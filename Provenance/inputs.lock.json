@@ -1428,8 +1428,8 @@
     },
     {
       "path": "Kernel/bootloader/boot_info.zig",
-      "bytes": 7725,
-      "sha256": "f4f42635cc6b6719c28d2188c0c78a9f5ebafdf1d9fcfa94665401f7017930c4",
+      "bytes": 9130,
+      "sha256": "8ee3fbb109a566e3e8efa7c50f61ce272d164bb96153163f5110c5690b0822a9",
       "originalSha256": "f4f42635cc6b6719c28d2188c0c78a9f5ebafdf1d9fcfa94665401f7017930c4",
       "origin": {
         "path": "bootloader/boot_info.zig",
@@ -1437,9 +1437,16 @@
       }
     },
     {
+      "path": "Kernel/bootloader/LIMINE-PROTOCOL-LICENSE.txt",
+      "bytes": 865,
+      "sha256": "2ca715177e0ca0e2db537b38faf95b3d38d9d1b3ef2549e4b35576a70fea6a4d",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/bootloader/limine.zig",
-      "bytes": 5807,
-      "sha256": "2d552ab78f81be61c5fbad9f8bcbdae4f2b172c92bcc759a23d7f086c1b50e1d",
+      "bytes": 7319,
+      "sha256": "962970e72b560446dfc48be1a6d64a19d92268067e4a8958981037d1de65fbe2",
       "originalSha256": "2d552ab78f81be61c5fbad9f8bcbdae4f2b172c92bcc759a23d7f086c1b50e1d",
       "origin": {
         "path": "bootloader/limine.zig",
@@ -1478,8 +1485,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 15780,
-      "sha256": "97ce84c2274b447e9f10caad42197029a14329373864c8b946e6471d9e93139d",
+      "bytes": 15819,
+      "sha256": "8f1479e736c9af8c5d7adec97389b741cd07fea7ee1c15bd1934b6de567904d4",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -1588,8 +1595,8 @@
     },
     {
       "path": "Kernel/DOCUMENTATION.de.txt",
-      "bytes": 32195,
-      "sha256": "24a9a6fdbdeb5803010beb59701c99b9a905dada5e4136d18d5e1dbc28911b40",
+      "bytes": 33956,
+      "sha256": "3c40f4220bac97ae74cd3d6f65688d18ec8d61717c4ad1fe4089450cd225a04a",
       "originalSha256": "24a9a6fdbdeb5803010beb59701c99b9a905dada5e4136d18d5e1dbc28911b40",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -1778,8 +1785,8 @@
     },
     {
       "path": "Kernel/driver/usb/msc.zig",
-      "bytes": 46784,
-      "sha256": "b6d82a88e73e2d51bb151a4be9ae2ebffc8f7fc70ece028e0f7d8a432b4bc7b6",
+      "bytes": 48299,
+      "sha256": "d6603e9751cc25eeb3f6bc9ac52d7a52b6ec2d5b609884367ecf16b81bafa827",
       "originalSha256": "b6d82a88e73e2d51bb151a4be9ae2ebffc8f7fc70ece028e0f7d8a432b4bc7b6",
       "origin": {
         "path": "driver/usb/msc.zig",
@@ -1908,8 +1915,8 @@
     },
     {
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 139600,
-      "sha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
+      "bytes": 140968,
+      "sha256": "a03dc2d6082fdcc25d898d59385fd4de1c2053c82c4daf9abdafa6c78b81757e",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "origin": {
         "path": "fs/fat/fat32.zig",
@@ -1928,8 +1935,8 @@
     },
     {
       "path": "Kernel/fs/ntfs/ntfs.zig",
-      "bytes": 34550,
-      "sha256": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
+      "bytes": 35844,
+      "sha256": "a99c289d34b9bdd273b3a59741fc7b67da624f027e61692d6250fcc74ea43930",
       "originalSha256": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
       "origin": {
         "path": "fs/ntfs/ntfs.zig",
@@ -2518,6 +2525,13 @@
       "origin": null
     },
     {
+      "path": "Kernel/kernel/recovery_storage.zig",
+      "bytes": 9417,
+      "sha256": "d94cac6aa73575ae37ee88651b677fa7873496e3343a79a3fcd3183cb6b340e2",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/kernel/runtime_boot.zig",
       "bytes": 4905,
       "sha256": "dcd1952309c5d7269c34e0626d2b246c79c25bcc28ba88c8b3d43926d34b7782",
@@ -2609,8 +2623,8 @@
     },
     {
       "path": "Kernel/kernel/storage_boot.zig",
-      "bytes": 15786,
-      "sha256": "c228ed2360615ff6949f1bba55e443c2e45552e4b067cd14343164c468915c87",
+      "bytes": 15809,
+      "sha256": "d78a7ae599875714ce30af05ecee14df3e8e5d1ff2ac38a4ebe4b0b5023ac4a0",
       "originalSha256": "c228ed2360615ff6949f1bba55e443c2e45552e4b067cd14343164c468915c87",
       "origin": {
         "path": "kernel/storage_boot.zig",
@@ -3109,8 +3123,8 @@
     },
     {
       "path": "Kernel/platform/device_inventory.zig",
-      "bytes": 32419,
-      "sha256": "0aa4c59cf5e29a7933272929ad2b68bd478d33d62e1c41b2e3cefb4a0e14de15",
+      "bytes": 32491,
+      "sha256": "2e07f6e3bb695ce5fb13a179224afaf485a0dc26c5c79a48680d24bcd4ca71fa",
       "originalSha256": "0aa4c59cf5e29a7933272929ad2b68bd478d33d62e1c41b2e3cefb4a0e14de15",
       "origin": {
         "path": "platform/device_inventory.zig",
@@ -3379,8 +3393,8 @@
     },
     {
       "path": "Kernel/recovery_main.zig",
-      "bytes": 4542,
-      "sha256": "b5b7c3b2accd18811317bcb0a9cf401c6522b6e29408cd4fe20be33a107c731d",
+      "bytes": 4944,
+      "sha256": "1c9ce76eb27f28e095e6b3c3e930d7d76ccd2994d34e42b15ea5852acf239580",
       "originalSha256": null,
       "origin": null
     },
@@ -3465,6 +3479,13 @@
       }
     },
     {
+      "path": "Kernel/storage_boot_tests.zig",
+      "bytes": 8381,
+      "sha256": "139d0b6db65a7e76404a718b13beb56144f86e7198177e538029d8f8c814b61e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/storage/block_dispatch.zig",
       "bytes": 7138,
       "sha256": "9d47494e42617d9ebd03f8a04493e4fa4076d3cfcfde8f63249e6863e6f93c36",
@@ -3486,8 +3507,8 @@
     },
     {
       "path": "Kernel/storage/block.zig",
-      "bytes": 101827,
-      "sha256": "0d9054658c23bd7e5cf3b521690c1dc714e0b7dd50c31b5bba91ce0ac71b394f",
+      "bytes": 103569,
+      "sha256": "12a5f6774ff8d1b3844f594364cf1c7566dfb6c62da5c123dd91f985e0dd6bc8",
       "originalSha256": "0d9054658c23bd7e5cf3b521690c1dc714e0b7dd50c31b5bba91ce0ac71b394f",
       "origin": {
         "path": "storage/block.zig",
@@ -3495,14 +3516,35 @@
       }
     },
     {
+      "path": "Kernel/storage/boot_source.zig",
+      "bytes": 3605,
+      "sha256": "f11645ede3a38d31d06ccfcc501d4cbcf8b2b827ccde2983878675080f4025fc",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/storage/gpt.zig",
-      "bytes": 11318,
-      "sha256": "211717779f6ea41514887e9cab6886c7b0eaec820c06ab18b3ec771645fefc76",
+      "bytes": 11739,
+      "sha256": "14d3eb4a77abd80aaf60d2a5d3f71c749ff34000d09bd8605bfa4db5e2544670",
       "originalSha256": "211717779f6ea41514887e9cab6886c7b0eaec820c06ab18b3ec771645fefc76",
       "origin": {
         "path": "storage/gpt.zig",
         "source": "Kernel"
       }
+    },
+    {
+      "path": "Kernel/storage/guid.zig",
+      "bytes": 1854,
+      "sha256": "453064689ddac31e150f0d5c1fc82134b6ff41ebb9e9515bff8fa8b892ece124",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/storage/installation.zig",
+      "bytes": 5899,
+      "sha256": "df1b3cefd6e654bfa1b33875e3026bf0776f606a94dfc2a007fcf302cd531096",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Kernel/storage/mbr.zig",
@@ -3513,6 +3555,20 @@
         "path": "storage/mbr.zig",
         "source": "Kernel"
       }
+    },
+    {
+      "path": "Kernel/storage/media_inventory.zig",
+      "bytes": 5422,
+      "sha256": "a0fa0ba903778d80b7ffc4e2ed6bb3dd40fd4668aec2584feefe28039fece347",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/storage/partition_table.zig",
+      "bytes": 8225,
+      "sha256": "7308abb36bbb0c6c3b2993bf8aac4a94c87115c128d05feb5aa6b18eefb3cdbb",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Kernel/Support/ntfs_format.zig",
@@ -3607,7 +3663,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "fa41f673b977e775e0c2b0927f7842ef022388e0158b3c5893630535b60286aa",
+      "sha256": "3297ec811abb07ed902add7a5738e29aaffa3b6344021a7a755731f91efb4990",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3618,6 +3674,13 @@
       "path": "Legal/Changes/Distribution-0.76.3.patch",
       "bytes": 10342,
       "sha256": "77a38487016b88613decbc6f299fbcad0391c9e270eadc2193b899240a1be6e6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.76.4.patch",
+      "bytes": 72775,
+      "sha256": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049",
       "originalSha256": null,
       "origin": null
     },
@@ -8317,7 +8380,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 63,
-      "sha256": "b38dbaf2d6f484a7871a5d122ae4bfcf4c7f7ed4c733cdb5eb9427b1a1a55392",
+      "sha256": "abc63450f619e4e36b51d7093bc18dc96f6293e399bb0454541bc64b028cad2a",
       "originalSha256": null,
       "origin": null
     },
@@ -8341,7 +8404,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 25,
-      "sha256": "6b6abe4b4d69630d7bb34cbaa0339d15f6b21afadd0c1ed0459600cc49630f8a",
+      "sha256": "59718c388dbd7bc20dd976cd3670af489388460ea2c46fedf87e15a2642dfe31",
       "originalSha256": null,
       "origin": null
     },
@@ -8985,6 +9048,176 @@
         }
       ],
       "reason": "0.76.3: Document the complete RAM/kernel pair and direct Terminal boot in the kernel checkout."
+    },
+    {
+      "changes": [
+        {
+          "after": "8ee3fbb109a566e3e8efa7c50f61ce272d164bb96153163f5110c5690b0822a9",
+          "before": "f4f42635cc6b6719c28d2188c0c78a9f5ebafdf1d9fcfa94665401f7017930c4",
+          "path": "Kernel/bootloader/boot_info.zig"
+        },
+        {
+          "after": "2ca715177e0ca0e2db537b38faf95b3d38d9d1b3ef2549e4b35576a70fea6a4d",
+          "before": null,
+          "path": "Kernel/bootloader/LIMINE-PROTOCOL-LICENSE.txt"
+        },
+        {
+          "after": "962970e72b560446dfc48be1a6d64a19d92268067e4a8958981037d1de65fbe2",
+          "before": "2d552ab78f81be61c5fbad9f8bcbdae4f2b172c92bcc759a23d7f086c1b50e1d",
+          "path": "Kernel/bootloader/limine.zig"
+        },
+        {
+          "after": "8f1479e736c9af8c5d7adec97389b741cd07fea7ee1c15bd1934b6de567904d4",
+          "before": "97ce84c2274b447e9f10caad42197029a14329373864c8b946e6471d9e93139d",
+          "path": "Kernel/build.zig"
+        },
+        {
+          "after": "de2c79f9228eb3f28c5b741595ef6927925bf5bfc34dd3f14647cf6657de1c8a",
+          "before": "b6d82a88e73e2d51bb151a4be9ae2ebffc8f7fc70ece028e0f7d8a432b4bc7b6",
+          "path": "Kernel/driver/usb/msc.zig"
+        },
+        {
+          "after": "a03dc2d6082fdcc25d898d59385fd4de1c2053c82c4daf9abdafa6c78b81757e",
+          "before": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
+          "path": "Kernel/fs/fat/fat32.zig"
+        },
+        {
+          "after": "a99c289d34b9bdd273b3a59741fc7b67da624f027e61692d6250fcc74ea43930",
+          "before": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
+          "path": "Kernel/fs/ntfs/ntfs.zig"
+        },
+        {
+          "after": "52fdbc4eb53f41d1b01fe3d7092479b8b8d0390108a7fd875a80e3cba342f6cc",
+          "before": null,
+          "path": "Kernel/kernel/recovery_storage.zig"
+        },
+        {
+          "after": "d78a7ae599875714ce30af05ecee14df3e8e5d1ff2ac38a4ebe4b0b5023ac4a0",
+          "before": "c228ed2360615ff6949f1bba55e443c2e45552e4b067cd14343164c468915c87",
+          "path": "Kernel/kernel/storage_boot.zig"
+        },
+        {
+          "after": "1c9ce76eb27f28e095e6b3c3e930d7d76ccd2994d34e42b15ea5852acf239580",
+          "before": "b5b7c3b2accd18811317bcb0a9cf401c6522b6e29408cd4fe20be33a107c731d",
+          "path": "Kernel/recovery_main.zig"
+        },
+        {
+          "after": "139d0b6db65a7e76404a718b13beb56144f86e7198177e538029d8f8c814b61e",
+          "before": null,
+          "path": "Kernel/storage_boot_tests.zig"
+        },
+        {
+          "after": "b1f89e876594cb8a649a10bbca33c439c0957012969558d397abfb2764c10622",
+          "before": "0d9054658c23bd7e5cf3b521690c1dc714e0b7dd50c31b5bba91ce0ac71b394f",
+          "path": "Kernel/storage/block.zig"
+        },
+        {
+          "after": "f11645ede3a38d31d06ccfcc501d4cbcf8b2b827ccde2983878675080f4025fc",
+          "before": null,
+          "path": "Kernel/storage/boot_source.zig"
+        },
+        {
+          "after": "14d3eb4a77abd80aaf60d2a5d3f71c749ff34000d09bd8605bfa4db5e2544670",
+          "before": "211717779f6ea41514887e9cab6886c7b0eaec820c06ab18b3ec771645fefc76",
+          "path": "Kernel/storage/gpt.zig"
+        },
+        {
+          "after": "453064689ddac31e150f0d5c1fc82134b6ff41ebb9e9515bff8fa8b892ece124",
+          "before": null,
+          "path": "Kernel/storage/guid.zig"
+        },
+        {
+          "after": "df1b3cefd6e654bfa1b33875e3026bf0776f606a94dfc2a007fcf302cd531096",
+          "before": null,
+          "path": "Kernel/storage/installation.zig"
+        },
+        {
+          "after": "4c8e853bbcd685f4ee834cfd264c7af1e1aa5141f8cdf26c0bda168d2ff41c24",
+          "before": null,
+          "path": "Kernel/storage/media_inventory.zig"
+        },
+        {
+          "after": "7308abb36bbb0c6c3b2993bf8aac4a94c87115c128d05feb5aa6b18eefb3cdbb",
+          "before": null,
+          "path": "Kernel/storage/partition_table.zig"
+        },
+        {
+          "after": "3297ec811abb07ed902add7a5738e29aaffa3b6344021a7a755731f91efb4990",
+          "before": "fa41f673b977e775e0c2b0927f7842ef022388e0158b3c5893630535b60286aa",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "after": "1c004c9c4e7e216e5f4d95d798c85d2aaba332ee162e858ce06811de5670b91e",
+          "before": null,
+          "path": "Legal/Changes/Kernel-0.76.4.patch"
+        },
+        {
+          "after": "abc63450f619e4e36b51d7093bc18dc96f6293e399bb0454541bc64b028cad2a",
+          "before": "b38dbaf2d6f484a7871a5d122ae4bfcf4c7f7ed4c733cdb5eb9427b1a1a55392",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "after": "59718c388dbd7bc20dd976cd3670af489388460ea2c46fedf87e15a2642dfe31",
+          "before": "6b6abe4b4d69630d7bb34cbaa0339d15f6b21afadd0c1ed0459600cc49630f8a",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
+        }
+      ],
+      "reason": "0.76.4: Explizite Kernel-Uebernahme fuer Medieninventar, echte Limine-Bootquelle und mehrere USB-/NTFS-Volumes."
+    },
+    {
+      "reason": "0.76.4: USB-Medienfilter auch im Geraeteinventar und echte optionale SCSI-Modellangaben.",
+      "changes": [
+        {
+          "before": "de2c79f9228eb3f28c5b741595ef6927925bf5bfc34dd3f14647cf6657de1c8a",
+          "path": "Kernel/driver/usb/msc.zig",
+          "after": "d6603e9751cc25eeb3f6bc9ac52d7a52b6ec2d5b609884367ecf16b81bafa827"
+        },
+        {
+          "before": "52fdbc4eb53f41d1b01fe3d7092479b8b8d0390108a7fd875a80e3cba342f6cc",
+          "path": "Kernel/kernel/recovery_storage.zig",
+          "after": "02ba6bc5f039c8b0d69b3dd948046592fd435cc448cea87321fe7ae52d079970"
+        },
+        {
+          "before": "0aa4c59cf5e29a7933272929ad2b68bd478d33d62e1c41b2e3cefb4a0e14de15",
+          "path": "Kernel/platform/device_inventory.zig",
+          "after": "2e07f6e3bb695ce5fb13a179224afaf485a0dc26c5c79a48680d24bcd4ca71fa"
+        },
+        {
+          "before": "b1f89e876594cb8a649a10bbca33c439c0957012969558d397abfb2764c10622",
+          "path": "Kernel/storage/block.zig",
+          "after": "12a5f6774ff8d1b3844f594364cf1c7566dfb6c62da5c123dd91f985e0dd6bc8"
+        },
+        {
+          "before": "4c8e853bbcd685f4ee834cfd264c7af1e1aa5141f8cdf26c0bda168d2ff41c24",
+          "path": "Kernel/storage/media_inventory.zig",
+          "after": "a0fa0ba903778d80b7ffc4e2ed6bb3dd40fd4668aec2584feefe28039fece347"
+        },
+        {
+          "before": "1c004c9c4e7e216e5f4d95d798c85d2aaba332ee162e858ce06811de5670b91e",
+          "path": "Legal/Changes/Kernel-0.76.4.patch",
+          "after": "4b08c5250a7066ffd2a27a826cd5d5a524642e98670ac240fea8c89e3b500231"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "24a9a6fdbdeb5803010beb59701c99b9a905dada5e4136d18d5e1dbc28911b40",
+          "path": "Kernel/DOCUMENTATION.de.txt",
+          "after": "3c40f4220bac97ae74cd3d6f65688d18ec8d61717c4ad1fe4089450cd225a04a"
+        },
+        {
+          "before": "02ba6bc5f039c8b0d69b3dd948046592fd435cc448cea87321fe7ae52d079970",
+          "path": "Kernel/kernel/recovery_storage.zig",
+          "after": "d94cac6aa73575ae37ee88651b677fa7873496e3343a79a3fcd3183cb6b340e2"
+        },
+        {
+          "before": "4b08c5250a7066ffd2a27a826cd5d5a524642e98670ac240fea8c89e3b500231",
+          "path": "Legal/Changes/Kernel-0.76.4.patch",
+          "after": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049"
+        }
+      ],
+      "reason": "0.76.4: Besitzerdokumentation und Schreib-/Flush-/Loeschnachweis fuer alle zulaessigen NTFS-Testvolumes."
     }
   ]
 }

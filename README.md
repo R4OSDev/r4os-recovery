@@ -83,3 +83,9 @@ public remote `https://github.com/R4OSDev/r4os-recovery.git`.
 Original R4OS material is licensed under Apache License 2.0. See
 [LICENSE](LICENSE), [NOTICE](NOTICE), and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Seit 0.76.4 stehen das physische Medieninventar, die echte Limine-Bootquelle
+und stabile C:/R:/weitere Mounts bereit. `-Mode StorageTest` prueft die
+USB-/AHCI-/NVMe- und Fehlerfaelle mit SMP4. Die Installationsaktionen folgen
+in ihren geplanten Unterversionen. Details und Grenzen stehen in
+[DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).

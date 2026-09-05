@@ -26,6 +26,7 @@ const recovery_runtime = @import("kernel/recovery_runtime.zig");
 const version = @import("kernel/version.zig");
 const recovery_boot = @import("kernel/recovery_boot.zig");
 const recovery_ram = @import("kernel/recovery_ram.zig");
+const recovery_storage = @import("kernel/recovery_storage.zig");
 
 pub const panic = std.debug.FullPanic(handleZigPanic);
 
@@ -72,10 +73,17 @@ export fn kmain() callconv(.c) noreturn {
     if (comptime config.recovery_probe == .ram)
         require(recovery_runtime.waitForMediaRemoval(), .storage, "Recovery boot medium removal not acknowledged");
     require(recovery_runtime.admitFilesystem(), .loader, "Recovery RAM userland admission failed");
+    if (comptime config.recovery_probe != .ram)
+        require(recovery_storage.init(), .storage, "Recovery media admission failed");
     boot_status.releaseForUserSession();
     log.setOutputHook(null);
     if (comptime config.recovery_probe == .ram) {
         require(recovery_runtime.runRamProbe(), .runtime, "Recovery RAM runtime probe failed");
+        log.serialFlush();
+        power.poweroff();
+    }
+    if (comptime config.recovery_probe == .storage) {
+        require(recovery_storage.runProbe(), .storage, "Recovery storage probe failed");
         log.serialFlush();
         power.poweroff();
     }

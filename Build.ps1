@@ -1,7 +1,7 @@
 param(
-    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest')][string]$Mode = 'Verify',
+    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest')][string]$Mode = 'Verify',
     [string]$Zig = '',
-    [ValidateSet('none', 'poweroff', 'reboot', 'ram')][string]$BootProbe = 'none',
+    [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
 )
 
@@ -18,6 +18,7 @@ try {
         if ($Mode -eq 'BootTest' -and $BootProbe -eq 'none') { $BootProbe = 'poweroff' }
         if ($Mode -eq 'BootTest' -and $BootProbe -eq 'ram') { throw 'Use -Mode RuntimeTest for the RAM witness.' }
         if ($Mode -eq 'RuntimeTest') { $BootProbe = 'ram' }
+        if ($Mode -eq 'StorageTest') { $BootProbe = 'storage' }
         if (!$Zig) {
             $Zig = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot $(if ($IsWindows) {'../../DevKit/Toolchains/Zig/zig.exe'} else {'../../DevKit/Toolchains/Zig/zig'})))
         }
@@ -28,7 +29,7 @@ try {
         $version = $release.RECOVERY_VERSION[0]
         if ($version -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'Invalid Recovery version.' }
         $runtimeArguments = @()
-        if ($BootProbe -in @('none', 'ram') -or $Mode -eq 'Runtime') {
+        if ($BootProbe -in @('none', 'ram', 'storage') -or $Mode -eq 'Runtime') {
             . (Join-Path $PSScriptRoot 'Tools/Runtime.ps1')
             $runtime = Build-RecoveryRuntime $PSScriptRoot $Zig
             $runtimeArguments = @("-Druntime-sha256=$($runtime.sha256)", "-Druntime-bytes=$($runtime.bytes)")
@@ -44,6 +45,10 @@ try {
         if ($Mode -in @('BootTest', 'RuntimeTest')) {
             & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Boot.ps1') -Firmware $Firmware -Action $BootProbe -Zig $Zig
             if ($LASTEXITCODE -ne 0) { throw 'Recovery boot acceptance failed.' }
+        }
+        if ($Mode -eq 'StorageTest') {
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Storage.ps1') -Firmware $Firmware -Zig $Zig
+            if ($LASTEXITCODE -ne 0) { throw 'Recovery storage acceptance failed.' }
         }
     }
     exit 0

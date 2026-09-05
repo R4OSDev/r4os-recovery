@@ -1,0 +1,1714 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 91d18e3..04fa166 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -564,3 +564,33 @@ MSI-X anbietet. BIR, Tabellenoffset und die 16-MiB-MMIO-Grenze werden vor der
+ Abbildung geprueft. Disable und Owner-Cleanup stellen Eintrag, Capability und
+ INTx-Zustand wieder her. Daraus entsteht weder eine oeffentliche Affinitaets-
+ noch eine Multivektor-ABI.
++
++Storage-Bootgrundlagen fuer Recovery (0.76.4)
++-------------------------------------------
++
++bootloader/boot_info.zig sichert den tatsaechlichen Limine-ExecutableFile-
++Datentraeger, dessen Partition und geladenen Pfad als kopierte Bootidentitaet.
++Die neuen storage/partition_table.zig, installation.zig und boot_source.zig
++pruefen GPT-/MBR-Inventare und den versionierten Installationsvertrag ohne
++Schreibzugriffe. media_inventory.zig bindet diese Logik an die bestehenden
++Block-/FAT32-/NTFS-Besitzer. Recovery verwendet diese Grundlage schon; die
++Umstellung der normalen SYSTEM-/DATA-Bootauswahl folgt in 0.76.17.
++
++USB-MSC verwaltet bis zu 16 eigene Medienkontexte unter dem gemeinsamen
++xHCI-Transportowner. Der Blockkatalog besitzt 16 Slots, davon benoetigt
++Recovery einen fuer RAM. Eine vor den Mounts gesetzte Busausnahme gilt fuer
++Enumeration und neue I/O-Pins, sowie fuer das Geraeteinventar; HID ist kein
++Blockgeraet und bleibt unabhaengig. Modelltexte sind optional und werden
++nur aus echten Backenddaten uebernommen (aktuell USB-SCSI INQUIRY).
++
++NTFS besitzt 26 statt vier Volume-Slots und begrenzt seine I/O-Seam auf das
++ausgewaehlte Volume. FAT32 prueft BPB, FAT-/Clustergeometrie und Grenzen vor
++Aufnahme; bei vollen Mountslots bleibt bestehender Zustand erhalten.
++Partitionstabellen nutzen u64-LBAs, die vorhandenen Dateisystembasen bleiben
++u32; Recovery meldet nicht unterstuetzte Geometrie, bevor sie verwendet wird.
++512-Byte-Sektoren bleiben der freigegebene Vertrag.
++
++Build.sh storage-test beziehungsweise Build.bat storage-test fuehrt die
++begrenzten Besitzerpruefungen fuer GUIDs, beide GPT-Kopien, fremdes MBR,
++Installationsbeschreibung, CURRENT/PREVIOUS und Medienregeln aus. Dieser
++Step ist auch Bestandteil des regulaeren Kernel-test-Steps.
+diff --git a/VERSION.R4S b/VERSION.R4S
+index a23a2a4..9105252 100644
+--- a/VERSION.R4S
++++ b/VERSION.R4S
+@@ -1 +1 @@
+-﻿KERNEL_VERSION=0.1.86
++﻿KERNEL_VERSION=0.1.87
+diff --git a/bootloader/boot_info.zig b/bootloader/boot_info.zig
+index f22e51d..e3a83d6 100644
+--- a/bootloader/boot_info.zig
++++ b/bootloader/boot_info.zig
+@@ -52,11 +52,31 @@ pub const BootModule = struct {
+     valid: bool = false,
+ };
+ 
++/// Copy identity before bootloader memory can be reclaimed. This identifies
++/// the actual executable; it does not infer a disk from labels or modules.
++pub const ExecutableSource = struct {
++    present: bool = false,
++    media_type: u32 = 0,
++    partition_index: u32 = 0,
++    mbr_disk_id: u32 = 0,
++    disk_guid: [16]u8 = .{0} ** 16,
++    partition_guid: [16]u8 = .{0} ** 16,
++    filesystem_uuid: [16]u8 = .{0} ** 16,
++    path_bytes: [256]u8 = .{0} ** 256,
++    path_len: usize = 0,
++    path_truncated: bool = false,
++
++    pub fn path(self: *const ExecutableSource) []const u8 {
++        return self.path_bytes[0..self.path_len];
++    }
++};
++
+ pub const Info = struct {
+     initialized: bool = false,
+     bootloader_name: []const u8 = "Limine",
+     memory_map_entries: []const MemoryMapEntry = &.{},
+     boot_modules: []const BootModule = &.{},
++    executable_source: ExecutableSource = .{},
+     memory_map_truncated: bool = false,
+     memory_map_invalid_entries: u64 = 0,
+     hhdm_offset: ?u64 = null,
+@@ -100,6 +120,7 @@ pub fn init() bool {
+     current.memory_map_invalid_entries = invalid;
+     current.hhdm_offset = limine.hhdmOffset() orelse return false;
+     current.boot_modules = collectBootModules();
++    current.executable_source = collectExecutableSource();
+ 
+     if (limine.firstFramebuffer()) |src| {
+         boot_framebuffer = .{
+@@ -221,10 +242,28 @@ fn collectBootModules() []const BootModule {
+ fn zSlice(value: ?[*:0]const u8) []const u8 {
+     const ptr = value orelse return "";
+     var len: usize = 0;
+-    while (ptr[len] != 0 and len < 256) : (len += 1) {}
++    while (len < 256 and ptr[len] != 0) : (len += 1) {}
+     return ptr[0..len];
+ }
+ 
++fn collectExecutableSource() ExecutableSource {
++    const file = limine.executableFile() orelse return .{};
++    var result = ExecutableSource{
++        .present = true,
++        .media_type = file.media_type,
++        .partition_index = file.partition_index,
++        .mbr_disk_id = file.mbr_disk_id,
++        .disk_guid = file.gpt_disk_uuid.bytes(),
++        .partition_guid = file.gpt_part_uuid.bytes(),
++        .filesystem_uuid = file.part_uuid.bytes(),
++    };
++    const path = zSlice(file.path);
++    result.path_truncated = path.len == result.path_bytes.len;
++    result.path_len = path.len;
++    @memcpy(result.path_bytes[0..path.len], path);
++    return result;
++}
++
+ fn maxUsize() u64 {
+     return ~@as(u64, 0);
+ }
+diff --git a/bootloader/limine.zig b/bootloader/limine.zig
+index 8c1670c..a622d0a 100644
+--- a/bootloader/limine.zig
++++ b/bootloader/limine.zig
+@@ -27,6 +27,7 @@ pub fn keepRequests() void {
+     touchU64(&framebuffer_request.id[0]);
+     touchU64(&memory_map_request.id[0]);
+     touchU64(&module_request.id[0]);
++    touchU64(&executable_file_request.id[0]);
+     touchU64(&rsdp_request.id[0]);
+     touchU64(&hhdm_request.id[0]);
+     touchU64(&requests_end_marker[0]);
+@@ -122,14 +123,61 @@ pub fn memoryMap() ?*MemoryMapResponse {
+ }
+ 
+ // --- Modules --------------------------------------------------------------
++// Protocol reference: https://raw.githubusercontent.com/limine-bootloader/limine-protocol/617369cb577108e483c096e373c4f2ecc9d2081d/include/limine.h
++// 0BSD, Copyright (C) 2022-2026 Mintsuki and contributors.
++// The UUID fields have the same little-endian field layout as GPT on x86_64.
++pub const Uuid = extern struct {
++    a: u32,
++    b: u16,
++    c: u16,
++    d: [8]u8,
++
++    pub fn bytes(self: Uuid) [16]u8 {
++        return @bitCast(self);
++    }
++};
++
+ pub const File = extern struct {
+     revision: u64,
+     address: ?[*]const u8,
+     size: u64,
+     path: ?[*:0]const u8,
+     cmdline: ?[*:0]const u8,
++    media_type: u32,
++    unused: u32,
++    tftp_ipv4: [4]u8,
++    tftp_port: u32,
++    partition_index: u32,
++    mbr_disk_id: u32,
++    gpt_disk_uuid: Uuid,
++    gpt_part_uuid: Uuid,
++    part_uuid: Uuid,
++};
++
++comptime {
++    if (@sizeOf(File) != 112 or @offsetOf(File, "gpt_disk_uuid") != 64 or
++        @offsetOf(File, "gpt_part_uuid") != 80) @compileError("Limine file ABI mismatch");
++}
++
++pub const ExecutableFileResponse = extern struct { revision: u64, file: *const File };
++pub const ExecutableFileRequest = extern struct {
++    id: [4]u64,
++    revision: u64,
++    response: ?*ExecutableFileResponse,
+ };
+ 
++pub export var executable_file_request: ExecutableFileRequest linksection(".limine_reqs_m_data") = .{
++    .id = .{ MAGIC_0, MAGIC_1, 0xad97e90e83f1ed67, 0x31eb5d1c5ff23b69 },
++    .revision = 0,
++    .response = null,
++};
++
++pub fn executableFile() ?*const File {
++    const ptr: *volatile ?*ExecutableFileResponse = &executable_file_request.response;
++    const response = ptr.* orelse return null;
++    return response.file;
++}
++
+ pub const ModuleResponse = extern struct {
+     revision: u64,
+     module_count: u64,
+diff --git a/build.zig b/build.zig
+index fb784a1..284fd5c 100644
+--- a/build.zig
++++ b/build.zig
+@@ -174,6 +174,9 @@ pub fn build(b: *std.Build) void {
+     b.installArtifact(kernel);
+ 
+     const test_step = b.step("test", "Build the kernel and run kernel-owned host tests");
++    const storage_test_step = b.step("storage-test", "Bounded partition identity and installation boot tests");
++    addUnitTest(b, storage_test_step, "storage_boot_tests.zig");
++    test_step.dependOn(storage_test_step);
+     test_step.dependOn(&kernel.step);
+     const unit_tests = [_][]const u8{
+         "display/console_scroll_buffer.zig",
+diff --git a/driver/usb/msc.zig b/driver/usb/msc.zig
+index 67f88e3..4240352 100644
+--- a/driver/usb/msc.zig
++++ b/driver/usb/msc.zig
+@@ -59,6 +59,8 @@ pub const Status = struct {
+     max_lun: u8 = 0,
+     uas_supported: bool = false,
+     inquiry_ok: bool = false,
++    model: [32]u8 = .{0} ** 32,
++    model_len: usize = 0,
+     inquiry_retries: u64 = 0,
+     inquiry_wait_elapsed_ns: u64 = 0,
+     test_unit_ready_ok: bool = false,
+@@ -135,9 +137,16 @@ pub const Status = struct {
+     scsi_last_result: i32 = 0,
+     protocol_required_missing: u64 = 0,
+     reason: []const u8 = "not initialized",
++    reason_storage: [128]u8 = .{0} ** 128,
++    transport_incident: diag_screen.IncidentToken = .{},
+ };
+ 
+-var current: Status = .{};
++const MAX_MSC_DEVICES = 16;
++var media: [MAX_MSC_DEVICES]Status = .{Status{}} ** MAX_MSC_DEVICES;
++var current: *Status = &media[0];
++var media_count: usize = 0;
++const media_names = [_][]const u8{ "usb0", "usb1", "usb2", "usb3", "usb4", "usb5", "usb6", "usb7", "usb8", "usb9", "usb10", "usb11", "usb12", "usb13", "usb14", "usb15" };
++var current_index: usize = 0;
+ var data_buf: [DATA_BUF_LEN]u8 = .{0} ** DATA_BUF_LEN;
+ var bot_r4p_build: u64 = 0;
+ var bot_r4p_csw: u64 = 0;
+@@ -149,74 +158,75 @@ var scsi_dispatch_failures: u64 = 0;
+ var scsi_last_result: i32 = 0;
+ var block_source: block.Source = .builtin;
+ var external_owner: bool = false;
+-var reason_buffer: [128]u8 = .{0} ** 128;
+-var last_transport_incident: diag_screen.IncidentToken = .{};
+ 
+ pub fn init() bool {
+     if (!xhci.acquireControllerOwnership()) return false;
+     defer xhci.releaseControllerOwnership();
+-    resolveTransportIncident();
+-    current = .{ .initialized = true, .reason = "no USB mass storage device found" };
+-    bot_r4p_build = 0;
+-    bot_r4p_csw = 0;
+-    bot_dispatch_failures = 0;
+-    bot_last_result = 0;
+-    scsi_r4p_build = 0;
+-    scsi_r4p_parse = 0;
+-    scsi_dispatch_failures = 0;
+-    scsi_last_result = 0;
+-    last_transport_incident = .{};
+-    @memset(reason_buffer[0..], 0);
+-
++    // Boot admission is idempotent; do not orphan registered block contexts.
++    if (media_count != 0) return blockDeviceCount() != 0;
+     var index: usize = 0;
+     while (usb_core.deviceAt(index)) |dev| : (index += 1) {
+         if (dev.first_interface_class != 0x08 or dev.first_interface_subclass != 0x06 or dev.first_interface_protocol != 0x50) continue;
+-        current.present = true;
+-        current.port = dev.port;
+-        current.device = xhci.deviceHandleFromCore(dev);
+-        current.bulk_in_handle = xhci.bulkInHandleFromCore(dev);
+-        current.bulk_out_handle = xhci.bulkOutHandleFromCore(dev);
+-        current.interface_number = dev.first_interface_number;
+-        current.bulk_in = dev.bulk_in_endpoint_address;
+-        current.bulk_out = dev.bulk_out_endpoint_address;
+-        current.bulk_in_max_packet = dev.bulk_in_endpoint_max_packet;
+-        current.bulk_out_max_packet = dev.bulk_out_endpoint_max_packet;
+-        if (current.bulk_in == 0 or current.bulk_out == 0) {
+-            current.failures += 1;
+-            current.reason = "bulk endpoints missing";
+-            return false;
+-        }
+-        if (!requireMscProtocolRoles()) return false;
+-        if (!ensureSelected()) return false;
+-        current.bound = true;
+-        // Probe the actual device state immediately. Ready media no longer
+-        // pays a blind settle second; transient command/Sense states own the
+-        // bounded waits below.
+-        current.inquiry_ok = scsiInquiryWithRetry();
+-        if (!current.inquiry_ok) {
+-            return false;
+-        }
+-        current.test_unit_ready_ok = waitForScsiReady();
+-        if (!current.test_unit_ready_ok) {
+-            current.reason = "SCSI device not ready after retry window";
+-            return false;
+-        }
+-        current.read_capacity_ok = scsiReadCapacityWithRetry();
+-        if (!current.read_capacity_ok) {
+-            current.reason = "SCSI READ CAPACITY failed";
+-            return false;
+-        }
+-        current.mode_sense_ok = scsiModeSense6();
+-        if (!validLogicalBlockSize(current.sector_size)) {
+-            current.reason = "unsupported logical block size";
+-            return false;
++        if (media_count == media.len) {
++            k.puts("[USBMSC] device capacity reached\r\n");
++            break;
+         }
+-        current.max_sectors_per_request = maxSectorsForBlockSize(current.sector_size);
+-        registerBlockDevice();
+-        current.reason = if (current.block_registered) "USB mass storage block device active" else "block register failed";
+-        return current.block_registered;
++        current_index = media_count;
++        current = &media[media_count];
++        current.* = .{ .initialized = true };
++        media_count += 1;
++        _ = initializeMedium(dev);
+     }
+-    return false;
++    current_index = 0;
++    current = &media[0];
++    return blockDeviceCount() != 0;
++}
++
++fn initializeMedium(dev: *const usb_core.Device) bool {
++    current.present = true;
++    current.port = dev.port;
++    current.device = xhci.deviceHandleFromCore(dev);
++    current.bulk_in_handle = xhci.bulkInHandleFromCore(dev);
++    current.bulk_out_handle = xhci.bulkOutHandleFromCore(dev);
++    current.interface_number = dev.first_interface_number;
++    current.bulk_in = dev.bulk_in_endpoint_address;
++    current.bulk_out = dev.bulk_out_endpoint_address;
++    current.bulk_in_max_packet = dev.bulk_in_endpoint_max_packet;
++    current.bulk_out_max_packet = dev.bulk_out_endpoint_max_packet;
++    if (current.bulk_in == 0 or current.bulk_out == 0) {
++        current.failures += 1;
++        current.reason = "bulk endpoints missing";
++        return false;
++    }
++    if (!requireMscProtocolRoles()) return false;
++    if (!ensureSelected()) return false;
++    current.bound = true;
++    // Probe the actual device state immediately. Ready media no longer
++    // pays a blind settle second; transient command/Sense states own the
++    // bounded waits below.
++    current.inquiry_ok = scsiInquiryWithRetry();
++    if (!current.inquiry_ok) {
++        return false;
++    }
++    current.test_unit_ready_ok = waitForScsiReady();
++    if (!current.test_unit_ready_ok) {
++        current.reason = "SCSI device not ready after retry window";
++        return false;
++    }
++    current.read_capacity_ok = scsiReadCapacityWithRetry();
++    if (!current.read_capacity_ok) {
++        current.reason = "SCSI READ CAPACITY failed";
++        return false;
++    }
++    current.mode_sense_ok = scsiModeSense6();
++    if (!validLogicalBlockSize(current.sector_size)) {
++        current.reason = "unsupported logical block size";
++        return false;
++    }
++    current.max_sectors_per_request = maxSectorsForBlockSize(current.sector_size);
++    registerBlockDevice();
++    current.reason = if (current.block_registered) "USB mass storage block device active" else "block register failed";
++    return current.block_registered;
+ }
+ 
+ pub fn setPreloadOwner() void {
+@@ -224,6 +234,11 @@ pub fn setPreloadOwner() void {
+     external_owner = true;
+ }
+ 
++pub fn setRuntimeOwner() void {
++    block_source = .disk;
++    external_owner = true;
++}
++
+ pub fn resetBuiltInOwner() void {
+     block_source = .builtin;
+     external_owner = false;
+@@ -244,7 +259,7 @@ pub fn status() Status {
+     current.scsi_r4p_parse = scsi_r4p_parse;
+     current.scsi_dispatch_failures = scsi_dispatch_failures;
+     current.scsi_last_result = scsi_last_result;
+-    return current;
++    return current.*;
+ }
+ 
+ fn requireMscProtocolRoles() bool {
+@@ -267,18 +282,26 @@ fn missingProtocolReason() []const u8 {
+ }
+ 
+ pub fn blockDeviceCount() usize {
+-    return if (current.block_registered) 1 else 0;
++    var count: usize = 0;
++    for (media[0..media_count]) |device| if (device.block_registered) {
++        count += 1;
++    };
++    return count;
+ }
+ 
+ pub fn deviceIndex() ?usize {
+-    return current.block_index;
++    for (media[0..media_count]) |device| if (device.block_registered) return device.block_index;
++    return null;
+ }
+ 
+ pub fn reselectActiveDevice() bool {
+-    if (!current.block_registered) return false;
+     if (!xhci.acquireControllerOwnership()) return false;
+     defer xhci.releaseControllerOwnership();
+-    return ensureSelected();
++    for (media[0..media_count]) |*device| if (device.block_registered) {
++        current = device;
++        return ensureSelected();
++    };
++    return false;
+ }
+ 
+ fn validLogicalBlockSize(bytes: u32) bool {
+@@ -298,7 +321,8 @@ fn usesReadWrite16(lba: u64, sectors: u16) bool {
+ 
+ fn registerBlockDevice() void {
+     const index = block.register(.{
+-        .name = "usb0",
++        .name = media_names[current_index],
++        .model = current.model[0..current.model_len],
+         .driver = "USBMSC",
+         .bus = .usb,
+         .controller = "xhci",
+@@ -311,7 +335,7 @@ fn registerBlockDevice() void {
+         .writable = !current.write_protected,
+         .owns_transport_retry = true,
+         .source = block_source,
+-        .ctx = null,
++        .ctx = current,
+         .read_fn = readBlock,
+         .write_fn = if (current.write_protected) null else writeBlock,
+         .flush_fn = flushBlock,
+@@ -321,12 +345,10 @@ fn registerBlockDevice() void {
+     current.block_registered = true;
+ }
+ 
+-fn readBlock(_: ?*anyopaque, lba: u64, sectors: u16, out: []u8) bool {
+-    if (!xhci.acquireControllerOwnership()) {
+-        current.read_failures += 1;
+-        return false;
+-    }
++fn readBlock(ctx: ?*anyopaque, lba: u64, sectors: u16, out: []u8) bool {
++    if (!xhci.acquireControllerOwnership()) return false;
+     defer xhci.releaseControllerOwnership();
++    current = @ptrCast(@alignCast(ctx orelse return false));
+     if (sectors == 0 or sectors > current.max_sectors_per_request) {
+         current.read_failures += 1;
+         return false;
+@@ -372,12 +394,10 @@ fn readBlock(_: ?*anyopaque, lba: u64, sectors: u16, out: []u8) bool {
+     return true;
+ }
+ 
+-fn writeBlock(_: ?*anyopaque, lba: u64, sectors: u16, data: []const u8) bool {
+-    if (!xhci.acquireControllerOwnership()) {
+-        current.write_failures += 1;
+-        return false;
+-    }
++fn writeBlock(ctx: ?*anyopaque, lba: u64, sectors: u16, data: []const u8) bool {
++    if (!xhci.acquireControllerOwnership()) return false;
+     defer xhci.releaseControllerOwnership();
++    current = @ptrCast(@alignCast(ctx orelse return false));
+     if (sectors == 0 or sectors > current.max_sectors_per_request) {
+         current.write_failures += 1;
+         return false;
+@@ -418,12 +438,10 @@ fn writeBlock(_: ?*anyopaque, lba: u64, sectors: u16, data: []const u8) bool {
+     return true;
+ }
+ 
+-fn flushBlock(_: ?*anyopaque) bool {
+-    if (!xhci.acquireControllerOwnership()) {
+-        current.flush_failures += 1;
+-        return false;
+-    }
++fn flushBlock(ctx: ?*anyopaque) bool {
++    if (!xhci.acquireControllerOwnership()) return false;
+     defer xhci.releaseControllerOwnership();
++    current = @ptrCast(@alignCast(ctx orelse return false));
+     if (!ensureSelected()) {
+         current.flush_failures += 1;
+         return false;
+@@ -527,6 +545,20 @@ fn scsiInquiry() bool {
+         setDataLengthReason("inquiry-truncated", current.last_data_actual_len);
+         return failCommand();
+     }
++    // Standard INQUIRY supplies an 8-byte vendor and 16-byte product name.
++    // Short valid replies may omit them; leave the model empty in that case.
++    current.model_len = 0;
++    if (actual >= 32 and declared >= 32) {
++        for (data_buf[8..32]) |byte| {
++            if (byte < 32 or byte > 126) {
++                current.model_len = 0;
++                break;
++            }
++            current.model[current.model_len] = byte;
++            current.model_len += 1;
++        }
++        while (current.model_len != 0 and current.model[current.model_len - 1] == ' ') current.model_len -= 1;
++    }
+     return true;
+ }
+ 
+@@ -1071,15 +1103,15 @@ fn failTransport() bool {
+     current.transport_failures += 1;
+     const transfer_incident = xhci.takeLastSyncTransferIncidentToken();
+     if (transfer_incident.valid()) {
+-        if (last_transport_incident.valid() and
+-            last_transport_incident.generation != transfer_incident.generation)
++        if (current.transport_incident.valid() and
++            current.transport_incident.generation != transfer_incident.generation)
+         {
+-            _ = diag_screen.resolveIncident(last_transport_incident);
++            _ = diag_screen.resolveIncident(current.transport_incident);
+         }
+-        last_transport_incident = transfer_incident;
++        current.transport_incident = transfer_incident;
+     }
+-    if (!last_transport_incident.valid()) {
+-        last_transport_incident = diag_screen.beginResolvableIncident();
++    if (!current.transport_incident.valid()) {
++        current.transport_incident = diag_screen.beginResolvableIncident();
+     }
+     // Publish the immutable root diagnosis before STOP/RESET/CLEAR_FEATURE
+     // can itself timeout or overwrite the most useful transport state.
+@@ -1109,8 +1141,8 @@ fn failTransportAt(stage: []const u8) bool {
+ }
+ 
+ fn resolveTransportIncident() void {
+-    _ = diag_screen.resolveIncident(last_transport_incident);
+-    last_transport_incident = .{};
++    _ = diag_screen.resolveIncident(current.transport_incident);
++    current.transport_incident = .{};
+ }
+ 
+ fn opcodeName(opcode: u8) []const u8 {
+@@ -1131,9 +1163,9 @@ fn opcodeName(opcode: u8) []const u8 {
+ }
+ 
+ fn appendReason(cursor: *usize, text: []const u8) void {
+-    const available = reason_buffer.len - @min(cursor.*, reason_buffer.len);
++    const available = current.reason_storage.len - @min(cursor.*, current.reason_storage.len);
+     const count = @min(available, text.len);
+-    if (count != 0) @memcpy(reason_buffer[cursor.* .. cursor.* + count], text[0..count]);
++    if (count != 0) @memcpy(current.reason_storage[cursor.* .. cursor.* + count], text[0..count]);
+     cursor.* += count;
+ }
+ 
+@@ -1154,11 +1186,11 @@ fn appendReasonU32(cursor: *usize, value_input: u32) void {
+ }
+ 
+ fn publishReason(cursor: usize) void {
+-    current.reason = reason_buffer[0..@min(cursor, reason_buffer.len)];
++    current.reason = current.reason_storage[0..@min(cursor, current.reason_storage.len)];
+ }
+ 
+ fn beginProtocolReason() usize {
+-    @memset(reason_buffer[0..], 0);
++    @memset(current.reason_storage[0..], 0);
+     var cursor: usize = 0;
+     appendReason(&cursor, "SCSI ");
+     appendReason(&cursor, opcodeName(current.last_opcode));
+diff --git a/fs/fat/fat32.zig b/fs/fat/fat32.zig
+index f0e475e..fc76217 100644
+--- a/fs/fat/fat32.zig
++++ b/fs/fat/fat32.zig
+@@ -3,6 +3,7 @@ const page_cache = @import("../page_cache.zig");
+ const scheduler = @import("../../sched/scheduler.zig");
+ const timer = @import("../../kernel/timer.zig");
+ const time_core = @import("../../platform/time.zig");
++const block = @import("../../storage/block.zig");
+ 
+ const SECTOR_SIZE: usize = 512;
+ pub const ATTR_READ_ONLY: u8 = 0x01;
+@@ -425,6 +426,16 @@ pub fn inspect(device_index: usize, first_lba: u32) ?Volume {
+ }
+ 
+ pub fn parse(device_index: usize, first_lba: u32) ?Volume {
++    const device = block.get(device_index) orelse return null;
++    if (first_lba >= device.sector_count) return null;
++    return parseBounded(device_index, first_lba, device.sector_count - first_lba);
++}
++
++/// Admit a filesystem only within the selected partition. FAT32's current
++/// address calculations are u32; reject incompatible geometry before use.
++pub fn parseBounded(device_index: usize, first_lba: u32, partition_sectors: u64) ?Volume {
++    const device = block.get(device_index) orelse return null;
++    if (device.sector_size != SECTOR_SIZE or first_lba >= device.sector_count or partition_sectors > device.sector_count - first_lba) return null;
+     var sector: [SECTOR_SIZE]u8 = undefined;
+     if (!readSector(device_index, first_lba, 1, sector[0..])) {
+         k.puts("      FAT BPB: read failed\r\n");
+@@ -472,6 +483,14 @@ pub fn parse(device_index: usize, first_lba: u32) ?Volume {
+         .fs_info_sector = fs_info_sector,
+         .backup_boot_sector = backup_boot_sector,
+     };
++    const metadata = @as(u64, reserved_sectors) + @as(u64, fat_count) * fat_sectors_32;
++    if (sectors_per_cluster > 128 or (sectors_per_cluster & (sectors_per_cluster - 1)) != 0 or
++        reserved_sectors == 0 or fat_count > 2 or metadata >= total_sectors or
++        total_sectors > partition_sectors or @as(u64, first_lba) + total_sectors > 0x1_0000_0000) return null;
++    const clusters = volume.totalClusters();
++    if (clusters < 65525 or clusters >= FAT_RESERVED_START - 2 or root_cluster < 2 or root_cluster >= clusters + 2 or
++        (@as(u64, clusters) + 2) * 4 > @as(u64, fat_sectors_32) * SECTOR_SIZE) return null;
++    if (runtimeStateFor(volume, true) == null) return null;
+     initializeVolumeState(volume);
+     return volume;
+ }
+@@ -625,7 +644,7 @@ fn runtimeStateFor(volume: Volume, create: bool) ?*VolumeRuntimeState {
+         if (!state.valid and fallback == null) fallback = state;
+     }
+     if (!create) return null;
+-    return fallback orelse &volume_states[0];
++    return fallback;
+ }
+ 
+ fn fsInfoSectorValid(volume: Volume) bool {
+diff --git a/fs/ntfs/ntfs.zig b/fs/ntfs/ntfs.zig
+index f5fc759..0555f2e 100644
+--- a/fs/ntfs/ntfs.zig
++++ b/fs/ntfs/ntfs.zig
+@@ -15,6 +15,7 @@ const heap = @import("../../memory/heap.zig");
+ const timer = @import("../../kernel/timer.zig");
+ const time_core = @import("../../platform/time.zig");
+ const k = @import("../../kernel/log.zig");
++const block = @import("../../storage/block.zig");
+ 
+ const SECTOR_SIZE: usize = 512;
+ // Bound staging ownership while still preserving normal 1/2-MB NTFS extents
+@@ -22,7 +23,9 @@ const SECTOR_SIZE: usize = 512;
+ // calls. The block core still splits each submission at the backend limit.
+ const MAX_DIRECT_WRITE_SECTORS: u32 = 2048;
+ const NAME_MAX: usize = 768; // matches vfs.NAME_MAX / nv.NAME_MAX (0.60.19)
+-const MAX_VOLUMES: usize = 4;
++// Match the VFS letter capacity: three installations already need six NTFS
++// volumes, independently of Recovery's RAM and FAT32 volumes.
++const MAX_VOLUMES: usize = 26;
+ const MAX_MFT_RUNS: usize = nv.MAX_MFT_RUNS;
+ const METADATA_NEGATIVE_TTL_TICKS: u64 = timer.DEFAULT_HZ;
+ const METADATA_RECLAIM_ENTRY_BUDGET: u32 = 8;
+@@ -111,16 +114,25 @@ var metadata_reclaim_volume_cursor: usize = 0;
+ // Page-cache device seam
+ // ---------------------------------------------------------------------------
+ 
+-const DeviceCtx = struct { device_index: usize = 0 };
++const DeviceCtx = struct {
++    device_index: usize = 0,
++    first_lba: u64 = 0,
++    end_lba: u64 = 0,
++    fn contains(self: *const DeviceCtx, lba: u64, count: u32) bool {
++        return lba >= self.first_lba and lba <= self.end_lba and count <= self.end_lba - lba;
++    }
++};
+ var device_ctxs: [MAX_VOLUMES]DeviceCtx = .{DeviceCtx{}} ** MAX_VOLUMES;
+ 
+ fn seamRead(ctx: *anyopaque, lba: u64, count: u32, out: []u8) bool {
+     const c: *DeviceCtx = @ptrCast(@alignCast(ctx));
++    if (!c.contains(lba, count)) return false;
+     return page_cache.readSectors(c.device_index, lba, count, out);
+ }
+ 
+ fn seamWrite(ctx: *anyopaque, lba: u64, count: u32, data: []const u8) bool {
+     const c: *DeviceCtx = @ptrCast(@alignCast(ctx));
++    if (!c.contains(lba, count)) return false;
+     if (count == 0) return true;
+     const total_bytes = @as(usize, count) * SECTOR_SIZE;
+     if (data.len < total_bytes) return false;
+@@ -208,6 +220,14 @@ fn daysFromCivil(year: u16, month: u8, day: u8) i64 {
+ // ---------------------------------------------------------------------------
+ 
+ pub fn inspect(device_index: usize, first_lba: u32) ?Volume {
++    const device = block.get(device_index) orelse return null;
++    if (first_lba >= device.sector_count) return null;
++    return inspectBounded(device_index, first_lba, device.sector_count - first_lba);
++}
++
++pub fn inspectBounded(device_index: usize, first_lba: u32, partition_sectors: u64) ?Volume {
++    const physical = block.get(device_index) orelse return null;
++    if (physical.sector_size != SECTOR_SIZE or first_lba >= physical.sector_count or partition_sectors > physical.sector_count - first_lba) return null;
+     var slot_index: usize = MAX_VOLUMES;
+     for (states, 0..) |state, i| {
+         if (state.in_use and state.device_index == device_index and state.partition_lba == first_lba) {
+@@ -223,6 +243,8 @@ pub fn inspect(device_index: usize, first_lba: u32) ?Volume {
+ 
+     const ctx = &device_ctxs[slot_index];
+     ctx.device_index = device_index;
++    ctx.first_lba = first_lba;
++    ctx.end_lba = @as(u64, first_lba) + partition_sectors;
+     const device = nv.Device{
+         .ctx = ctx,
+         .read_sectors = seamRead,
+@@ -235,7 +257,9 @@ pub fn inspect(device_index: usize, first_lba: u32) ?Volume {
+         k.puts("      NTFS: mount failed (invalid boot sector or unsupported layout)\r\n");
+         return null;
+     };
+-    if (info.cluster_bytes / SECTOR_SIZE == 0) return null;
++    if (info.cluster_bytes / SECTOR_SIZE == 0 or info.total_sectors > partition_sectors or
++        info.total_sectors / (info.cluster_bytes / SECTOR_SIZE) > 0xffff_ffff) return null;
++    ctx.end_lba = @as(u64, first_lba) + info.total_sectors;
+ 
+     state.device_index = device_index;
+     state.partition_lba = first_lba;
+diff --git a/kernel/storage_boot.zig b/kernel/storage_boot.zig
+index ef68b40..b469d29 100644
+--- a/kernel/storage_boot.zig
++++ b/kernel/storage_boot.zig
+@@ -360,7 +360,7 @@ fn scanExternalStorageBackends(scanned: *[16]bool) void {
+     var index: usize = 0;
+     while (index < block.slotCount()) : (index += 1) {
+         const device = block.get(index) orelse continue;
+-        if (device.source == .builtin) continue;
++        if (device.source == .builtin and device.bus != .usb) continue;
+         const name = switch (device.bus) {
+             .nvme => "NVME.R4D",
+             .ahci => "AHCI.R4D",
+diff --git a/platform/device_inventory.zig b/platform/device_inventory.zig
+index d395352..6057a84 100644
+--- a/platform/device_inventory.zig
++++ b/platform/device_inventory.zig
+@@ -184,6 +184,7 @@ fn addUsbDeviceRecords(s: *Snapshot) void {
+     var index: usize = 0;
+     while (usb_core.deviceAt(index)) |d| : (index += 1) {
+         const class_code = if (d.first_interface_class != 0) d.first_interface_class else d.device_class;
++        if (class_code == 0x08 and !block.isBusVisible(.usb)) continue;
+         const subclass = if (d.first_interface_class != 0) d.first_interface_subclass else d.device_subclass;
+         const protocol = if (d.first_interface_class != 0) d.first_interface_protocol else d.device_protocol;
+         s.add(.{
+diff --git a/storage/block.zig b/storage/block.zig
+index b90da0d..2cfc151 100644
+--- a/storage/block.zig
++++ b/storage/block.zig
+@@ -12,7 +12,7 @@ const sched_task = @import("../sched/task.zig");
+ const task_context = @import("../sched/task_context.zig");
+ const timer = @import("../kernel/timer.zig");
+ 
+-const MAX_DEVICES: usize = 8;
++const MAX_DEVICES: usize = 16;
+ pub const MAX_REQUEST_QUEUE_DEPTH: usize = 16;
+ 
+ pub const ReadFn = *const fn (ctx: ?*anyopaque, lba: u64, sectors: u16, out: []u8) bool;
+@@ -267,6 +267,8 @@ pub const RuntimeSummary = struct {
+ 
+ pub const Device = struct {
+     name: []const u8,
++    // Hardware-provided text when available; distinct from the registry name.
++    model: []const u8 = "",
+     driver: []const u8 = "unknown",
+     bus: Bus = .unknown,
+     controller: []const u8 = "unknown",
+@@ -333,6 +335,9 @@ pub const UnregisterToken = struct {
+ var devices: [MAX_DEVICES]DeviceSlot = .{DeviceSlot{}} ** MAX_DEVICES;
+ var device_count: usize = 0;
+ var device_slot_count: usize = 0;
++// Session-wide media policy, applied before physical volumes are admitted.
++// Hardware/USB HID owners are independent of block-device visibility.
++var excluded_bus: ?Bus = null;
+ var runtime_worker_started = false;
+ var runtime_worker_task_id: u32 = 0;
+ var runtime_worker_task_generation: u64 = 0;
+@@ -357,6 +362,7 @@ pub fn init() void {
+     devices = .{DeviceSlot{}} ** MAX_DEVICES;
+     device_count = 0;
+     device_slot_count = 0;
++    excluded_bus = null;
+     runtime_worker_started = false;
+     runtime_worker_task_id = 0;
+     runtime_worker_task_generation = 0;
+@@ -663,14 +669,49 @@ pub fn findByName(name: []const u8) ?usize {
+ fn findByNameLocked(name: []const u8) ?usize {
+     var index: usize = 0;
+     while (index < device_slot_count) : (index += 1) {
+-        if (!devices[index].used) continue;
++        if (!devices[index].used or busExcluded(devices[index].device.bus)) continue;
+         if (strEqIgnoreCase(devices[index].device.name, name)) return index;
+     }
+     return null;
+ }
+ 
+ pub fn count() usize {
+-    return device_count;
++    const flags = owner_locks.storage.acquire();
++    defer owner_locks.storage.release(flags);
++    var visible: usize = 0;
++    for (devices[0..device_slot_count]) |*slot| {
++        if (slot.used and !slot.retiring and !busExcluded(slot.device.bus)) visible += 1;
++    }
++    return visible;
++}
++
++pub fn excludeBusBeforeMount(bus: Bus) bool {
++    if (bus == .ram) return false;
++    // This is a boot policy, never an unmount/revocation substitute.
++    for (0..drive.DRIVE_COUNT) |i| if (drive.atIndex(i)) |mounted| {
++        if (mounted.block_device_index) |index| {
++            const device = get(index) orelse continue;
++            if (device.bus == bus) return false;
++        }
++    };
++    const flags = owner_locks.storage.acquire();
++    defer owner_locks.storage.release(flags);
++    if (excluded_bus != null) return excluded_bus.? == bus;
++    for (devices[0..device_slot_count]) |*slot| {
++        if (slot.used and slot.device.bus == bus and (slot.pin_count != 0 or slot.device.active_executions != 0)) return false;
++    }
++    excluded_bus = bus;
++    return true;
++}
++
++fn busExcluded(bus: Bus) bool {
++    return excluded_bus != null and excluded_bus.? == bus;
++}
++
++pub fn isBusVisible(bus: Bus) bool {
++    const flags = owner_locks.storage.acquire();
++    defer owner_locks.storage.release(flags);
++    return !busExcluded(bus);
+ }
+ 
+ pub fn slotCount() usize {
+@@ -684,7 +725,7 @@ pub fn maxDevices() usize {
+ pub fn get(index: usize) ?*const Device {
+     const irq_flags = owner_locks.storage.acquire();
+     defer owner_locks.storage.release(irq_flags);
+-    if (index >= device_slot_count or !devices[index].used or devices[index].retiring) return null;
++    if (index >= device_slot_count or !devices[index].used or devices[index].retiring or busExcluded(devices[index].device.bus)) return null;
+     return &devices[index].device;
+ }
+ 
+@@ -696,6 +737,7 @@ fn pinDevice(index: usize) ?DevicePin {
+     if (index >= device_slot_count or
+         !devices[index].used or
+         devices[index].retiring or
++        busExcluded(devices[index].device.bus) or
+         devices[index].pin_count == 0xFFFF_FFFF)
+     {
+         owner_locks.storage.release(irq_flags);
+diff --git a/storage/gpt.zig b/storage/gpt.zig
+index 7cd34c5..2e77221 100644
+--- a/storage/gpt.zig
++++ b/storage/gpt.zig
+@@ -20,6 +20,7 @@ const microsoft_basic_data_guid = [16]u8{
+ };
+ 
+ pub const Header = struct {
++    disk_guid: [16]u8 = .{0} ** 16,
+     current_lba: u64,
+     backup_lba: u64,
+     first_usable_lba: u64,
+@@ -45,6 +46,9 @@ pub const PartitionType = enum {
+ };
+ 
+ pub const Partition = struct {
++    type_guid: [16]u8 = .{0} ** 16,
++    unique_guid: [16]u8 = .{0} ** 16,
++    name_utf16: [36]u16 = .{0} ** 36,
+     partition_type: PartitionType,
+     first_lba: u64,
+     last_lba: u64,
+@@ -111,6 +115,7 @@ pub fn parseHeader(sector: []const u8, header_lba: u64, device_sector_count: u64
+     }
+ 
+     const header = Header{
++        .disk_guid = sector[56..72].*,
+         .current_lba = current_lba,
+         .backup_lba = backup_lba,
+         .first_usable_lba = first_usable_lba,
+@@ -158,7 +163,12 @@ pub fn parsePartition(raw: []const u8, header: Header) ParseError!?Partition {
+         return error.BadPartitionRange;
+     }
+ 
++    var name: [36]u16 = undefined;
++    for (&name, 0..) |*unit, i| unit.* = std.mem.readInt(u16, raw[56 + i * 2 ..][0..2], .little);
+     return .{
++        .type_guid = raw[0..16].*,
++        .unique_guid = raw[16..32].*,
++        .name_utf16 = name,
+         .partition_type = classifyType(type_guid),
+         .first_lba = first_lba,
+         .last_lba = last_lba,
+diff --git a/bootloader/LIMINE-PROTOCOL-LICENSE.txt b/bootloader/LIMINE-PROTOCOL-LICENSE.txt
+new file mode 100644
+index 0000000..892f731
+--- /dev/null
++++ b/bootloader/LIMINE-PROTOCOL-LICENSE.txt
+@@ -0,0 +1,18 @@
++﻿https://raw.githubusercontent.com/limine-bootloader/limine-protocol/617369cb577108e483c096e373c4f2ecc9d2081d/include/limine.h
++
++/* SPDX-License-Identifier: 0BSD */
++
++/* Copyright (C) 2022-2026 Mintsuki and contributors.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
+diff --git a/storage/boot_source.zig b/storage/boot_source.zig
+new file mode 100644
+index 0000000..e073539
+--- /dev/null
++++ b/storage/boot_source.zig
+@@ -0,0 +1,94 @@
++const std = @import("std");
++const tables = @import("partition_table.zig");
++const installation = @import("installation.zig");
++const guid = tables.guid;
++
++pub const Identity = struct {
++    present: bool = false,
++    generic_media: bool = false,
++    path: []const u8 = "",
++    path_truncated: bool = false,
++    disk_guid: guid.Guid = guid.zero,
++    partition_guid: guid.Guid = guid.zero,
++};
++pub const DeviceView = struct {
++    index: usize,
++    usb: bool,
++    local: bool,
++    table: *const tables.Table,
++    installation: ?*const installation.Manifest,
++    installation_conflict: bool = false,
++};
++pub const Source = struct {
++    confirmed: bool = false,
++    reason: []const u8 = "missing-identity",
++    device_index: usize = 0,
++    usb: bool = false,
++    slot: enum { unknown, current, previous } = .unknown,
++    installation_id: guid.Guid = guid.zero,
++    disk_guid: guid.Guid = guid.zero,
++    boot_guid: guid.Guid = guid.zero,
++    recovery_guid: guid.Guid = guid.zero,
++
++    pub fn permitsInstall(self: Source, device_index: usize) bool {
++        return self.confirmed and !(self.usb and self.device_index == device_index);
++    }
++    pub fn permitsRecoveryUpdate(self: Source, _: usize) bool {
++        return self.confirmed;
++    }
++    pub fn exposesUsb(self: Source) bool {
++        return self.confirmed and self.usb;
++    }
++};
++
++pub fn resolve(identity: Identity, devices: []const DeviceView) Source {
++    var result = Source{};
++    if (!identity.present or identity.path_truncated or !identity.generic_media or guid.isZero(identity.disk_guid) or guid.isZero(identity.partition_guid)) return result;
++    result.reason = "unknown-loaded-path";
++    if (std.ascii.eqlIgnoreCase(identity.path, "/CURRENT/recovery.elf")) result.slot = .current else if (std.ascii.eqlIgnoreCase(identity.path, "/PREVIOUS/recovery.elf")) result.slot = .previous else return result;
++    result.reason = "source-not-found";
++    var selected: ?DeviceView = null;
++    var disk_matches: usize = 0;
++    for (devices) |device| {
++        if (!guid.eql(device.table.disk_guid, identity.disk_guid)) continue;
++        disk_matches += 1;
++        if (device.table.valid and (device.usb or device.local)) selected = device;
++    }
++    if (disk_matches > 1) {
++        result.reason = "duplicate-disk-guid";
++        return result;
++    }
++    const device = selected orelse return result;
++    const manifest = device.installation orelse {
++        result.reason = "installation-unavailable";
++        return result;
++    };
++    if (device.installation_conflict) {
++        result.reason = "installation-conflict";
++        return result;
++    }
++    if (!guid.eql(manifest.part(.RECOVERY).partition_guid, identity.partition_guid)) {
++        result.reason = "loaded-partition-mismatch";
++        return result;
++    }
++    for (devices) |other| {
++        if (other.index == device.index) continue;
++        if (other.installation) |m| if (guid.eql(m.installation_id, manifest.installation_id)) {
++            result.reason = "duplicate-installation-id";
++            return result;
++        };
++        for (other.table.items()) |p| if (guid.eql(p.unique_guid, identity.partition_guid)) {
++            result.reason = "duplicate-source-partition-guid";
++            return result;
++        };
++    }
++    result.confirmed = true;
++    result.reason = "ok";
++    result.device_index = device.index;
++    result.usb = device.usb;
++    result.installation_id = manifest.installation_id;
++    result.disk_guid = manifest.disk_guid;
++    result.boot_guid = manifest.part(.BOOT).partition_guid;
++    result.recovery_guid = manifest.part(.RECOVERY).partition_guid;
++    return result;
++}
+diff --git a/storage/guid.zig b/storage/guid.zig
+new file mode 100644
+index 0000000..75f1bd9
+--- /dev/null
++++ b/storage/guid.zig
+@@ -0,0 +1,61 @@
++const std = @import("std");
++
++pub const Guid = [16]u8;
++pub const zero: Guid = .{0} ** 16;
++const order = [_]usize{ 3, 2, 1, 0, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13, 14, 15 };
++
++pub fn parse(text: []const u8) ?Guid {
++    if (text.len != 36) return null;
++    var result: Guid = undefined;
++    var pos: usize = 0;
++    for (order, 0..) |destination, i| {
++        if (i == 4 or i == 6 or i == 8 or i == 10) {
++            if (text[pos] != '-') return null;
++            pos += 1;
++        }
++        const hi = nibble(text[pos]) orelse return null;
++        const lo = nibble(text[pos + 1]) orelse return null;
++        result[destination] = hi * 16 + lo;
++        pos += 2;
++    }
++    return result;
++}
++
++pub fn format(value: Guid) [36]u8 {
++    const hex = "0123456789abcdef";
++    var result: [36]u8 = undefined;
++    var pos: usize = 0;
++    for (order, 0..) |source, i| {
++        if (i == 4 or i == 6 or i == 8 or i == 10) {
++            result[pos] = '-';
++            pos += 1;
++        }
++        result[pos] = hex[value[source] >> 4];
++        result[pos + 1] = hex[value[source] & 15];
++        pos += 2;
++    }
++    return result;
++}
++
++pub fn eql(a: Guid, b: Guid) bool {
++    return std.mem.eql(u8, &a, &b);
++}
++pub fn isZero(value: Guid) bool {
++    return eql(value, zero);
++}
++
++fn nibble(c: u8) ?u8 {
++    return switch (c) {
++        '0'...'9' => c - '0',
++        'a'...'f' => c - 'a' + 10,
++        else => null,
++    };
++}
++
++test "UUID text uses GPT field byte order and exact canonical syntax" {
++    const text = "00112233-4455-6677-8899-aabbccddeeff";
++    const value = parse(text).?;
++    try std.testing.expectEqualSlices(u8, &.{ 0x33, 0x22, 0x11, 0, 0x55, 0x44, 0x77, 0x66, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff }, &value);
++    try std.testing.expectEqualStrings(text, &format(value));
++    try std.testing.expect(parse("00112233-4455-6677-8899-AABBCCDDEEFF") == null);
++}
+diff --git a/storage/installation.zig b/storage/installation.zig
+new file mode 100644
+index 0000000..0cafd44
+--- /dev/null
++++ b/storage/installation.zig
+@@ -0,0 +1,127 @@
++// Versioned BOOT:/boot/r4os-installation.json. Parsing is host-independent;
++// disk I/O and drive assignment belong to the boot/mount owner.
++const std = @import("std");
++const tables = @import("partition_table.zig");
++pub const guid = tables.guid;
++pub const max_bytes = 16384;
++pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
++
++pub const Part = struct {
++    partition_guid: guid.Guid = guid.zero,
++    type_guid: guid.Guid = guid.zero,
++    first_lba: u64 = 0,
++    sector_count: u64 = 0,
++};
++pub const Manifest = struct {
++    installation_id: guid.Guid = guid.zero,
++    disk_guid: guid.Guid = guid.zero,
++    partitions: [5]Part = .{Part{}} ** 5,
++    pub fn part(self: *const Manifest, role: Role) *const Part {
++        return &self.partitions[@intFromEnum(role)];
++    }
++};
++
++pub fn parse(allocator: std.mem.Allocator, input: []const u8) !Manifest {
++    if (input.len == 0 or input.len > max_bytes) return error.ManifestSize;
++    const text = if (std.mem.startsWith(u8, input, "\xef\xbb\xbf")) input[3..] else input;
++    const doc = try std.json.parseFromSlice(std.json.Value, allocator, text, .{ .parse_numbers = false, .duplicate_field_behavior = .@"error" });
++    defer doc.deinit();
++    const root = doc.value;
++    if (try uint(try field(root, "schema")) != 1) return error.UnsupportedSchema;
++    if (try uint(try field(root, "logicalSectorBytes")) != 512) return error.UnsupportedSectorSize;
++    var result = Manifest{
++        .installation_id = try uuid(try field(root, "installationId")),
++        .disk_guid = try uuid(try field(root, "diskGuid")),
++    };
++    const parts = try field(root, "partitions");
++    if (parts != .object or parts.object.count() != 5) return error.PartitionRoles;
++    inline for (std.meta.fields(Role)) |role| {
++        const obj = try field(parts, role.name);
++        result.partitions[role.value] = .{
++            .partition_guid = try uuid(try field(obj, "partitionGuid")),
++            .type_guid = try uuid(try field(obj, "typeGuid")),
++            .first_lba = try uint(try field(obj, "firstLba")),
++            .sector_count = try uint(try field(obj, "sectorCount")),
++        };
++        const p = result.partitions[role.value];
++        if (p.first_lba == 0 or p.sector_count == 0 or p.sector_count > std.math.maxInt(u64) - p.first_lba) return error.PartitionRange;
++        const expected = switch (@as(Role, @enumFromInt(role.value))) {
++            .BIOSBOOT => tables.bios_boot_guid,
++            .BOOT => tables.esp_guid,
++            else => tables.basic_guid,
++        };
++        if (!guid.eql(p.type_guid, expected)) return error.PartitionType;
++    }
++    for (result.partitions, 0..) |p, i| for (result.partitions[0..i]) |other| {
++        if (guid.eql(p.partition_guid, other.partition_guid)) return error.DuplicatePartitionGuid;
++        if (p.first_lba < other.first_lba + other.sector_count and other.first_lba < p.first_lba + p.sector_count) return error.PartitionOverlap;
++    };
++    const files = try field(root, "bootFiles");
++    if (files != .array or files.array.items.len == 0 or files.array.items.len > 64) return error.BootFiles;
++    for (files.array.items, 0..) |value, i| {
++        const path = try string(value);
++        if (!validBootPath(path)) return error.BootPath;
++        for (files.array.items[0..i]) |other| if (std.ascii.eqlIgnoreCase(path, try string(other))) return error.DuplicateBootPath;
++    }
++    if (!validVersion(try string(try field(root, "releaseVersion"))) or !validVersion(try string(try field(root, "kernelVersion")))) return error.Version;
++    return result;
++}
++
++pub fn matches(manifest: *const Manifest, table: *const tables.Table, boot_guid: guid.Guid) bool {
++    if (!table.valid or table.kind != .gpt or !guid.eql(manifest.disk_guid, table.disk_guid) or !guid.eql(manifest.part(.BOOT).partition_guid, boot_guid)) return false;
++    for (manifest.partitions) |part| {
++        var found = false;
++        for (table.items()) |p| {
++            if (!guid.eql(part.partition_guid, p.unique_guid)) continue;
++            if (!guid.eql(part.type_guid, p.type_guid) or part.first_lba != p.first_lba or part.sector_count != p.sector_count) return false;
++            found = true;
++        }
++        if (!found) return false;
++    }
++    return true;
++}
++
++fn field(value: std.json.Value, key: []const u8) !std.json.Value {
++    if (value != .object) return error.ExpectedObject;
++    return value.object.get(key) orelse error.MissingField;
++}
++fn string(value: std.json.Value) ![]const u8 {
++    if (value != .string) return error.ExpectedString;
++    return value.string;
++}
++fn uuid(value: std.json.Value) !guid.Guid {
++    const result = guid.parse(try string(value)) orelse return error.InvalidGuid;
++    if (guid.isZero(result)) return error.InvalidGuid;
++    return result;
++}
++fn uint(value: std.json.Value) !u64 {
++    if (value != .number_string) return error.ExpectedInteger;
++    const text = value.number_string;
++    if (text.len == 0) return error.ExpectedInteger;
++    for (text) |c| if (c < '0' or c > '9') return error.ExpectedInteger;
++    return std.fmt.parseInt(u64, text, 10) catch error.IntegerOverflow;
++}
++fn validVersion(text: []const u8) bool {
++    if (text.len == 0 or text.len > 63) return false;
++    var dots: usize = 0;
++    var digits: usize = 0;
++    for (text) |c| {
++        if (c == '.') {
++            if (digits == 0) return false;
++            dots += 1;
++            digits = 0;
++        } else if (c >= '0' and c <= '9') {
++            digits += 1;
++        } else return false;
++    }
++    return dots == 2 and digits != 0;
++}
++fn validBootPath(path: []const u8) bool {
++    if (path.len == 0 or path.len > 255) return false;
++    var components = std.mem.splitScalar(u8, path, '/');
++    while (components.next()) |part| {
++        if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return false;
++        for (part) |c| if (c < 32 or c == ':' or c == '\\') return false;
++    }
++    return true;
++}
+diff --git a/storage/media_inventory.zig b/storage/media_inventory.zig
+new file mode 100644
+index 0000000..0e80e8b
+--- /dev/null
++++ b/storage/media_inventory.zig
+@@ -0,0 +1,118 @@
++// Boot-time physical media inventory shared by Recovery and the normal
++// installation boot owner. Does not select C:, R: or an installation target.
++const std = @import("std");
++const block = @import("block.zig");
++const tables = @import("partition_table.zig");
++const installation = @import("installation.zig");
++const fat = @import("../fs/fat/fat32.zig");
++const ntfs = @import("../fs/ntfs/ntfs.zig");
++const vfs = @import("../fs/vfs.zig");
++const heap = @import("../memory/heap.zig");
++
++pub const maximum_devices = 16;
++pub const Filesystem = enum { unprobed, none, unknown, fat32, ntfs, invalid, unsupported, no_capacity };
++pub const VolumeRecord = struct {
++    filesystem: Filesystem = .unprobed,
++    volume: ?vfs.Volume = null,
++    letter: u8 = 0,
++};
++pub const DeviceRecord = struct {
++    used: bool = false,
++    index: usize = 0,
++    bus: block.Bus = .unknown,
++    name: []const u8 = "",
++    model: []const u8 = "",
++    driver: []const u8 = "",
++    sector_bytes: u32 = 0,
++    sectors: u64 = 0,
++    writable: bool = false,
++    table: tables.Table = .{},
++    volumes: [tables.max_partitions]VolumeRecord = .{VolumeRecord{}} ** tables.max_partitions,
++    installation: ?installation.Manifest = null,
++    installation_conflict: bool = false,
++    installation_reason: []const u8 = "not-found",
++};
++pub var devices: [maximum_devices]DeviceRecord = .{DeviceRecord{}} ** maximum_devices;
++
++pub fn scan() void {
++    // Call only before user sessions start. Later rescans must own the mount
++    // transaction and preserve existing leases/generations.
++    for (&devices) |*record| record.* = .{};
++    for (0..@min(block.slotCount(), devices.len)) |index| {
++        const device = block.get(index) orelse continue;
++        if (device.bus == .ram) continue;
++        const record = &devices[index];
++        record.* = .{ .used = true, .index = index, .bus = device.bus, .name = device.name, .model = device.model, .driver = device.driver, .sector_bytes = device.sector_size, .sectors = device.sector_count, .writable = device.writable };
++        var context = index;
++        tables.scan(.{ .ctx = &context, .read = readSector, .sector_bytes = device.sector_size, .sectors = device.sector_count }, &record.table);
++    }
++}
++
++pub fn probe(record: *DeviceRecord, part_index: usize) *VolumeRecord {
++    const result = &record.volumes[part_index];
++    if (result.filesystem != .unprobed) return result;
++    result.filesystem = .invalid;
++    if (!record.table.valid or part_index >= record.table.count) return result;
++    const part = record.table.partitions[part_index];
++    if (tables.guid.eql(part.type_guid, tables.bios_boot_guid)) {
++        result.filesystem = .none;
++        return result;
++    }
++    // The existing FS owners use u32 partition bases. Keep that explicit and
++    // avoid narrowing a large foreign LBA into another partition.
++    if (record.sector_bytes != 512 or part.first_lba > std.math.maxInt(u32)) {
++        result.filesystem = .unsupported;
++        return result;
++    }
++    var boot: [512]u8 = undefined;
++    if (!block.read(record.index, part.first_lba, 1, &boot)) return result;
++    if (std.mem.eql(u8, boot[3..11], "NTFS    ")) {
++        if (ntfs.inspectBounded(record.index, @intCast(part.first_lba), part.sector_count)) |volume| {
++            result.volume = .{ .ntfs = volume };
++            result.filesystem = .ntfs;
++        }
++    } else if (std.mem.eql(u8, boot[82..90], "FAT32   ")) {
++        if (fat.parseBounded(record.index, @intCast(part.first_lba), part.sector_count)) |volume| {
++            result.volume = .{ .fat32 = volume };
++            result.filesystem = .fat32;
++        }
++    } else result.filesystem = .unknown;
++    return result;
++}
++
++pub fn readInstallation(record: *DeviceRecord) void {
++    if (!record.table.valid or record.table.kind != .gpt) return;
++    for (record.table.items(), 0..) |part, i| {
++        if (!tables.guid.eql(part.type_guid, tables.esp_guid)) continue;
++        const volume = probe(record, i).volume orelse continue;
++        const entry = vfs.resolveEntry(volume, "/boot/r4os-installation.json") orelse continue;
++        record.installation_reason = "invalid-manifest";
++        if (entry.isDir() or entry.size == 0 or entry.size > installation.max_bytes) continue;
++        const bytes = heap.alloc(@intCast(entry.size), 8) orelse {
++            record.installation_reason = "out-of-memory";
++            continue;
++        };
++        defer _ = heap.free(bytes);
++        if (vfs.readFileRange(volume, entry, 0, bytes) != bytes.len) continue;
++        // Bound JSON allocation independently of the image or file size.
++        const scratch = heap.alloc(128 * 1024, 8) orelse continue;
++        defer _ = heap.free(scratch);
++        var allocator = std.heap.FixedBufferAllocator.init(scratch);
++        const manifest = installation.parse(allocator.allocator(), bytes) catch |err| {
++            record.installation_reason = @errorName(err);
++            continue;
++        };
++        if (!installation.matches(&manifest, &record.table, part.unique_guid)) {
++            record.installation_reason = "gpt-mismatch";
++            continue;
++        }
++        if (record.installation != null) record.installation_conflict = true;
++        record.installation = manifest;
++        record.installation_reason = "ok";
++    }
++}
++
++fn readSector(ctx: *anyopaque, lba: u64, out: *[512]u8) bool {
++    const index: *const usize = @ptrCast(@alignCast(ctx));
++    return block.read(index.*, lba, 1, out);
++}
+diff --git a/storage/partition_table.zig b/storage/partition_table.zig
+new file mode 100644
+index 0000000..8431d9b
+--- /dev/null
++++ b/storage/partition_table.zig
+@@ -0,0 +1,184 @@
++// Read-only media inventory. No drive letters, system heuristics or writes.
++const std = @import("std");
++pub const gpt = @import("gpt.zig");
++pub const guid = @import("guid.zig");
++pub const max_partitions = 128;
++pub const bios_boot_guid = guid.parse("21686148-6449-6e6f-744e-656564454649").?;
++pub const esp_guid = guid.parse("c12a7328-f81f-11d2-ba4b-00a0c93ec93b").?;
++pub const basic_guid = guid.parse("ebd0a0a2-b9e5-4433-87c0-68b6b72699c7").?;
++
++pub const Reader = struct {
++    ctx: *anyopaque,
++    read: *const fn (*anyopaque, u64, *[512]u8) bool,
++    sector_bytes: u32,
++    sectors: u64,
++    fn sector(self: Reader, lba: u64, out: *[512]u8) !void {
++        if (lba >= self.sectors) return error.OutOfRange;
++        if (!self.read(self.ctx, lba, out)) return error.ReadFailed;
++    }
++};
++
++pub const Partition = struct {
++    number: u32 = 0,
++    first_lba: u64 = 0,
++    sector_count: u64 = 0,
++    unique_guid: guid.Guid = guid.zero,
++    type_guid: guid.Guid = guid.zero,
++    mbr_type: u8 = 0,
++    attributes: u64 = 0,
++    name: [36]u16 = .{0} ** 36,
++    pub fn end(self: Partition) u64 {
++        return self.first_lba + self.sector_count;
++    }
++};
++
++pub const Table = struct {
++    kind: enum { unknown, mbr, gpt } = .unknown,
++    valid: bool = false,
++    reason: []const u8 = "not-scanned",
++    disk_guid: guid.Guid = guid.zero,
++    mbr_disk_id: u32 = 0,
++    first_usable: u64 = 0,
++    last_usable: u64 = 0,
++    partitions: [max_partitions]Partition = .{Partition{}} ** max_partitions,
++    count: usize = 0,
++    pub fn items(self: *const Table) []const Partition {
++        return self.partitions[0..self.count];
++    }
++};
++
++pub fn scan(reader: Reader, result: *Table) void {
++    result.* = .{};
++    scanChecked(reader, result) catch |err| {
++        result.reason = @errorName(err);
++        return;
++    };
++    result.valid = true;
++    result.reason = "ok";
++}
++
++fn scanChecked(reader: Reader, result: *Table) !void {
++    if (reader.sector_bytes != 512) return error.UnsupportedSectorSize;
++    if (reader.sectors == 0 or reader.sectors > std.math.maxInt(u64) / 512) return error.UnsupportedCapacity;
++    var mbr: [512]u8 = undefined;
++    try reader.sector(0, &mbr);
++    if (mbr[510] != 0x55 or mbr[511] != 0xaa) return error.NoPartitionTable;
++    result.mbr_disk_id = le32(mbr[440..444]);
++    var protective: usize = 0;
++    var occupied: usize = 0;
++    for (0..4) |i| {
++        const entry = mbr[446 + i * 16 ..][0..16];
++        if (entry[4] == 0) continue;
++        occupied += 1;
++        if (entry[4] == 0xee) {
++            protective += 1;
++            if (le32(entry[8..12]) != 1 or le32(entry[12..16]) != @min(reader.sectors - 1, std.math.maxInt(u32))) return error.BadProtectiveMbr;
++        }
++    }
++    if (protective != 0) {
++        result.kind = .gpt;
++        if (protective != 1 or occupied != 1) return error.HybridMbr;
++        return scanGpt(reader, result);
++    }
++    result.kind = .mbr;
++    result.first_usable = 1;
++    result.last_usable = reader.sectors - 1;
++    var extended_base: u64 = 0;
++    var extended_end: u64 = 0;
++    for (0..4) |i| {
++        const raw = mbr[446 + i * 16 ..][0..16];
++        if (raw[4] == 0) continue;
++        const p = Partition{ .number = @intCast(i + 1), .mbr_type = raw[4], .first_lba = le32(raw[8..12]), .sector_count = le32(raw[12..16]) };
++        try bounds(p, reader.sectors);
++        if (isExtended(p.mbr_type)) {
++            if (extended_base != 0) return error.MultipleExtendedPartitions;
++            extended_base = p.first_lba;
++            extended_end = p.end();
++        } else try append(result, p);
++    }
++    if (extended_base != 0) {
++        for (result.items()) |p| if (p.first_lba < extended_end and p.end() > extended_base) return error.PartitionOverlap;
++        var ebr_lba = extended_base;
++        var seen: [max_partitions]u64 = undefined;
++        var seen_count: usize = 0;
++        while (true) {
++            if (seen_count == seen.len) return error.TooManyPartitions;
++            for (seen[0..seen_count]) |old| if (old == ebr_lba) return error.ExtendedCycle;
++            for (result.items()) |p| if (ebr_lba >= p.first_lba and ebr_lba < p.end()) return error.ExtendedMetadataOverlap;
++            seen[seen_count] = ebr_lba;
++            seen_count += 1;
++            var ebr: [512]u8 = undefined;
++            try reader.sector(ebr_lba, &ebr);
++            if (ebr[510] != 0x55 or ebr[511] != 0xaa) return error.BadExtendedSignature;
++            const first = ebr[446..462];
++            if (first[4] == 0 or isExtended(first[4])) return error.BadLogicalPartition;
++            const p = Partition{ .number = @intCast(4 + seen_count), .mbr_type = first[4], .first_lba = ebr_lba + le32(first[8..12]), .sector_count = le32(first[12..16]) };
++            try bounds(p, reader.sectors);
++            if (p.first_lba <= ebr_lba or p.end() > extended_end) return error.BadLogicalPartition;
++            try append(result, p);
++            if (ebr[482 + 4] != 0 or ebr[498 + 4] != 0) return error.BadExtendedEntries;
++            const next = ebr[462..478];
++            if (next[4] == 0) break;
++            if (!isExtended(next[4])) return error.BadExtendedLink;
++            ebr_lba = extended_base + le32(next[8..12]);
++            if (ebr_lba < extended_base or ebr_lba >= extended_end) return error.BadExtendedLink;
++        }
++    }
++}
++
++fn scanGpt(reader: Reader, result: *Table) !void {
++    var a: [512]u8 = undefined;
++    var b: [512]u8 = undefined;
++    try reader.sector(1, &a);
++    const primary = try gpt.parseHeader(&a, 1, reader.sectors);
++    if (512 % primary.entry_size != 0) return error.UnsupportedEntryLayout;
++    result.disk_guid = primary.disk_guid;
++    result.first_usable = primary.first_usable_lba;
++    result.last_usable = primary.last_usable_lba;
++    if (guid.isZero(primary.disk_guid)) return error.MissingDiskGuid;
++    try reader.sector(reader.sectors - 1, &b);
++    const backup = try gpt.parseHeader(&b, reader.sectors - 1, reader.sectors);
++    if (!guid.eql(primary.disk_guid, backup.disk_guid) or primary.first_usable_lba != backup.first_usable_lba or
++        primary.last_usable_lba != backup.last_usable_lba or primary.entry_count != backup.entry_count or
++        primary.entry_size != backup.entry_size or primary.entries_crc32 != backup.entries_crc32) return error.GptCopiesDiffer;
++    var crc = gpt.Crc32{};
++    var remaining = primary.entryBytes();
++    var index: u32 = 0;
++    var sector_index: u64 = 0;
++    while (remaining != 0) : (sector_index += 1) {
++        try reader.sector(primary.entries_lba + sector_index, &a);
++        try reader.sector(backup.entries_lba + sector_index, &b);
++        const take: usize = @intCast(@min(remaining, 512));
++        if (!std.mem.eql(u8, a[0..take], b[0..take])) return error.GptCopiesDiffer;
++        crc.update(a[0..take]);
++        var offset: usize = 0;
++        while (offset < take) : (offset += primary.entry_size) {
++            index += 1;
++            const parsed = try gpt.parsePartition(a[offset..][0..primary.entry_size], primary) orelse continue;
++            if (guid.isZero(parsed.unique_guid)) return error.MissingPartitionGuid;
++            try append(result, .{ .number = index, .first_lba = parsed.first_lba, .sector_count = parsed.sectorCount(), .unique_guid = parsed.unique_guid, .type_guid = parsed.type_guid, .attributes = parsed.attributes, .name = parsed.name_utf16 });
++        }
++        remaining -= take;
++    }
++    if (crc.finish() != primary.entries_crc32) return error.BadEntriesCrc;
++}
++
++fn append(table: *Table, p: Partition) !void {
++    for (table.items()) |old| {
++        if (p.first_lba < old.end() and p.end() > old.first_lba) return error.PartitionOverlap;
++        if (!guid.isZero(p.unique_guid) and guid.eql(old.unique_guid, p.unique_guid)) return error.DuplicatePartitionGuid;
++    }
++    if (table.count == table.partitions.len) return error.TooManyPartitions;
++    table.partitions[table.count] = p;
++    table.count += 1;
++}
++
++fn bounds(p: Partition, sectors: u64) !void {
++    if (p.first_lba == 0 or p.first_lba >= sectors or p.sector_count == 0 or p.sector_count > sectors - p.first_lba) return error.PartitionOutOfRange;
++}
++fn isExtended(kind: u8) bool {
++    return kind == 5 or kind == 0x0f or kind == 0x85;
++}
++fn le32(p: *const [4]u8) u32 {
++    return std.mem.readInt(u32, p, .little);
++}
+diff --git a/storage_boot_tests.zig b/storage_boot_tests.zig
+new file mode 100644
+index 0000000..96f836d
+--- /dev/null
++++ b/storage_boot_tests.zig
+@@ -0,0 +1,183 @@
++const std = @import("std");
++const tables = @import("storage/partition_table.zig");
++const installation = @import("storage/installation.zig");
++const source = @import("storage/boot_source.zig");
++const guid = tables.guid;
++const a = std.testing.allocator;
++
++const Fixture = struct {
++    const sectors: u64 = 4194304;
++    bytes: [67][512]u8 = .{.{0} ** 512} ** 67,
++    fn init() Fixture {
++        var f = Fixture{};
++        f.bytes[0][510] = 0x55;
++        f.bytes[0][511] = 0xaa;
++        f.bytes[0][450] = 0xee;
++        put32(f.bytes[0][454..458], 1);
++        put32(f.bytes[0][458..462], sectors - 1);
++        const starts = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
++        const lengths = [_]u64{ 2048, 262144, 2097152, 1048576, sectors - 34 - 3411968 + 1 };
++        for (starts, lengths, 0..) |start, len, i| {
++            const p = f.bytes[2 + i / 4][(i % 4) * 128 ..][0..128];
++            const kind = if (i == 0) tables.bios_boot_guid else if (i == 1) tables.esp_guid else tables.basic_guid;
++            @memcpy(p[0..16], &kind);
++            p[16] = @intCast(40 + i);
++            put64(p[32..40], start);
++            put64(p[40..48], start + len - 1);
++        }
++        f.sync();
++        return f;
++    }
++    fn sync(f: *Fixture) void {
++        for (0..32) |i| f.bytes[34 + i] = f.bytes[2 + i];
++        var crc = std.hash.Crc32.init();
++        for (f.bytes[2..34]) |sector| crc.update(&sector);
++        for ([_]usize{ 1, 66 }) |index| {
++            const h = &f.bytes[index];
++            h.* = .{0} ** 512;
++            @memcpy(h[0..8], "EFI PART");
++            put32(h[8..12], 0x10000);
++            put32(h[12..16], 92);
++            put64(h[24..32], if (index == 1) 1 else sectors - 1);
++            put64(h[32..40], if (index == 1) sectors - 1 else 1);
++            put64(h[40..48], 34);
++            put64(h[48..56], sectors - 34);
++            h[56] = 12;
++            put64(h[72..80], if (index == 1) 2 else sectors - 33);
++            put32(h[80..84], 128);
++            put32(h[84..88], 128);
++            put32(h[88..92], crc.final());
++            put32(h[16..20], std.hash.Crc32.hash(h[0..92]));
++        }
++    }
++    fn reader(f: *Fixture) tables.Reader {
++        return .{ .ctx = f, .read = read, .sector_bytes = 512, .sectors = sectors };
++    }
++    fn read(ctx: *anyopaque, lba: u64, out: *[512]u8) bool {
++        const f: *const Fixture = @ptrCast(@alignCast(ctx));
++        const index = if (lba < 34) lba else if (lba >= sectors - 33 and lba < sectors) 34 + lba - (sectors - 33) else return false;
++        out.* = f.bytes[@intCast(index)];
++        return true;
++    }
++};
++fn put32(out: *[4]u8, value: u32) void {
++    std.mem.writeInt(u32, out, value, .little);
++}
++fn put64(out: *[8]u8, value: u64) void {
++    std.mem.writeInt(u64, out, value, .little);
++}
++
++fn manifestJson(t: *const tables.Table) ![]u8 {
++    const P = struct { partitionGuid: []const u8, typeGuid: []const u8, firstLba: u64, sectorCount: u64 };
++    var ids: [5][36]u8 = undefined;
++    var types: [5][36]u8 = undefined;
++    var parts: [5]P = undefined;
++    for (t.items(), 0..) |p, i| {
++        ids[i] = guid.format(p.unique_guid);
++        types[i] = guid.format(p.type_guid);
++        parts[i] = .{ .partitionGuid = &ids[i], .typeGuid = &types[i], .firstLba = p.first_lba, .sectorCount = p.sector_count };
++    }
++    const disk = guid.format(t.disk_guid);
++    return std.json.Stringify.valueAlloc(a, .{ .schema = @as(u32, 1), .installationId = "11111111-2222-3333-4444-555555555555", .diskGuid = @as([]const u8, &disk), .logicalSectorBytes = @as(u32, 512), .partitions = .{ .BIOSBOOT = parts[0], .BOOT = parts[1], .SYSTEM = parts[2], .RECOVERY = parts[3], .DATA = parts[4] }, .bootFiles = [_][]const u8{ "boot/kernel.elf", "boot/PRELOAD.R4I" }, .releaseVersion = "0.76.4", .kernelVersion = "0.1.87" }, .{});
++}
++
++test "two GPT copies retain GUIDs, all five roles and real media geometry" {
++    var f = Fixture.init();
++    var t = tables.Table{};
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(t.valid);
++    try std.testing.expectEqual(@as(usize, 5), t.count);
++    const json = try manifestJson(&t);
++    defer a.free(json);
++    const m = try installation.parse(a, json);
++    try std.testing.expect(installation.matches(&m, &t, t.partitions[1].unique_guid));
++    t.partitions[2].sector_count -= 1;
++    try std.testing.expect(!installation.matches(&m, &t, t.partitions[1].unique_guid));
++}
++
++test "valid CRC cannot authorize overlapping or duplicate GPT identities" {
++    var f = Fixture.init();
++    var t = tables.Table{};
++    f.bytes[2][128 + 16] = f.bytes[2][16];
++    f.sync();
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(!t.valid);
++    try std.testing.expectEqualStrings("DuplicatePartitionGuid", t.reason);
++    f = Fixture.init();
++    put64(f.bytes[2][128 + 32 ..][0..8], 2048);
++    f.sync();
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(!t.valid);
++    try std.testing.expectEqualStrings("PartitionOverlap", t.reason);
++    f = Fixture.init();
++    f.bytes[34][60] ^= 1;
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(!t.valid);
++    try std.testing.expectEqualStrings("GptCopiesDiffer", t.reason);
++    f = Fixture.init();
++    f.bytes[66][16] ^= 1;
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(!t.valid);
++    try std.testing.expectEqualStrings("BadHeaderCrc", t.reason);
++    var reader = f.reader();
++    reader.sector_bytes = 4096;
++    tables.scan(reader, &t);
++    try std.testing.expect(!t.valid);
++    try std.testing.expectEqualStrings("UnsupportedSectorSize", t.reason);
++}
++
++test "manifest rejects duplicate keys, fractional geometry, unknown schema and traversal" {
++    var f = Fixture.init();
++    var t = tables.Table{};
++    tables.scan(f.reader(), &t);
++    const json = try manifestJson(&t);
++    defer a.free(json);
++    const cases = [_][2][]const u8{
++        .{ "\"schema\":1", "\"schema\":1,\"schema\":1" },                  .{ "\"schema\":1", "\"schema\":2" },
++        .{ "\"logicalSectorBytes\":512", "\"logicalSectorBytes\":512.0" }, .{ "boot/kernel.elf", "../kernel.elf" },
++        .{ "\"firstLba\":2048", "\"firstLba\":18446744073709551616" },     .{ "boot/PRELOAD.R4I", "BOOT/KERNEL.ELF" },
++    };
++    for (cases) |pair| {
++        const changed = try std.mem.replaceOwned(u8, a, json, pair[0], pair[1]);
++        defer a.free(changed);
++        if (installation.parse(a, changed)) |_| return error.InvalidManifestAccepted else |_| {}
++    }
++}
++
++test "actual loaded partition selects CURRENT or PREVIOUS and protects only own USB install" {
++    var f = Fixture.init();
++    var t = tables.Table{};
++    tables.scan(f.reader(), &t);
++    const json = try manifestJson(&t);
++    defer a.free(json);
++    const m = try installation.parse(a, json);
++    var devices = [_]source.DeviceView{.{ .index = 7, .usb = true, .local = false, .table = &t, .installation = &m }};
++    var identity = source.Identity{ .present = true, .generic_media = true, .path = "/CURRENT/recovery.elf", .disk_guid = t.disk_guid, .partition_guid = t.partitions[3].unique_guid };
++    var result = source.resolve(identity, &devices);
++    try std.testing.expect(result.confirmed and result.usb and !result.permitsInstall(7) and result.permitsInstall(3) and result.permitsRecoveryUpdate(7));
++    devices[0].usb = false;
++    devices[0].local = true;
++    identity.path = "/PREVIOUS/recovery.elf";
++    result = source.resolve(identity, &devices);
++    try std.testing.expect(result.confirmed and result.slot == .previous and result.permitsInstall(7) and !result.exposesUsb());
++    identity.partition_guid = t.partitions[2].unique_guid;
++    try std.testing.expect(!source.resolve(identity, &devices).confirmed);
++    identity.partition_guid = t.partitions[3].unique_guid;
++    var duplicate = devices[0];
++    duplicate.index = 8;
++    result = source.resolve(identity, &.{ devices[0], duplicate });
++    try std.testing.expect(!result.confirmed and !result.permitsInstall(7));
++}
++
++test "foreign MBR partitions remain enumerable without a mounted filesystem" {
++    var f = Fixture.init();
++    f.bytes[0][450] = 7;
++    put32(f.bytes[0][454..458], 2048);
++    put32(f.bytes[0][458..462], 10000);
++    var t = tables.Table{};
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(t.valid and t.kind == .mbr and t.count == 1 and t.partitions[0].mbr_type == 7);
++    put32(f.bytes[0][458..462], std.math.maxInt(u32));
++    tables.scan(f.reader(), &t);
++    try std.testing.expect(!t.valid);
++}

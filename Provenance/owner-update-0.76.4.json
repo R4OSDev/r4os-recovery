@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "owner": "Kernel",
+  "baseCommit": "0932e25ccc99d3e31e757b644e3f72f585fd2897",
+  "patch": "Legal/Changes/Kernel-0.76.4.patch",
+  "patchSha256": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049",
+  "files": [
+    {
+      "path": "Kernel/DOCUMENTATION.de.txt",
+      "sha256": "3c40f4220bac97ae74cd3d6f65688d18ec8d61717c4ad1fe4089450cd225a04a"
+    },
+    {
+      "path": "Kernel/bootloader/boot_info.zig",
+      "sha256": "8ee3fbb109a566e3e8efa7c50f61ce272d164bb96153163f5110c5690b0822a9"
+    },
+    {
+      "path": "Kernel/bootloader/limine.zig",
+      "sha256": "962970e72b560446dfc48be1a6d64a19d92268067e4a8958981037d1de65fbe2"
+    },
+    {
+      "path": "Kernel/driver/usb/msc.zig",
+      "sha256": "d6603e9751cc25eeb3f6bc9ac52d7a52b6ec2d5b609884367ecf16b81bafa827"
+    },
+    {
+      "path": "Kernel/fs/fat/fat32.zig",
+      "sha256": "a03dc2d6082fdcc25d898d59385fd4de1c2053c82c4daf9abdafa6c78b81757e"
+    },
+    {
+      "path": "Kernel/fs/ntfs/ntfs.zig",
+      "sha256": "a99c289d34b9bdd273b3a59741fc7b67da624f027e61692d6250fcc74ea43930"
+    },
+    {
+      "path": "Kernel/kernel/storage_boot.zig",
+      "sha256": "d78a7ae599875714ce30af05ecee14df3e8e5d1ff2ac38a4ebe4b0b5023ac4a0"
+    },
+    {
+      "path": "Kernel/platform/device_inventory.zig",
+      "sha256": "2e07f6e3bb695ce5fb13a179224afaf485a0dc26c5c79a48680d24bcd4ca71fa"
+    },
+    {
+      "path": "Kernel/storage/block.zig",
+      "sha256": "12a5f6774ff8d1b3844f594364cf1c7566dfb6c62da5c123dd91f985e0dd6bc8"
+    },
+    {
+      "path": "Kernel/storage/gpt.zig",
+      "sha256": "14d3eb4a77abd80aaf60d2a5d3f71c749ff34000d09bd8605bfa4db5e2544670"
+    },
+    {
+      "path": "Kernel/bootloader/LIMINE-PROTOCOL-LICENSE.txt",
+      "sha256": "2ca715177e0ca0e2db537b38faf95b3d38d9d1b3ef2549e4b35576a70fea6a4d"
+    },
+    {
+      "path": "Kernel/storage/boot_source.zig",
+      "sha256": "f11645ede3a38d31d06ccfcc501d4cbcf8b2b827ccde2983878675080f4025fc"
+    },
+    {
+      "path": "Kernel/storage/guid.zig",
+      "sha256": "453064689ddac31e150f0d5c1fc82134b6ff41ebb9e9515bff8fa8b892ece124"
+    },
+    {
+      "path": "Kernel/storage/installation.zig",
+      "sha256": "df1b3cefd6e654bfa1b33875e3026bf0776f606a94dfc2a007fcf302cd531096"
+    },
+    {
+      "path": "Kernel/storage/media_inventory.zig",
+      "sha256": "a0fa0ba903778d80b7ffc4e2ed6bb3dd40fd4668aec2584feefe28039fece347"
+    },
+    {
+      "path": "Kernel/storage/partition_table.zig",
+      "sha256": "7308abb36bbb0c6c3b2993bf8aac4a94c87115c128d05feb5aa6b18eefb3cdbb"
+    },
+    {
+      "path": "Kernel/storage_boot_tests.zig",
+      "sha256": "139d0b6db65a7e76404a718b13beb56144f86e7198177e538029d8f8c814b61e"
+    }
+  ],
+  "reason": "0.76.4: actual Limine executable identity, bounded media/installation parsing, multi-USB storage, mount bounds and volume capacity."
+}

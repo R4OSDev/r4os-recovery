@@ -1,14 +1,15 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.3
+Stand 0.76.4
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
 einen eigenen Recovery-Kernel. recovery.elf startet mit Limine unter BIOS
 und x64-UEFI ohne SYSTEM-Partition. Seit 0.76.3 laedt Limine ein vollstaendiges
 FAT32-Laufzeitvolume in den RAM; C: und das regulaere Terminal arbeiten daraus.
-Ein Recovery-Menue und automatische Netzwerkdienste folgen spaeter.
+Seit 0.76.4 erkennt Recovery physische Medien und ordnet sie anhand der
+tatsaechlichen Limine-Startdatei zu. Menue und Netzwerkdienste folgen spaeter.
 
 Pruefen: Build.bat beziehungsweise ./Build.sh, optional -Mode Verify.
 Beide duennen Starter rufen dieselbe Build.ps1 mit PowerShell 7 auf.
@@ -87,8 +88,8 @@ Lese-/Schreiboperationen; die vorhandenen Blockworker, Cache-, FAT32-, VFS-
 und Dateianfragen bleiben der produktive I/O-Weg. C: wird vor jeglicher
 physischer SYSTEM-Suche fest als FAT32 mit Rolle ram gebunden. Es ist
 beschreibbar; Konfiguration, R4STD, Module, Fonts, Media und C:\TEMP sind
-vollstaendig im RAM. Aenderungen gehen beim Neustart verloren. R: ist in
-diesem Schritt noch nicht eingebunden; dessen Zuordnung folgt in 0.76.4.
+vollstaendig im RAM. Aenderungen gehen beim Neustart verloren. R: gehoert zur bestaetigten physischen Bootquelle; sein Ausfall beendet
+die RAM-Laufzeit nicht.
 
 Zwei unveraenderte Terminalfonts stammen aus dem Besitzerbuild. Das vom
 Benutzer gelieferte Hintergrundbild liegt bytegleich unter
@@ -208,3 +209,66 @@ Die 512-MB-RECOVERY-Groesse bleibt vorlaeufig. Die verbindliche Abnahme mit
 beiden echten Recovery-Staenden, altem/neuem Release-ZIP, FAT-Verwaltung und
 Arbeitsspeicher folgt in 0.76.23. Keine Groessenaenderung allein aus einer
 Projektion und keine Nutzung von DATA fuer Quellen-/Arbeitsablage.
+
+Storage und Bootquelle (0.76.4)
+------------------------------
+
+Die festgehaltenen R4D-Module XHCI, AHCI, NVME, ATAPIO und USBMSC werden
+aus C: aktiviert. Der gemeinsame kernelresidente USB-MSC-Owner verwaltet
+mehrere Geraete mit getrennten SCSI-/Endpoint-/Blockkontexten; der vorhandene
+xHCI-Owner serialisiert die gemeinsame Transportgrundlage. Die normalen
+Treiberbinaerdateien bleiben unveraendert.
+
+BootInfo kopiert den Limine-ExecutableFile-Eintrag einschliesslich GPT-IDs
+und geladenem Pfad vor einer Speicherfreigabe. partition_table prueft MBR
+mit begrenzter EBR-Kette beziehungsweise beide GPT-Header, beide identischen
+Eintragsarrays, CRCs, Grenzen, Ueberlappungen und eindeutige Partition-IDs.
+BOOT:/boot/r4os-installation.json wird begrenzt geparst und gegen diese
+Tabelle geprueft. Doppelte JSON-Schluessel, fraktionale/ueberlaufende Zahlen,
+Traversals, unbekannte Hauptschemata und widerspruechliche Rollen scheitern.
+
+Die tatsaechlich geladene RECOVERY-Partition bestimmt CURRENT/PREVIOUS sowie
+Installation und Bus. Geklonte Kennungen, fehlende Beschreibung oder falsche
+Startpartition liefern keine automatische R:- oder destruktive Zielzuordnung.
+Recovery bleibt dabei aus C: bedienbar. Beim lokalen oder ungeklaerten Start
+wird USB-Speicher vor der physischen Mountaufnahme in der Blockschicht
+ausgeschlossen; auch Geraeteinventar und spaetere Dateizugriffe beachten das.
+USB-HID und der gemeinsame Hostcontroller bleiben davon unabhaengig.
+
+R: bindet ausschliesslich die RECOVERY-Partition der bestaetigten Bootquelle.
+Weitere geeignete Volumes erhalten freie Buchstaben ab D: unter Auslassung
+von R:. Bestehende Zuordnungen werden nicht ersetzt; C: bleibt RAM und das
+aktuelle Laufwerk. BIOSBOOT bleibt unlettered. Beim USB-Start ist der eigene
+Stick von Install ausgeschlossen und fuer Update Recovery zulaessig. Der
+eigene lokale Datentraeger bleibt ein gueltiges Install-Ziel. Die ausfuehrenden
+Installer folgen in den dafuer geplanten Unterversionen.
+
+Das Inventar bewahrt Kapazitaet, logische Sektorgroesse, Bus, logischen
+Geraetenamen, GPT-/MBR-Kennung, Partitionen und Dateisystem-/Mountstatus.
+Das Modellfeld ist optional: USB-SCSI liefert echte INQUIRY-Daten; der
+bisherige R4D-Storage-Vertrag liefert fuer AHCI/NVME/ATAPIO keine Modelltexte.
+Dort bleibt das Feld leer, statt den Registry-Namen als Hardwaremodell
+auszugeben. Nicht erkannte/defekte Dateisysteme bleiben als Diagnose sichtbar.
+
+Grenzen: 16 registrierte Blockgeraete einschliesslich RAM, 128 inventarisierte
+Partitionen pro Medium, 26 FAT-/NTFS-/VFS-Zuordnungen je Besitzer (Buchstaben
+begrenzen den Gesamtmountbestand). NTFS hatte zuvor nur vier Slots. FAT32
+ueberschreibt bei Slotmangel keinen bestehenden Laufzeitzustand mehr. Die
+Partitionstabelle verwendet u64-LBAs; die bisherigen FS-Basen sind u32, FAT32
+verwendet weiterhin u32-Endadressen und NTFS hoechstens u32 Cluster. Fremde
+Geometrien ausserhalb dieser Grenzen bleiben ungemountet; native 4Kn ist
+nicht freigegeben. FAT32 prueft die Partitionsgrenzen vor dem Mount; der
+NTFS-I/O-Adapter begrenzt jeden Zugriff auf sein ausgewaehltes Volume.
+
+-Mode StorageTest baut einen Diagnosekernel und feste 2048-MB-GPT-Fixtures
+mit fuenf Rollen. Tools/Storage-Fixtures.ps1 erzeugt ausschliesslich Dateien
+in Artifacts; dies ist kein Produktionsinstaller. Der kurze SMP4-Gast prueft
+USB- und lokalen AHCI-Start unter BIOS/UEFI, NVMe/PREVIOUS, geklonte IDs und
+eine falsche Installationsbeschreibung. Zwei USB- plus AHCI-/NVMe-Medien,
+sechs NTFS-Volumes, Datei-Zeugen jedes Mounts, ein unbekanntes MBR-Dateisystem,
+C:/R:-Stabilitaet und die Zielregeln werden automatisch geprueft. Auf den
+NTFS-Volumes bestaetigter Installationen werden Dateien erstellt, geflusht,
+gelesen und geloescht; alle Gastmedien verwenden QEMU-Snapshots. Auch der
+kurze SMP4-Starttest des normalen R4OS-Kernels ist erfolgreich.
+Ergebnisse: Artifacts/BootProbe/storage/storage-results.json und Seriallogs.
+Ausschliesslich Linux/KVM ist praktisch geprueft; kein Lenovo-Sichttest.
