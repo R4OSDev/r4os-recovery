@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.4
+Stand 0.76.5
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -272,3 +272,33 @@ gelesen und geloescht; alle Gastmedien verwenden QEMU-Snapshots. Auch der
 kurze SMP4-Starttest des normalen R4OS-Kernels ist erfolgreich.
 Ergebnisse: Artifacts/BootProbe/storage/storage-results.json und Seriallogs.
 Ausschliesslich Linux/KVM ist praktisch geprueft; kein Lenovo-Sichttest.
+
+Tastatureingabe (0.76.5)
+-----------------------
+
+Recovery uebernimmt den internen PS/2-/i8042-/IRQ-Pfad sowie den gemeinsamen
+Scancode-/Codepointpuffer und die englischen/deutschen R4OS-Layouts. Nach
+der Medienaufnahme werden die festgehaltenen USBHID.R4P und HIDREPORT.R4P
+aus RAM geladen und an den vorhandenen xHCI-/HID-Besitzer angeschlossen.
+Protokollaufnahme erfolgt vor dem Controller-Owner, damit kein Modul-I/O
+unter dessen Sperre laeuft. Der HID-Polltask und der xHCI-Topologietask
+bleiben unabhaengig von der Sichtbarkeit der USB-Massenspeicher aktiv.
+
+Die explizit uebernommene kanonische HID-Option bind_mouse=false gilt auch
+nach Topologieaenderungen. Recovery initialisiert weder die PS/2-Maus noch
+eine USB-Maus, keinen Mauszeiger und keinen Desktop. Normales R4OS behaelt
+seine bisherigen HID-Standardoptionen. Die 37 Runtime-Binaermodule bleiben
+bytegleich; ein zusaetzlicher USB-Tastaturtreiber ist dafuer nicht notwendig.
+
+-Mode InputTest prueft SMP4-Gaeste fuer USB-/lokalen Start unter BIOS/UEFI
+mit PS/2- beziehungsweise USB-Tastatur. Im USB-Tastaturfall ist i8042=off;
+der Gast verlangt HID-Reportverarbeitung und unveraenderten PS/2-IRQ-Zaehler.
+Eine zusaetzliche USB-Maus bleibt ungebunden. Der Host wartet positiv auf
+Bereitschaftsmarker und sendet erst dann Hardware-Tastenereignisse per QMP.
+Navigation, Enter, Escape, Backspace, Shift/Ctrl/AltGr, QWERTY/QWERTZ und
+Unicode-Codepoints werden am gemeinsamen Eingabepfad geprueft. Danach
+tippt der Host einen Befehl mit Korrekturtaste in die echte TERMINAL.R4X;
+die resultierende Datei und das geordnete EXIT werden im Gast geprueft.
+Dabei bleibt die normale ASCII-/Grossschreibungslogik des Terminals bestehen.
+Der Nachweis der sichtbaren Menuezustaende folgt mit der Oberflaeche in
+0.76.6; reale Lenovo-/USB-Tastaturmodelle sind damit noch nicht abgenommen.

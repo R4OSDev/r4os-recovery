@@ -1,0 +1,108 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 04fa166..c733b89 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -594,3 +594,16 @@ Build.sh storage-test beziehungsweise Build.bat storage-test fuehrt die
+ begrenzten Besitzerpruefungen fuer GUIDs, beide GPT-Kopien, fremdes MBR,
+ Installationsbeschreibung, CURRENT/PREVIOUS und Medienregeln aus. Dieser
+ Step ist auch Bestandteil des regulaeren Kernel-test-Steps.
++
++Recovery-Tastatureingabe (0.76.5)
++--------------------------------
++
++Der USB-HID-Besitzer stellt initWithOptions bereit. bind_mouse=false nimmt
++nur Boot-Tastaturen auf und gilt auch fuer spaetere Topologieabgleiche.
++init() behaelt fuer normales R4OS die bisherige Tastatur-/Mausaufnahme.
++Recovery verwendet die vorhandenen PS/2-IRQ-, Scancode-, Unicode- und
++Layoutbesitzer sowie unveraenderte USBHID-/HIDREPORT-Protokollmodule.
++USB-Speichersichtbarkeit und HID-Bindung sind voneinander unabhaengig.
++Der Build-Step input-test buendelt die schon vorhandenen begrenzten
++Controller-, Queue-, Layout-, HID-Set1-, USB-Host- und Eventroutertests;
++der volle test-Step fuehrt diese Tests weiterhin genau einmal aus.
+diff --git a/VERSION.R4S b/VERSION.R4S
+index 9105252..eb8e075 100644
+--- a/VERSION.R4S
++++ b/VERSION.R4S
+@@ -1 +1 @@
+-﻿KERNEL_VERSION=0.1.87
++﻿KERNEL_VERSION=0.1.88
+diff --git a/build.zig b/build.zig
+index 284fd5c..432ec1d 100644
+--- a/build.zig
++++ b/build.zig
+@@ -177,23 +177,27 @@ pub fn build(b: *std.Build) void {
+     const storage_test_step = b.step("storage-test", "Bounded partition identity and installation boot tests");
+     addUnitTest(b, storage_test_step, "storage_boot_tests.zig");
+     test_step.dependOn(storage_test_step);
++    const input_test_step = b.step("input-test", "Run the existing bounded input and USB owner tests");
++    for ([_][]const u8{
++        "input_controller_tests.zig",
++        "driver/input/codepoint_queue.zig",
++        "driver/input/key_layout.zig",
++        "driver/input/hid_set1.zig",
++        "usb_host_controller_tests.zig",
++        "driver/usb/xhci_event_router.zig",
++    }) |path| addUnitTest(b, input_test_step, path);
++    test_step.dependOn(input_test_step);
+     test_step.dependOn(&kernel.step);
+     const unit_tests = [_][]const u8{
+         "display/console_scroll_buffer.zig",
+         "display/framebuffer.zig",
+-        "input_controller_tests.zig",
+         "audio/backend_contract.zig",
+         "audio/mixer.zig",
+-        "driver/input/codepoint_queue.zig",
+-        "driver/input/key_layout.zig",
+-        "driver/input/hid_set1.zig",
+         "driver/usb/usb_boot_timing.zig",
+         "driver/usb/usb_msc_retry.zig",
+-        "usb_host_controller_tests.zig",
+         "driver/usb/xhci_bulk_completion.zig",
+         "driver/usb/xhci_endpoint_context.zig",
+         "driver/usb/xhci_endpoint_recovery.zig",
+-        "driver/usb/xhci_event_router.zig",
+         "driver/usb/xhci_ring_cycle.zig",
+         "driver/usb/xhci_trb_chain.zig",
+         "driver/usb/xhci_transfer_pool.zig",
+diff --git a/driver/usb/hid.zig b/driver/usb/hid.zig
+index 754100c..a171736 100644
+--- a/driver/usb/hid.zig
++++ b/driver/usb/hid.zig
+@@ -143,9 +143,21 @@ var boot_r4p_mouse: u64 = 0;
+ var boot_dispatch_failures: u64 = 0;
+ var boot_last_result: i32 = 0;
+ 
++pub const Options = struct {
++    bind_mouse: bool = true,
++};
++var options: Options = .{};
++
+ pub fn init() bool {
++    return initWithOptions(.{});
++}
++
++// Boot environments choose their admitted input classes once. Topology
++// reconciliation keeps the same choice when devices appear later.
++pub fn initWithOptions(selected: Options) bool {
+     if (!xhci.acquireControllerOwnership()) return false;
+     defer xhci.releaseControllerOwnership();
++    options = selected;
+     current = .{ .initialized = true, .reason = "no USB HID boot device found" };
+     keyboard_binding = .{};
+     mouse_binding = .{};
+@@ -262,6 +274,7 @@ fn chooseInterruptEndpoint(interrupt_in: u8, first_address: u8, first_attributes
+ 
+ fn handleCandidate(dev: *const usb_core.Device, candidate: HidInterfaceCandidate) void {
+     if (candidate.class_code != 0x03) return;
++    if (!options.bind_mouse and candidate.subclass == 0x01 and candidate.protocol == 0x02) return;
+     const kind = classifyCandidate(candidate) orelse {
+         if (candidate.subclass == 0x01 and !candidateHasInterruptEndpoint(candidate)) {
+             current.missing_endpoint_hid += 1;
+@@ -285,6 +298,7 @@ fn handleCandidate(dev: *const usb_core.Device, candidate: HidInterfaceCandidate
+         return;
+     }
+     if (kind == .mouse) {
++        if (!options.bind_mouse) return;
+         if (mouse_binding.bound) return;
+         current.mouse_present = true;
+         fillBinding(&mouse_binding, dev, candidate);

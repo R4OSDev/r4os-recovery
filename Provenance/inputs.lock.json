@@ -1485,8 +1485,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 15819,
-      "sha256": "8f1479e736c9af8c5d7adec97389b741cd07fea7ee1c15bd1934b6de567904d4",
+      "bytes": 15854,
+      "sha256": "edde57184afece6dafc8add39eca6d74eae2b06061eb1937c90d356e686228de",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -1595,8 +1595,8 @@
     },
     {
       "path": "Kernel/DOCUMENTATION.de.txt",
-      "bytes": 33956,
-      "sha256": "3c40f4220bac97ae74cd3d6f65688d18ec8d61717c4ad1fe4089450cd225a04a",
+      "bytes": 34663,
+      "sha256": "54c0f9879d3cb1ff5d46ece92e83192afe657ea781855bd9ac6ee452a953952e",
       "originalSha256": "24a9a6fdbdeb5803010beb59701c99b9a905dada5e4136d18d5e1dbc28911b40",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -1765,8 +1765,8 @@
     },
     {
       "path": "Kernel/driver/usb/hid.zig",
-      "bytes": 35916,
-      "sha256": "d80b57e7b9f5bdd96a684dbd5fa61fb297ccd128ff82d8fbcbb8928548497fc4",
+      "bytes": 36394,
+      "sha256": "c5486b5023a8e6cc8d940c08ba12d9e8a007e7b6252eee86368d9fe280e6ca7f",
       "originalSha256": "d80b57e7b9f5bdd96a684dbd5fa61fb297ccd128ff82d8fbcbb8928548497fc4",
       "origin": {
         "path": "driver/usb/hid.zig",
@@ -2511,6 +2511,20 @@
       "origin": null
     },
     {
+      "path": "Kernel/kernel/recovery_input_probe.zig",
+      "bytes": 5300,
+      "sha256": "cb62d2f68978829e17591c65a1ffd011944259b467d133cdc683ed9bf7666850",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/kernel/recovery_input.zig",
+      "bytes": 1272,
+      "sha256": "fef444d596d461b85bec41a534d737c1a28c39d2e0c157ae30a62df017e3f415",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/kernel/recovery_ram.zig",
       "bytes": 4038,
       "sha256": "ad9fb5c711a6a28e070e66e8d6ef64e24d7288daf29d7d9d2c644a3dd8406ad1",
@@ -2519,8 +2533,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_runtime.zig",
-      "bytes": 7925,
-      "sha256": "80a7bffed33d4c7b80c4be1d613feacfd1f5f094dbd36e6b30ef104c45eab887",
+      "bytes": 8027,
+      "sha256": "6028c35c9733315e0ea9505ffccfb95842e21e62915b5261c723cdd990a4458e",
       "originalSha256": null,
       "origin": null
     },
@@ -3393,8 +3407,8 @@
     },
     {
       "path": "Kernel/recovery_main.zig",
-      "bytes": 4944,
-      "sha256": "1c9ce76eb27f28e095e6b3c3e930d7d76ccd2994d34e42b15ea5852acf239580",
+      "bytes": 5443,
+      "sha256": "ff81568771999f66ce95c50a6721b751edcd22436dfc8248917173050f5388df",
       "originalSha256": null,
       "origin": null
     },
@@ -3663,7 +3677,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "3297ec811abb07ed902add7a5738e29aaffa3b6344021a7a755731f91efb4990",
+      "sha256": "890c5ba266783da62ee2e4a1deff6c8765b01fbd7d57d9f5f0ef779f7ff7f3eb",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3681,6 +3695,13 @@
       "path": "Legal/Changes/Kernel-0.76.4.patch",
       "bytes": 72775,
       "sha256": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.76.5.patch",
+      "bytes": 4754,
+      "sha256": "5cf3560003ed9f480340d755dd1a962e84239ac8fe78b795537eec5a53c0cb76",
       "originalSha256": null,
       "origin": null
     },
@@ -8380,7 +8401,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 63,
-      "sha256": "abc63450f619e4e36b51d7093bc18dc96f6293e399bb0454541bc64b028cad2a",
+      "sha256": "94bc4413bcccc37c51c4ca6e8a52c90ad09fe334f1f96ec40e7725635f3cf2ea",
       "originalSha256": null,
       "origin": null
     },
@@ -8404,7 +8425,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 25,
-      "sha256": "59718c388dbd7bc20dd976cd3670af489388460ea2c46fedf87e15a2642dfe31",
+      "sha256": "669d1bf95a49ec6ce128a07ebfcc3de9adc8575343f7e1073f564214ca8ebd83",
       "originalSha256": null,
       "origin": null
     },
@@ -9218,6 +9239,86 @@
         }
       ],
       "reason": "0.76.4: Besitzerdokumentation und Schreib-/Flush-/Loeschnachweis fuer alle zulaessigen NTFS-Testvolumes."
+    },
+    {
+      "reason": "0.76.5: keyboard-only HID owner import and Recovery input admission",
+      "changes": [
+        {
+          "after": "edde57184afece6dafc8add39eca6d74eae2b06061eb1937c90d356e686228de",
+          "before": "8f1479e736c9af8c5d7adec97389b741cd07fea7ee1c15bd1934b6de567904d4",
+          "path": "Kernel/build.zig"
+        },
+        {
+          "after": "c5486b5023a8e6cc8d940c08ba12d9e8a007e7b6252eee86368d9fe280e6ca7f",
+          "before": "d80b57e7b9f5bdd96a684dbd5fa61fb297ccd128ff82d8fbcbb8928548497fc4",
+          "path": "Kernel/driver/usb/hid.zig"
+        },
+        {
+          "after": "653addde20822f73d6978fcad992f1da2ecbd025802dfbc41a0810e11c9d0772",
+          "before": null,
+          "path": "Kernel/kernel/recovery_input_probe.zig"
+        },
+        {
+          "after": "fef444d596d461b85bec41a534d737c1a28c39d2e0c157ae30a62df017e3f415",
+          "before": null,
+          "path": "Kernel/kernel/recovery_input.zig"
+        },
+        {
+          "after": "8c8c54200ce07bec2d91743a912feb551bf69a07179889eedefedfa3595a61c5",
+          "before": "80a7bffed33d4c7b80c4be1d613feacfd1f5f094dbd36e6b30ef104c45eab887",
+          "path": "Kernel/kernel/recovery_runtime.zig"
+        },
+        {
+          "after": "ff81568771999f66ce95c50a6721b751edcd22436dfc8248917173050f5388df",
+          "before": "1c9ce76eb27f28e095e6b3c3e930d7d76ccd2994d34e42b15ea5852acf239580",
+          "path": "Kernel/recovery_main.zig"
+        },
+        {
+          "after": "890c5ba266783da62ee2e4a1deff6c8765b01fbd7d57d9f5f0ef779f7ff7f3eb",
+          "before": "3297ec811abb07ed902add7a5738e29aaffa3b6344021a7a755731f91efb4990",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "after": "798ed972678904545f8a0784d82e670e6fa934472ad8971c8e51b175cd903352",
+          "before": null,
+          "path": "Legal/Changes/Kernel-0.76.5.patch"
+        },
+        {
+          "after": "94bc4413bcccc37c51c4ca6e8a52c90ad09fe334f1f96ec40e7725635f3cf2ea",
+          "before": "abc63450f619e4e36b51d7093bc18dc96f6293e399bb0454541bc64b028cad2a",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "after": "669d1bf95a49ec6ce128a07ebfcc3de9adc8575343f7e1073f564214ca8ebd83",
+          "before": "59718c388dbd7bc20dd976cd3670af489388460ea2c46fedf87e15a2642dfe31",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/DOCUMENTATION.de.txt",
+          "after": "54c0f9879d3cb1ff5d46ece92e83192afe657ea781855bd9ac6ee452a953952e",
+          "before": "3c40f4220bac97ae74cd3d6f65688d18ec8d61717c4ad1fe4089450cd225a04a"
+        },
+        {
+          "path": "Kernel/kernel/recovery_input_probe.zig",
+          "after": "cb62d2f68978829e17591c65a1ffd011944259b467d133cdc683ed9bf7666850",
+          "before": "653addde20822f73d6978fcad992f1da2ecbd025802dfbc41a0810e11c9d0772"
+        },
+        {
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "after": "6028c35c9733315e0ea9505ffccfb95842e21e62915b5261c723cdd990a4458e",
+          "before": "8c8c54200ce07bec2d91743a912feb551bf69a07179889eedefedfa3595a61c5"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.76.5.patch",
+          "after": "5cf3560003ed9f480340d755dd1a962e84239ac8fe78b795537eec5a53c0cb76",
+          "before": "798ed972678904545f8a0784d82e670e6fa934472ad8971c8e51b175cd903352"
+        }
+      ],
+      "reason": "0.76.5: align Terminal witness with canonical uppercase input and document HID policy"
     }
   ]
 }

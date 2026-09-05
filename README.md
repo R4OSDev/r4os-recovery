@@ -89,3 +89,11 @@ und stabile C:/R:/weitere Mounts bereit. `-Mode StorageTest` prueft die
 USB-/AHCI-/NVMe- und Fehlerfaelle mit SMP4. Die Installationsaktionen folgen
 in ihren geplanten Unterversionen. Details und Grenzen stehen in
 [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).
+
+## Keyboard input
+
+`./Build.sh -Mode InputTest` (Windows: `Build.bat -Mode InputTest`) exercises
+PS/2 and USB keyboards through BIOS/UEFI Recovery guests with four CPUs.
+USB-only cases disable the emulated PS/2 controller. The shared input path
+supports R4OS layouts, navigation and the existing Terminal; Recovery does
+not bind a mouse. Results live under `Artifacts/BootProbe/input/`.

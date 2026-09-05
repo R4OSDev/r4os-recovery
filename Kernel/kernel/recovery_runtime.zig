@@ -67,17 +67,22 @@ pub fn admitFilesystem() bool {
 }
 
 pub fn startShell() noreturn {
+    if (!launchShell()) fatal.kernelFatal(.shell, "Recovery Terminal admission failed");
+    scheduler.exitCurrentAndRetire();
+}
+
+pub fn launchShell() bool {
     // The standard Terminal owns parsing, commands and console sessions.
     // SERVMAN autostart follows the network foundation in 0.76.7.
     r4x.initializeRuntime(memory_boot.usableBytes());
-    const boot_drive = drive.get('C') orelse fatal.kernelFatal(.shell, "Recovery C: missing");
+    const boot_drive = drive.get('C') orelse return false;
     const config = boot_config.get();
     // With no external console host, the standard shell consumes the physical
     // keyboard directly. terminal_mode expects a host to forward input.
     if (r4x.runShellPathWithHost(boot_drive, boot_config.shellPath(config), boot_config.shellArgs(config), boot_drive, .none) != .ran)
-        fatal.kernelFatal(.shell, "Recovery Terminal admission failed");
+        return false;
     log.puts("[RECOVERYRAM] terminal=STARTED\r\n");
-    scheduler.exitCurrentAndRetire();
+    return true;
 }
 
 // Diagnostic-only guest path. The host removes the actual USB boot device
@@ -88,7 +93,10 @@ pub fn waitForMediaRemoval() bool {
     var detached = false;
     while (timer.tickCount() < deadline) {
         if (keyboard.readChar()) |key| {
-            if (key == 'f' or key == 'F') { detached = true; break; }
+            if (key == 'f' or key == 'F') {
+                detached = true;
+                break;
+            }
         }
         scheduler.sleepTicks(1);
     }
@@ -130,7 +138,9 @@ fn runCommand(args: []const u8, expected: []const u8) bool {
     const result = r4x.runPath(d, terminal_path, args, d);
     const captured = r4x.endOutputCapture();
     const ok = result == .ran and r4x.lastExitCode() == 0 and !captured.truncated and std.mem.indexOf(u8, output[0..captured.len], expected) != null;
-    log.puts("[RECOVERYRAM] command="); log.puts(args); log.puts(if (ok) " result=OK\r\n" else " result=FAILED\r\n");
+    log.puts("[RECOVERYRAM] command=");
+    log.puts(args);
+    log.puts(if (ok) " result=OK\r\n" else " result=FAILED\r\n");
     if (!ok) log.puts(output[0..captured.len]);
     return ok;
 }

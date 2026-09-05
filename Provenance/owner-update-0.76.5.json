@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "owner": "Kernel",
+  "baseCommit": "403b615a14abcb95965f6e9f1795bf5b5e0f3016",
+  "patch": "Legal/Changes/Kernel-0.76.5.patch",
+  "patchSha256": "5cf3560003ed9f480340d755dd1a962e84239ac8fe78b795537eec5a53c0cb76",
+  "files": [
+    {
+      "path": "Kernel/DOCUMENTATION.de.txt",
+      "sha256": "54c0f9879d3cb1ff5d46ece92e83192afe657ea781855bd9ac6ee452a953952e"
+    },
+    {
+      "path": "Kernel/driver/usb/hid.zig",
+      "sha256": "c5486b5023a8e6cc8d940c08ba12d9e8a007e7b6252eee86368d9fe280e6ca7f"
+    }
+  ],
+  "reason": "0.76.5: keyboard-only USB HID admission with normal R4OS defaults preserved."
+}
