@@ -503,3 +503,50 @@ Die bestehenden Zig/C-Storage-Conformancefaelle pruefen auch einen kuerzeren
 R4SYS-Praefix, einen nur teilweise verfuegbaren neuen Provider, fehlerhafte
 Raw-Laengen sowie das unterschiedliche Eigentum bei BUSY und terminalem
 Abschlussfehler. Ausfuehrliche Semantik: Docs/API/StorageFacade.md.
+
+0.76.9: Gemeinsame Datentraegerwerkzeuge
+--------------------------------------
+r4os.storage_tools besitzt die hostneutralen GPT-/MBR- und FAT32-/NTFS-
+Werkzeugroutinen. Plan/prepare pruefen die Geometrie und bereiten Metadaten
+vor; commit/execute schreiben ausschliesslich ueber ein exklusives Device.
+Hostdateien verwenden host_file.File mit Dateisperre und Flush; R4OS-Programme
+storage_tools_guest.Target mit dem generationgebundenen R4SYS-Claim.
+
+512-Byte-Sektoren, neue Partitionsstarts auf 1-MB-Grenzen, bis 128 GPT-Eintraege
+oder vier primaere MBR-Partitionen. Bestehende Startgrenzen bleiben erhalten.
+GPT wird nur bei zwei konsistenten Kopien bearbeitet; SHA-256 bindet den Plan
+an die gelesenen Tabellen und wird nach exklusiver Zulassung erneut geprueft.
+CLEAN loescht beide Rand-MB, CLEAN ALL den gesamten Datentraeger. Neuanlage
+setzt einen leeren Tabellenbereich voraus; belegte/erweiterte/hybride oder
+unbekannte Konvertierungen werden vor Schreibbeginn abgewiesen.
+
+NTFS-Builder und FAT32-Geometrie stammen aus dem bisherigen ImageCreator;
+der Boot-GPT-Parser wurde als explizite Werkzeugbasis uebernommen. Der Kernel
+behaelt seinen getrennten Bootparser. Standard-NTFS-Metadaten liegen mit
+Byteidentitaeten und Herkunft in storage_tools/ntfs_metadata; Details in
+THIRD_PARTY_NOTICES.md und PROVENANCE.txt. Namen/Labels verwenden vorerst ASCII,
+GPT bewahrt bestehende UTF-16-Namen unveraendert. FAT-Labels maximal 11,
+NTFS-Labels maximal 32 Zeichen, NTFS-Baum hoechstens 4096 MFT-Records.
+
+Formatierung arbeitet mit caller-eigenem Buffer, ueblich 128 KB, und maximal
+128 KB je Blockaufruf. NTFS erzeugt die Clusterbitmap blockweise aus dem
+geplanten belegten Praefix. Der MFT-Puffer ist begrenzt und haengt vom
+Dateibestand ab, nicht von der Volumegroesse. Der alte finalize()-RAM-Rueckgabepfad
+bleibt nur fuer bestehende Imagebaum-/Fixture-Aufrufer; neue Formatter nutzen
+prepare()/execute(). Quick schreibt Verwaltungsdaten, Full zusaetzlich alle
+freien Sektoren. Beides ist Formatierung, keine Zusage sicherer Datenvernichtung.
+
+Progress liefert ersten nativen Fehler/LBA, Phase, write_attempted,
+written_sectors, flushed und verified. Ein fehlgeschlagener Schreibaufruf
+kann einen unbekannten Praefix veraendert haben; written_sectors zaehlt nur
+vollstaendig bestaetigte Aufrufe. GPT-Sicherung wird vor der Hauptkopie,
+Dateisystem-Metadaten vor den Bootsektoren geschrieben/geflusht. Readback
+prueft Tabellen sowie NTFS-Metadaten/Bitmap/LogFile bzw. FATs/Boot/FSInfo/Root.
+Kein automatischer Schreibretry und keine behauptete Stromausfalltransaktion.
+Claimabschluss und neue Mountgeneration sind zusaetzlich zu pruefen.
+
+Build.sh storage-tools-test bzw. Build.bat storage-tools-test fuehrt einen
+gebuendelten Komponentenbestand mit Layout-, Kapazitaets-, Schreib-/Flush-/
+Readback-/Abbruchfaellen und Allokationsfehlern aus. Ein 128-GB-NTFS-Plan wird
+mit insgesamt 2 MB Formatter-Allocator inklusive Arbeitsbuffer ausgefuehrt;
+der simulierte Datentraeger besitzt separaten, begrenzten Metadatenspeicher.

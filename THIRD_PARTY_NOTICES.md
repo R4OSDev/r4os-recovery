@@ -23,3 +23,12 @@ audio, browser or desktop runtime module is imported by implication.
 The kernel implements the public Limine protocol. Actual bootloader files and
 the Recovery background asset will be imported explicitly with their boot/UI
 implementation steps and recorded in the input inventory.
+
+## Shared NTFS formatter metadata
+
+The 16 production metadata templates under
+`Platform/SDK/r4os/storage_tools/ntfs_metadata` are byte-identical copies of
+the existing Windows-generated NTFS fixture data. Their source paths and
+hashes are recorded in `provenance.json`; the pinned SDK notices and original
+fixture generation records remain included. The shared formatter is R4OS
+source explicitly imported from Distribution, not Microsoft formatter code.

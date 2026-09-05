@@ -127,3 +127,9 @@ uses the existing shell stdout mirror and a second standard Terminal to
 check console isolation. QMP screendumps compare every pixel outside the
 monitor, and verify visible selection, dialogs, progress, clear, scrolling,
 Terminal return and reset. Artifacts stay under `Artifacts/BootProbe/ui/`.
+
+Since 0.76.9, the pinned SDK and ImageCreator share GPT/MBR editing and streamed
+FAT32/NTFS formatting. `-Mode StorageToolsTest` exercises those same routines
+through real guest claims on a disposable 128-MB NVMe disk, then mounts both
+filesystems and checks file access. The existing network runner provides
+BIOS/UEFI SMP4 and menu/remote-access coverage in the same sessions.

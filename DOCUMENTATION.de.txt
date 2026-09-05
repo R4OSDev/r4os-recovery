@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.8
+Stand 0.76.9
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -466,3 +466,36 @@ der normale SMP4-testquick bestanden. Keine Windows-/Lenovo-Ausfuehrung;
 der vereinbarte einzelne Hardwaretest bleibt der finalen Unterversion
 vorbehalten. Das Eingabeinventar enthaelt 858 Dateien und 37 importierte
 Module; die Menuediagnose bleibt Teil des Recovery-eigenen Konsolenmoduls.
+
+0.76.9: Gemeinsame Partitions- und Formatierungswerkzeuge
+-------------------------------------------------------
+Platform/SDK/r4os/storage_tools enthaelt den explizit eingefrorenen gemeinsamen
+GPT-/MBR- und FAT32-/NTFS-Werkzeugstand. Recovery-Gastprogramme nutzen ihn mit
+storage_tools_guest.Target und echten R4SYS-Claims. Auch der eingefrorene
+ImageCreator nutzt diesen Baustein; sein bisheriger lokaler NTFS-Builder
+entfaellt. Vorbereitete Plaene/Metadaten und begrenzte Arbeitsbuffer vermeiden
+volumengrosse RAM-Allokationen bei der Formatierung. Normale Runtime-Binaer-
+importe bleiben unveraendert; Herkunft und SDK-/Distribution-Patches stehen
+unter Provenance/owner-update-0.76.9.json und Legal/Changes.
+
+Die 16 Standard-NTFS-Metadatenvorlagen sind bytegleich mit den bisherigen
+Windows-erzeugten SDK-Fixtures und ihren Herkunftshinweisen. Produktkopien
+und Hashreceipt liegen in Platform/SDK/r4os/storage_tools/ntfs_metadata.
+Sie enthalten Dateisystemdaten, keinen Microsoft-Formattercode.
+
+-Mode StorageToolsTest erweitert den vorhandenen PS7-Netzwerkpruefer um einen
+entbehrlichen 128-MB-NVMe-Datentraeger. Der gekapselte /STORAGESMOKE TOOLS-
+Nachweis verlangt zuerst die technische Bootfixture-GUID und eine passende
+leere Scratchdisk. Er prueft MBR/Aktivmarkierung, CLEAN, GPT-Haupt-/Sicherung,
+exklusive Partitionsclaims, FAT32-Quick, NTFS-Full und danach echte
+Mount-/Datei-/Unmountoperationen. Bootmedium, RAM-C, SYSTEM und DATA bleiben
+benutzbar; bestehende SSH/FTP-/Menuepruefungen laufen im selben SMP4-Gast.
+Die Funktion ist kein oeffentlicher Partitionsbefehl; R4PART folgt separat.
+Ergebnisdatei: Artifacts/BootProbe/storage-tools/network-results.json.
+
+Hostseitig prueft der kanonische SDK-Komponentenbestand Geometrie, Ueberlappung,
+Stale/Readrace, Kapazitaets- und Allokationsfehler, Schreibabbruch, Flush- und
+Readbackfehler sowie Quick/Full. Ein 128-GB-NTFS-Formatter laeuft mit insgesamt
+2 MB Formatter-Allocator inklusive Arbeitsbuffer; die virtuelle Platte hat
+separaten begrenzten Metadatenspeicher. Bestehende NtfsVerify-Pruefungen
+validieren die kleinen realen Hostdateien weiterhin unabhaengig.

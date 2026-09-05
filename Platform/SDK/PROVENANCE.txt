@@ -31,3 +31,23 @@ festgelegt. Sein tatsaechlicher Checkout wird durch `Settings.R4S` gemappt;
 uebergeben den gemappten Checkout als lokalen Zig-Fork. Dadurch sind auch
 andere relative oder absolute Hostpfade moeglich, ohne eine
 Zugangsdatenabhaengigkeit in das SDK einzubauen.
+
+Explizite Werkzeugkonsolidierung 0.76.9
+-------------------------------------
+- NTFS-Builder: R4OSDev/r4os-distribution,
+  Ausgangscommit 5d4f4d63a222a77c35dab04b22fa3c2762a788e9,
+  Tools/ImageCreator/src/ntfs_mkfs.zig; jetzt r4os/ntfs_builder.zig.
+- FAT32-Geometrie/BPB/FSInfo: gleicher Besitzer/Commit,
+  Tools/ImageCreator/src/main.zig; jetzt r4os/storage_tools/fat32.zig.
+- GPT-Lese-/CRC-Basis und GUID: R4OSDev/r4os-kernel,
+  Ausgangscommit 53a69743874c0f07413ff87bb67095e9e2bece17, storage/gpt.zig und
+  storage/guid.zig; explizite SDK-Werkzeugkopien. Der Kernel wird dadurch
+  weder SDK-Konsument noch Besitzer der Partitionsbefehle.
+- 16 vorhandene NTFS-Datenvorlagen: Tests/Fixture/Ntfs/Meta0605,
+  Kopien nach r4os/storage_tools/ntfs_metadata; provenance.json belegt
+  Quelle und SHA-256. Urspruengliche Fixtures und Herkunft bleiben erhalten.
+
+Die R4OS-Quellen behalten die vorhandene Projektlizenz. Die Vorlagen sind
+Dateisystemdaten, keine fremden ausfuehrbaren Formatterbestandteile; der
+bestehende Hinweis zu den Windows-generierten Fixtures gilt auch fuer die
+Produktkopien. Neue Host-/Gast-Adapter enthalten keine Hostpfadkonstanten.

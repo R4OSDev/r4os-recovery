@@ -128,6 +128,20 @@ pub fn build(b: *std.Build) void {
     const run_catalog_tool_tests = b.addRunArtifact(catalog_tool_tests);
 
     const test_step = b.step("test", "Run SDK, build-tool and smoke tests");
+    const storage_tools = b.createModule(.{
+        .root_source_file = b.path("r4os/storage_tools.zig"),
+        .target = b.graph.host,
+        .optimize = .Debug,
+    });
+    const storage_fixture = b.createModule(.{
+        .root_source_file = b.path("Tests/Simulation/CheckStorageTools0769.zig"),
+        .target = b.graph.host,
+        .optimize = .Debug,
+    });
+    storage_fixture.addImport("storage_tools", storage_tools);
+    const storage_tests = b.addRunArtifact(b.addTest(.{ .root_module = storage_fixture }));
+    b.step("storage-tools-test", "Shared partition/format component fixtures and fault cases").dependOn(&storage_tests.step);
+    test_step.dependOn(&storage_tests.step);
     test_step.dependOn(b.getInstallStep());
     test_step.dependOn(&run_sdk_unit_tests.step);
     test_step.dependOn(&run_vm_allocator_tests.step);

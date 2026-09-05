@@ -3706,7 +3706,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "dd7c0c29837c26a705127146f23305d340573c74c647563212877ad8a9b094bd",
+      "sha256": "7d79cb7e719982541d2bce80e52a60bf81b095802f6d8d38fa748062ce74b4e7",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3731,6 +3731,13 @@
       "path": "Legal/Changes/Distribution-0.76.3.patch",
       "bytes": 10342,
       "sha256": "77a38487016b88613decbc6f299fbcad0391c9e270eadc2193b899240a1be6e6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Distribution-0.76.9.patch",
+      "bytes": 60696,
+      "sha256": "82282b5ba92c0b517544b7a723217d82792eb64009c5e24447e9e2d5ba9e8e40",
       "originalSha256": null,
       "origin": null
     },
@@ -3794,6 +3801,13 @@
       "path": "Legal/Changes/SDK-0.76.8.patch",
       "bytes": 20403,
       "sha256": "da452dd05b8b8245b98f4d3ed184951e69895c7b4688b44661654d3d45157ab8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.9.patch",
+      "bytes": 311408,
+      "sha256": "471585ea0aaee1a4dca201a42fbc89b321932d6ce8dd8e3b1a482edaa817bee6",
       "originalSha256": null,
       "origin": null
     },
@@ -5835,22 +5849,15 @@
     },
     {
       "path": "Platform/Distribution/Tools/ImageCreator/src/main.zig",
-      "bytes": 36033,
-      "sha256": "e450ffb7636f6108a61bcb9048adc3b7d53efd96eee0466fa4fe6a4c498ce414",
+      "bytes": 34443,
+      "sha256": "f4bd6b0258515a7c8cd08902bdeb351a5e371cc39c7158b9ab62870097045984",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_cli.zig",
-      "bytes": 8135,
-      "sha256": "5c1ba42aca0d3e2e54e395bc0dc205b9856db828eb6cc30074d137e552f35e55",
-      "originalSha256": null,
-      "origin": null
-    },
-    {
-      "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_mkfs.zig",
-      "bytes": 48925,
-      "sha256": "c2e953ffcae062a6c385a8e15f14a0af11dbf1189238463a79ab462a884d8956",
+      "bytes": 8935,
+      "sha256": "e89c20311d8fc392d6a7a457c4e97b665a09f2c20600196e07b1f0815040e934",
       "originalSha256": null,
       "origin": null
     },
@@ -5896,8 +5903,8 @@
     },
     {
       "path": "Platform/SDK/build.zig",
-      "bytes": 6267,
-      "sha256": "0fcf203e192bd853f70c753965a614209ad5d3ee012b31d687553385e77bdf84",
+      "bytes": 6963,
+      "sha256": "da5c57d0b0ad5b8af9fa220fd3766db586a3f9440eafe6ff07a4713d421dc1d6",
       "originalSha256": "0fcf203e192bd853f70c753965a614209ad5d3ee012b31d687553385e77bdf84",
       "origin": {
         "path": "build.zig",
@@ -5956,8 +5963,8 @@
     },
     {
       "path": "Platform/SDK/DOCUMENTATION.de.txt",
-      "bytes": 28714,
-      "sha256": "d8c715caaeaa26f99be5b9a79b956219998faf029bfd796b7e653298c9855074",
+      "bytes": 31740,
+      "sha256": "1715c518a2ae9f4233107376e6cee43253e3166cb730e1464a69f4fd4b4b326e",
       "originalSha256": "df240d0fb7312961eb1bf9eb53c7e51dc4d36fcaba46eb9a3135bf60720bc70a",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -6026,8 +6033,8 @@
     },
     {
       "path": "Platform/SDK/PROVENANCE.txt",
-      "bytes": 1316,
-      "sha256": "91cae0a3353228fb1af95526243e9a49a989798f0680232b01470ecbd3e99b34",
+      "bytes": 2468,
+      "sha256": "bdb563da3e7aa5f559e0f2913a8581f7210ffa97f1d8932667aea959eb557eb4",
       "originalSha256": "91cae0a3353228fb1af95526243e9a49a989798f0680232b01470ecbd3e99b34",
       "origin": {
         "path": "PROVENANCE.txt",
@@ -6036,8 +6043,8 @@
     },
     {
       "path": "Platform/SDK/r4os.zig",
-      "bytes": 7763,
-      "sha256": "432e56608cf4b06f73d005a237602a5095205b9e86a8d734aad8a0eac9736625",
+      "bytes": 7897,
+      "sha256": "eb0b414a2539e54af705a42df048699a770976356ee2efb978aed13a40493db1",
       "originalSha256": "2ac809c94953505ad6588bca8dc37f26396317c34a68fc292fba336c51d054d7",
       "origin": {
         "path": "r4os.zig",
@@ -6215,6 +6222,13 @@
       }
     },
     {
+      "path": "Platform/SDK/r4os/gpt_format.zig",
+      "bytes": 11866,
+      "sha256": "009a158f1f5bf1a4f6da1e5ffd28230d4163b13670efd48a2e15c7b43200c1c6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Platform/SDK/r4os/gui_shapes.zig",
       "bytes": 11557,
       "sha256": "01167e944d9ef9f2c89f8fb5166a4e7c7fff53bc2f1f0d6b475614342a21d555",
@@ -6355,6 +6369,13 @@
       }
     },
     {
+      "path": "Platform/SDK/r4os/ntfs_builder.zig",
+      "bytes": 59228,
+      "sha256": "6e3edc0a0b040d0f2685d44702399fe8bcf12fe7e032e9d88b701c28762c61bd",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Platform/SDK/r4os/ntfs_format.zig",
       "bytes": 37881,
       "sha256": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
@@ -6363,6 +6384,13 @@
         "path": "r4os/ntfs_format.zig",
         "source": "SDK"
       }
+    },
+    {
+      "path": "Platform/SDK/r4os/ntfs_mkfs.zig",
+      "bytes": 345,
+      "sha256": "6a33bc6f2ea3452cfd11e1ffabeef991c7cd74152134ce7373c65c97ac0ac966",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Platform/SDK/r4os/ntfs_volume.zig",
@@ -6590,6 +6618,188 @@
         "path": "r4os/service_deadline.zig",
         "source": "SDK"
       }
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools_guest.zig",
+      "bytes": 1776,
+      "sha256": "154d7ec78f8ea3a232561b9f9c08a94510bec3c8b553c46ffb0ea9fc6b7d9f97",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools.zig",
+      "bytes": 540,
+      "sha256": "f769f5b316f7dc2c6b7169f6bfedf0cbaee64fb78182b9b5218874cbbb741d01",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/fat32.zig",
+      "bytes": 6706,
+      "sha256": "ea0eca83f8e8a0116a109db789fdf884538d0967d6f9374144473e75c6b70bf0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/guid.zig",
+      "bytes": 2022,
+      "sha256": "45535a4e53fbab56c789de19000909c953cff8a55d32f22a5118b7a9c0fd3321",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/host_file.zig",
+      "bytes": 2548,
+      "sha256": "c9d7a92c11bbf877f7855b1387f1481feaed1e5e8e4e85729b2b4abe152ce2b1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/io.zig",
+      "bytes": 9293,
+      "sha256": "003148d1f5c50bc328e2172a834cfe337435466b68979deadfa7eacedf04cee8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata.zig",
+      "bytes": 1344,
+      "sha256": "da0524393f4913f010ad36b58b38eccf321cd4413be86e730ffe963a272b59f1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/attrdef.bin",
+      "bytes": 2560,
+      "sha256": "d7de5b1b2f79f45f235ceb1adbc46908ed64eae174eb90ed66aefe5f25165da3",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/boot_sd.bin",
+      "bytes": 100,
+      "sha256": "f11a1b3644ba6aaa368c670f886963f533b138c300715e9a5ad578964860a52a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_objid_o_root.bin",
+      "bytes": 48,
+      "sha256": "e490de5181fd875fc9006534bc503ec0163b7d3b5e28d356f54e2887f8583a5a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_quota_o_root.bin",
+      "bytes": 88,
+      "sha256": "0d44d3d04114afde5eb66b6131b5b2479b6cc9461c6b929ef8882f3ffc4a3cf4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_quota_q_root.bin",
+      "bytes": 208,
+      "sha256": "13377b2b22043514c5b372e95db062b28d73b0ffda47bd2f377040114dabb3fb",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_reparse_r_root.bin",
+      "bytes": 48,
+      "sha256": "e490de5181fd875fc9006534bc503ec0163b7d3b5e28d356f54e2887f8583a5a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/provenance.json",
+      "bytes": 3838,
+      "sha256": "8560742310ee8af2a7346cf06de314b0700e56b06e2ac7f0aaeb2aefe3edd3c4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/root_sd.bin",
+      "bytes": 228,
+      "sha256": "3e125681e9328d6ed5069dd145943e69fc63a3c2ce722aac4c52451a13673ff1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SDH_alloc.bin",
+      "bytes": 4096,
+      "sha256": "a9f362b5365d9d3f9e62531ce9210db3e96ebcf9a9da47b48e67418b4f1641df",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SDH_bitmap.bin",
+      "bytes": 8,
+      "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_sdh_root.bin",
+      "bytes": 56,
+      "sha256": "202f7fa0921ea6b2c32d1920268b7ad635aec8dc4060b981c20aa0717b0a61e2",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_sds_prefix.bin",
+      "bytes": 1378,
+      "sha256": "efca367ca9f62d04dea1cc64290c89b5d2bf1090c74976c72d6739954722ccdb",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SII_alloc.bin",
+      "bytes": 4096,
+      "sha256": "1408f979ba070c70a0be1053abdd5837807a762344ba81b8a89a75b564b79061",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SII_bitmap.bin",
+      "bytes": 8,
+      "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_sii_root.bin",
+      "bytes": 56,
+      "sha256": "33be1fcfa47b93ae272c2ac2f386668f0fcfe820334622e2b2eb5f6177e4a19e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/upcase_info.bin",
+      "bytes": 32,
+      "sha256": "ee502838f53f00c9444b311f4cdea74454a1e0c64e8cdec3d63eb5232fb61f82",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/upcase.bin",
+      "bytes": 131072,
+      "sha256": "41c26bc7a12bdaeb26025c93118697c7e3ef81ee048b00fe5cce2a472e0e0742",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_plan.zig",
+      "bytes": 7357,
+      "sha256": "6452d5c795051dfcace876055acafaf590a165adc6ad202c3a11dfaa078bf021",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/partition.zig",
+      "bytes": 19915,
+      "sha256": "f64912ddd55e35593efac7132a949bb1bd377fc75bca60fe77d64df45ce62fc6",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Platform/SDK/r4os/storage.zig",
@@ -8267,8 +8477,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckNtfsFormatter0605.zig",
-      "bytes": 6448,
-      "sha256": "9ab618758f0c6b444a6ba8480ab567277057f4cb0d3e3686920c5dd4fc14e609",
+      "bytes": 6438,
+      "sha256": "af9c0d0a12a0b24e54e7eafda517b4a6ebe44349ebffe07510180f37b7aa7f1e",
       "originalSha256": "9ab618758f0c6b444a6ba8480ab567277057f4cb0d3e3686920c5dd4fc14e609",
       "origin": {
         "path": "Tests/Simulation/CheckNtfsFormatter0605.zig",
@@ -8336,6 +8546,13 @@
       }
     },
     {
+      "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+      "bytes": 11670,
+      "sha256": "64c45cf4561d71214e386cf35d966ac1fa0232d315c091eda2a499b8ff0bb154",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Platform/SDK/Tests/Simulation/CheckUploadPublishClaim0622.zig",
       "bytes": 24819,
       "sha256": "600ac1011b8630d4cb6d5f85c5f84081893e7683ed93bcb3e7c24a41de50fa31",
@@ -8347,8 +8564,8 @@
     },
     {
       "path": "Platform/SDK/THIRD_PARTY_NOTICES.md",
-      "bytes": 611,
-      "sha256": "b9adca2aca92154e8d7b9721a188b9f1d172fbd9ef134c0d8f6ce3e477ef4763",
+      "bytes": 1178,
+      "sha256": "5147cc21be2bcd3240e241408d09bee1d4444b1c41166cba78474c32d65b4b83",
       "originalSha256": "b9adca2aca92154e8d7b9721a188b9f1d172fbd9ef134c0d8f6ce3e477ef4763",
       "origin": {
         "path": "THIRD_PARTY_NOTICES.md",
@@ -8479,7 +8696,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 326,
-      "sha256": "937296a9a35441b5bdb7c499967a3655b57264b7379f28667e5c574138e246f5",
+      "sha256": "6fccc67f89aba0176afb3181eefe2ef13ed303b42bb841ed673a46b09a96278b",
       "originalSha256": null,
       "origin": null
     },
@@ -8499,8 +8716,15 @@
     },
     {
       "path": "RecoveryTools/Menu/src/storage_diagnostic.zig",
-      "bytes": 14364,
-      "sha256": "7c26e6a7b618ce4def6411b8db3920b23d7cf8f2f51502fb3d45ca66304b07a0",
+      "bytes": 14629,
+      "sha256": "b544ada98a1dd81947c76200f2e61ae182661ebdf7288f2d8efe8b443a303fc2",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/storage_tools_diagnostic.zig",
+      "bytes": 6674,
+      "sha256": "57fc7422d7ed44b1b2656ae06a317d62bfa4cf06444a9280549c3346d9671ed2",
       "originalSha256": null,
       "origin": null
     },
@@ -8598,7 +8822,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 63,
-      "sha256": "5971e475f9e7a0dd115209b1e46fbfb56789137eb2ef4a6315304f534970d362",
+      "sha256": "08fb7376e5de1ce95a3f872fa05677b7f7878f8adb0e9668b28d96099b083638",
       "originalSha256": null,
       "origin": null
     },
@@ -8622,7 +8846,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 25,
-      "sha256": "63266fef06efc216988ad2d7ebf7d017b33618f35dbabb8a51b0059cecb513b6",
+      "sha256": "c37c55d33a5da9898201898b70ac623d3e56f94bf9768ba7dba420b882e547b6",
       "originalSha256": null,
       "origin": null
     },
@@ -10099,6 +10323,246 @@
           "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
           "before": "d0cbbe952def3f9b9a30dff8d628aec87dd9f018abc2a29ce05a39dc5cb55583",
           "after": "83e2c251de759c1a3ccb9177d1c5448a3c89cde66b12f74a6a670e80dfd53895"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.9: explicit SDK/ImageCreator tooling consolidation, fixed NTFS metadata, common guest adapters and bounded formatter acceptance; Recovery 0.1.7 and menu 0.1.2.",
+      "changes": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "dd7c0c29837c26a705127146f23305d340573c74c647563212877ad8a9b094bd",
+          "after": "7d79cb7e719982541d2bce80e52a60bf81b095802f6d8d38fa748062ce74b4e7"
+        },
+        {
+          "path": "Legal/Changes/Distribution-0.76.9.patch",
+          "before": null,
+          "after": "82282b5ba92c0b517544b7a723217d82792eb64009c5e24447e9e2d5ba9e8e40"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.76.9.patch",
+          "before": null,
+          "after": "471585ea0aaee1a4dca201a42fbc89b321932d6ce8dd8e3b1a482edaa817bee6"
+        },
+        {
+          "path": "Platform/Distribution/Tools/ImageCreator/src/main.zig",
+          "before": "e450ffb7636f6108a61bcb9048adc3b7d53efd96eee0466fa4fe6a4c498ce414",
+          "after": "f4bd6b0258515a7c8cd08902bdeb351a5e371cc39c7158b9ab62870097045984"
+        },
+        {
+          "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_cli.zig",
+          "before": "5c1ba42aca0d3e2e54e395bc0dc205b9856db828eb6cc30074d137e552f35e55",
+          "after": "e89c20311d8fc392d6a7a457c4e97b665a09f2c20600196e07b1f0815040e934"
+        },
+        {
+          "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_mkfs.zig",
+          "before": "c2e953ffcae062a6c385a8e15f14a0af11dbf1189238463a79ab462a884d8956",
+          "after": null
+        },
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "before": "d8c715caaeaa26f99be5b9a79b956219998faf029bfd796b7e653298c9855074",
+          "after": "1715c518a2ae9f4233107376e6cee43253e3166cb730e1464a69f4fd4b4b326e"
+        },
+        {
+          "path": "Platform/SDK/PROVENANCE.txt",
+          "before": "91cae0a3353228fb1af95526243e9a49a989798f0680232b01470ecbd3e99b34",
+          "after": "bdb563da3e7aa5f559e0f2913a8581f7210ffa97f1d8932667aea959eb557eb4"
+        },
+        {
+          "path": "Platform/SDK/THIRD_PARTY_NOTICES.md",
+          "before": "b9adca2aca92154e8d7b9721a188b9f1d172fbd9ef134c0d8f6ce3e477ef4763",
+          "after": "5147cc21be2bcd3240e241408d09bee1d4444b1c41166cba78474c32d65b4b83"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckNtfsFormatter0605.zig",
+          "before": "9ab618758f0c6b444a6ba8480ab567277057f4cb0d3e3686920c5dd4fc14e609",
+          "after": "af9c0d0a12a0b24e54e7eafda517b4a6ebe44349ebffe07510180f37b7aa7f1e"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "before": null,
+          "after": "64c45cf4561d71214e386cf35d966ac1fa0232d315c091eda2a499b8ff0bb154"
+        },
+        {
+          "path": "Platform/SDK/build.zig",
+          "before": "0fcf203e192bd853f70c753965a614209ad5d3ee012b31d687553385e77bdf84",
+          "after": "da5c57d0b0ad5b8af9fa220fd3766db586a3f9440eafe6ff07a4713d421dc1d6"
+        },
+        {
+          "path": "Platform/SDK/r4os.zig",
+          "before": "432e56608cf4b06f73d005a237602a5095205b9e86a8d734aad8a0eac9736625",
+          "after": "eb0b414a2539e54af705a42df048699a770976356ee2efb978aed13a40493db1"
+        },
+        {
+          "path": "Platform/SDK/r4os/gpt_format.zig",
+          "before": null,
+          "after": "009a158f1f5bf1a4f6da1e5ffd28230d4163b13670efd48a2e15c7b43200c1c6"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_builder.zig",
+          "before": null,
+          "after": "6e3edc0a0b040d0f2685d44702399fe8bcf12fe7e032e9d88b701c28762c61bd"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_mkfs.zig",
+          "before": null,
+          "after": "6a33bc6f2ea3452cfd11e1ffabeef991c7cd74152134ce7373c65c97ac0ac966"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "before": null,
+          "after": "f769f5b316f7dc2c6b7169f6bfedf0cbaee64fb78182b9b5218874cbbb741d01"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32.zig",
+          "before": null,
+          "after": "ea0eca83f8e8a0116a109db789fdf884538d0967d6f9374144473e75c6b70bf0"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/guid.zig",
+          "before": null,
+          "after": "45535a4e53fbab56c789de19000909c953cff8a55d32f22a5118b7a9c0fd3321"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/host_file.zig",
+          "before": null,
+          "after": "c9d7a92c11bbf877f7855b1387f1481feaed1e5e8e4e85729b2b4abe152ce2b1"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/io.zig",
+          "before": null,
+          "after": "003148d1f5c50bc328e2172a834cfe337435466b68979deadfa7eacedf04cee8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata.zig",
+          "before": null,
+          "after": "da0524393f4913f010ad36b58b38eccf321cd4413be86e730ffe963a272b59f1"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/attrdef.bin",
+          "before": null,
+          "after": "d7de5b1b2f79f45f235ceb1adbc46908ed64eae174eb90ed66aefe5f25165da3"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/boot_sd.bin",
+          "before": null,
+          "after": "f11a1b3644ba6aaa368c670f886963f533b138c300715e9a5ad578964860a52a"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_objid_o_root.bin",
+          "before": null,
+          "after": "e490de5181fd875fc9006534bc503ec0163b7d3b5e28d356f54e2887f8583a5a"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_quota_o_root.bin",
+          "before": null,
+          "after": "0d44d3d04114afde5eb66b6131b5b2479b6cc9461c6b929ef8882f3ffc4a3cf4"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_quota_q_root.bin",
+          "before": null,
+          "after": "13377b2b22043514c5b372e95db062b28d73b0ffda47bd2f377040114dabb3fb"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/extend_reparse_r_root.bin",
+          "before": null,
+          "after": "e490de5181fd875fc9006534bc503ec0163b7d3b5e28d356f54e2887f8583a5a"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/provenance.json",
+          "before": null,
+          "after": "8560742310ee8af2a7346cf06de314b0700e56b06e2ac7f0aaeb2aefe3edd3c4"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/root_sd.bin",
+          "before": null,
+          "after": "3e125681e9328d6ed5069dd145943e69fc63a3c2ce722aac4c52451a13673ff1"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SDH_alloc.bin",
+          "before": null,
+          "after": "a9f362b5365d9d3f9e62531ce9210db3e96ebcf9a9da47b48e67418b4f1641df"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SDH_bitmap.bin",
+          "before": null,
+          "after": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SII_alloc.bin",
+          "before": null,
+          "after": "1408f979ba070c70a0be1053abdd5837807a762344ba81b8a89a75b564b79061"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_SII_bitmap.bin",
+          "before": null,
+          "after": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_sdh_root.bin",
+          "before": null,
+          "after": "202f7fa0921ea6b2c32d1920268b7ad635aec8dc4060b981c20aa0717b0a61e2"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_sds_prefix.bin",
+          "before": null,
+          "after": "efca367ca9f62d04dea1cc64290c89b5d2bf1090c74976c72d6739954722ccdb"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/secure_sii_root.bin",
+          "before": null,
+          "after": "33be1fcfa47b93ae272c2ac2f386668f0fcfe820334622e2b2eb5f6177e4a19e"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/upcase.bin",
+          "before": null,
+          "after": "41c26bc7a12bdaeb26025c93118697c7e3ef81ee048b00fe5cce2a472e0e0742"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_metadata/upcase_info.bin",
+          "before": null,
+          "after": "ee502838f53f00c9444b311f4cdea74454a1e0c64e8cdec3d63eb5232fb61f82"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_plan.zig",
+          "before": null,
+          "after": "6452d5c795051dfcace876055acafaf590a165adc6ad202c3a11dfaa078bf021"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/partition.zig",
+          "before": null,
+          "after": "f64912ddd55e35593efac7132a949bb1bd377fc75bca60fe77d64df45ce62fc6"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools_guest.zig",
+          "before": null,
+          "after": "154d7ec78f8ea3a232561b9f9c08a94510bec3c8b553c46ffb0ea9fc6b7d9f97"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "937296a9a35441b5bdb7c499967a3655b57264b7379f28667e5c574138e246f5",
+          "after": "6fccc67f89aba0176afb3181eefe2ef13ed303b42bb841ed673a46b09a96278b"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/storage_diagnostic.zig",
+          "before": "7c26e6a7b618ce4def6411b8db3920b23d7cf8f2f51502fb3d45ca66304b07a0",
+          "after": "b544ada98a1dd81947c76200f2e61ae182661ebdf7288f2d8efe8b443a303fc2"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/storage_tools_diagnostic.zig",
+          "before": null,
+          "after": "57fc7422d7ed44b1b2656ae06a317d62bfa4cf06444a9280549c3346d9671ed2"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "5971e475f9e7a0dd115209b1e46fbfb56789137eb2ef4a6315304f534970d362",
+          "after": "08fb7376e5de1ce95a3f872fa05677b7f7878f8adb0e9668b28d96099b083638"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "63266fef06efc216988ad2d7ebf7d017b33618f35dbabb8a51b0059cecb513b6",
+          "after": "c37c55d33a5da9898201898b70ac623d3e56f94bf9768ba7dba420b882e547b6"
         }
       ]
     }

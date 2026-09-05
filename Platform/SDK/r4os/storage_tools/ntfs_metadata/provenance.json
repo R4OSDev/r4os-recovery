@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "origin": "R4OS Windows-generated NTFS reference fixture; filesystem data, no Microsoft executable or source code",
+  "fixtureManifest": "Tests/Fixture/Ntfs/NtfsFixtureManifest.json",
+  "fixtureManifestSha256": "c7b200bb3df62bd61bd85cc251d6a509f4db774bde832d0ce111027fe03a8609",
+  "importedFor": "0.76.9",
+  "files": [
+    {
+      "path": "attrdef.bin",
+      "bytes": 2560,
+      "sha256": "d7de5b1b2f79f45f235ceb1adbc46908ed64eae174eb90ed66aefe5f25165da3",
+      "source": "Tests/Fixture/Ntfs/Meta0605/attrdef.bin"
+    },
+    {
+      "path": "boot_sd.bin",
+      "bytes": 100,
+      "sha256": "f11a1b3644ba6aaa368c670f886963f533b138c300715e9a5ad578964860a52a",
+      "source": "Tests/Fixture/Ntfs/Meta0605/boot_sd.bin"
+    },
+    {
+      "path": "extend_objid_o_root.bin",
+      "bytes": 48,
+      "sha256": "e490de5181fd875fc9006534bc503ec0163b7d3b5e28d356f54e2887f8583a5a",
+      "source": "Tests/Fixture/Ntfs/Meta0605/extend_objid_o_root.bin"
+    },
+    {
+      "path": "extend_quota_o_root.bin",
+      "bytes": 88,
+      "sha256": "0d44d3d04114afde5eb66b6131b5b2479b6cc9461c6b929ef8882f3ffc4a3cf4",
+      "source": "Tests/Fixture/Ntfs/Meta0605/extend_quota_o_root.bin"
+    },
+    {
+      "path": "extend_quota_q_root.bin",
+      "bytes": 208,
+      "sha256": "13377b2b22043514c5b372e95db062b28d73b0ffda47bd2f377040114dabb3fb",
+      "source": "Tests/Fixture/Ntfs/Meta0605/extend_quota_q_root.bin"
+    },
+    {
+      "path": "extend_reparse_r_root.bin",
+      "bytes": 48,
+      "sha256": "e490de5181fd875fc9006534bc503ec0163b7d3b5e28d356f54e2887f8583a5a",
+      "source": "Tests/Fixture/Ntfs/Meta0605/extend_reparse_r_root.bin"
+    },
+    {
+      "path": "root_sd.bin",
+      "bytes": 228,
+      "sha256": "3e125681e9328d6ed5069dd145943e69fc63a3c2ce722aac4c52451a13673ff1",
+      "source": "Tests/Fixture/Ntfs/Meta0605/root_sd.bin"
+    },
+    {
+      "path": "secure_SDH_alloc.bin",
+      "bytes": 4096,
+      "sha256": "a9f362b5365d9d3f9e62531ce9210db3e96ebcf9a9da47b48e67418b4f1641df",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_SDH_alloc.bin"
+    },
+    {
+      "path": "secure_SDH_bitmap.bin",
+      "bytes": 8,
+      "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_SDH_bitmap.bin"
+    },
+    {
+      "path": "secure_SII_alloc.bin",
+      "bytes": 4096,
+      "sha256": "1408f979ba070c70a0be1053abdd5837807a762344ba81b8a89a75b564b79061",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_SII_alloc.bin"
+    },
+    {
+      "path": "secure_SII_bitmap.bin",
+      "bytes": 8,
+      "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_SII_bitmap.bin"
+    },
+    {
+      "path": "secure_sdh_root.bin",
+      "bytes": 56,
+      "sha256": "202f7fa0921ea6b2c32d1920268b7ad635aec8dc4060b981c20aa0717b0a61e2",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_sdh_root.bin"
+    },
+    {
+      "path": "secure_sds_prefix.bin",
+      "bytes": 1378,
+      "sha256": "efca367ca9f62d04dea1cc64290c89b5d2bf1090c74976c72d6739954722ccdb",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_sds_prefix.bin"
+    },
+    {
+      "path": "secure_sii_root.bin",
+      "bytes": 56,
+      "sha256": "33be1fcfa47b93ae272c2ac2f386668f0fcfe820334622e2b2eb5f6177e4a19e",
+      "source": "Tests/Fixture/Ntfs/Meta0605/secure_sii_root.bin"
+    },
+    {
+      "path": "upcase.bin",
+      "bytes": 131072,
+      "sha256": "41c26bc7a12bdaeb26025c93118697c7e3ef81ee048b00fe5cce2a472e0e0742",
+      "source": "Tests/Fixture/Ntfs/Meta0605/upcase.bin"
+    },
+    {
+      "path": "upcase_info.bin",
+      "bytes": 32,
+      "sha256": "ee502838f53f00c9444b311f4cdea74454a1e0c64e8cdec3d63eb5232fb61f82",
+      "source": "Tests/Fixture/Ntfs/Meta0605/upcase_info.bin"
+    }
+  ]
+}

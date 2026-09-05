@@ -63,7 +63,9 @@ const Harness = struct {
         try self.check("raw read", self.storage.read(&target, 0, &before), 0);
         try self.check("raw bound", self.storage.read(&target, target.sector_count, &before), abi.storage_error_invalid);
         var id: u64 = 0;
-        defer if (id != 0) { _ = self.storage.claimEnd(&id, false); };
+        defer if (id != 0) {
+            _ = self.storage.claimEnd(&id, false);
+        };
         var use: u64 = 0;
         try self.check("local use", self.storage.useBegin("E:\\VOLUME.TXT", &use), 0);
         defer _ = self.storage.useEnd(&use);
@@ -140,7 +142,9 @@ const Harness = struct {
         try self.check("RAM ready", self.sys.fileWrite(ready_path, token), @intCast(token.len));
         self.sys.write("[STORAGE] HOLD READY\r\n");
         if (abandon) return; // Exact ProgramThread retirement must close it.
-        defer if (id != 0) { _ = self.storage.claimEnd(&id, false); };
+        defer if (id != 0) {
+            _ = self.storage.claimEnd(&id, false);
+        };
         const deadline = self.sys.ticks() + self.sys.ticksFromMilliseconds(15000);
         while (self.sys.fileInfo(release_path) == null) {
             if (self.sys.ticks() >= deadline) return error.Failed;
@@ -169,7 +173,9 @@ const Harness = struct {
         try self.check("save boot RAM", self.sys.fileWrite(saved_boot_path, &saved), 512);
         var id: u64 = 0;
         try self.check("fault begin", self.storage.claimBegin(&target, &id), 0);
-        defer if (id != 0) { _ = self.storage.claimEnd(&id, true); };
+        defer if (id != 0) {
+            _ = self.storage.claimEnd(&id, true);
+        };
         const blank: [512]u8 = .{0} ** 512;
         try self.check("fault boot write", self.storage.claimWrite(id, 0, &blank), 0);
         try self.check("reported remount failure", self.storage.claimEnd(&id, false), abi.storage_error_remount);
@@ -187,7 +193,9 @@ const Harness = struct {
         try self.check("saved boot RAM", self.sys.fileRead(saved_boot_path, &saved), 512);
         var id: u64 = 0;
         try self.check("restore begin", self.storage.claimBegin(&target, &id), 0);
-        defer if (id != 0) { _ = self.storage.claimEnd(&id, true); };
+        defer if (id != 0) {
+            _ = self.storage.claimEnd(&id, true);
+        };
         try self.check("restore bytes", self.storage.claimWrite(id, 0, &saved), 0);
         try self.check("restore finish", self.storage.claimEnd(&id, true), 0);
         target = try self.fixtureTarget();
@@ -206,7 +214,9 @@ const Harness = struct {
             const target = r4os.storage.Context.wholeDevice(disk);
             var id: u64 = 0;
             try self.check("flush fault begin", self.storage.claimBegin(&target, &id), 0);
-            defer if (id != 0) { _ = self.storage.claimEnd(&id, true); };
+            defer if (id != 0) {
+                _ = self.storage.claimEnd(&id, true);
+            };
             const sector: [512]u8 = .{0x76} ** 512;
             try self.check("arm real backend fault", self.storage.claimWrite(id, 0, &sector), 0);
             try self.check("real backend flush failure", self.storage.claimEnd(&id, true), abi.storage_error_io);
@@ -220,22 +230,17 @@ const Harness = struct {
         }
         return error.MissingFixture;
     }
+    fn tools(self: Harness) !void {
+        _ = try self.fixtureTarget();
+        try @import("storage_tools_diagnostic.zig").run(self.sys);
+        try self.witness();
+    }
 };
 
 pub fn run(sys: *const r4os.r4sys.Context, command: []const u8) i32 {
     const h = Harness{ .sys = sys, .storage = .{ .sys = sys } };
     if (!h.storage.available()) return 1;
-    const result = if (std.ascii.eqlIgnoreCase(command, "BASIC")) h.basic()
-        else if (std.ascii.eqlIgnoreCase(command, "BUSY")) h.tryClaim(true)
-        else if (std.ascii.eqlIgnoreCase(command, "FREE")) h.tryClaim(false)
-        else if (std.ascii.eqlIgnoreCase(command, "WAITFREE")) h.waitFree()
-        else if (std.ascii.eqlIgnoreCase(command, "HOLD")) h.hold(false)
-        else if (std.ascii.eqlIgnoreCase(command, "ABANDON")) h.hold(true)
-        else if (std.ascii.eqlIgnoreCase(command, "FORGED")) h.forged()
-        else if (std.ascii.eqlIgnoreCase(command, "CORRUPT")) h.corrupt()
-        else if (std.ascii.eqlIgnoreCase(command, "RESTORE")) h.restore()
-        else if (std.ascii.eqlIgnoreCase(command, "FLUSHFAIL")) h.flushFailure()
-        else @as(Error!void, error.Failed);
+    const result = if (std.ascii.eqlIgnoreCase(command, "BASIC")) h.basic() else if (std.ascii.eqlIgnoreCase(command, "BUSY")) h.tryClaim(true) else if (std.ascii.eqlIgnoreCase(command, "FREE")) h.tryClaim(false) else if (std.ascii.eqlIgnoreCase(command, "WAITFREE")) h.waitFree() else if (std.ascii.eqlIgnoreCase(command, "HOLD")) h.hold(false) else if (std.ascii.eqlIgnoreCase(command, "ABANDON")) h.hold(true) else if (std.ascii.eqlIgnoreCase(command, "FORGED")) h.forged() else if (std.ascii.eqlIgnoreCase(command, "CORRUPT")) h.corrupt() else if (std.ascii.eqlIgnoreCase(command, "RESTORE")) h.restore() else if (std.ascii.eqlIgnoreCase(command, "FLUSHFAIL")) h.flushFailure() else if (std.ascii.eqlIgnoreCase(command, "TOOLS")) h.tools() else @as(Error!void, error.Failed);
     result catch |err| {
         var text: [120]u8 = undefined;
         sys.write(std.fmt.bufPrint(&text, "[STORAGE] result=FAILED {s}: {s}\r\n", .{ command, @errorName(err) }) catch "Storage test failed\r\n");

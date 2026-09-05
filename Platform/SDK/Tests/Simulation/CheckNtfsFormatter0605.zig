@@ -3,9 +3,9 @@
 // deterministic file tree, then writes it out for NtfsVerify and chkdsk.
 //
 // Usage:
-//   zig run --dep ntfs_mkfs --dep ntfs_format -Mroot=CheckNtfsFormatter0605.zig \
-//       -Mntfs_mkfs=Code/BuildTools/ImageCreator/src/ntfs_mkfs.zig \
-//       -Mntfs_format=Code/System/SDK/r4os/ntfs_format.zig \
+//   zig run --dep ntfs_mkfs -Mroot=CheckNtfsFormatter0605.zig \
+//       --dep ntfs_format -Mntfs_mkfs=Repositories/SDK/r4os/ntfs_mkfs.zig \
+//       -Mntfs_format=Repositories/SDK/r4os/ntfs_format.zig \
 //       -- <meta-dir> <output-image>
 
 const std = @import("std");
