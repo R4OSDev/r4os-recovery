@@ -313,6 +313,34 @@ pub const Plan = struct {
         return error.NoSpace;
     }
 
+    /// Changes only the end of one existing partition. A growth request may
+    /// consume only immediately adjacent free sectors; no partition is moved.
+    pub fn extend(self: *Plan, number: u32, extra_sectors: ?u64) !u64 {
+        try self.validate();
+        const entry = try self.get(number);
+        const end = entry.first + entry.count;
+        var limit = self.last_usable + 1;
+        for (self.entries[0..self.entry_count]) |other| {
+            if (other.present and other.first >= end) limit = @min(limit, other.first);
+        }
+        const available = limit - end;
+        const extra = extra_sectors orelse (available / alignment_sectors * alignment_sectors);
+        if (extra == 0 or extra > available) return error.NoSpace;
+        const old_count = entry.count;
+        entry.count += extra;
+        self.validate() catch |err| {
+            entry.count = old_count;
+            return err;
+        };
+        return entry.count;
+    }
+
+    pub fn revalidate(self: *const Plan, device: block.Device, work: []u8) !void {
+        try self.validate();
+        if (device.sectors != self.sectors or self.source.count == 0) return error.Geometry;
+        if (!std.mem.eql(u8, &self.source.digest, &try self.source.hash(device, work))) return error.Stale;
+    }
+
     /// The source fingerprint is rechecked after the caller acquires its
     /// whole-device claim. Existing unknown layouts are never rewritten.
     pub fn commit(self: *const Plan, device: block.Device, work: []u8) !void {

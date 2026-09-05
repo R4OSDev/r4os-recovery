@@ -1,5 +1,5 @@
 # Host clients for isolated QEMU acceptances; credentials are the Recovery default.
-function Client([string]$Program,[string[]]$Arguments,[string]$InputText=''){
+function Client([string]$Program,[string[]]$Arguments,[string]$InputText='',[ValidateRange(1,60000)][int]$TimeoutMilliseconds=20000){
     $start=[Diagnostics.ProcessStartInfo]::new($Program);$start.UseShellExecute=$false
     $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true;$start.RedirectStandardInput=$true
     $start.Environment['SSH_ASKPASS']=$askpass;$start.Environment['SSH_ASKPASS_REQUIRE']='force';$start.Environment['DISPLAY']='recovery-acceptance'
@@ -9,7 +9,7 @@ function Client([string]$Program,[string[]]$Arguments,[string]$InputText=''){
         if(!$client.Start()){throw "Client did not start: $Program"}
         $stdout=$client.StandardOutput.ReadToEndAsync();$stderr=$client.StandardError.ReadToEndAsync()
         $client.StandardInput.Write($InputText);$client.StandardInput.Close()
-        $timedOut=!$client.WaitForExit(20000)
+        $timedOut=!$client.WaitForExit($TimeoutMilliseconds)
         if($timedOut){$client.Kill($true);$client.WaitForExit()}
         $text=$stdout.GetAwaiter().GetResult();$errorText=$stderr.GetAwaiter().GetResult()
         [IO.File]::AppendAllText($clientLog,"$([IO.Path]::GetFileName($Program)) $($Arguments -join ' ')`n$text$errorText`n",$utf8)
@@ -19,7 +19,7 @@ function Client([string]$Program,[string[]]$Arguments,[string]$InputText=''){
     }finally{$client.Dispose()}
 }
 function Ssh([string]$Command){return Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',$Command))}
-function Sftp([string[]]$Commands){return Client $sftp (@('-P',"$sshPort",'-o','BatchMode=no','-b','-')+$sshOptions+@('r4os@127.0.0.1')) (($Commands -join "`n")+"`n")}
+function Sftp([string[]]$Commands,[ValidateRange(1,60000)][int]$TimeoutMilliseconds=20000){return Client $sftp (@('-P',"$sshPort",'-o','BatchMode=no','-b','-')+$sshOptions+@('r4os@127.0.0.1')) (($Commands -join "`n")+"`n") $TimeoutMilliseconds}
 function Host-Path([string]$Path){return '"'+$Path.Replace('\','/').Replace('"','\"')+'"'}
 function Require-Hash([string]$Actual,[string]$Expected){if((Get-RecoveryHash $Actual) -cne (Get-RecoveryHash $Expected)){throw "File hash mismatch: $Actual"}}
 function Ftp-Reply($Ftp,[string]$Expected){

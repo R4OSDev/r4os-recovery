@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "reason": "0.76.11: explicit R4PART owner build/source import, common NTFS growth with bounded bitmap relocation, explicit persistence and remount after successful resize; original platform archives retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "df6caecb534c7d5d96b3b35b2bc3be207b233205",
+      "sourceCommit": "9ce07d5e0063aa1536c6e33032215ed96b2af684",
+      "patch": "Legal/Changes/SDK-0.76.11.patch",
+      "patchSha256": "44f8341cfeef25e305636ec5282c9aeffcc5f8cbba0a8962b143dafac91e6d0b",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "ecc106a31c0955a38ab9e0f884737829fb2513010f8317e965e7b16e5a225bfd"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "fb9fdca0e0c0746a13449402c0c9c6db75079018b433572ba2b6b52284f24e43"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "sha256": "77afafc4302e0b016a771410934a41da02cf0a857a2ebe7c42bb3ee5ca2fc553"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_extend.zig",
+          "sha256": "bbbb465daa13b88e4682253af41d391d782551989383dbe6e6df8e46906b488c"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/partition.zig",
+          "sha256": "be1de2c5a17e98a5b1cec1b15f79967c48e6e9470186094de92908e67b112fd6"
+        }
+      ]
+    }
+  ],
+  "application": {
+    "source": "Apps-R4Part",
+    "commit": "3533d6050835086313e36498cc96ef29c4c4e5d6",
+    "archiveSha256": "f316f4e1e306a74b687a718e26e6b915a72a4134220416c9893d94b81c2d879e",
+    "binary": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+    "binarySha256": "24dd8217acec684fed2d68713ca1c499ea995faa82b7895a1e8e16bf22092098",
+    "sdkCommit": "9ce07d5e0063aa1536c6e33032215ed96b2af684"
+  }
+}

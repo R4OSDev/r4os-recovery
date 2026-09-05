@@ -119,7 +119,7 @@ test "GPT/MBR roundtrip, geometry, free space, attributes and stale plans" {
     const converted = try table.Plan.read(device, &work);
     try eq(table.Kind.mbr, converted.kind);
     try eq(@as(u32, 77), converted.disk_id);
-    for (bytes[512..34 * 512]) |byte| try eq(@as(u8, 0), byte);
+    for (bytes[512 .. 34 * 512]) |byte| try eq(@as(u8, 0), byte);
     for (bytes[bytes.len - 33 * 512 ..]) |byte| try eq(@as(u8, 0), byte);
 }
 
@@ -264,4 +264,115 @@ fn allocationFixture(allocator: std.mem.Allocator) !void {
 
 test "NTFS preparation releases resources on every allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationFixture, .{});
+}
+
+fn extendAllocation(allocator: std.mem.Allocator, disk: tools.io.Device, layout: *table.Plan, work: []u8) !void {
+    const plan = try tools.ntfs_extend.Plan.prepare(allocator, disk, layout, 1, 128 * 2048, work);
+    plan.deinit();
+}
+
+test "offline NTFS growth relocates bitmap, preserves data and exposes interrupted metadata/table phases" {
+    const allocator = std.testing.allocator;
+    const bytes = try allocator.alloc(u8, 200 * 1024 * 1024);
+    defer allocator.free(bytes);
+    @memset(bytes, 0);
+    var memory = tools.io.Memory{ .bytes = bytes };
+    var work: [32768]u8 = undefined;
+    var layout = try table.Plan.read(memory.device(), &work);
+    try layout.initializeGpt(disk_guid);
+    _ = try layout.add(.{ .present = true, .first = 2048, .count = 128 * 2048, .type_guid = table.basic_type, .unique_guid = table.guid.parse("20112233-4455-6677-8899-aabbccddeeff").? });
+    try layout.commit(memory.device(), &work);
+    var region = tools.io.Region{ .parent = memory.device(), .first = 2048, .count = 128 * 2048 };
+    var builder = try tools.ntfs.Builder.init(allocator, 128 * 1024 * 1024, "EXTEND", 2048, tools.standardNtfsMetadata(), 0, 42);
+    defer builder.deinit();
+    const witness = try allocator.alloc(u8, 64 * 1024);
+    defer allocator.free(witness);
+    for (witness, 0..) |*byte, i| byte.* = @truncate(i *% 17 +% 39);
+    try builder.addFile(builder.root(), "WITNESS.BIN", witness);
+    // Several index nodes exercise duplicated $Bitmap sizes outside the root.
+    var names: [96][32]u8 = undefined;
+    for (0..96) |i| try builder.addFile(builder.root(), try std.fmt.bufPrint(&names[i], "FILE{d:0>3}.TXT", .{i}), "unchanged content");
+    var formatted = try builder.prepare();
+    defer formatted.deinit();
+    try formatted.execute(try region.device(), false, &work);
+    const original = try allocator.dupe(u8, bytes);
+    defer allocator.free(original);
+    layout = try table.Plan.read(memory.device(), &work);
+    try expectError(error.NoSpace, layout.extend(1, 100 * 2048));
+    try eq(@as(u64, 192 * 2048), try layout.extend(1, 64 * 2048));
+    try std.testing.checkAllAllocationFailures(allocator, extendAllocation, .{ memory.device(), &layout, &work });
+    const plan = try tools.ntfs_extend.Plan.prepare(allocator, memory.device(), &layout, 1, 128 * 2048, &work);
+    defer plan.deinit();
+    try eq(@as(u64, 2), plan.bitmap_clusters);
+    var progress = tools.io.Progress{};
+    var fixture = Fixture{ .bytes = bytes };
+    try plan.execute(fixture.device(&progress), &layout, &work);
+    const writes = fixture.writes;
+    const flushes = fixture.flushes;
+    try expect(progress.verified and progress.flushed);
+    const after = try table.Plan.read(memory.device(), &work);
+    try eq(@as(u64, 2048), after.entries[0].first);
+    try eq(@as(u64, 192 * 2048), after.entries[0].count);
+    try expect(std.mem.eql(u8, &after.entries[0].unique_guid, &layout.entries[0].unique_guid));
+    var found_witness = false;
+    for (formatted.segments.items) |segment| {
+        if (segment.data.ptr == witness.ptr) {
+            try expect(std.mem.eql(u8, witness, bytes[1024 * 1024 + @as(usize, @intCast(segment.offset)) ..][0..witness.len]));
+            found_witness = true;
+        }
+    }
+    try expect(found_witness);
+    var boot: tools.ntfs_format.BootSector = undefined;
+    try eq(tools.ntfs_format.BootSector.ParseError.ok, tools.ntfs_format.BootSector.parse(bytes[1024 * 1024 ..][0..512], &boot));
+    try eq(@as(u64, 192 * 2048 - 1), boot.total_sectors);
+    try expect(std.mem.eql(u8, bytes[1024 * 1024 ..][0..512], bytes[(1 + 192) * 1024 * 1024 - 512 ..][0..512]));
+    // A second preflight reads the metadata just written: dirty flag, mirror,
+    // bitmap, sparse $Bad and index duplicates must all agree again.
+    var second = try table.Plan.read(memory.device(), &work);
+    _ = try second.extend(1, 4 * 2048);
+    const next = try tools.ntfs_extend.Plan.prepare(allocator, memory.device(), &second, 1, 192 * 2048, &work);
+    next.deinit();
+    // Inject failure at every metadata/table write and persistence barrier.
+    for (0..writes + flushes) |fault| {
+        @memcpy(bytes, original);
+        progress = .{};
+        fixture = .{ .bytes = bytes };
+        if (fault < writes) fixture.fail_write = fault + 1 else fixture.fail_flush = fault - writes + 1;
+        try expectError(if (fault < writes) error.WriteFailed else error.FlushFailed, plan.execute(fixture.device(&progress), &layout, &work));
+        try expect(progress.write_attempted and !progress.verified);
+        try expect(progress.failed_lba != null or progress.failure.? == error.FlushFailed);
+    }
+    @memcpy(bytes, original);
+    fixture = .{ .bytes = bytes, .corrupt_after_flush = true };
+    progress = .{};
+    try expectError(error.VerifyFailed, plan.execute(fixture.device(&progress), &layout, &work));
+    try expect(progress.write_attempted and !progress.verified);
+    @memcpy(bytes, original);
+    bytes[1024 * 1024 + 20] ^= 1;
+    fixture = .{ .bytes = bytes };
+    progress = .{};
+    try expectError(error.Stale, plan.execute(fixture.device(&progress), &layout, &work));
+    try expect(!progress.write_attempted and fixture.writes == 0);
+    @memcpy(bytes, original);
+    var readonly = memory.device();
+    readonly.exclusive = false;
+    try expectError(error.ExclusiveRequired, plan.execute(readonly, &layout, &work));
+    try expect(@sizeOf(tools.ntfs_extend.Plan) < 48 * 1024);
+    progress = .{};
+    var cancelled = memory.device();
+    cancelled.progress = &progress;
+    cancelled.continue_fn = struct {
+        fn proceed(_: ?*anyopaque, _: tools.io.Phase, _: u64) bool {
+            return false;
+        }
+    }.proceed;
+    try expectError(error.Cancelled, plan.execute(cancelled, &layout, &work));
+    try expect(!progress.write_attempted);
+    // Unsupported cluster geometry is rejected with untouched tables/metadata.
+    bytes[1024 * 1024 + 13] = 16;
+    bytes[(1 + 128) * 1024 * 1024 - 512 + 13] = 16;
+    fixture = .{ .bytes = bytes };
+    progress = .{};
+    try expectError(error.UnsupportedNtfs, tools.ntfs_extend.Plan.prepare(allocator, fixture.device(&progress), &layout, 1, 128 * 2048, &work));
+    try expect(!progress.write_attempted and fixture.writes == 0);
 }

@@ -556,3 +556,53 @@ leerer Tabelle; der alte Fingerprint bleibt gebunden. GPT->MBR entfernt
 explizit beide alten GPT-Header und Arrays vor der MBR-Publikation.
 Der vorhandene Komponentenbestand prueft belegte Abweisung und beide
 Konvertierungsrichtungen mit leerem GPT-Verwaltungsbereich danach.
+
+0.76.11: Ausgehaengte NTFS-Volumes vergroessern
+---------------------------------------------
+partition.Plan.extend aendert nur die Endgrenze der gewaehlten Partition;
+SIZE addiert MB, ohne SIZE werden alle angrenzenden vollen MB genutzt.
+Start, Typ, IDs, Attribute und alle anderen Eintraege bleiben erhalten.
+ntfs_extend.Plan bereitet die gemeinsame Dateisystemanpassung im Heap vor.
+Unterstuetzt: sauberes NTFS 3.1, 512-Byte-Sektoren, 4096-Byte-Cluster,
+1024-Byte-MFT-Records, 4096-Byte-Indizes, identische Bootkopien ohne Checksumme,
+bis 64 Runs pro bearbeitetem Metadatenattribut, voll initialisierte MFT/Bitmap,
+vier konsistente MFTMirr-Records und hoechstens 128 aktive Root-Indexbloecke
+mit residenter Indexbitmap. Attributlisten, unbekannte Volume-Flags, echte
+BadClus-Belegung oder speziell markierte sparse/komprimierte Metadaten werden
+abgewiesen. Der rein virtuelle $Bad-Strom ist ausdruecklich unterstuetzt.
+Das ist keine allgemeine Dateisystemreparatur oder Konsistenzpruefung aller
+Dateien; vorhandene beschaedigte Volumes sind kein freigegebenes Resizeziel.
+
+Der neue Bitmapbereich liegt zusammenhaengend im hinzugefuegten Platz hinter
+dem alten Sicherungsbootsektor. Er muss dort vollstaendig hineinpassen. Alte
+Belegungsbits werden blockweise kopiert, die alte Bitmap freigegeben, die neue
+Bitmap reserviert, neuer Freiraum freigegeben und Paddingbits gesetzt. $Bitmap-
+Runlist/Groessen, FILE_NAME und der tatsaechliche Root-I30-Eintrag, $Bad sowie
+beide Bootsektoren werden angepasst. Bestehende Dateidaten werden nicht bewegt.
+Plan unter 48 KB plus caller-eigener Arbeitsbuffer (128 KB empfohlen); keine
+volumenproportionale Allokation. Bitmapverarbeitung ist block-/bereichsweise.
+
+Gelesene Verwaltungssektoren und der komplette alte Bitmapdatenstrom tragen
+SHA-256-Fingerprints; Nachlesen bindet die tatsaechlich geparsten Bytes bereits
+vor Bestaetigung und erneut nach dem exklusiven Unmount. Alle Ablehnungen und
+Allokationen liegen vor Schreibbeginn. Reihenfolge: dirty $Volume + Spiegel,
+Flush/Readback; groessere Partitionstabelle, Flush/Readback; neue Bitmap,
+Flush/Readback; MFT-/Root-Metadaten, Flush/Readback; neuer Backupbootsektor,
+Flush/Readback; Hauptbootsektor, Flush/Readback; sauberer $Volume + Spiegel,
+Flush/Readback. Jeder FILE-/INDX-Schreiber installiert neue USA-Fixups.
+
+Unterbrechungsgrenzen: nach Tabellenanpassung kann eine groessere Partition
+noch das alte kleinere, dirty markierte NTFS enthalten. Zwischen Bitmap-/MFT-
+Publikation und Bootsektoren koennen Groessen und Verwaltungsdaten voneinander
+abweichen. Unterbrochene Sektorschreibvorgaenge koennen USA/Tabelle zerreissen;
+der letzte Clean-Schritt kann trotz konsistenter Nutzmetadaten fehlschlagen.
+Fehler lassen das Ziel ausgehaengt. Kein automatischer Rollback oder blindes
+Wiederholen; externer Offline-NTFS-/GPT-Reparaturlauf bzw. Wiederherstellung
+kann erforderlich sein. R4PART stellt den alten Buchstaben erst nach komplett
+erfolgreicher Vergroesserung und erneut gepruefter Zielidentitaet wieder her.
+Guestgrenzen: Partitionsstart u32, Clusterzahl u32; SDK-Blockadressen u64.
+
+Der bestehende storage-tools-test enthaelt einen gebuendelten Resizefall:
+128->192 MB mit Bitmaprelokation und mehrteiligem Rootindex, Datenbytevergleich,
+erneuter Planung, jedem Schreib-/Flushfehler, Readback, Stale, Cancel,
+Exklusivitaet, abgelehnter Geometrie und allen Planallokationsfehlern.

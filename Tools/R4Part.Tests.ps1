@@ -43,6 +43,28 @@ function Test-R4Part([bool]$Recovery=$true) {
     $null=Part-Run @($select,'SELECT PARTITION 1','FORMAT FS=FAT32 QUICK LABEL="PART FAT"',$p1,'ASSIGN LETTER=X',
         'SELECT PARTITION 2','FORMAT FS=NTFS FULL LABEL="PART NTFS"',$p2,'ASSIGN LETTER=Y','LIST VOLUME') @('FAT32','NTFS','Assigned X:','Assigned Y:')
     Part-File 'X';Part-File 'Y'
+    # NTFS growth preserves IDs/start and the unrelated FAT volume. No-space,
+    # unsupported FS and a live SFTP handle must all reject before mutation.
+    $null=Part-Run @($select,'SELECT PARTITION 1','EXTEND SIZE=1',
+        'CREATE PARTITION PRIMARY SIZE=4 OFFSET=99328',$yes,'SELECT PARTITION 2','EXTEND SIZE=16',
+        'SELECT PARTITION 3','DELETE PARTITION',"$yes PARTITION 3") @('ERROR UnsupportedNtfs','ERROR NoSpace') 2
+    $held=Storage-Sftp
+    try{
+        if($held.Open('/Y/WITNESS.BIN',$false,$false) -ne 0){throw 'Could not hold NTFS file.'}
+        $null=Part-Run @($select,'SELECT PARTITION 2','EXTEND SIZE=16',$p2,'DETAIL PARTITION') @('ERROR Storage \(-3: in use','sectors 65536') 1
+        if($held.CloseHandle() -ne 0){throw 'Held NTFS close failed.'}
+    }finally{$held.Dispose()}
+    $null=Part-Run @($select,'SELECT PARTITION 2','EXTEND SIZE=16',$p2,'DETAIL PARTITION','LIST VOLUME') @('32 MB -> 48 MB','first LBA 133120, sectors 98304','Assigned Y:')
+    Part-Read 'X';Part-Read 'Y'
+    # The payload is larger than the entire old filesystem, so successful
+    # write+read proves allocation in the newly added area, not only old space.
+    $growth=Join-Path $output 'growth.bin';$growthRead=Join-Path $output 'growth-read.bin'
+    $block=[byte[]]::new(65536);for($i=0;$i -lt $block.Length;$i++){$block[$i]=[byte](($i*17+39)%256)}
+    $file=[IO.File]::Create($growth);try{for($i=0;$i -lt 640;$i++){$file.Write($block)}}finally{$file.Dispose()}
+    $null=Sftp @("put $(Host-Path $growth) /Y/GROWTH.BIN","get /Y/GROWTH.BIN $(Host-Path $growthRead)") -TimeoutMilliseconds 60000
+    Require-Hash $growthRead $growth
+    Part-Read 'Y'
+    $null=Sftp @('rm /Y/GROWTH.BIN')
     $null=Part-Run @($select,'SELECT PARTITION 1','OFFLINE PARTITION','LIST VOLUME') @('Offline: affected volumes flushed and unmounted')
     $text=Ssh 'R4PART LIST VOLUME';if($text -match '(?m)^\s*23\s+X\s'){throw 'OFFLINE did not survive EXIT.'}
     Part-Read 'Y'

@@ -295,10 +295,10 @@
     },
     {
       "id": "Apps-R4Part",
-      "commit": "e92784e9a9249934a6f6de6380937e02a55173d4",
+      "commit": "3533d6050835086313e36498cc96ef29c4c4e5d6",
       "remote": "https://github.com/R4OSDev/r4os-app-r4part.git",
       "archive": "Legal/Sources/Apps-R4Part.zip",
-      "archiveSha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842"
+      "archiveSha256": "f316f4e1e306a74b687a718e26e6b915a72a4134220416c9893d94b81c2d879e"
     }
   ],
   "platformProviders": [
@@ -1114,12 +1114,12 @@
     },
     {
       "name": "R4PART",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": "Apps-R4Part",
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
       "manifest": "Legal/Manifests/R4PART/module.R4MF",
       "kind": 1,
-      "bytes": 303836,
+      "bytes": 324906,
       "imports": [
         "R4SYS:Query:1",
         "R4DESK:Query:1"
@@ -3734,7 +3734,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "1642a5966dd7fff2c066df4b973a6f7b4d3372c9186124d24d8c97072fe43597",
+      "sha256": "095b837ccd409db36017b6760e4a5d06114390ca80f0186faf3a092f720b23f9",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3829,6 +3829,13 @@
       "path": "Legal/Changes/SDK-0.76.10.patch",
       "bytes": 6303,
       "sha256": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.11.patch",
+      "bytes": 44615,
+      "sha256": "44f8341cfeef25e305636ec5282c9aeffcc5f8cbba0a8962b143dafac91e6d0b",
       "originalSha256": null,
       "origin": null
     },
@@ -4094,8 +4101,8 @@
     {
       "path": "Legal/Manifests/R4PART/module.R4MF",
       "bytes": 273,
-      "sha256": "cb9954bd51a3b8841fd7bf26dbd6a9895c0548328c4e0abae298d1c7b28d3ee7",
-      "originalSha256": "cb9954bd51a3b8841fd7bf26dbd6a9895c0548328c4e0abae298d1c7b28d3ee7",
+      "sha256": "4b36d38651368aa077cef2d9074642c562868d2f83f1446efce9f6b6311b5c6a",
+      "originalSha256": "4b36d38651368aa077cef2d9074642c562868d2f83f1446efce9f6b6311b5c6a",
       "origin": {
         "source": "Apps-R4Part",
         "path": "module.R4MF"
@@ -5189,12 +5196,12 @@
     },
     {
       "path": "Legal/Sources/Apps-R4Part.zip",
-      "bytes": 24198,
-      "sha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842",
-      "originalSha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842",
+      "bytes": 25410,
+      "sha256": "f316f4e1e306a74b687a718e26e6b915a72a4134220416c9893d94b81c2d879e",
+      "originalSha256": "f316f4e1e306a74b687a718e26e6b915a72a4134220416c9893d94b81c2d879e",
       "origin": {
         "source": "Apps-R4Part",
-        "path": "git archive e92784e9a9249934a6f6de6380937e02a55173d4"
+        "path": "git archive 3533d6050835086313e36498cc96ef29c4c4e5d6"
       }
     },
     {
@@ -6062,8 +6069,8 @@
     },
     {
       "path": "Platform/SDK/DOCUMENTATION.de.txt",
-      "bytes": 32090,
-      "sha256": "c3c2c38e2f2659493e870385948f1a479f0361a4d642cd31a4d73fa182a8606d",
+      "bytes": 35480,
+      "sha256": "ecc106a31c0955a38ab9e0f884737829fb2513010f8317e965e7b16e5a225bfd",
       "originalSha256": "df240d0fb7312961eb1bf9eb53c7e51dc4d36fcaba46eb9a3135bf60720bc70a",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -6727,8 +6734,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools.zig",
-      "bytes": 540,
-      "sha256": "f769f5b316f7dc2c6b7169f6bfedf0cbaee64fb78182b9b5218874cbbb741d01",
+      "bytes": 606,
+      "sha256": "77afafc4302e0b016a771410934a41da02cf0a857a2ebe7c42bb3ee5ca2fc553",
       "originalSha256": null,
       "origin": null
     },
@@ -6757,6 +6764,13 @@
       "path": "Platform/SDK/r4os/storage_tools/io.zig",
       "bytes": 9293,
       "sha256": "003148d1f5c50bc328e2172a834cfe337435466b68979deadfa7eacedf04cee8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/ntfs_extend.zig",
+      "bytes": 30435,
+      "sha256": "bbbb465daa13b88e4682253af41d391d782551989383dbe6e6df8e46906b488c",
       "originalSha256": null,
       "origin": null
     },
@@ -6895,8 +6909,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/partition.zig",
-      "bytes": 21611,
-      "sha256": "53370e75bafd0187bc87d05538aa2715b60fe616f69b006c378fc91277744aec",
+      "bytes": 22893,
+      "sha256": "be1de2c5a17e98a5b1cec1b15f79967c48e6e9470186094de92908e67b112fd6",
       "originalSha256": null,
       "origin": null
     },
@@ -8646,8 +8660,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
-      "bytes": 12435,
-      "sha256": "2ccbcecc66b54fa12654f31243711e1a99f1cd1a3e16ca6a3196e01bcf5a233d",
+      "bytes": 18676,
+      "sha256": "fb9fdca0e0c0746a13449402c0c9c6db75079018b433572ba2b6b52284f24e43",
       "originalSha256": null,
       "origin": null
     },
@@ -8921,7 +8935,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 63,
-      "sha256": "7a642fb0f99cd6446e72c7f9774e5993c2ca990f0834d45bfbc23c31354c074d",
+      "sha256": "477224777b7aacbdcddad07ec58f6f0dfa9469dfad751f364d7122cb29c857bd",
       "originalSha256": null,
       "origin": null
     },
@@ -8945,7 +8959,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 25,
-      "sha256": "77559a94b7d5bf4593968a06bf6994a7df9d5fae73197b166a7e5c04217261a1",
+      "sha256": "975be452180391591096ee9ceb4fc8d77b956da13d63e315482f5daadbc07106",
       "originalSha256": null,
       "origin": null
     },
@@ -9312,9 +9326,9 @@
     },
     {
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
-      "bytes": 303836,
-      "sha256": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112",
-      "originalSha256": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112",
+      "bytes": 324906,
+      "sha256": "24dd8217acec684fed2d68713ca1c499ea995faa82b7895a1e8e16bf22092098",
+      "originalSha256": "24dd8217acec684fed2d68713ca1c499ea995faa82b7895a1e8e16bf22092098",
       "origin": {
         "source": "Apps-R4Part",
         "path": "Artifacts/Modules/R4Part/R4PART.R4X"
@@ -10792,6 +10806,56 @@
           "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
           "before": null,
           "after": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.11: expliziten NTFS-Extend-SDK- und R4PART-Stand fuer Recovery uebernehmen",
+      "changes": [
+        {
+          "after": "095b837ccd409db36017b6760e4a5d06114390ca80f0186faf3a092f720b23f9",
+          "before": "1642a5966dd7fff2c066df4b973a6f7b4d3372c9186124d24d8c97072fe43597",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "after": "44f8341cfeef25e305636ec5282c9aeffcc5f8cbba0a8962b143dafac91e6d0b",
+          "before": null,
+          "path": "Legal/Changes/SDK-0.76.11.patch"
+        },
+        {
+          "after": "ecc106a31c0955a38ab9e0f884737829fb2513010f8317e965e7b16e5a225bfd",
+          "before": "c3c2c38e2f2659493e870385948f1a479f0361a4d642cd31a4d73fa182a8606d",
+          "path": "Platform/SDK/DOCUMENTATION.de.txt"
+        },
+        {
+          "after": "77afafc4302e0b016a771410934a41da02cf0a857a2ebe7c42bb3ee5ca2fc553",
+          "before": "f769f5b316f7dc2c6b7169f6bfedf0cbaee64fb78182b9b5218874cbbb741d01",
+          "path": "Platform/SDK/r4os/storage_tools.zig"
+        },
+        {
+          "after": "bbbb465daa13b88e4682253af41d391d782551989383dbe6e6df8e46906b488c",
+          "before": null,
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_extend.zig"
+        },
+        {
+          "after": "be1de2c5a17e98a5b1cec1b15f79967c48e6e9470186094de92908e67b112fd6",
+          "before": "53370e75bafd0187bc87d05538aa2715b60fe616f69b006c378fc91277744aec",
+          "path": "Platform/SDK/r4os/storage_tools/partition.zig"
+        },
+        {
+          "after": "fb9fdca0e0c0746a13449402c0c9c6db75079018b433572ba2b6b52284f24e43",
+          "before": "2ccbcecc66b54fa12654f31243711e1a99f1cd1a3e16ca6a3196e01bcf5a233d",
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig"
+        },
+        {
+          "after": "477224777b7aacbdcddad07ec58f6f0dfa9469dfad751f364d7122cb29c857bd",
+          "before": "7a642fb0f99cd6446e72c7f9774e5993c2ca990f0834d45bfbc23c31354c074d",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "after": "975be452180391591096ee9ceb4fc8d77b956da13d63e315482f5daadbc07106",
+          "before": "77559a94b7d5bf4593968a06bf6994a7df9d5fae73197b166a7e5c04217261a1",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
         }
       ]
     }

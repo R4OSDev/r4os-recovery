@@ -4,6 +4,7 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'Inventory.ps1')
 . (Join-Path $PSScriptRoot 'Guest-NetClients.ps1')
 . (Join-Path $PSScriptRoot 'Guest-Qmp.ps1')
+. (Join-Path $PSScriptRoot 'Storage-Access.Tests.ps1')
 . (Join-Path $PSScriptRoot 'R4Part.Tests.ps1')
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))

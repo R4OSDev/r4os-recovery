@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.9
+Stand 0.76.11
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -543,3 +543,27 @@ Alle bestanden; normaler testquick und gebuendelte SDK-/R4PART-/SSHD-Hosttests
 ebenfalls. 899 gepinnte Dateien, 38 Runtimeimporte, 20 lokale Revisionen.
 Stand: Recovery/Recovery-Kernel 0.1.8, Menue 0.1.3, R4PART 0.1.1,
 SSHD 0.1.6, normaler Kernel 0.1.92. Kein Windows-/Lenovo-Lauf.
+
+0.76.11: NTFS-Vergrößerung
+-------------------------
+R4PART 0.1.2 enthält EXTEND [SIZE=MB]. Der explizit übernommene SDK-Plan
+vergrößert nur angrenzendes NTFS bei unverändertem Start und Kennungen.
+Bitmaprelokation, Dateisystemmetadaten und Tabellen werden vorab geprüft,
+unter exklusivem Claim erneut validiert und mit Flush/Readback geschrieben.
+Nach Erfolg wird der vorherige Laufwerksbuchstabe mit frischer Identität
+wieder eingebunden. Unterstützte Geometrie und Unterbrechungsgrenzen stehen
+in Platform/SDK/DOCUMENTATION.de.txt. Kein Kernelmechanismus wurde erweitert.
+Die vorhandene R4PART-Abnahme prüft zusätzlich Busy durch ein offenes SFTP-
+Handle, fehlenden Nachbarplatz, FAT32-Abweisung und einen 40-MB-Datentransfer
+auf dem von 32 auf 48 MB vergrößerten Volume samt Hashvergleich.
+
+Abnahme 0.76.11: Linux/KVM, SMP4, 1024 MB. BIOS/VirtioNet 81.128 s,
+UEFI/RTL8139 83.174 s, offline/beschaedigtes SYSTEM 10.230 s.
+Normaler Full-Gast 88.005 s samt lokalem Terminal. Alle bestanden.
+Die 40-MB-SFTP-Datei wird hoch- und wieder heruntergeladen; fuer diesen
+80-MB-Rundlauf gilt eine eigene 60-s-Clientfrist (sonst weiterhin 20 s).
+SDK 6/6, R4PART-Parser 1/1; Standalone-Build mit oeffentlichen Pins bytegleich.
+R4PART SHA-256: 24dd8217acec684fed2d68713ca1c499ea995faa82b7895a1e8e16bf22092098.
+901 gepinnte Dateien, 38 Module, 21 lokale Revisionen; Recovery/Recovery-
+Kernel 0.1.9, R4PART 0.1.2; normaler Kernel 0.1.92 unveraendert.
+Keine Windows-/Lenovo-Ausfuehrung.
