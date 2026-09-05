@@ -109,7 +109,7 @@ not bind a mouse. Results live under `Artifacts/BootProbe/input/`.
 ## Recovery console host
 
 `RecoveryTools/Menu` owns RECOVERY.R4X and builds against the pinned SDK and
-Contract. The 37 imported binaries stay fixed; the runtime image additionally
+Contract. The 38 imported binaries stay fixed; the runtime image additionally
 contains the locally built Recovery application. Its manifest and source
 participate in input verification, and the build checks its real imports.
 
@@ -118,15 +118,23 @@ unchanged TERMINAL.R4X in a separate console session; EXIT restores the menu.
 Image scaling, text, cursor, scrolling and clear are confined to the source
 image's monitor. The shell uses existing R4DRAW and console-host APIs without
 a desktop. The footer shows the actual SSH address or network waiting state.
-Installer/update workflows are connected in their roadmap steps;
-the current entries report their availability explicitly.
+The first three entries select a fixed cached ZIP or their GitHub channel,
+then a live disk or an identified SYSTEM/RECOVERY partition. Review defaults
+to Back and revalidates the target before dispatch. Package processing and
+writes follow in their respective roadmap steps; no placeholder claims a
+completed installation. Readable OS markers add comma-separated names; no
+marker leaves the extra display empty. Details and current limits are in
+[DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).
 
-`-Mode UITest` exercises BIOS at 800x600, 1024x768 and 1920x1080 plus UEFI at
+`-Mode UITest` exercises BIOS at 640x480, 800x600, 1024x768 and 1920x1080 plus UEFI at
 1024x768, with four CPUs and a USB keyboard. Its `/UISMOKE` diagnostic session
 uses the existing shell stdout mirror and a second standard Terminal to
 check console isolation. QMP screendumps compare every pixel outside the
 monitor, and verify visible selection, dialogs, progress, clear, scrolling,
-Terminal return and reset. Artifacts stay under `Artifacts/BootProbe/ui/`.
+Terminal return and reset. The disk fixtures cover an existing installation,
+a blank disk and combined OS markers. `Tools/Test-UI.ps1 -BootMedium LOCAL
+-Firmware Bios -Resolution 1024x768x32` checks local-source USB exclusion and
+own-disk eligibility. Artifacts stay under `Artifacts/BootProbe/ui/`.
 
 Since 0.76.9, the pinned SDK and ImageCreator share GPT/MBR editing and streamed
 FAT32/NTFS formatting. `-Mode StorageToolsTest` exercises those same routines

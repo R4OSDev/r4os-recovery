@@ -3734,7 +3734,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "42dc727ae19cf8b3704d47776736ace80f6363bb5c4cd2059fdc1b053c6377e2",
+      "sha256": "b4e67d93b67ffceade709b4c3f23f1923b5db240fd50911dc8044707e98b198f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -8822,15 +8822,15 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 10730,
-      "sha256": "5e53886379984c3d5eb838d71f4c7b26be01734d925a147d1ece2dec79c4c482",
+      "bytes": 10872,
+      "sha256": "76300fb9a93a5a9b1149213fdc0ef297433225db4369965ec3cee3c5c1563634",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/build.zig",
-      "bytes": 618,
-      "sha256": "f075eb5bf0d4ccbaf47de09202d6f0285ca7df4b611e1498c976eb9b01e50189",
+      "bytes": 971,
+      "sha256": "736908ca38e494375284e952b3962cfd9aa006a010dc88a1a32f3f4fe1c3cd61",
       "originalSha256": null,
       "origin": null
     },
@@ -8843,8 +8843,8 @@
     },
     {
       "path": "RecoveryTools/Menu/module.R4MF",
-      "bytes": 326,
-      "sha256": "ad1e3613300cbbb1db58b3a85ba6eb074bdc19c00786030c9a99b81d5476eed2",
+      "bytes": 388,
+      "sha256": "0d469b20ba9b610c3e6863d06f0dcb7eb76320880c16192cec942b8935ee8e9d",
       "originalSha256": null,
       "origin": null
     },
@@ -8856,9 +8856,30 @@
       "origin": null
     },
     {
+      "path": "RecoveryTools/Menu/src/installation.fixture.json",
+      "bytes": 1274,
+      "sha256": "b4c90fdaeace63b9d3b3be18e03a934b41b8ce783c5b14e7a216e37506c6ac9a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 17558,
-      "sha256": "d632441f3a8a9183463571134815c34e3c0ec1df69bcd30e58d600648ed13341",
+      "bytes": 28977,
+      "sha256": "4d2cfc93616ac89c99054a5aa98bc2cf5129eaecd69e0c24f34465ec6321f278",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/os_probe.zig",
+      "bytes": 5312,
+      "sha256": "4c213076cdbaf2f54701c60256fdf9a9371ae9a6d8ed081f7150cb99e2ea27d4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/selection.zig",
+      "bytes": 9941,
+      "sha256": "664b2a7040a156028007cf8fab537ad0d4100ff72e40b2a5cfeb337ba3ac3cde",
       "originalSha256": null,
       "origin": null
     },
@@ -8873,6 +8894,20 @@
       "path": "RecoveryTools/Menu/src/storage_tools_diagnostic.zig",
       "bytes": 6674,
       "sha256": "57fc7422d7ed44b1b2656ae06a317d62bfa4cf06444a9280549c3346d9671ed2",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/targets.zig",
+      "bytes": 9643,
+      "sha256": "4f43351e276ec67b986ced99872b7606484e77f8e2e9173ca016d0e7de8e6078",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/tests.zig",
+      "bytes": 103,
+      "sha256": "bfc7c45e268ca51a4be0c838dc489067b571660e9947e970b0284ba7b002d90d",
       "originalSha256": null,
       "origin": null
     },
@@ -8970,7 +9005,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "4daf0ebd926affa7e4cd29a1c51c34d4b92429983c4d9b4b561322e7607484fb",
+      "sha256": "3a456c7375cbf7f0f79d3b1bfbf51b9e725174ccd59e2501626eafb724462bce",
       "originalSha256": null,
       "origin": null
     },
@@ -8994,7 +9029,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "02b000892248bedb934bd84085f742f8ff3ddb1dd6a947914284180796e02b78",
+      "sha256": "d58a9c067018a33ffd0c1e1f19f7a3d488c9978198323b21ef3230b39430b2a8",
       "originalSha256": null,
       "origin": null
     },
@@ -11036,6 +11071,96 @@
           "after": null,
           "before": "e3f528b023a5217d9227badf062e59214f6fd4b9e01fbb8a7feafba258db0865",
           "path": "Legal/Changes/Kernel-diagnostic-0.76.13.patch"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.14: Recovery0.1.12, Menu0.1.4, shared installation parser, live target identity and OS markers, keyboard selection and review.",
+      "changes": [
+        {
+          "before": "42dc727ae19cf8b3704d47776736ace80f6363bb5c4cd2059fdc1b053c6377e2",
+          "path": "Kernel/VERSION.R4S",
+          "after": "b4e67d93b67ffceade709b4c3f23f1923b5db240fd50911dc8044707e98b198f"
+        },
+        {
+          "before": "f075eb5bf0d4ccbaf47de09202d6f0285ca7df4b611e1498c976eb9b01e50189",
+          "path": "RecoveryTools/Menu/build.zig",
+          "after": "736908ca38e494375284e952b3962cfd9aa006a010dc88a1a32f3f4fe1c3cd61"
+        },
+        {
+          "before": "ad1e3613300cbbb1db58b3a85ba6eb074bdc19c00786030c9a99b81d5476eed2",
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "after": "0d469b20ba9b610c3e6863d06f0dcb7eb76320880c16192cec942b8935ee8e9d"
+        },
+        {
+          "before": null,
+          "path": "RecoveryTools/Menu/src/installation.fixture.json",
+          "after": "b4c90fdaeace63b9d3b3be18e03a934b41b8ce783c5b14e7a216e37506c6ac9a"
+        },
+        {
+          "before": "d632441f3a8a9183463571134815c34e3c0ec1df69bcd30e58d600648ed13341",
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "after": "f895a37895edcce96ca5f226598aa6cf7814aa1a1d9c62abe3921e50c75f77ba"
+        },
+        {
+          "before": null,
+          "path": "RecoveryTools/Menu/src/os_probe.zig",
+          "after": "4c213076cdbaf2f54701c60256fdf9a9371ae9a6d8ed081f7150cb99e2ea27d4"
+        },
+        {
+          "before": null,
+          "path": "RecoveryTools/Menu/src/selection.zig",
+          "after": "664b2a7040a156028007cf8fab537ad0d4100ff72e40b2a5cfeb337ba3ac3cde"
+        },
+        {
+          "before": null,
+          "path": "RecoveryTools/Menu/src/targets.zig",
+          "after": "f2a414bcf5168e29f0c766263a6a6866d385910659458eb2ce1487a0d29acd80"
+        },
+        {
+          "before": null,
+          "path": "RecoveryTools/Menu/src/tests.zig",
+          "after": "bfc7c45e268ca51a4be0c838dc489067b571660e9947e970b0284ba7b002d90d"
+        },
+        {
+          "before": "4daf0ebd926affa7e4cd29a1c51c34d4b92429983c4d9b4b561322e7607484fb",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "after": "3a456c7375cbf7f0f79d3b1bfbf51b9e725174ccd59e2501626eafb724462bce"
+        },
+        {
+          "before": "02b000892248bedb934bd84085f742f8ff3ddb1dd6a947914284180796e02b78",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "d58a9c067018a33ffd0c1e1f19f7a3d488c9978198323b21ef3230b39430b2a8"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.14: compact partition labels and bounded scrolling at 640x480; separate Recovery package cache documented.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "5e53886379984c3d5eb838d71f4c7b26be01734d925a147d1ece2dec79c4c482",
+          "after": "76300fb9a93a5a9b1149213fdc0ef297433225db4369965ec3cee3c5c1563634"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "f895a37895edcce96ca5f226598aa6cf7814aa1a1d9c62abe3921e50c75f77ba",
+          "after": "d481645e6cd339311613a2b2bb84d8715dfe27643ab06233ceb81d47cc88bb71"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.14: refuse incomplete inventory for Install consistently with the raw claim contract; display actual target partition GUID.",
+      "changes": [
+        {
+          "before": "d481645e6cd339311613a2b2bb84d8715dfe27643ab06233ceb81d47cc88bb71",
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "after": "4d2cfc93616ac89c99054a5aa98bc2cf5129eaecd69e0c24f34465ec6321f278"
+        },
+        {
+          "before": "f2a414bcf5168e29f0c766263a6a6866d385910659458eb2ce1487a0d29acd80",
+          "path": "RecoveryTools/Menu/src/targets.zig",
+          "after": "4f43351e276ec67b986ced99872b7606484e77f8e2e9173ca016d0e7de8e6078"
         }
       ]
     }

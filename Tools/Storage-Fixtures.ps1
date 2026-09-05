@@ -29,7 +29,7 @@ function Header([byte[]]$Entries,[string]$DiskGuid,[uint64]$Current,[uint64]$Bac
     U32 $h 16 (Crc $h 92)
     return ,$h
 }
-function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolution='1024x768x32'){
+function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolution='1024x768x32',[hashtable]$ExtraFilesByRole=@{}){
     $name=if($BadManifest){'damaged'}else{"disk-$Number"}
     $dir=Join-Path $output $name
     [IO.Directory]::CreateDirectory($dir)|Out-Null
@@ -73,6 +73,7 @@ function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolu
             [IO.File]::WriteAllText($witness,"$Number/$role",$utf8)
             $list=Join-Path $dir "$role.list"
             $files=@("$witness|/VOLUME.TXT")
+            if($ExtraFilesByRole.ContainsKey($role)){$files+=@($ExtraFilesByRole[$role])}
             if($role -eq 'BOOT'){
                 $files+=@("$manifestPath|/boot/r4os-installation.json","$config|/boot/limine.conf", "$(Join-Path $LimineRoot 'limine-bios.sys')|/boot/limine-bios.sys", "$(Join-Path $LimineRoot 'BOOTX64.EFI')|/EFI/BOOT/BOOTX64.EFI")
             }

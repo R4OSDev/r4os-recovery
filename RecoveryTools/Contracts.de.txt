@@ -131,6 +131,8 @@ RECOVERY:/CURRENT/{recovery.elf,runtime.img,manifest.json,Legal/...}
 RECOVERY:/PREVIOUS/{recovery.elf,runtime.img,manifest.json,Legal/...}
 RECOVERY:/INSTALL/RELEASE.ZIP       R4OS-Quelle, exakt Original-ZIP
 RECOVERY:/INSTALL/RELEASE.PART      neuer Download bis vollstaendig geprueft
+RECOVERY:/INSTALL/RECOVERY.ZIP      unabhängiges Recovery-Paket
+RECOVERY:/INSTALL/RECOVERY.PART     separater Recovery-Download bis geprueft
 RECOVERY:/state.r4s
 
 Limine verwendet feste CURRENT- und PREVIOUS-Eintraege derselben Partition-

@@ -1,6 +1,7 @@
 param(
     [ValidateSet('Bios','Uefi','Both')][string]$Firmware='Both',
-    [ValidateSet('','800x600x32','1024x768x32','1920x1080x32')][string]$Resolution='',
+    [ValidateSet('','640x480x32','800x600x32','1024x768x32','1920x1080x32')][string]$Resolution='',
+    [ValidateSet('USB','LOCAL')][string]$BootMedium='USB',
     [string]$Zig='', [string]$Qemu='', [string]$LimineRoot='',
     [string]$OvmfCode='', [string]$OvmfVars='',
     [ValidateRange(30,300)][int]$TimeoutSeconds=120
@@ -75,15 +76,28 @@ try{
     [string[]]$modes=if($Firmware -eq 'Both'){@('Bios','Uefi')}else{@($Firmware)}
     $runs=@()
     foreach($mode in $modes){
-        [string[]]$sizes=if($Resolution){@($Resolution)}elseif($mode -eq 'Bios'){@('800x600x32','1024x768x32','1920x1080x32')}else{@('1024x768x32')}
+        [string[]]$sizes=if($Resolution){@($Resolution)}elseif($mode -eq 'Bios'){@('640x480x32','800x600x32','1024x768x32','1920x1080x32')}else{@('1024x768x32')}
         foreach($size in $sizes){
-            $name="$mode-$size"
+            $name="$mode-$BootMedium-$size"
             $inputs=[ordered]@{schema=1;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;resolution=$size;
-                fixtureBuilder=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');creator=Get-RecoveryHash $imageCreator;
+                fixtureBuilder=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');test=Get-RecoveryHash $PSCommandPath;creator=Get-RecoveryHash $imageCreator;
                 efi=Get-RecoveryHash (Join-Path $LimineRoot 'BOOTX64.EFI');bios=Get-RecoveryHash (Join-Path $LimineRoot 'limine-bios.sys')}
             $serialized=$inputs|ConvertTo-Json -Compress;$cache=Join-Path $output 'fixture-inputs.json'
-            $cached=(Test-Path -LiteralPath $cache) -and ((Get-Content -Raw -LiteralPath $cache).Trim() -ceq $serialized) -and (Test-Path -LiteralPath (Join-Path $output 'disk-1.img'))
-            if(!$cached){$null=New-Installation 1 $false $size;[IO.File]::WriteAllText($cache,$serialized,$utf8)}
+            $cached=(Test-Path -LiteralPath $cache) -and ((Get-Content -Raw -LiteralPath $cache).Trim() -ceq $serialized) -and
+                (Test-Path -LiteralPath (Join-Path $output 'disk-1.img')) -and (Test-Path -LiteralPath (Join-Path $output 'disk-2.img')) -and (Test-Path -LiteralPath (Join-Path $output 'blank.img'))
+            if(!$cached){
+                $null=New-Installation 1 $false $size
+                # Deliberate non-executable marker fixtures. A filename alone
+                # does not identify an OS; these exercise the readable headers.
+                $mz=Join-Path $output 'marker-mz.bin';[IO.File]::WriteAllBytes($mz,[byte[]]@(77,90))
+                $regf=Join-Path $output 'marker-regf.bin';[IO.File]::WriteAllText($regf,'regf',$utf8)
+                $linux=Join-Path $output 'marker-linux.bin';$header=[byte[]]::new(1024);$header[510]=85;$header[511]=170
+                [Text.Encoding]::ASCII.GetBytes('HdrS').CopyTo($header,514);[IO.File]::WriteAllBytes($linux,$header)
+                $null=New-Installation 2 $false $size @{SYSTEM=@("$mz|/Windows/System32/ntoskrnl.exe","$regf|/Windows/System32/config/SYSTEM");DATA=@("$linux|/boot/vmlinuz-fixture")}
+                $blank=[IO.File]::Open((Join-Path $output 'blank.img'),[IO.FileMode]::Create,[IO.FileAccess]::ReadWrite)
+                try{$blank.SetLength(2048MB)}finally{$blank.Dispose()}
+                [IO.File]::WriteAllText($cache,$serialized,$utf8)
+            }
             $serialLog=Join-Path $output "$name-serial.log";$errorLog=Join-Path $output "$name-qemu.log"
             if(Test-Path -LiteralPath $serialLog){Remove-Item -LiteralPath $serialLog -Force}
             $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0)
@@ -91,7 +105,9 @@ try{
             $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain),i8042=off",'-cpu',$profile.CpuModel,'-m','1024','-smp','4',
                 '-display','none','-monitor','none','-no-reboot','-nic','none','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$port,server=on,wait=off",
                 '-device','qemu-xhci,id=ui-xhci','-device','usb-kbd,id=ui-keyboard','-device','usb-mouse,id=ignored-mouse',
-                '-drive',"if=none,id=usb-media,format=raw,file=$(Join-Path $output 'disk-1.img'),snapshot=on",'-device','usb-storage,drive=usb-media,bootindex=1')
+                '-drive',"if=none,id=usb-media,format=raw,file=$(Join-Path $output 'disk-1.img'),snapshot=on",'-device',"usb-storage,drive=usb-media,bootindex=$(if($BootMedium -eq 'USB'){1}else{2})",
+                '-drive',"if=none,id=local-media,format=raw,file=$(Join-Path $output 'disk-2.img'),snapshot=on",'-device',"nvme,drive=local-media,serial=RECOVERY-UI-LOCAL,bootindex=$(if($BootMedium -eq 'LOCAL'){1}else{2})",
+                '-drive',"if=ide,format=raw,file=$(Join-Path $output 'blank.img'),snapshot=on")
             if($mode -eq 'Uefi'){
                 $vars=Join-Path $output 'OVMF-vars.fd';Copy-Item -LiteralPath $OvmfVars -Destination $vars -Force
                 $arguments+=@('-drive',"if=pflash,format=raw,unit=0,readonly=on,file=$OvmfCode",'-drive',"if=pflash,format=raw,unit=1,file=$vars")
@@ -120,9 +136,29 @@ try{
                 for($selected=0;$selected -lt 3;$selected++){
                     $frame=Capture "menu-$selected"
                     if($frame.RedRow() -ne $firstRow+$selected*$itemHeight){throw "Wrong visible selection row: $selected"}
-                    Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=dialog selected=$selected"
-                    $dialog=Capture "dialog-$selected";$dialog.RequireContentChanged($frame)
-                    Send-Keys $session @('esc');Wait-Marker "\[RECOVERYUI\] page=menu selected=$selected" $(if($selected -eq 0){3}else{2})
+                    Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=source selected=$selected choice=0"
+                    $sourceFrame=Capture "source-$selected";$sourceFrame.RequireContentChanged($frame)
+                    Send-Keys $session @('down','ret');Wait-Marker "\[RECOVERYUI\] page=targets selected=$selected choice=0"
+                    $operation=@('install','system','recovery')[$selected]
+                    $expected=if($selected -eq 0 -or $BootMedium -eq 'USB'){2}else{1}
+                    Wait-Marker "\[RECOVERYTARGET\] mode=$operation boot=$BootMedium count=$expected excluded=0"
+                    $targetsFrame=Capture "targets-$selected";$targetsFrame.RequireContentChanged($sourceFrame)
+                    [string]$targetLog=Get-Content -Raw -LiteralPath $serialLog
+                    $lastScan=($targetLog -split "\[RECOVERYTARGET\] mode=$operation")[-1]
+                    if($lastScan -notmatch 'guid=00000002-2222-4333-8444-000000000000 os=Windows, Linux, R4OS'){throw 'Combined OS names or actual installation missing.'}
+                    if($selected -eq 0){
+                        if($lastScan -notmatch 'guid=00000000-0000-0000-0000-000000000000 os=\r?\n'){throw 'Empty disk has an OS placeholder.'}
+                        if($lastScan -match 'guid=00000001-2222-4333-8444-000000000000'){throw 'Boot USB was offered for installation.'}
+                    }
+                    if($BootMedium -eq 'LOCAL' -and $lastScan -match 'guid=00000001-2222-4333-8444-000000000000'){throw 'Local Recovery exposed USB storage.'}
+                    Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=review selected=$selected choice=0"
+                    $review=Capture "review-$selected";$review.RequireContentChanged($targetsFrame)
+                    # Enter without changing the default goes back, never writes.
+                    Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=targets selected=$selected choice=0" 2
+                    Send-Keys $session @('ret','down','ret');Wait-Marker '\[RECOVERYTARGET\] identity=REVALIDATED writes=0' ($selected+1)
+                    Wait-Marker "\[RECOVERYUI\] page=dialog selected=$selected"
+                    $null=Capture "validated-$selected"
+                    Send-Keys $session @('esc','esc','esc','esc');Wait-Marker "\[RECOVERYUI\] page=menu selected=$selected" $(if($selected -eq 0){3}else{2})
                     Send-Keys $session @('down');Wait-Marker "\[RECOVERYUI\] page=menu selected=$($selected+1)"
                 }
                 Send-Keys $session @('down');Wait-Marker '\[RECOVERYUI\] page=menu selected=4'
@@ -167,10 +203,11 @@ try{
             }
             [string]$text=Get-Content -Raw -LiteralPath $serialLog
             if($text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0' -or $text -notmatch '\[RESET\]' -or $text -match '\[CRASH\]|result=FAILED'){throw "Incomplete UI acceptance: $serialLog"}
-            $run=[ordered]@{firmware=$mode;resolution=$size;result='ok';cpus=4;accelerator=$profile.Name;keyboard='USB';i8042='off';
+            $run=[ordered]@{firmware=$mode;bootMedium=$BootMedium;resolution=$size;result='ok';cpus=4;accelerator=$profile.Name;keyboard='USB';i8042='off';
                 seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog;
                 frames=$frames.ToArray();artworkSha256=Get-RecoveryHash (Join-Path $root 'Runtime/R4OS/MEDIA/RECOVERY.BMP');
-                navigation='six entries, wrap, enter, escape';console='text, clear, scroll, cursor, EXIT';independentSession='unchanged and reaped'}
+                navigation='six entries, wrap, source/targets/review, default Back, identity revalidation, escape';targets='local/USB policy, empty disk, Windows+Linux+R4OS, actual partition identities';
+                console='text, clear, scroll, cursor, EXIT';independentSession='unchanged and reaped'}
             $runs+=$run;Write-RecoveryJson $resultPath @{schema=1;runs=$runs}
             Write-Host "Recovery UI $name OK ($($run.seconds) seconds, $($frames.Count) framebuffer comparisons)."
         }

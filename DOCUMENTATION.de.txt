@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.12
+Stand 0.76.14
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -330,9 +330,10 @@ mindestens 280x160 Monitorpixel; kleinere Modi werden konkret abgewiesen.
 Reihenfolge: Install R4OS, Update R4OS, Update Recovery, Manage Partitions,
 Terminal, Exit and Restart. Pfeile wechseln mit Umlauf, Enter oeffnet den
 Eintrag, Escape oder Enter schliesst einen Dialog. Rote Auswahl und helle
-Schrift gelten fuer alle Modi. Die ersten drei Aufrufkanten melden ihren
-noch ausstehenden Implementierungsstand; Manage Partitions startet R4PART
-sobald dessen Modul vorliegt und meldet andernfalls den Startfehler.
+Schrift gelten fuer alle Modi. Seit 0.76.14 fuehren die ersten drei Eintraege
+ueber Quelle, echte Ziele und eine Bestaetigung mit Back als Vorauswahl.
+Paketverarbeitung und Schreibablaeufe folgen in 0.76.15 bis 0.76.20.
+Manage Partitions startet das seit 0.76.10 uebernommene R4PART.
 
 Terminal startet die festgehaltene TERMINAL.R4X mit /NOAUTOEXEC und eigenem
 Consolehost. Der Host liest begrenztes Transcript, Zustand und Revision,
@@ -642,3 +643,85 @@ bestanden; frisches Testimage/testquick, SDK 8/8 und Parser/Skript 2/2 ebenfalls
 Oeffentlicher R4PART-Standalone-Build bytegleich. 906 gepinnte Dateien,
 38 Module; Recovery/Recovery-Kernel 0.1.11, R4PART 0.1.4, normaler Kernel 0.1.94.
 Keine Windows-/Lenovo-Ausfuehrung. Fehlversuche sind oben getrennt dokumentiert.
+
+
+0.76.14: Installationsziele und Betriebssystemanzeige
+---------------------------------------------------
+
+RecoveryTools/Menu besitzt die gemeinsamen Modelle fuer ganze Datentraeger,
+SYSTEM-Partition und RECOVERY-Installation. Ein Inventarsnapshot bindet
+Geraetereferenz/-generation, Layoutgeneration, Sektoren und GPT-IDs. Modell,
+Kapazitaet, Ziel-GUID und bei Updates Partitionsnummer sind sichtbar.
+Eine unpartitionierte Platte besitzt innerhalb der Sitzung die gepruefte
+Geraetereferenz; es wird keine erfundene persistente UUID angezeigt.
+
+Die reale R:-Zuordnung bestimmt die Startquelle. Lokal bleiben USB-Medien
+aus allen Auswahlwegen ausgeschlossen, waehrend die eigene lokale Platte
+fuer Install erlaubt ist. Beim USB-Start bleibt genau der gestartete Stick
+aus Install ausgeschlossen, aber fuer Update Recovery erreichbar. Ohne
+bestaetigte Bootquelle gibt es keine schreibenden Ziele. RAM, schreibgeschuetzte
+Medien, nicht unterstuetzte Sektorgroessen, unvollstaendige Inventare und aktive
+Claims sind keine Ziele.
+Install verlangt Platz fuer das feste Layout einschliesslich mindestens
+16 MB NTFS-DATA und der Backup-GPT am echten Ende.
+
+Updates verwenden den unveraenderten strikten Parser aus
+Kernel/storage/installation.zig als ausdrueckliches Zig-Buildmodul. Jede der
+fuenf Rollen wird danach gegen das tatsaechliche ABI-Inventar und genau das
+BOOT-Volume gebunden, aus dem die Datei gelesen wurde. Fehlende SYSTEM-Dateien
+verhindern damit keine Reparatur einer weiterhin eindeutig zugeordneten
+Installation. Widerspruechliche Manifeste, unvollstaendige Tabellen, doppelte
+Disk-/Partition-GUIDs und wiederholte Installations-IDs autorisieren kein
+Update. Die Auswahl meldet ausgeschlossene ungueltige/mehrdeutige Installationen.
+Eine vollstaendige Neuinstallation darf auch fremde/defekte Layouts ersetzen.
+
+Die Erkennung liest ausschliesslich bereits eingebundene FAT32-/NTFS-Volumes
+unter einem Storage-use-Lease; explizit mit R4PART OFFLINE gesetzte Partitionen
+werden nicht heimlich wieder eingebunden. Fehlende/unsupported/unlesbare
+Inhalte blockieren Install nicht. Eine unlesbare oder nicht eingebundene
+BOOT-Partition liefert kein pruefbares Updateziel; bei Bedarf mit R4PART
+einbinden und R im Zieldialog druecken. Inventarwechsel waehrend des Scans
+verwerfen den Snapshot. Grenzen: 16 Geraeteslots, 128 Partitionen je Geraet,
+27 Volumes entsprechend dem aktuellen Plattformvertrag; keine still gekuerzte
+Zielliste bei Ueberschreitung.
+
+OS-Merkmale sind rein informative Funde, keine Updateberechtigung:
+- R4OS: passend gebundener BOOT-Vertrag, oder eine gueltige RELEASE_VERSION
+  zusammen mit dem R4M0-Header der installierten TERMINAL.R4X.
+- Windows: ntoskrnl.exe mit MZ-Header und SYSTEM-Hive mit regf-Signatur,
+  alternativ Microsoft-EFI-Bootloader mit MZ und BCD mit regf.
+- Linux: lesbarer x86-Kernel mit Bootflag 55 aa und HdrS-Kennung, etwa
+  vmlinuz oder ein passender Eintrag unter boot (maximal 64 Eintraege).
+  GRUB, ein Dateisystemtyp oder ein Label allein genuegen nicht.
+
+Treffer mehrerer Volumes werden je Datentraeger als Windows, Linux, R4OS
+zusammengefasst. Ohne Treffer bleibt der Namenszusatz leer. Das bedeutet
+nicht, dass die Platte leer ist oder kein startfaehiges System enthaelt;
+insbesondere werden nicht lesbare Linux-Dateisysteme nicht erraten.
+Grundlagen fuer die lesenden Heuristiken:
+https://docs.kernel.org/arch/x86/boot.html
+https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-hives
+https://projectzero.google/2024/12/the-windows-registry-adventure-5-regf.html
+
+Install zeigt ausdruecklich das geplante neue Layout mit vollstaendigem
+Datenersatz. SYSTEM-Update nennt die vorhandene Partition, BOOT-Kernel und
+den Erhalt von DATA, RECOVERY, IDs, Grenzen und limine.conf. Recovery-Update
+nennt die vorhandene RECOVERY-Partition und den Erhalt von INSTALL, anderen
+Partitionen, IDs, Grenzen und limine.conf. Quelle: fester Cache oder eigener
+GitHub-Kanal. R4OS bleibt R:\INSTALL\RELEASE.ZIP; Recovery verwendet separat
+R:\INSTALL\RECOVERY.ZIP und spaeter RECOVERY.PART. Keine Pfadeingabe noetig.
+
+Continue baut das Inventar erneut auf und vergleicht Quelle, Generationen,
+Zielbereiche, BOOT-Referenz und SHA-256 des vollstaendigen Manifests. Eine
+Aenderung verlangt erneute Auswahl. Die spaeteren Schreiber muessen nochmals
+unter ihren exklusiven Claims pruefen. In dieser Unterversion erfolgt noch
+kein Paketdownload/Schreibauftrag; der Dialog benennt diesen Stand ausdruecklich.
+
+Die bestehende view-test-Gruppe prueft zusaetzlich Bootpolitik, gebundene
+Rollen/Grenzen/Typen, falsches BOOT, fehlende Rollen, Klone, doppelte
+Installations-IDs, Generationen und OS-Marker. UITest benutzt dieselben
+Produktpfade mit USB-Tastatur, source/targets/review und Back-Vorauswahl;
+zusammengefasste und leere Anzeigen sowie die reale Identitaetspruefung
+sind in den seriellen Markern beobachtbar. Keine neue manuelle Abnahme.
+
+Abnahme: 0.76.14: Linux/KVM SMP4,1024MB, USB keyboard/i8042=off. BIOS USB 640x480 19.092s,800x600 19.131s,1024x768 19.566s,1920x1080 20.222s; UEFI USB1024x768 20.795s; BIOS LOCAL1024x768 18.523s. Six passes/150 framebuffer comparisons, real target identity revalidation and default Back, combined Windows/Linux/R4OS markers, blank extra display, local USB exclusion and own-local eligibility. Existing Terminal/R4PART, independent console and reset passed. Host group6/6. No Windows or Lenovo run.

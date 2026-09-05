@@ -2,9 +2,11 @@ const std = @import("std");
 const r4os = @import("r4os");
 const view = @import("view.zig");
 const diagnostic = @import("diagnostic.zig");
+const selection = @import("selection.zig");
+const targets = selection.model;
 const abi = r4os.abi;
 const terminal_path = "C:\\R4OS\\SOFTWARE\\TERMINAL\\TERMINAL.R4X";
-const Page = enum { menu, dialog, terminal, progress };
+const Page = enum { menu, source, targets, review, dialog, terminal, progress };
 
 const State = struct {
     sys: r4os.r4sys.Context,
@@ -23,6 +25,12 @@ const State = struct {
     console_retry_since: ?u64 = null,
     page: Page = .menu,
     selection: usize = 0,
+    choice: usize = 0,
+    source: targets.Source = .cached,
+    catalog: ?selection.Catalog = null,
+    target_index: usize = 0,
+    notice_return: Page = .menu,
+    notice: [256]u8 = undefined,
     message: []const u8 = "",
     progress: u32 = 0,
     working: bool = false,
@@ -106,6 +114,9 @@ const State = struct {
                     self.text(area.x + self.font_width * 3, y + 3, label, if (self.selection == index) 0xffffff else view.foreground);
                 }
             },
+            .source => self.renderSource(area),
+            .targets => self.renderTargets(area),
+            .review => self.renderReview(area),
             .dialog => self.wrap(self.message, area, view.foreground),
             .progress => {
                 self.wrap(self.message, area, view.foreground);
@@ -135,6 +146,8 @@ const State = struct {
         self.canvas.fill(.{ .x = inner.x, .y = footer_y - 4, .w = inner.w, .h = 1 }, 0x42201b);
         self.text(inner.x, footer_y, switch (self.page) {
             .menu => "Up/Down: select   Enter: open",
+            .source, .review => "Up/Down: select  Enter  Esc: back",
+            .targets => "Up/Down  Enter  Esc: back  R: refresh",
             .terminal => "Type EXIT to return to Recovery",
             .dialog => "Enter / Esc: back",
             .progress => "Please wait...",
@@ -153,11 +166,134 @@ const State = struct {
         var offset: usize = 0;
         var y = area.y;
         while (offset < message.len and y < area.y + area.h) {
-            const count = @min(message.len - offset, cols);
+            const newline = std.mem.indexOfScalar(u8, message[offset..], '\n') orelse message.len - offset;
+            const count = @min(newline, cols);
             self.text(area.x, y, message[offset..][0..count], color);
-            offset += count;
+            offset += count + @as(usize, if (count == newline and offset + count < message.len) 1 else 0);
             y += self.font_height + 2;
         }
+    }
+
+    fn operation(self: *const State) targets.Operation {
+        return @enumFromInt(self.selection);
+    }
+
+    fn clearCatalog(self: *State) void {
+        if (self.catalog) |*catalog| catalog.deinit();
+        self.catalog = null;
+    }
+
+    fn fail(self: *State, err: anyerror, back: Page) void {
+        self.message = std.fmt.bufPrint(&self.notice, "Selection unavailable: {s}\nRefresh the disk list and select again.", .{@errorName(err)}) catch "Selection unavailable.";
+        self.page = .dialog;
+        self.notice_return = back;
+    }
+
+    fn scanTargets(self: *State) void {
+        self.clearCatalog();
+        self.catalog = selection.Catalog.scan(&self.sys, self.operation()) catch |err| {
+            self.fail(err, .source);
+            return;
+        };
+        self.page = .targets;
+        self.choice = 0;
+        const catalog = &self.catalog.?;
+        var line: [256]u8 = undefined;
+        self.sys.write(std.fmt.bufPrint(&line, "[RECOVERYTARGET] mode={s} boot={s} count={d} excluded={d}\r\n", .{
+            @tagName(self.operation()), if (catalog.boot) |boot| (if (boot.usb) "USB" else "LOCAL") else "UNKNOWN", catalog.targets.items.len, catalog.excluded_installations,
+        }) catch "");
+        for (catalog.targets.items) |target| {
+            const disk = catalog.disks.items[target.disk];
+            var names: [32]u8 = undefined;
+            self.sys.write(std.fmt.bufPrint(&line, "[RECOVERYTARGET] disk={d} guid={s} os={s}\r\n", .{
+                disk.info.reference.slot, targets.guid.format(disk.info.disk_guid), disk.systems.text(&names),
+            }) catch "");
+        }
+    }
+
+    fn option(self: *State, area: view.Rect, y: u32, label: []const u8, chosen: bool) void {
+        if (chosen) self.canvas.fill(.{ .x = area.x, .y = y, .w = area.w, .h = self.font_height + 4 }, view.accent);
+        self.text(area.x + 2, y + 2, if (chosen) ">" else " ", view.foreground);
+        self.text(area.x + self.font_width * 2, y + 2, label, if (chosen) 0xffffff else view.foreground);
+    }
+
+    fn renderSource(self: *State, area: view.Rect) void {
+        const step = self.font_height + 6;
+        self.text(area.x, area.y, "Choose release source", view.foreground);
+        for ([_][]const u8{ "Cached release ZIP", "Download from GitHub", "Back" }, 0..) |label, i|
+            self.option(area, area.y + step * @as(u32, @intCast(i + 2)), label, self.choice == i);
+        const bottom = area.y + step * 6;
+        self.wrap(targets.cachePath(self.operation()), .{ .x = area.x, .y = bottom, .w = area.w, .h = (area.y + area.h) -| bottom }, view.muted);
+    }
+
+    fn renderTargets(self: *State, area: view.Rect) void {
+        const catalog = &self.catalog.?;
+        const count = catalog.targets.items.len;
+        const step = self.font_height + 6;
+        var buffer: [256]u8 = undefined;
+        const label: []const u8 = if (catalog.boot == null) "Boot source unknown; no writable targets." else if (count == 0) "No eligible targets. R: refresh" else switch (self.operation()) {
+            .install => "Choose entire disk to replace",
+            .system => "Choose existing SYSTEM partition",
+            .recovery => "Choose existing RECOVERY partition",
+        };
+        self.text(area.x, area.y, label, view.foreground);
+        const rows = @max(1, (area.h -| step -| (self.font_height + 2) * 3) / step);
+        const start = if (self.choice >= rows) self.choice - rows + 1 else 0;
+        const end = @min(count + 1, start + rows);
+        for (start..end) |i| {
+            var names: [32]u8 = undefined;
+            const row_text = if (i == count) "Back" else blk: {
+                const target = catalog.targets.items[i];
+                const disk = catalog.disks.items[target.disk];
+                const affected = targets.affected(target, catalog.disks.items, catalog.installed.items);
+                break :blk if (target.operation == .install)
+                    std.fmt.bufPrint(&buffer, "Disk {d} {d}MB {s}", .{ disk.info.reference.slot, affected.sector_count / 2048, disk.systems.text(&names) }) catch "Disk"
+                else
+                    std.fmt.bufPrint(&buffer, "Disk {d}/P{d} {d}MB {s}", .{ disk.info.reference.slot, affected.partition_number, affected.sector_count / 2048, disk.systems.text(&names) }) catch "Partition";
+            };
+            self.option(area, area.y + step * @as(u32, @intCast(i - start + 1)), row_text, self.choice == i);
+        }
+        const detail_y = area.y + area.h -| (self.font_height + 2) * 3;
+        if (self.choice < count) {
+            const target = catalog.targets.items[self.choice];
+            const disk = catalog.disks.items[target.disk];
+            self.text(area.x, detail_y, std.mem.sliceTo(&disk.info.model, 0), view.muted);
+            const target_guid = if (target.operation == .install) disk.info.disk_guid else targets.affected(target, catalog.disks.items, catalog.installed.items).partition_guid;
+            const id = targets.guid.format(target_guid);
+            const identity = if (targets.guid.isZero(target_guid))
+                std.fmt.bufPrint(&buffer, "Device {d}, generation {d}", .{ disk.info.reference.slot, disk.info.reference.generation }) catch ""
+            else
+                &id;
+            self.text(area.x, detail_y + self.font_height + 2, identity, view.muted);
+        }
+        if (catalog.excluded_installations != 0)
+            self.text(area.x, detail_y + (self.font_height + 2) * 2, "Invalid/ambiguous installations excluded.", view.accent);
+    }
+
+    fn renderReview(self: *State, area: view.Rect) void {
+        const catalog = &self.catalog.?;
+        const target = catalog.targets.items[self.target_index];
+        const disk = catalog.disks.items[target.disk];
+        const affected = targets.affected(target, catalog.disks.items, catalog.installed.items);
+        var buffer: [1024]u8 = undefined;
+        const source = if (self.source == .cached) "cached ZIP" else "GitHub release";
+        const review_text = switch (target.operation) {
+            .install => std.fmt.bufPrint(&buffer, "Disk {d}: {d}MB - ALL DATA ERASED\nNew layout (not current partitions):\nBIOSBOOT 1MB + BOOT 128MB FAT32\nSYSTEM 1024MB NTFS\nRECOVERY 512MB FAT32\nDATA remaining {d}MB NTFS\nSource: {s}", .{
+                disk.info.reference.slot, disk.info.sector_count / 2048, (disk.info.sector_count - 34 - 3411968) / 2048, source,
+            }),
+            .system => std.fmt.bufPrint(&buffer, "Disk {d}: SYSTEM partition {d}, {d}MB\nReplace ALL SYSTEM files and BOOT kernel.\nKeep partition sizes and identifiers.\nKeep DATA, RECOVERY and limine.conf.\nBOOT partition: {d}\nSource: {s}", .{
+                disk.info.reference.slot,                                              affected.partition_number, affected.sector_count / 2048,
+                catalog.installed.items[target.installed.?].parts[1].partition_number, source,
+            }),
+            .recovery => std.fmt.bufPrint(&buffer, "Disk {d}: RECOVERY partition {d}, {d}MB\nReplace the current Recovery package.\nKeep a verified previous Recovery.\nKeep INSTALL cache and other partitions.\nKeep sizes, identifiers and limine.conf.\nBOOT partition: {d}\nSource: {s}", .{
+                disk.info.reference.slot,                                              affected.partition_number, affected.sector_count / 2048,
+                catalog.installed.items[target.installed.?].parts[1].partition_number, source,
+            }),
+        } catch "Review unavailable.";
+        const step = self.font_height + 6;
+        self.wrap(review_text, .{ .x = area.x, .y = area.y, .w = area.w, .h = area.h -| step * 2 }, view.foreground);
+        self.option(area, area.y + area.h -| step * 2, "Back", self.choice == 0);
+        self.option(area, area.y + area.h -| step, "Continue", self.choice == 1);
     }
 
     fn renderTerminal(self: *State, area: view.Rect) bool {
@@ -185,20 +321,22 @@ const State = struct {
 
     fn marker(self: *State) void {
         var buffer: [128]u8 = undefined;
-        self.sys.write(std.fmt.bufPrint(&buffer, "[RECOVERYUI] page={s} selected={d}\r\n", .{ @tagName(self.page), self.selection }) catch return);
+        self.sys.write(std.fmt.bufPrint(&buffer, "[RECOVERYUI] page={s} selected={d} choice={d}\r\n", .{ @tagName(self.page), self.selection, self.choice }) catch return);
     }
 
     fn open(self: *State) void {
         switch (self.selection) {
             0, 1, 2 => {
-                self.page = .dialog;
-                self.message = "This operation is not available in this build.";
+                self.clearCatalog();
+                self.page = .source;
+                self.choice = 0;
             },
             3, 4 => {
                 const path: [:0]const u8 = if (self.selection == 4) terminal_path else "C:\\R4OS\\SOFTWARE\\TERMINAL\\R4PART.R4X";
                 const args: [:0]const u8 = if (self.selection == 4) "/NOAUTOEXEC" else "";
                 if (self.sys.programSpawnWithConsoleHostHandle(path, args, .console, .terminal_mode, &self.child) < 0) {
                     self.page = .dialog;
+                    self.notice_return = .menu;
                     self.message = "The console program could not be started.";
                 } else {
                     self.page = .terminal;
@@ -234,9 +372,71 @@ const State = struct {
                 },
                 else => return true,
             },
+            .source => switch (key) {
+                0x80 => self.choice = (self.choice + 2) % 3,
+                0x81 => self.choice = (self.choice + 1) % 3,
+                '\n' => if (self.choice == 2) {
+                    self.clearCatalog();
+                    self.page = .menu;
+                } else {
+                    self.source = @enumFromInt(self.choice);
+                    self.scanTargets();
+                },
+                0x1b => {
+                    self.clearCatalog();
+                    self.page = .menu;
+                },
+                else => return true,
+            },
+            .targets => {
+                const count = self.catalog.?.targets.items.len;
+                switch (key) {
+                    0x80 => self.choice = (self.choice + count) % (count + 1),
+                    0x81 => self.choice = (self.choice + 1) % (count + 1),
+                    'r', 'R' => self.scanTargets(),
+                    0x1b => {
+                        self.page = .source;
+                        self.choice = @intFromEnum(self.source);
+                    },
+                    '\n' => if (self.choice == count) {
+                        self.page = .source;
+                        self.choice = @intFromEnum(self.source);
+                    } else {
+                        self.target_index = self.choice;
+                        self.choice = 0; // Destructive review always defaults to Back.
+                        self.page = .review;
+                    },
+                    else => return true,
+                }
+            },
+            .review => switch (key) {
+                0x80, 0x81 => self.choice = 1 - self.choice,
+                0x1b => {
+                    self.page = .targets;
+                    self.choice = self.target_index;
+                },
+                '\n' => if (self.choice == 0) {
+                    self.page = .targets;
+                    self.choice = self.target_index;
+                } else {
+                    self.catalog.?.revalidate(&self.sys, self.target_index) catch |err| {
+                        self.choice = self.target_index;
+                        self.fail(err, .targets);
+                        self.dirty = true;
+                        self.marker();
+                        return true;
+                    };
+                    self.sys.write("[RECOVERYTARGET] identity=REVALIDATED writes=0\r\n");
+                    self.page = .dialog;
+                    self.notice_return = .review;
+                    self.choice = 0;
+                    self.message = "Target verified. Package processing is not available in this build.";
+                },
+                else => return true,
+            },
             .dialog => {
                 if (key != '\n' and key != 0x1b) return true;
-                self.page = .menu;
+                self.page = self.notice_return;
             },
             .terminal => {
                 if (self.desk.consolePushKey(self.child.instance_id, key) < 0) return self.pollChild();
@@ -296,6 +496,7 @@ fn run(app: *r4os.App) i32 {
     defer allocator.destroy(state);
     state.* = .{ .sys = sys, .desk = desk, .draw = draw, .net = net, .geometry = geometry, .canvas = .{ .pixels = pixels, .width = width, .height = height, .clip = geometry.monitor } };
     defer state.test_session.close(sys);
+    defer state.clearCatalog();
     const path = "C:\\R4OS\\MEDIA\\RECOVERY.BMP";
     const info = sys.fileInfo(path) orelse return -8;
     if (info.size != 4720110) return -9;
