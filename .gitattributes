@@ -1,9 +1,10 @@
-# Frozen binary and source inputs retain their recorded bytes on either host.
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+# These rules take precedence over the general script rules above. Imported
+# scripts are frozen inputs too, including their original line endings.
 Kernel/** -text
 Platform/** -text
 Runtime/** -text
 Legal/** -text
 Provenance/** -text
-*.ps1 text eol=lf
-*.sh text eol=lf
-*.bat text eol=crlf

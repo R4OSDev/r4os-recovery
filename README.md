@@ -6,14 +6,21 @@ complete RAM-resident console runtime.
 
 The 0.76.1 baseline contains pinned kernel, platform contract and SDK sources,
 37 precompiled console, service, driver, protocol and library modules, and
-their original source archives and license notices. The executable Recovery
-kernel and bootable releases follow in subsequent roadmap steps.
+their original source archives and license notices. Since 0.76.2 the separate
+Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
+complete RAM filesystem and console runtime follow in 0.76.3.
 
 Run `Build.bat` on Windows or `./Build.sh` on Linux with PowerShell 7 to verify
 the local inventory. The shared `Build.ps1` checks file hashes, actual binary
 imports, protocol dependencies and original manifests. It does not import
 from the normal workspace or fetch dependencies. Results are written to
 `Artifacts/Verification/inventory.json`.
+
+Add `-Mode Kernel` to build `Artifacts/Kernel/bin/recovery.elf` using the
+recorded Zig version. Add `-Mode BootTest` for the bounded BIOS/UEFI SMP4
+foundation check, or `-Mode BootTest -BootProbe reboot` to verify reset.
+Diagnostic kernels and logs remain in `Artifacts/BootProbe/`. The Linux UEFI
+check uses the Debian `ovmf` package; Windows uses matching firmware from QEMU.
 
 An explicit initial import uses `Tools/Import.ps1` and the source revisions in
 `Provenance/import-plan.json`. Source and configuration changes are recorded
@@ -30,7 +37,7 @@ and [the technical contracts](RecoveryTools/Contracts.de.txt) for details.
 - Use keyboard input and display menus and console programs inside the recovery
   background's monitor area.
 
-The recovery kernel will reuse selected R4OS kernel components. Compatible
+The recovery kernel reuses selected R4OS kernel components. Compatible
 drivers, protocols, services, console applications, and libraries will be
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
 normal R4OS releases will include an explicitly selected Recovery release.

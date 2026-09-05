@@ -1108,8 +1108,8 @@
   "files": [
     {
       "path": "Kernel/.gitattributes",
-      "bytes": 332,
-      "sha256": "83a791387a1267c35fc2fe1604132392634e5597971235cceb91d99ad95d84f4",
+      "bytes": 85,
+      "sha256": "3297a3a429ecdbc867b8a31988639356d155fe60b0ea0f0280f7740bd2dcf0cb",
       "originalSha256": "83a791387a1267c35fc2fe1604132392634e5597971235cceb91d99ad95d84f4",
       "origin": {
         "path": ".gitattributes",
@@ -1458,8 +1458,8 @@
     },
     {
       "path": "Kernel/Build.bat",
-      "bytes": 2308,
-      "sha256": "0ac34d9a1cf22067660c78240e9ff5fb7fdbd8ce484738cac68eb24c43303c45",
+      "bytes": 122,
+      "sha256": "95d51b5e6c33a1665efce85ebb174e6a92c0959e93aed3d13915a9a7fe0093d1",
       "originalSha256": "0ac34d9a1cf22067660c78240e9ff5fb7fdbd8ce484738cac68eb24c43303c45",
       "origin": {
         "path": "Build.bat",
@@ -1468,8 +1468,8 @@
     },
     {
       "path": "Kernel/Build.sh",
-      "bytes": 1803,
-      "sha256": "4570f295cbe4e6a8acf2b9686dd3a9489f9f382a6ba67c574eee460f8fb2f8b1",
+      "bytes": 140,
+      "sha256": "c68b155ab77aacb74665e2d6e7fb60654c5301cb034f4fe2a792b1cd4edfb4d0",
       "originalSha256": "4570f295cbe4e6a8acf2b9686dd3a9489f9f382a6ba67c574eee460f8fb2f8b1",
       "origin": {
         "path": "Build.sh",
@@ -1478,8 +1478,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 14681,
-      "sha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
+      "bytes": 15201,
+      "sha256": "a3ce2cf1610390651ef5feaf654c96a78429b7a294812a35a1a41d02eb501a24",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -1488,8 +1488,8 @@
     },
     {
       "path": "Kernel/build.zig.zon",
-      "bytes": 1293,
-      "sha256": "a185253aae236f7b0383b83206b4bb64041cbcb964e5d694fd575c217ec0800f",
+      "bytes": 1298,
+      "sha256": "dc5e844720e45c60ba193b420d9fb73f2224ccb41f594fe45065ca6e8f634b18",
       "originalSha256": "a185253aae236f7b0383b83206b4bb64041cbcb964e5d694fd575c217ec0800f",
       "origin": {
         "path": "build.zig.zon",
@@ -1508,8 +1508,8 @@
     },
     {
       "path": "Kernel/display/boot_display.zig",
-      "bytes": 5962,
-      "sha256": "a836f7d1431a481f7a256ae81b9da8b0abc4cecc9c2661d3525ea9601c2fbb84",
+      "bytes": 5856,
+      "sha256": "b9f47ac35703ed2e9ecac119a06f910d6865bab7de89d134cc2f3b0ecb37e32c",
       "originalSha256": "a836f7d1431a481f7a256ae81b9da8b0abc4cecc9c2661d3525ea9601c2fbb84",
       "origin": {
         "path": "display/boot_display.zig",
@@ -2497,6 +2497,20 @@
       }
     },
     {
+      "path": "Kernel/kernel/recovery_boot.zig",
+      "bytes": 3898,
+      "sha256": "c8416ab4bfc6463efaa212ef159ec8a5dc326b9f89b04b90a7e808cec8dfe30b",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/kernel/recovery_runtime.zig",
+      "bytes": 1181,
+      "sha256": "34da3cdf8adca2fa5841b78b68e09b3f8162d99901799e19797179fd45ca6fb5",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/kernel/runtime_boot.zig",
       "bytes": 4905,
       "sha256": "dcd1952309c5d7269c34e0626d2b246c79c25bcc28ba88c8b3d43926d34b7782",
@@ -3348,13 +3362,20 @@
     },
     {
       "path": "Kernel/README.md",
-      "bytes": 13064,
-      "sha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
+      "bytes": 1493,
+      "sha256": "cc1376236a749687ff8545bce3b10815bbbea302a4b33655cda92e310776a3c9",
       "originalSha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
       "origin": {
         "path": "README.md",
         "source": "Kernel"
       }
+    },
+    {
+      "path": "Kernel/recovery_main.zig",
+      "bytes": 4428,
+      "sha256": "2078c6400cef1cb0009e77d79934a991586c36fb4720cac792b62e499ec89f1b",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Kernel/sched/initial_stack.zig",
@@ -3433,16 +3454,6 @@
       "originalSha256": "a90012296d964fd2318621c0ac32025c4679817f599d3bebf77126c38fc3368f",
       "origin": {
         "path": "services_tests.zig",
-        "source": "Kernel"
-      }
-    },
-    {
-      "path": "Kernel/Settings.R4S",
-      "bytes": 466,
-      "sha256": "9a173fff981198fc4d769962af10a6d94c386f702ce7afb6ddaefa33b6431d41",
-      "originalSha256": "9a173fff981198fc4d769962af10a6d94c386f702ce7afb6ddaefa33b6431d41",
-      "origin": {
-        "path": "Settings.R4S",
         "source": "Kernel"
       }
     },
@@ -3588,8 +3599,8 @@
     },
     {
       "path": "Kernel/VERSION.R4S",
-      "bytes": 25,
-      "sha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
+      "bytes": 24,
+      "sha256": "98924c6c909f83c4129fae79730dd744d043d38a7fc305e38c48aa52258c029c",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -5123,8 +5134,8 @@
     },
     {
       "path": "Platform/Contract/.gitattributes",
-      "bytes": 323,
-      "sha256": "6b9aa4ce93368e0a44415b54f6d00f7002475711d1785ca4f2fad22d682bbd75",
+      "bytes": 85,
+      "sha256": "3297a3a429ecdbc867b8a31988639356d155fe60b0ea0f0280f7740bd2dcf0cb",
       "originalSha256": "6b9aa4ce93368e0a44415b54f6d00f7002475711d1785ca4f2fad22d682bbd75",
       "origin": {
         "path": ".gitattributes",
@@ -5613,8 +5624,8 @@
     },
     {
       "path": "Platform/SDK/.gitattributes",
-      "bytes": 445,
-      "sha256": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5",
+      "bytes": 85,
+      "sha256": "3297a3a429ecdbc867b8a31988639356d155fe60b0ea0f0280f7740bd2dcf0cb",
       "originalSha256": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5",
       "origin": {
         "path": ".gitattributes",
@@ -8656,5 +8667,132 @@
       }
     }
   ],
-  "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3."
+  "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
+  "localRevisions": [
+    {
+      "changes": [
+        {
+          "path": "Kernel/build.zig",
+          "before": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
+          "after": "a3ce2cf1610390651ef5feaf654c96a78429b7a294812a35a1a41d02eb501a24"
+        },
+        {
+          "path": "Kernel/display/boot_display.zig",
+          "before": "a836f7d1431a481f7a256ae81b9da8b0abc4cecc9c2661d3525ea9601c2fbb84",
+          "after": "b9f47ac35703ed2e9ecac119a06f910d6865bab7de89d134cc2f3b0ecb37e32c"
+        },
+        {
+          "path": "Kernel/kernel/recovery_boot.zig",
+          "before": null,
+          "after": "b9d53989b43f090fbb897becb58fe8a1963fb61ff5a41b31e9938e69f7b1c7f5"
+        },
+        {
+          "path": "Kernel/recovery_main.zig",
+          "before": null,
+          "after": "97e404c9d78eacc34e5c1e84bccfdac8bbb008a64b634a37d733a7613a1d0de4"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
+          "after": "98924c6c909f83c4129fae79730dd744d043d38a7fc305e38c48aa52258c029c"
+        }
+      ],
+      "reason": "0.76.2: Eigenstaendige Bootfolge ohne SYSTEM, Recovery-Version und begrenzter SMP4-Bootnachweis"
+    },
+    {
+      "reason": "0.76.2: Recovery-Einstieg im Paketbestand und normaler Console-Uebergang",
+      "changes": [
+        {
+          "path": "Kernel/build.zig.zon",
+          "before": "a185253aae236f7b0383b83206b4bb64041cbcb964e5d694fd575c217ec0800f",
+          "after": "d5c0fe17ef3c17b9c52139c9e26a3709e18e5a68f30e9cfc7bbd6937e3dd9201"
+        },
+        {
+          "path": "Kernel/recovery_main.zig",
+          "before": "97e404c9d78eacc34e5c1e84bccfdac8bbb008a64b634a37d733a7613a1d0de4",
+          "after": "8855a67a49f33e17b160a47f6227cb7d2305793888260279015b5dd58719913f"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "b9d53989b43f090fbb897becb58fe8a1963fb61ff5a41b31e9938e69f7b1c7f5",
+          "path": "Kernel/kernel/recovery_boot.zig",
+          "after": "c8416ab4bfc6463efaa212ef159ec8a5dc326b9f89b04b90a7e808cec8dfe30b"
+        },
+        {
+          "before": "8855a67a49f33e17b160a47f6227cb7d2305793888260279015b5dd58719913f",
+          "path": "Kernel/recovery_main.zig",
+          "after": "80afefc65eb6e0b76cba858554f32773f23a40cb67e670a2a330b386ef46063d"
+        }
+      ],
+      "reason": "0.76.2: Bootphasen-Diagnose und RAM-Pruefblock auch nach SMP-Heap-/Wait-Arbeit kontrollieren"
+    },
+    {
+      "changes": [
+        {
+          "after": "34da3cdf8adca2fa5841b78b68e09b3f8162d99901799e19797179fd45ca6fb5",
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "before": null
+        },
+        {
+          "after": "2078c6400cef1cb0009e77d79934a991586c36fb4720cac792b62e499ec89f1b",
+          "path": "Kernel/recovery_main.zig",
+          "before": "80afefc65eb6e0b76cba858554f32773f23a40cb67e670a2a330b386ef46063d"
+        }
+      ],
+      "reason": "0.76.2: Task-/SMP-Start von spaeterem RAM-Blockgeraet und dessen Workern trennen"
+    },
+    {
+      "changes": [
+        {
+          "before": "0ac34d9a1cf22067660c78240e9ff5fb7fdbd8ce484738cac68eb24c43303c45",
+          "after": "95d51b5e6c33a1665efce85ebb174e6a92c0959e93aed3d13915a9a7fe0093d1",
+          "path": "Kernel/Build.bat"
+        },
+        {
+          "before": "4570f295cbe4e6a8acf2b9686dd3a9489f9f382a6ba67c574eee460f8fb2f8b1",
+          "after": "c68b155ab77aacb74665e2d6e7fb60654c5301cb034f4fe2a792b1cd4edfb4d0",
+          "path": "Kernel/Build.sh"
+        },
+        {
+          "before": "d5c0fe17ef3c17b9c52139c9e26a3709e18e5a68f30e9cfc7bbd6937e3dd9201",
+          "after": "dc5e844720e45c60ba193b420d9fb73f2224ccb41f594fe45065ca6e8f634b18",
+          "path": "Kernel/build.zig.zon"
+        },
+        {
+          "before": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
+          "after": "cc1376236a749687ff8545bce3b10815bbbea302a4b33655cda92e310776a3c9",
+          "path": "Kernel/README.md"
+        },
+        {
+          "before": "9a173fff981198fc4d769962af10a6d94c386f702ce7afb6ddaefa33b6431d41",
+          "after": null,
+          "path": "Kernel/Settings.R4S"
+        }
+      ],
+      "reason": "0.76.2: Geerbte Kernel-Starter auf eigenstaendige Recovery-Orchestrierung umstellen und alte Pfadmappings entfernen"
+    },
+    {
+      "changes": [
+        {
+          "after": "3297a3a429ecdbc867b8a31988639356d155fe60b0ea0f0280f7740bd2dcf0cb",
+          "path": "Kernel/.gitattributes",
+          "before": "83a791387a1267c35fc2fe1604132392634e5597971235cceb91d99ad95d84f4"
+        },
+        {
+          "after": "3297a3a429ecdbc867b8a31988639356d155fe60b0ea0f0280f7740bd2dcf0cb",
+          "path": "Platform/Contract/.gitattributes",
+          "before": "6b9aa4ce93368e0a44415b54f6d00f7002475711d1785ca4f2fad22d682bbd75"
+        },
+        {
+          "after": "3297a3a429ecdbc867b8a31988639356d155fe60b0ea0f0280f7740bd2dcf0cb",
+          "path": "Platform/SDK/.gitattributes",
+          "before": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5"
+        }
+      ],
+      "reason": "0.76.2: Disable inherited checkout normalization for byte-pinned Recovery sources on both hosts."
+    }
+  ]
 }

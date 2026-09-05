@@ -1,6 +1,5 @@
 const boot_info = @import("../bootloader/boot_info.zig");
 const log = @import("../kernel/log.zig");
-const bootscreen = @import("../kernel/bootscreen.zig");
 const fb = @import("../display/framebuffer.zig");
 const Console = @import("console.zig").Console;
 const display = @import("../display/display.zig");
@@ -31,7 +30,6 @@ pub fn init() ?State {
     display.registerBootBackend(boot_target);
     surface_pipeline.initFromDisplayManager();
     console_storage.clear();
-    _ = bootscreen.renderToFramebuffer(framebuf);
     console_storage.invalidateBackingForExternalDisplay();
     log.setConsoleSink(consoleSink(&console_storage));
 

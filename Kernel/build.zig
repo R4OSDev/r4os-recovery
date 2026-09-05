@@ -1,6 +1,9 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
+    const RecoveryProbe = enum { none, poweroff, reboot };
+    const recovery_probe = b.option(RecoveryProbe, "recovery-probe", "Bounded Recovery foundation guest witness") orelse .none;
+    const recovery_version_source = b.option([]const u8, "recovery-version", "Recovery release version") orelse @panic("Recovery version must be supplied by Build.ps1");
     // The R4OS kernel is pinned to ReleaseSafe. Debug overflows the Zig 0.16
     // ELF linker, while the kernel must never inherit a caller optimization.
     const optimize: std.builtin.OptimizeMode = .ReleaseSafe;
@@ -98,7 +101,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const kernel_mod = b.createModule(.{
-        .root_source_file = b.path("main.zig"),
+        .root_source_file = b.path("recovery_main.zig"),
         .target = target,
         .optimize = optimize,
         .code_model = .kernel,
@@ -111,6 +114,8 @@ pub fn build(b: *std.Build) void {
         .strip = strip_kernel,
     });
     const config = b.addOptions();
+    config.addOption(RecoveryProbe, "recovery_probe", recovery_probe);
+    config.addOption([]const u8, "recovery_version", recovery_version_source);
     config.addOption(bool, "enable_exception_test", enable_exception_test);
     config.addOption(bool, "enable_page_fault_test", enable_page_fault_test);
     config.addOption(bool, "enable_general_protection_test", enable_general_protection_test);
@@ -165,7 +170,7 @@ pub fn build(b: *std.Build) void {
     kernel_mod.addAssemblyFile(b.path("arch/x86_64/ap_trampoline.S"));
 
     const kernel = b.addExecutable(.{
-        .name = "r4os.elf",
+        .name = "recovery.elf",
         .root_module = kernel_mod,
     });
     kernel.setLinkerScript(b.path("linker.ld"));

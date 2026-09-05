@@ -1,22 +1,60 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.1
+Stand 0.76.2
 ------------
 
-Das Monorepo besitzt jetzt einen expliziten Quell-/Binaer-Ausgangsstand.
-Ein bootbares Recovery ist erst mit den folgenden Unterversionen vorhanden.
-Der initiale Kernelbaum ist die unveraenderte Quellkopie des normalen
-Kernels; die separate Bootfolge wird in 0.76.2 daraus entwickelt.
+Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
+einen eigenen Recovery-Kernel. recovery.elf startet mit Limine unter BIOS
+und x64-UEFI ohne SYSTEM-Partition. Die vollstaendige RAM-Dateisystem- und
+Userland-Aufnahme folgt in 0.76.3; ein Recovery-Menue ist noch nicht enthalten.
 
 Pruefen: Build.bat beziehungsweise ./Build.sh, optional -Mode Verify.
 Beide duennen Starter rufen dieselbe Build.ps1 mit PowerShell 7 auf.
 Der Aufruf funktioniert aus jedem Arbeitsverzeichnis und liest nur lokale
 Recovery-Eingaben. Ergebnis: Artifacts/Verification/inventory.json.
 Es werden weder normale Workspace-Module neu gebaut noch Eingaben aus dem
-Workspace kopiert oder ueber das Netz nachgeladen. -Mode Kernel meldet im
-Stand 0.76.1 ausdruecklich, dass noch kein ausfuehrbarer Build angeschlossen
-ist; es wird kein normales r4os.elf als Recovery ausgegeben.
+Workspace kopiert oder ueber das Netz nachgeladen.
+
+-Mode Kernel baut Artifacts/Kernel/bin/recovery.elf mit dem festgehaltenen
+Zig, lokalem Contract und ReleaseSafe/soft_float. -Zig waehlt bei Bedarf das
+Hostwerkzeug; der Default kommt aus dem benachbarten DevKit. Kernel/Build.sh
+und Kernel/Build.bat delegieren denselben Einstieg. Kernel/recovery_main.zig
+ist die separate Bootfolge, Kernel/main.zig bleibt als Herkunftsreferenz.
+Recovery VERSION.R4S und Kernel/VERSION.R4S besitzen eigene Versionen.
+
+Die Grundfolge uebernimmt CPU, Speicher, Interrupts, Timer, SMP4-Scheduling,
+Programmlebenszyklus, Service-IPC und DriverWork aus den festgehaltenen
+Besitzern. Sie startet keinen Desktop und sucht keine SYSTEM-Partition.
+Limine-Modulbereiche muessen vollstaendig als kernel_and_modules reserviert
+sein; sie werden nicht als freie PMM-Seiten aufgenommen. Controllergebundene
+Blockworker starten erst, wenn ein Blockgeraet vorhanden ist. Das regulaere
+Zwischenartefakt zeigt eine Textkonsole mit R fuer Neustart und P fuer Aus.
+
+Bootnachweis
+------------
+
+-Mode BootTest baut einen eigenen Diagnosekernel und fuehrt kurze BIOS- und
+UEFI-Laeufe mit vier vCPUs aus. -Firmware Bios beziehungsweise Uefi begrenzt
+die Auswahl. -BootProbe reboot prueft zusaetzlich den regulaeren Resetpfad;
+Standard ist Herunterfahren. Der Diagnosecode fehlt im regulaeren Artefakt.
+
+Tools/Test-Boot.ps1 erstellt eine technische 128-MB-Fixture mit genau einer
+FAT32-Partition und ohne SYSTEM/NTFS. Sie ist nicht das geplante Releaseimage.
+Der ImageCreator und die QEMU-Hostauswahl stammen aus dem festgehaltenen
+Distribution-Quellenarchiv. Neben recovery.elf laedt Limine einen bekannten
+4096-Byte-Pruefblock. Vier an CPU 0 bis 3 gebundene Worker allozieren, warten,
+pruefen und geben Speicher frei. Vorher und danach bleibt der Pruefblock
+unveraendert. Der Test verlangt den vollstaendigen SMP4-Erfolgsmarker und
+regulaeren QEMU-Abschluss; Crash und Zeitlimit schlagen fehl.
+
+Ergebnisse und serielle Logs liegen unter Artifacts/BootProbe/poweroff
+beziehungsweise reboot. Linux benoetigt ein passendes OVMF-Code-/Variablen-
+paar; DevKit-Setup installiert es mit. Windows verwendet die QEMU-Firmware.
+Der Teststarter erlaubt explizite -Qemu, -LimineRoot, -OvmfCode und -OvmfVars.
+Die vorliegende Abnahme lief auf Linux mit KVM: BIOS/UEFI, Poweroff/Reset,
+vier vCPUs und 1024 MB RAM. Eine Windows- oder Hardwareabnahme wird damit
+nicht behauptet. Die RAM-Menge ist noch keine finale Kapazitaetszusage.
 
 Uebernahme
 ----------
@@ -91,8 +129,9 @@ der Gastabnahme nachgewiesen, nicht durch eine reine Textsuche behauptet.
 
 Die gegenwaertige Pruefung belegt statische Kompatibilitaet und Integritaet.
 Sie behauptet noch keine gemeinsame Gast-Laufzeitabnahme der kopierten
-Module. BIOS-/UEFI-RAM-Boot, spaete Modul-/Ressourcenstarts, USB, Netzwerk
-und SSH/FTP erhalten ihre vorgesehenen begrenzten SMP4-Nachweise.
+Module. Die Kernel-Bootgrundlage ist unter BIOS/UEFI mit SMP4 geprueft;
+RAM-Dateisystem, spaete Modul-/Ressourcenstarts, USB, Netzwerk und SSH/FTP
+erhalten ihre folgenden begrenzten SMP4-Nachweise.
 
 Vertraege und Platzbedarf
 ------------------------
