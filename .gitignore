@@ -1,0 +1,20 @@
+# Generated outputs. Imported runtime modules are intentionally tracked.
+/Artifacts/
+/Releases/
+/Temp/
+**/.zig-cache/
+**/zig-out/
+**/zig-pkg/
+**/__pycache__/
+*.pyc
+
+# Local credentials and editor state.
+/Tools/Credentials/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~

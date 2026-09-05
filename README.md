@@ -1,0 +1,54 @@
+﻿# R4OS Recovery
+
+R4OS Recovery is the independent recovery environment planned for R4OS roadmap
+0.76.X. It will boot through Limine with its own lightweight kernel and a
+complete RAM-resident console runtime.
+
+This initial repository contains the project overview, license notices, and
+Git exclusions. Implementation, build entry points, imported modules, and
+bootable releases will follow as the roadmap is implemented.
+
+## Planned scope
+
+- Install R4OS from a stored release ZIP or a release downloaded from GitHub.
+- Replace a selected R4OS system installation and update Recovery independently.
+- Manage partitions through the reusable R4PART console application.
+- Run the existing terminal and provide SSH and FTP access for offline repair.
+- Use keyboard input and display menus and console programs inside the recovery
+  background's monitor area.
+
+The recovery kernel will reuse selected R4OS kernel components. Compatible
+drivers, protocols, services, console applications, and libraries will be
+imported as a pinned, jointly verified set. Recovery has its own release cycle;
+normal R4OS releases will include an explicitly selected Recovery release.
+
+## Planned repository layout
+
+Directories will be added with their implementation or imported contents:
+
+    Kernel/             Recovery kernel sources
+    Platform/Contract/  Pinned platform API and ABI contract
+    Platform/SDK/       Pinned SDK sources
+    RecoveryTools/      Recovery menu and installation/update workflows
+    Runtime/            Configuration, imported modules, and recovery media
+    Provenance/         Import versions, source commits, hashes, and manifests
+    Legal/              Licenses and notices for imported material
+    Tools/              Build, import, and release tooling
+
+Imported runtime binaries will be versioned together with their provenance and
+license notices. Generated build and release outputs remain untracked. Shared
+host orchestration will use PowerShell 7 with thin Windows and Linux launchers.
+
+## Workspace integration
+
+The canonical checkout is `Repositories/Recovery` within the
+[R4OS project workspace](https://github.com/R4OSDev/r4os-project). From the
+workspace root, use `Tools\Github.bat -Pull -Recovery` on Windows or
+`./Tools/Github.sh -Pull -Recovery` on Linux. The repository uses `main` and the
+public remote `https://github.com/R4OSDev/r4os-recovery.git`.
+
+## License
+
+Original R4OS material is licensed under Apache License 2.0. See
+[LICENSE](LICENSE), [NOTICE](NOTICE), and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
