@@ -852,3 +852,67 @@ Der Menue-Gasttest korrigierte nach dem Downloadlauf die neuen Links-/Rechts-
 Tastencodes auf 0x88/0x89. Dieser separat erneut gepruefte Eingabezweig ist die
 einzige Produktquellenabweichung gegenueber dem festgehaltenen Downloadlauf;
 Download-, Paket-, Transport- und FAT-Quellen sind SHA256-identisch geblieben.
+
+0.76.18: Installation und lokaler Selbstersatz
+-------------------------------------------
+
+Install R4OS fuehrt die bereits bestaetigte vollstaendige Datentraeger-
+Ersetzung aus. Der feste ZIP-Cache bleibt Quelle und wird als unveraendertes
+Original in das neue RECOVERY uebernommen. Innere GPT-/BOOT-Beschreibung,
+aeussere BOOT-Dateien, SYSTEM-Katalog, eingebettete Kernelversionen und beide
+Recovery-Slots werden vorab auf Uebereinstimmung geprueft. Die normale SDK-
+Einheit besitzt jetzt auch den vorbereiteten FAT-Dateibaum des ImageCreator.
+RecoveryTools besitzt ausschliesslich die Installationsfolge und Oberflaeche.
+
+Alle Quelldaten und Plaene liegen vor dem Claim in gepinntem RAM. Die echte
+Zielgroesse bestimmt DATA; sieben frische IDs binden die fuenf Partitionen,
+das Installationsmanifest und das lokale Limine-Menue. BOOT, SYSTEM, beide
+Recovery-Slots, ihre vollstaendigen Legal-Dateien, das Original-ZIP und frische
+DATA-Verzeichnisse werden geschrieben und rueckgelesen. Der BIOS-Bootcode
+folgt zuletzt. Der Abschluss verlangt Flush, neue gepruefte Mountidentitaeten
+und einen erneuten SHA-256-Lauf ueber das installierte Original-ZIP.
+
+Die lokale Neuinstallation darf das eigene physische Medium ersetzen. C:
+bleibt RAM; der normale Kernelbesitzer erlaubt die ausdrueckliche neue R:-
+Zuordnung ausschliesslich fuer die bei Recovery-Boot reservierte physische
+Geraeteinkarnation. Ein Fehler vor Schreibbeginn stellt fruehere Mounts
+wieder her. Nach dem ersten Schreibversuch bleiben fehlgeschlagene Ziele
+unvollstaendig und ausgehaengt; SSH und Terminal bleiben fuer Diagnose nutzbar.
+Der Ablauf ist keine atomare Installation ueber Stromausfaelle hinweg.
+
+Die erste echte Installation deckte einen Fehler des normalen FAT-Lesers
+auf: Ein Volume-Label BOOT verdeckte das Verzeichnis boot. Lookup, Mutation
+und Aufzaehlung ueberspringen nun solche Metadateneintraege. Die Aenderung
+wurde beim normalen Kernel vorgenommen und ausdruecklich importiert. Der
+Installer behält die Distribution-Bezeichnung R4OS BOOT bei, damit auch
+aeltere gueltige Release-Kernel starten. Die Gastfixture prueft dagegen
+gezielt die Kollision BOOT/boot mit dem korrigierten Recovery-Kernel.
+
+Tools/Test-Install.ps1 verwendet den echten Menueweg und physische Schreib-
+zugriffe auf ausschliesslich temporaere QEMU-Dateiimages mit vier vCPUs.
+USB/BIOS installiert auf ein groesseres 3-GB-NVMe-Ziel; lokal/UEFI ersetzt
+das eigene 2-GB-Medium. Ein weiterer beschreibbarer Datentraeger und die
+USB-Quelle werden danach per SHA-256 verglichen. Ein QEMU-Blockfehler und
+1024 MB RAM pruefen Fehler nach und vor Schreibbeginn. Alle vier Faelle
+verlangen anschliessend SSH-Antwort und reguläres Herunterfahren im Terminal.
+Erfolgreiche Ergebnisse werden vom unabhaengigen Distribution-Pruefer
+geprueft und jeweils als normales R4OS und Recovery gebootet.
+
+Die technische Quelle ist das vollstaendige 0.76.17-Slim-Paket mit normalem
+Kernel 0.1.97 und Recovery 0.1.14. Der neue Installer laeuft mit Recovery/
+Recovery-Kernel 0.1.15 und Menu 0.1.7; der normale Besitzerkernel ist 0.1.98.
+Die gemessene Vorbereitungs-Spitze betraegt 3628724224 Bytes (rund 3,38 GB)
+bei 8192 MB Gast-RAM. Das ist ein Messwert dieser Quelle, keine allgemeine
+RAM-Untergrenze. Windows und Lenovo werden hier nicht manuell getestet.
+
+Abnahme: Alle acht Linux/KVM-SMP4-Faelle bestanden. USB-Installation 114,04 s,
+lokaler Selbstersatz 76,88 s, Schreibfehler 103,28 s und RAM-Abweisung 79,17 s.
+Vier anschliessende BIOS-/UEFI-Starts von normalem R4OS und Recovery mit
+2048 MB bestaetigten die tatsaechlichen neuen Installationsidentitaeten und
+regulaeren Terminal-Poweroff. Andere Datentraeger/USB-Quelle blieben
+bytegleich; bei RAM-Abweisung auch das Ziel. SDK 10/10 Gruppen und die
+Distribution-Besitzerpruefungen bestanden. Ein unabhaengiger vollstaendiger
+Recovery-Baum in einem Pfad mit Leerzeichen baute Kernel und Runtime
+SHA-256-identisch. Der beobachtete SeaBIOS/NVMe-Startfehler mit 4/8 GB liegt
+vor dem Kernel und bleibt in Problems.txt fuer die Integrationspruefung
+festgehalten; die lokale 8-GB-Installationsabnahme verwendet UEFI.

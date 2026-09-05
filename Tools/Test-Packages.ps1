@@ -87,10 +87,10 @@ try {
     [IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $root 'Legal/Sources/Protocols-R4Zip.zip'),$zipSource)
     $hostTool=Join-Path $output "package-host$suffix"
     if(!$GuestOnly){
-        Checked $Zig @('build-exe','-OReleaseSafe','--dep','r4os','--dep','ntfs_volume','--dep','zip_core',
+        Checked $Zig @('build-exe','-OReleaseSafe','--dep','r4os','--dep','ntfs_volume','--dep','zip_core','--dep','installation',
             "-Mroot=$(Join-Path $root 'RecoveryTools/Menu/src/package_fixture.zig')",'--dep','r4os_contract',"-Mr4os=$(Join-Path $sdk 'r4os.zig')",
             '--dep','ntfs_format',"-Mntfs_volume=$(Join-Path $sdk 'r4os/ntfs_volume.zig')",'--dep','r4os',"-Mntfs_format=$(Join-Path $root 'RecoveryTools/Menu/src/ntfs_format.zig')",
-            '--dep','r4os',"-Mzip_core=$(Join-Path $zipSource 'src/zip_core.zig')","-Mr4os_contract=$(Join-Path $root 'Platform/Contract/Generated/SDK/Zig/package.zig')","-femit-bin=$hostTool")
+            '--dep','r4os',"-Mzip_core=$(Join-Path $zipSource 'src/zip_core.zig')","-Minstallation=$(Join-Path $root 'Kernel/storage/installation.zig')","-Mr4os_contract=$(Join-Path $root 'Platform/Contract/Generated/SDK/Zig/package.zig')","-femit-bin=$hostTool")
     }
     $good=Join-Path $output 'recovery-good.zip';$bad=Join-Path $output 'recovery-bad-hash.zip'
     $systemPackage=Join-Path $output 'system/R4OS-0.76.15-slim-x86_64.zip'

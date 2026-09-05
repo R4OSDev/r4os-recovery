@@ -51,6 +51,24 @@ const Memory = struct {
 pub fn main(init: std.process.Init) !void {
     const a = init.arena.allocator();
     const args = try init.minimal.args.toSlice(a);
+    if (args.len == 3 and std.mem.eql(u8, args[1], "--installation")) {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(package.max_archive_bytes));
+        const prepared = try package.prepare(a, Codec{}, bytes, .r4os, .{});
+        const tree = try source.Tree.read(a, prepared.archive.get("disk.img").?, prepared.version(), .{});
+        try source.verifyInstallation(a, prepared, tree, .{});
+        var mismatch = prepared;
+        mismatch.system.?.kernelVersion = "99.99.99";
+        try std.testing.expectError(error.SourceVersion, source.verifyInstallation(a, mismatch, tree, .{}));
+        mismatch = prepared;
+        mismatch.recovery.recoveryKernelVersion = "99.99.99";
+        try std.testing.expectError(error.SourceKernel, source.verifyRecovery(a, mismatch));
+        const outer_kernel = @constCast(prepared.archive.get("BOOT/boot/r4os.elf").?);
+        outer_kernel[0] ^= 1;
+        try std.testing.expectError(error.SourceContentMismatch, source.verifyInstallation(a, prepared, tree, .{}));
+        outer_kernel[0] ^= 1;
+        std.debug.print("[PACKAGEHOST] installation={s} profile={s} files={d} coherent=OK mismatches=REJECTED writes=0\n", .{ prepared.version(), prepared.system.?.profile, tree.nodes.items.len });
+        return;
+    }
     if (args.len != 4) return error.Usage;
     const cwd = std.Io.Dir.cwd();
     const recovery_zip = try cwd.readFileAlloc(init.io, args[1], a, .limited(package.max_archive_bytes));

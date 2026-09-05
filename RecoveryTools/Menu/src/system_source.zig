@@ -48,6 +48,7 @@ const Ram = struct {
 pub const Tree = struct {
     nodes: std.ArrayList(Node) = .empty,
     file_bytes: u64 = 0,
+    layout: ?*const partition.Plan = null,
     // The prepared image still owns the source; the tree owns independent
     // file content too, including any non-contiguous NTFS stream.
     pub fn get(self: Tree, path: []const u8) ?[]const u8 {
@@ -87,7 +88,7 @@ pub const Tree = struct {
         const upcase = try allocator.alloc(u8, ntfs.UPCASE_BYTES);
         if ((nv.readFileRange(&volume, ntfs.MFT_RECORD_UPCASE, 0, upcase) orelse return error.SourceNtfs) != upcase.len) return error.SourceNtfs;
         volume.upcase = upcase;
-        var tree = Tree{};
+        var tree = Tree{ .layout = table };
         try tree.nodes.append(allocator, .{ .path = "", .name = "", .parent = 0, .directory = true, .record = ntfs.MFT_RECORD_ROOT });
         var dir_index: usize = 0;
         while (dir_index < tree.nodes.items.len) : (dir_index += 1) {
@@ -142,3 +143,86 @@ pub const Tree = struct {
         return .{ .builder = builder, .plan = plan };
     }
 };
+
+/// Strong installation preflight, in addition to ZIP/schema/hash checking.
+/// Technical decoder fixtures need not pretend to be bootable releases.
+pub fn verifyInstallation(allocator: std.mem.Allocator, prepared: @import("package.zig").Prepared, tree: Tree, pump: Pump) !void {
+    const system = prepared.system orelse return error.SourceLayout;
+    const layout = tree.layout orelse return error.SourceLayout;
+    const setup = r4os.storage_tools.installation;
+    const image = prepared.archive.get("disk.img").?;
+    const boot_part = layout.entries[1];
+    const recovery_part = layout.entries[3];
+    const View = r4os.storage_tools.fat32_view.View;
+    const boot = try View.init(image[@intCast(boot_part.first * 512)..][0..@intCast(boot_part.count * 512)], boot_part.first);
+    const recovery = try View.init(image[@intCast(recovery_part.first * 512)..][0..@intCast(recovery_part.count * 512)], recovery_part.first);
+    const manifest_bytes = try boot.readFile(allocator, "boot/r4os-installation.json", 16384);
+    const manifest = try @import("installation").parse(allocator, manifest_bytes);
+    if (!partition.guid.eql(layout.disk_guid, manifest.disk_guid)) return error.SourceLayout;
+    for (manifest.partitions, layout.entries[0..5]) |part, entry| {
+        if (!partition.guid.eql(part.partition_guid, entry.unique_guid) or !partition.guid.eql(part.type_guid, entry.type_guid) or part.first_lba != entry.first or part.sector_count != entry.count) return error.SourceLayout;
+    }
+    const BootManifest = struct { releaseVersion: []const u8, kernelVersion: []const u8, bootFiles: []const []const u8 };
+    const details = try std.json.parseFromSlice(BootManifest, allocator, manifest_bytes, .{ .ignore_unknown_fields = true });
+    if (!std.mem.eql(u8, details.value.releaseVersion, system.releaseVersion) or !std.mem.eql(u8, details.value.kernelVersion, system.kernelVersion) or
+        details.value.bootFiles.len != setup.boot_paths.len or system.bootFiles.len != setup.boot_paths.len) return error.SourceVersion;
+    var ids = setup.Identifiers{ .installation = manifest.installation_id, .disk = manifest.disk_guid, .partitions = undefined };
+    for (manifest.partitions, 0..) |part, i| ids.partitions[i] = part.partition_guid;
+    const source_layout = try setup.Layout.prepare(image.len / 512, 512, ids);
+    const config = try boot.readFile(allocator, "boot/limine.conf", 16384);
+    const local = try source_layout.limineConfig(allocator, .local);
+    const usb = try source_layout.limineConfig(allocator, .usb);
+    if (!std.mem.eql(u8, config, local) and !std.mem.eql(u8, config, usb)) return error.SourceBootConfig;
+    for (setup.boot_paths) |path| {
+        for (system.bootFiles) |actual| {
+            if (std.mem.eql(u8, path, actual)) break;
+        } else return error.SourceBootFiles;
+        for (details.value.bootFiles) |actual| {
+            if (std.mem.eql(u8, path, actual)) break;
+        } else return error.SourceBootFiles;
+        const outer = try std.fmt.allocPrint(allocator, "BOOT/{s}", .{path});
+        try boot.matches(path, prepared.archive.get(outer) orelse return error.SourceBootFiles);
+        try pump.run("Checking packaged boot files", 0, 0);
+    }
+    // BIOS stage one is installed from this shared pinned Limine payload.
+    if (!r4os.storage_tools.limine.supportsBiosSystem(prepared.archive.get("BOOT/boot/limine-bios.sys").?)) return error.SourceBootFiles;
+    try kernelVersion(prepared.archive.get("BOOT/boot/r4os.elf").?, system.kernelVersion);
+    const Modules = struct {
+        schema: u32,
+        profile: []const u8,
+        count: u32,
+        entries: []const struct { name: []const u8, kind: []const u8, version: []const u8, target: []const u8 },
+    };
+    const module_bytes = tree.get("/R4OS/CONFIG/MODULES.JSON") orelse return error.SourceVersion;
+    const modules = try std.json.parseFromSlice(Modules, allocator, r4os.version_info.stripBom(module_bytes), .{ .ignore_unknown_fields = true });
+    if (modules.value.schema != 4 or modules.value.count != modules.value.entries.len or !std.mem.eql(u8, modules.value.profile, system.profile)) return error.SourceVersion;
+    var kernels: usize = 0;
+    for (modules.value.entries) |entry| {
+        if (!std.mem.eql(u8, entry.kind, "KERNEL")) continue;
+        kernels += 1;
+        if (!std.mem.eql(u8, entry.name, "KERNEL") or !std.mem.eql(u8, entry.target, "/boot/r4os.elf") or !std.mem.eql(u8, entry.version, system.kernelVersion)) return error.SourceVersion;
+    }
+    if (kernels != 1) return error.SourceVersion;
+    try verifyRecovery(allocator, prepared);
+    for ([_][]const u8{ "CURRENT", "PREVIOUS" }) |slot| {
+        const manifest_path = try std.fmt.allocPrint(allocator, "{s}/manifest.json", .{slot});
+        try recovery.matches(manifest_path, prepared.recovery_archive.manifest);
+        for (prepared.recovery.files) |file| {
+            const path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ slot, file.path });
+            try recovery.matches(path, prepared.recovery_archive.get(file.path).?);
+            try pump.run("Checking packaged Recovery slots", 0, 0);
+        }
+    }
+}
+
+pub fn verifyRecovery(allocator: std.mem.Allocator, prepared: @import("package.zig").Prepared) !void {
+    try kernelVersion(prepared.recovery_archive.get("recovery.elf").?, prepared.recovery.recoveryKernelVersion);
+    const runtime = try r4os.storage_tools.fat32_view.View.init(prepared.recovery_archive.get("runtime.img").?, 0);
+    const version = try runtime.readFile(allocator, "R4OS/CONFIG/VERSION.R4S", 4096);
+    if (!std.mem.eql(u8, r4os.version_info.parseReleaseVersion(version) orelse return error.SourceVersion, prepared.recovery.recoveryVersion)) return error.SourceVersion;
+}
+fn kernelVersion(bytes: []const u8, expected: []const u8) !void {
+    const artifact = r4os.r4u_artifact;
+    const identity = artifact.inspect(artifact.SliceReader{ .bytes = bytes }, bytes.len) orelse return error.SourceKernel;
+    if (identity.kind != .kernel or !std.mem.eql(u8, identity.versionText(), expected)) return error.SourceKernel;
+}

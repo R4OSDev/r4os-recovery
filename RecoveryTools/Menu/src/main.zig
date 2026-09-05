@@ -5,6 +5,7 @@ const diagnostic = @import("diagnostic.zig");
 const selection = @import("selection.zig");
 const targets = selection.model;
 const packages = @import("package_session.zig");
+const install = @import("install.zig");
 const downloads = @import("download.zig");
 const github = @import("github.zig");
 const abi = r4os.abi;
@@ -298,7 +299,7 @@ const State = struct {
         const source = if (self.source == .cached) "cached ZIP" else "GitHub release";
         const review_text = switch (target.operation) {
             .install => std.fmt.bufPrint(&buffer, "Disk {d}: {d}MB - ALL DATA ERASED\nNew layout (not current partitions):\nBIOSBOOT 1MB + BOOT 128MB FAT32\nSYSTEM 1024MB NTFS\nRECOVERY 512MB FAT32\nDATA remaining {d}MB NTFS\nSource: {s}", .{
-                disk.info.reference.slot, disk.info.sector_count / 2048, (disk.info.sector_count - 34 - 3411968) / 2048, source,
+                disk.info.reference.slot, disk.info.sector_count / 2048, (disk.info.sector_count - 33 - 3411968) / 2048, source,
             }),
             .system => std.fmt.bufPrint(&buffer, "Disk {d}: SYSTEM partition {d}, {d}MB\nReplace ALL SYSTEM files and BOOT kernel.\nKeep partition sizes and identifiers.\nKeep DATA, RECOVERY and limine.conf.\nBOOT partition: {d}\nSource: {s}", .{
                 disk.info.reference.slot,                                              affected.partition_number, affected.sector_count / 2048,
@@ -410,6 +411,33 @@ const State = struct {
         @memcpy(self.cache.version[0..actual_version.len], actual_version);
         var detail: [192]u8 = undefined;
         self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] prepared={s} version={s} ram_peak={d} original_zip={d} writes=0\r\n", .{ @tagName(self.kind()), session.prepared.?.version(), session.pool.peak, session.prepared.?.archive.original.len }) catch "");
+        if (self.operation() == .install) {
+            const installer = session.arena.allocator().create(install.Installer) catch {
+                result_message = packages.message(error.OutOfMemory);
+                return;
+            };
+            installer.* = install.Installer.prepare(session, &self.catalog.?, self.target_index) catch |err| {
+                result_message = install.message(if (session.pool.cancelled) error.Cancelled else err, false);
+                self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYINSTALL] preflight={s} writes=0 ram_peak={d}\r\n", .{ @errorName(err), session.pool.peak }) catch "");
+                return;
+            };
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYINSTALL] prepared=OK own_source={d} ram_peak={d} writes=0\r\n", .{ @intFromBool(installer.own_source), session.pool.peak }) catch "");
+            installer.execute() catch |err| {
+                result_message = install.message(err, installer.progress.write_attempted);
+                self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYINSTALL] result={s} attempted={d} sectors={d} native={d} lba={d} claim={d}\r\n", .{
+                    @errorName(err),                                                                                       @intFromBool(installer.progress.write_attempted), installer.progress.written_sectors,
+                    if (installer.progress.native_error != 0) installer.progress.native_error else installer.native_error, installer.progress.failed_lba orelse 0,           installer.target.claim,
+                }) catch "");
+                self.clearCatalog();
+                self.notice_return = .menu;
+                return;
+            };
+            const digest = std.fmt.bytesToHex(session.original_digest, .lower);
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYINSTALL] result=OK disk={d} sectors={d} original_sha256={s}\r\n", .{ installer.target.target.device.slot, installer.layout.sectors, digest }) catch "");
+            result_message = "R4OS installed. SYSTEM, BOOT, both Recovery slots and the original ZIP were verified. DATA is ready. Restart to boot R4OS.";
+            self.clearCatalog();
+            self.notice_return = .menu;
+        }
     }
     fn downloadPackage(self: *State) bool {
         self.page = .progress;
@@ -442,9 +470,9 @@ const State = struct {
         try session.prepare(targets.cachePath(self.operation()), self.kind(), if (self.cache.state == .manifest or self.cache.state == .verified) self.cache.digest else null);
         const catalog = &self.catalog.?;
         const target = catalog.targets.items[self.target_index];
-        if (self.operation() != .recovery) {
+        if (self.operation() == .system) {
             const affected = targets.affected(target, catalog.disks.items, catalog.installed.items);
-            try session.targetSystem(if (self.operation() == .install) 266240 else affected.first_lba, if (self.operation() == .install) 2097152 else affected.sector_count, self.sys.ticks());
+            try session.targetSystem(affected.first_lba, affected.sector_count, self.sys.ticks());
         }
         try catalog.revalidate(&self.sys, self.target_index);
     }

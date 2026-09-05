@@ -50,7 +50,8 @@ pub fn allowed(boot: ?Boot, disk: Disk, operation: Operation) bool {
     if (!source.usb and d.bus == abi.storage_bus_usb) return false;
     if (operation == .install) {
         // Fixed five-part layout, at least 16 MB DATA and final GPT records.
-        if (d.sector_count < 3411968 + 32768 + 34) return false;
+        const layout = @import("r4os").storage_tools.installation;
+        if (d.sector_count < layout.first_lbas[4] + layout.minimum_data_sectors + 33) return false;
         return !(source.usb and sameDevice(source.device, d.reference));
     }
     return !disk.ambiguous and

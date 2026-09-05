@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "version": "12.0.1",
+  "upstream": "https://github.com/limine-bootloader/limine",
+  "source": "Workspace DevKit/Boot/Limine; version declared by limine.c",
+  "license": "BSD-2-Clause",
+  "extraction": "bios-hdd.bin contains exactly the ordered uint8_t elements of binary_limine_hdd_bin_data in limine-bios-hdd.h, without changes.",
+  "biosSystemCompanion": {
+    "pathInPackage": "boot/limine-bios.sys",
+    "source": "DevKit/Boot/Limine/limine-bios.sys from the same Limine 12.0.1 distribution",
+    "sha256": "c325db0e68c0954bc1c6b32148fe311e9e6a9de89c47621397cf4f17a707c43d"
+  },
+  "files": [
+    {
+      "path": "limine.c",
+      "bytes": 44899,
+      "sha256": "e2f66c0eb7a07db995d5ef8b579c991e32864bf01dd73a6b4d2e930e537e02de"
+    },
+    {
+      "path": "limine-bios-hdd.h",
+      "bytes": 139432,
+      "sha256": "ef88b0484bbe028e4ac46a312fe756f9d5a59425ac3165c2fb70c7373b46437f"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1297,
+      "sha256": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8"
+    },
+    {
+      "path": "bios-hdd.bin",
+      "bytes": 22301,
+      "sha256": "0bab1e802a4bbd32a44285e0244b2bd73d58c57e4dc0c9bf8b2ca6af0c8cbda8"
+    }
+  ]
+}

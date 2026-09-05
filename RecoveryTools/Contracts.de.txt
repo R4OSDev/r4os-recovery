@@ -264,3 +264,37 @@ Auftrag muss alle betroffenen Handles/Transfers ausschliessen, neue Zugriffe
 waehrend der Mutation abweisen, I/O entleeren, flushen, sauber aushangen und
 nach Rescan mit neuen Generationen einbinden. Belegte Ziele werden vor
 Mutation abgewiesen. Unbetroffene Volumes und RAM-Dienste koennen weiterlaufen.
+
+Installationsvollzug ab 0.76.18
+------------------------------
+
+Install laedt das originale R:/INSTALL/RELEASE.ZIP, entpackt und prueft alle
+Dateien vor dem Claim. Die innere disk.img, ihr BOOT-Installationsmanifest,
+alle aeusseren BOOT-Dateien, der SYSTEM-Modulkatalog und die eingebetteten
+Kernel-/Releaseversionen muessen zusammenpassen. Beide inneren Recovery-Slots
+muessen genau dem mitgelieferten Recovery-Paket entsprechen. Die BIOS-Stage-3-
+Datei muss zum festgehaltenen Limine-Bootcode passen. Ein syntaktisch korrektes
+ZIP mit abweichenden inneren Dateien ist keine gueltige Installationsquelle.
+
+BOOT, RECOVERY samt originalem ZIP, SYSTEM- und DATA-Metadatenplaene sowie
+Arbeitsbuffer sind vor dem ersten Zielzugriff vollstaendig in gepinntem RAM.
+Zielidentitaet und erste/letzte GPT-Sektoren werden nach dem exklusiven Claim
+nochmals verglichen. Nur dann folgt der vollstaendige Ersatz: leere Tabelle,
+neues gemeinsames Layout mit sieben frischen IDs, BOOT, SYSTEM, RECOVERY,
+DATA und zuletzt BIOS-Bootcode. Jeder gemeinsame Formatierer verwendet
+Flush und Readback. SYSTEM wird aus Inhalten fuer seine echte Zielgeometrie
+aufgebaut; DATA erhaelt den verbleibenden Platz und DOCS/MEDIA/TEMP.
+
+Die FAT-Bezeichnung von BOOT bleibt wie im Distribution-Image 'R4OS BOOT',
+damit auch aeltere gueltige Release-Kernel starten. Der GPT-Rollenname bleibt
+BOOT. Der normale FAT-Besitzer und sein ausdruecklicher Recovery-Import
+behandeln Volume-Label-Eintraege nicht mehr als Dateien oder Verzeichnisse.
+
+Nach dem Schreiben wird der Claim geschlossen und frisch inventarisiert.
+Erst gepruefte neue GUIDs, Grenzen, Dateisysteme und Mountgenerationen werden
+sichtbar. Bei eigener lokaler Neuinstallation darf nur dieselbe physische
+Geraeteinkarnation ihr neues RECOVERY wieder als R: erhalten. Das gespeicherte
+Original-ZIP wird ueber den neuen Mount vollstaendig per SHA-256 gelesen.
+Erst danach meldet das Menue Erfolg. Nach Schreibbeginn sind Fehler oder
+ESC ein unvollstaendiger Datentraeger; der RAM-Betrieb bleibt fuer Diagnose
+und Neustart verfuegbar. Der Ablauf verspricht keine Powerfail-Atomizitaet.

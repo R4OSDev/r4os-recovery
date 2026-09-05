@@ -177,3 +177,20 @@ operations on a disposable NVMe, identifier changes and the menu/Terminal
 return paths. `pwsh -File Tools/Test-R4Part-Normal.ps1` exercises that identical
 binary in an already built normal Full image, then verifies the ordinary
 local Terminal in a private QEMU snapshot. Both run with four virtual CPUs.
+
+Since 0.76.18, Install R4OS performs the complete replacement after the
+existing source, target and confirmation steps. It validates the original
+release ZIP and the agreement between its outer BOOT files, inner image,
+SYSTEM catalog and pinned Recovery. Every write plan and the original ZIP
+reside in pinned RAM before exclusive access. The common SDK creates fresh
+GPT identities, BOOT/SYSTEM/RECOVERY and DATA using the actual target size.
+Both Recovery slots and INSTALL/RELEASE.ZIP are installed. Completion requires
+flush/readback, new mount identities and a full hash of the stored original.
+
+Build the production kernel with `-Mode Kernel` and its diagnostic UI sibling
+with `-Mode Kernel -BootProbe ui`. `Tools/Test-Install.ps1 -SourcePackage PATH`
+uses that real installer with a validated complete R4OS package on disposable
+SMP4 QEMU media. It covers USB installation, own-device local replacement,
+write failure and low RAM, then independently checks and boots successful
+results. `-ReuseFixture` requires matching hashes; `-VerifyInstalled` only
+rechecks already recorded results and boots them through snapshots.

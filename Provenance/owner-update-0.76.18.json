@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "reason": "0.76.18: explicit import of shared installation/Limine, prepared FAT file trees and read-only source validation, and device-bound Recovery cache remount. Pending commits are development-only.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "0d5f253486309c78770916f9cefa5d192f492be5",
+      "sourceCommit": "337ab022efe3cc5c562c76157e47db1ebeb43563",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.76.18.patch",
+      "patchSha256": "f071fed6add29debb0a59c60b25058b6d6a7577ac007fb6ba2043c7fdd89772d",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "038f098f101a0359b7f846103ef62131f94a44d59855f47f078fd7b20518c83a"
+        },
+        {
+          "path": "Platform/SDK/THIRD_PARTY_NOTICES.md",
+          "sha256": "ca604045c4a209b44ae9baa8ed490f4635706fcd2b1d3fa79491a216b180eade"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "d3e0f02b3978256b64de9a7853ae6e7d7e817c0b76c6a5f14f433f251c1d4821"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "sha256": "a9f799642b9aea62d773148d09f01026bf5224b7f749b592d05e70e1a8c7f380"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_image.zig",
+          "sha256": "68097933b37fda11cc0887f15bb81bb1584b3d059f5eee2f09269368a0f7a4e8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_view.zig",
+          "sha256": "ebf2fe10b55db58c8e63dc9923d302faec21daac558e0ff8d0272d302abf95e1"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "sha256": "8464251ec3538d9d1ddf1261b5936c045b5b04481665532b127f27b36dab37c8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine.zig",
+          "sha256": "762b72e507858c0c1b8363aed59ce8ef39be7f3cb9f8845a12a5829f43081144"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/LICENSE",
+          "sha256": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/bios-hdd.bin",
+          "sha256": "0bab1e802a4bbd32a44285e0244b2bd73d58c57e4dc0c9bf8b2ca6af0c8cbda8"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/limine-bios-hdd.h",
+          "sha256": "ef88b0484bbe028e4ac46a312fe756f9d5a59425ac3165c2fb70c7373b46437f"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/limine.c",
+          "sha256": "e2f66c0eb7a07db995d5ef8b579c991e32864bf01dd73a6b4d2e930e537e02de"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/provenance.json",
+          "sha256": "a2e037b541ac69429dba6feb56f3011290abb92f04fdb4a9128c78bff8b51058"
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseCommit": "39a0d3b4b9000cdf0bd8c36589805da95de8f0e5",
+      "sourceCommit": "b0f68a791a11e4bc62a678d2880491634d0fa71f",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.76.18.patch",
+      "patchSha256": "1c09c7a802846e2122290d0fe7d968ff9f766210ab0d1a9566b3d0a0ad64ff56",
+      "files": [
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "sha256": "c663b3b4e5495f97a2f614863b7330570bc2db0485b2ce72a5b7942b3eafc939"
+        },
+        {
+          "path": "Kernel/storage/operations.zig",
+          "sha256": "c6bcae6d6e89c90cb3229fa8ff89192d76935e394adaf0f96f0c25584e4c6d62"
+        }
+      ]
+    }
+  ]
+}

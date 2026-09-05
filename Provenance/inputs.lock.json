@@ -1975,8 +1975,8 @@
     },
     {
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 145428,
-      "sha256": "10f978e33e0d3431ec868d1c2cc55267e3df03734879f123226de633342532e9",
+      "bytes": 145796,
+      "sha256": "c663b3b4e5495f97a2f614863b7330570bc2db0485b2ce72a5b7942b3eafc939",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "origin": {
         "path": "fs/fat/fat32.zig",
@@ -2607,8 +2607,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_storage.zig",
-      "bytes": 9521,
-      "sha256": "30019562ca1868c89d5cdc2ba46e005ef94ad3e2c9bc73488e9fbccddf701906",
+      "bytes": 9648,
+      "sha256": "09df2806a7a4ac2481dbc914f084cfe7be708424a22686462728d3f6d7d04582",
       "originalSha256": null,
       "origin": null
     },
@@ -3660,8 +3660,8 @@
     },
     {
       "path": "Kernel/storage/operations.zig",
-      "bytes": 29933,
-      "sha256": "96ce50050a9a8dfa7e17aaa4874150e22721bab66690425f11f4fb6936526946",
+      "bytes": 31096,
+      "sha256": "c6bcae6d6e89c90cb3229fa8ff89192d76935e394adaf0f96f0c25584e4c6d62",
       "originalSha256": null,
       "origin": null
     },
@@ -3765,7 +3765,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "eda4108d6ceca048eb243b27e00136ec317800ae807b20012cc738a50109f363",
+      "sha256": "086fc280ad7eee39a45cc880eac60b470c350402cb3ea808f9f6f32506faf324",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3871,6 +3871,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.76.18.patch",
+      "bytes": 4908,
+      "sha256": "1c09c7a802846e2122290d0fe7d968ff9f766210ab0d1a9566b3d0a0ad64ff56",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/Kernel-0.76.4.patch",
       "bytes": 72775,
       "sha256": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049",
@@ -3944,6 +3951,13 @@
       "path": "Legal/Changes/SDK-0.76.16.patch",
       "bytes": 6765,
       "sha256": "39fa13b273353a82ee0abcecc6474f63c4eaec44ebfc2b33f3ac6326fefcb1a8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.18.patch",
+      "bytes": 279414,
+      "sha256": "f071fed6add29debb0a59c60b25058b6d6a7577ac007fb6ba2043c7fdd89772d",
       "originalSha256": null,
       "origin": null
     },
@@ -6244,8 +6258,8 @@
     },
     {
       "path": "Platform/SDK/DOCUMENTATION.de.txt",
-      "bytes": 42571,
-      "sha256": "ce91c061c02b4776cff6935a515b9f642df073443a9ccddaefba309a8398c5d6",
+      "bytes": 45856,
+      "sha256": "038f098f101a0359b7f846103ef62131f94a44d59855f47f078fd7b20518c83a",
       "originalSha256": "df240d0fb7312961eb1bf9eb53c7e51dc4d36fcaba46eb9a3135bf60720bc70a",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -6909,8 +6923,22 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools.zig",
-      "bytes": 707,
-      "sha256": "e1a5424f95c0dd57794c15f0adb8d29bf7db285ce3977414b243332ddc062527",
+      "bytes": 961,
+      "sha256": "a9f799642b9aea62d773148d09f01026bf5224b7f749b592d05e70e1a8c7f380",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/fat32_image.zig",
+      "bytes": 23967,
+      "sha256": "68097933b37fda11cc0887f15bb81bb1584b3d059f5eee2f09269368a0f7a4e8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/fat32_view.zig",
+      "bytes": 8280,
+      "sha256": "ebf2fe10b55db58c8e63dc9923d302faec21daac558e0ff8d0272d302abf95e1",
       "originalSha256": null,
       "origin": null
     },
@@ -6943,9 +6971,58 @@
       "origin": null
     },
     {
+      "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+      "bytes": 8153,
+      "sha256": "8464251ec3538d9d1ddf1261b5936c045b5b04481665532b127f27b36dab37c8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Platform/SDK/r4os/storage_tools/io.zig",
       "bytes": 9293,
       "sha256": "003148d1f5c50bc328e2172a834cfe337435466b68979deadfa7eacedf04cee8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/limine.zig",
+      "bytes": 2966,
+      "sha256": "762b72e507858c0c1b8363aed59ce8ef39be7f3cb9f8845a12a5829f43081144",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/limine/bios-hdd.bin",
+      "bytes": 22301,
+      "sha256": "0bab1e802a4bbd32a44285e0244b2bd73d58c57e4dc0c9bf8b2ca6af0c8cbda8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/limine/LICENSE",
+      "bytes": 1297,
+      "sha256": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/limine/limine-bios-hdd.h",
+      "bytes": 139432,
+      "sha256": "ef88b0484bbe028e4ac46a312fe756f9d5a59425ac3165c2fb70c7373b46437f",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/limine/limine.c",
+      "bytes": 44899,
+      "sha256": "e2f66c0eb7a07db995d5ef8b579c991e32864bf01dd73a6b4d2e930e537e02de",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/limine/provenance.json",
+      "bytes": 1208,
+      "sha256": "a2e037b541ac69429dba6feb56f3011290abb92f04fdb4a9128c78bff8b51058",
       "originalSha256": null,
       "origin": null
     },
@@ -8863,8 +8940,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
-      "bytes": 34470,
-      "sha256": "68de43216e1b53059426fcf9e2c719baa3b60e66995c334205b55e74bc4b08e6",
+      "bytes": 44485,
+      "sha256": "d3e0f02b3978256b64de9a7853ae6e7d7e817c0b76c6a5f14f433f251c1d4821",
       "originalSha256": null,
       "origin": null
     },
@@ -8880,8 +8957,8 @@
     },
     {
       "path": "Platform/SDK/THIRD_PARTY_NOTICES.md",
-      "bytes": 1178,
-      "sha256": "5147cc21be2bcd3240e241408d09bee1d4444b1c41166cba78474c32d65b4b83",
+      "bytes": 1842,
+      "sha256": "ca604045c4a209b44ae9baa8ed490f4635706fcd2b1d3fa79491a216b180eade",
       "originalSha256": "b9adca2aca92154e8d7b9721a188b9f1d172fbd9ef134c0d8f6ce3e477ef4763",
       "origin": {
         "path": "THIRD_PARTY_NOTICES.md",
@@ -8990,8 +9067,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 15346,
-      "sha256": "6ab0fd8d373076be5decd4dc13060885ec6916b00257bd39efaea84598740871",
+      "bytes": 17457,
+      "sha256": "b0dccd6dc39ccccf6023e5b5a34d7f3b2cb857c72ff096a3ee50b8a0206d26a8",
       "originalSha256": null,
       "origin": null
     },
@@ -9012,7 +9089,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 588,
-      "sha256": "bfa0fa9820e33717c39ba624260aa58eb14ef3cb06079f0b0bf5bc43b056abf9",
+      "sha256": "624adddd08576af46e0c9b3420d5b0e0899e3d4230782bbeaf4f38b383c17325",
       "originalSha256": null,
       "origin": null
     },
@@ -9052,6 +9129,13 @@
       "origin": null
     },
     {
+      "path": "RecoveryTools/Menu/src/install.zig",
+      "bytes": 14099,
+      "sha256": "e53374dbe91da4c05896841720f44d13a86b0b8b6d242c9997f775138d9ce37d",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "RecoveryTools/Menu/src/installation.fixture.json",
       "bytes": 1274,
       "sha256": "b4c90fdaeace63b9d3b3be18e03a934b41b8ce783c5b14e7a216e37506c6ac9a",
@@ -9060,8 +9144,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 37811,
-      "sha256": "49e431d0ff93da4280b07a80b906c37ba89e59798b8869898b7f64d63dabc91c",
+      "bytes": 40006,
+      "sha256": "e9e15cf1a7ac4cf331229a8991a1d0189dc60fd4ad7b9a0675569c35b6f51c74",
       "originalSha256": null,
       "origin": null
     },
@@ -9088,8 +9172,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package_fixture.zig",
-      "bytes": 5673,
-      "sha256": "fce27ccc06d9d3326b8e7261b533dfe60aaf91d511a926870b731e6fa185f34a",
+      "bytes": 6972,
+      "sha256": "9999d48f2a2d0328a40f5d13450ecc9cd799f5786efb029f1d7392d1dceb5aa7",
       "originalSha256": null,
       "origin": null
     },
@@ -9137,15 +9221,15 @@
     },
     {
       "path": "RecoveryTools/Menu/src/system_source.zig",
-      "bytes": 8685,
-      "sha256": "b8ec320d9c754f770b46ad54163fa74d4e740a2c76e1be9965da2b9ab53d87c5",
+      "bytes": 14827,
+      "sha256": "6d08547e999a1b44bff3f1e18d483d4397e5a19e1b3a1e7454a7eeeef5e1b7ab",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/targets.zig",
-      "bytes": 9643,
-      "sha256": "4f43351e276ec67b986ced99872b7606484e77f8e2e9173ca016d0e7de8e6078",
+      "bytes": 9745,
+      "sha256": "8bb7f78a220be8a0795b0286595d5c37e3abf1da740b94a4fa6ff94a4a98ae70",
       "originalSha256": null,
       "origin": null
     },
@@ -9264,7 +9348,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "87458e8074be5b245aaa48e745cbe2478143b4fcaf232e445713f03e41311e51",
+      "sha256": "103c2f88fa624bc38baafcb3e3c8e9dc22f58331c634086557f76155adea7dbf",
       "originalSha256": null,
       "origin": null
     },
@@ -9288,7 +9372,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "2f4d7e4de8dbb761e65b9fc321ef7a9df72cf69bd66d0016721abf0557220216",
+      "sha256": "f3f9e507a8625be86b9c7acf9f360231d65d06546a2b3427abc544449182e31d",
       "originalSha256": null,
       "origin": null
     },
@@ -12067,6 +12151,246 @@
         }
       ],
       "reason": "0.76.16: finalize public owner receipts after verified GitHub/cache/FAT acceptance."
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/kernel/recovery_storage.zig",
+          "after": "09df2806a7a4ac2481dbc914f084cfe7be708424a22686462728d3f6d7d04582",
+          "before": "30019562ca1868c89d5cdc2ba46e005ef94ad3e2c9bc73488e9fbccddf701906"
+        },
+        {
+          "path": "Kernel/storage/operations.zig",
+          "after": "c6bcae6d6e89c90cb3229fa8ff89192d76935e394adaf0f96f0c25584e4c6d62",
+          "before": "96ce50050a9a8dfa7e17aaa4874150e22721bab66690425f11f4fb6936526946"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "after": "086fc280ad7eee39a45cc880eac60b470c350402cb3ea808f9f6f32506faf324",
+          "before": "eda4108d6ceca048eb243b27e00136ec317800ae807b20012cc738a50109f363"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.76.18.patch",
+          "after": "23fe5ddc3caf5ffd51f8a61137f9a5fb0760899ccf0d3ed0fd395aa644f0ff95",
+          "before": null
+        },
+        {
+          "path": "Legal/Changes/SDK-0.76.18.patch",
+          "after": "a81f4c16e36eed47cef882a3a69b941c8050bea36782a7271d0b64a39c5c3069",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "after": "4a489d10bc2a8339b707e8a02920e545afdf808b463aa4bb8a79688ffb76e1ad",
+          "before": "ce91c061c02b4776cff6935a515b9f642df073443a9ccddaefba309a8398c5d6"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "after": "a9f799642b9aea62d773148d09f01026bf5224b7f749b592d05e70e1a8c7f380",
+          "before": "e1a5424f95c0dd57794c15f0adb8d29bf7db285ce3977414b243332ddc062527"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_image.zig",
+          "after": "68097933b37fda11cc0887f15bb81bb1584b3d059f5eee2f09269368a0f7a4e8",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_view.zig",
+          "after": "ebf2fe10b55db58c8e63dc9923d302faec21daac558e0ff8d0272d302abf95e1",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "after": "8464251ec3538d9d1ddf1261b5936c045b5b04481665532b127f27b36dab37c8",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine.zig",
+          "after": "2c624f87a7cbbd6c173afc80e304338922aefa4270fda12844febd42e62fb1d9",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/bios-hdd.bin",
+          "after": "0bab1e802a4bbd32a44285e0244b2bd73d58c57e4dc0c9bf8b2ca6af0c8cbda8",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/LICENSE",
+          "after": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/limine-bios-hdd.h",
+          "after": "ef88b0484bbe028e4ac46a312fe756f9d5a59425ac3165c2fb70c7373b46437f",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/limine.c",
+          "after": "e2f66c0eb7a07db995d5ef8b579c991e32864bf01dd73a6b4d2e930e537e02de",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/provenance.json",
+          "after": "88c087dc02520c9c55313c28c295dd55460863c9dcd8a7a9f22737381248d424",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "after": "4ce6c9399ab0078bc4f7f949933f6e508a5ca23b49cf67bae2b015c011e0aaa8",
+          "before": "68de43216e1b53059426fcf9e2c719baa3b60e66995c334205b55e74bc4b08e6"
+        },
+        {
+          "path": "Platform/SDK/THIRD_PARTY_NOTICES.md",
+          "after": "ca604045c4a209b44ae9baa8ed490f4635706fcd2b1d3fa79491a216b180eade",
+          "before": "5147cc21be2bcd3240e241408d09bee1d4444b1c41166cba78474c32d65b4b83"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "after": "624adddd08576af46e0c9b3420d5b0e0899e3d4230782bbeaf4f38b383c17325",
+          "before": "bfa0fa9820e33717c39ba624260aa58eb14ef3cb06079f0b0bf5bc43b056abf9"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/install.zig",
+          "after": "a86f566c96a566701548c63aafd344955b9063decdb8147d2202c1ca01eea365",
+          "before": null
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "after": "e9e15cf1a7ac4cf331229a8991a1d0189dc60fd4ad7b9a0675569c35b6f51c74",
+          "before": "49e431d0ff93da4280b07a80b906c37ba89e59798b8869898b7f64d63dabc91c"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/system_source.zig",
+          "after": "c0b6b8608db71149aaa058f24c7c0e8ef6b28fbda52b00cbc8ad993ed6dd638e",
+          "before": "b8ec320d9c754f770b46ad54163fa74d4e740a2c76e1be9965da2b9ab53d87c5"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/targets.zig",
+          "after": "8bb7f78a220be8a0795b0286595d5c37e3abf1da740b94a4fa6ff94a4a98ae70",
+          "before": "4f43351e276ec67b986ced99872b7606484e77f8e2e9173ca016d0e7de8e6078"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "after": "103c2f88fa624bc38baafcb3e3c8e9dc22f58331c634086557f76155adea7dbf",
+          "before": "87458e8074be5b245aaa48e745cbe2478143b4fcaf232e445713f03e41311e51"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "f3f9e507a8625be86b9c7acf9f360231d65d06546a2b3427abc544449182e31d",
+          "before": "2f4d7e4de8dbb761e65b9fc321ef7a9df72cf69bd66d0016721abf0557220216"
+        }
+      ],
+      "reason": "0.76.18 development: resident installer, shared FAT/boot source preflight and cache remount"
+    },
+    {
+      "changes": [
+        {
+          "path": "RecoveryTools/Menu/src/install.zig",
+          "before": "a86f566c96a566701548c63aafd344955b9063decdb8147d2202c1ca01eea365",
+          "after": "226f4c78024447fc40246bf1be1430eb13ad4e47c4f047d5beeca8d5c0ab5b5f"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/package_fixture.zig",
+          "before": "fce27ccc06d9d3326b8e7261b533dfe60aaf91d511a926870b731e6fa185f34a",
+          "after": "9999d48f2a2d0328a40f5d13450ecc9cd799f5786efb029f1d7392d1dceb5aa7"
+        }
+      ],
+      "reason": "0.76.18: compiled installer and coherent release source witness"
+    },
+    {
+      "changes": [
+        {
+          "path": "Legal/Changes/SDK-0.76.18.patch",
+          "after": "b6da96ce3050496dc18af00daaed2947f921f32aa6c69ed96d099e31232218e0",
+          "before": "a81f4c16e36eed47cef882a3a69b941c8050bea36782a7271d0b64a39c5c3069"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine.zig",
+          "after": "762b72e507858c0c1b8363aed59ce8ef39be7f3cb9f8845a12a5829f43081144",
+          "before": "2c624f87a7cbbd6c173afc80e304338922aefa4270fda12844febd42e62fb1d9"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/install.zig",
+          "after": "85753c09a59e73e983cc409b35d366435b2f73fc3eaf2dd29e9e28a662ef0556",
+          "before": "226f4c78024447fc40246bf1be1430eb13ad4e47c4f047d5beeca8d5c0ab5b5f"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/system_source.zig",
+          "after": "6d08547e999a1b44bff3f1e18d483d4397e5a19e1b3a1e7454a7eeeef5e1b7ab",
+          "before": "c0b6b8608db71149aaa058f24c7c0e8ef6b28fbda52b00cbc8ad993ed6dd638e"
+        }
+      ],
+      "reason": "0.76.18: bind BIOS companion and erase the new BIOS extent during full replacement"
+    },
+    {
+      "changes": [
+        {
+          "after": "e53374dbe91da4c05896841720f44d13a86b0b8b6d242c9997f775138d9ce37d",
+          "path": "RecoveryTools/Menu/src/install.zig",
+          "before": "85753c09a59e73e983cc409b35d366435b2f73fc3eaf2dd29e9e28a662ef0556"
+        }
+      ],
+      "reason": "0.76.18 development: FAT label diagnosis and pre-write release restoration"
+    },
+    {
+      "reason": "0.76.18: prepared installer, canonical BOOT label and FAT volume-label regression fix",
+      "changes": [
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "after": "c663b3b4e5495f97a2f614863b7330570bc2db0485b2ce72a5b7942b3eafc939",
+          "before": "10f978e33e0d3431ec868d1c2cc55267e3df03734879f123226de633342532e9"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.76.18.patch",
+          "after": "1c09c7a802846e2122290d0fe7d968ff9f766210ab0d1a9566b3d0a0ad64ff56",
+          "before": "23fe5ddc3caf5ffd51f8a61137f9a5fb0760899ccf0d3ed0fd395aa644f0ff95"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.76.18.patch",
+          "after": "1d7f63ed5c5ba3a73b84b8188deb01a8952a5802d514800290d952d95af97fba",
+          "before": "b6da96ce3050496dc18af00daaed2947f921f32aa6c69ed96d099e31232218e0"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine/provenance.json",
+          "after": "a2e037b541ac69429dba6feb56f3011290abb92f04fdb4a9128c78bff8b51058",
+          "before": "88c087dc02520c9c55313c28c295dd55460863c9dcd8a7a9f22737381248d424"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "after": "d3e0f02b3978256b64de9a7853ae6e7d7e817c0b76c6a5f14f433f251c1d4821",
+          "before": "4ce6c9399ab0078bc4f7f949933f6e508a5ca23b49cf67bae2b015c011e0aaa8"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "1d7f63ed5c5ba3a73b84b8188deb01a8952a5802d514800290d952d95af97fba",
+          "path": "Legal/Changes/SDK-0.76.18.patch",
+          "after": "f0d09cd516dec2a6b04dcef73e8c3b46fa12056ba61114581e794f67a89672ac"
+        },
+        {
+          "before": "4a489d10bc2a8339b707e8a02920e545afdf808b463aa4bb8a79688ffb76e1ad",
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "after": "038f098f101a0359b7f846103ef62131f94a44d59855f47f078fd7b20518c83a"
+        },
+        {
+          "before": "6ab0fd8d373076be5decd4dc13060885ec6916b00257bd39efaea84598740871",
+          "path": "RecoveryTools/Contracts.de.txt",
+          "after": "b0dccd6dc39ccccf6023e5b5a34d7f3b2cb857c72ff096a3ee50b8a0206d26a8"
+        }
+      ],
+      "reason": "0.76.18: installation contract and shared FAT owner documentation"
+    },
+    {
+      "reason": "0.76.18: installation contract and shared FAT owner documentation",
+      "changes": [
+        {
+          "after": "f071fed6add29debb0a59c60b25058b6d6a7577ac007fb6ba2043c7fdd89772d",
+          "before": "f0d09cd516dec2a6b04dcef73e8c3b46fa12056ba61114581e794f67a89672ac",
+          "path": "Legal/Changes/SDK-0.76.18.patch"
+        }
+      ]
     }
   ]
 }

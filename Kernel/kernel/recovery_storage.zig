@@ -67,7 +67,9 @@ pub fn init() bool {
     if (source.confirmed) {
         const record = &inventory.devices[source.device_index];
         for (record.table.items(), 0..) |part, i| {
-            if (tables.guid.eql(part.unique_guid, source.recovery_guid)) _ = mount(record, i, 'R');
+            if (tables.guid.eql(part.unique_guid, source.recovery_guid) and mount(record, i, 'R')) {
+                if (!@import("../storage/operations.zig").reserveRecoveryCacheBoot(record.index)) return false;
+            }
         }
     }
     admitAdditionalVolumes();

@@ -8,6 +8,109 @@ const expectError = std.testing.expectError;
 const table = tools.partition;
 const disk_guid = table.guid.parse("00112233-4455-6677-8899-aabbccddeeff").?;
 
+const BootFixture = struct {
+    // Sparse logical disk: GPT metadata and the BIOSBOOT extent only.
+    // Any accidental access elsewhere is an error, not a zero-filled pass.
+    bytes: [131][512]u8 = .{.{0} ** 512} ** 131,
+    sectors: u64 = tools.installation.standard_bytes / 512,
+    writes: usize = 0,
+    flushes: usize = 0,
+    fail_write: ?usize = null,
+    fail_flush: ?usize = null,
+    corrupt_stage: bool = false,
+    fn slot(self: *BootFixture, lba: u64) ?*[512]u8 {
+        const index = if (lba < 34) lba else if (lba >= self.sectors - 33 and lba < self.sectors)
+            34 + lba - (self.sectors - 33)
+        else if (lba >= 2048 and lba < 2112) 67 + lba - 2048 else return null;
+        return &self.bytes[@intCast(index)];
+    }
+    fn device(self: *BootFixture, progress: *tools.io.Progress) tools.io.Device {
+        return .{ .context = self, .sectors = self.sectors, .exclusive = true, .read_fn = read, .write_fn = write, .flush_fn = flush, .progress = progress };
+    }
+    fn read(raw: *anyopaque, lba: u64, out: []u8) i32 {
+        const self: *BootFixture = @ptrCast(@alignCast(raw));
+        for (0..out.len / 512) |i| @memcpy(out[i * 512 ..][0..512], self.slot(lba + i) orelse return -1);
+        if (self.corrupt_stage and self.flushes != 0 and lba == 2048) out[0] ^= 1;
+        return 0;
+    }
+    fn write(raw: *anyopaque, lba: u64, bytes: []const u8) i32 {
+        const self: *BootFixture = @ptrCast(@alignCast(raw));
+        self.writes += 1;
+        if (self.fail_write == self.writes) return -2;
+        for (0..bytes.len / 512) |i| @memcpy(self.slot(lba + i) orelse return -1, bytes[i * 512 ..][0..512]);
+        return 0;
+    }
+    fn flush(raw: *anyopaque) i32 {
+        const self: *BootFixture = @ptrCast(@alignCast(raw));
+        self.flushes += 1;
+        return if (self.fail_flush == self.flushes) -3 else 0;
+    }
+};
+
+test "five-role layout, GUID boot references and Limine GPT publication" {
+    const a = std.testing.allocator;
+    var entropy: [7][16]u8 = .{.{0} ** 16} ** 7;
+    for (&entropy, 0..) |*id, i| id[0] = @intCast(i + 1);
+    const ids = try tools.installation.Identifiers.fromEntropy(entropy);
+    var work: [tools.io.scratch_bytes]u8 = undefined;
+    for ([_]u64{ tools.installation.standard_bytes / 512, 16 * 1024 * 2048 }) |sectors| {
+        var fixture = BootFixture{ .sectors = sectors };
+        var progress = tools.io.Progress{};
+        const device = fixture.device(&progress);
+        const layout = try tools.installation.Layout.prepare(sectors, 512, ids);
+        try eq(sectors - 1, layout.part(.DATA).first + layout.part(.DATA).count + 32);
+        var plan = try table.Plan.read(device, &work);
+        try layout.bind(&plan);
+        try plan.commit(device, &work);
+        const actual = try table.Plan.read(device, &work);
+        try eq(sectors - 33, actual.backup_array);
+        for (actual.entries, 0..) |entry, i| {
+            try eq(i < 5, entry.present);
+            if (i < 5) {
+                try eq(tools.installation.first_lbas[i], entry.first);
+                try expect(table.guid.eql(ids.partitions[i], entry.unique_guid));
+            }
+        }
+        const manifest = try layout.manifest(a, "0.76.17", "0.1.97", &tools.installation.boot_paths);
+        defer a.free(manifest);
+        const json = try std.json.parseFromSlice(std.json.Value, a, manifest, .{});
+        defer json.deinit();
+        try eq(@as(usize, 5), json.value.object.get("partitions").?.object.count());
+        for ([_]tools.installation.Medium{ .local, .usb }) |medium| {
+            const config = try layout.limineConfig(a, medium);
+            defer a.free(config);
+            try expect(std.mem.indexOf(u8, config, if (medium == .local) "default_entry: 1" else "default_entry: 2") != null);
+            try eq(@as(usize, 3), std.mem.count(u8, config, "protocol: limine"));
+            try expect(std.mem.indexOf(u8, config, &table.guid.format(ids.partitions[1])) != null);
+            try expect(std.mem.indexOf(u8, config, ":/CURRENT/runtime.img") != null);
+            try expect(std.mem.indexOf(u8, config, ":/PREVIOUS/runtime.img") != null);
+        }
+        const before = fixture.bytes;
+        fixture.writes = 0;
+        fixture.flushes = 0;
+        progress = .{};
+        try tools.limine.installBios(device, &actual, &work);
+        try expect(progress.flushed and progress.verified);
+        try std.testing.expectEqualSlices(u8, before[0][218..224], fixture.bytes[0][218..224]);
+        try std.testing.expectEqualSlices(u8, before[0][440..510], fixture.bytes[0][440..510]);
+        try eq(@as(u64, 2048 * 512), std.mem.readInt(u64, fixture.bytes[0][0x1a4..][0..8], .little));
+        try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(before[1..67]), std.mem.sliceAsBytes(fixture.bytes[1..67]));
+        try std.testing.expectEqualSlices(u8, tools.limine.payload[512..], std.mem.sliceAsBytes(fixture.bytes[67..])[0 .. tools.limine.payload.len - 512]);
+        for (0..5) |failure| {
+            fixture = .{ .sectors = sectors, .bytes = before };
+            progress = .{};
+            if (failure < 2) fixture.fail_write = failure + 1 else if (failure < 4) fixture.fail_flush = failure - 1 else fixture.corrupt_stage = true;
+            if (tools.limine.installBios(device, &actual, &work)) |_| return error.BootFaultAccepted else |_| {}
+            try expect(!progress.verified);
+            if (failure == 0 or failure == 2 or failure == 4) try std.testing.expectEqualSlices(u8, &before[0], &fixture.bytes[0]);
+        }
+    }
+    try expectError(error.Geometry, tools.installation.Layout.prepare(4194304, 4096, ids));
+    try expectError(error.Geometry, tools.installation.Layout.prepare(tools.installation.first_lbas[4] + 32, 512, ids));
+    entropy[1] = entropy[0];
+    try expectError(error.DuplicateGuid, tools.installation.Identifiers.fromEntropy(entropy));
+}
+
 const Fixture = struct {
     bytes: []u8,
     writes: usize = 0,
@@ -52,6 +155,85 @@ fn newPlan(device: tools.io.Device, work: []u8) !table.Plan {
     try plan.initializeGpt(disk_guid);
     _ = try plan.add(.{ .present = true, .first = 2048, .count = 4096, .type_guid = table.basic_type, .unique_guid = table.guid.parse("10112233-4455-6677-8899-aabbccddeeff").?, .attributes = 4, .name = try table.asciiName("SYSTEM") });
     return plan;
+}
+
+fn fatAllocationCase(allocator: std.mem.Allocator, bytes: []u8) !void {
+    _ = try tools.fat32_image.buildInto(allocator, bytes, 4096, 1, "BOOT", 42, &.{
+        .{ .path = "boot/long name first.dat", .bytes = "first" },
+        .{ .path = "BOOT/long name second.dat", .bytes = "second" },
+        .{ .path = "boot/empty.dat", .bytes = "" },
+    });
+    const view = try tools.fat32_view.View.init(bytes, 4096);
+    try view.matches("BOOT/long name first.dat", "first");
+    try view.matches("boot/long name second.dat", "second");
+    try view.matches("boot/empty.dat", "");
+}
+
+test "prepared FAT file trees, long root chains, bounded import and publication faults" {
+    const a = std.testing.allocator;
+    const bytes = try a.alloc(u8, 64 * 1024 * 1024);
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, fatAllocationCase, .{bytes});
+    var names: [40][64]u8 = undefined;
+    var files: [40]tools.fat32_image.File = undefined;
+    const content = [_]u8{0x35} ** 6000;
+    for (&files, 0..) |*file, i| file.* = .{
+        .path = try std.fmt.bufPrint(&names[i], "Root long file number {d}.bin", .{i}),
+        .bytes = &content,
+    };
+    var prepared = try tools.fat32_image.prepare(a, bytes.len / 512, 4096, "BOOT", 71, &files);
+    defer prepared.deinit();
+    const view = try tools.fat32_view.View.init(prepared.bytes, 4096);
+    for (files) |file| try view.matches(file.path, file.bytes);
+    const copy = try view.readFile(a, files[39].path, content.len);
+    defer a.free(copy);
+    try std.testing.expectEqualSlices(u8, &content, copy);
+    try expectError(error.SourceFileMissing, view.matches("MISSING", ""));
+    try expectError(error.SourceFat, view.readFile(a, files[0].path, 5999));
+    try expectError(error.DuplicatePath, tools.fat32_image.buildInto(a, bytes, 4096, 1, "BOOT", 1, &.{
+        .{ .path = "boot", .bytes = "" }, .{ .path = "BOOT/file", .bytes = "x" },
+    }));
+    try expectError(error.Path, tools.fat32_image.buildInto(a, bytes, 4096, 1, "BOOT", 1, &.{.{ .path = "../escape", .bytes = "" }}));
+    // File bytes can fit in the partition size while filesystem metadata
+    // makes the complete prepared image too large. No device I/O is exposed.
+    try expectError(error.ImageFull, tools.fat32_image.buildInto(a, bytes, 4096, 1, "RECOVERY", 1, &.{.{ .path = "INSTALL/RELEASE.ZIP", .bytes = bytes }}));
+    var work: [tools.io.scratch_bytes]u8 = undefined;
+    for (0..5) |fault| {
+        @memset(bytes, 0xa5);
+        var fixture = Fixture{ .bytes = bytes };
+        var progress = tools.io.Progress{};
+        var device = fixture.device(&progress);
+        switch (fault) {
+            1 => fixture.fail_write = 2,
+            2 => fixture.fail_flush = 1,
+            3 => fixture.corrupt_after_flush = true,
+            4 => device.continue_fn = struct {
+                fn proceed(_: ?*anyopaque, _: tools.io.Phase, written: u64) bool {
+                    return written < 4;
+                }
+            }.proceed,
+            else => {},
+        }
+        if (fault == 0) {
+            var readonly = device;
+            readonly.exclusive = false;
+            try expectError(error.ExclusiveRequired, prepared.execute(readonly, false, &work));
+            try expect(!progress.write_attempted);
+            try prepared.execute(device, false, &work);
+            try expect(progress.flushed and progress.verified);
+            const observed = try tools.fat32_view.View.init(bytes, 4096);
+            for (files) |file| try observed.matches(file.path, file.bytes);
+            try eq(@as(u8, 0xa5), bytes[@as(usize, prepared.stats.used_sectors) * 512]);
+        } else {
+            const errors = [_]anyerror{ error.WriteFailed, error.FlushFailed, error.VerifyFailed, error.Cancelled };
+            try expectError(errors[fault - 1], prepared.execute(device, false, &work));
+            try expect(progress.write_attempted and !progress.verified);
+            try eq(@as(u8, 0), bytes[510]);
+        }
+    }
+    @memcpy(bytes, prepared.bytes);
+    bytes[32 * 512 + 8] ^= 1;
+    try expectError(error.SourceFat, tools.fat32_view.View.init(bytes, 4096));
 }
 
 test "GPT/MBR roundtrip, geometry, free space, attributes and stale plans" {
