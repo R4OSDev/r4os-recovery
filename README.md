@@ -4,9 +4,22 @@ R4OS Recovery is the independent recovery environment planned for R4OS roadmap
 0.76.X. It will boot through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-This initial repository contains the project overview, license notices, and
-Git exclusions. Implementation, build entry points, imported modules, and
-bootable releases will follow as the roadmap is implemented.
+The 0.76.1 baseline contains pinned kernel, platform contract and SDK sources,
+37 precompiled console, service, driver, protocol and library modules, and
+their original source archives and license notices. The executable Recovery
+kernel and bootable releases follow in subsequent roadmap steps.
+
+Run `Build.bat` on Windows or `./Build.sh` on Linux with PowerShell 7 to verify
+the local inventory. The shared `Build.ps1` checks file hashes, actual binary
+imports, protocol dependencies and original manifests. It does not import
+from the normal workspace or fetch dependencies. Results are written to
+`Artifacts/Verification/inventory.json`.
+
+An explicit initial import uses `Tools/Import.ps1` and the source revisions in
+`Provenance/import-plan.json`. Source and configuration changes are recorded
+separately with `Tools/Record-Inputs.ps1 -Reason 'description'`; this is never
+an automatic build action. See [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt)
+and [the technical contracts](RecoveryTools/Contracts.de.txt) for details.
 
 ## Planned scope
 
@@ -22,9 +35,9 @@ drivers, protocols, services, console applications, and libraries will be
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
 normal R4OS releases will include an explicitly selected Recovery release.
 
-## Planned repository layout
+## Repository layout
 
-Directories will be added with their implementation or imported contents:
+The frozen inputs and their owners are separated explicitly:
 
     Kernel/             Recovery kernel sources
     Platform/Contract/  Pinned platform API and ABI contract
@@ -32,7 +45,7 @@ Directories will be added with their implementation or imported contents:
     RecoveryTools/      Recovery menu and installation/update workflows
     Runtime/            Configuration, imported modules, and recovery media
     Provenance/         Import versions, source commits, hashes, and manifests
-    Legal/              Licenses and notices for imported material
+    Legal/              Original source archives, manifests and notices
     Tools/              Build, import, and release tooling
 
 Imported runtime binaries will be versioned together with their provenance and

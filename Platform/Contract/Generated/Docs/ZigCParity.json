@@ -1,0 +1,2944 @@
+{
+  "schema_version": 1,
+  "source": "API/ApiContract.json",
+  "source_schema_version": 11,
+  "source_baseline_id": "standalone-contract-0.64.11",
+  "summary": {
+    "group_function_signatures": 324,
+    "sdk_operation_contracts": 0,
+    "parity_entries": 324,
+    "cross_language_fixtures": 1
+  },
+  "signature_parity": [
+    {
+      "id": "R4SYS.write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.write",
+      "c_contract": "R4SysWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.putc",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.putc",
+      "c_contract": "R4SysPutcFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.sleep_ticks",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.sleep_ticks",
+      "c_contract": "R4SysSleepTicksFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.ticks",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.ticks",
+      "c_contract": "R4SysTicksFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.env_get",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.env_get",
+      "c_contract": "R4SysEnvGetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.dir_entry",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.dir_entry",
+      "c_contract": "R4SysDirEntryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_should_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_should_close",
+      "c_contract": "R4SysProgramShouldCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_class",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_class",
+      "c_contract": "R4SysProgramClassFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_instance",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_instance",
+      "c_contract": "R4SysProgramInstanceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_status",
+      "c_contract": "R4SysServiceStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_open",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_open",
+      "c_contract": "R4SysServiceOpenFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_close",
+      "c_contract": "R4SysServiceCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_call",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_call",
+      "c_contract": "R4SysServiceCallFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_endpoint_register",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_endpoint_register",
+      "c_contract": "R4SysServiceEndpointRegisterFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_endpoint_unregister",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_endpoint_unregister",
+      "c_contract": "R4SysServiceEndpointUnregisterFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_endpoint_poll",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_endpoint_poll",
+      "c_contract": "R4SysServiceEndpointPollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_endpoint_recv",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_endpoint_recv",
+      "c_contract": "R4SysServiceEndpointRecvFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_endpoint_reply",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_endpoint_reply",
+      "c_contract": "R4SysServiceEndpointReplyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_detail_by_name",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_detail_by_name",
+      "c_contract": "R4SysServiceDetailByNameFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_start",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_start",
+      "c_contract": "R4SysServiceStartFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_stop",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_stop",
+      "c_contract": "R4SysServiceStopFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_restart",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_restart",
+      "c_contract": "R4SysServiceRestartFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_install",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_install",
+      "c_contract": "R4SysServiceInstallFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_remove",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_remove",
+      "c_contract": "R4SysServiceRemoveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.vm_reserve",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.vm_reserve",
+      "c_contract": "R4SysVmReserveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.vm_commit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.vm_commit",
+      "c_contract": "R4SysVmCommitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.vm_decommit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.vm_decommit",
+      "c_contract": "R4SysVmDecommitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.vm_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.vm_release",
+      "c_contract": "R4SysVmReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.vm_query",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.vm_query",
+      "c_contract": "R4SysVmQueryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_create",
+      "c_contract": "R4SysThreadCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_exit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_exit",
+      "c_contract": "R4SysThreadExitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_join",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_join",
+      "c_contract": "R4SysThreadJoinFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_current",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_current",
+      "c_contract": "R4SysThreadCurrentFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_status",
+      "c_contract": "R4SysThreadStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_read",
+      "c_contract": "R4SysIoFileReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_read_at",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_read_at",
+      "c_contract": "R4SysIoFileReadAtFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_write",
+      "c_contract": "R4SysIoFileWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_append",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_append",
+      "c_contract": "R4SysIoFileAppendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_stream_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_stream_begin",
+      "c_contract": "R4SysIoFileStreamBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_stream_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_stream_write",
+      "c_contract": "R4SysIoFileStreamWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_stream_finish",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_stream_finish",
+      "c_contract": "R4SysIoFileStreamFinishFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_stream_abort",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_stream_abort",
+      "c_contract": "R4SysIoFileStreamAbortFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_service_call",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_service_call",
+      "c_contract": "R4SysIoServiceCallFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_status",
+      "c_contract": "R4SysIoStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_wait",
+      "c_contract": "R4SysIoWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_close",
+      "c_contract": "R4SysIoCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.task_yield",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.task_yield",
+      "c_contract": "R4SysTaskYieldFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.system_halt",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.system_halt",
+      "c_contract": "R4SysSystemHaltFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.system_reboot",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.system_reboot",
+      "c_contract": "R4SysSystemRebootFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.system_poweroff",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.system_poweroff",
+      "c_contract": "R4SysSystemPoweroffFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.time_state",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.time_state",
+      "c_contract": "R4SysTimeStateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.time_set_state",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.time_set_state",
+      "c_contract": "R4SysTimeSetStateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.time_seconds_since_midnight",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.time_seconds_since_midnight",
+      "c_contract": "R4SysTimeSecondsSinceMidnightFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.dir_list",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.dir_list",
+      "c_contract": "R4SysDirListFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.dir_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.dir_create",
+      "c_contract": "R4SysDirCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.dir_delete",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.dir_delete",
+      "c_contract": "R4SysDirDeleteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.drive_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.drive_info",
+      "c_contract": "R4SysDriveInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_info",
+      "c_contract": "R4SysFileInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_delete",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_delete",
+      "c_contract": "R4SysFileDeleteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_rename",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_rename",
+      "c_contract": "R4SysFileRenameFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_copy",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_copy",
+      "c_contract": "R4SysFileCopyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_move",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_move",
+      "c_contract": "R4SysFileMoveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_read",
+      "c_contract": "R4SysFileReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_write",
+      "c_contract": "R4SysFileWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_read_at",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_read_at",
+      "c_contract": "R4SysFileReadAtFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_append",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_append",
+      "c_contract": "R4SysFileAppendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_stream_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_stream_begin",
+      "c_contract": "R4SysFileStreamBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_stream_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_stream_write",
+      "c_contract": "R4SysFileStreamWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_stream_finish",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_stream_finish",
+      "c_contract": "R4SysFileStreamFinishFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_stream_abort",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_stream_abort",
+      "c_contract": "R4SysFileStreamAbortFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.env_set",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.env_set",
+      "c_contract": "R4SysEnvSetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_key_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_key_info",
+      "c_contract": "R4SysRegistryKeyInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_enum_key",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_enum_key",
+      "c_contract": "R4SysRegistryEnumKeyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_enum_value",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_enum_value",
+      "c_contract": "R4SysRegistryEnumValueFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_get_value",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_get_value",
+      "c_contract": "R4SysRegistryGetValueFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_set_value",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_set_value",
+      "c_contract": "R4SysRegistrySetValueFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_delete_value",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_delete_value",
+      "c_contract": "R4SysRegistryDeleteValueFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_info",
+      "c_contract": "R4SysServiceInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_detail",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_detail",
+      "c_contract": "R4SysServiceDetailFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_set_start_mode",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_set_start_mode",
+      "c_contract": "R4SysServiceSetStartModeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_endpoint_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_endpoint_wait",
+      "c_contract": "R4SysServiceEndpointWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_run",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_run",
+      "c_contract": "R4SysProgramRunFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_launch",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_launch",
+      "c_contract": "R4SysProgramLaunchFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_spawn",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_spawn",
+      "c_contract": "R4SysProgramSpawnFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_kill",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_kill",
+      "c_contract": "R4SysProgramKillFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_status",
+      "c_contract": "R4SysProgramStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_request_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_request_close",
+      "c_contract": "R4SysProgramRequestCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_reap_instance",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_reap_instance",
+      "c_contract": "R4SysProgramReapInstanceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.boot_log_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.boot_log_info",
+      "c_contract": "R4SysBootLogInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.boot_log_read",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.boot_log_read",
+      "c_contract": "R4SysBootLogReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_spawn_handle",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_spawn_handle",
+      "c_contract": "R4SysProgramSpawnHandleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_open_handle",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_open_handle",
+      "c_contract": "R4SysProgramOpenHandleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_handle_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_handle_status",
+      "c_contract": "R4SysProgramHandleStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_handle_request_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_handle_request_close",
+      "c_contract": "R4SysProgramHandleRequestCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_handle_kill",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_handle_kill",
+      "c_contract": "R4SysProgramHandleKillFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_handle_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_handle_wait",
+      "c_contract": "R4SysProgramHandleWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_handle_reap",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_handle_reap",
+      "c_contract": "R4SysProgramHandleReapFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_completion_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_completion_read",
+      "c_contract": "R4SysProgramCompletionReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_inventory_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_inventory_begin",
+      "c_contract": "R4SysProgramInventoryBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_inventory_programs",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_inventory_programs",
+      "c_contract": "R4SysProgramInventoryProgramsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_inventory_tasks",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_inventory_tasks",
+      "c_contract": "R4SysProgramInventoryTasksFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_inventory_threads",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_inventory_threads",
+      "c_contract": "R4SysProgramInventoryThreadsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_create_handle",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_create_handle",
+      "c_contract": "R4SysThreadCreateHandleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_handle_join",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_handle_join",
+      "c_contract": "R4SysThreadHandleJoinFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_handle_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_handle_status",
+      "c_contract": "R4SysThreadHandleStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_replace_atomic",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_replace_atomic",
+      "c_contract": "R4SysFileReplaceAtomicFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_delete_if_match",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_delete_if_match",
+      "c_contract": "R4SysFileDeleteIfMatchFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_update_atomic_checked",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_update_atomic_checked",
+      "c_contract": "R4SysFileUpdateAtomicCheckedFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.path_names_equal_collated",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.path_names_equal_collated",
+      "c_contract": "R4SysPathNamesEqualCollatedFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_update_cleanup_checked",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_update_cleanup_checked",
+      "c_contract": "R4SysFileUpdateCleanupCheckedFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_stream_declare_publish",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_stream_declare_publish",
+      "c_contract": "R4SysFileStreamDeclarePublishFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.module_resource_stat",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.module_resource_stat",
+      "c_contract": "R4SysModuleResourceStatFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.module_resource_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.module_resource_read",
+      "c_contract": "R4SysModuleResourceReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_module_path",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_module_path",
+      "c_contract": "R4SysProgramModulePathFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_module_running",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_module_running",
+      "c_contract": "R4SysProgramModuleRunningFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.monotonic_clock",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.monotonic_clock",
+      "c_contract": "R4SysMonotonicClockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.boot_ready",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.boot_ready",
+      "c_contract": "R4SysBootReadyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_snapshot_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_snapshot_begin",
+      "c_contract": "R4SysRegistrySnapshotBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_snapshot_page",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_snapshot_page",
+      "c_contract": "R4SysRegistrySnapshotPageFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.registry_batch_mutate",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.registry_batch_mutate",
+      "c_contract": "R4SysRegistryBatchMutateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_write_at",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_write_at",
+      "c_contract": "R4SysIoFileWriteAtFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_info",
+      "c_contract": "R4SysIoFileInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.io_file_lock",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.io_file_lock",
+      "c_contract": "R4SysIoFileLockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.read_key",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.read_key",
+      "c_contract": "R4DeskReadKeyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.mouse_state",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.mouse_state",
+      "c_contract": "R4DeskMouseStateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.mouse_show",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.mouse_show",
+      "c_contract": "R4DeskMouseShowFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.mouse_hide",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.mouse_hide",
+      "c_contract": "R4DeskMouseHideFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.keyboard_layout_current",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.keyboard_layout_current",
+      "c_contract": "R4DeskKeyboardLayoutCurrentFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.keyboard_layout_at",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.keyboard_layout_at",
+      "c_contract": "R4DeskKeyboardLayoutAtFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.keyboard_layout_set",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.keyboard_layout_set",
+      "c_contract": "R4DeskKeyboardLayoutSetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_set_window",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_set_window",
+      "c_contract": "R4DeskProgramSetWindowFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_set_console_host",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_set_console_host",
+      "c_contract": "R4DeskProgramSetConsoleHostFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_request_host_launch",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_request_host_launch",
+      "c_contract": "R4DeskProgramRequestHostLaunchFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_take_host_launch",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_take_host_launch",
+      "c_contract": "R4DeskProgramTakeHostLaunchFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_window_id",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_window_id",
+      "c_contract": "R4DeskProgramWindowIdFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_window_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_window_info",
+      "c_contract": "R4DeskGuiWindowInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_set_window_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_set_window_info",
+      "c_contract": "R4DeskGuiSetWindowInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_poll_event",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_poll_event",
+      "c_contract": "R4DeskGuiPollEventFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_push_event",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_push_event",
+      "c_contract": "R4DeskGuiPushEventFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_set_text",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_set_text",
+      "c_contract": "R4DeskGuiSetTextFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_text",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_text",
+      "c_contract": "R4DeskGuiTextFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_revision",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_revision",
+      "c_contract": "R4DeskGuiRevisionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_command",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_command",
+      "c_contract": "R4DeskGuiCommandFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_set_title",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_set_title",
+      "c_contract": "R4DeskGuiSetTitleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_title",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_title",
+      "c_contract": "R4DeskGuiTitleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_set_min_size",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_set_min_size",
+      "c_contract": "R4DeskGuiSetMinSizeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_min_size",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_min_size",
+      "c_contract": "R4DeskGuiMinSizeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_output",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_output",
+      "c_contract": "R4DeskConsoleOutputFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_revision",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_revision",
+      "c_contract": "R4DeskConsoleRevisionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_state",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_state",
+      "c_contract": "R4DeskConsoleStateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_set_metrics",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_set_metrics",
+      "c_contract": "R4DeskConsoleSetMetricsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_push_key",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_push_key",
+      "c_contract": "R4DeskConsolePushKeyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_write",
+      "c_contract": "R4DeskConsoleWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_read",
+      "c_contract": "R4DeskConsoleReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.clipboard_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.clipboard_write",
+      "c_contract": "R4DeskClipboardWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.clipboard_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.clipboard_read",
+      "c_contract": "R4DeskClipboardReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.clipboard_revision",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.clipboard_revision",
+      "c_contract": "R4DeskClipboardRevisionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.clipboard_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.clipboard_info",
+      "c_contract": "R4DeskClipboardInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.clipboard_clear",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.clipboard_clear",
+      "c_contract": "R4DeskClipboardClearFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.read_key_codepoint",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.read_key_codepoint",
+      "c_contract": "R4DeskReadKeyCodepointFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_info",
+      "c_contract": "R4DeskRemoteFrameInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_read",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_read",
+      "c_contract": "R4DeskRemoteFrameReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_wait",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_wait",
+      "c_contract": "R4DeskRemoteFrameWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_publish",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_publish",
+      "c_contract": "R4DeskRemoteFramePublishFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_input_push",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_input_push",
+      "c_contract": "R4DeskRemoteInputPushFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_input_poll",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_input_poll",
+      "c_contract": "R4DeskRemoteInputPollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_input_status",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_input_status",
+      "c_contract": "R4DeskRemoteInputStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.desktop_activity_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.desktop_activity_wait",
+      "c_contract": "R4DeskDesktopActivityWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_map",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_map",
+      "c_contract": "R4DeskRemoteFrameMapFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_current_console_host",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_current_console_host",
+      "c_contract": "R4DeskProgramCurrentConsoleHostFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_request_desktop",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_request_desktop",
+      "c_contract": "R4DeskProgramRequestDesktopFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_spawn_with_console_host",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_spawn_with_console_host",
+      "c_contract": "R4DeskProgramSpawnWithConsoleHostFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_spawn_with_console_host_handle",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_spawn_with_console_host_handle",
+      "c_contract": "R4DeskProgramSpawnWithConsoleHostHandleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.program_set_window_handle",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.program_set_window_handle",
+      "c_contract": "R4DeskProgramSetWindowHandleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_push_input",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_push_input",
+      "c_contract": "R4DeskConsolePushInputFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_acquire",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_acquire",
+      "c_contract": "R4DeskRemoteFrameAcquireFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_release",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_release",
+      "c_contract": "R4DeskRemoteFrameReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_consumers",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_consumers",
+      "c_contract": "R4DeskRemoteFrameConsumersFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_publish_regions",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_publish_regions",
+      "c_contract": "R4DeskRemoteFramePublishRegionsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_input_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_input_wait",
+      "c_contract": "R4DeskConsoleInputWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.physical_key_poll",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.physical_key_poll",
+      "c_contract": "R4DeskPhysicalKeyPollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.screen_width",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.screen_width",
+      "c_contract": "R4DrawScreenWidthFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.screen_height",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.screen_height",
+      "c_contract": "R4DrawScreenHeightFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.clear",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.clear",
+      "c_contract": "R4DrawClearFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.rect",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.rect",
+      "c_contract": "R4DrawRectFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.text",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.text",
+      "c_contract": "R4DrawTextFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_revision",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_revision",
+      "c_contract": "R4DrawDisplayRevisionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_begin_frame",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_begin_frame",
+      "c_contract": "R4DrawDisplayBeginFrameFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_begin_frame_rect",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_begin_frame_rect",
+      "c_contract": "R4DrawDisplayBeginFrameRectFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_present",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_present",
+      "c_contract": "R4DrawDisplayPresentFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_blit_xrgb32",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_blit_xrgb32",
+      "c_contract": "R4DrawDisplayBlitXrgb32Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_clear",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_clear",
+      "c_contract": "R4DrawGuiClearFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_rect",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_rect",
+      "c_contract": "R4DrawGuiRectFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_draw_text",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_draw_text",
+      "c_contract": "R4DrawGuiDrawTextFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_draw_text_ex",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_draw_text_ex",
+      "c_contract": "R4DrawGuiDrawTextExFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_blit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_blit",
+      "c_contract": "R4DrawGuiBlitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_raster_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_raster_read",
+      "c_contract": "R4DrawGuiRasterReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_present",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_present",
+      "c_contract": "R4DrawGuiPresentFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_count",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_count",
+      "c_contract": "R4DrawFontCountFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_info",
+      "c_contract": "R4DrawFontInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_measure",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_measure",
+      "c_contract": "R4DrawFontMeasureFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_set_font",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_set_font",
+      "c_contract": "R4DrawGuiSetFontFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_font",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_font",
+      "c_contract": "R4DrawGuiFontFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.text_font",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.text_font",
+      "c_contract": "R4DrawTextFontFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_reload",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_reload",
+      "c_contract": "R4DrawFontReloadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_glyph_row",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_glyph_row",
+      "c_contract": "R4DrawFontGlyphRowFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_blend_alpha8",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_blend_alpha8",
+      "c_contract": "R4DrawGuiBlendAlpha8Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_begin",
+      "c_contract": "R4DrawGuiFrameBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_append",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_append",
+      "c_contract": "R4DrawGuiFrameAppendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_commit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_commit",
+      "c_contract": "R4DrawGuiFrameCommitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_cancel",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_cancel",
+      "c_contract": "R4DrawGuiFrameCancelFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_info",
+      "c_contract": "R4DrawGuiFrameInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_read",
+      "c_contract": "R4DrawGuiFrameReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_blit_xrgb32_stride",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_blit_xrgb32_stride",
+      "c_contract": "R4DrawDisplayBlitXrgb32StrideFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_present_regions",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_present_regions",
+      "c_contract": "R4DrawDisplayPresentRegionsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_present_capabilities",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_present_capabilities",
+      "c_contract": "R4DrawDisplayPresentCapabilitiesFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_present_completion",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_present_completion",
+      "c_contract": "R4DrawDisplayPresentCompletionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_begin_damage",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_begin_damage",
+      "c_contract": "R4DrawGuiFrameBeginDamageFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_generation_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_generation_info",
+      "c_contract": "R4DrawGuiFrameGenerationInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_generation_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_generation_read",
+      "c_contract": "R4DrawGuiFrameGenerationReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_glyph_bitmap",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_glyph_bitmap",
+      "c_contract": "R4DrawFontGlyphBitmapFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_revision",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_revision",
+      "c_contract": "R4DrawFontRevisionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_begin_replace",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_begin_replace",
+      "c_contract": "R4DrawGuiFrameBeginReplaceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_frame_stream_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_frame_stream_info",
+      "c_contract": "R4DrawGuiFrameStreamInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_shared_raster_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_shared_raster_create",
+      "c_contract": "R4DrawGuiSharedRasterCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_shared_raster_destroy",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_shared_raster_destroy",
+      "c_contract": "R4DrawGuiSharedRasterDestroyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_shared_raster_map_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_shared_raster_map_write",
+      "c_contract": "R4DrawGuiSharedRasterMapWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_shared_raster_publish",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_shared_raster_publish",
+      "c_contract": "R4DrawGuiSharedRasterPublishFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_shared_raster_acquire",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_shared_raster_acquire",
+      "c_contract": "R4DrawGuiSharedRasterAcquireFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gui_shared_raster_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gui_shared_raster_release",
+      "c_contract": "R4DrawGuiSharedRasterReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_connect",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_connect",
+      "c_contract": "R4NetTcpConnectFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_write",
+      "c_contract": "R4NetTcpWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_read",
+      "c_contract": "R4NetTcpReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_close",
+      "c_contract": "R4NetTcpCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_summary",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_summary",
+      "c_contract": "R4NetTcpSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_connection",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_connection",
+      "c_contract": "R4NetTcpConnectionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_echo_listen_once",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_echo_listen_once",
+      "c_contract": "R4NetTcpEchoListenOnceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_accept_read_once",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_accept_read_once",
+      "c_contract": "R4NetTcpAcceptReadOnceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_ipv4_send",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_ipv4_send",
+      "c_contract": "R4NetNetIpv4SendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_ipv4_recv",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_ipv4_recv",
+      "c_contract": "R4NetNetIpv4RecvFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_config_get",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_config_get",
+      "c_contract": "R4NetNetConfigGetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_config_set",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_config_set",
+      "c_contract": "R4NetNetConfigSetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_dns_resolve",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_dns_resolve",
+      "c_contract": "R4NetNetDnsResolveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_dns_resolve_server",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_dns_resolve_server",
+      "c_contract": "R4NetNetDnsResolveServerFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_dhcp_acquire",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_dhcp_acquire",
+      "c_contract": "R4NetNetDhcpAcquireFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_dhcp_renew",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_dhcp_renew",
+      "c_contract": "R4NetNetDhcpRenewFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_dhcp_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_dhcp_release",
+      "c_contract": "R4NetNetDhcpReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_dhcp_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_dhcp_status",
+      "c_contract": "R4NetNetDhcpStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_detail_get",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_detail_get",
+      "c_contract": "R4NetNetDetailGetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_diag_run",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_diag_run",
+      "c_contract": "R4NetNetDiagRunFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_open",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_open",
+      "c_contract": "R4NetIpcOpenFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_send",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_send",
+      "c_contract": "R4NetIpcSendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_recv",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_recv",
+      "c_contract": "R4NetIpcRecvFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_poll",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_poll",
+      "c_contract": "R4NetIpcPollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_close",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_close",
+      "c_contract": "R4NetIpcCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_summary",
+      "c_contract": "R4NetIpcSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_channel",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_channel",
+      "c_contract": "R4NetIpcChannelFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.serial_link_status",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.serial_link_status",
+      "c_contract": "R4NetSerialLinkStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.serial_link_poll",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.serial_link_poll",
+      "c_contract": "R4NetSerialLinkPollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.serial_link_send_message",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.serial_link_send_message",
+      "c_contract": "R4NetSerialLinkSendMessageFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.serial_link_host_test",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.serial_link_host_test",
+      "c_contract": "R4NetSerialLinkHostTestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.serial_link_inbox",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.serial_link_inbox",
+      "c_contract": "R4NetSerialLinkInboxFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.net_service_request",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.net_service_request",
+      "c_contract": "R4NetNetServiceRequestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.ipc_performance",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.ipc_performance",
+      "c_contract": "R4NetIpcPerformanceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4NET.tcp_performance",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4NetFns.tcp_performance",
+      "c_contract": "R4NetTcpPerformanceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_open_stream",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_open_stream",
+      "c_contract": "R4AudioAudioOpenStreamFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_write",
+      "c_contract": "R4AudioAudioWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_close",
+      "c_contract": "R4AudioAudioCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_set_volume",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_set_volume",
+      "c_contract": "R4AudioAudioSetVolumeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_acquire",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_acquire",
+      "c_contract": "R4AudioSidAcquireFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_write_register",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_write_register",
+      "c_contract": "R4AudioSidWriteRegisterFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_release",
+      "c_contract": "R4AudioSidReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_load_data",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_load_data",
+      "c_contract": "R4AudioSidLoadDataFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_init",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_init",
+      "c_contract": "R4AudioSidInitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_play_frame",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_play_frame",
+      "c_contract": "R4AudioSidPlayFrameFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_stop",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_stop",
+      "c_contract": "R4AudioSidStopFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.sid_model_name",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.sid_model_name",
+      "c_contract": "R4AudioSidModelNameFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.midi_open_synth",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.midi_open_synth",
+      "c_contract": "R4AudioMidiOpenSynthFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.midi_send",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.midi_send",
+      "c_contract": "R4AudioMidiSendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.midi_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.midi_close",
+      "c_contract": "R4AudioMidiCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.opl3_write_register",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.opl3_write_register",
+      "c_contract": "R4AudioOpl3WriteRegisterFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.opl3_reset",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.opl3_reset",
+      "c_contract": "R4AudioOpl3ResetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.opl3_render_block",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.opl3_render_block",
+      "c_contract": "R4AudioOpl3RenderBlockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.opl3_stop",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.opl3_stop",
+      "c_contract": "R4AudioOpl3StopFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.device_inventory_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.device_inventory_summary",
+      "c_contract": "R4DevDeviceInventorySummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.device_inventory_record",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.device_inventory_record",
+      "c_contract": "R4DevDeviceInventoryRecordFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_summary",
+      "c_contract": "R4DevMemorySummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_block_count",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_block_count",
+      "c_contract": "R4DevMemoryBlockCountFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_block",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_block",
+      "c_contract": "R4DevMemoryBlockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_pressure_snapshot",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_pressure_snapshot",
+      "c_contract": "R4DevMemoryPressureSnapshotFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_reclaim_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_reclaim_probe",
+      "c_contract": "R4DevMemoryReclaimProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_backing_store_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_backing_store_probe",
+      "c_contract": "R4DevMemoryBackingStoreProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_backing_store_slot_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_backing_store_slot_probe",
+      "c_contract": "R4DevMemoryBackingStoreSlotProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_pager_gate_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_pager_gate_probe",
+      "c_contract": "R4DevMemoryPagerGateProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_page_io_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_page_io_probe",
+      "c_contract": "R4DevMemoryPageIoProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_vm_page_state_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_vm_page_state_probe",
+      "c_contract": "R4DevMemoryVmPageStateProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_vm_reserve_probe",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_vm_reserve_probe",
+      "c_contract": "R4DevMemoryVmReserveProbeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.paging_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.paging_summary",
+      "c_contract": "R4DevPagingSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_summary",
+      "c_contract": "R4DevPerformanceSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_task",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_task",
+      "c_contract": "R4DevPerformanceTaskFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_storage",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_storage",
+      "c_contract": "R4DevPerformanceStorageFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_boot_phase",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_boot_phase",
+      "c_contract": "R4DevPerformanceBootPhaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.protocol_status",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.protocol_status",
+      "c_contract": "R4DevProtocolStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.protocol_dispatch",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.protocol_dispatch",
+      "c_contract": "R4DevProtocolDispatchFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.display_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.display_summary",
+      "c_contract": "R4DevDisplaySummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.hardware_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.hardware_summary",
+      "c_contract": "R4DevHardwareSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.boot_info_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.boot_info_summary",
+      "c_contract": "R4DevBootInfoSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.boot_info_memory_count",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.boot_info_memory_count",
+      "c_contract": "R4DevBootInfoMemoryCountFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.boot_info_memory_entry",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.boot_info_memory_entry",
+      "c_contract": "R4DevBootInfoMemoryEntryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_instance_storage_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_instance_storage_summary",
+      "c_contract": "R4DevProgramInstanceStorageSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_instance_storage_self_test",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_instance_storage_self_test",
+      "c_contract": "R4DevProgramInstanceStorageSelfTestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_registry_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_registry_summary",
+      "c_contract": "R4DevProgramRegistrySummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_registry_self_test",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_registry_self_test",
+      "c_contract": "R4DevProgramRegistrySelfTestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_registry_summary_v2",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_registry_summary_v2",
+      "c_contract": "R4DevProgramRegistrySummaryV2Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_registry_self_test_v2",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_registry_self_test_v2",
+      "c_contract": "R4DevProgramRegistrySelfTestV2Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.execution_inventory_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.execution_inventory_summary",
+      "c_contract": "R4DevExecutionInventorySummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.program_instance_storage_summary_v2",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.program_instance_storage_summary_v2",
+      "c_contract": "R4DevProgramInstanceStorageSummaryV2Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.kernel_version",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.kernel_version",
+      "c_contract": "R4DevKernelVersionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_boot_phase_clock",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_boot_phase_clock",
+      "c_contract": "R4DevPerformanceBootPhaseClockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_irq_timing",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_irq_timing",
+      "c_contract": "R4DevPerformanceIrqTimingFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_boot_summary",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_boot_summary",
+      "c_contract": "R4DevPerformanceBootSummaryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_driver_work",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_driver_work",
+      "c_contract": "R4DevPerformanceDriverWorkFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_pci_inventory",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_pci_inventory",
+      "c_contract": "R4DevPerformancePciInventoryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_input",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_input",
+      "c_contract": "R4DevPerformanceInputFn",
+      "coverage": "generated_signature"
+    }
+  ],
+  "cross_language_fixtures": [
+    {
+      "id": "platform-abi-06411",
+      "since": "0.64.11",
+      "scope": [
+        "R4XStart and R4LQuery layouts",
+        "six platform group tables",
+        "Zig and C signature parity"
+      ],
+      "zig_fixture": "Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
+      "c_fixture": "Generated/Conformance/C/ApiContractConformanceGenerated.c",
+      "gate": "zig build test"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+const std = @import("std");
+const r4os = @import("r4os");
+const contract = @import("r4l_contract");
+
+export fn r4l_entry() linksection(".text.r4l_entry") callconv(.c) void {}
+
+pub export fn {ProjectNameLower}_add_impl(left: i64, right: i64) linksection(".text.r4l_exports") callconv(.c) i64 {
+    return left +% right;
+}
+
+pub export var {ProjectNameLower}_api_v1: contract.ApiV1 align(8) linksection(".data.r4l_exports") = .{
+    .header = contract.api_v1_header,
+    .add = {ProjectNameLower}_add_impl,
+};
+
+pub export var {ProjectNameLower}_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
+    .magic = r4os.abi.r4l_abi_magic,
+    .abi_version = r4os.abi.r4l_abi_version,
+    .size = r4os.abi.r4l_query_struct_size,
+    .group = 0,
+    .kernel_bridge = 0,
+    .reserved = 0,
+};
+
+test "provider exports the generated API table" {
+    try std.testing.expectEqual(@as(i64, 42), {ProjectNameLower}_add_impl(19, 23));
+    try std.testing.expectEqual(contract.api_v1_header.interface_id_lo, {ProjectNameLower}_api_v1.header.interface_id_lo);
+}

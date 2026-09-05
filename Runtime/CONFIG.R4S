@@ -1,0 +1,9 @@
+﻿# Recovery bootstrap; the Recovery menu becomes the shell in 0.76.6.
+AUTO=PCI
+AUTO=ACPI
+SHELL=/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X
+DRIVER=VIRTNET
+DRIVER=RTL8139
+DRIVER=RTL8168
+OPTION NET dhcp=on
+LOG=verbose

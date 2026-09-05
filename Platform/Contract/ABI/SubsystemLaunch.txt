@@ -1,0 +1,53 @@
+﻿R4OS Subsystem Launch Contract 1
+================================
+
+Purpose
+-------
+
+This contract transports one guest file from a file-handler consumer to an
+ordinary Desktop-hosted subsystem R4X. It is layered on the existing R4XStart
+argument string and introduces no new kernel ABI, loader kind, service, or
+shared emulator process.
+
+Resolution and instances
+------------------------
+
+The association stores a stable SUBSYSTEM_ID and guest format ID. The caller
+resolves that logical identity against the installed MODULES.JSON immediately
+before launch, validates that the selected host file exists, and then starts
+the resolved GUI R4X through the normal Desktop host request. Host paths and
+display names are never copied into ASSOC.R4S.
+
+Every launch request creates one R4X program instance. Opening two guest files
+creates two windows, address spaces, runtime states, and close paths even when
+both resolve to the same host artifact.
+
+Encoding
+--------
+
+The complete R4X argument payload is at most 127 bytes and has this grammar:
+
+    R4SUBSYS1 record+
+    record = ; key_length : key = value_length : value
+
+Lengths are unsigned decimal byte counts without a sign. Keys contain 1 to 31
+ASCII bytes, begin with a letter, and then contain only letters, digits,
+underscore, or hyphen. Values are length-delimited and must not contain NUL.
+
+Exactly one record has the reserved key GUEST. Its value is a valid absolute
+R4OS file path. The caller validates that path but encodes the original path
+bytes; it does not normalize separators, add quotes, escape spaces, or split
+the payload into shell tokens. Duplicate or missing GUEST records are errors.
+
+Up to eight additional option records may follow. Version-1 hosts skip unknown
+option keys by their declared lengths. Future required semantics need a new
+magic version rather than changing the meaning of an existing key.
+
+Failures
+--------
+
+Malformed lengths, invalid keys or paths, embedded NUL, duplicate required
+fields, excessive options, and payload overflow are visible pre-launch errors.
+A stale association, missing host, ambiguous automatic match, and R4X launch
+failure remain distinct visible consumer errors. No failure selects a hidden
+fallback handler.

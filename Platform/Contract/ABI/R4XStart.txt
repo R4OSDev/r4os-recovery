@@ -1,0 +1,196 @@
+﻿R4XStart ABI
+===========
+
+Rolle
+-----
+
+R4XStart ist der aktuelle Einstieg fuer R4X-Programme. Der Loader uebergibt
+einen R4XStartContext. Das SDK validiert ihn und erzeugt daraus einen
+r4os.r4x.Context mit den importierten Gruppen-Contexts.
+
+R4OS-CONTRACT-GENERATED:BEGIN R4XSTART
+Dieser Block wird aus ApiContract.json erzeugt und darf nicht von Hand geaendert werden.
+
+Konstanten
+----------
+
+    R4XSTART_MAGIC        = 0x53583452
+    R4XSTART_ABI_MAJOR    = 1
+    R4XSTART_ABI_MINOR    = 1
+    R4XSTART_CONTEXT_SIZE = 128
+    R4XSTART_IMPORT_SIZE  = 40
+
+R4XStartContext
+---------------
+
+Offset  Typ  Feld
+0       u32  magic
+4       u16  abi_major
+6       u16  abi_minor
+8       u32  size
+12      u32  flags
+16      u64  instance_id
+24      u32  app_class
+28      u32  reserved0
+32      u64  program_path
+40      u64  args
+48      u64  args_len
+56      u64  imports
+64      u32  import_count
+68      u32  reserved1
+72      u64  reserved_memory0
+80      u64  reserved_memory1
+88      u64  exit
+96      u64  should_close
+104     u64  yield
+112     u64  reserved_runtime
+120     u64  reserved2
+
+Groesse: 128 Byte
+
+R4XStartImport
+--------------
+
+Offset  Typ  Feld
+0       u32  group_id
+4       u32  min_version
+8       u32  resolved_version
+12      u32  flags
+16      u64  module_name
+24      u64  symbol_name
+32      u64  table
+
+Groesse: 40 Byte
+
+Gruppen-IDs
+-----------
+
+    1 = R4SYS
+    2 = R4DESK
+    3 = R4DRAW
+    4 = R4NET
+    5 = R4AUDIO
+    6 = R4DEV
+
+App-Profile
+-----------
+
+    console -> app.class=console, required-mask=0x2, optional-mask=0x7C
+    desktop -> app.class=gui, required-mask=0xE, optional-mask=0x70
+    service -> app.class=service, required-mask=0x2, optional-mask=0x7C
+
+Gruppentabellen
+---------------
+
+    R4XSTART_R4SYS_VERSION = 15
+    R4XSTART_R4SYS_SIZE    = 1024
+    R4XSTART_R4DESK_VERSION = 12
+    R4XSTART_R4DESK_SIZE    = 488
+    R4XSTART_R4DRAW_VERSION = 9
+    R4XSTART_R4DRAW_SIZE    = 408
+    R4XSTART_R4NET_VERSION = 2
+    R4XSTART_R4NET_SIZE    = 296
+    R4XSTART_R4AUDIO_VERSION = 1
+    R4XSTART_R4AUDIO_SIZE    = 184
+    R4XSTART_R4DEV_VERSION = 10
+    R4XSTART_R4DEV_SIZE    = 352
+
+Die sechs eingebauten Platform APIs beginnen jeweils mit magic, abi_version, size und flags;
+danach folgen die im Schema definierten 8-Byte-Slots. Externe Runtime-R4Ls
+besitzen libraryeigene Vertraege und werden hier nicht zentral registriert.
+
+R4OS-CONTRACT-GENERATED:END R4XSTART
+
+group_id=0 kennzeichnet seit 0.64.2 ein benanntes externes Interface. In
+diesem Fall identifizieren module_name und symbol_name den Export,
+min_version/resolved_version enthalten die angeforderte und gelieferte
+Revision, flags enthaelt nicht group_interface und table zeigt direkt auf den
+geladenen Export. Das 40-Byte-Layout bleibt unveraendert.
+
+Nur die sechs eingebauten Platform-API-Provider R4SYS, R4DESK, R4DRAW,
+R4NET, R4AUDIO und R4DEV werden anhand ihres Namens einer festen ID und einer
+Kernel-Gruppentabelle zugeordnet. Andere Libraries erhalten keine
+Gruppen-ID; ihre Interfaces werden ausschliesslich als benannte Importe mit
+group_id=0 transportiert.
+
+Der Kontextvalidator verlangt die aktuelle Magic, ABI-Major 1 und mindestens
+die im generierten Block angegebene Kontextgroesse. Ein groesserer Minorwert
+bleibt zulaessig, solange der bekannte Mindestteil vorhanden ist. Alle Offsets
+gelten fuer x86_64.
+
+GUI-Ereignisse
+---------------
+
+`GuiEvent.kind` verwendet die append-only Werte `none=0`, `close=1`,
+`resize=2`, `mouse_down=3`, `mouse_up=4`, `mouse_move=5`, `key_down=6`,
+`font_changed=7`, `focus_gained=8`, `focus_lost=9`,
+`physical_key_down=10`, `physical_key_up=11` und `physical_key_reset=12`.
+Die beiden Fokuswerte werden beim Wechsel des aktiven gehosteten GUI-Fensters
+an die betroffenen Programminstanzen gestellt. Physische Tasteneintraege
+tragen in `key` die layoutunabhaengige USB-HID-Keyboard-Page-Usage, in
+`modifiers` den seitenspezifischen Zustand und bei einem Reset den Wert 0.
+Das bestehende 40-Byte-Layout von `GuiEvent` bleibt dabei unveraendert;
+unbekannte kuenftige Werte muessen von Verbrauchern ignoriert werden.
+
+Stabilitaet
+-----------
+
+- Vorhandene Felder bleiben an ihrem Offset.
+- Neue Funktionen werden nur am Ende angefuegt.
+- Ein Consumer prueft zuerst, ob size das Feld abdeckt, und dann den
+  Funktionszeiger.
+- hasFn("feld") ist die normale SDK-Pruefung.
+- Ein reservierter Slot ist kein Funktionsfeld und wird nicht mit hasFn
+  abgefragt.
+- reserved_runtime im Kontext liegt bei Offset 112 und ist 0.
+- reserved_shell_run in R4SYS liegt bei Offset 408 und ist 0.
+  system_halt bleibt bei 416, boot_log_read bei 752.
+- Alle weiteren reserved-Felder bleiben 0.
+
+Start- und Importvertrag
+------------------------
+
+Ein gueltiges R4X besitzt:
+
+- R4M0 ModuleKind R4X;
+- Export R4XStart Version 1;
+- Metadaten r4x.start=r4xstart, r4x.entry=R4XStart und
+  r4x.context=R4XStartContext;
+- Import R4SYS:Query:1;
+- alle zusaetzlichen Plattform- oder benannten Imports aus module.R4MF.
+
+Ein benannter Import wie EXTMATH:API_V1:1 erscheint mit group_id=0 und mit
+allen Namen, Versionen und dem Providerpointer im Startkontext. group_id=0 ist
+kein Fehlerzustand. Seine Interfaceheader-Regeln stehen in R4LInterface.txt.
+
+Fehlende, unbekannte, doppelte oder widerspruechliche Startmetadaten werden
+als generisch ungueltiger Startvertrag abgelehnt.
+
+SDK-Nutzung
+-----------
+
+Zig:
+
+    pub fn r4_app_main(app: *r4os.App) i32 {
+        app.system().println("Hallo");
+        return 0;
+    }
+
+C:
+
+    int32_t r4_app_main(R4App *app);
+
+Die SDK-Startups exportieren R4XStart, validieren Kontext und Profilgruppen
+und rufen r4_app_main mit einem aufruflokalen App-Objekt auf. Direkter
+R4XStart-Zugriff bleibt explizite Low-Level-ABI.
+
+Generierte Pakete und Pruefung
+------------------------------
+
+    Generated/SDK/Zig/abi_generated.zig
+    Generated/SDK/C/include/r4os/abi_generated.h
+    Generated/Kernel/Zig/r4x_api_generated.zig
+    Generated/Conformance/
+
+`zig build check` prueft Vertragsblock und Pakete bytegenau;
+`zig build test` kompiliert die Zig-/C-Projektionen.

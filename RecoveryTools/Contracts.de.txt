@@ -1,0 +1,191 @@
+﻿R4OS Recovery: technische Vertraege, Format 1
+===========================================
+
+Stand 0.76.1. Dies sind die verbindlichen Eingaben fuer die nachfolgenden
+Implementierungsschritte, keine Behauptung bereits ausfuehrbarer Installer.
+1 MB = 1048576 Bytes. Alle Sektoradressen sind logische 512-Byte-Sektoren.
+
+Identitaet und Bootquelle
+-----------------------
+
+Jede Neuinstallation bekommt zufaellige, neue UUIDs fuer Installation,
+GPT-Datentraeger und jede Partition. GUIDs werden in JSON als kanonische
+kleingeschriebene UUID-Zeichenketten gespeichert; GPT benutzt sein definiertes
+Little-Endian-Feldlayout. Firmwarelaufwerksnummer, Label und Listenindex sind
+keine dauerhaften Identitaeten. Geklonte/mehrdeutige IDs muessen vor einem
+schreibenden Auftrag als Konflikt gemeldet werden, niemals first-wins.
+
+BOOT:/boot/r4os-installation.json ist die versionierte Zuordnungswahrheit:
+
+  schema:                 1
+  installationId:         UUID
+  diskGuid:               GPT-Datentraeger-UUID
+  logicalSectorBytes:     512
+  partitions:             Objekt mit BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA
+    je Rolle:             partitionGuid, typeGuid, firstLba, sectorCount
+  bootFiles:              Array der von R4OS verwalteten relativen BOOT-Pfade
+  releaseVersion:         installierte normale R4OS-Releaseversion
+  kernelVersion:          zu diesem SYSTEM gehoerende normale Kernelversion
+
+Jede Rolle kommt genau einmal vor, mit unterschiedlicher Partition-GUID.
+Sektorzahlen sind positive JSON-Ganzzahlen im geprueften u64-Bereich.
+Grenzen, Typen und IDs muessen mit beiden konsistenten GPT-Kopien und der
+tatsaechlichen Kapazitaet uebereinstimmen. Unbekannte Schema-Hauptversion,
+doppelte Schluessel, Ueberlaeufe, fehlende Rollen, Ueberlappung oder ein
+widerspruechlicher Datentraeger verhindern einen Updateauftrag. Eine volle
+Neuinstallation benoetigt keinen bereits gueltigen Installationsvertrag.
+
+bootFiles erlaubt nur kanonische relative Pfade innerhalb BOOT ohne '..',
+Doppelpunkt, Backslash, leere Komponente oder Namenskollision ohne Beachtung
+der Grossschreibung. Es enthaelt die normalen Kernel-/Preloaddateien und
+zugehoerigen verwalteten Bootdateien. Vorhandene limine.conf und fremde Dateien
+werden bei Updates nicht daraus geloescht oder ersetzt. Ein Update behaelt
+alle Partitions-IDs, Grenzen und benoetigten Bootpfade; eine Quelle mit
+inkompatiblen Pflichtpfaden wird vor dem ersten Schreibzugriff abgelehnt.
+
+Der Kernel sichert frueh die vom Limine-Kerneldateieintrag gemeldeten
+Datentraeger-/Partitions-IDs sowie den tatsaechlichen geladenen Pfad. Daraus,
+GPT und Installationsbeschreibung entsteht genau eine BootSource:
+installationId, diskGuid, bootGuid, recoveryGuid, originBus, loadedSlot.
+originBus ist die vom registrierten Blockgeraet bestaetigte physische Quelle,
+kein aus der Konfiguration geglaubtes 'usb' oder 'local'. loadedSlot ist
+CURRENT oder PREVIOUS und wird aus dem tatsaechlich geladenen Recoverypfad
+abgeleitet. Fehlende Identitaet verhindert automatische Ziel-/R:-Zuordnung;
+RAM-Bootdiagnose bleibt moeglich. Eine Probe aller R4OS-Systembaeume darf
+diese Identitaet nicht ersetzen. Der normale R4OS-Boot muss nach demselben
+Installationsvertrag sein SYSTEM, BOOT und DATA finden.
+
+Laufwerke: C: ist ausschliesslich das vollstaendige RAM-Dateisystem.
+R: ist RECOVERY der bestaetigten BootSource. Andere nutzbare Partitionen
+erhalten stabile Sitzungsbuchstaben ab D: unter Auslassung von R:.
+BIOSBOOT erhaelt keinen Buchstaben. Beim lokalen Start wird USB-Speicher
+auch unter Terminal, SSH und FTP nicht freigegeben. USB-HID bleibt nutzbar.
+Beim USB-Start ist der gestartete Stick fuer Install R4OS ausgeschlossen,
+fuer Update Recovery jedoch als eigenes Ziel zulaessig.
+
+Partitionsvertrag
+-----------------
+
+GPT mit Protective MBR, 128 Eintraegen zu 128 Bytes, gueltigen CRCs und
+Backup-GPT am echten Datentraeger-Ende. Startausrichtung jeweils 1 MB.
+
+  BIOSBOOT     1 MB   kein FS    21686148-6449-6e6f-744e-656564454649
+  BOOT       128 MB   FAT32 ESP c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+  SYSTEM    1024 MB   NTFS      ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+  RECOVERY   512 MB   FAT32     ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+  DATA        Rest   NTFS      ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+Die konkrete Rolle der Basic-Data-Partitionen folgt der Installations-
+beschreibung, nicht allein deren Typ/Label. Standard-disk.img: 2048 MB.
+DATA endet am letzten nutzbaren GPT-Sektor; sein Rest muss eine tatsaechlich
+formatierbare NTFS-Geometrie ergeben. Native 4Kn, dynamische Windows-Disks,
+RAID, VHD und Verschieben ganzer Partitionen sind nicht Bestandteil 0.76.X.
+Beim SYSTEM-Update bleibt auch eine abweichende Partitionsgroesse erhalten.
+Erforderlicher Platz wird anhand importierter Inhalte und der konkreten
+NTFS-Geometrie vorab bestimmt; keine rohe Quellpartitionskopie mit fremdem BPB.
+
+Versionen und Recovery-Paket
+---------------------------
+
+VERSION.R4S im Recovery-Root besitzt RECOVERY_VERSION=MAJOR.MINOR.PATCH.
+Kernel/VERSION.R4S besitzt die davon getrennte Recovery-Kernelversion.
+Provenance nennt den uebernommenen normalen Kernel-/Plattformstand.
+RELEASE_VERSION des normalen R4OS und dessen Kernelversion werden niemals
+als Recovery-Version umgedeutet. Modulversionen bleiben bei bytegleicher
+Uebernahme gleich. Build- und Versionsaenderungen stehen unter Git-Kontrolle.
+
+R4OS-Recovery-<Recovery-Version>-x86_64.zip enthaelt ausschliesslich einen
+vollstaendigen Satz aus recovery.elf, runtime.img, manifest.json und Legal/.
+runtime.img ist ein vollstaendiges FAT32-Volume, keine PRELOAD.R4I-Liste.
+Limine laedt Kernel und komplettes Runtime-Volume in den RAM; dieser Speicher
+bleibt bis zum regulierten RAM-FS-Abbau reserviert. Auch spaete R4X-Starts,
+R4L-/R4P-Imports und Ressourcenreads lesen daraus.
+
+manifest.json:
+  schema:                 1
+  product:                "r4os-recovery"
+  architecture:           "x86_64"
+  recoveryVersion:        MAJOR.MINOR.PATCH
+  recoveryKernelVersion:  MAJOR.MINOR.PATCH
+  platformContract:      Commit und SHA256 des verwendeten ApiContract.json
+  runtime:                {format: "fat32", logicalSectorBytes: 512}
+  files:                  Array aus {path, bytes, sha256}
+  minimumRamBytes:        gemessene Untergrenze fuer normalen Recovery-Boot
+
+files listet recovery.elf, runtime.img und alle Legal-Dateien exakt auf;
+manifest.json referenziert sich nicht selbst. Hashes: SHA-256, 64 kleine
+Hexzeichen. bytes: tatsaechliche unkomprimierte Dateigroesse. Pfade strikt
+relativ, case-insensitiv eindeutig, keine ZIP-Symlinks oder Traversalpfade.
+Unbekannte Hauptschemata, fehlende/zusatzliche Nutzdateien, abweichende
+Groessen/Hashes und nicht unterstuetzte Architektur/Runtime verhindern
+Installation vor dem ersten Zielschreibzugriff. Integritaet ersetzt keine
+Authentifizierung: GitHub-Downloads verwenden den geprueften HTTPS-Pfad.
+Die fuer einen konkreten Install-/Updateauftrag benoetigte RAM-Spitze wird
+zusaetzlich berechnet und reserviert; minimumRamBytes deckt keinen beliebig
+grossen Auftrag ab. Paketstruktur und Grenzen werden in 0.76.15 umgesetzt.
+
+Feste Ablage und Startbestaetigung
+--------------------------------
+
+RECOVERY:/CURRENT/{recovery.elf,runtime.img,manifest.json,Legal/...}
+RECOVERY:/PREVIOUS/{recovery.elf,runtime.img,manifest.json,Legal/...}
+RECOVERY:/INSTALL/RELEASE.ZIP       R4OS-Quelle, exakt Original-ZIP
+RECOVERY:/INSTALL/RELEASE.PART      neuer Download bis vollstaendig geprueft
+RECOVERY:/state.r4s
+
+Limine verwendet feste CURRENT- und PREVIOUS-Eintraege derselben Partition-
+GUID. Lokal: 5 Sekunden, Standard R4OS. USB: Standard R4OS Recovery.
+Vorhandene limine.conf bleibt bei beiden Updatefunktionen bytegleich.
+
+state.r4s ist UTF-8 mit BOM, maximal 4096 Bytes, eindeutige Pflichtfelder:
+  R4S_FORMAT=1
+  SCHEMA=RECOVERY_STATE
+  STATE_VERSION=1
+  INSTALLATION_ID=<UUID>
+  CURRENT_VERSION=<Recovery-Version>
+  CURRENT_MANIFEST_SHA256=<SHA256 der exakten CURRENT/manifest.json-Bytes>
+  CURRENT_CONFIRMED=yes|no
+
+Nur eine zu Installation, Version UND Manifest-Hash passende vollstaendige
+Datei mit CURRENT_CONFIRMED=yes gilt als bestaetigt. Fehlend, beschaedigt,
+veraltet, doppelte Felder oder nicht dauerhaft geschrieben bedeutet
+unbestaetigt. Eine Versionszeichenkette allein reicht nicht.
+Die laufende PREVIOUS-Recovery darf PREVIOUS nicht durch CURRENT ersetzen,
+auch wenn die Statusdatei CURRENT bestaetigt nennt. Nach vollstaendigem
+RAM-FS-/Kernel-/Menue-Start aus CURRENT darf exakt dieser gestartete Stand
+bestaetigt werden. Schreiben, Flush und Ruecklesen sind erforderlich;
+ein Fehlschlag verhindert weder RAM-Betrieb noch spaetere Reparatur.
+
+Updatefolge: Ziel exklusiv beanspruchen; Paket/Platz/RAM pruefen und
+bereithalten; bestaetigtes CURRENT nach PREVIOUS kopieren, flushen und
+vollstaendig pruefen, waehrend CURRENT erhalten bleibt. Bei unklarem Zustand
+oder Start aus PREVIOUS bleibt PREVIOUS unangetastet. CURRENT anschliessend
+vollstaendig erneuern, flushen, ruecklesen und geprueft als unbestaetigt
+eintragen. Erst dann Erfolg melden. INSTALL und DATA bleiben erhalten.
+Eine alte Bestaetigung passt durch den Manifest-Hash nicht zum neuen Satz.
+Dies ist kein atomarer Verzeichnistausch und keine Stromausfallgarantie fuer
+das gemeinsame FAT32. Bei defektem CURRENT wird PREVIOUS manuell in Limine
+gewaehlt; bei defektem BOOT/RECOVERY bleibt der externe Stick erforderlich.
+
+Zustaendigkeiten
+----------------
+
+Repositories/Contract: additive Plattform-Storage-/Mount-/Flush-Vertraege.
+Repositories/Kernel: Hardware, RAM-FS, Programmlaufzeit, konsistente Handle-
+und Mountgenerationen, exklusiver Geraetezugriff samt Cache-/I/O-Abschluss.
+Repositories/SDK: hostneutrale GPT/MBR-/Formatieralgorithmen und API-Fassaden;
+NTFS bleibt beim vorhandenen ntfs_volume-/ntfs_format-Besitzer. Grosse
+DATA-Volumes werden mit begrenzten Puffern statt Vollvolume-RAM formatiert.
+Repositories/Apps/R4Part: regulaere externe R4PART-App fuer Terminal und SSH,
+DiskPart-artige Befehle, Skripte, Ausgabe, Auswahl und Bestaetigungen.
+Repositories/Protocols/R4Zip: regulaeres externes ZIP-Protokoll R4ZIP.R4P.
+RecoveryTools: Menue, Quellen-/Zielauswahl, OS-Erkennung, Installer,
+R4OS-Updater, Recovery-Updater und deren konkrete Transaktionsfolge.
+
+Fachliche Korrekturen gemeinsam genutzter Teile zuerst beim normalen
+Besitzer, danach ausdruecklich geprueft in Recovery uebernehmen. Die lokale
+Menue-, SSH- und FTP-Sitzung teilen dieselbe Mountsicht. Ein schreibender
+Auftrag muss alle betroffenen Handles/Transfers ausschliessen, neue Zugriffe
+waehrend der Mutation abweisen, I/O entleeren, flushen, sauber aushangen und
+nach Rescan mit neuen Generationen einbinden. Belegte Ziele werden vor
+Mutation abgewiesen. Unbetroffene Volumes und RAM-Dienste koennen weiterlaufen.

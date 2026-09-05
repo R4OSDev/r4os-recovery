@@ -1,0 +1,36 @@
+﻿Herkunft des R4OS Plattform-Contracts
+=====================================
+
+Quellstand
+----------
+
+Kanonischer fachlicher Altprojekt-Commit:
+
+    259cbfac272c47ac1a7828de973512d17b29ae10
+
+Organisatorischer Archivcommit:
+
+    2c0ca0473b5eeb5f3417db82fa666368ed67d5df
+
+Git-Baum des uebernommenen Contract-Verzeichnisses am fachlichen Commit:
+
+    1580c4d5ac2dc352ac61c2a436fb5da1da87ebea
+
+Die zwoelf Dateien aus `Code/System/SDK/Contract/` wurden zu Beginn von
+0.64.11 bytegenau uebernommen. Danach erfolgte ausschliesslich die
+repo-neutrale Verpackung des final abgenommenen Vertrags:
+
+- Contract-interne Pfade wurden auf diese Repositorywurzel umgestellt.
+- Die Baseline erhielt die Identitaet `standalone-contract-0.64.11`.
+- SDK-, Kernel- und C-Projektionen wurden unter `Generated/` materialisiert.
+- ApiContractGen und seine Selbsttests wurden in dieses Repository uebernommen.
+- Veraltete Monorepo- und geplante Snapshottexte wurden entfernt oder auf die
+  neue Besitzgrenze aktualisiert.
+
+Keine Plattformgruppe, kein Slot, keine Signatur, kein Payloadlayout und kein
+ABI-Wert wurde bei dieser Ortsmigration fachlich geaendert. Die generierten
+Zig-SDK-, Zig-Kernel- und C-ABI-Hauptdateien sind byteidentisch mit dem
+abgenommenen 0.64.9-Stand.
+
+Konkrete Runtime-R4L-Vertraege und handgeschriebene SDK-/Kernelquellen wurden
+nicht in dieses Repository uebernommen.

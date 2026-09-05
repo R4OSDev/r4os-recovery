@@ -1,0 +1,23 @@
+R4OS_MODULE_MANIFEST=2
+KIND=R4P
+NAME=R4HTTP
+VERSION=0.1.2
+LANGUAGE=Zig
+SOURCE=src/main.zig
+TARGET=/R4OS/PROTOCOLS/R4HTTP.R4P
+IMAGE_SCOPE=full
+IMPORT=R4DEV:Query:1
+META=r4p.name=R4HTTP
+META=r4p.role=application.http
+META=r4p.category=data
+META=module.name=R4P_R4HTTP
+META=description=Reusable HTTP 1.1 client protocol
+META=feature=request-builder
+META=feature=response-parser
+META=feature=content-length
+META=feature=content-range-stream
+META=feature=range-resume
+META=feature=chunked-transfer
+META=feature=redirect-resolution
+META=feature=bounded-cancellation
+META=consumer=KLICKIFAX

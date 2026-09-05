@@ -1,0 +1,352 @@
+﻿R4OS MODULE MANIFEST V2 (R4MF)
+================================
+
+Status: Current contract for all in-tree R4X, R4L, R4D and R4P modules.
+Encoding: UTF-8 without BOM for module.R4MF itself. Lines use KEY=VALUE.
+
+1. One manifest, one module
+---------------------------
+
+The identity is the case-insensitive pair (KIND, NAME). One module.R4MF
+describes exactly one output module.
+Unknown keys, empty values and duplicate single-value keys are errors. SOURCE,
+GUEST_FORMAT, GUEST_EXTENSION, GUEST_FEATURE, ZIG_MODULE, C_INCLUDE, C_DEFINE,
+C_FLAG, IMPORT, EXPORT and META are ordered repeatable fields. Their order is
+significant and is preserved by planning and building.
+
+Fields in canonical order:
+
+  R4OS_MODULE_MANIFEST=2
+  KIND=R4X
+  NAME=<FAT-safe ASCII module name, maximum 31 bytes>
+  VERSION=<MAJOR.MINOR.PATCH>          module version, required for all kinds
+  LANGUAGE=Zig|C
+  SOURCE=<project-relative canonical path, repeated for C>
+  ENTRY_MODE=app|lowlevel              required for R4X, forbidden otherwise
+  APP_CLASS=console|gui|service        required for R4X, forbidden otherwise
+  MODULE_ROLE=subsystem                optional R4X role, forbidden otherwise
+  SUBSYSTEM_ID=<canonical ID>          required exactly with subsystem role
+  SUBSYSTEM_DISPLAY_NAME=<UTF-8 text>  required exactly with subsystem role
+  GUEST_FORMAT=<format ID>             subsystem only, repeated, at least one
+  GUEST_EXTENSION=<format ID>:<.ext>   subsystem only, optional, repeatable
+  GUEST_FEATURE=<format ID>:<feature>  subsystem only, optional, repeatable
+  TARGET=/<absolute image path ending in the KIND extension>
+  IMAGE_SCOPE=slim|full|test|none      required for every kind
+  OPTIMIZE=size|speed                  optional for every kind, default size
+  PACKAGE=<group name>                 optional for R4X, no build semantics
+  ZIG_MODULE=<alias>:<relative .zig>   optional for R4X, repeatable, Zig only
+  C_INCLUDE=<relative include root>    optional, repeatable, C inputs only
+  C_DEFINE=<NAME>=<VALUE>              optional, repeatable, C inputs only
+  C_FLAG=<single compiler flag>        optional, repeatable, C inputs only
+  IMPORT=<module>:<symbol>:<min-version> repeated; at least one for R4X
+  EXPORT=<public-name>:<ELF-symbol>:<revision> repeated; compiled R4L only
+  CONTRACT=<project-relative .json>                 compiled R4L only
+  CONTRACT_BASELINE=<project-relative .json>        compiled R4L only
+  IMPLEMENTATION_ZIG=<project-relative .zig>        compiled R4L only
+  BINDING_ZIG=<project-relative .zig>                compiled R4L only
+  BINDING_C=<project-relative .h>                    compiled R4L only
+  CONFORMANCE_ZIG=<project-relative .zig>            compiled R4L only
+  CONFORMANCE_C=<project-relative .c>                compiled R4L only
+  API_REFERENCE=<project-relative .md>               compiled R4L only
+  META=<key>=<value>                 optional, repeatable
+  ICON=<project-relative .ico path>  optional, repeatable; order = icon index
+  HELP=<project-relative text path>  optional, at most once
+  RESOURCE=<NAME>:<project-relative path>  optional, repeatable
+
+Zig has exactly one SOURCE. C may have multiple SOURCE fields. Sources are
+relative to the manifest directory, use forward slashes, may not escape with
+".." and must match the declared language. TARGET uses forward slashes,
+contains no dot segments and respects the current R4OS path/component limits.
+
+C_INCLUDE, C_DEFINE and C_FLAG are available only when the project contains
+C sources, including a mixed Zig/C compiled R4L. Include roots are relative
+build dependencies and may deliberately use ".." to reach a package sibling;
+absolute paths, backslashes and explicit "." components are forbidden.
+C_DEFINE splits at the first "=" and requires a C identifier plus a
+whitespace-free value. C_FLAG is one whitespace-free token beginning with
+"-". Duplicate include roots, define names and flags are errors.
+
+IMAGE_SCOPE decides which image a module reaches and is required for all
+four kinds. The selected sets are exact: slim images contain slim, full images
+contain slim plus full, and test images contain slim plus test. none reaches
+no automatically built image; an explicit test-plan include may still select
+it for an on-demand diagnostic run. It replaced two other conventions:
+META=image.shipped=yes|no for
+R4D and R4L, and META=image.scope=test-only in the R4L negative fixtures.
+Both are now rejected. R4D and R4P used to have no scope at all - their
+placement lived in a hardcoded list inside the build script, where the
+manifest TARGET was silently unused.
+
+VERSION is the version of the MODULE, not of the manifest format - the format
+number is R4OS_MODULE_MANIFEST. Exactly three decimal components, no prefix, no
+suffix and no leading zero in a component, so that one version has exactly one
+spelling and an update server comparison never sees two strings for the same
+version. The manifest is the only place this value is maintained: the build
+emits it into the R4M0 metadata block as module.version=<MAJOR.MINOR.PATCH> for
+all four module kinds. ModuleCatalog exposes it as module_version in its source
+catalog; a Distribution may project it as version into the shipped module
+inventory. Raising it when a module changes is a human decision; no gate
+enforces it.
+
+ENTRY_MODE=app selects the normal SDK-owned r4_app_main startup. The explicit
+lowlevel value selects a current R4XStart source that owns its entry assembly
+and is restricted to the reasoned startup, loader and SIMD fixtures. PACKAGE
+only groups installation and documentation.
+It is present in the catalog but is not read by the SDK build driver.
+
+OPTIMIZE selects the code-generation goal of an R4X, R4L, R4D or R4P without
+creating a project-local build truth. `size` maps to ReleaseSmall and remains
+the default; `speed` maps to ReleaseFast for modules whose measured hot path
+justifies the larger artifact. All compiled manifest build paths consume the
+same field. It changes code generation only, never runtime memory profiles,
+imports, ABI, metadata or image placement.
+
+ZIG_MODULE binds a source import name to one shared Zig file. The alias is a
+Zig identifier and unique inside the manifest. Its forward-slash path is
+resolved relative to the manifest, may deliberately reach a package sibling
+with "..", must end in .zig and must exist. The field is a build input and is
+therefore included in the machine plan. C manifests reject ZIG_MODULE.
+
+ICON, HELP and RESOURCE (since 0.61.12) declare the R4M0 resource area of
+the built module; the binary layout lives in `ABI/R4M0.txt`. Their
+paths follow the SOURCE rules: project-relative, forward slashes, no
+escape - a resource outside the project would silently break standalone
+builds. The first ICON is icon index 0 and thereby the desktop icon; icons
+must satisfy the SDK ICO parser (classic container, no PNG entry, a 32x32
+entry in 32 bpp BGRA or 8 bpp palette) and an unsuitable icon is a build
+error. HELP is UTF-8 text; a leading BOM of the build source is stripped on
+embedding. RESOURCE names are 1..63 bytes of printable ASCII without path
+separators or colon, case-insensitively unique per module, split at the
+FIRST colon. At most 64 resource entries per module. R4L manifests reject
+all three fields because the R4L container contract has no resource path - a
+declared but never embedded resource would be a silent lie. The fields are
+build inputs and are included in the machine plan.
+
+Subsystem role and guest formats (since 0.66.0)
+------------------------------------------------
+
+MODULE_ROLE is orthogonal to KIND. The only current value is subsystem, and it
+is valid only together with KIND=R4X and APP_CLASS=gui. It does not introduce a
+new R4M0 kind, file extension, loader path or application class. If MODULE_ROLE
+is absent, SUBSYSTEM_ID, SUBSYSTEM_DISPLAY_NAME and all GUEST_* fields are
+forbidden. If it is present, SUBSYSTEM_ID, SUBSYSTEM_DISPLAY_NAME and at least
+one GUEST_FORMAT are required. This makes an incomplete or accidentally copied
+role declaration a hard manifest error.
+
+SUBSYSTEM_ID is the stable resolver identity, not the display name, module
+NAME, filename or installation path. Its canonical stored spelling is lower
+case ASCII. It contains 1 through 63 bytes, starts with an ASCII letter, ends
+with an ASCII letter or digit, and otherwise contains only letters, digits,
+dot, underscore or hyphen. Input is compared case-insensitively and normalized
+to lower case. Across a complete catalog, two subsystem hosts may not carry the
+same SUBSYSTEM_ID, even when their IMAGE_SCOPE values differ. The canonical
+target is:
+
+  /R4OS/SUBSYSTEMS/<SUBSYSTEM_ID>/<NAME>.R4X
+
+This corresponds to C:\R4OS\SUBSYSTEMS\<SUBSYSTEM_ID>\ on the target. Path
+comparison remains case-insensitive, but the normalized ID emitted into plans,
+metadata and inventories is lower case.
+
+SUBSYSTEM_DISPLAY_NAME is the human-readable host name shown in a handler
+choice. It is distinct from the stable SUBSYSTEM_ID and the technical module
+NAME. It contains 1 through 96 UTF-8 bytes, has no leading or trailing ASCII
+whitespace, control characters, quote or backslash. Schema-3 inventories from
+0.66.0 have no such field and are migrated with module NAME as their explicit
+fallback; every new manifest and schema-4 inventory carries the real value.
+
+GUEST_FORMAT declares an opaque, namespaced guest-format ID with the same
+grammar and normalization as SUBSYSTEM_ID. Up to 16 formats are allowed per
+host and duplicates are errors. A format ID describes a semantic input format;
+it is deliberately not an extension and multiple subsystem hosts may offer the
+same format.
+
+GUEST_EXTENSION maps a declared format to a typical lower-case extension. The
+extension starts with a dot, is 2 through 16 bytes long, ends alphanumeric and
+otherwise contains ASCII letters, digits, dot, underscore or hyphen. Input is
+normalized to lower case. It is a candidate-selection hint, never sufficient
+proof that a file has that format. GUEST_FEATURE maps a declared format to an
+optional normalized feature ID using the format-ID grammar. Up to 32 extension
+mappings and 32 feature mappings are allowed; duplicate pairs and references to
+undeclared formats are errors. Ordered repetition keeps both mappings
+extensible for later signature, probe and capability vocabularies.
+
+Two versioned GUEST_FEATURE vocabularies are understood by the common 0.66.1
+resolver:
+
+  probe.magic-v1.<hex offset>.<hex bytes>
+  probe.text-token-v1.<hex ASCII token>
+
+The first compares 1 through 16 bytes at a hexadecimal offset inside the
+bounded probe window. The second searches case-insensitively for a printable
+ASCII token at word boundaries in text-like input. Descriptors are normalized
+lower case through the normal feature-ID rule. Their `v1` meaning is frozen;
+new probe algorithms or semantics require another feature ID/version. Unknown
+feature IDs remain advertised capabilities and are ignored by this resolver,
+never reinterpreted as a match. A malformed descriptor carrying either known
+v1 prefix is a manifest/inventory error rather than an unknown feature. Probe
+input is bounded to 128 KiB. A confirmed probe only selects a candidate: the
+started subsystem host remains responsible for final validation of the
+complete guest file.
+
+2. Explicit imports and SDK profile source
+------------------------------------------
+
+R4SYS:Query:1 is explicit in every V2 R4X import list. No parser, profile or
+builder may add it silently or filter it from the declared order. The profile
+requirements come from r4os/abi_generated.zig:r4_app_profiles, the same
+generated table consumed by App.init:
+
+  console -> app profile console -> requires R4SYS
+  gui     -> app profile desktop -> requires R4SYS, R4DESK and R4DRAW
+  service -> app profile service -> requires R4SYS
+
+The validator checks that every required platform group is declared. Other
+imports are ordinary named R4M0 dependencies and are never invented. The six
+kernelimplemented platform groups use Query:1. A named Runtime-R4L is imported
+directly, for example ACMECODEC:API_V1:2; its module name needs no central
+group constant or profile bit. If the catalog knows that provider, image
+planning requires it in the selected image scope.
+
+3. Derived build and binary facts
+---------------------------------
+
+SOURCE_PROJECT, ARTIFACT and BUILD_PROFILE are derived facts and are not
+manifest keys. EXPORT and the library-contract paths are explicit only for a
+compiled Runtime-R4L; they remain derived for a standard R4X.
+META=app.class and META keys beginning with r4x. are also forbidden.
+META=module.role and META keys beginning with subsystem. are likewise
+forbidden because they are derived from the typed fields above.
+
+Derived facts for a standard R4X are:
+
+  SOURCE_PROJECT = directory containing module.R4MF
+  ARTIFACT       = zig-out/<NAME>.R4X for standalone repository builds
+  BUILD_PROFILE  = R4X_<LANGUAGE>_<App|LowLevel>_<Console|Desktop|Service>
+  OPTIMIZE       = size|speed
+  EXPORT         = R4XStart:R4XStart:1
+  CONTRACT       = R4M0:1 and R4XStart:1
+  app.class      = APP_CLASS
+
+The fixed R4M0 metadata is r4x.name, r4x.class, feature=program-module,
+r4x.start=r4xstart, r4x.entry=R4XStart, r4x.start_abi=1,
+r4x.context=R4XStartContext and a class-derived memory.profile unless META
+declares that profile explicitly.
+
+A subsystem R4X additionally carries, in declaration order:
+
+  module.role=subsystem
+  subsystem.id=<normalized SUBSYSTEM_ID>
+  subsystem.display_name=<SUBSYSTEM_DISPLAY_NAME>
+  subsystem.format=<normalized GUEST_FORMAT>             repeated
+  subsystem.extension=<format>:<normalized extension>    repeated
+  subsystem.feature=<format>:<normalized feature>        repeated
+
+The semantic R4MF plan and the SDK R4M0 packager use the same derivation.
+
+For a compiled Runtime-R4L, at least one EXPORT line is the transition marker
+from the legacy comptime path to the normal compiler path. Each line binds a
+public case-insensitive R4M0 export name to one global or weak ELF symbol and
+an export revision from 1 through 65535. Public names and ELF symbols are
+unique. The packager resolves the symbol to the final R4M0 section and offset;
+the private ELF symbol name is not stored as the public ABI name.
+
+Once EXPORT is present, all eight project-local contract fields are required
+together. Their paths may not escape the manifest directory and must use the
+declared extension. CONTRACT is the sole fachliche schema truth of that
+library, CONTRACT_BASELINE is its explicitly accepted comparison state, and
+the remaining six paths name the materialized deterministic outputs. Every
+compiled R4L exports Query revision 1 plus at least one fachliches Interface.
+Every normal build runs R4LContractGen --check against exactly these paths and
+passes module name and all non-Query EXPORT declarations as expectations. The
+check rejects name, symbol or revision drift between manifest and local
+contract and never writes. Intentional materialization uses the generator
+separately; an accepted ABI change additionally requires its explicit
+baseline-update flag.
+
+The R4L source is compiled as Zig or C with the normal freestanding R4OS
+userland target and packed from its ELF. Zig receives IMPLEMENTATION_ZIG as
+the `r4l_contract` module; C receives the directory of BINDING_C as an include
+root. IMPORT, TARGET, IMAGE_SCOPE, VERSION and META keep their ordinary R4MF
+meaning. R4Ls without EXPORT remain valid only as the temporary explicit
+legacy path during migration and are skipped by the compiled R4L catalog.
+
+4. Image scope
+--------------
+
+slim marks the required base system, full an additional full-image module,
+test a test-only module, and none an automatically uninstalled module. The
+historical normal and both values are invalid. Scope does not alter build
+semantics, runtime dependencies or later installability. Full modules do not
+enter test images implicitly. Targets are compared case-insensitively across
+the complete catalog. A target collision is an error before building or
+writing an image. If an IMPORT group has a known R4L component in the catalog,
+that provider must be selected for the same image or planning fails.
+
+ModuleCatalog emits the full source catalog to an explicitly supplied output.
+Catalog schema 4 exposes module_role, subsystem_id, subsystem_display_name,
+guest_formats, guest_extensions and guest_features for every entry (null and
+empty for normal modules). The Distribution owns the shipped mutable starting
+inventory (schema 4). It carries the required profile field slim|full|test and
+only the R4X, R4L, R4D and R4P identities selected by the exact image plan. It
+carries the same six role/format fields so updates do not erase resolver input.
+The runtime updater still accepts historical schema-2 and schema-3 inventories
+and rewrites them as schema 4. Missing and unknown profiles are errors, never
+an implicit default.
+
+Installed subsystem catalog and resolver (since 0.66.1)
+-------------------------------------------------------
+
+`C:\R4OS\CONFIG\MODULES.JSON` is also the sole persistent installed-subsystem
+catalog. The SDK projects only its validated subsystem entries into a compact
+view sorted by SUBSYSTEM_ID. A projected entry contains ID, host target,
+display name, module name/version, format IDs, extension hints and feature
+descriptors. There is deliberately no second mutable association database in
+the SDK: install, update and exact removal change the inventory, and the next
+projection therefore sees exactly that state. A malformed/truncated inventory,
+duplicate ID, invalid mapping or missing host is an error, not an empty
+successful catalog.
+
+The allocation-free userland resolver accepts that catalog, a path, at most
+128 KiB of probe data and optional user/default association tables. Its strict
+precedence is:
+
+  1. explicit user association for the extension;
+  2. one or more confirmed versioned probes;
+  3. configured default association for the extension;
+  4. declared extension candidates not disproved by a complete probe window.
+
+Zero candidates are `unknown`, one is `selected`, and multiple candidates are
+`ambiguous` in SUBSYSTEM_ID/format order. Repository and filesystem order never
+break a tie. Every returned candidate says that host validation is still
+required. Stale or duplicate associations are explicit errors. The resolver
+contains no kernel path and does not start a host; launch integration belongs
+to the file-association consumer. The consumer resolves a selected stable ID
+to the current installed host target and uses the ordinary Desktop-hosted R4X
+launch path. The argument payload follows `ABI/SubsystemLaunch.txt`; opening
+two guest files means two independent R4X launches, not a reused host process.
+
+5. Discovery and current-only validation
+----------------------------------------
+
+ModuleCatalog recursively discovers module.R4MF, sorts by KIND, NAME and path,
+and rejects case-insensitive identity, image-target and SUBSYSTEM_ID collisions
+before profile selection. Sharing a GUEST_FORMAT is explicitly allowed. Its JSON is
+the machine-readable catalog/plan interface. The SDK compiler catalog uses the
+same parser and builds every Runtime-R4L carrying EXPORT without a concrete
+library-name branch. The contract-plan action renders the environment-neutral
+R4MF_PLAN=1 view shared byte-for-byte with R4BUILD PLAN. Repository and
+inside-R4OS artifact directories are deliberately absent from that comparison
+view.
+
+The parser accepts only the contract declared in this document. Unknown
+versions, fields or kind-specific combinations are errors. All in-tree
+manifests are catalogued through this one parser; build and image owners do
+not implement a second reader.
+
+R4CODE creates and opens module.R4MF directly. R4BUILD VALIDATE, PLAN and BUILD
+use the same runtime parser. The inside-R4OS compiler reports a capability
+error for unsupported languages or profiles instead of selecting another
+project path. Historical R4CP is read only by the explicit R4BUILD CONVERT
+one-shot command; normal R4CODE and R4BUILD operation does not accept it as a
+project contract.

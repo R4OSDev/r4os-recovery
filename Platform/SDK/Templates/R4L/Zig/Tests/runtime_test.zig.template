@@ -1,0 +1,27 @@
+const std = @import("std");
+const project = @import("project");
+const binding = @import("binding");
+const r4os = @import("r4os");
+
+const module_name: [:0]const u8 = "{ProjectName}";
+const export_name: [:0]const u8 = "API_V1";
+
+test "generated binding calls the independent provider table" {
+    var imports = [_]r4os.abi.R4XStartImport{.{
+        .group_id = 0,
+        .min_version = 1,
+        .resolved_version = 1,
+        .flags = 0,
+        .module_name = @intFromPtr(module_name.ptr),
+        .symbol_name = @intFromPtr(export_name.ptr),
+        .table = @intFromPtr(&project.{ProjectNameLower}_api_v1),
+    }};
+    var context = r4os.abi.R4XStartContext{
+        .flags = r4os.abi.r4xstart_flag_imports_valid,
+        .imports = @intFromPtr(&imports),
+        .import_count = imports.len,
+    };
+
+    const client = try binding.ApiV1Client.init(&context);
+    try std.testing.expectEqual(@as(i64, 42), client.add(20, 22));
+}

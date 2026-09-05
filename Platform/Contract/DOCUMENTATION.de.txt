@@ -1,0 +1,107 @@
+﻿R4OS Plattform-Contract
+=======================
+
+Dieses Repository ist die zentrale API-/ABI-Wahrheit der R4OS-Plattform.
+Es beschreibt den gemeinsamen R4M0-, R4XStart- und R4L-Mechanismus sowie die
+sechs vom Kernel bereitgestellten Plattformgruppen.
+
+Wahrheit und Ausgaben
+---------------------
+
+- `API/ApiContract.json` ist das kanonische, sprachneutrale Schema.
+- `API/ApiContract.baseline.json` ist der kontrollierte
+  Append-only-Vergleichsstand.
+- `ABI/` enthaelt die lesbaren Container-, Start- und Runtime-R4L-Vertraege.
+- `Module/R4MFv2.txt` beschreibt das gemeinsame Modulmanifest.
+- `Generated/` enthaelt die daraus erzeugten Zig-, Kernel- und C-Pakete,
+  Conformance-Fixtures, Referenzdokumente und das API-Inventar.
+- Die exportierte Zig-ABI verbindet die schemagenerierten Definitionen mit
+  den gemeinsamen technischen Plattformtypen aus dem eingefrorenen
+  Referenzstand.
+- `Tools/ApiContractGen/` besitzt den Generator und seine Negativtests.
+
+Nicht enthalten sind Kernelimplementierungen, handgeschriebene SDK-Fassaden,
+Module oder fachliche Vertraege konkreter Runtime-R4Ls. Eine benannte
+Runtime-R4L besitzt Implementierung, Contract, Baseline und Bindings
+vollstaendig in ihrer eigenen Library-Einheit.
+
+Build und Pruefung
+------------------
+
+Voraussetzung ist Zig 0.16.0 oder kompatibel.
+
+    zig build
+    zig build check
+    zig build test
+
+Ein normaler Build validiert und vergleicht nur; er schreibt keine
+versionierte Datei. Nach einer absichtlichen Schemaaenderung materialisiert
+`zig build write` die generierten Ausgaben. Ein bestaetigter neuer
+Baseline-Stand wird ausschliesslich explizit erzeugt:
+
+    zig build run -- --write --baseline
+
+Verbraucher beziehen die passenden Dateien aus `Generated/` als explizite
+Contract-Version. Sie erzeugen daraus keine zweite fachliche Wahrheit.
+Zig-Builds beziehen das exportierte Modul `r4os_contract` und dessen
+Namespace `abi`; fuer C-Builds exportiert das Paket den Include-Pfad
+`r4os_contract_c_include`.
+
+Der technische Zig-Fassadenteil fuehrt seit 0.69.28 den append-only
+`SynthEngine.render_pcm`-Callback. DriverApi v18 haengt den synchronen
+`protocol_dispatch` an. DriverApi v19 ergaenzt ownergebundene Pin-, Segment-,
+Sync-, Unmap- und Unpin-Operationen fuer vorhandene residente DMA-Puffer;
+`StorageBackend` v2 fuegt nonblocking Submit sowie advisory Cancel und
+quieszenzbeweisenden Reset an. Alte Tabellen- und Deskriptorpraefixe bleiben
+unveraendert. DriverApi v20 haengt eine versionierte Audio-Refill-Anforderung
+mit absoluter Tickdeadline, einem Budget von hoechstens vier Ticks und einem
+stabilen Geraeteschluessel an. Sie laeuft EDF-sortiert auf dem einzelnen
+`r4d-audio`-Short-Completion-Worker und bleibt von der normalen IRQ-/Task-FIFO
+getrennt. Der vollstaendige Besitzer-, Bounce-, Deadline-, Completion-,
+Flush- und Unloadvertrag steht in `ABI/R4DDriver.txt`.
+
+DriverApi v21 haengt die ownergebundene Aktivierung des kanonischen
+USB-Hostbackends an. XHCI.R4D aktiviert damit genau den kernelresidenten
+PCI-/MMIO-/DMA-Pfad und erzeugt keinen zweiten Controllerbesitz.
+UsbHostController v2 macht Port-, Control-, Bulk-, Interrupt-, Reset- und
+Poll/Completion-Callbacks produktiv dispatchbar und weist Capabilityflags,
+Queue-Tiefe, maximale Transfergroesse, aktive Transfers, Completions, IRQs,
+Pollfallbacks und Abbrueche aus. Ein fehlgeschlagener Controllerhalt vetoisiert
+den Unload.
+
+DriverApi v22 haengt den ownergebundenen synchronen Display-Blitcallback an;
+Ziel, Fence, Statistik und vollstaendiger CPU-Fallback bleiben Kernelbesitz.
+DriverApi v23 ergaenzt `net_schedule_rx` als einzigen IRQ-sicheren
+Netzwerkaufruf. Der Treiber quittiert und klassifiziert im IRQ nur begrenzt,
+waehrend Framekopie, eine feste 64-Slot-Besitzqueue und Protokollbatches von
+hoechstens 32 Frames dem ereignisgesteuerten `net-rx`-Task gehoeren.
+`net_receive_frame` meldet Queue-Backpressure explizit; der Treiber behaelt
+dann seinen unveraenderten Deskriptor beziehungsweise Ringkopf. Der genaue
+Besitz-, Fehler-, Wakeup- und Teardownvertrag steht in `ABI/R4DDriver.txt`.
+
+DriverApi v24 fuegt `net_backend_query` und `net_receive_packet` an;
+NetBackend v2 haengt Capabilityangebot, Pflichtmenge, Queue-/Segmentgrenzen,
+Besitzmodi, Moderation und einen optionalen Paket-TX-Callback an den v1-
+Praefix. Unbekannte oder abgelehnte optionale Metadaten verwenden immer die
+mitgelieferten kanonischen Flat-Bytes, waehrend eine abgelehnte Pflicht-
+faehigkeit die Registrierung beendet. Der BSP-Kernel waehlt eine RX-/TX-
+Queue und als ersten produktiven Verbraucher nur validierte RX-TCP-/UDP-
+Pruefsummen. IPv4 und alle nicht ausgehandelten Pfade bleiben software-
+geprueft; Details stehen in `ABI/R4DDriver.txt`.
+
+Der bestehende R4AUDIO-Aufruf `midi_send` verwendet Status null fuer PCM-
+Renderanforderungen und transportiert die Framezahl little-endian in
+`data1`/`data2`.
+
+`ProgramPerformanceSummary` v12 erweitert den v11-Praefix append-only um die
+generationsgebundenen NTFS-Metadatencaches. Sichtbar sind feste Pro-Volume-
+Budgets und Belegungen fuer dekodierte Records, Attribute/Runlists,
+INDX-Bloecke sowie positive und negative Pfade, Mount-/Inhaltsgenerationen,
+Negativlaufzeit, Treffer, Fehlschlaege, Stores, Tree-Walks, Invalidierungen
+und begrenzte Reclaimarbeit. v11 beschreibt weiterhin die begrenzte
+Pagecache-Policy. Ein v11-Verbraucher erhaelt exakt den 5704-Byte-Praefix;
+v10 bleibt bei 5552, v9 bei 5512 und v8 bei 5400 Bytes. v12 umfasst 6000
+Bytes.
+
+Die Herkunft des uebernommenen 0.64.9-Stands und die repo-neutrale Anpassung
+sind in `PROVENANCE.txt` festgehalten.

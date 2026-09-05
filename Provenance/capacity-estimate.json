@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "stage": "0.76.1 early estimate; final 0.76.23 measurement remains required",
+  "unitBytes": 1048576,
+  "partitionBytes": 536870912,
+  "measured": {
+    "runtimeModules": 4750589,
+    "legalIncludingCompleteSourceArchives": 19949488,
+    "normalKernelElfProxy": 26425624,
+    "representativeReleaseZips": [
+      {
+        "path": "Artifacts/Distribution/Releases/0.69.67/R4OS-0.69.67-Full-x86_64.zip",
+        "bytes": 9128387,
+        "sha256": "79b3ebfd011c2a2c4b15b66613d75e7e5c108028ac698cba0f2a8936751b80bf"
+      },
+      {
+        "path": "Artifacts/Distribution/Releases/0.69.67/R4OS-0.69.67-Slim-x86_64.zip",
+        "bytes": 7098033,
+        "sha256": "58da664936061890e200f0ea2aba7c337d42b20c2270184a7bd36be1cf0e2409"
+      },
+      {
+        "path": "Artifacts/Distribution/Releases/0.70.14/R4OS-0.70.14-Full-x86_64.zip",
+        "bytes": 9336572,
+        "sha256": "6dfd77d1c0dd5bb7cc513060c94d31de5984185a3b5f57500ca7f58525079f7b"
+      },
+      {
+        "path": "Artifacts/Distribution/Releases/0.70.14/R4OS-0.70.14-Slim-x86_64.zip",
+        "bytes": 7103036,
+        "sha256": "eda56de39604b94a2c48b9ad0f379066ebb14ca6a1aaa0fb99161201e05d4923"
+      },
+      {
+        "path": "Artifacts/Distribution/Releases/0.73.25/R4OS-0.73.25-Full-x86_64.zip",
+        "bytes": 9801249,
+        "sha256": "27791eb2f97396fc1bd4f453aa9ff4e37370cc9c4a4056685c3c4edea1bcb98a"
+      },
+      {
+        "path": "Artifacts/Distribution/Releases/0.73.25/R4OS-0.73.25-Slim-x86_64.zip",
+        "bytes": 7216416,
+        "sha256": "e66d0c71c176926a7038decf435d71014f5806e5f9775dee0f0e5abf42276102"
+      }
+    ]
+  },
+  "assumptions": {
+    "runtimeImagePerSlotBytes": 67108864,
+    "kernelPerSlotBytes": 26425624,
+    "legalPerSlotBytes": 19949488,
+    "oldZipBytes": 9801249,
+    "newPartBytes": 9801249,
+    "filesystemAndWorkAllowanceBytes": 16777216
+  },
+  "projection": {
+    "totalBytes": 263347666,
+    "remainingBytes": 273523246,
+    "formula": "2 * (kernel proxy + assumed runtime.img + current Legal) + old ZIP + new PART + allowance"
+  },
+  "unmeasured": [
+    "Real recovery.elf and complete FAT32 runtime.img including background and recovery tools",
+    "New five-partition R4OS release ZIP sizes and downloaded replacement",
+    "FAT allocation overhead, directory/update staging peak",
+    "RAM peak including entire original ZIP and unpacked sources during own-disk reinstall",
+    "Actual minimum FAT32/NTFS geometry and DATA remainder"
+  ],
+  "decision": "Keep provisional 512 MB. The projection is not a release-space gate or a proven upper bound; use real artifacts in 0.76.23."
+}

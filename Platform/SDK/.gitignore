@@ -1,0 +1,15 @@
+/.zig-cache/
+/zig-out/
+/zig-pkg/
+**/.zig-cache/
+**/zig-out/
+**/zig-pkg/
+
+*.exe
+!Tests/Fixture/SubsystemResolver/*.exe
+*.obj
+*.o
+*.pdb
+
+.DS_Store
+Thumbs.db

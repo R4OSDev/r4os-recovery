@@ -1,0 +1,7 @@
+﻿# Recovery service plan; SERVMAN owns registration and autostart.
+SERVICE;name=DNSSVC;path=C:\R4OS\SERVICES\DNSSVC.R4X;args=/RUN;start=auto;enabled=yes;description=DNS resolver service
+SERVICE;name=DHCPSVC;path=C:\R4OS\SERVICES\DHCPSVC.R4X;args=/RUN;start=auto;enabled=yes;description=DHCP lease service
+SERVICE;name=TCPSVC;path=C:\R4OS\SERVICES\TCPSVC.R4X;args=/RUN;start=auto;enabled=yes;description=TCP connection service
+SERVICE;name=UDPSVC;path=C:\R4OS\SERVICES\UDPSVC.R4X;args=/RUN;start=auto;enabled=yes;description=UDP socket broker service
+SERVICE;name=FTPSVC;path=C:\R4OS\SERVICES\FTPSVC.R4X;args=/RUN;start=auto;enabled=yes;description=Recovery FTP server
+SERVICE;name=SSHD;path=C:\R4OS\SERVICES\SSHD.R4X;args=/RUN;start=auto;enabled=yes;description=Recovery SSH server

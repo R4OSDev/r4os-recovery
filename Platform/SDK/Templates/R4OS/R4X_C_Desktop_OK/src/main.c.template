@@ -1,0 +1,43 @@
+#include <r4os/r4os.h>
+
+R4OS_TEXT(window_title, "{ProjectName}");
+R4OS_TEXT(ok_label, "OK");
+R4OS_TEXT(message, "HELLO from {ProjectName}");
+
+static int32_t draw_window(R4Window *window)
+{
+    R4PaintContext paint;
+    if (!r4_window_begin_paint(window, &paint)) return R4OS_ERR_NO_FN;
+    R4Canvas canvas = r4_paint_canvas(&paint);
+    r4_canvas_clear(canvas, 0x00C0C0C0);
+    r4_canvas_rect(canvas, 44, 36, 172, 72, 0x00808080);
+    r4_canvas_rect(canvas, 45, 37, 170, 70, 0x00FFFFFF);
+    r4_canvas_rect(canvas, 84, 78, 72, 24, 0x00C0C0C0);
+    r4_canvas_text(canvas, 58, 50, message, 0x000000, 0x00FFFFFF);
+    r4_canvas_text(canvas, 112, 86, ok_label, 0x000000, 0x00C0C0C0);
+    return r4_paint_present(&paint);
+}
+
+int32_t r4_app_main(R4App *app)
+{
+    R4Timer timers[1] = {{0}};
+    R4Window window;
+    if (!r4_window_open(app, timers, 1, &window)) return R4OS_ERR_NO_GROUP;
+    r4_window_set_title(&window, window_title);
+    r4_window_set_minimum_size(&window, 260, 140);
+    if (draw_window(&window) < 0) return R4OS_ERR_NO_FN;
+
+    for (;;) {
+        R4MessageNext next = r4_window_wait_message(&window, r4_timeout_forever());
+        if (next.state == R4_MESSAGE_NEXT_FAILED) return next.raw_code;
+        if (next.state != R4_MESSAGE_NEXT_MESSAGE) continue;
+        if (next.message.kind == R4_MESSAGE_CLOSE) return 0;
+        if (next.message.kind == R4_MESSAGE_RESIZE) draw_window(&window);
+        if (next.message.kind == R4_MESSAGE_MOUSE &&
+            next.message.value.mouse.action == R4_MOUSE_UP &&
+            next.message.value.mouse.x >= 84 && next.message.value.mouse.x < 156 &&
+            next.message.value.mouse.y >= 78 && next.message.value.mouse.y < 102) {
+            return 0;
+        }
+    }
+}

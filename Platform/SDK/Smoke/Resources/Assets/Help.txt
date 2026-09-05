@@ -1,0 +1,7 @@
+﻿RSRCFIX - resource area smoke fixture
+
+This module carries two icons, this helpfile and one named data file
+in its R4M0 resource area. It exists so the headless smoke can prove
+that embedded resources survive the build byte for byte.
+
+Usage: RSRCFIX.R4X takes no arguments and prints a single marker.

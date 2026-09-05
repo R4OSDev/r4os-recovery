@@ -1,0 +1,33 @@
+﻿R4OS SDK - Herkunft
+====================
+
+Kanonischer Quellstand der Uebernahme:
+
+    Repository: R4mbo/R4OS
+    Commit:     259cbfac
+    Archivkopf: 2c0ca047
+
+Ausgangseinheiten:
+
+    Code/System/SDK/
+    Code/BuildTools/ModuleCatalog/
+
+Der SDK-Teilbaum wurde aus dem fachlichen Commit uebernommen. Absichtliche
+Grenzaenderungen:
+
+- `Code/System/SDK/Contract` bleibt ausgeschlossen; er ist als
+  `R4OSDev/r4os-contract` eigenstaendig.
+- Die vollstaendige gemeinsame Zig-ABI aus `r4os/abi.zig` liegt nun im
+  Contract. Das SDK importiert sie ueber das Paket `r4os_contract`.
+- Der generierte C-Header `abi_generated.h` kommt direkt aus dem Contract;
+  im SDK bleibt nur die handgeschriebene C-Fassade `abi.h`.
+- `ModuleCatalog` liegt als generisches SDK-Hosttool unter `Tools/` und wird
+  durch den SDK-Rootbuild gebaut und getestet.
+- Caches, `zig-out` und andere Buildausgaben sind ausgeschlossen.
+
+Der Contract ist im Paketmanifest durch Identitaet, Version und Inhaltshash
+festgelegt. Sein tatsaechlicher Checkout wird durch `Settings.R4S` gemappt;
+`../Contract` ist nur die portable Workspace-Voreinstellung. Die Buildstarter
+uebergeben den gemappten Checkout als lokalen Zig-Fork. Dadurch sind auch
+andere relative oder absolute Hostpfade moeglich, ohne eine
+Zugangsdatenabhaengigkeit in das SDK einzubauen.

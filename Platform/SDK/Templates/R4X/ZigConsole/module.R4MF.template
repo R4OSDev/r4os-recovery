@@ -1,0 +1,12 @@
+# R4OS app project manifest (erzeugt von New-R4XProject.ps1).
+R4OS_MODULE_MANIFEST=2
+KIND=R4X
+NAME={ProjectName}
+VERSION=0.1.0
+LANGUAGE=Zig
+SOURCE=src/main.zig
+ENTRY_MODE=app
+APP_CLASS=console
+TARGET={Target}
+IMAGE_SCOPE={ImageScope}
+{ImportLines}

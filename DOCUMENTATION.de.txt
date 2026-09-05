@@ -1,0 +1,108 @@
+﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
+=================================================
+
+Stand 0.76.1
+------------
+
+Das Monorepo besitzt jetzt einen expliziten Quell-/Binaer-Ausgangsstand.
+Ein bootbares Recovery ist erst mit den folgenden Unterversionen vorhanden.
+Der initiale Kernelbaum ist die unveraenderte Quellkopie des normalen
+Kernels; die separate Bootfolge wird in 0.76.2 daraus entwickelt.
+
+Pruefen: Build.bat beziehungsweise ./Build.sh, optional -Mode Verify.
+Beide duennen Starter rufen dieselbe Build.ps1 mit PowerShell 7 auf.
+Der Aufruf funktioniert aus jedem Arbeitsverzeichnis und liest nur lokale
+Recovery-Eingaben. Ergebnis: Artifacts/Verification/inventory.json.
+Es werden weder normale Workspace-Module neu gebaut noch Eingaben aus dem
+Workspace kopiert oder ueber das Netz nachgeladen. -Mode Kernel meldet im
+Stand 0.76.1 ausdruecklich, dass noch kein ausfuehrbarer Build angeschlossen
+ist; es wird kein normales r4os.elf als Recovery ausgegeben.
+
+Uebernahme
+----------
+
+Provenance/import-plan.json benennt 41 explizite Quellcommits, die verwendete
+Zig-Version und 37 regulaere R4M0-Module. Tools/Import.ps1 ist der getrennte,
+ausdrueckliche Einmalimport. Er prueft Revisionen und Build-Eingaben, baut
+ueber die Besitzerstarter, prueft Container mit dem kanonischen R4XBuilder,
+liest ihre tatsaechlichen Imports/Exports und archiviert die Originalquellen.
+Dokumentationskorrekturen im Workspace koennen vorhanden sein; Archive
+enthalten trotzdem exakt HEAD, und veraenderte Bauquellen werden abgewiesen.
+Ein teilweise fehlgeschlagener Import darf nur bytegleiche Quellkopien
+wiederverwenden und ueberschreibt keine bearbeitete Recovery-Kernelkopie.
+
+Kernel/, Platform/Contract/ und Platform/SDK/ sind lokale Quellkopien.
+Legal/Sources/ enthaelt die zugehoerigen Originalquellen als Git-Archive,
+Legal/Notices/ die mitgebrachten Lizenzhinweise, Legal/Manifests/ die
+originalen Modulmanifeste. Herkunft, Commits, SHA-256, Modulversionen,
+Imports, Exports, Ressourcen und Protokollrollen stehen in
+Provenance/inputs.lock.json. Keine automatischen Updateverweise im Build.
+Geerbte Standalone-URLs in den eingefrorenen Zig-Paketmetadaten sind nur
+Herkunft; Recovery-Builds muessen ihre eigenen lokalen Forks benutzen.
+
+Die Pruefung vergleicht alle Dateien in Kernel, Platform, Runtime und Legal
+mit dem festgehaltenen Bestand und lehnt auch unbekannte Eingaben ab.
+Sie prueft binaere Import-/Exporttabellen, manifeste Modulidentitaet,
+Protokollabhaengigkeiten, Quellenarchive und den eingebetteten Contract.
+Der Bytevergleich funktioniert hostuebergreifend ohne Git-Zeilenendumbau.
+Eine bewusste lokale Weiterentwicklung wird mit Begruendung im Lock
+fortgeschrieben; Originalhash und unveraenderliches Quellenarchiv bleiben
+als Herkunft erhalten. Der Build selbst schreibt diese Hashes niemals neu.
+
+Laufzeitbedarf und Grenzen
+-------------------------
+
+Storage: AHCI, ATAPIO, NVME, USBMSC und XHCI. XHCI.R4D aktiviert den Host; seine
+Controllerimplementierung und USB-MSC-I/O leben weiterhin im Kernel.
+USB: USBHID, HIDREPORT, USBBOT und USBSCSI. Die gemeinsame Keyboardqueue
+und PS/2-Eingabe bleiben Kernelgrundlagen. Es wird keine Maus initialisiert.
+Netz: VIRTNET, RTL8139 und RTL8168; NETETH, NETARP, NETIPV4, NETICMP,
+NETUDP, NETTCP, NETDNS und NETDHCP sowie R4HTTP, R4TLS und JSON.
+Dienste: DHCPSVC, DNSSVC, TCPSVC, UDPSVC, SSHD und FTPSVC.
+Konsole: TERMINAL, SERVMAN, HELP, IPCONFIG, SYSINFO, HTTPGET und NETCAT.
+Runtime-Library: R4STD mit DATE_V1/TIME_V1 fuer TERMINAL.
+Zertifikate, Tastatur-/Zeitkonfiguration und eingebettete Modulressourcen
+werden ebenfalls festgehalten. Weitere Recovery-eigene Laufzeitdateien
+kommen mit ihren jeweiligen Implementierungsschritten hinzu.
+
+Die 37 Binaerdateien haben 53 explizite Imports. Die benoetigten Plattform-
+Provider sind R4SYS, R4DESK, R4DEV und R4NET jeweils Query:1. Der vollstaendige
+eingefrorene Contract bleibt erhalten; seine Tabellen werden nicht aufgrund
+eines Importnamens verkleinert. Ein Query-Import beschreibt keine exakte
+Liste ausgefuehrter Slots. Fuer die Reduktion gelten folgende Verbraucher:
+
+R4SYS: Console/STDIO, Datei- und Ressourcen-I/O, Allocator/VM, Zeit,
+Umgebung/Registry, Programm-/Threadhandles, Services und Endpoints/Waits.
+R4DESK: TERMINAL/SSHD/NETCAT benutzen ueber die SDK-Fassaden Programmstart,
+Consolehost, Eingabe, Metriken, State, Revision und Ausgabetranskript.
+SSHD benoetigt zudem unabhaengige Consoleinstanzen und Workerthreads.
+R4DEV: Treiber-/Protokollregistrierung, Block-/Geraetegrundlagen,
+USB-Dispatcher, Kernel-/Inventarausgabe und Diagnosefunktionen.
+R4NET: NIC/TCP/UDP/DNS/DHCP, Socket-/Servicepfade und Protokolldispatch;
+HTTP/TLS bleiben bei ihren existierenden SDK-/Protokollbesitzern.
+
+R4DESK als Plattformname ist kein Auftrag, R4DESK.R4X zu installieren.
+Es sind kein Desktopprogramm, keine GUI-App, keine Audio-/Window-/RDP-
+Dienste und keine Emulator-/Browsermodule im Runtime-Bestand enthalten.
+Die Quellkopien behalten zunaechst auch unbenutzte SDK-/Kerneldateien, um
+den Ausgangsstand unveraendert nachvollziehen zu koennen. Welche Kernelteile
+tatsaechlich im getrennten Artefakt benoetigt werden, wird beim Build und
+der Gastabnahme nachgewiesen, nicht durch eine reine Textsuche behauptet.
+
+Die gegenwaertige Pruefung belegt statische Kompatibilitaet und Integritaet.
+Sie behauptet noch keine gemeinsame Gast-Laufzeitabnahme der kopierten
+Module. BIOS-/UEFI-RAM-Boot, spaete Modul-/Ressourcenstarts, USB, Netzwerk
+und SSH/FTP erhalten ihre vorgesehenen begrenzten SMP4-Nachweise.
+
+Vertraege und Platzbedarf
+------------------------
+
+RecoveryTools/Contracts.de.txt spezifiziert Bootquellenidentitaet,
+BOOT-Installationsbeschreibung, GPT-Rollen, Release-/Kernelversionen,
+Recovery-Manifest, state.r4s und die fachlichen Besitzergrenzen.
+Provenance/capacity-estimate.json haelt die erste gemessene Bestandsgroesse,
+repraesentative vorhandene R4OS-Releases und ausdrueckliche Annahmen fest.
+Die 512-MB-RECOVERY-Groesse bleibt vorlaeufig. Die verbindliche Abnahme mit
+beiden echten Recovery-Staenden, altem/neuem Release-ZIP, FAT-Verwaltung und
+Arbeitsspeicher folgt in 0.76.23. Keine Groessenaenderung allein aus einer
+Projektion und keine Nutzung von DATA fuer Quellen-/Arbeitsablage.

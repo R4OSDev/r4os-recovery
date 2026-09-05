@@ -1,0 +1,80 @@
+﻿R4OS Plattformgruppen
+=====================
+
+Grundmodell
+-----------
+
+Ein R4X erhaelt beim Start ein Bundle der explizit importierten
+Plattformschnittstellen. R4SYS ist die Basis; weitere Gruppen werden in
+`module.R4MF` als `<NAME>:Query:1` angefordert. Gruppen-ID, Tabellenlayout,
+Slots und Signaturen stehen ausschliesslich in `ApiContract.json`.
+
+Alle sechs Gruppen sind eingebaute Kernel-Provider. Ihre oeffentlichen
+Query-Identitaeten bleiben normale Resolverziele, werden aber weder als R4L
+gebaut noch als Datei im Image installiert. Ihre Implementierung und Version
+sind an Contract und Kernelartefakt gebunden.
+
+R4SYS
+-----
+
+Systembasis fuer Console/STDIO, Tasks und Threads, Zeit, Dateien und
+Verzeichnisse, Programme, Services, virtuelle Speicherregionen, asynchrones
+I/O, Registry und Bootlog.
+
+R4DESK
+------
+
+Desktop- und Fenstersystem fuer Eingabe, Console-Host, Fenster, Controls,
+Menues, Dialoge, Clipboard sowie Desktop- und Remote-Frames.
+
+R4DRAW
+------
+
+Zeichen- und Rasterfunktionen fuer Pixel, Linien, Rechtecke, Text, Fonts,
+Oberflaechen und Present.
+
+R4NET
+-----
+
+Netzwerkfunktionen fuer Adapterstatus, UDP/TCP, DNS, DHCP, ICMP,
+Netzwerkdienste, Diagnose und Serial-Link-Transport.
+
+R4AUDIO
+-------
+
+Audiofunktionen fuer PCM-Ausgabe, MIDI, SID, OPL3 sowie Synth- und
+Audiogeraetdiagnose.
+
+R4DEV
+-----
+
+Device- und Diagnosefunktionen fuer Hardwareinventar, Treiber,
+Protokollstatus, Bootinformationen und entwicklernahe Systemdiagnose.
+
+Die vollstaendigen generierten Tabellen stehen unter
+`Generated/Docs/API/<GRUPPE>.md`.
+
+Benannte Runtime-R4Ls
+---------------------
+
+Eine unabhaengige Runtime-R4L besitzt keine zentrale Gruppen-ID und keine
+Kernel-Gruppentabelle. Implementierung, fachlicher Contract, Baseline,
+Funktionsslots, Fehlercodes, Bindings und Tests liegen gemeinsam in ihrer
+Library-Einheit. Anwendungen importieren eine solche Tabelle direkt als
+`<MODUL>:<INTERFACE_VMAJOR>:<MINDESTREVISION>`.
+
+Der zentrale Contract definiert dafuer nur R4M0, R4LQuery und den generischen
+Interfaceheader in `ABI/R4LInterface.txt`. Eine neue Runtime-R4L erfordert
+keine Aenderung an diesem Gruppenverzeichnis.
+
+Gemeinsame Regeln
+-----------------
+
+- Plattformgruppen sind R4SYS, R4DESK, R4DRAW, R4NET, R4AUDIO und R4DEV.
+- Vorhandene Felder und Payloads bleiben binaer stabil.
+- Erweiterungen erfolgen append-only.
+- Nutzbarkeit wird ueber vorhandene Feldgroesse und einen Zeiger ungleich 0
+  geprueft.
+- Nicht erreichbare Plattformgruppen beziehungsweise Felder melden
+  `err_no_group` (-9001) oder `err_no_fn` (-9002).
+- Fachliche Runtime-R4L-Fehler bleiben Eigentum der jeweiligen Library.

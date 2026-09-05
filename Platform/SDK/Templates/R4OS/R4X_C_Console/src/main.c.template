@@ -1,0 +1,9 @@
+#include <r4os/r4os.h>
+
+R4OS_TEXT(hello_message, "HELLO from {ProjectName} via R4OS SDK");
+
+int32_t r4_app_main(R4App *app)
+{
+    R4Console console = r4_app_console(app);
+    return r4_console_line(&console, (const char *)hello_message);
+}

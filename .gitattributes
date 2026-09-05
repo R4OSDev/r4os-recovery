@@ -1,0 +1,9 @@
+# Frozen binary and source inputs retain their recorded bytes on either host.
+Kernel/** -text
+Platform/** -text
+Runtime/** -text
+Legal/** -text
+Provenance/** -text
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf

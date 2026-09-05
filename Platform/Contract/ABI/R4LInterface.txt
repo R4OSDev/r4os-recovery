@@ -1,0 +1,361 @@
+﻿R4L Interface ABI v1
+====================
+
+Status
+------
+
+Dieser Vertrag beschreibt den produktiven Stand echter, benannter
+Runtime-R4L-Interfaces. R4STD, R4IMG und R4FONT verwenden diesen Vertrag und
+besitzen keine zentrale Platform-API-Gruppe.
+
+Zweck und Grenze
+----------------
+
+Eine optionale Runtime-R4L besitzt ihre Implementierung und ihren fachlichen
+API-/ABI-Vertrag selbst. Der Plattformvertrag kennt nur:
+
+- den R4M0-Container und dessen generische Imports, Exports und Relocations;
+- den R4LQuery:1-Prefix fuer Identitaet und technische Metadaten;
+- den R4XStartImport-Transport fuer Modulname, Exportname, Mindestversion,
+  aufgeloeste Version und Tabellenpointer;
+- den in dieser Datei definierten gemeinsamen Interface-Header;
+- generische Validierungs- und Binding-Helfer.
+
+Der Kernel und der zentrale Plattform-Contract interpretieren keine
+fachlichen Slots einer optionalen Library. Sie vergeben fuer optionale
+Libraries keine Gruppen-ID und fuehren keine Liste ihrer Namen, Interfaces,
+Funktionen oder Fehlercodes.
+
+Die kernelimplementierten Platform APIs R4SYS, R4DESK, R4DRAW, R4NET,
+R4AUDIO und R4DEV bleiben davon getrennt. Sie sind eingebaute Provider und
+behalten ihre zentralen Gruppen-IDs, ihre Query-Semantik und ihre
+Plattformtabellen. Fuer sie existieren keine R4L-Dateien.
+
+Namen und Identitaet
+--------------------
+
+Modulname:
+
+- 1 bis 31 ASCII-Bytes;
+- Zeichen A-Z, 0-9, Unterstrich und Bindestrich; die kanonische Schreibweise
+  ist Grossschrift;
+- die technische Identitaet ist case-insensitive;
+- ein doppelter Modulname innerhalb einer geladenen Generation ist ein harter
+  Ladefehler fuer die kollidierenden Provider;
+- der Namensanfang R4 ist fuer vom R4OS-Projekt vergebene Komponenten
+  reserviert. Externe Anbieter verwenden einen eindeutigen Herstellerpraefix.
+
+Exportname:
+
+- 1 bis 31 ASCII-Bytes;
+- beginnt mit A-Z, danach sind A-Z, 0-9 und Unterstrich erlaubt;
+- die technische Identitaet ist case-insensitive, die kanonische Schreibweise
+  ist Grossschrift;
+- doppelte Exportnamen innerhalb eines Moduls sind ein harter Ladefehler;
+- das primaere Interface eines ABI-Majors heisst API_V<MAJOR>, zum Beispiel
+  API_V1. Weitere fachlich getrennte Interfaces duerfen eigene Namen nach
+  denselben Regeln tragen.
+
+Jede Interface-Familie besitzt zusaetzlich eine zufaellig erzeugte,
+librarylokal verwaltete 128-Bit-Identitaet. Sie wird als zwei ausdrueckliche
+u64-Werte interface_id_lo und interface_id_hi dokumentiert. Das Paar 0/0 ist
+ungueltig. Es gibt dafuer keine zentrale Registry. Ein Binding prueft diese
+Identitaet, damit ein gleichnamiger, aber fachlich falscher Export nicht als
+passend gilt.
+
+R4LQuery:1 fuer benannte Libraries
+----------------------------------
+
+Jede R4L exportiert weiterhin Query Version 1 mit dem unveraenderten
+32-Byte-Layout aus R4LQuery.txt. Fuer eine optionale benannte Runtime-R4L gilt:
+
+    magic         = 0x314C3452
+    abi_version   = 1
+    size          = 32
+    group         = 0
+    kernel_bridge = 0
+    reserved      = 0
+
+group=0 bedeutet: Die Identitaet und Aufloesung erfolgen ausschliesslich ueber
+Modulname, Exportname und Exportversion. Der Wert ist keine fehlende oder
+unbekannte Plattformgruppe. Query:1 ist keine fachliche Funktionstabelle und
+seine Version ist unabhaengig von den Interface-Versionen einer Library.
+
+Es existiert kein direkt importierbarer interner Kernelzugang. Eine Library
+bezieht benoetigte Platform APIs oder andere R4Ls ueber normale, in ihrem
+eigenen R4M0-Importverzeichnis deklarierte Imports.
+
+Interface-Export und Versionen
+------------------------------
+
+Ein Consumer importiert die gewuenschte Tabelle direkt:
+
+    <MODUL>:API_V<MAJOR>:<MINDESTREVISION>
+
+Beispiel:
+
+    IMPORT=ACMECODEC:API_V1:2
+
+API_V1 bezeichnet ABI-Major 1. Die letzte Zahl ist die kleinste kompatible
+Revision dieses Majors und nicht der ABI-Major. Der R4M0-Resolver akzeptiert
+einen Export, wenn dessen Exportversion mindestens der angeforderten Revision
+entspricht.
+
+Es gibt drei voneinander unabhaengige Versionsachsen:
+
+- module.R4MF VERSION: Releaseversion des konkreten Library-Artefakts; sie
+  steigt bei jeder Aenderung des Artefakts;
+- Interface-Revision: append-only kompatible Tabellenrevision innerhalb eines
+  API-Majors; sie steht gleichzeitig im R4M0-Export und in abi_minor;
+- API-Major: binaer inkompatible Generation mit neuem Exportnamen API_Vn.
+
+Die R4M0-Exportversion eines Interfaces liegt im Bereich 1 bis 65535 und muss
+exakt dem Feld abi_minor des exportierten Headers entsprechen. Ein reines
+Implementierungsupdate ohne ABI-Erweiterung erhoeht nur die Modulversion. Ein
+neuer append-only Slot erhoeht abi_minor und die R4M0-Exportversion. Ein
+ABI-Bruch erhaelt einen neuen API_Vn-Export, dessen Revision wieder bei 1
+beginnt. Alte und neue Major-Exporte duerfen parallel vorhanden sein.
+
+Gemeinsamer Interface-Header
+----------------------------
+
+R4L_INTERFACE_MAGIC          = 0x31493452  (Little Endian: "R4I1")
+R4L_INTERFACE_HEADER_VERSION = 1
+R4L_INTERFACE_HEADER_SIZE    = 32
+R4L_INTERFACE_ALIGNMENT      = 8
+
+Jede fachliche Funktionstabelle beginnt mit diesem unveraenderlichen
+Little-Endian-Layout:
+
+Offset  Typ  Feld
+0       u32  magic
+4       u16  header_version
+6       u16  flags
+8       u32  size
+12      u16  abi_major
+14      u16  abi_minor
+16      u64  interface_id_lo
+24      u64  interface_id_hi
+
+Groesse: 32 Byte, Alignment: 8 Byte.
+
+size umfasst Header und alle vorhandenen Slots. Der Wert ist mindestens 32,
+ein Vielfaches von 8 und darf den geladenen, lesbaren Bereich des exportierten
+Providerobjekts nicht ueberschreiten.
+
+Flags 0 bis 7 beschreiben verpflichtende Semantik. Ein Consumer lehnt ein
+unbekanntes gesetztes Pflichtflag ab. Flags 8 bis 15 sind rein informativ und
+duerfen von einem aelteren Consumer ignoriert werden. In Header-Version 1 sind
+keine Pflicht- oder Informationsflags vergeben; ein Producer schreibt 0.
+
+Tabellenlayout und Kompatibilitaet
+---------------------------------
+
+Direkt nach dem Header folgen 8-Byte-Funktionsslots. Jeder Slot enthaelt einen
+64-Bit-Codepointer auf eine Funktion der R4OS-x86_64-C-ABI. Der fachliche
+Library-Contract ordnet jedem Offset genau einen Namen und genau eine Signatur
+zu.
+
+- Ein veroeffentlichter Slot behaelt Offset, Signatur und Bedeutung fuer den
+  gesamten ABI-Major.
+- Neue Slots werden ausschliesslich am Ende angefuegt.
+- Entfernte oder veraltete Slots werden nie wiederverwendet. Falls ihre
+  Operation nicht mehr ausgefuehrt werden kann, bleibt ein ABI-konformer Stub
+  mit dem dokumentierten Fehlerverhalten erreichbar.
+- Jeder Revisionsstand nennt seine erforderliche Mindestgroesse und seine
+  erforderlichen, von null verschiedenen Slots.
+- Ein Consumer prueft die Mindestgroesse vor jedem Slotzugriff und danach den
+  konkreten Funktionspointer auf ungleich 0.
+- Neue fachliche Struct-Felder folgen demselben append-only Groessenvertrag.
+- Eine Signaturaenderung, Feldverschiebung, neue Pflichtsemantik fuer einen
+  alten Aufruf oder geaenderte Besitzregel ist ein ABI-Bruch und verlangt
+  einen neuen Major-Export.
+
+Verbindliche Validierungsreihenfolge
+-----------------------------------
+
+Der generische Resolver und das libraryeigene Binding lehnen fail-closed ab.
+Vor dem ersten fachlichen Aufruf werden mindestens folgende Punkte geprueft:
+
+1. Modul- und Exportname sind syntaktisch gueltig und eindeutig aufgeloest.
+2. Ein benannter R4XStartImport besitzt group_id=0, gueltige Namenspointers,
+   die angeforderte Mindestversion, eine ausreichende resolved_version und
+   einen von null verschiedenen table-Pointer.
+3. table ist 8-Byte-aligned. Header und deklarierte Tabellengroesse liegen
+   ohne Integerueberlauf vollstaendig im lesbaren Speicher der aktiven
+   Providergeneration.
+4. magic, header_version und unbekannte Pflichtflags sind gueltig.
+5. interface_id_lo/interface_id_hi und abi_major entsprechen dem Binding.
+6. abi_minor ist mindestens die angeforderte Revision und exakt gleich der
+   vom R4M0-Resolver gelieferten Exportversion.
+7. size deckt die fuer die angeforderte Revision erforderliche
+   Mindestgroesse ab.
+8. Jeder vom Binding benoetigte Funktionsslot ist vorhanden, korrekt
+   ausgerichtet, kanonisch und ungleich 0.
+
+Schlaegt eine Pruefung fehl, wird kein Tabellenfunktionspointer aufgerufen.
+Der technische Bindingfehler bleibt von fachlichen Fehlercodes der Library
+getrennt.
+
+Maschinen-ABI
+-------------
+
+- Architektur: x86_64;
+- Byteordnung: Little Endian;
+- Pointergroesse: 8 Byte;
+- Calling Convention: R4OS x86_64 C ABI, in Zig callconv(.c), entsprechend
+  der System-V-AMD64-Konvention des freestanding R4OS-Targets;
+- Stack und Register folgen dieser C-ABI; die Microsoft-x64-Konvention ist
+  nicht zulaessig;
+- oeffentliche Structs sind explizite extern-Layouts mit festen Integerbreiten
+  und dokumentiertem size-/version-Vertrag;
+- Pointer werden als Pointer plus explizite Laenge und Einheit uebergeben;
+- erlaubt sind u8/u16/u32/u64, i8/i16/i32/i64, entsprechend breite Enums,
+  feste extern-Structs, Pointer, Callbacks mit callconv(.c) und opaque Handles;
+- nicht erlaubt sind Zig-Slices, Zig-Error-Sets, implizit gelayoutete Structs,
+  bool, usize/isize, C long, C-Bitfelder, Exceptions oder Unwind ueber die
+  ABI-Grenze.
+
+SIMD darf entsprechend dem allgemeinen R4OS-Userland-Target verwendet werden.
+Ein Library-Contract muss jedoch angeben, ob Buffer oder Payloads ein ueber
+die natuerliche Typausrichtung hinausgehendes Alignment verlangen.
+
+Besitz, Lebensdauer und Fehler
+------------------------------
+
+Jede Funktion muss im libraryeigenen Contract fuer jeden Pointer und Handle
+folgende Angaben besitzen: Richtung, Nullbarkeit, Laengeneinheit, Alignment,
+Mutierbarkeit, Aliasing, Besitzer und garantierte Lebensdauer.
+
+Verbindliche Grundregeln:
+
+- Caller-owned Buffer werden von der Library weder behalten noch freigegeben,
+  sofern der Funktionsvertrag nicht ausdruecklich eine Retain-Operation mit
+  passender Release-Operation definiert.
+- Speicher wird immer von derselben Seite freigegeben, die ihn allokiert hat.
+  Library-owned Speicher wird ueber eine Funktion derselben Tabelle
+  freigegeben; es gibt kein allocatoruebergreifendes free.
+- Opaque Handles werden nur durch ihre Library erzeugt, validiert und
+  zerstoert. Nach erfolgreichem Destroy/Close ist der Handle ungueltig.
+- Geliehene Pointer bleiben hoechstens fuer die ausdruecklich dokumentierte
+  Dauer gueltig und niemals laenger als ihre Providergeneration.
+- Fehler ueberschreiten die ABI als expliziter Integercode oder als
+  dokumentiertes Ergebnis-Struct. Zig-Error-Sets und Panic/Unwind duerfen die
+  Grenze nicht ueberschreiten.
+- Erfolg, fachliche Fehler, Buffer-too-small, ungueltige Argumente und
+  Ressourcenfehler werden je Interface als stabile Domaene dokumentiert.
+- Ein Callback besitzt immer callconv(.c), einen ausdruecklichen user_data-
+  Wert und eine dokumentierte Aufruf- und Retain-Lebensdauer.
+- Reentrancy, Parallelaufrufe, Handle-Synchronisation und Callback-Thread
+  werden pro Interface ausdruecklich festgelegt. Ohne diese Angaben ist ein
+  Library-Contract unvollstaendig.
+
+Generation, Update und Aktivierung
+----------------------------------
+
+Eine geladene Providergeneration besitzt Code, Daten, Tabellen und alle daraus
+erreichbaren Funktionspointer bis zum Ende dieser Generation. Solange ein
+Consumer sie erreichen kann, werden ihre Seiten weder freigegeben,
+ueberschrieben noch einer neuen Generation zugeordnet.
+
+R4OS 0.64.X fuehrt keinen Live-Hot-Swap aus. Ein Update ersetzt das
+on-disk-Artefakt atomar fuer einen spaeteren sicheren Aktivierungspunkt. Die
+bereits geladene Generation bleibt unveraendert; die neue Generation wird
+spaetestens beim naechsten Systemstart aktiv. Ein Prozess mischt niemals
+Tabellen oder Handles zweier Generationen.
+
+Pflichtinhalt eines Library-Contracts
+-------------------------------------
+
+Eine auslieferbare Runtime-R4L verwaltet in ihrer eigenen Einheit mindestens:
+
+- kanonischen Modulnamen, Modulversion und 128-Bit-Interface-ID;
+- alle Exportnamen, Majors, Revisionen, Tabellengroessen und Slots;
+- alle ABI-Typen, Konstanten, Status- und Fehlerdomaenen;
+- Ownership-, Buffer-, Handle-, Callback-, Threading- und Reentrancy-Regeln;
+- generierte Zig- und C-Bindings aus derselben fachlichen Wahrheit;
+- akzeptierte ABI-Baseline und expliziten Baseline-Updateweg;
+- Implementierung, benoetigten Fremdcode, Conformance-Fixtures, Unit-,
+  Integrations- und Consumer-Tests;
+- module.R4MF als Build-, Import-, Export-, Ziel- und Imagewahrheit.
+
+Eine normale kompatible Aenderung dieser Einheit darf keine fachliche
+Aenderung am Kernel, am zentralen Plattform-Contract oder am Kern-SDK
+erfordern.
+
+Materialisierung und Baseline
+-----------------------------
+
+Eine kompilierte Runtime-R4L deklariert in module.R4MF ihre lokale
+Contractdatei, ihre lokale Baseline und saemtliche erzeugten Ausgaben. Das
+Schema beschreibt mindestens Modul- und Interfaceidentitaet, ABI-Major und
+Revision, feste Typen und Layouts, Konstanten und Fehler, Funktionsslots und
+Signaturen, Pointerrichtung, Nullbarkeit, Laengenbezug, Ownership und
+Lebensdauer sowie Blocking-, Threading-, Reentrancy- und Fehlersemantik.
+
+R4LContractGen erhaelt Modulname, nichttechnische Manifestexporte und alle
+Ein- und Ausgabepfade ausdruecklich. Es besitzt keinen Standardpfad in
+Contract, SDK, Kernel oder eine andere Library. Name, Exportsymbol und Revision
+muessen zwischen module.R4MF und fachlichem Contract exakt uebereinstimmen.
+Seine deterministischen Ausgaben sind:
+
+- Implementierungs-ABI und Funktionstabellendeklaration fuer Zig;
+- Zig-Binding und C-Header;
+- Zig- und C-Conformance-Fixtures;
+- lesbare librarylokale API-Referenz.
+
+`--check` validiert Schema und Baseline und vergleicht jede Ausgabe bytegenau,
+ohne zu schreiben. `--write` materialisiert nur die angegebenen Ziele. Eine
+Baseline wird ausschliesslich mit `--write --update-baseline` bewusst ersetzt.
+Damit kann eine einzelne Library vollstaendig in ihrer Einheit geaendert und
+abgenommen werden; der zentrale ApiContractGen bleibt allein fuer die
+eingebauten Platform APIs zustaendig.
+
+Der normale R4MF-Build haengt `--check` vor das gebaute R4L-Artefakt. Die
+Implementierung wird als Zig oder C mit demselben freestanding Userland-Target
+wie andere Module kompiliert und anschliessend aus der ELF samt symbolischen
+Exporten und Relocations in R4M0 verpackt. Eine konkrete Librarybezeichnung
+kommt in diesem generischen Buildpfad nicht vor.
+
+Kompatibilitaetsmatrix
+----------------------
+
+Fall                          Producer             Consumer fordert  Ergebnis
+Implementierungsupdate       API_V1 Rev. 1        API_V1 Rev. 1     akzeptiert
+Append-only Erweiterung      API_V1 Rev. 2        API_V1 Rev. 1     akzeptiert
+Neuer Slot wird benoetigt     API_V1 Rev. 2        API_V1 Rev. 2     akzeptiert
+Revision fehlt               API_V1 Rev. 1        API_V1 Rev. 2     abgelehnt
+Tabelle zu klein             API_V1 Rev. 2        API_V1 Rev. 2     abgelehnt
+Neuer ABI-Major              API_V2 Rev. 1        API_V1 Rev. 1     abgelehnt
+Parallele Majors             API_V1 und API_V2    jeweils passend   akzeptiert
+
+Harte Negativfaelle
+-------------------
+
+Falsche Magic, Header-Version, Interface-ID oder ABI-Major, unbekannte
+Pflichtflags, Export-/Header-Revisionsdrift, zu kleine oder uebergrosse
+Tabelle, Nullslot, ungueltige Pointer, Namenskollision, Exportkollision,
+fehlender Export und zu alte Revision werden deterministisch abgelehnt. Kein
+Fall darf in einen stillen Fallback auf SDK-eingebauten Fachcode fuehren.
+
+Die 0.64.4-Kompatibilitaetsabnahme materialisiert diese Matrix mit zwei
+unabhaengig baubaren Providergenerationen und drei echten Verbrauchern. Sie
+prueft append-only V1, ein parallel exportiertes V2, caller-owned Buffer,
+providergebundene opaque Handles, stale Handles, fehlende oder fehladressierte
+Tabellen sowie einen abgeschnittenen R4M0-Container. Ein laufender
+Altverbraucher behaelt seine gepinnte Generation; erst ein neuer Kontext nach
+dem Neustart darf die neue Generation erhalten.
+
+Vertragsquellen und Abnahme
+---------------------------
+
+    ABI/R4M0.txt
+    ABI/R4LQuery.txt
+    ABI/R4XStart.txt
+
+Der generische R4L-Contract-Generator und Runtime-Resolver gehoeren zum SDK.
+Der zentrale ApiContractGen bleibt allein fuer die eingebauten Platform APIs
+zustaendig. Konkrete Contract-, Baseline-, Binding- und
+Kompatibilitaetstests gehoeren in die jeweilige Library-Einheit. Dieses
+Repository prueft nur den gemeinsamen Plattformmechanismus mit
+`zig build test`.

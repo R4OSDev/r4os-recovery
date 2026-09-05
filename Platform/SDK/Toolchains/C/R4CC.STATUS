@@ -1,0 +1,10 @@
+R4CC 0.58.33
+toolchain=C
+compiler=R4CC
+stage=r4mf-v2-app-console-desktop
+target=x86_64-r4os-r4xstart
+source=R4OS-owned C subset compiler
+license=R4OS repository source, no external compiler source
+compile=R4X_C_App_Console,R4X_C_App_Desktop
+host_fallback=disabled
+status=OK

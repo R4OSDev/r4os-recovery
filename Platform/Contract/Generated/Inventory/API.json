@@ -1,0 +1,3902 @@
+{
+  "schema_version": 1,
+  "generated_from": "API/ApiContract.json",
+  "contract_schema_version": 11,
+  "summary": {
+    "function_count": 324,
+    "group_slot_count": 324,
+    "sdk_only_count": 0,
+    "public_count": 232,
+    "advanced_count": 92
+  },
+  "functions": [
+    {
+      "name": "R4SYS.write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 0,
+      "exposure": "public",
+      "description": "Writes a byte sequence to the calling program's standard output.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.putc",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 1,
+      "exposure": "public",
+      "description": "Writes one byte to the calling program's standard output.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.sleep_ticks",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 2,
+      "exposure": "public",
+      "description": "Suspends the calling task for at least the requested timer ticks.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.ticks",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 3,
+      "exposure": "advanced",
+      "description": "Returns the current monotonic system tick count.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.env_get",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 4,
+      "exposure": "public",
+      "description": "Reads one environment variable into a caller-owned buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.dir_entry",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 5,
+      "exposure": "public",
+      "description": "Reads one directory entry at the requested index.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_should_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 6,
+      "exposure": "public",
+      "description": "Reports whether the calling program has received a close request.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_class",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 7,
+      "exposure": "advanced",
+      "description": "Returns the application class of a program instance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_instance",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 8,
+      "exposure": "advanced",
+      "description": "Reads the public state of one program instance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_status",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 9,
+      "exposure": "public",
+      "description": "Returns the current state of a named service.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_open",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 10,
+      "exposure": "public",
+      "description": "Opens a connection to a named service and returns an owned handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 11,
+      "exposure": "public",
+      "description": "Closes and invalidates an owned service connection handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_call",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 12,
+      "exposure": "public",
+      "description": "Sends a request to a service and waits for its bounded reply.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_endpoint_register",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 13,
+      "exposure": "public",
+      "description": "Registers a named service endpoint and returns an owned endpoint handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_endpoint_unregister",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 14,
+      "exposure": "public",
+      "description": "Unregisters and invalidates an owned service endpoint handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_endpoint_poll",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 15,
+      "exposure": "public",
+      "description": "Reports whether a service endpoint has a request ready.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_endpoint_recv",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 16,
+      "exposure": "public",
+      "description": "Receives the next request from a service endpoint.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_endpoint_reply",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 17,
+      "exposure": "public",
+      "description": "Sends a reply for a previously received service request.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_detail_by_name",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 18,
+      "exposure": "public",
+      "description": "Returns detailed runtime information for a named service.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_start",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 19,
+      "exposure": "public",
+      "description": "Starts a registered service by name.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_stop",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 20,
+      "exposure": "public",
+      "description": "Requests a registered service to stop and waits for bounded shutdown.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_restart",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 21,
+      "exposure": "public",
+      "description": "Stops and starts a registered service by name.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_install",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 22,
+      "exposure": "public",
+      "description": "Installs a service definition in the service catalogue.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_remove",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 23,
+      "exposure": "public",
+      "description": "Removes a stopped service from the service catalogue.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.vm_reserve",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 26,
+      "exposure": "public",
+      "description": "Reserves a virtual address range and returns an owned region handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.vm_commit",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 27,
+      "exposure": "public",
+      "description": "Commits pages in a reserved virtual memory region.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.vm_decommit",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 28,
+      "exposure": "public",
+      "description": "Decommits pages while retaining the virtual memory reservation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.vm_release",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 29,
+      "exposure": "public",
+      "description": "Releases and invalidates an owned virtual memory region.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.vm_query",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 30,
+      "exposure": "public",
+      "description": "Returns the current state and limits of a virtual memory region.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_create",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 31,
+      "exposure": "public",
+      "description": "Creates a program thread from an entry callback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_exit",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 32,
+      "exposure": "public",
+      "description": "Terminates the calling program thread with an exit code.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_join",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 33,
+      "exposure": "public",
+      "description": "Waits for a thread to finish and consumes its join identity.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_current",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 34,
+      "exposure": "public",
+      "description": "Returns the public identifier of the calling thread.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_status",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 35,
+      "exposure": "public",
+      "description": "Returns the current state of a program thread.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 36,
+      "exposure": "public",
+      "description": "Starts an asynchronous whole-file read into a caller-owned buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_read_at",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 37,
+      "exposure": "public",
+      "description": "Starts an asynchronous file read at a byte offset.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 38,
+      "exposure": "public",
+      "description": "Starts an asynchronous whole-file write.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_append",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 39,
+      "exposure": "public",
+      "description": "Starts an asynchronous append to a file.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_stream_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 40,
+      "exposure": "public",
+      "description": "Starts an asynchronous streamed file publication.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_stream_write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 41,
+      "exposure": "public",
+      "description": "Queues one chunk for an asynchronous file stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_stream_finish",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 42,
+      "exposure": "public",
+      "description": "Finishes and publishes an asynchronous file stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_stream_abort",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 43,
+      "exposure": "public",
+      "description": "Aborts an asynchronous file stream and discards its stage.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_service_call",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 44,
+      "exposure": "public",
+      "description": "Starts an asynchronous service request.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_status",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 45,
+      "exposure": "public",
+      "description": "Returns the current state and progress of an asynchronous request.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_wait",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 46,
+      "exposure": "public",
+      "description": "Waits for an asynchronous request to complete within one budget.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 47,
+      "exposure": "public",
+      "description": "Closes a completed request or arranges bounded cancellation before release.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.task_yield",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 48,
+      "exposure": "advanced",
+      "description": "Yields the processor cooperatively to another ready task.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.system_halt",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 50,
+      "exposure": "advanced",
+      "description": "Halts processor execution without rebooting.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.system_reboot",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 51,
+      "exposure": "advanced",
+      "description": "Requests an immediate system reboot.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.system_poweroff",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 52,
+      "exposure": "advanced",
+      "description": "Requests an orderly system poweroff.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.time_state",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 53,
+      "exposure": "public",
+      "description": "Reads the current UTC, local offset, and clock configuration state.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.time_set_state",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 54,
+      "exposure": "public",
+      "description": "Applies a validated system time and clock configuration state.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.time_seconds_since_midnight",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 55,
+      "exposure": "public",
+      "description": "Returns local seconds elapsed since midnight.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.dir_list",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 56,
+      "exposure": "public",
+      "description": "Lists directory entries into a caller-owned result buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.dir_create",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 57,
+      "exposure": "public",
+      "description": "Creates a directory at an absolute path.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.dir_delete",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 58,
+      "exposure": "public",
+      "description": "Deletes an empty directory at an absolute path.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.drive_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 59,
+      "exposure": "public",
+      "description": "Returns capacity and filesystem information for a mounted drive.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 60,
+      "exposure": "public",
+      "description": "Returns size, attributes, and identity information for a file.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_delete",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 61,
+      "exposure": "public",
+      "description": "Deletes a file at an absolute path.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_rename",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 62,
+      "exposure": "public",
+      "description": "Renames a file within its directory.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_copy",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 63,
+      "exposure": "public",
+      "description": "Copies a file while reporting completed byte progress.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_move",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 64,
+      "exposure": "public",
+      "description": "Moves a file while reporting completed byte progress.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 65,
+      "exposure": "public",
+      "description": "Reads a complete file into a caller-owned buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 66,
+      "exposure": "public",
+      "description": "Creates or replaces a file with the supplied bytes.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_read_at",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 67,
+      "exposure": "public",
+      "description": "Reads file bytes starting at the requested offset.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_append",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 68,
+      "exposure": "public",
+      "description": "Appends bytes to an existing file.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_stream_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 69,
+      "exposure": "public",
+      "description": "Creates a staged sequential file stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_stream_write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 70,
+      "exposure": "public",
+      "description": "Writes the next sequential chunk to a staged file stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_stream_finish",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 71,
+      "exposure": "public",
+      "description": "Publishes a completed staged file stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_stream_abort",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 72,
+      "exposure": "public",
+      "description": "Aborts a staged file stream and removes its private data.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.env_set",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 73,
+      "exposure": "public",
+      "description": "Creates or replaces one environment variable for the calling program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_key_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 74,
+      "exposure": "public",
+      "description": "Returns metadata for a registry key.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_enum_key",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 75,
+      "exposure": "public",
+      "description": "Enumerates one child key by index.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_enum_value",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 76,
+      "exposure": "public",
+      "description": "Enumerates one registry value by index.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_get_value",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 77,
+      "exposure": "public",
+      "description": "Reads a registry value into a caller-owned buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_set_value",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 78,
+      "exposure": "public",
+      "description": "Creates or replaces a registry value.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_delete_value",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 79,
+      "exposure": "public",
+      "description": "Deletes a registry value.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 80,
+      "exposure": "public",
+      "description": "Returns summary information for a registered service.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_detail",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 81,
+      "exposure": "public",
+      "description": "Returns detailed information for a service by catalogue index.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_set_start_mode",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 82,
+      "exposure": "public",
+      "description": "Changes the configured start mode of a service.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_endpoint_wait",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 83,
+      "exposure": "public",
+      "description": "Waits until a service endpoint has a request or the budget expires.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_run",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 84,
+      "exposure": "public",
+      "description": "Starts a program and waits for its completion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_launch",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 85,
+      "exposure": "public",
+      "description": "Launches a program without waiting for completion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_spawn",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 86,
+      "exposure": "public",
+      "description": "Starts a child program and returns its public instance identifier.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_kill",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 87,
+      "exposure": "public",
+      "description": "Terminates a program instance by identifier.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_status",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 88,
+      "exposure": "public",
+      "description": "Returns the current state of a program instance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_request_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 89,
+      "exposure": "public",
+      "description": "Requests cooperative closure of a program instance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_reap_instance",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 90,
+      "exposure": "public",
+      "description": "Consumes the retained completion of a finished program instance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.boot_log_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 91,
+      "exposure": "advanced",
+      "description": "Returns boot-log size, revision, and wrap information.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.boot_log_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 92,
+      "exposure": "advanced",
+      "description": "Reads a byte range from the persistent boot log.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_spawn_handle",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 93,
+      "exposure": "public",
+      "description": "Starts a child program and returns its exact generation-safe handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_open_handle",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 94,
+      "exposure": "public",
+      "description": "R4SYS atomically opens a borrowed generation-safe program handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_handle_status",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 95,
+      "exposure": "public",
+      "description": "Returns state for the exact generation carried by a program handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_handle_request_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 96,
+      "exposure": "public",
+      "description": "Requests cooperative closure of the exact program generation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_handle_kill",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 97,
+      "exposure": "public",
+      "description": "Terminates the exact program generation carried by a handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_handle_wait",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 98,
+      "exposure": "public",
+      "description": "R4SYS waits for but does not consume a generation-safe program completion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_handle_reap",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 99,
+      "exposure": "public",
+      "description": "R4SYS atomically consumes a generation-safe program completion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_completion_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 100,
+      "exposure": "public",
+      "description": "R4SYS reads retained output from an unconsumed program completion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_inventory_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 101,
+      "exposure": "public",
+      "description": "R4SYS starts a generation-keyed program, task, and thread inventory snapshot without allocating kernel memory.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_inventory_programs",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 102,
+      "exposure": "public",
+      "description": "R4SYS reads one mutation-safe program inventory page and returns an explicit restart status if the captured epochs changed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_inventory_tasks",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 103,
+      "exposure": "public",
+      "description": "R4SYS reads one mutation-safe task inventory page and returns an explicit restart status if the captured epochs changed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_inventory_threads",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 104,
+      "exposure": "public",
+      "description": "R4SYS reads one mutation-safe thread inventory page and returns an explicit restart status if the captured epochs changed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_create_handle",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 105,
+      "exposure": "public",
+      "description": "R4SYS creates a joinable thread and returns its exact generation-safe identity.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_handle_join",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 106,
+      "exposure": "public",
+      "description": "R4SYS joins only the exact thread generation carried by a ProgramJoinHandle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_handle_status",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 107,
+      "exposure": "public",
+      "description": "R4SYS queries only the exact thread generation carried by a ProgramJoinHandle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_replace_atomic",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 108,
+      "exposure": "advanced",
+      "description": "R4SYS transfers a staged FAT file into a target with a durable sibling backup and without a copy/delete fallback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_delete_if_match",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 109,
+      "exposure": "advanced",
+      "description": "R4SYS deletes a file only when its size, FNV-1a checksum and filesystem identity still match under one serialized filesystem gate.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_update_atomic_checked",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 110,
+      "exposure": "advanced",
+      "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.path_names_equal_collated",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 111,
+      "exposure": "advanced",
+      "description": "R4SYS reports whether two paths would resolve to the same object on their shared volume using the filesystem own collation (NTFS $UpCase, FAT32 ASCII case fold), so callers never mistake a byte-wise fold for identity.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_update_cleanup_checked",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 112,
+      "exposure": "advanced",
+      "description": "R4SYS completes one SYSUPD per-payload cleanup with target, stage, current backup and previous backup bound together to expected identity, size and checksum under one serialized filesystem gate.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_stream_declare_publish",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 113,
+      "exposure": "advanced",
+      "description": "R4SYS records the create-only publish intent of an already open stream, including which protocol owns it, so the durable claim brackets the whole transfer instead of only the final hand-over and recovery telemetry can attribute an abandoned stage to SFTP, SCP or FTP.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.module_resource_stat",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 114,
+      "exposure": "public",
+      "description": "R4SYS resolves one embedded resource of an R4M0 module file by type plus index or name and returns its exact size without reading the payload.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.module_resource_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 115,
+      "exposure": "public",
+      "description": "R4SYS reads one embedded resource of an R4M0 module file completely into a caller-owned buffer; a too small buffer is a visible error, never a silent truncation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_module_path",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 116,
+      "exposure": "public",
+      "description": "R4SYS writes the absolute module file path of the calling program into a caller-owned buffer, so a program can read its own embedded resources without a hardcoded second truth beside the manifest TARGET.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_module_running",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 117,
+      "exposure": "public",
+      "description": "Returns one when a published R4X instance from the exact absolute module path is still running, zero when no such instance exists, and a negative program error when the query cannot be completed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.monotonic_clock",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 118,
+      "exposure": "public",
+      "description": "Reads the backend-stable monotonic nanosecond instant together with calibrated source and periodic-event metadata without reading the RTC.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.boot_ready",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 119,
+      "exposure": "public",
+      "description": "Lets the active boot shell mark its first usable frame or prompt exactly once; repeated calls by that shell are idempotent.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_snapshot_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 120,
+      "exposure": "public",
+      "description": "Starts a caller-owned, generation-keyed registry child-key or value snapshot without allocating kernel memory.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_snapshot_page",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 121,
+      "exposure": "public",
+      "description": "Reads one bounded registry snapshot page directly from the captured key range and reports restart instead of exposing mixed generations.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.registry_batch_mutate",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 122,
+      "exposure": "public",
+      "description": "Validates and commits one bounded set/delete batch as a single registry generation with no partial visible mutation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_write_at",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 123,
+      "exposure": "public",
+      "description": "Starts an asynchronous, progress-reporting file write at an absolute byte offset without truncating unrelated data.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 124,
+      "exposure": "public",
+      "description": "Starts an asynchronous metadata query; the terminal IoStatus result is the file size in bytes or an I/O error.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.io_file_lock",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 125,
+      "exposure": "public",
+      "description": "Asynchronously acquires or exactly releases a caller-owned advisory byte-range lock; conflicts complete with io_error_lock_violation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.read_key",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 0,
+      "exposure": "public",
+      "description": "Reads the next translated keyboard byte for the calling console program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.mouse_state",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 1,
+      "exposure": "public",
+      "description": "Returns the current pointer position and button state.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.mouse_show",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 2,
+      "exposure": "public",
+      "description": "Makes the desktop pointer visible.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.mouse_hide",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 3,
+      "exposure": "public",
+      "description": "Hides the desktop pointer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.keyboard_layout_current",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 4,
+      "exposure": "public",
+      "description": "Returns the currently selected keyboard layout.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.keyboard_layout_at",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 5,
+      "exposure": "public",
+      "description": "Returns keyboard layout information by catalogue index.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.keyboard_layout_set",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 6,
+      "exposure": "public",
+      "description": "Selects the active keyboard layout.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_set_window",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 7,
+      "exposure": "advanced",
+      "description": "Binds a GUI window slot to a program instance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_set_console_host",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 8,
+      "exposure": "advanced",
+      "description": "Binds a console program to its desktop host.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_request_host_launch",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 9,
+      "exposure": "advanced",
+      "description": "Queues a host-side launch request for a program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_take_host_launch",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 10,
+      "exposure": "advanced",
+      "description": "Takes the next pending program launch request from the desktop host queue.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_window_id",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 11,
+      "exposure": "public",
+      "description": "Returns the desktop window identifier assigned to a program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_window_info",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 12,
+      "exposure": "public",
+      "description": "Returns geometry and state for a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_set_window_info",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 13,
+      "exposure": "public",
+      "description": "Updates geometry and state for a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_poll_event",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 14,
+      "exposure": "public",
+      "description": "Takes the next queued GUI event for the calling program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_push_event",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 15,
+      "exposure": "advanced",
+      "description": "Queues a GUI event for a hosted program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_set_text",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 16,
+      "exposure": "public",
+      "description": "Replaces the shared text buffer of a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_text",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 17,
+      "exposure": "public",
+      "description": "Reads the shared text buffer of a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_revision",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 18,
+      "exposure": "public",
+      "description": "Returns the content revision of a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_command",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 19,
+      "exposure": "public",
+      "description": "Queues a command identifier for a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_set_title",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 20,
+      "exposure": "public",
+      "description": "Sets the title of a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_title",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 21,
+      "exposure": "public",
+      "description": "Reads the title of a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_set_min_size",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 22,
+      "exposure": "public",
+      "description": "Sets the minimum client size requested by a GUI program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_min_size",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 23,
+      "exposure": "public",
+      "description": "Reads the minimum client size requested by a GUI program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_output",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 24,
+      "exposure": "public",
+      "description": "Reads retained console output for desktop rendering.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_revision",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 25,
+      "exposure": "public",
+      "description": "Returns the output revision of a hosted console.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_state",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 26,
+      "exposure": "public",
+      "description": "Returns cursor and buffer state for a hosted console.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_set_metrics",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 27,
+      "exposure": "public",
+      "description": "Sets character-cell metrics for a hosted console.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_push_key",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 28,
+      "exposure": "advanced",
+      "description": "Queues one input key for a hosted console program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_write",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 29,
+      "exposure": "public",
+      "description": "Writes bytes to a hosted console buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_read",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 30,
+      "exposure": "public",
+      "description": "Reads bytes from a hosted console input queue.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.clipboard_write",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 31,
+      "exposure": "public",
+      "description": "Replaces the shared text clipboard.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.clipboard_read",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 32,
+      "exposure": "public",
+      "description": "Reads text from the shared clipboard.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.clipboard_revision",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 33,
+      "exposure": "public",
+      "description": "Returns the current clipboard revision.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.clipboard_info",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 34,
+      "exposure": "public",
+      "description": "Returns clipboard format and size information.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.clipboard_clear",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 35,
+      "exposure": "public",
+      "description": "Clears all shared clipboard content.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.read_key_codepoint",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 36,
+      "exposure": "public",
+      "description": "Reads the next translated keyboard input as a Unicode codepoint or legacy special-key value.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_info",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 38,
+      "exposure": "advanced",
+      "description": "Returns geometry and revision information for the remote desktop frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_read",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 39,
+      "exposure": "advanced",
+      "description": "Reads pixels from the published remote desktop frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_wait",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 40,
+      "exposure": "advanced",
+      "description": "Waits for a newer remote desktop frame revision.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_publish",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 41,
+      "exposure": "advanced",
+      "description": "Publishes a changed desktop frame region to remote consumers.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_input_push",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 42,
+      "exposure": "advanced",
+      "description": "Queues one remote keyboard or pointer event.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_input_poll",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 43,
+      "exposure": "advanced",
+      "description": "Takes the next queued remote input event.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_input_status",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 44,
+      "exposure": "advanced",
+      "description": "Returns queue and drop statistics for remote input.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.desktop_activity_wait",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 45,
+      "exposure": "public",
+      "description": "Waits for desktop input, GUI activity, or a timeout.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_map",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 46,
+      "exposure": "advanced",
+      "description": "Returns a borrowed mapping of the current remote desktop frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_current_console_host",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 47,
+      "exposure": "public",
+      "description": "Returns the console host associated with the calling program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_request_desktop",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 48,
+      "exposure": "public",
+      "description": "Requests that the desktop host attach or focus a program.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_spawn_with_console_host",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 49,
+      "exposure": "public",
+      "description": "Starts a program with an explicitly selected console host.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_spawn_with_console_host_handle",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 50,
+      "exposure": "public",
+      "description": "Starts a console-hosted program and returns its generation-safe handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.program_set_window_handle",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 51,
+      "exposure": "public",
+      "description": "Binds a desktop window to the exact program generation carried by a handle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_push_input",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 52,
+      "exposure": "advanced",
+      "description": "Queues a bounded byte span for a hosted console and returns the accepted prefix length; an unaccepted suffix remains caller-owned.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_acquire",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 53,
+      "exposure": "advanced",
+      "description": "Registers one active remote-frame readback consumer, wakes the desktop on the first consumer, and returns the active consumer count.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_release",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 54,
+      "exposure": "advanced",
+      "description": "Releases one active remote-frame readback consumer, discards the full-frame shadow after the last consumer, and returns the remaining consumer count.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_consumers",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 55,
+      "exposure": "advanced",
+      "description": "Returns the active remote-frame readback consumer count without creating or copying a frame shadow.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_publish_regions",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 56,
+      "exposure": "advanced",
+      "description": "Publishes several bounded XRGB32 desktop damage regions as one remote-frame generation. Legacy readers receive their bounding dirty rectangle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_input_wait",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 57,
+      "exposure": "public",
+      "description": "Waits generation-safely until the calling console input source is readable, changes generation, times out, or is closed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.physical_key_poll",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 58,
+      "exposure": "advanced",
+      "description": "Takes the next ordered layout-independent physical keyboard transition for the desktop host.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.screen_width",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 0,
+      "exposure": "public",
+      "description": "Returns the current display width in pixels.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.screen_height",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 1,
+      "exposure": "public",
+      "description": "Returns the current display height in pixels.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.clear",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 2,
+      "exposure": "public",
+      "description": "Fills the complete visible display with one color.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.rect",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 3,
+      "exposure": "public",
+      "description": "Fills a rectangle on the visible display.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.text",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 4,
+      "exposure": "public",
+      "description": "Draws text on the visible display with the active system font.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_revision",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 5,
+      "exposure": "public",
+      "description": "Returns the current visible display revision.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_begin_frame",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 6,
+      "exposure": "public",
+      "description": "Begins a full-display presentation frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_begin_frame_rect",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 7,
+      "exposure": "public",
+      "description": "Begins a presentation frame restricted to one damage rectangle.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_present",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 8,
+      "exposure": "public",
+      "description": "Presents the completed display frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_blit_xrgb32",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 9,
+      "exposure": "public",
+      "description": "Copies an XRGB32 pixel buffer into the display frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_clear",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 10,
+      "exposure": "public",
+      "description": "Fills a hosted GUI window surface with one color.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_rect",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 11,
+      "exposure": "public",
+      "description": "Fills a rectangle on a hosted GUI window surface.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_draw_text",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 12,
+      "exposure": "public",
+      "description": "Draws text on a hosted GUI window surface.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_draw_text_ex",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 13,
+      "exposure": "public",
+      "description": "Draws measured or clipped text with explicit rendering options.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_blit",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 14,
+      "exposure": "public",
+      "description": "Copies pixels into a hosted GUI window surface.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_raster_read",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 15,
+      "exposure": "public",
+      "description": "Reads pixels from a hosted GUI window surface.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_present",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 16,
+      "exposure": "public",
+      "description": "Publishes pending drawing changes for a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_count",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 17,
+      "exposure": "public",
+      "description": "Returns the number of fonts in the active system catalogue.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 18,
+      "exposure": "public",
+      "description": "Returns metadata for one system font.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_measure",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 19,
+      "exposure": "public",
+      "description": "Measures text with a selected system font.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_set_font",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 20,
+      "exposure": "public",
+      "description": "Selects the font used by a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_font",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 21,
+      "exposure": "public",
+      "description": "Returns the font selected by a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.text_font",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 22,
+      "exposure": "public",
+      "description": "Draws text with an explicitly selected system font.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_reload",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 23,
+      "exposure": "public",
+      "description": "Reloads the installed R4F system-font catalogue from C:\\R4OS\\FONTS and notifies running GUI applications.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_glyph_row",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 24,
+      "exposure": "public",
+      "description": "Returns one cached monochrome glyph row as a least-significant-bit-first pixel mask. The query exposes only transient R4F cache pixels, never font-file bytes.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_blend_alpha8",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 25,
+      "exposure": "public",
+      "description": "Snapshots a tightly bounded Alpha8 coverage mask and queues source-over blending into a hosted GUI window.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_begin",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 26,
+      "exposure": "public",
+      "description": "Begins a private transactional GUI build frame for the current GUI program. Existing GUI draw calls and gui_frame_append target the same active build frame until commit or cancel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_append",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 27,
+      "exposure": "public",
+      "description": "Atomically appends a variable command batch and its shared byte-resource blob to the current active build frame. Resource offsets are relative to this blob; null is valid only for a corresponding zero count.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_commit",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 28,
+      "exposure": "public",
+      "description": "Atomically publishes the complete active build frame as the current immutable committed frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_cancel",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 29,
+      "exposure": "public",
+      "description": "Discards the complete active build frame without changing the committed frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 30,
+      "exposure": "public",
+      "description": "Returns transactional GUI frame state and exact snapshot requirements. A null handle selects the current caller; a non-null generation-exact process handle selects that owner. GuiFrameInfo version 1 or newer with size at least 176 is accepted and answered as the supported v1/176 prefix. Version zero or a smaller size returns gui_frame_error_invalid without modifying out_info.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_read",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 31,
+      "exposure": "public",
+      "description": "Copies one immutable committed GUI frame into caller-owned command and resource buffers in one generation-checked operation. The handle is mandatory. Null payload pointers require zero capacity. GuiFrameInfo version 1 or newer with size at least 176 is accepted and answered as the supported v1/176 prefix. Version zero or a smaller size modifies neither out_info nor either payload buffer and returns gui_frame_error_invalid. On stale, buffer-too-small or other invalid input neither payload buffer is modified; out_info remains valid and reports the current owner, generation and required counts.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_blit_xrgb32_stride",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 32,
+      "exposure": "public",
+      "description": "Copies an XRGB32 source rectangle with an explicit source row stride into the display frame. source_stride_pixels must be at least w and pixel_count must cover the last addressed pixel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_present_regions",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 33,
+      "exposure": "public",
+      "description": "Presents one XRGB32 source generation through the canonical bounded multi-region path and returns its synchronous fence and selected backend.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_present_capabilities",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 34,
+      "exposure": "public",
+      "description": "Returns the active canonical present backend, exact damage limits, formats and CPU fallback capabilities.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_present_completion",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 35,
+      "exposure": "public",
+      "description": "Polls completion of a canonical present fence. The current bootframebuffer and external blit backends complete synchronously.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_begin_damage",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 36,
+      "exposure": "public",
+      "description": "Begins a private transactional GUI delta frame for the current GUI program. The bounded client-local regions are copied during the call and describe every pixel that the appended commands may change. A successful commit retains the previous immutable generation as its base without cloning it.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_generation_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 37,
+      "exposure": "public",
+      "description": "Returns exact local counts, base generation, damage regions and telemetry for one immutable generation in the current committed chain. The generation must be nonzero and the process handle is mandatory.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_generation_read",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 38,
+      "exposure": "public",
+      "description": "Copies only the commands, resources and exact client-local damage regions owned by one immutable generation. Resource offsets remain local to the returned blob. On stale, buffer-too-small or invalid input no payload buffer is modified and out_info reports the generation requirements when available.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_glyph_bitmap",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 39,
+      "exposure": "public",
+      "description": "Copies one complete cached monochrome glyph, including its metrics and least-significant-bit-first row masks, after resolving the glyph exactly once. Missing glyphs use the same built-in fallback as the existing font renderer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_revision",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 40,
+      "exposure": "public",
+      "description": "Returns the non-zero generation of the live system-font catalogue. Every completed catalogue reload advances the generation so consumers can invalidate font-id keyed caches even when ids or metadata are reused.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_begin_replace",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 41,
+      "exposure": "public",
+      "description": "Begins a private transactional complete replacement GUI frame for the current GUI program. The bounded client-local regions are copied during the call and describe every pixel changed from the prior generation. A successful commit publishes a standalone complete generation and supersedes the prior committed chain without retaining it as a base.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_frame_stream_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 42,
+      "exposure": "public",
+      "description": "Returns bounded replacement-stream lifecycle and native XRGB32 transport counters for one GUI program. The process handle is mandatory and invalid caller headers remain unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_shared_raster_create",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 43,
+      "exposure": "public",
+      "description": "Creates one producer-owned bounded shared raster with three reusable backing buffers. The returned generation-exact handle is destroyed explicitly or automatically at producer exit.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_shared_raster_destroy",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 44,
+      "exposure": "public",
+      "description": "Closes one exact producer-owned shared raster. Existing immutable frame and consumer references remain valid until their final release; no new write mapping is accepted.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_shared_raster_map_write",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 45,
+      "exposure": "public",
+      "description": "Reserves one currently unreferenced backing buffer and returns its direct producer-writable address and an unforgeable write token. The mapping becomes immutable when published.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_shared_raster_publish",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 46,
+      "exposure": "public",
+      "description": "Publishes one exact write mapping as a new immutable raster generation. The generation may be referenced by a standalone full or replacement GUI frame until its backing buffer is reused.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_shared_raster_acquire",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 47,
+      "exposure": "public",
+      "description": "Acquires one immutable shared raster generation referenced by the exact captured GUI frame generation and returns the direct consumer mapping plus an explicit lease.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gui_shared_raster_release",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 48,
+      "exposure": "public",
+      "description": "Releases one exact consumer lease. A stale, foreign or duplicate lease is rejected without changing shared-raster ownership.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_connect",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 0,
+      "exposure": "public",
+      "description": "Opens a TCP connection to a remote IPv4 endpoint.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_write",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 1,
+      "exposure": "public",
+      "description": "Writes bytes to an open TCP connection.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_read",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 2,
+      "exposure": "public",
+      "description": "Reads available bytes from an open TCP connection.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_close",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 3,
+      "exposure": "public",
+      "description": "Closes an open TCP connection.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_summary",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 4,
+      "exposure": "public",
+      "description": "Returns aggregate TCP connection and traffic counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_connection",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 5,
+      "exposure": "public",
+      "description": "Returns state and endpoint information for one TCP connection.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_echo_listen_once",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 6,
+      "exposure": "public",
+      "description": "Accepts one TCP echo request and sends its payload back.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_accept_read_once",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 7,
+      "exposure": "public",
+      "description": "Accepts one TCP client and reads its first payload.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_ipv4_send",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 8,
+      "exposure": "public",
+      "description": "Sends one IPv4 payload through the configured network stack.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_ipv4_recv",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 9,
+      "exposure": "public",
+      "description": "Receives one queued IPv4 payload.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_config_get",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 10,
+      "exposure": "public",
+      "description": "Returns the active IPv4 network configuration.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_config_set",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 11,
+      "exposure": "public",
+      "description": "Applies an IPv4 network configuration.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_dns_resolve",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 12,
+      "exposure": "public",
+      "description": "Resolves a host name using the configured DNS server.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_dns_resolve_server",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 13,
+      "exposure": "public",
+      "description": "Resolves a host name using an explicitly selected DNS server.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_dhcp_acquire",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 14,
+      "exposure": "public",
+      "description": "Starts or performs DHCP lease acquisition.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_dhcp_renew",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 15,
+      "exposure": "public",
+      "description": "Renews the active DHCP lease.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_dhcp_release",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 16,
+      "exposure": "public",
+      "description": "Releases the active DHCP lease.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_dhcp_status",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 17,
+      "exposure": "public",
+      "description": "Returns DHCP coordinator and lease state.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_detail_get",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 18,
+      "exposure": "advanced",
+      "description": "Returns detailed adapter and IPv4 stack information.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_diag_run",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 19,
+      "exposure": "advanced",
+      "description": "Runs the bounded network diagnostic suite.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_open",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 20,
+      "exposure": "advanced",
+      "description": "Opens a named local IPC channel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_send",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 21,
+      "exposure": "advanced",
+      "description": "Sends one message through a local IPC channel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_recv",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 22,
+      "exposure": "advanced",
+      "description": "Receives one message from a local IPC channel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_poll",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 23,
+      "exposure": "advanced",
+      "description": "Reports whether a local IPC channel has a message ready.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_close",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 24,
+      "exposure": "advanced",
+      "description": "Closes a local IPC channel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_summary",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 25,
+      "exposure": "advanced",
+      "description": "Returns aggregate local IPC channel statistics.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_channel",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 26,
+      "exposure": "advanced",
+      "description": "Returns state and counters for one local IPC channel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.serial_link_status",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 27,
+      "exposure": "advanced",
+      "description": "Returns serial-link connection and transfer state.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.serial_link_poll",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 28,
+      "exposure": "advanced",
+      "description": "Polls the serial link for newly received messages.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.serial_link_send_message",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 29,
+      "exposure": "advanced",
+      "description": "Sends one framed message over the serial link.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.serial_link_host_test",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 30,
+      "exposure": "advanced",
+      "description": "Runs the serial-link host interoperability probe.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.serial_link_inbox",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 31,
+      "exposure": "advanced",
+      "description": "Reads one message from the serial-link inbox.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.net_service_request",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 32,
+      "exposure": "advanced",
+      "description": "Runs one network-service request through the generation-bound kernel channel worker and returns only its matching response.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.ipc_performance",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 33,
+      "exposure": "advanced",
+      "description": "Returns append-only kernel-channel worker, byte-work, queue, wait and timing counters for one channel or channel zero for the aggregate.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4NET.tcp_performance",
+      "group": "R4NET",
+      "kind": "group_slot",
+      "slot": 34,
+      "exposure": "advanced",
+      "description": "Returns append-only TCP write-burst, outstanding-data, ACK-coalescing, polling, retransmit and negotiated-option counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_open_stream",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 0,
+      "exposure": "public",
+      "description": "Opens an owned PCM output stream with the requested format.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_write",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 1,
+      "exposure": "public",
+      "description": "Writes PCM frames to an open audio stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_close",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 2,
+      "exposure": "public",
+      "description": "Drains all accepted PCM frames, then closes and invalidates an owned audio stream; a failed drain keeps the handle valid for retry.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_set_volume",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 3,
+      "exposure": "public",
+      "description": "Sets the volume of an open audio stream.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_acquire",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 4,
+      "exposure": "public",
+      "description": "Acquires exclusive access to a SID synthesis voice.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_write_register",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 5,
+      "exposure": "public",
+      "description": "Writes one register of an acquired SID synthesizer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_release",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 6,
+      "exposure": "public",
+      "description": "Releases an acquired SID synthesizer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_load_data",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 7,
+      "exposure": "public",
+      "description": "Loads SID tune data into the synthesis service.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_init",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 8,
+      "exposure": "public",
+      "description": "Initializes a loaded SID tune at the requested subsong.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_play_frame",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 9,
+      "exposure": "public",
+      "description": "Renders or advances one SID playback frame.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_stop",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 10,
+      "exposure": "public",
+      "description": "Stops active SID tune playback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.sid_model_name",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 11,
+      "exposure": "public",
+      "description": "Returns the display name of a SID chip model.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.midi_open_synth",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 12,
+      "exposure": "public",
+      "description": "Opens an owned MIDI synthesizer session.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.midi_send",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 13,
+      "exposure": "public",
+      "description": "Sends MIDI bytes to an open synthesizer session. Status zero renders PCM; data1/data2 carry the little-endian frame count (1..1024), while zero selects 1024 frames. Backend and backpressure errors are returned unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.midi_close",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 14,
+      "exposure": "public",
+      "description": "Closes and invalidates an owned MIDI synthesizer session.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.opl3_write_register",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 15,
+      "exposure": "public",
+      "description": "Writes one OPL3 hardware or emulation register.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.opl3_reset",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 16,
+      "exposure": "public",
+      "description": "Resets all OPL3 channels and registers.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.opl3_render_block",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 17,
+      "exposure": "public",
+      "description": "Renders one block of OPL3 PCM samples.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.opl3_stop",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 18,
+      "exposure": "public",
+      "description": "Stops OPL3 playback and silences active voices.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.device_inventory_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 0,
+      "exposure": "advanced",
+      "description": "Returns the number and revision of inventoried hardware devices.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.device_inventory_record",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 1,
+      "exposure": "advanced",
+      "description": "Returns one hardware device inventory record.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 2,
+      "exposure": "advanced",
+      "description": "Returns physical memory totals and allocator usage.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_block_count",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 3,
+      "exposure": "advanced",
+      "description": "Returns the number of physical memory-map blocks.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_block",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 4,
+      "exposure": "advanced",
+      "description": "Returns one physical memory-map block.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_pressure_snapshot",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 5,
+      "exposure": "advanced",
+      "description": "Returns current reclaim, cache, and memory-pressure counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_reclaim_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 6,
+      "exposure": "advanced",
+      "description": "Runs a bounded memory reclaim diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_backing_store_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 7,
+      "exposure": "advanced",
+      "description": "Runs the backing-store availability diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_backing_store_slot_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 8,
+      "exposure": "advanced",
+      "description": "Runs the backing-store slot allocation diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_pager_gate_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 9,
+      "exposure": "advanced",
+      "description": "Runs the pager admission and blocker diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_page_io_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 10,
+      "exposure": "advanced",
+      "description": "Runs the explicit page-input and page-output diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_vm_page_state_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 11,
+      "exposure": "advanced",
+      "description": "Runs the virtual-memory page-state transition diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_vm_reserve_probe",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 12,
+      "exposure": "advanced",
+      "description": "Runs the virtual-memory reserve and release diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.paging_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 13,
+      "exposure": "advanced",
+      "description": "Returns paging, residency, and page-fault counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 14,
+      "exposure": "advanced",
+      "description": "Returns aggregate scheduler, storage, boot, and calibrated clock counters. The caller supplies its supported ProgramPerformanceSummary version and byte size; the provider writes only the negotiated append-only prefix.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_task",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 15,
+      "exposure": "advanced",
+      "description": "Returns performance counters for one task.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_storage",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 16,
+      "exposure": "advanced",
+      "description": "Returns performance counters for one storage device.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_boot_phase",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 17,
+      "exposure": "advanced",
+      "description": "Returns timing data for one boot phase.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.protocol_status",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 18,
+      "exposure": "advanced",
+      "description": "Returns load and runtime state for one protocol module.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.protocol_dispatch",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 19,
+      "exposure": "advanced",
+      "description": "Dispatches a diagnostic or control operation to a protocol module.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.display_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 20,
+      "exposure": "advanced",
+      "description": "Returns display backend, mode, cache, and presentation statistics.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.hardware_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 21,
+      "exposure": "advanced",
+      "description": "Returns a compact summary of discovered platform hardware.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.boot_info_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 22,
+      "exposure": "advanced",
+      "description": "Returns bootloader response and platform discovery summary data.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.boot_info_memory_count",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 23,
+      "exposure": "advanced",
+      "description": "Returns the number of boot memory-map entries.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.boot_info_memory_entry",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 24,
+      "exposure": "advanced",
+      "description": "Returns one boot memory-map entry.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_instance_storage_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 27,
+      "exposure": "advanced",
+      "description": "Legacy v1 storage summary output. The provider never reads the incoming header, writes exactly the frozen 256-byte v1 prefix and leaves bytes after that prefix untouched, preserving callers built with the original C facade.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_instance_storage_self_test",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 28,
+      "exposure": "advanced",
+      "description": "Runs the bounded dynamic program-instance storage diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_registry_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 29,
+      "exposure": "advanced",
+      "description": "Returns compatibility summary data for the dynamic program registry.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_registry_self_test",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 30,
+      "exposure": "advanced",
+      "description": "Runs the compatibility dynamic program-registry diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_registry_summary_v2",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 31,
+      "exposure": "advanced",
+      "description": "Returns full lifecycle and allocation data for the dynamic program registry.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_registry_self_test_v2",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 32,
+      "exposure": "advanced",
+      "description": "Runs the full program-lifecycle and dynamic-registry diagnostic.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.execution_inventory_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 33,
+      "exposure": "advanced",
+      "description": "R4DEV returns the compact generation-safe program, task, and thread inventory summary.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.program_instance_storage_summary_v2",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 34,
+      "exposure": "advanced",
+      "description": "Returns the complete current v2/336-byte dynamic program-instance storage summary, including transactional GUI-frame telemetry. Caller versions 2 or newer with size at least 336 are accepted and answered as v2/336; version zero, version 1 or a smaller size returns -1 without modifying the buffer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.kernel_version",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 35,
+      "exposure": "advanced",
+      "description": "Returns the semantic version of the currently running kernel from its embedded ELF metadata source.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_boot_phase_clock",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 36,
+      "exposure": "advanced",
+      "description": "Returns the calibrated nanosecond timing and explicit availability state for one recorded boot phase; endpoint clock metadata is frozen after terminal boot completion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_irq_timing",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 37,
+      "exposure": "advanced",
+      "description": "Returns IRQ-router dispatch and external-handler nanosecond timing with explicit coverage and observer-read counts.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_boot_summary",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 38,
+      "exposure": "advanced",
+      "description": "Returns the small passive boot completion and frozen timing dataset without collecting broad subsystem summaries.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_driver_work",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 39,
+      "exposure": "advanced",
+      "description": "Returns the compact owner-selectable driver-work queue state, timing, wake, release, scan, critical-section and cleanup counters without collecting broad subsystem summaries.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_pci_inventory",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 40,
+      "exposure": "advanced",
+      "description": "Returns the compact canonical PCI inventory coverage, bounded-enumeration, config-access, mapping and consumer-materialization counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_input",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 41,
+      "exposure": "advanced",
+      "description": "Returns compact i8042, keyboard, GUI-event, console-input and program-entry queue counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+﻿# {ProjectName} Runtime-R4L
+
+{Description}
+
+This library is an independent unit. Its contract, baseline, implementation,
+Zig and C bindings, conformance fixtures, and tests remain together.
+module.R4MF is the build and image source of truth.
+
+Build and test:
+
+    zig build test
+
+Intentionally evolve the contract:
+
+    R4LContractGen --write --update-baseline
+
+Supply the paths defined by module.R4MF. Normal builds only verify materialized
+contract files and never rewrite sources.

@@ -1,0 +1,23 @@
+﻿# R4OS SDK path mappings
+# WORKSPACE_ROOT and REPOSITORIES_ROOT are relative to this SDK directory.
+# Component roots are relative to REPOSITORIES_ROOT. DEVKIT_ROOT and
+# ARTIFACTS_ROOT are relative to WORKSPACE_ROOT; ZIG_ROOT is relative to
+# DEVKIT_ROOT. Every value may instead be absolute. Do not wrap values in quotes.
+
+WORKSPACE_ROOT=../..
+REPOSITORIES_ROOT=..
+
+CONTRACT_ROOT=Contract
+LIBRARIES_ROOT=Libraries
+KERNEL_ROOT=Kernel
+DISTRIBUTION_ROOT=Distribution
+APPS_ROOT=Apps
+SERVICES_ROOT=Services
+DIAGNOSTICS_ROOT=Diagnostics
+DRIVERS_ROOT=Drivers
+PROTOCOLS_ROOT=Protocols
+SUBSYSTEMS_ROOT=Subsystems
+
+DEVKIT_ROOT=DevKit
+ARTIFACTS_ROOT=Artifacts
+ZIG_ROOT=Toolchains/Zig

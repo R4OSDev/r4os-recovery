@@ -1,0 +1,294 @@
+﻿R4D driver DMA, deadline work, storage, display and network ABI
+=================================================================
+
+Scope
+-----
+
+This document defines the owner and lifetime rules for the technical R4D
+types that accompany the generated R4DEV platform contract. The target is
+trusted little-endian x86_64. DriverApi version 19 appends segment-DMA
+operations; version 20 appends deadline-isolated audio work; version 21
+appends canonical USB-host activation; version 22 appends the display-blit
+backend; version 23 appends network RX-work publication; version 24 appends
+network capability selection and metadata intake. StorageBackend version 2
+appends asynchronous block callbacks, UsbHostController version 2 appends
+capability, activity and completion status, and NetBackend version 2 appends
+its offer. None of these extensions changes an older prefix.
+
+Pinned buffers and DMA mappings
+-------------------------------
+
+`dma_pin_buffer` creates an owner-bound lease over an already resident and
+mapped driver buffer. It does not allocate or copy the buffer. The caller must
+not free it, replace its virtual mapping, or unpin it while a mapping exists.
+Pinning is limited to 16 MiB per buffer and to the fixed kernel capacity of 32
+simultaneous pins. Calls from IRQ context are rejected. Flags are zero in
+version 1.
+
+`dma_map_pinned` resolves the pinned pages and returns at most 64 ordered
+`DmaSegment` records. All constraints are hard:
+
+- `dma_mask` is the inclusive highest addressable byte. `0xFFFFFFFF` is the
+  normal 32-bit DMA limit.
+- `boundary` is zero or a power of two. No segment crosses it.
+- `max_segment_bytes` is zero for the ABI `u32` maximum or the maximum length
+  of one segment.
+- `alignment` is a power of two not greater than 4096. Every emitted segment
+  start satisfies it; a nonzero boundary cannot be smaller than alignment.
+- `max_segments` is between 1 and 64.
+- Exactly one of `dma_flag_coherent` and `dma_flag_streaming` is required.
+  `dma_flag_allow_bounce` permits a bounded contiguous fallback.
+
+If the original physical pages cannot meet mask, boundary, alignment, length,
+or count limits, mapping either fails without a public partial result or uses
+a contiguous addressable bounce allocation. A bounced result sets
+`dma_mapping_flag_bounced`. `requested_bytes` and `mapped_bytes` describe the
+valid request payload; only the published `segment_count` entries may be used.
+
+Mapping performs the initial device synchronization. Before every later
+device ownership transfer, the driver calls `dma_sync_for_device`; after a
+device completion and before CPU consumption it calls `dma_sync_for_cpu`.
+Direction controls bounce copies: to-device copies outward, from-device copies
+back, and bidirectional does both. On x86_64 coherent and streaming mappings
+both execute the explicit memory-order boundary; the distinct flags preserve
+the portable ownership contract for later platforms.
+
+Pin, map, synchronization, unmap, and unpin require process or driver-worker
+context because synchronization may copy a bounded bounce buffer. An IRQ
+handler queues driver work when it must synchronize or release a mapping
+before publishing a higher-level completion.
+
+Each successful mapping is unmapped exactly once, then its pin is released.
+Unmap performs the final CPU synchronization and copy-back where applicable.
+Unpin fails while any child mapping remains. Generation handles reject stale,
+duplicate, foreign-owner, and already released operations. Failed map paths
+release any private bounce allocation before returning. R4D owner cleanup
+releases mappings before pins and legacy contiguous DMA allocations. The
+existing `alloc_dma_region` and constrained variant remain compatible,
+owner-checked contiguous fast/fallback paths.
+
+Deadline-isolated audio work
+----------------------------
+
+DriverApi version 20 appends `driver_work_submit_request`. Its version-1
+`DriverWorkRequest` is copied during submission and is valid only for the
+call. The only current class is `audio_refill`. It requires a nonzero stable
+device serialization key, an absolute monotonic tick deadline and a callback
+budget from one through four ticks. Flags remain limited to `from_irq`.
+
+Audio requests enter a separate earliest-deadline-first queue and execute on
+the single `r4d-audio` short-completion worker. This makes callbacks globally,
+and therefore per device, serial. The normal IRQ/task FIFO keeps its existing
+bounded IRQ preference and task fairness; normal admission leaves two of the
+16 shared completion slots available to the deadline lane. At most four
+deadline jobs may be queued. The scheduler bounds every short-completion
+activation to four ticks and four dispatches before demotion, so the audio
+lane cannot create an unbounded priority class.
+
+A driver submits one bounded hardware-status, refill or recovery pass per
+request. Work arriving during that pass is represented by a new request with
+a new absolute deadline; the callback does not drain an unbounded private
+loop. A device retains at most one queued successor while its current pass
+runs. Completion handles, cancellation, owner cleanup and release use the
+same generation-safe lifetime as normal Driver Work. Shutdown closes device
+admission, disables its interrupt source, releases device locks and only then
+joins or cancels every retained work handle before DMA or module memory is
+released.
+
+The performance snapshot version 2 reports deadline queue/running/high-water,
+submission/start/completion, admission rejection, queue ticks, start
+lateness and callback budget overruns globally and per selected owner. A miss
+means the callback began after its declared absolute deadline; an overrun
+means the callback used more ticks than its declared budget. These counters
+are observation and conformance data, not permission to ignore a failed
+submission.
+
+Canonical USB-host activation
+-----------------------------
+
+DriverApi version 21 appends `activate_usb_host_controller`. For `XHCI` this
+is an ownership boundary, not a second implementation: XHCI.R4D activates the
+kernel-resident PCI/MMIO/DMA backend with its current R4D owner ID. Exactly one
+registry entry owns controller initialization, transfer and event rings,
+interrupt registration, polling fallback, hotplug and shutdown. The built-in
+path may start only when no activated registry owner exists.
+
+UsbHostController version 2 keeps all version-1 callbacks and makes their
+dispatch productive for port scan, device address/configuration, control,
+bulk, interrupt, reset, clear-halt and bounded poll/completion work. Device
+handles carry the stable registry controller ID; endpoint handles additionally
+carry SuperSpeed `max_burst`. Callers must not bypass that controller identity
+or retain a handle after hot-unplug, reset or host unregister.
+Version-2 registration rejects unknown capability bits, missing mandatory
+operation flags and a capability/callback mismatch. A loadable activation may
+declare preload or disk source; built-in source is reserved for the internal
+fallback.
+
+The status callback reports the registry state and source, capability flags,
+queue depth, maximum transfer bytes, active transfers, completions,
+interrupts, poll fallbacks, cancellations and failures. The event-IRQ flag
+means the backend supports IRQ wakeup; the poll-fallback flag remains set
+because missing or unusable routing must not stop forward progress.
+
+An xHCI transfer has a generation-safe endpoint-bound owner until completion,
+timeout recovery, cancellation or hot-unplug. A multi-TRB TD retains every
+TRB pointer, including both sides of a producer-ring wrap. Errors and late
+events can therefore resolve only that exact transfer. Unregister first masks
+the xHC interrupter, stops the controller and retires transfers and DMA. A
+failed halt vetoes unregister and retains the registry and resources.
+
+Synchronous display blit
+------------------------
+
+DriverApi version 22 appends the owner-bound display-blit registration pair.
+The callback borrows one validated kernel target, one XRGB32 source and at
+most eight damage regions for the duration of a synchronous call. It retains
+no pointer or fence. Display target ownership, completed-generation state,
+statistics and the complete CPU fallback remain in the kernel. Owner cleanup
+closes callback admission and drains the active callback before module memory
+can be released.
+
+Bounded network receive handoff
+-------------------------------
+
+DriverApi version 23 appends `net_schedule_rx(adapter_index)`. This is the
+only network operation intended for external IRQ context. A handler reads and
+acknowledges a bounded device-specific cause, records any recovery state, and
+then publishes work for the exact registered adapter. It does not move an RX
+cursor, copy a frame, dispatch R4P, transmit a reply or wake a protocol waiter.
+Pure TX and configuration causes do not publish RX work unless the same
+bounded device observation also proves pending RX or controller recovery.
+
+`net_receive_frame` is task/driver-worker only. It copies one frame of 1
+through 1536 bytes into Netcore's fixed 64-slot ownership queue and returns:
+0 for accepted, -1 for an invalid adapter, -2 for an invalid frame, -3 while
+admission is closed, -4 for queue backpressure and -5 for IRQ context. After
+acceptance the driver may immediately return its original buffer or descriptor
+to the device. On -4 it retains that exact device entry and publishes retry
+work; it must neither advance nor count the frame as consumed.
+
+The `net-rx` task consumes at most 32 queued frames in one protocol batch.
+Adapter work and a transition from an empty common queue signal the same event,
+so normal RX has no periodic-poll admission latency. The bounded 10-ms poll is
+only a watchdog for absent or unusable interrupt routing. A claimed queue slot
+stays occupied through nested protocol progress and is released exactly once
+after success or classified protocol failure. Explicit backend or system
+transition may cancel queued ownership only after producer and consumer
+callbacks have drained. Accepted, released, cancelled and occupied counts,
+queue high-water/backpressure, batch ends, event/fallback wakes and schedule-
+plus-handoff tail latency remain diagnostically visible.
+
+Negotiated network queues and offloads
+---------------------------------------
+
+NetBackend version 2 appends an offered and required 64-bit capability set,
+RX/TX queue and segment maxima, RX/TX ownership modes, an interrupt-moderation
+offer and the optional packet TX callback after the complete version-1
+descriptor. A version-1 descriptor remains the flat single-queue backend.
+Unknown and unsupported optional bits appear in `rejected`; a required bit
+which is absent, unknown or unsupported rejects registration. No partial
+required selection is possible.
+
+After successful registration DriverApi version 24
+`net_backend_query(adapter, selection)` returns immutable offered, accepted
+and rejected masks plus the selected queue, segment, ownership and moderation
+values. The current BSP Netcore selects exactly one RX and one TX queue, one
+flat segment, borrowed-until-return ownership and zero moderation. Multiqueue,
+scatter, VLAN insertion/removal, TX checksum/segmentation, notification
+suppression and asynchronous completion are therefore specified but rejected.
+SMP may select more queues later without changing either prefix.
+
+`NetPacket` always names one canonical `fallback_addr/fallback_bytes` byte
+stream. Segment address/count, checksum start/offset, VLAN tag and GSO size
+are only interpretations selected by accepted direction capabilities; they
+never replace the flat bytes for fallback. At most eight segments may be
+described. Unknown packet flags, rejected capabilities and structurally
+inapplicable metadata are stripped together and the flat bytes enter normal
+software processing unchanged. DriverApi `net_receive_packet` returns 0 for
+ordinary acceptance, 1 for accepted software fallback, and the existing
+-1..-5 adapter/frame/admission/backpressure/context errors. Both successful
+values transfer exactly one copied frame to the bounded queue. On -4 the
+driver still owns the exact device descriptor and retries it unchanged.
+
+Borrowed-until-return means no pointer may be retained beyond the call.
+Transferred-until-completion is valid only after the corresponding TX
+capability was selected. A future accepted `NetTxRequest` then copies the
+completion handle and callback and terminates it exactly once with success,
+error, cancellation, timeout or shutdown. A rejected submission transfers
+nothing. Duplicate or late completions must not touch a reused request.
+Current Netcore accepts no transferred TX path and continues to call the
+version-1 synchronous transmit callback with the flat bytes.
+
+The first productive capability is `rx_l4_checksum_valid`. Only a driver
+which offered it and received it in `accepted` may mark a complete flat IPv4
+TCP/UDP packet. Netcore still validates Ethernet shape, IPv4 shape,
+fragmentation and the IPv4 header checksum. It then sets
+`ProtocolBuffer.flags.rx_l4_checksum_valid` only for the matching RX dispatch;
+NetUdp/NetTcp skip exactly their duplicate L4 checksum pass. TX operations,
+ICMP, unknown flags, VLAN-wrapped frames, fragments and incapable adapters
+retain software verification. Virtio `NEEDS_CSUM` is completed first and then
+software-verified; only `DATA_VALID` consumes the negotiated bypass.
+
+Selection, metadata usage, byte-preserving fallbacks and malformed metadata
+are visible in NETRX and backend status. Teardown first closes admission and
+drains callbacks as before; the copied common-queue slot remains the sole RX
+owner after a successful return, independent of the optional metadata.
+
+Asynchronous storage backend
+----------------------------
+
+StorageBackend version 2 appends `submit`, `cancel`, and `reset` after the
+complete version-1 descriptor. A version-1 descriptor, a short version-2
+descriptor, or a null `submit` keeps the synchronous callback adapter.
+Synchronous devices always have effective in-flight depth one.
+
+For an asynchronous backend, `queue_depth` is the maximum number of requests
+owned by hardware at once. It no longer describes waiting callers. The block
+core has a separate bounded software queue of 16 slots and admits requests in
+request-ID order.
+
+`submit` is nonblocking and receives a versioned `StorageRequest` descriptor.
+The descriptor pointer is valid only for the callback; the backend copies any
+fields it needs before returning. After a zero return, the copied handle,
+completion function, and request buffer remain valid until terminal
+completion. Operation values are none=0, read=1, write=2, and flush=3. A zero
+return transfers ownership to the backend, which must invoke
+`complete(handle, result, bytes)` exactly once. A nonzero return rejects the
+request and buffer unless the backend already completed inline; an inline
+completion wins that race.
+
+Completion may run in IRQ context. The kernel claims only the exact live
+generation handle there and delegates all queue, waiter, and buffer teardown
+to the owning block worker. Read and write success requires exactly
+`buffer_bytes`; flush success requires zero bytes. Duplicate and late
+completions are rejected and counted without touching reused state.
+
+Cancellation is advisory. `cancel(handle, reason)` is requested at most once
+for timeout, caller cancellation, reset, or shutdown, but it is not proof that
+hardware stopped. An accepted request still requires a completion. A
+successful `reset(reason)` is the sole alternate proof that every old command
+is physically quiescent; the core invalidates old handles before waking
+waiters or releasing buffers. A failed reset leaves the requests owned until
+their real completions arrive.
+
+Ordering and teardown
+---------------------
+
+Reads and writes may occupy the declared in-flight depth. A flush is an
+exclusive FIFO barrier: it waits for all earlier active requests, runs alone,
+and prevents later requests from passing it.
+
+General callers use kernel-owned bounce buffers and may detach after a
+classified timeout; the late physical completion owns final release. A direct
+request borrows a proven resident buffer and therefore waits through timeout
+or cancellation until physical completion or successful reset. Its task holds
+the existing unwind token, so a hard kill is deferred across that lifetime.
+
+Unregister first closes admission and succeeds only when mounts, operation
+pins, queued or active requests, locks, and waiters are all gone. Thus an R4D
+module cannot unload while a backend can still call its code or access its
+buffers. Driver shutdown/finalization runs before generic IRQ, work, DMA, and
+module memory release.
+
+This contract provides the shared foundation only. It does not make an AHCI,
+NVMe, USB, audio, or network driver asynchronous by itself.

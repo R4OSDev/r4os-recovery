@@ -1,0 +1,29 @@
+* text=auto
+
+.gitattributes text eol=lf
+.gitignore text eol=lf
+
+*.zig text eol=lf
+*.zon text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.ld text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.R4MF text eol=lf
+*.R4S text eol=lf
+*.txt text eol=lf
+*.ini text eol=lf
+*.sh text eol=lf
+*.STATUS text eol=lf
+*.template text eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+*.bin -text
+*.br -text
+*.ico -text
+*.zip -text
+*.md text eol=lf

@@ -1,0 +1,81 @@
+﻿R4LQuery ABI
+===========
+
+Rolle
+-----
+
+Query Version 1 ist die technische Identitaet fuer Platform-API-Importe und
+Runtime-R4Ls. Platform APIs werden so importiert:
+
+    <GRUPPE>:Query:1
+
+Der Kernel stellt die sechs Platform-API-Querys als eingebaute Provider
+bereit. Dafuer existiert keine R4L-Datei. Eine benannte optionale Runtime-R4L
+verwendet group=0, kernel_bridge=0 und wird fachlich direkt ueber einen Export
+wie API_V1 importiert. Query bleibt in beiden Faellen technische
+Identitaetsmetadaten und ist keine Funktionstabelle.
+
+R4OS-CONTRACT-GENERATED:BEGIN R4LQUERY
+Dieser Block wird aus ApiContract.json erzeugt und darf nicht von Hand geaendert werden.
+
+R4LQuery
+--------
+
+Offset  Typ  Feld
+0       u32  magic
+4       u32  abi_version
+8       u32  size
+12      u32  group
+16      u64  kernel_bridge
+24      u64  reserved
+
+Groesse: 32 Byte
+
+Magic: 0x314C3452
+Version: 1
+Pointergroesse: 8
+Entry: Query:1
+
+Gruppen-IDs
+-----------
+
+    1 = R4SYS (kernel_table)
+    2 = R4DESK (kernel_table)
+    3 = R4DRAW (kernel_table)
+    4 = R4NET (kernel_table)
+    5 = R4AUDIO (kernel_table)
+    6 = R4DEV (kernel_table)
+
+Diese Gruppen-IDs identifizieren eingebaute Platform APIs und keine R4L-Dateien.
+Externe Runtime-R4Ls besitzen eigene, versionierte Funktionstabellen und werden hier nicht zentral registriert.
+
+R4OS-CONTRACT-GENERATED:END R4LQUERY
+
+Query-Vertrag
+-------------
+
+- Eine Platform API ist ein eingebauter Kernel-Provider und kein R4M0-Modul.
+  Der Provider exportiert seine statische Query-Identitaet direkt aus dem
+  Kernel.
+- Eine Runtime-R4L ist ein R4M0-Modul mit ModuleKind R4L. Ihr module.R4MF
+  exportiert Query und nennt den fachlichen CONTRACT.
+- Magic, Version, Groesse, Gruppe und Pointergroesse muessen passen.
+- kernel_bridge ist ein historisch gebundenes Feld, bleibt 0 und ist kein
+  App-Funktionsfeld.
+- Der Loader ordnet die sechs eingebauten Provider ueber ihre feste
+  Gruppen-ID der jeweiligen R4XStart-Tabelle zu.
+- Benannte Runtime-R4Ls verwenden group=0; Anwendungen importieren ihre
+  libraryeigene Funktionstabelle direkt mit
+  `<MODUL>:<INTERFACE>:<REVISION>`.
+- Es existiert kein direkt importierbarer interner Kernelzugang. Platform
+  APIs werden ausschliesslich ueber ihren oeffentlichen Namen und Query:1
+  importiert.
+- Neue optionale Libraries verwenden group=0 und keine zentrale Gruppen-ID.
+
+Beispiel
+--------
+
+    IMPORT=R4SYS:Query:1
+    IMPORT=EXAMPLE:API_V1:1
+
+Die Importliste eines Projekts steht ausschliesslich in module.R4MF.

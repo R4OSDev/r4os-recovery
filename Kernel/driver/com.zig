@@ -1,0 +1,267 @@
+// 16550-kompatibler UART (PC COM-Ports).
+
+const io = @import("../arch/x86_64/io.zig");
+const owner_locks = @import("../memory/owner_locks.zig");
+const tx_policy = @import("com_tx_policy.zig");
+
+pub const COM1: u16 = 0x3F8;
+pub const COM2: u16 = 0x2F8;
+const TX_READY_TIMEOUT: usize = 1_000_000;
+const UART_FIFO_DEPTH: usize = 16;
+
+pub const Port = struct {
+    base: u16,
+
+    pub fn init(self: Port) void {
+        io.outb(self.base + 1, 0x00); // IRQs aus
+        io.outb(self.base + 3, 0x80); // DLAB on
+        io.outb(self.base + 0, 0x03); // 38400 baud (low)
+        io.outb(self.base + 1, 0x00); // (high)
+        io.outb(self.base + 3, 0x03); // 8N1
+        io.outb(self.base + 2, 0xC7); // FIFO an
+        io.outb(self.base + 4, 0x0B); // RTS/DSR
+    }
+
+    pub fn isPresent(self: Port) bool {
+        io.outb(self.base + 7, 0x5A);
+        if (io.inb(self.base + 7) != 0x5A) return false;
+        io.outb(self.base + 7, 0xA5);
+        return io.inb(self.base + 7) == 0xA5;
+    }
+
+    pub fn putc(self: Port, c: u8) void {
+        var spins: usize = 0;
+        while ((io.inb(self.base + 5) & 0x20) == 0) : (spins += 1) {
+            if (spins >= TX_READY_TIMEOUT) return;
+        }
+        io.outb(self.base, c);
+    }
+
+    // Nonblocking runtime path for COM2/Serial-Link. Once THR is empty the
+    // enabled 16550 FIFO accepts one bounded burst; callers own retry and
+    // deadline policy and therefore never hide a stalled byte as success.
+    pub fn writeAvailable(self: Port, data: []const u8) usize {
+        if (data.len == 0 or (io.inb(self.base + 5) & 0x20) == 0) return 0;
+        const count = @min(data.len, UART_FIFO_DEPTH);
+        for (data[0..count]) |byte| io.outb(self.base, byte);
+        return count;
+    }
+
+    pub fn hasData(self: Port) bool {
+        return (io.inb(self.base + 5) & 0x01) != 0;
+    }
+
+    pub fn getc(self: Port) ?u8 {
+        if (!self.hasData()) return null;
+        return io.inb(self.base);
+    }
+
+    pub fn puts(self: Port, s: []const u8) void {
+        for (s) |c| self.putc(c);
+    }
+};
+
+// Default ports for convenience.
+pub var com1: Port = .{ .base = COM1 };
+pub var com2: Port = .{ .base = COM2 };
+
+pub fn init() void {
+    com1.init();
+}
+
+pub fn puts(s: []const u8) void {
+    // Ueber den TX-Ring, damit Direktnutzer die Ring-Reihenfolge nicht
+    // ueberholen (COM1-Log ist EIN Strom).
+    logWrite(s);
+}
+
+// --- COM1 TX-Ring fuer den Kernel-Log-Pfad (0.56.15) ---
+// putc schreibt nur in den Ring; gedraint wird opportunistisch (nach jedem
+// Zeichen, wenn der UART-THR frei ist) sowie per Timer-Tick. Der Crash-/
+// Poweroff-/Crash-Pfad schaltet mit logEnterSyncMode() auf synchrone
+// Direktausgabe um. Auch dort ist ein nicht antwortender UART strikt
+// begrenzt; COM2 (Serial-Link) bleibt bewusst roh/synchron.
+const TX_RING_SIZE: usize = 8192; // Zweierpotenz (Index-Maskierung)
+
+var tx_ring: [TX_RING_SIZE]u8 = undefined;
+var tx_head: usize = 0; // monoton, Index = head & (SIZE-1)
+var tx_tail: usize = 0;
+var tx_sync_mode: bool = false;
+var tx_ring_bytes: u64 = 0;
+var tx_sync_bytes: u64 = 0;
+var tx_full_stalls: u64 = 0;
+var tx_dropped_bytes: u64 = 0;
+var tx_sync_failures: u64 = 0;
+var tx_sync_uart_available: bool = true;
+var tx_write_calls: u64 = 0;
+var tx_bulk_calls: u64 = 0;
+var tx_lock_acquisitions: u64 = 0;
+var tx_uart_status_reads: u64 = 0;
+var tx_drain_calls: u64 = 0;
+var tx_max_span: u64 = 0;
+
+pub const LogTxStats = struct {
+    ring_size: u64 = TX_RING_SIZE,
+    pending: u64 = 0,
+    ring_bytes: u64 = 0,
+    sync_bytes: u64 = 0,
+    full_stalls: u64 = 0,
+    dropped_bytes: u64 = 0,
+    sync_failures: u64 = 0,
+    sync_mode: bool = false,
+    sync_uart_available: bool = true,
+    write_calls: u64 = 0,
+    bulk_calls: u64 = 0,
+    lock_acquisitions: u64 = 0,
+    uart_status_reads: u64 = 0,
+    drain_calls: u64 = 0,
+    max_span: u64 = 0,
+};
+
+pub fn logTxStats() LogTxStats {
+    const token = owner_locks.serial_output.acquire();
+    defer owner_locks.serial_output.release(token);
+    return .{
+        .pending = tx_head -% tx_tail,
+        .ring_bytes = tx_ring_bytes,
+        .sync_bytes = tx_sync_bytes,
+        .full_stalls = tx_full_stalls,
+        .dropped_bytes = tx_dropped_bytes,
+        .sync_failures = tx_sync_failures,
+        .sync_mode = tx_sync_mode,
+        .sync_uart_available = tx_sync_uart_available,
+        .write_calls = tx_write_calls,
+        .bulk_calls = tx_bulk_calls,
+        .lock_acquisitions = tx_lock_acquisitions,
+        .uart_status_reads = tx_uart_status_reads,
+        .drain_calls = tx_drain_calls,
+        .max_span = tx_max_span,
+    };
+}
+
+pub fn logPutc(c: u8) void {
+    const byte = [1]u8{c};
+    logWrite(byte[0..]);
+}
+
+// Normal runtime strings enter the serial owner once, append the complete
+// memory span and perform at most one opportunistic FIFO drain.  The UART
+// line-status register is therefore sampled per span instead of per byte.
+pub fn logWrite(data: []const u8) void {
+    if (data.len == 0) return;
+    const flags = owner_locks.serial_output.acquire();
+    defer owner_locks.serial_output.release(flags);
+    tx_write_calls +%= 1;
+    if (data.len > 1) tx_bulk_calls +%= 1;
+    tx_lock_acquisitions +%= 1;
+    tx_max_span = @max(tx_max_span, @as(u64, @intCast(data.len)));
+    if (tx_sync_mode) {
+        for (data) |byte| {
+            if (writeSyncByte(byte)) {
+                tx_sync_bytes +%= 1;
+            } else {
+                tx_dropped_bytes +%= 1;
+            }
+        }
+        return;
+    }
+
+    // Make one bounded attempt before admitting the span.  If the producer
+    // outruns the fixed ring, preserve the newest byte stream exactly as the
+    // former byte path did, while accounting every overwritten byte.
+    var drained = false;
+    if (data.len > TX_RING_SIZE -| (tx_head -% tx_tail)) {
+        drainLocked();
+        drained = true;
+    }
+    const admission = tx_policy.planAdmission(tx_head -% tx_tail, TX_RING_SIZE, data.len);
+    const dropped = admission.dropped();
+    if (dropped != 0) {
+        tx_full_stalls +%= dropped;
+        tx_dropped_bytes +%= dropped;
+        tx_tail +%= admission.drop_existing;
+    }
+    for (data[admission.skip_input..]) |byte| {
+        tx_ring[tx_head & (TX_RING_SIZE - 1)] = byte;
+        tx_head +%= 1;
+        tx_ring_bytes +%= 1;
+    }
+    if (!drained) drainLocked();
+}
+
+// Opportunistischer Drain fuer Timer-Tick/Idle: nicht blockierend.
+pub fn logDrain() void {
+    if (tx_tail == tx_head) return;
+    const flags = owner_locks.serial_output.acquire();
+    defer owner_locks.serial_output.release(flags);
+    drainLocked();
+}
+
+// Synchron leeren (Poweroff-/Abschluss-Pfad), solange der UART fortschreitet.
+// Ein einmal erkannter Hardwarestillstand verwirft den Rest statt zu haengen.
+pub fn logFlushSync() void {
+    const flags = owner_locks.serial_output.acquire();
+    defer owner_locks.serial_output.release(flags);
+    while (tx_tail != tx_head) {
+        if (!drainSyncBurst()) {
+            tx_dropped_bytes +%= tx_head -% tx_tail;
+            tx_tail = tx_head; // UART tot: aufgeben statt haengen
+            return;
+        }
+    }
+}
+
+// Crash-Pfad: erst Ring leeren, danach jede Ausgabe direkt/synchron.
+pub fn logEnterSyncMode() void {
+    const flags = owner_locks.serial_output.acquire();
+    defer owner_locks.serial_output.release(flags);
+    tx_sync_mode = true;
+    logFlushSync();
+}
+
+fn drainLocked() void {
+    tx_drain_calls +%= 1;
+    if (tx_tail == tx_head) return;
+    tx_uart_status_reads +%= 1;
+    if ((io.inb(COM1 + 5) & 0x20) == 0) return; // THR nicht frei
+    const count = tx_policy.drainCount(tx_head -% tx_tail, true, UART_FIFO_DEPTH);
+    var burst: usize = 0;
+    while (burst < count) : (burst += 1) {
+        io.outb(COM1, tx_ring[tx_tail & (TX_RING_SIZE - 1)]);
+        tx_tail +%= 1;
+    }
+}
+
+fn drainSyncBurst() bool {
+    if (!tx_sync_uart_available) return false;
+    var spins: usize = 0;
+    tx_uart_status_reads +%= 1;
+    while ((io.inb(COM1 + 5) & 0x20) == 0) : (spins += 1) {
+        if (spins >= TX_READY_TIMEOUT) {
+            tx_sync_uart_available = false;
+            tx_sync_failures +%= 1;
+            return false;
+        }
+    }
+    var burst: usize = 0;
+    while (burst < UART_FIFO_DEPTH and tx_tail != tx_head) : (burst += 1) {
+        io.outb(COM1, tx_ring[tx_tail & (TX_RING_SIZE - 1)]);
+        tx_tail +%= 1;
+    }
+    return true;
+}
+
+fn writeSyncByte(c: u8) bool {
+    if (!tx_sync_uart_available) return false;
+    var spins: usize = 0;
+    tx_uart_status_reads +%= 1;
+    while ((io.inb(COM1 + 5) & 0x20) == 0) : (spins += 1) {
+        if (spins >= TX_READY_TIMEOUT) {
+            tx_sync_uart_available = false;
+            tx_sync_failures +%= 1;
+            return false;
+        }
+    }
+    io.outb(COM1, c);
+    return true;
+}

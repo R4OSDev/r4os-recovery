@@ -1,0 +1,22 @@
+.{
+    .name = {PackageName},
+    .version = "{Version}",
+    .fingerprint = {Fingerprint},
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .r4os_sdk = .{
+            .path = "{SdkRelativePath}",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "Source",
+        "Contract",
+        "Bindings",
+        "Tests",
+        "Docs",
+        "module.R4MF",
+        "README.md",
+    },
+}

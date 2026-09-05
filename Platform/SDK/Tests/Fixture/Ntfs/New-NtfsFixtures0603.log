@@ -1,0 +1,95 @@
+﻿[2026-07-20 23:26:13] work directory: C:\Users\R4mbo\AppData\Local\Temp\ntfs-fixtures-0603-97c00bf6450f4f5995fae9e0fc4f52c4
+[2026-07-20 23:26:13] creating NTFS4K: 32 MB, unit 4096, letter X
+
+Microsoft DiskPart-Version 10.0.26100.1150
+
+Copyright (C) Microsoft Corporation.
+Auf Computer: R4MAIN
+
+
+    0 Prozent bearbeitet
+  100 Prozent bearbeitet
+
+
+DiskPart hat die Datei für virtuelle Datenträger erfolgreich erstellt.
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich ausgewählt.
+
+
+  100 Prozent bearbeitet
+
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich angefügt.
+
+Die angegebene Partition wurde erfolgreich erstellt.
+
+
+    0 Prozent bearbeitet
+  100 Prozent bearbeitet
+
+
+DiskPart hat das Volume erfolgreich formatiert.
+
+Der Laufwerkbuchstabe oder der Bereitstellungspunkt wurde zugewiesen.
+
+[2026-07-20 23:26:46] NTFS4K: mounted as X:\
+[2026-07-20 23:26:47] NTFS4K: 347 files hashed
+
+Microsoft DiskPart-Version 10.0.26100.1150
+
+Copyright (C) Microsoft Corporation.
+Auf Computer: R4MAIN
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich ausgewählt.
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich getrennt.
+
+[2026-07-20 23:27:15] NTFS4K: raw image 32 MB
+[2026-07-20 23:27:15] creating NTFS512: 16 MB, unit 512, letter X
+
+Microsoft DiskPart-Version 10.0.26100.1150
+
+Copyright (C) Microsoft Corporation.
+Auf Computer: R4MAIN
+
+
+    0 Prozent bearbeitet
+  100 Prozent bearbeitet
+
+
+DiskPart hat die Datei für virtuelle Datenträger erfolgreich erstellt.
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich ausgewählt.
+
+
+  100 Prozent bearbeitet
+
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich angefügt.
+
+Die angegebene Partition wurde erfolgreich erstellt.
+
+
+    0 Prozent bearbeitet
+  100 Prozent bearbeitet
+
+
+DiskPart hat das Volume erfolgreich formatiert.
+
+Der Laufwerkbuchstabe oder der Bereitstellungspunkt wurde zugewiesen.
+
+[2026-07-20 23:27:47] NTFS512: mounted as X:\
+[2026-07-20 23:27:48] NTFS512: 341 files hashed
+
+Microsoft DiskPart-Version 10.0.26100.1150
+
+Copyright (C) Microsoft Corporation.
+Auf Computer: R4MAIN
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich ausgewählt.
+
+Die Datei für virtuelle Datenträger wurde von DiskPart erfolgreich getrennt.
+
+[2026-07-20 23:28:16] NTFS512: raw image 16 MB
+[2026-07-20 23:28:17] fixture zip: D:\AI\Projects\Claude Code\R4OS\Code\System\SDK\Tests\NtfsFixtures\NtfsFixtures0603.zip (6.41 MB) sha256=FAE17271D3DC59D1279C8A88A62DF17C73D4DDCB58DF57C64A938CBE8731F7F5
+[2026-07-20 23:28:17] DONE

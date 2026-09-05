@@ -1,0 +1,532 @@
+{
+  "schema": 1,
+  "baselineRelease": "0.75.21",
+  "sources": [
+    {
+      "id": "Kernel",
+      "repository": "Repositories/Kernel",
+      "copyTo": "Kernel",
+      "commit": "0932e25ccc99d3e31e757b644e3f72f585fd2897",
+      "remote": "https://github.com/R4OSDev/r4os-kernel.git"
+    },
+    {
+      "id": "Contract",
+      "repository": "Repositories/Contract",
+      "copyTo": "Platform/Contract",
+      "commit": "e9f97a6e66a3a1a4daf4e01e21518fdcb62d14cb",
+      "remote": "https://github.com/R4OSDev/r4os-contract.git"
+    },
+    {
+      "id": "SDK",
+      "repository": "Repositories/SDK",
+      "copyTo": "Platform/SDK",
+      "commit": "cfc6f470b2c7dd1ba173d52d2edf5ce68a9ed18c",
+      "remote": "https://github.com/R4OSDev/r4os-sdk.git"
+    },
+    {
+      "id": "Libraries",
+      "repository": "Repositories/Libraries",
+      "copyTo": null,
+      "commit": "5d376bc702775a93b7b21504fffe5d9930ab88dd",
+      "remote": "https://github.com/R4OSDev/r4os-libraries.git"
+    },
+    {
+      "id": "Distribution",
+      "repository": "Repositories/Distribution",
+      "copyTo": null,
+      "commit": "4d05786aa9b642f525b8abfa61e1e01586dc8f10",
+      "remote": "https://github.com/R4OSDev/r4os-distribution.git"
+    },
+    {
+      "id": "Drivers-AHCI",
+      "repository": "Repositories/Drivers/AHCI",
+      "copyTo": null,
+      "commit": "d1a7d549dcf43dbf39a5b79bc8e33a9c11fbc57a",
+      "remote": "https://github.com/R4OSDev/r4os-driver-ahci.git"
+    },
+    {
+      "id": "Drivers-ATAPIO",
+      "repository": "Repositories/Drivers/ATAPIO",
+      "copyTo": null,
+      "commit": "52e1046b879f792dec926483e4b416d35c0cd07a",
+      "remote": "https://github.com/R4OSDev/r4os-driver-atapio.git"
+    },
+    {
+      "id": "Drivers-NVME",
+      "repository": "Repositories/Drivers/NVME",
+      "copyTo": null,
+      "commit": "19070985290ac203157d903b2512fcf10c81f62f",
+      "remote": "https://github.com/R4OSDev/r4os-driver-nvme.git"
+    },
+    {
+      "id": "Drivers-XHCI",
+      "repository": "Repositories/Drivers/XHCI",
+      "copyTo": null,
+      "commit": "be701f33b62a82e47fb599fbf453f5fa645e9b84",
+      "remote": "https://github.com/R4OSDev/r4os-driver-xhci.git"
+    },
+    {
+      "id": "Drivers-USBMSC",
+      "repository": "Repositories/Drivers/USBMSC",
+      "copyTo": null,
+      "commit": "2d138ac9cb19ad87a4de18eba6329698b657ebb9",
+      "remote": "https://github.com/R4OSDev/r4os-driver-usbmsc.git"
+    },
+    {
+      "id": "Drivers-RTL8139",
+      "repository": "Repositories/Drivers/RTL8139",
+      "copyTo": null,
+      "commit": "84d1b46340a06dca2e279148fae2cafbd839a6b1",
+      "remote": "https://github.com/R4OSDev/r4os-driver-rtl8139.git"
+    },
+    {
+      "id": "Drivers-RTL8168",
+      "repository": "Repositories/Drivers/RTL8168",
+      "copyTo": null,
+      "commit": "9648f81508e07fadfc83bcb40e946b37c20bbb16",
+      "remote": "https://github.com/R4OSDev/r4os-driver-rtl8168.git"
+    },
+    {
+      "id": "Drivers-VirtioNet",
+      "repository": "Repositories/Drivers/VirtioNet",
+      "copyTo": null,
+      "commit": "dc90186eae719219da1fbeebeb9abe30b0f26e60",
+      "remote": "https://github.com/R4OSDev/r4os-driver-virtionet.git"
+    },
+    {
+      "id": "Protocols-UsbHidBoot",
+      "repository": "Repositories/Protocols/UsbHidBoot",
+      "copyTo": null,
+      "commit": "00b1147d436a08ff7166e5b1758d1232d22e055e",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-usbhidboot.git"
+    },
+    {
+      "id": "Protocols-UsbHidReport",
+      "repository": "Repositories/Protocols/UsbHidReport",
+      "copyTo": null,
+      "commit": "6a6ecaf753b3a458729f38210cd28054b4be7769",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-usbhidreport.git"
+    },
+    {
+      "id": "Protocols-UsbMscBot",
+      "repository": "Repositories/Protocols/UsbMscBot",
+      "copyTo": null,
+      "commit": "426dba4cef73d07b471f569539d58fc7864f3314",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-usbmscbot.git"
+    },
+    {
+      "id": "Protocols-UsbScsiBlock",
+      "repository": "Repositories/Protocols/UsbScsiBlock",
+      "copyTo": null,
+      "commit": "729c82fefc14ad77485e392cf724d6551b73d08b",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-usbscsiblock.git"
+    },
+    {
+      "id": "Protocols-NetEthernet",
+      "repository": "Repositories/Protocols/NetEthernet",
+      "copyTo": null,
+      "commit": "322039747414795507fdfd9f8056ad582073991f",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-netethernet.git"
+    },
+    {
+      "id": "Protocols-NetArp",
+      "repository": "Repositories/Protocols/NetArp",
+      "copyTo": null,
+      "commit": "b1146c876fa1e482ef04d6afbc654bb45246aba5",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-netarp.git"
+    },
+    {
+      "id": "Protocols-NetIpv4",
+      "repository": "Repositories/Protocols/NetIpv4",
+      "copyTo": null,
+      "commit": "2a8d04034c3a36974af1da49716a699af3d77696",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-netipv4.git"
+    },
+    {
+      "id": "Protocols-NetIcmp",
+      "repository": "Repositories/Protocols/NetIcmp",
+      "copyTo": null,
+      "commit": "72db7bed2b90603303bd59f0cbcb0b64ee29ab58",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-neticmp.git"
+    },
+    {
+      "id": "Protocols-NetUdp",
+      "repository": "Repositories/Protocols/NetUdp",
+      "copyTo": null,
+      "commit": "a2b23191601e333d1a976143faa85da819c57eeb",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-netudp.git"
+    },
+    {
+      "id": "Protocols-NetTcp",
+      "repository": "Repositories/Protocols/NetTcp",
+      "copyTo": null,
+      "commit": "ef00409860a2a762c90ddcf6e7aba45c60a4e4bd",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-nettcp.git"
+    },
+    {
+      "id": "Protocols-NetDns",
+      "repository": "Repositories/Protocols/NetDns",
+      "copyTo": null,
+      "commit": "24256b1cf9adedb4736b2e91ce1e1969a274dc1f",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-netdns.git"
+    },
+    {
+      "id": "Protocols-NetDhcp",
+      "repository": "Repositories/Protocols/NetDhcp",
+      "copyTo": null,
+      "commit": "d5ea3ff3b102622d2f7ace636fdbbcdb42cb0841",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-netdhcp.git"
+    },
+    {
+      "id": "Protocols-R4Http",
+      "repository": "Repositories/Protocols/R4Http",
+      "copyTo": null,
+      "commit": "825c9a02eb40b4a5a3fbe7b8d157a0432cf8243e",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-r4http.git"
+    },
+    {
+      "id": "Protocols-R4Tls",
+      "repository": "Repositories/Protocols/R4Tls",
+      "copyTo": null,
+      "commit": "8cba0e83ef70ed0c5c2e95f1cbb7d1504d6ad081",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-r4tls.git"
+    },
+    {
+      "id": "Protocols-JSON",
+      "repository": "Repositories/Protocols/JSON",
+      "copyTo": null,
+      "commit": "4fb0a66d1a79602fac90ce2e997262d593c3c88d",
+      "remote": "https://github.com/R4OSDev/r4os-protocol-json.git"
+    },
+    {
+      "id": "Services-DhcpService",
+      "repository": "Repositories/Services/DhcpService",
+      "copyTo": null,
+      "commit": "e37752de323f6c33b4a5cddf90ce354bf8258d0a",
+      "remote": "https://github.com/R4OSDev/r4os-service-dhcpservice.git"
+    },
+    {
+      "id": "Services-DnsService",
+      "repository": "Repositories/Services/DnsService",
+      "copyTo": null,
+      "commit": "e1c68a122c51d3c31d7a956290c855d9dcb425f0",
+      "remote": "https://github.com/R4OSDev/r4os-service-dnsservice.git"
+    },
+    {
+      "id": "Services-TcpService",
+      "repository": "Repositories/Services/TcpService",
+      "copyTo": null,
+      "commit": "bfc9e8d986205a12cd5896d4871ce08fc7d4d914",
+      "remote": "https://github.com/R4OSDev/r4os-service-tcpservice.git"
+    },
+    {
+      "id": "Services-UdpService",
+      "repository": "Repositories/Services/UdpService",
+      "copyTo": null,
+      "commit": "b3816050d2be67b388a36d35812f2c8c75326772",
+      "remote": "https://github.com/R4OSDev/r4os-service-udpservice.git"
+    },
+    {
+      "id": "Services-SshService",
+      "repository": "Repositories/Services/SshService",
+      "copyTo": null,
+      "commit": "b0e34927b46a22ba90bd5a32843830f8f40aa3c8",
+      "remote": "https://github.com/R4OSDev/r4os-service-sshservice.git"
+    },
+    {
+      "id": "Services-FtpService",
+      "repository": "Repositories/Services/FtpService",
+      "copyTo": null,
+      "commit": "8b29281067c46d925a7839e3cc6f1840e1aa6a7d",
+      "remote": "https://github.com/R4OSDev/r4os-service-ftpservice.git"
+    },
+    {
+      "id": "Apps-Terminal",
+      "repository": "Repositories/Apps/Terminal",
+      "copyTo": null,
+      "commit": "fb64937dad93c86fd1813855f7e1e8b45f126621",
+      "remote": "https://github.com/R4OSDev/r4os-app-terminal.git"
+    },
+    {
+      "id": "Apps-ServiceManager",
+      "repository": "Repositories/Apps/ServiceManager",
+      "copyTo": null,
+      "commit": "6a09eeeaee32cad0954bd896d6688bbd19f9d724",
+      "remote": "https://github.com/R4OSDev/r4os-app-servicemanager.git"
+    },
+    {
+      "id": "Apps-Help",
+      "repository": "Repositories/Apps/Help",
+      "copyTo": null,
+      "commit": "f5227ca6cf4fc2f1a56818b056953ec704d459b4",
+      "remote": "https://github.com/R4OSDev/r4os-app-help.git"
+    },
+    {
+      "id": "Apps-IpConfig",
+      "repository": "Repositories/Apps/IpConfig",
+      "copyTo": null,
+      "commit": "d65cb20ca7ed1cc161b03ed9fecee622ae555f3a",
+      "remote": "https://github.com/R4OSDev/r4os-app-ipconfig.git"
+    },
+    {
+      "id": "Apps-SysInfo",
+      "repository": "Repositories/Apps/SysInfo",
+      "copyTo": null,
+      "commit": "83c0f31b12f87cbe0443f15ed105d6574c1d4d9a",
+      "remote": "https://github.com/R4OSDev/r4os-app-sysinfo.git"
+    },
+    {
+      "id": "Apps-HttpGet",
+      "repository": "Repositories/Apps/HttpGet",
+      "copyTo": null,
+      "commit": "079c5b759521eaee75853afdbda6bdff577b891d",
+      "remote": "https://github.com/R4OSDev/r4os-app-httpget.git"
+    },
+    {
+      "id": "Apps-NetCat",
+      "repository": "Repositories/Apps/NetCat",
+      "copyTo": null,
+      "commit": "206ca6b3f07fdaa235a361d4ee5bf721c1ae23dc",
+      "remote": "https://github.com/R4OSDev/r4os-app-netcat.git"
+    }
+  ],
+  "modules": [
+    {
+      "source": "Drivers-AHCI",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/AHCI/AHCI.R4D"
+    },
+    {
+      "source": "Drivers-ATAPIO",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/ATAPIO/ATAPIO.R4D"
+    },
+    {
+      "source": "Drivers-NVME",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NVME/NVME.R4D"
+    },
+    {
+      "source": "Drivers-XHCI",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/XHCI/XHCI.R4D"
+    },
+    {
+      "source": "Drivers-USBMSC",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/USBMSC/USBMSC.R4D"
+    },
+    {
+      "source": "Drivers-RTL8139",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/RTL8139/RTL8139.R4D"
+    },
+    {
+      "source": "Drivers-RTL8168",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/RTL8168/RTL8168.R4D"
+    },
+    {
+      "source": "Drivers-VirtioNet",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/VirtioNet/VIRTNET.R4D"
+    },
+    {
+      "source": "Protocols-UsbHidBoot",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/UsbHidBoot/USBHID.R4P"
+    },
+    {
+      "source": "Protocols-UsbHidReport",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/UsbHidReport/HIDREPORT.R4P"
+    },
+    {
+      "source": "Protocols-UsbMscBot",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/UsbMscBot/USBBOT.R4P"
+    },
+    {
+      "source": "Protocols-UsbScsiBlock",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/UsbScsiBlock/USBSCSI.R4P"
+    },
+    {
+      "source": "Protocols-NetEthernet",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetEthernet/NETETH.R4P"
+    },
+    {
+      "source": "Protocols-NetArp",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetArp/NETARP.R4P"
+    },
+    {
+      "source": "Protocols-NetIpv4",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetIpv4/NETIPV4.R4P"
+    },
+    {
+      "source": "Protocols-NetIcmp",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetIcmp/NETICMP.R4P"
+    },
+    {
+      "source": "Protocols-NetUdp",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetUdp/NETUDP.R4P"
+    },
+    {
+      "source": "Protocols-NetTcp",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetTcp/NETTCP.R4P"
+    },
+    {
+      "source": "Protocols-NetDns",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetDns/NETDNS.R4P"
+    },
+    {
+      "source": "Protocols-NetDhcp",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetDhcp/NETDHCP.R4P"
+    },
+    {
+      "source": "Protocols-R4Http",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/R4Http/R4HTTP.R4P"
+    },
+    {
+      "source": "Protocols-R4Tls",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/R4Tls/R4TLS.R4P"
+    },
+    {
+      "source": "Protocols-JSON",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/JSON/JSON.R4P"
+    },
+    {
+      "source": "Services-DhcpService",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/DhcpService/DHCPSVC.R4X"
+    },
+    {
+      "source": "Services-DnsService",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/DnsService/DNSSVC.R4X"
+    },
+    {
+      "source": "Services-TcpService",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/TcpService/TCPSVC.R4X"
+    },
+    {
+      "source": "Services-UdpService",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/UdpService/UDPSVC.R4X"
+    },
+    {
+      "source": "Services-SshService",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/SshService/SSHD.R4X"
+    },
+    {
+      "source": "Services-FtpService",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/FtpService/FTPSVC.R4X"
+    },
+    {
+      "source": "Apps-Terminal",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/Terminal/TERMINAL.R4X"
+    },
+    {
+      "source": "Apps-ServiceManager",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/ServiceManager/SERVMAN.R4X"
+    },
+    {
+      "source": "Apps-Help",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/Help/HELP.R4X"
+    },
+    {
+      "source": "Apps-IpConfig",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/IpConfig/IPCONFIG.R4X"
+    },
+    {
+      "source": "Apps-SysInfo",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/SysInfo/SYSINFO.R4X"
+    },
+    {
+      "source": "Apps-HttpGet",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/HttpGet/HTTPGET.R4X"
+    },
+    {
+      "source": "Apps-NetCat",
+      "manifest": "module.R4MF",
+      "artifact": "Artifacts/Modules/NetCat/NETCAT.R4X"
+    },
+    {
+      "source": "Libraries",
+      "manifest": "R4STD/module.R4MF",
+      "artifact": "Repositories/Libraries/R4STD/zig-out/R4STD.R4L"
+    }
+  ],
+  "resources": [
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CONFIG/INPUT.R4S",
+      "target": "Runtime/R4OS/CONFIG/INPUT.R4S"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CONFIG/TIME.R4S",
+      "target": "Runtime/R4OS/CONFIG/TIME.R4S"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CERTS/CATALOG.R4S",
+      "target": "Runtime/R4OS/CERTS/CATALOG.R4S"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CERTS/ROOTS/DIGICERT-GLOBAL-ROOT-G2.CRT",
+      "target": "Runtime/R4OS/CERTS/ROOTS/DIGICERT-GLOBAL-ROOT-G2.CRT"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CERTS/ROOTS/GLOBALSIGN-ECC-R4.CRT",
+      "target": "Runtime/R4OS/CERTS/ROOTS/GLOBALSIGN-ECC-R4.CRT"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CERTS/ROOTS/GLOBALSIGN-ROOT-CA.CRT",
+      "target": "Runtime/R4OS/CERTS/ROOTS/GLOBALSIGN-ROOT-CA.CRT"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CERTS/ROOTS/ISRG-ROOT-X1.CRT",
+      "target": "Runtime/R4OS/CERTS/ROOTS/ISRG-ROOT-X1.CRT"
+    },
+    {
+      "source": "Distribution",
+      "path": "Injection/R4OS/CERTS/ROOTS/R4OSDEV.CRT",
+      "target": "Runtime/R4OS/CERTS/ROOTS/R4OSDEV.CRT"
+    }
+  ],
+  "platformProviders": [
+    "R4SYS:Query:1",
+    "R4DESK:Query:1",
+    "R4DEV:Query:1",
+    "R4NET:Query:1"
+  ],
+  "toolchain": {
+    "version": "0.16.0"
+  },
+  "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3."
+}

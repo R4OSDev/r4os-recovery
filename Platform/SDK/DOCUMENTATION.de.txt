@@ -1,0 +1,474 @@
+﻿R4OS SDK
+========
+
+Dieses Repository enthaelt das hostneutrale Kern-SDK von R4OS: Zig- und
+C-Fassaden, Buildprofile, Templates, Smokeprojekte sowie die generischen
+Werkzeuge R4XBuilder, R4LContractGen und ModuleCatalog.
+
+Pfade
+-----
+
+`Settings.R4S` ist die zentrale Pfadzuordnung. `WORKSPACE_ROOT` und
+`REPOSITORIES_ROOT` beginnen am SDK-Root. Komponentenpfade beginnen am
+gemappten Repositories-Verzeichnis, DevKit und Artifacts an der Workspace-
+Wurzel und Zig am DevKit. Jeder Wert darf durch einen anderen relativen oder
+einen absoluten Pfad ersetzt werden. Werte werden ohne Anfuehrungszeichen
+eingetragen und weder als Shellausdruck noch als Umgebungsvariable ausgewertet.
+
+Die Voreinstellung passt zur normalen Workspace-Struktur:
+
+    R4OS/
+      DevKit/
+      Artifacts/
+      Repositories/
+        Contract/
+        SDK/
+        Libraries/
+        Kernel/
+        Distribution/
+        Apps/
+        Services/
+        Diagnostics/
+        Drivers/
+        Protocols/
+        Subsystems/
+
+Aktuell verwenden die SDK-Buildstarter `CONTRACT_ROOT` und `ZIG_ROOT`. Die
+weiteren Eintraege bilden bereits die gemeinsamen Komponentenwurzeln fuer
+kommende Werkzeuge ab.
+
+Die typisierten Datei- und Registrypfade initialisieren nur noch ihre
+kanonischen Bytes samt abschliessender Null. Die 160 Ruecksprungpositionen der
+Dateinormalisierung sind in Zig und C als 16-Bit-Offsets abgelegt und belegen
+zusammen fest 640 Byte statt zweier nativer Wortarrays. Laengen-, UTF-8-,
+Geraetenamen- und Normalisierungsvertrag bleiben unveraendert.
+
+Gebündelte GUI-Frames
+--------------------
+
+Zeichenintensive Zig-Anwendungen koennen an einen offenen `PaintContext` mit
+`bufferedCanvas` einen `FrameCanvas` sowie eigene begrenzte Command- und
+Ressourcenpuffer binden. Alle vorhandenen Canvas-Widgets verwenden diesen
+Pfad ohne eigene Batchlogik. Volle Puffer werden geordnet ueber
+`gui_frame_append` geleert; XRGB wird normalisiert, Alpha8 aus seinem Stride
+kompakt kopiert und Ressourcenoffsets werden je Chunk neu bezogen. Vor einem
+zu grossen Einzelobjekt wird zuerst der bisherige Chunk geleert. Das Objekt
+geht danach als einzelner Chunk oder, wenn eine Konvertierung noetig ist,
+ueber den bestehenden Draw-Aufruf in dieselbe private Transaktion.
+
+Ein Fehler wird bis `present` festgehalten und fuehrt zum Abbruch des ganzen
+Frames, sodass kein erfolgreicher Praefix sichtbar wird. Fehlt der aktuelle
+Framevertrag, bleiben die bisherigen einzelnen Draw-Aufrufe samt PRESENT
+erhalten. `FrameCanvas.stats` zaehlt fuer genau diesen Frame logische Commands,
+Ressourcenbytes, Flushes, direkte Chunks, Legacy-Aufrufe und Fehler; die
+abgeleiteten Draw-Uebergaenge benoetigen keinen weiteren Plattformaufruf.
+
+Build
+-----
+
+Unter Windows:
+
+    Build.bat
+    Build.bat test
+
+Unter Linux und macOS:
+
+    ./Build.sh
+    ./Build.sh test
+
+Die Starter sind der verbindliche Einstieg, weil sie `Settings.R4S` vor der
+Zig-Paketaufloesung anwenden. Der gemappte aktuelle lokale Contract-Checkout
+wird mit Zig `--fork` als Projektvariante verwendet. URL und Commit im
+Paketmanifest dokumentieren nur den zuletzt geprueften
+Standalone-Referenzstand fuer einen direkten Build ohne Starter; sie sperren
+den normalen Workspace-Build nicht auf diesen Stand. Der SDK-Build benoetigt
+dadurch weder einen festen Nachbarpfad noch GitHub-Zugangsdaten.
+
+Herkunft und absichtliche Grenzaenderungen stehen in `PROVENANCE.txt`.
+
+Modulbuilds
+-----------
+
+`Sdk.addR4MF` baut ein Modul ausschliesslich aus dessen `module.R4MF`. Fuer
+ZIG_MODULE-Abhaengigkeiten aus anderen Repositories verwendet ein Modulbuild
+`Sdk.addR4MFWithOptions`: Die Namen und ihre Reihenfolge bleiben im Manifest,
+waehrend `zig_module_roots` die vom Zig-Paketmanager aufgeloesten, explizit
+eingebundenen Quellpfade in derselben Reihenfolge liefert. Der jeweilige
+Buildstarter stellt mit `--fork` die aktuell gemappten lokalen SDK-, Contract-
+und Libraries-Checkouts bereit. Eine inkompatible aktuelle Aenderung bricht
+den Verbraucherbuild sichtbar; der Stand in `build.zig.zon` bleibt lediglich
+der gepruefte Standalone-Referenzstand. Dadurch sind weder feste Nachbarpfade
+noch eine zweite Library-Importliste im Buildscript erforderlich.
+
+Mehrrepo-Imageplaene
+--------------------
+
+`ModuleCatalog workspace-image-plan` liest eine explizite Textzuordnung aus
+`MANIFEST|ARTEFAKT`-Zeilen und erzeugt daraus einen Slim-, Full-, Test- oder
+Benchmark-Plan. Benchmark ist eine Auswahlregel aus `slim + full` plus
+explizit benannten `test`-Diagnosen und kein vierter `IMAGE_SCOPE`.
+Manifestparsing, Profilregeln, Zielkollisionen und der
+Runtime-R4L-Abhaengigkeitsschluss bleiben beim gemeinsamen R4MF-Vertrag; die
+Workspace-Orchestrierung liefert nur den erwarteten Ort des vom jeweiligen
+Repository gebauten Artefakts. Module mit `IMAGE_SCOPE=none` koennen fuer
+einen gezielten Testplan ausdruecklich aufgenommen werden. Ein Artefakt wird
+erst verlangt, wenn die Profilauswahl das zugehoerige Manifest tatsaechlich
+auswaehlt; dadurch duerfen unbeteiligte on-demand-Artefakte fehlen.
+
+Optional erzeugt derselbe Aufruf mit `--inventory-output` aus genau dieser
+Auswahl das installierte `MODULES.JSON`; zusammen mit Kernel-Version und
+-Artefakt enthaelt es damit keine handgepflegte zweite Komponentenliste.
+
+Subsystem-Hosts bleiben normale GUI-R4X und deklarieren im R4MF-v2-Manifest
+`MODULE_ROLE=subsystem`, eine normalisierte stabile `SUBSYSTEM_ID` sowie
+einen `SUBSYSTEM_DISPLAY_NAME`, geordnete Gastformate, Endungshinweise und
+optionale Formatmerkmale. Parser, semantischer Plan, R4M0-Packager und
+ModuleCatalog verwenden dieselbe Ableitung. Katalog und `MODULES.JSON` tragen
+die Angaben in Schema 4; doppelte Subsystem-IDs werden vor der Profilauswahl
+abgewiesen, gemeinsam angebotene Gastformate dagegen nicht. Schema 2 und 3
+bleiben lesbar und werden beim Fortschreiben in Schema 4 ueberfuehrt.
+
+`r4os.subsystem_catalog` projiziert die installierten Subsystemeintraege aus
+dem validierten `MODULES.JSON` in einen nach ID sortierten Laufzeitkatalog. Ein
+vom Verbraucher bereitgestellter Hostcheck macht eine fehlende R4X-Datei zum
+Fehler, statt den Eintrag still auszublenden. Der gemeinsame allokationsfreie
+Resolver priorisiert Benutzerzuordnung, bestaetigte versionierte Probe,
+konfigurierten Endungsstandard und erst danach die stabile Kandidatenliste.
+`probe.magic-v1` und `probe.text-token-v1` arbeiten auf hoechstens 256 KiB.
+Eine eindeutige Benutzer- oder Endungszuordnung braucht dabei keine
+Inhaltsprobe; nur unbekannte oder mehrdeutige Zuordnungen lesen das begrenzte
+Fenster bedarfsgesteuert. Jeder Treffer verlangt weiterhin die endgueltige
+Validierung durch den Host.
+Damit bleiben Katalog und Aufloesung reine Userland-Funktionen und besitzen
+keine zweite persistente Liste neben dem installierten Modulinventar.
+
+`r4os.subsystem_launch` definiert den Startvertrag zwischen einem
+Dateihandler und dem normalen R4X-Host. Der vollstaendige Argumentblock ist
+auf 127 Byte begrenzt, beginnt mit `R4SUBSYS1` und transportiert Gastpfad und
+spaetere Optionen als laengencodierte Datensaetze. `GUEST` ist genau einmal
+erforderlich; unbekannte Optionsschluessel koennen von aelteren Hosts
+uebersprungen werden. Der Pfad wird validiert, aber nicht normalisiert,
+gequotet oder in Shelltoken zerlegt. Ein Host erhaelt dadurch exakt die
+Pfadbytes, die Explorer aufgeloest hat. Der Vertrag startet oder teilt keine
+Instanz: Jeder Aufruf bleibt ein normaler, eigenstaendiger R4X-Start.
+Die oeffentlichen Optionsschluessel `C` und `E` bezeichnen eine bytegenaue
+VM-lokale Kommandozeile beziehungsweise wiederholbare `NAME=VALUE`-Eintraege
+fuer das initiale Gast-Environment. Ihre Interpretation bleibt Aufgabe des
+betroffenen Subsystemhosts; der gemeinsame Decoder tokenisiert sie nicht.
+
+Ausgehandelte Netzwerkmetadaten seit 0.69.50
+---------------------------------------------
+
+`DriverContext.netBackendQuery` liest nach erfolgreicher NetBackend-v2-
+Registrierung die unveraenderliche Auswahl aus Angebot, Annahme und Ablehnung.
+`netReceivePacket` uebergibt taskseitig einen versionierten Paketdeskriptor;
+die kanonischen Flat-Bytes sind stets vorhanden und bis zur Rueckkehr nur
+geliehen. Rueckgabe 0 bedeutet normale Annahme, 1 Annahme mit Software-
+Fallback und -4 unveraenderten Treiberbesitz wegen Queue-Backpressure. Die
+aktuelle Ein-Queue-Auswahl akzeptiert nur validierte RX-TCP-/UDP-Pruefsummen.
+
+`r4os.subsystem_host` ist die einkompilierte Userland-Schicht fuer das
+Fenster-, Video- und Eingabehosting eines solchen R4X. Sie ist weder Dienst
+noch Runtime-R4L und besitzt keine prozessuebergreifende Emulator-ABI.
+`Surface` verwendet ausschliesslich vom Aufrufer bereitgestellte Speicher:
+entweder acht Bit breite Indizes mit einer 256 Eintraege grossen XRGB-Palette
+oder direkt XRGB32. Auch der 128x128-Pixel-Scratch fuer den kompatiblen
+XRGB-Pfad kommt vom Aufrufer; der Presenter allokiert beim Darstellen nicht.
+
+Der virtuelle Gastmodus bleibt unabhaengig von der Fenstergroesse. Der
+Presenter berechnet einen zentrierten, seitenverhaeltnistreuen Viewport mit
+schwarzem Letterboxing und Naechste-Nachbar-Skalierung. Eine ganzzahlige
+Skalierung wird verwendet, wenn sie mindestens 85 Prozent des passenden
+Viewports ausfuellt; andernfalls wird der gesamte passende Viewport
+fraktional genutzt. Voll- und Damage-Praesentation laufen ueber dieselbe
+Schnittstelle. Bis zu acht getrennte Gastregionen bleiben erhalten;
+ueberlappende oder beruehrende Rechtecke werden vereinigt und erst bei
+Ueberlauf mit dem kleinsten Flaechenzuwachs zusammengefasst. Ein
+unveraendertes Bild erzeugt keinen GUI-Frame. Die fraktionale
+Naechste-Nachbar-Abbildung fuehrt Quellenquotient und Rest inkrementell fort,
+statt pro Zielpixel eine 64-Bit-Division zu wiederholen.
+
+Mit R4DRAW-v5 transportiert eine Indexed8-Surface ihre 256-Eintrag-Palette
+und den benoetigten indizierten Quellausschnitt in einem versionierten
+`GuiIndexed8Resource`; Ziel- und Quelltiles bleiben jeweils hoechstens
+128x128 Pixel gross. Die vorzeitige XRGB32-Expansion entfaellt. Aeltere
+R4DRAW-Tabellen verwenden weiterhin den sicheren Rasterfallback. Damage-Begin
+publiziert eine append-only Generation mit bis zu acht Regionen, waehrend
+Leser die lokale Generation oder den abgeflachten Gesamtframe generationstreu
+abfragen koennen. Paletten-, Modus- und Viewportaenderungen erzwingen einen
+Vollframe; nach einer Vollbasis und hoechstens 31 Deltas wird die Kette durch
+einen neuen Vollframe verdichtet.
+
+R4DRAW-v6 liefert mit `font_glyph_bitmap` eine komplette, auf 40 Zeilen
+begrenzte Glyph-Bitmap samt Layoutmetriken in einem Aufruf. Dadurch entfallen
+bei aktuellen Kerneln die wiederholte Glyphsuche und ein ABI-Aufruf je Zeile.
+Der alte `font_glyph_row`-Slot bleibt erhalten. Fehlt der neue optionale Slot,
+setzt das SDK die Bitmap daraus zusammen; die Pixel bleiben exakt, waehrend
+proportionale Einzelglyphmetriken auf Face-Breite und maximalen Advance
+zurueckfallen.
+
+R4DRAW-v7 haengt `font_revision` an. Der von `fontRevision()` gelieferte
+Wert ist ungleich null und aendert sich nach jedem erfolgreich abgeschlossenen
+Reload des Fontkatalogs. Caches duerfen damit Font-ID, Revision und Codepoint
+als Schluessel verwenden und muessen bei einem Revisionswechsel ihre alten
+Layouts und Abdeckungen verwerfen. Fehlt der optionale Slot in einer aelteren
+Tabelle, liefert die SDK-Fassade die stabile Kompatibilitaetsrevision 1.
+
+R4DRAW-v8 ergaenzt vollstaendig ersetzende GUI-Generationen und native
+XRGB32-Quelltiles. Fuer einen geaenderten XRGB32-Frame publiziert der
+Subsystem-Presenter weiterhin die exakten Damage-Regionen, transportiert aber
+einen eigenstaendigen vollstaendigen Zustand. Damit muss kein Leser
+ueberdeckte Damagegenerationen erneut abspielen. `GuiXrgb32Resource` erhaelt
+Gast- und Viewportgeometrie bis zum Desktop; Kacheln bleiben hoechstens
+128x128 Pixel gross und werden weder in Farblaeufe noch in `fillRect`-Aufrufe
+zerlegt. `gui_frame_stream_info` weist Live-, Freigabe-, Koaleszenz-, XRGB32-
+und Speicherzaehler aus. Fehlen die optionalen Slots, bleiben der bestehende
+Damagevertrag und der begrenzte Rasterfallback unveraendert nutzbar.
+
+R4DRAW-v9 transportiert XRGB32-, Indexed8- und Alpha8-Raster ueber
+generationengebundene Shared-Ressourcen. Der Producer beschreibt den Inhalt
+einmal; die hoechstens 128x128 Pixel grossen Zielbloecke verweisen danach nur
+noch ueber feste 80-Byte-Deskriptoren darauf. Drei begrenzte Puffer verhindern
+unbeschraenkte Retention. Backpressure oder ein fehlender optionaler Slot
+fallen fuer genau diesen Frame auf den kopierenden Pfad zurueck. Manuell
+erzeugte `subsystem_host.Backend`-Werte muessen die optionalen v8/v9-Callbacks
+nicht mit Platzhaltern fuellen: Deren Defaults liefern `err_no_fn`, waehrend
+die zugehoerigen Capability-Flags false bleiben.
+
+`Host.pollInput` uebersetzt Close, Resize, Fokus, Tastencode, Text und Maus in
+eine gastneutrale Ereignisunion. Jedes rohe GUI-Ereignis erhaelt dabei eine
+monotone Host-Sequenz; alle daraus entstehenden logischen Ereignisse behalten
+dieselbe Sequenz und den urspruenglichen Tick. Ein deklaratives Eingabeprofil
+kann druckbare Keys genau einmal als Text ausgeben und Mausereignisse vor der
+Koordinatenabbildung verwerfen. Das Standardprofil behaelt die bisherige
+Key-plus-Text- und Maussemantik. Passive Zaehler trennen rohe, logische,
+wartende und gefilterte Ereignisse samt stabilem Filtergrund sowie Mausmoves,
+Mappings, WindowInfo-Aufrufe und Viewportrechnungen. Mauspositionen werden im
+Standardprofil auf den virtuellen Bildschirm zurueckgerechnet; ein Punkt im
+Letterboxbereich besitzt bewusst keine Gastkoordinate. Resize transportiert
+den neuen Client-Viewport, aendert aber nicht die Aufloesung der Surface.
+Scheduling, Gastzeit und Audio bleiben bewusst ausserhalb dieser Video-/
+Eingabeschicht.
+
+`r4os.subsystem_runtime` ist die dazu passende, ebenfalls einkompilierte
+Userland-Laufzeitschicht. Ein Gast stellt drei Callbacks fuer eine begrenzte
+Ausfuehrungsscheibe, Reset und PCM-Erzeugung sowie optional einen vierten fuer
+Audiofortschritt bereit; der Host stellt Poll und Present bereit. Pro Zyklus werden hoechstens die konfigurierte Anzahl
+Ereignisse und genau eine Gast-Scheibe mit festem Operationsbudget
+verarbeitet. Danach wird entweder bis zum naechsten echten Termin geschlafen
+oder nach produktiver Gastarbeit kooperativ abgegeben. Meldet ein laufender
+Gast dagegen Fortschritt ohne eine ausgefuehrte Operation und ohne eigene
+Deadline, wird dieses Idle-Polling fuer einen begrenzten Hosttick blockiert.
+`RuntimeStats.zero_progress_waits` trennt diese Faelle von produktiven
+`yields`. Ein Hostereignis kann eine Darstellung anfordern, ohne dafuer einen
+Gastschritt zu erfinden. `HostPollResult.ignored` zaehlt bewusst verworfene
+Rohereignisse getrennt und weckt einen nur auf Eingabe wartenden Gast nicht.
+
+`GuestClock` leitet Nanosekunden aus der monotonen R4SYS-Uhr ab. Pausen
+zaehlen nicht zur Gastzeit, Reset beginnt bei null und `Pacer` liefert
+driftarme Frame- oder Zyklustermine. Der Lebenszyklus umfasst Ready, Running,
+Paused, Completed, Failed und Closed sowie Pause, Fortsetzen, Reset, Mute und
+Close. Befehle werden nur zwischen Gast-Scheiben angewendet; Abschluss und
+Fehler fuehren durch denselben idempotenten Ressourcenabbau. Controller und
+Save-States koennen spaeter oberhalb der Callbacks ergaenzt werden, sind aber
+nicht Bestandteil dieses Vertrags.
+
+`r4os.subsystem_persistence` ist ein einkompilierter SDK-Quellhelfer und kein
+R4L- oder Plattform-ABI-Vertrag. Das konsumierende Subsystem liefert nur den
+kanonischen Save-Verzeichnisbaum, die exakte RTC-Satzlaenge und dessen
+Validator. Der Helfer besitzt pro 32-Byte-Gastidentitaet eine create-only
+Writer-Lease, exakte Reads, unveraenderliche SRAM-/RTC-Snapshots, einen
+seriellen joinbaren und pro Dateityp zusammenfassenden Worker sowie die
+gleichverzeichnige Stage-/Ziel-/Last-Good-Veroeffentlichung. Verlorene
+Dateisystembestaetigungen und transiente Sichtbarkeit werden begrenzt
+wiederholt; ein Neustart uebernimmt nur exakt lange und bei RTC inhaltlich
+gueltige Stages. Close und Fehler drainen und joinen vor Lease-Freigabe.
+Batteriepolitik, Speicherlaenge, RTC-Codec und Gastzeit bleiben vollstaendig
+beim jeweiligen Subsystem.
+
+Die optionale Audio-Pumpe verwendet caller-eigene Queue- und Scratchspeicher.
+Der definierte Standard ist 48 kHz, Stereo, signed 16-bit little endian mit
+480 Frames je 10-ms-Quantum, zwei Zielquanten und einem begrenzten
+Catch-up-Fenster. Der Sink wird erst beim ersten Quantum mit
+mindestens einem von null verschiedenen Samplebyte geoeffnet. Leere oder
+vollstaendig stille Renderquanten werden gezaehlt, aber weder als voller
+Scratchblock hergestellt noch geschrieben. Pause, Mute, Reset und der erste
+stille Zustand schliessen einen tatsaechlich aktiven Sink genau einmal und
+entfernen die Audiodeadline; ein spaeteres Signal materialisiert ihn erneut.
+`R4AudioSink` oeffnet, schreibt und schliesst ausschliesslich ueber die normale
+App-Audiofassade und AUDSVC. `initWithTimeouts` trennt das Budget fuer kurze
+Open-/Write-/Volume-Aufrufe vom Budget des normal drainierenden Close;
+`initWithTimeout` bleibt kompatibel und setzt beide Budgets gleich. Ein
+fehlender Dienst, Timeout oder Schreibfehler
+setzt Audio sichtbar auf `degraded`. Dabei werden verbliebenes PCM,
+Vorfuellzustand und Audiodeadline genau einmal entfernt; danach finden weder
+weitere Gast-Audiorenders noch Scratch-Einreichungen statt. Gastzeit, Video
+und Warteverhalten laufen weiterhin getaktet und nicht als Busy-Wait oder
+ungebremste Fehlerschleife.
+
+Eine anstehende Bildpraesentation erfolgt vor dem Audiopfad. Open,
+Vorfuell-/Regelwrite und ein gegebenenfalls aufgeschobenes Close sind auf
+hoechstens einen Serviceaufruf je Hostzyklus begrenzt; Vorfuellung und Resync
+laufen deshalb ueber frische Zyklen weiter. Busy behaelt das gleiche PCM und
+verwendet eine unabhaengige 10-ms-Wiederholungsfrist. Der optionale
+Audiofeedback-Callback meldet angenommene, als Stille unterdrueckte und
+explizit verworfene Quellbytes. Er meldet keinen erfundenen
+Hardware-Ausspielstand: der aktuelle Plattformvertrag besitzt keinen
+streambezogenen Playback-Cursor.
+
+`r4os.app_audio.WriteCursor` bewertet den frameausgerichteten Fortschritt
+eines Clientblocks ueber vollstaendige, Busy-, Timeout- und Fehlerantworten.
+Bereits angenommene Bytes bleiben damit auch bei einem anschliessenden Fehler
+sichtbar; nur der Aufrufer entscheidet ueber Retry und Pacing.
+
+JavaScript und WebRuntime seit 0.69.30
+-------------------------------------
+
+`r4os.javascript` haelt weiterhin hoechstens 64 gleichzeitige RegExp-
+Zustaende. Normale Atomfolgen werden jedoch iterativ ausgefuehrt und
+Quantifier pruefen ihre Wiederholungsschichten bis zum allgemeinen 65.536-
+Elemente-Budget direkt gegen die verbleibende Sequenz. Dadurch begrenzt die
+32er-Tiefe nur Gruppen und Backtracking, nicht die Laenge eines linearen
+Musters. Greedy/lazy-Ergebnisse bleiben geordnet; eine Kapazitaetsgrenze, die
+sonst als falscher Nichttreffer erschiene, wird als `RangeError` gemeldet.
+
+`r4os.web_runtime` fuehrt fuer DOM-Dirtiness einen vom Reflowmarker getrennten
+Pendingzustand. Alle Attribut-, Text- und Baumoperationen bis zur Abnahme der
+Aktion teilen genau einen Queueeintrag `dom_changed`; Navigation, History und
+Formaktionen bleiben nicht koaleszierbar. `takeAction` gibt den Pendingzustand
+beim Entnehmen frei, Dokumentwechsel und Abbruch setzen beide Marker zurueck.
+
+Seit 0.69.51 bindet `r4os.javascript.Program` validierten Bytecode an eine
+monoton steigende, von der Parse-Generation getrennte Bytecode-Generation.
+Die normalen Evaluate-, Modul-, Funktions-, Generator- und Async-Pfade
+pruefen diese beiden Zahlen in konstanter Zeit. Ein erneuter Vollhash ist nur
+noch die ausdrueckliche Diagnose `verifyBytecodeIntegrity`; rohe Aenderungen
+muessen vorher `invalidateBytecode` aufrufen und anschliessend neu kompiliert
+werden.
+
+`r4os.web_runtime.WebRuntime` enthaelt den rund 34,7 MB grossen
+`javascript.Runtime`-Block nicht mehr eingebettet. Ein Dokument ohne Skript
+bleibt beim rund 2,66 MB grossen Grundzustand und fordert ueber den
+ProgramAllocator keine Realmbytes an. Erst die erste Quell- oder Modulladung
+materialisiert Runtime, Bindings und Plattformprogramm. Abort, Dokumentersatz
+und Deinitialisierung verwenden denselben wiederholbar sicheren Abbaupfad und
+geben Programme, dynamische Runtimebereiche und den Realmblock frei.
+
+Plattform-APIs
+--------------
+
+R4SYS, R4DESK, R4DRAW, R4NET, R4AUDIO und R4DEV sind fest eingebaute
+Plattform-APIs des Kernels. Der Contract definiert Namen, Gruppen-IDs und
+Tabellenlayouts; SDK-Fassaden konsumieren die vom Kernel aufgeloesten
+Gruppentabellen. Fuer diese sechs APIs gibt es weder R4L-Projekte noch
+R4L-Dateien im Image. Unabhaengige Runtime-R4Ls wie R4STD, R4IMG und R4FONT
+bleiben davon getrennte Module mit eigenem Contract und eigener Query-Tabelle.
+
+Seit 0.69.67 nutzt `Context.write` den vorhandenen R4SYS-Write-Slot als
+zusammenhaengenden Batch und faellt nur bei fehlendem oder fehlschlagendem Slot
+auf `putc` zurueck. `consoleInputWait` kapselt den optionalen,
+generationstreuen R4DESK-Inputwait; `consoleRead` und `readKey` bleiben
+unveraendert als Bulk- beziehungsweise Pollvarianten verfuegbar.
+
+Die optionale R4SYS-Funktion `monotonic_clock` liefert einen kontinuierlichen
+Nanosekundeninstant sowie Quelle, Qualitaetsflags, Aufloesung und die getrennte
+wirksame Ereignisrate. `monotonicNanoseconds` ist der direkte Apppfad;
+`monotonicHz` und `monotonicBackend` verwenden dieselben Metadaten und fallen
+bei einem aelteren Kernel auf `TimeState` zurueck. R4DEV-Fassaden stellen die
+zugehoerigen Bootphasen- und IRQ-Zeitinformationen bereit. Jeder angehaengte
+Slot wird einzeln ueber die Tabellengroesse geprueft.
+
+Der append-only R4DEV-Slot `performance_pci_inventory` liefert den kompakten
+kanonischen PCI-Snapshot mit Quelle, Kapazitaet, Configzugriffen, ECAM-
+Mappingarbeit, Such-/Detailzaehlern und Enumerationszeit. Die Zig-Fassaden in
+`r4os.program` und `r4os.r4dev` sowie der C-Helper behandeln den Slot als
+optional und bleiben damit gegenueber aelteren Kerneln lesbar.
+
+Synth- und Treibervertrag seit 0.69.28
+--------------------------------------
+
+Der append-only `SynthEngine`-Descriptor behaelt seinen v1-Praefix und fuegt
+`render_pcm` an. Der Kernel stellt Puffer, Kapazitaet, Rate, Kanalzahl und
+Format bereit; der Treiber liefert die tatsaechliche Bytelaenge oder einen
+Fehler. Erst ein MIDI-Empfaenger mit diesem produktiven Callback gilt als
+Renderer. `midiRender` kodiert 1 bis 1024 gewuenschte Frames ueber den
+bestehenden R4AUDIO-Aufruf, ohne einen zweiten ABI-Slot einzufuehren.
+
+DriverApi v18 haengt `protocol_dispatch` an. Treiber pruefen den Tabellenkopf
+und die volle aktuelle Groesse, bevor sie diesen optionalen R4P-Pfad nutzen.
+Bestehende v1-Synth-Descriptoren bleiben anhand ihres Groessenpraefixes
+registrierbar, gelten ohne PCM-Callback aber nicht als RenderBackend.
+
+Segment-DMA und asynchrones Storage seit 0.69.39
+------------------------------------------------
+
+DriverApi v19 stellt ueber `DriverContext` Pin, Map, beide
+Synchronisationsrichtungen, Unmap und Unpin bereit. `DmaConstraints` begrenzt
+die inklusive DMA-Adresse, Boundary, Segmentlaenge, Ausrichtung und hoechstens
+64 Segmente. Genau coherent oder streaming wird gewaehlt; ein erlaubter
+Bouncepfad wird im Mappingflag sichtbar. Die Fassaden akzeptieren vorhandene
+residente mutable oder const Slices bis 16 MiB. Nach erfolgreichem Map gilt
+immer die Reihenfolge Sync-for-device, Hardware, Sync-for-CPU, Unmap, Unpin;
+Stale- und Doppelabbau werden abgewiesen.
+
+`StorageBackend` v2 erweitert seinen vollstaendigen v1-Praefix um `submit`,
+`cancel` und `reset`. Submit uebernimmt bei Rueckgabe null genau einen
+versionierten Request samt Completionhandle; der Backendcode muss ihn genau
+einmal abschliessen. Cancel ist nur eine Aufforderung und gibt den Puffer nicht
+frei. Erst Completion oder ein erfolgreich quieszierender Reset beendet den
+physischen Besitz. `queue_depth` ist fuer v2 die Hardware-In-Flight-Grenze;
+die getrennte Softwarequeue bleibt Kernelbesitz. Null-Submit und alte
+Deskriptoren laufen unveraendert ueber den synchronen Tiefe-eins-Adapter.
+
+Die exakten ABI-Regeln fuer 32-Bit-Masken, Bouncekopien, Inline-Completion,
+Timeout, Kill, Flushbarrieren und Unload stehen im zentralen
+`Contract/ABI/R4DDriver.txt`.
+
+Deadline-Driverarbeit seit 0.69.42
+----------------------------------
+
+DriverApi v20 stellt ueber `DriverContext.workSubmitRequest` die versionierte
+Audio-Refill-Anforderung bereit. Sie verlangt eine absolute Tickdeadline,
+einen stabilen, von null verschiedenen Geraeteschluessel und ein Budget von
+hoechstens vier Ticks. Der Kernel kopiert die Anforderung beim Submit. Der
+Treiber behaelt nur Completionhandle und eigenen Kontext und muss jede
+Completion vor DMA- oder Modulabbau canceln beziehungsweise joinen und
+freigeben. Die normale `workSubmit`-Fassade bleibt fuer nicht deadlinefaehige
+IRQ-/Taskarbeit unveraendert.
+
+Kanonischer USB-Host seit 0.69.43
+---------------------------------
+
+DriverApi v21 stellt `DriverContext.activateUsbHostController` bereit.
+XHCI.R4D verwendet die Operation als ownergebundene Aktivierungsgrenze fuer
+den einzigen kernelresidenten PCI-/MMIO-/DMA-Pfad; das Modul initialisiert
+keinen zweiten Controller. UsbHostController v2 ergaenzt sichtbare
+Capability-, Aktivitaets- und Completionfelder sowie `max_burst` am
+Endpointhandle. Port-, Control-, Bulk-, Interrupt-, Reset-, Clear-Halt- und
+Polloperationen werden ueber die Registry dispatcht.
+
+Kanonischer Display-Blitvertrag seit 0.69.48
+---------------------------------------------
+
+DriverApi v22 stellt `DriverContext.registerDisplayBlitBackend` und die
+zugehoerige Unregister-Operation bereit. Genau ein externer Besitzer erhaelt
+pro synchronem Callback ausschliesslich geborgte, vollstaendig validierte
+XRGB32-Ziel-, Quell- und Regionsdaten. Zielmapping, Fence, Statistik und der
+vollstaendige CPU-Rueckfall bleiben Kernelbesitz. Die Zulassung wird vor dem
+Owner-Unload geschlossen; ein aktiver Callback vetoisiert den Abbau.
+
+Begrenzter Netzwerk-RX-Handoff seit 0.69.49
+--------------------------------------------
+
+DriverApi v23 stellt `DriverContext.netScheduleRx` als einzigen IRQ-sicheren
+Netzwerkaufruf bereit. Nach begrenzter Ursachenklassifikation und Quittierung
+weckt ein R4D damit den adapterbezogenen `net-rx`-Pfad. Ringcursor,
+Framekopie, R4P, Antworten und Waiter-Wakeups duerfen nicht im IRQ laufen.
+
+`DriverContext.netReceiveFrame` bleibt dem Task-/Workerkontext vorbehalten.
+Er kopiert 1 bis 1536 Bytes in die feste 64-Slot-Netcore-Queue. Erfolg
+uebertraegt den kopierten Framebesitz; bei `net_rx_handoff_busy` behaelt der
+Treiber den unveraenderten Geraetepuffer und plant eine weitere Aktivierung.
+Die uebrigen benannten Rueckgaben unterscheiden ungueltigen Adapter, Frame,
+geschlossene Admission und falschen IRQ-Kontext. Der kanonische Vertrag liegt
+in `Contract/ABI/R4DDriver.txt`.
