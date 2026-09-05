@@ -147,6 +147,17 @@ SMP4 guest package checks. After those builds,
 `pwsh -File Tools/Test-Packages.ps1 -HostOnly` or `-GuestOnly` selects one half.
 Release publication and physical installation remain separate roadmap steps.
 
+`./Build.sh -Mode DownloadTest` uses the production Recovery kernel and the
+same guest web transport. It checks a real GitHub HTTPS/redirect download,
+controlled complete and invalid packages, separate fixed caches, available
+space, actual power cuts at three durable cache boundaries and representative
+FAT32 alias/orphan-LFN states. Only disposable images under Artifacts are
+written; an extra installation disk must remain byte-identical. Logs and
+hashes live under `Artifacts/BootProbe/downloads/`. `Tools/Test-Downloads.ps1`
+can select `-LiveOnly` or `-NoCuts`; `-ReuseFixture` requires matching recorded
+input and fixture hashes. The complete production release channels are
+checked after publication in the release integration step.
+
 Since 0.76.9, the pinned SDK and ImageCreator share GPT/MBR editing and streamed
 FAT32/NTFS formatting. `-Mode StorageToolsTest` exercises those same routines
 through real guest claims on a disposable 128-MB NVMe disk, then mounts both

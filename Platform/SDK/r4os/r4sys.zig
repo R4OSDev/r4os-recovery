@@ -54,6 +54,9 @@ pub const file_update_atomic_checked_flag_forward: u32 = 1 << 0;
 pub const file_update_atomic_checked_flag_rollback: u32 = 1 << 1;
 pub const file_update_atomic_checked_flag_target_existed: u32 = 1 << 2;
 pub const file_update_atomic_checked_flag_old_known: u32 = 1 << 3;
+/// FAT32 forward-only replacement may consume an existing long stage name.
+/// The backup and a newly created target must still use 8.3 names.
+pub const file_update_atomic_checked_flag_long_stage = abi.file_update_atomic_checked_flag_long_stage;
 // Declared create-only publish intent (0.60.30).
 pub const file_stream_publish_protocol_sftp = abi.file_stream_publish_protocol_sftp;
 pub const file_stream_publish_protocol_scp = abi.file_stream_publish_protocol_scp;

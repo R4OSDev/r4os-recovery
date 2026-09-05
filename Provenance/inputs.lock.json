@@ -1975,8 +1975,8 @@
     },
     {
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 142476,
-      "sha256": "00556db012c5079612b04d07aef07984358c1f182ce0d77ecea40d82f5e91fa9",
+      "bytes": 145428,
+      "sha256": "10f978e33e0d3431ec868d1c2cc55267e3df03734879f123226de633342532e9",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "origin": {
         "path": "fs/fat/fat32.zig",
@@ -2055,8 +2055,8 @@
     },
     {
       "path": "Kernel/fs/system_update_atomic.zig",
-      "bytes": 21994,
-      "sha256": "a8e0af2ef3b69486005915ae8303c085109b3119dce24facb29151b35d756f96",
+      "bytes": 22140,
+      "sha256": "7c6c37062a92b96c11da6d11ade0fdb4f379e4f2924a808866863cf2fde6a404",
       "originalSha256": "a8e0af2ef3b69486005915ae8303c085109b3119dce24facb29151b35d756f96",
       "origin": {
         "path": "fs/system_update_atomic.zig",
@@ -3394,8 +3394,8 @@
     },
     {
       "path": "Kernel/program/r4sys.zig",
-      "bytes": 210838,
-      "sha256": "c3fd5af426a423e19e9b46b6f1a72095385c0e1f1c4a7468fed64ce89128397c",
+      "bytes": 211198,
+      "sha256": "ecd9e38c6f21cce7f16b3c3c7300030995fa7bfd1401971509c5abd20ce1a9a6",
       "originalSha256": "d8b44cd993395db12d23057a6c8d0f76ea728e5b4d520720578c78d34111f957",
       "origin": {
         "path": "program/r4sys.zig",
@@ -3404,8 +3404,8 @@
     },
     {
       "path": "Kernel/program/r4x_api.zig",
-      "bytes": 160764,
-      "sha256": "1a9fd7406fdae2d28c1a5546edf59b1125a8be7b8ce8b8054dad8d62145e66da",
+      "bytes": 160873,
+      "sha256": "61a6189b4315dd7e4eabd243df5183ea704d50434381feb148883c7fafeabf36",
       "originalSha256": "55233d42de7fa821f7ff650ea3789abb7fecf21cadafdd0c10c235480011a6dc",
       "origin": {
         "path": "program/r4x_api.zig",
@@ -3765,7 +3765,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "a23d4839fdab76f1636ecd4ff9b8b8af2622cad682ea6c9922d610189c063936",
+      "sha256": "eda4108d6ceca048eb243b27e00136ec317800ae807b20012cc738a50109f363",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3776,6 +3776,13 @@
       "path": "Legal/Changes/Contract-0.76.15.patch",
       "bytes": 9999,
       "sha256": "e1e39459a07f83906cee5c76a8ecde8fb8b50209470f3979975d266b13efe071",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Contract-0.76.16.patch",
+      "bytes": 10326,
+      "sha256": "65b675a19eb3e5b98a24344ee18fb40a0dcc01cde98fe2291b65abfdaa1ef6d8",
       "originalSha256": null,
       "origin": null
     },
@@ -3797,6 +3804,13 @@
       "path": "Legal/Changes/Distribution-0.76.15.patch",
       "bytes": 4710,
       "sha256": "0d6fddc9dce06eec060cf4e15f8b1299faaa8dff7883a8af4816aa5dc6aee7e4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Distribution-0.76.16.patch",
+      "bytes": 7802,
+      "sha256": "1c6cfaf4e0bca194d1a5983dce4ee3d96e3b895f1ab0afaafd70dec77c12f2bf",
       "originalSha256": null,
       "origin": null
     },
@@ -3846,6 +3860,13 @@
       "path": "Legal/Changes/Kernel-0.76.15.patch",
       "bytes": 43040,
       "sha256": "dabbc9d99872ab34a6cf3ad9ed54e1df6e58c747783d92b81386793691df2b06",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.76.16.patch",
+      "bytes": 23418,
+      "sha256": "b07682f0932cf32fab01dd2844a4b6bf6129815f8d79c9d19ac860f3eaf95f6c",
       "originalSha256": null,
       "origin": null
     },
@@ -3916,6 +3937,13 @@
       "path": "Legal/Changes/SDK-0.76.15.patch",
       "bytes": 15124,
       "sha256": "b3aca177d31fa411a36664d50d01e4573300225fe356fcce25d45f0ce6a9c7e5",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.16.patch",
+      "bytes": 6765,
+      "sha256": "39fa13b273353a82ee0abcecc6474f63c4eaec44ebfc2b33f3ac6326fefcb1a8",
       "originalSha256": null,
       "origin": null
     },
@@ -4206,6 +4234,16 @@
       "origin": {
         "path": "module.R4MF",
         "source": "Protocols-R4Tls"
+      }
+    },
+    {
+      "path": "Legal/Manifests/R4ZIP/module.R4MF",
+      "bytes": 424,
+      "sha256": "3a1c52ef85f9f74cc75532126de290ca88ac29bb7aab2744d4da4c78ddae9116",
+      "originalSha256": "3a1c52ef85f9f74cc75532126de290ca88ac29bb7aab2744d4da4c78ddae9116",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "module.R4MF"
       }
     },
     {
@@ -4562,8 +4600,8 @@
     },
     {
       "path": "Legal/Notices/Distribution/THIRD_PARTY_NOTICES.md",
-      "bytes": 1668,
-      "sha256": "a41c0062e4856d8512350c5119c62e611347a02e81619f5c21769e6dd3bf2211",
+      "bytes": 2590,
+      "sha256": "4c81397eaeb348b7972e4217124a7f755691487d4938b869b8228d6b6c72bddb",
       "originalSha256": "a41c0062e4856d8512350c5119c62e611347a02e81619f5c21769e6dd3bf2211",
       "origin": null
     },
@@ -5014,6 +5052,46 @@
       "sha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
       "originalSha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
       "origin": null
+    },
+    {
+      "path": "Legal/Notices/Protocols-R4Zip/LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "originalSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "LICENSE"
+      }
+    },
+    {
+      "path": "Legal/Notices/Protocols-R4Zip/LICENSE-Zig",
+      "bytes": 1080,
+      "sha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+      "originalSha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "LICENSE-Zig"
+      }
+    },
+    {
+      "path": "Legal/Notices/Protocols-R4Zip/NOTICE",
+      "bytes": 211,
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "originalSha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "NOTICE"
+      }
+    },
+    {
+      "path": "Legal/Notices/Protocols-R4Zip/THIRD_PARTY_NOTICES.md",
+      "bytes": 945,
+      "sha256": "9c03c4e50073dc8c26312f7c6ece14597af26204447e46c561107942eaac008e",
+      "originalSha256": "9c03c4e50073dc8c26312f7c6ece14597af26204447e46c561107942eaac008e",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "THIRD_PARTY_NOTICES.md"
+      }
     },
     {
       "path": "Legal/Notices/Protocols-UsbHidBoot/LICENSE",
@@ -5467,6 +5545,16 @@
       "origin": null
     },
     {
+      "path": "Legal/Sources/Protocols-R4Zip.zip",
+      "bytes": 35882,
+      "sha256": "61d870746695ee88ae1d97be8f59b8118bc7b7bfcd8c135c75471645a88d52c3",
+      "originalSha256": "61d870746695ee88ae1d97be8f59b8118bc7b7bfcd8c135c75471645a88d52c3",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "git archive 279434d24b94f76d3edb8ed9d53f6f8eb6b7ebe0"
+      }
+    },
+    {
       "path": "Legal/Sources/Protocols-UsbHidBoot.zip",
       "bytes": 12276,
       "sha256": "941b825a2d4320ca3384823d5589de86acc5d0668bc3a49f535384b583179730",
@@ -5635,8 +5723,8 @@
     },
     {
       "path": "Platform/Contract/API/ApiContract.baseline.json",
-      "bytes": 2652659,
-      "sha256": "fcf9fb64cf391eaf58198cfed6d3611d97f8349be5d84dd2755ea2736c11ca90",
+      "bytes": 2653324,
+      "sha256": "7c6f6123102975544559b0194df7aea3199d0402793b055d067857ebca8f37ce",
       "originalSha256": "97e256c07eeefe143eaa68cb613d27dc83e9d0cc33cd4930526e40eadd6a0dfa",
       "origin": {
         "path": "API/ApiContract.baseline.json",
@@ -5645,8 +5733,8 @@
     },
     {
       "path": "Platform/Contract/API/ApiContract.json",
-      "bytes": 2652659,
-      "sha256": "fcf9fb64cf391eaf58198cfed6d3611d97f8349be5d84dd2755ea2736c11ca90",
+      "bytes": 2653324,
+      "sha256": "7c6f6123102975544559b0194df7aea3199d0402793b055d067857ebca8f37ce",
       "originalSha256": "97e256c07eeefe143eaa68cb613d27dc83e9d0cc33cd4930526e40eadd6a0dfa",
       "origin": {
         "path": "API/ApiContract.json",
@@ -5795,8 +5883,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
-      "bytes": 395097,
-      "sha256": "f96d57940d3fab55847efbdc681814cfe0870a401118507e2c7b0b28485b5d82",
+      "bytes": 395226,
+      "sha256": "d0cf2b8305a6943a0959f7afb5a805bcdd70f828561ff9efed492f38e70bb8d7",
       "originalSha256": "5da6fc48921237641a1a9fffde0c296393c0085d074c9f867b18b24f65fee3d1",
       "origin": {
         "path": "Generated/Docs/PayloadTypes.md",
@@ -5875,8 +5963,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Inventory/API.json",
-      "bytes": 138127,
-      "sha256": "933ecdb2ef22e53ba91cf8d14e695eb4c236f57f9b3b90cb593baa9c8bbd3d70",
+      "bytes": 138365,
+      "sha256": "5da8958f1f7218b2c9e19a0b73b97e08470c0fbb273b8f7799d4de39af4b61d6",
       "originalSha256": "526a334441ccabf36e38e793b77995ea4988a5214f69e4ab868648dd30f15220",
       "origin": {
         "path": "Generated/Inventory/API.json",
@@ -5885,8 +5973,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
-      "bytes": 160544,
-      "sha256": "8f837ff2b435f4f4e9dbbd054ff211d82faee9803b48c52d7ff09455dd6facbf",
+      "bytes": 160653,
+      "sha256": "c993abb4152af6c234d960b5a1acfc6b0230ee56268645c855a231dd46d68898",
       "originalSha256": "d15c5a8c0949f84c0f42145f3e1529c4661e6cba633a731d10899ac316a45884",
       "origin": {
         "path": "Generated/Kernel/Zig/r4x_api_exports.zig",
@@ -5895,8 +5983,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
-      "bytes": 922025,
-      "sha256": "2e8f7dfda0c3b0d5bd47a2941ef69ab77abfc13421f760416d533f3e1366dd91",
+      "bytes": 922089,
+      "sha256": "e994217abd339cda87c17dc0d1a131afa0aaf1ed780d9178eaca3f56a3e74ee3",
       "originalSha256": "91b1dcd9751f788a3b87016000630a69e9e009a08c0a16fcbae495422f5be8ca",
       "origin": {
         "path": "Generated/Kernel/Zig/r4x_api_generated.zig",
@@ -5915,8 +6003,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
-      "bytes": 797364,
-      "sha256": "272784cdaecf4f88cc3cf9ef6a21decfd774ab605faecf6acf157bf5507f4de4",
+      "bytes": 797424,
+      "sha256": "ac7b662c0c7fbd47bbf4642207753db432530a03273acb38b35826a2025f6437",
       "originalSha256": "8045c102dcfb1c152ccd73a766042f2454b0e408fb1b4fb1d5e0dcbdb37a5b96",
       "origin": {
         "path": "Generated/SDK/C/include/r4os/abi_generated.h",
@@ -5925,8 +6013,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
-      "bytes": 159874,
-      "sha256": "eaa2a428095dcf2fdef55b9a6650ddef54b0727f5c5f109700ba5fae67213fb9",
+      "bytes": 159983,
+      "sha256": "17b9d9c0ac9a7e3189bc63aee5be0693004ed5196e5cf279e9da3cf9fcef2c0e",
       "originalSha256": "ad4e74cb80812c91d1ff9646a2fef04214590c714efa378ce5e0f9465466617a",
       "origin": {
         "path": "Generated/SDK/Zig/abi_exports.zig",
@@ -5935,8 +6023,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
-      "bytes": 879929,
-      "sha256": "ab0cf319c87294d52e9bf4c946791df7d597724111f07e075ebcd81539eee421",
+      "bytes": 879993,
+      "sha256": "67c09e5698597c7a63b15b8ac4582490c20afc7d2ad88f4cc53981df6de79d92",
       "originalSha256": "c58591f60947930599257a013012a618930d57186428a60b7c83a1914fd69a1c",
       "origin": {
         "path": "Generated/SDK/Zig/abi_generated.zig",
@@ -5945,8 +6033,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
-      "bytes": 219120,
-      "sha256": "efecd5ffce913b54cf72161b383b8e537473161a2777b2ead6e93ace45088935",
+      "bytes": 219229,
+      "sha256": "edad2f87dc4e6620a7a8dadfa08652fe58833f469b54fca9560747b947053940",
       "originalSha256": "b5f1ee979388c37ed6c2b8c1ccc87e7d913f3aa35e767e7cc6baf3544c63aa30",
       "origin": {
         "path": "Generated/SDK/Zig/abi.zig",
@@ -6107,7 +6195,7 @@
     {
       "path": "Platform/SDK/build.zig.zon",
       "bytes": 1034,
-      "sha256": "cd2709ab0f7c82190e9169069aed1404592d95744b60f40fa693a44966e8cb65",
+      "sha256": "73f65a8fa5053092daab768e8435464714ef2ec73e90e353231290f9eb2ae5a4",
       "originalSha256": "84d1a70bdb8a39eab41cc49c96fea026ae1842d3018d55897f47a5408e7a38c5",
       "origin": {
         "path": "build.zig.zon",
@@ -6336,8 +6424,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_web.zig",
-      "bytes": 82417,
-      "sha256": "afc6def13ed0910683072109b615915c8fcfc1857ed6bcf09993ca24a7df45df",
+      "bytes": 83614,
+      "sha256": "6e57804f61b771117c24ec2a91e4f3765ed653502f9c9c057a5e382b3dd3b8c5",
       "originalSha256": "afc6def13ed0910683072109b615915c8fcfc1857ed6bcf09993ca24a7df45df",
       "origin": {
         "path": "r4os/app_web.zig",
@@ -6697,8 +6785,8 @@
     },
     {
       "path": "Platform/SDK/r4os/r4sys.zig",
-      "bytes": 63463,
-      "sha256": "80533465450f6e258da61301167301c5c133714d28f4a1c4145e232aef46414a",
+      "bytes": 63710,
+      "sha256": "22723fa26c783afea492c547d79018d82bf9c4c300396b4f3c3f52ef502a1981",
       "originalSha256": "80533465450f6e258da61301167301c5c133714d28f4a1c4145e232aef46414a",
       "origin": {
         "path": "r4os/r4sys.zig",
@@ -8902,8 +8990,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 12864,
-      "sha256": "1cf6d29f18da481a369cf5e5eb734e9a447bcf8a2547aa3b51f93f5af75e4721",
+      "bytes": 15346,
+      "sha256": "6ab0fd8d373076be5decd4dc13060885ec6916b00257bd39efaea84598740871",
       "originalSha256": null,
       "origin": null
     },
@@ -8924,7 +9012,14 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 588,
-      "sha256": "018b2e3e36eade88d24b583c6e87eca5f58fc83df7f167079f412bda6b212ae6",
+      "sha256": "bfa0fa9820e33717c39ba624260aa58eb14ef3cb06079f0b0bf5bc43b056abf9",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/cache.zig",
+      "bytes": 13619,
+      "sha256": "db524fdab67b7a3a1a30749ed0cb5b5323aa488b61b0072a438d4a8bf05ea9ce",
       "originalSha256": null,
       "origin": null
     },
@@ -8932,6 +9027,27 @@
       "path": "RecoveryTools/Menu/src/diagnostic.zig",
       "bytes": 3844,
       "sha256": "5e9625fc40a8fcce0dd262eb581a8c4c8f34f881b15907715daf47f1bd64a79f",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+      "bytes": 11764,
+      "sha256": "cdf3af74be05175ecf3f1f5eb85c545bce8358da6aa5dbec786d69e8229b6926",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/download.zig",
+      "bytes": 9337,
+      "sha256": "ed6e94b8f34a9cbb9994ce679cfea1e7c497638a54246a7ebd7bcada7c2962cf",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/github.zig",
+      "bytes": 6138,
+      "sha256": "5e5d7e3a98b434fc58a06a02b7922cf7e4febc947658988b800f9bfe14e1c14a",
       "originalSha256": null,
       "origin": null
     },
@@ -8944,8 +9060,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 35249,
-      "sha256": "4f111ee3f8415cae288d496b121244878aad47eb4671c9a5bc51b7f78cb78075",
+      "bytes": 37811,
+      "sha256": "49e431d0ff93da4280b07a80b906c37ba89e59798b8869898b7f64d63dabc91c",
       "originalSha256": null,
       "origin": null
     },
@@ -9035,8 +9151,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/tests.zig",
-      "bytes": 103,
-      "sha256": "bfc7c45e268ca51a4be0c838dc489067b571660e9947e970b0284ba7b002d90d",
+      "bytes": 164,
+      "sha256": "a66d01d289ba61138b38784b63ebf33c412fdd69d365078811130052bfa06dad",
       "originalSha256": null,
       "origin": null
     },
@@ -9063,8 +9179,8 @@
     },
     {
       "path": "Runtime/R4OS/CERTS/CATALOG.R4S",
-      "bytes": 271,
-      "sha256": "30c14c8cc1565a78f0dc810d5404537be2800f8b7477ed04ea8f070252bb2071",
+      "bytes": 361,
+      "sha256": "b62920746cd51824ee01bc94441f7cf551d88d9a89af6bbfe85f3078d1b968d3",
       "originalSha256": "30c14c8cc1565a78f0dc810d5404537be2800f8b7477ed04ea8f070252bb2071",
       "origin": {
         "path": "Injection/R4OS/CERTS/CATALOG.R4S",
@@ -9122,6 +9238,20 @@
       }
     },
     {
+      "path": "Runtime/R4OS/CERTS/ROOTS/USERTRUST-ECC.CRT",
+      "bytes": 1687,
+      "sha256": "c61c7c0111a711b6daa1431e7eb62e8ed5a2250049a5ac7a9f3257f556f233ff",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Runtime/R4OS/CERTS/ROOTS/USERTRUST-RSA.CRT",
+      "bytes": 3381,
+      "sha256": "7de39e7ff2b3b0ede479b056bce5cf74e15dd28b178e4bc2c3cf598a600f559e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Runtime/R4OS/CONFIG/INPUT.R4S",
       "bytes": 67,
       "sha256": "e569ac16854e7100d1000713fe40acdd363dc59b91fee16308cee20a381325c4",
@@ -9134,7 +9264,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "f0482f8c41b75e7a3f79792309ee0b0d30ce073cbd5b443971390f433f2ad48b",
+      "sha256": "87458e8074be5b245aaa48e745cbe2478143b4fcaf232e445713f03e41311e51",
       "originalSha256": null,
       "origin": null
     },
@@ -9158,7 +9288,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "da722814c96a4ba24400fce54992e84046fa4352fd39eb78636094b406f6229e",
+      "sha256": "2f4d7e4de8dbb761e65b9fc321ef7a9df72cf69bd66d0016721abf0557220216",
       "originalSha256": null,
       "origin": null
     },
@@ -9394,6 +9524,16 @@
       }
     },
     {
+      "path": "Runtime/R4OS/PROTOCOLS/R4ZIP.R4P",
+      "bytes": 33367,
+      "sha256": "a6111e11977411c6ec9e9ca9e1af2716a5ed5e0a5d0c7d3361a54dd3ed01e76f",
+      "originalSha256": "a6111e11977411c6ec9e9ca9e1af2716a5ed5e0a5d0c7d3361a54dd3ed01e76f",
+      "origin": {
+        "source": "Protocols-R4Zip",
+        "path": "Artifacts/Modules/R4Zip/R4ZIP.R4P"
+      }
+    },
+    {
       "path": "Runtime/R4OS/PROTOCOLS/USBBOT.R4P",
       "bytes": 8614,
       "sha256": "3972cd1970975f48e6a2cd5a8cf9e4b3e54015a72e8c62648f42406d137f6d12",
@@ -9569,76 +9709,6 @@
       "sha256": "0b2d1bc4949c34ae923aa9958e2510e4b59125945ddef35542a247c9b7f81db5",
       "originalSha256": null,
       "origin": null
-    },
-    {
-      "path": "Runtime/R4OS/PROTOCOLS/R4ZIP.R4P",
-      "bytes": 33367,
-      "sha256": "a6111e11977411c6ec9e9ca9e1af2716a5ed5e0a5d0c7d3361a54dd3ed01e76f",
-      "originalSha256": "a6111e11977411c6ec9e9ca9e1af2716a5ed5e0a5d0c7d3361a54dd3ed01e76f",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "Artifacts/Modules/R4Zip/R4ZIP.R4P"
-      }
-    },
-    {
-      "path": "Legal/Manifests/R4ZIP/module.R4MF",
-      "bytes": 424,
-      "sha256": "3a1c52ef85f9f74cc75532126de290ca88ac29bb7aab2744d4da4c78ddae9116",
-      "originalSha256": "3a1c52ef85f9f74cc75532126de290ca88ac29bb7aab2744d4da4c78ddae9116",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "module.R4MF"
-      }
-    },
-    {
-      "path": "Legal/Notices/Protocols-R4Zip/LICENSE",
-      "bytes": 11358,
-      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "originalSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "LICENSE"
-      }
-    },
-    {
-      "path": "Legal/Notices/Protocols-R4Zip/NOTICE",
-      "bytes": 211,
-      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
-      "originalSha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "NOTICE"
-      }
-    },
-    {
-      "path": "Legal/Notices/Protocols-R4Zip/THIRD_PARTY_NOTICES.md",
-      "bytes": 945,
-      "sha256": "9c03c4e50073dc8c26312f7c6ece14597af26204447e46c561107942eaac008e",
-      "originalSha256": "9c03c4e50073dc8c26312f7c6ece14597af26204447e46c561107942eaac008e",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "THIRD_PARTY_NOTICES.md"
-      }
-    },
-    {
-      "path": "Legal/Notices/Protocols-R4Zip/LICENSE-Zig",
-      "bytes": 1080,
-      "sha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
-      "originalSha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "LICENSE-Zig"
-      }
-    },
-    {
-      "path": "Legal/Sources/Protocols-R4Zip.zip",
-      "bytes": 35882,
-      "sha256": "61d870746695ee88ae1d97be8f59b8118bc7b7bfcd8c135c75471645a88d52c3",
-      "originalSha256": "61d870746695ee88ae1d97be8f59b8118bc7b7bfcd8c135c75471645a88d52c3",
-      "origin": {
-        "source": "Protocols-R4Zip",
-        "path": "git archive 279434d24b94f76d3edb8ed9d53f6f8eb6b7ebe0"
-      }
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -11627,6 +11697,376 @@
         }
       ],
       "reason": "0.76.15: retry-safe RAM cleanup and complete package acceptance runner"
+    },
+    {
+      "reason": "0.76.16: explicit checked FAT32 long-stage owner import and Recovery download implementation",
+      "changes": [
+        {
+          "after": "c039a584a530cd13706f743702fd0b7ed7fa5ef47658df2057f8a57e6aa065b4",
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "00556db012c5079612b04d07aef07984358c1f182ce0d77ecea40d82f5e91fa9"
+        },
+        {
+          "after": "7c6c37062a92b96c11da6d11ade0fdb4f379e4f2924a808866863cf2fde6a404",
+          "path": "Kernel/fs/system_update_atomic.zig",
+          "before": "a8e0af2ef3b69486005915ae8303c085109b3119dce24facb29151b35d756f96"
+        },
+        {
+          "after": "2ac76f51e35488030bfeb88ba92accb0a53585cc8ad624ff78e1a79b120a10b9",
+          "path": "Kernel/program/r4sys.zig",
+          "before": "c3fd5af426a423e19e9b46b6f1a72095385c0e1f1c4a7468fed64ce89128397c"
+        },
+        {
+          "after": "eda4108d6ceca048eb243b27e00136ec317800ae807b20012cc738a50109f363",
+          "path": "Kernel/VERSION.R4S",
+          "before": "a23d4839fdab76f1636ecd4ff9b8b8af2622cad682ea6c9922d610189c063936"
+        },
+        {
+          "after": "ef224c154959d26ed06fe471571cd9fa8347967f2ef9d26ccb4c4b3caeeb50c1",
+          "path": "Legal/Changes/Kernel-0.76.16.patch",
+          "before": null
+        },
+        {
+          "after": "74135b1731a2ccce0256765c326df698fbfa763ca80156b1aef47091f9cb7d9e",
+          "path": "Legal/Changes/SDK-0.76.16.patch",
+          "before": null
+        },
+        {
+          "after": "1e9154ebc94153f455c20ac804ab8ca4dc8adf2c90931bcf07b29a7372e82468",
+          "path": "Platform/SDK/r4os/r4sys.zig",
+          "before": "80533465450f6e258da61301167301c5c133714d28f4a1c4145e232aef46414a"
+        },
+        {
+          "after": "bfa0fa9820e33717c39ba624260aa58eb14ef3cb06079f0b0bf5bc43b056abf9",
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "018b2e3e36eade88d24b583c6e87eca5f58fc83df7f167079f412bda6b212ae6"
+        },
+        {
+          "after": "42fd8240651f59a78a48634cc57e4aba02ffb517a31aa471d0103f94b6b3147e",
+          "path": "RecoveryTools/Menu/src/cache.zig",
+          "before": null
+        },
+        {
+          "after": "d561752ba16cc1045ee9bc3f1cc660f16f2bf45c17c34398c6240f14983df7de",
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": null
+        },
+        {
+          "after": "5e5d7e3a98b434fc58a06a02b7922cf7e4febc947658988b800f9bfe14e1c14a",
+          "path": "RecoveryTools/Menu/src/github.zig",
+          "before": null
+        },
+        {
+          "after": "2ca5470970ea5c949b3c2af1da7052136a81f59b1b4c722c7b81ad8b572be3b7",
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "4f111ee3f8415cae288d496b121244878aad47eb4671c9a5bc51b7f78cb78075"
+        },
+        {
+          "after": "a66d01d289ba61138b38784b63ebf33c412fdd69d365078811130052bfa06dad",
+          "path": "RecoveryTools/Menu/src/tests.zig",
+          "before": "bfc7c45e268ca51a4be0c838dc489067b571660e9947e970b0284ba7b002d90d"
+        },
+        {
+          "after": "87458e8074be5b245aaa48e745cbe2478143b4fcaf232e445713f03e41311e51",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "f0482f8c41b75e7a3f79792309ee0b0d30ce073cbd5b443971390f433f2ad48b"
+        },
+        {
+          "after": "2f4d7e4de8dbb761e65b9fc321ef7a9df72cf69bd66d0016721abf0557220216",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "da722814c96a4ba24400fce54992e84046fa4352fd39eb78636094b406f6229e"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.16: compile Recovery download menu and bounded guest diagnostics",
+      "changes": [
+        {
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+          "before": null,
+          "after": "617d18b118cd6daa92553521b0406c115589cf0cacbb88c807fb94a917a31cc9"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": "d561752ba16cc1045ee9bc3f1cc660f16f2bf45c17c34398c6240f14983df7de",
+          "after": "c103574949993b1ebae0a59289fb37bab4fe49fa1457cba7c3878417ecaf61d1"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "2ca5470970ea5c949b3c2af1da7052136a81f59b1b4c722c7b81ad8b572be3b7",
+          "after": "fc73dc9ba4602c781819b5fc801dc507c52deee3b7a69b031cccbef03b25a80a"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.16: include shared transport rejection before clock access",
+      "changes": [
+        {
+          "before": "74135b1731a2ccce0256765c326df698fbfa763ca80156b1aef47091f9cb7d9e",
+          "after": "53e71635460600bec1326e15ab2157431d28f397edfb83244d36bb717a049ced",
+          "path": "Legal/Changes/SDK-0.76.16.patch"
+        },
+        {
+          "before": "afc6def13ed0910683072109b615915c8fcfc1857ed6bcf09993ca24a7df45df",
+          "after": "e3f9ab3dfd159c69af078d70e858efdc7ea0785748b21392bb5b5aed9e5e61c2",
+          "path": "Platform/SDK/r4os/app_web.zig"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "53e71635460600bec1326e15ab2157431d28f397edfb83244d36bb717a049ced",
+          "path": "Legal/Changes/SDK-0.76.16.patch",
+          "after": "60b5ee052c44a9382d548392ef2007d33b6058b3edbe0d8a2f73c25174076c56"
+        },
+        {
+          "before": "e3f9ab3dfd159c69af078d70e858efdc7ea0785748b21392bb5b5aed9e5e61c2",
+          "path": "Platform/SDK/r4os/app_web.zig",
+          "after": "6e57804f61b771117c24ec2a91e4f3765ed653502f9c9c057a5e382b3dd3b8c5"
+        },
+        {
+          "before": "617d18b118cd6daa92553521b0406c115589cf0cacbb88c807fb94a917a31cc9",
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+          "after": "1fbb91ba61f9b46f3aa40a7d205c04837a4678794536bec31cafa9abb92c2cf3"
+        }
+      ],
+      "reason": "0.76.16: shared transport and production download compile"
+    },
+    {
+      "changes": [
+        {
+          "after": "b281fbb719613a2009d299b7c55707821de2e3aa10947169e0cd6633ee7e8793",
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+          "before": "1fbb91ba61f9b46f3aa40a7d205c04837a4678794536bec31cafa9abb92c2cf3"
+        },
+        {
+          "after": "ed6e94b8f34a9cbb9994ce679cfea1e7c497638a54246a7ebd7bcada7c2962cf",
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": "c103574949993b1ebae0a59289fb37bab4fe49fa1457cba7c3878417ecaf61d1"
+        }
+      ],
+      "reason": "0.76.16: use the shared LF header serialization correctly"
+    },
+    {
+      "changes": [
+        {
+          "path": "Legal/Changes/Distribution-0.76.16.patch",
+          "after": "5a0cc4b9f5f7881a30997ed2c3b33298f3945f6dc2a698f9535635e5e692ce53",
+          "before": null
+        },
+        {
+          "path": "Legal/Notices/Distribution/THIRD_PARTY_NOTICES.md",
+          "after": "fae56b4451fb05748b2a8daff8e7ca7bda473fbf0702fc0c21e96b98140932b8",
+          "before": "a41c0062e4856d8512350c5119c62e611347a02e81619f5c21769e6dd3bf2211"
+        },
+        {
+          "path": "Runtime/R4OS/CERTS/CATALOG.R4S",
+          "after": "811a7f69985af1873d58ea97d7cfc35826a06048ccbd82fc0fcf531eb2cc4a2f",
+          "before": "30c14c8cc1565a78f0dc810d5404537be2800f8b7477ed04ea8f070252bb2071"
+        },
+        {
+          "path": "Runtime/R4OS/CERTS/ROOTS/USERTRUST-RSA.CRT",
+          "after": "7de39e7ff2b3b0ede479b056bce5cf74e15dd28b178e4bc2c3cf598a600f559e",
+          "before": null
+        }
+      ],
+      "reason": "0.76.16: explicit issuer-verified USERTrust root for GitHub cross-signing"
+    },
+    {
+      "reason": "0.76.16: issuer-verified ECC trust root confirmed against the actual guest TLS chain",
+      "changes": [
+        {
+          "path": "Legal/Changes/Distribution-0.76.16.patch",
+          "after": "a00c9bd2825b6c3aff4775ca2c8466f30102ee1d080ad3db1e04cbaf9b8813d6",
+          "before": "5a0cc4b9f5f7881a30997ed2c3b33298f3945f6dc2a698f9535635e5e692ce53"
+        },
+        {
+          "path": "Legal/Notices/Distribution/THIRD_PARTY_NOTICES.md",
+          "after": "4c81397eaeb348b7972e4217124a7f755691487d4938b869b8228d6b6c72bddb",
+          "before": "fae56b4451fb05748b2a8daff8e7ca7bda473fbf0702fc0c21e96b98140932b8"
+        },
+        {
+          "path": "Runtime/R4OS/CERTS/CATALOG.R4S",
+          "after": "b62920746cd51824ee01bc94441f7cf551d88d9a89af6bbfe85f3078d1b968d3",
+          "before": "811a7f69985af1873d58ea97d7cfc35826a06048ccbd82fc0fcf531eb2cc4a2f"
+        },
+        {
+          "path": "Runtime/R4OS/CERTS/ROOTS/USERTRUST-ECC.CRT",
+          "after": "c61c7c0111a711b6daa1431e7eb62e8ed5a2250049a5ac7a9f3257f556f233ff",
+          "before": null
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "c039a584a530cd13706f743702fd0b7ed7fa5ef47658df2057f8a57e6aa065b4",
+          "after": "523d92bcd6d7b86478d1644b42c6d7433b294e0ec9d54da8cd8d3dc121f80cd4",
+          "path": "Kernel/fs/fat/fat32.zig"
+        },
+        {
+          "before": "2ac76f51e35488030bfeb88ba92accb0a53585cc8ad624ff78e1a79b120a10b9",
+          "after": "ecd9e38c6f21cce7f16b3c3c7300030995fa7bfd1401971509c5abd20ce1a9a6",
+          "path": "Kernel/program/r4sys.zig"
+        },
+        {
+          "before": null,
+          "after": "65b675a19eb3e5b98a24344ee18fb40a0dcc01cde98fe2291b65abfdaa1ef6d8",
+          "path": "Legal/Changes/Contract-0.76.16.patch"
+        },
+        {
+          "before": "ef224c154959d26ed06fe471571cd9fa8347967f2ef9d26ccb4c4b3caeeb50c1",
+          "after": "eee9b74c450e09f0edc121fac4181b815cb03ca6549f370887b332c5f30500cf",
+          "path": "Legal/Changes/Kernel-0.76.16.patch"
+        },
+        {
+          "before": "60b5ee052c44a9382d548392ef2007d33b6058b3edbe0d8a2f73c25174076c56",
+          "after": "30a51bee92249fa359a4ba6fb450d826786e085bbc0962727d6c16b9d3971abe",
+          "path": "Legal/Changes/SDK-0.76.16.patch"
+        },
+        {
+          "before": "fcf9fb64cf391eaf58198cfed6d3611d97f8349be5d84dd2755ea2736c11ca90",
+          "after": "7c6f6123102975544559b0194df7aea3199d0402793b055d067857ebca8f37ce",
+          "path": "Platform/Contract/API/ApiContract.baseline.json"
+        },
+        {
+          "before": "fcf9fb64cf391eaf58198cfed6d3611d97f8349be5d84dd2755ea2736c11ca90",
+          "after": "7c6f6123102975544559b0194df7aea3199d0402793b055d067857ebca8f37ce",
+          "path": "Platform/Contract/API/ApiContract.json"
+        },
+        {
+          "before": "f96d57940d3fab55847efbdc681814cfe0870a401118507e2c7b0b28485b5d82",
+          "after": "d0cf2b8305a6943a0959f7afb5a805bcdd70f828561ff9efed492f38e70bb8d7",
+          "path": "Platform/Contract/Generated/Docs/PayloadTypes.md"
+        },
+        {
+          "before": "933ecdb2ef22e53ba91cf8d14e695eb4c236f57f9b3b90cb593baa9c8bbd3d70",
+          "after": "5da8958f1f7218b2c9e19a0b73b97e08470c0fbb273b8f7799d4de39af4b61d6",
+          "path": "Platform/Contract/Generated/Inventory/API.json"
+        },
+        {
+          "before": "8f837ff2b435f4f4e9dbbd054ff211d82faee9803b48c52d7ff09455dd6facbf",
+          "after": "c993abb4152af6c234d960b5a1acfc6b0230ee56268645c855a231dd46d68898",
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig"
+        },
+        {
+          "before": "2e8f7dfda0c3b0d5bd47a2941ef69ab77abfc13421f760416d533f3e1366dd91",
+          "after": "e994217abd339cda87c17dc0d1a131afa0aaf1ed780d9178eaca3f56a3e74ee3",
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig"
+        },
+        {
+          "before": "272784cdaecf4f88cc3cf9ef6a21decfd774ab605faecf6acf157bf5507f4de4",
+          "after": "ac7b662c0c7fbd47bbf4642207753db432530a03273acb38b35826a2025f6437",
+          "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h"
+        },
+        {
+          "before": "eaa2a428095dcf2fdef55b9a6650ddef54b0727f5c5f109700ba5fae67213fb9",
+          "after": "17b9d9c0ac9a7e3189bc63aee5be0693004ed5196e5cf279e9da3cf9fcef2c0e",
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig"
+        },
+        {
+          "before": "ab0cf319c87294d52e9bf4c946791df7d597724111f07e075ebcd81539eee421",
+          "after": "67c09e5698597c7a63b15b8ac4582490c20afc7d2ad88f4cc53981df6de79d92",
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig"
+        },
+        {
+          "before": "efecd5ffce913b54cf72161b383b8e537473161a2777b2ead6e93ace45088935",
+          "after": "edad2f87dc4e6620a7a8dadfa08652fe58833f469b54fca9560747b947053940",
+          "path": "Platform/Contract/Generated/SDK/Zig/abi.zig"
+        },
+        {
+          "before": "1e9154ebc94153f455c20ac804ab8ca4dc8adf2c90931bcf07b29a7372e82468",
+          "after": "22723fa26c783afea492c547d79018d82bf9c4c300396b4f3c3f52ef502a1981",
+          "path": "Platform/SDK/r4os/r4sys.zig"
+        },
+        {
+          "before": "42fd8240651f59a78a48634cc57e4aba02ffb517a31aa471d0103f94b6b3147e",
+          "after": "db524fdab67b7a3a1a30749ed0cb5b5323aa488b61b0072a438d4a8bf05ea9ce",
+          "path": "RecoveryTools/Menu/src/cache.zig"
+        },
+        {
+          "before": "b281fbb719613a2009d299b7c55707821de2e3aa10947169e0cd6633ee7e8793",
+          "after": "600c98c32c347bedf94c955e6ba3088aabebdd594828042b79ae9c1ffafe9c6c",
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig"
+        }
+      ],
+      "reason": "0.76.16: Contract long-stage flag, checked cache publication and orphan LFN recovery"
+    },
+    {
+      "reason": "0.76.16: expose generated long-stage flag through kernel facade",
+      "changes": [
+        {
+          "path": "Kernel/program/r4x_api.zig",
+          "after": "61a6189b4315dd7e4eabd243df5183ea704d50434381feb148883c7fafeabf36",
+          "before": "1a9fd7406fdae2d28c1a5546edf59b1125a8be7b8ce8b8054dad8d62145e66da"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.76.16.patch",
+          "after": "7a2ab79c8c9b943baa758c7b8d504d122903922ef486e6799f3d0392892ffa62",
+          "before": "eee9b74c450e09f0edc121fac4181b815cb03ca6549f370887b332c5f30500cf"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "30a51bee92249fa359a4ba6fb450d826786e085bbc0962727d6c16b9d3971abe",
+          "path": "Legal/Changes/SDK-0.76.16.patch",
+          "after": "39fa13b273353a82ee0abcecc6474f63c4eaec44ebfc2b33f3ac6326fefcb1a8"
+        },
+        {
+          "before": "cd2709ab0f7c82190e9169069aed1404592d95744b60f40fa693a44966e8cb65",
+          "path": "Platform/SDK/build.zig.zon",
+          "after": "73f65a8fa5053092daab768e8435464714ef2ec73e90e353231290f9eb2ae5a4"
+        }
+      ],
+      "reason": "0.76.16: finalized public Contract and SDK owner provenance"
+    },
+    {
+      "reason": "0.76.16: full FAT chain reclamation and cold random-offset regression witness",
+      "changes": [
+        {
+          "after": "10f978e33e0d3431ec868d1c2cc55267e3df03734879f123226de633342532e9",
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "523d92bcd6d7b86478d1644b42c6d7433b294e0ec9d54da8cd8d3dc121f80cd4"
+        },
+        {
+          "after": "b07682f0932cf32fab01dd2844a4b6bf6129815f8d79c9d19ac860f3eaf95f6c",
+          "path": "Legal/Changes/Kernel-0.76.16.patch",
+          "before": "7a2ab79c8c9b943baa758c7b8d504d122903922ef486e6799f3d0392892ffa62"
+        },
+        {
+          "after": "6ab0fd8d373076be5decd4dc13060885ec6916b00257bd39efaea84598740871",
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "1cf6d29f18da481a369cf5e5eb734e9a447bcf8a2547aa3b51f93f5af75e4721"
+        },
+        {
+          "after": "cdf3af74be05175ecf3f1f5eb85c545bce8358da6aa5dbec786d69e8229b6926",
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+          "before": "600c98c32c347bedf94c955e6ba3088aabebdd594828042b79ae9c1ffafe9c6c"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.16: correct GitHub profile navigation to the existing Left/Right console key codes.",
+      "changes": [
+        {
+          "after": "49e431d0ff93da4280b07a80b906c37ba89e59798b8869898b7f64d63dabc91c",
+          "before": "fc73dc9ba4602c781819b5fc801dc507c52deee3b7a69b031cccbef03b25a80a",
+          "path": "RecoveryTools/Menu/src/main.zig"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Legal/Changes/Distribution-0.76.16.patch",
+          "after": "1c6cfaf4e0bca194d1a5983dce4ee3d96e3b895f1ab0afaafd70dec77c12f2bf",
+          "before": "a00c9bd2825b6c3aff4775ca2c8466f30102ee1d080ad3db1e04cbaf9b8813d6"
+        }
+      ],
+      "reason": "0.76.16: finalize public owner receipts after verified GitHub/cache/FAT acceptance."
     }
   ]
 }

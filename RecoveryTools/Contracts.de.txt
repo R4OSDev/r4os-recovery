@@ -161,6 +161,45 @@ Diese technischen Grenzen sind keine Zusage fuer das finale RAM-Minimum.
 Feste Ablage und Startbestaetigung
 --------------------------------
 
+Die Quellenmenues benutzen getrennte /releases/latest-Endpunkte von
+R4OSDev/r4os-distribution und R4OSDev/r4os-recovery. Drafts, Prereleases,
+fehlende Veroeffentlichung und unpassende Architekturen/Paketnamen werden
+abgewiesen. R4OS erlaubt Slim oder Full; die Auswahl erfolgt mit Links/Rechts.
+Das Asset muss uploaded sein, zum Versionstag und exakten Repositorypfad
+passen und einen SHA-256-Digest besitzen. HTTPS-Weiterleitungen bleiben auf
+den freigegebenen GitHub-/Asset-Hosts. Lokale Pakete bleiben ohne Netz nutzbar.
+
+Beide Cachekanaele haben dieselbe unabhaengige Transaktionsfolge. INSTALL
+liegt ausschliesslich auf der bestaetigten Boot-RECOVERY-Partition R:.
+RELEASE bzw. RECOVERY besitzen je .ZIP, .PART und kurzlebig .LCK, .TMP,
+.TXN, .BAK, .JBK. .LCK nutzt die vorhandene Streamlease; parallele
+Cacheoperationen melden Busy. .JBK darf in einem gueltigen Zustand nicht
+uebrig bleiben. Freier Platz muss neuen Download plus 1 MB Verwaltung
+aufnehmen, waehrend das alte ZIP weiterhin seine eigenen Cluster belegt.
+
+PART wird vollstaendig gestreamt und geflusht. Assetgroesse, Original-SHA256,
+ZIP/CRC, Manifest und saemtliche Nutzdateien werden wie bei lokalen Paketen
+im RAM geprueft. Erst danach bindet ein 160-Byte-R4CACHE1-Journal Kanal,
+neue und gegebenenfalls alte Dateigroesse, FNV1a sowie SHA256. Reservierte
+Bytes sind null; ein weiterer SHA256 schuetzt die kanonischen Journalbytes.
+Die geflushte TMP-Datei wird ueber die vorhandene gepruefte kurze
+Dateiuebernahme als TXN veroeffentlicht, bevor sich ZIP oder BAK aendern.
+
+Die gepruefte FAT32-Uebernahme sichert die alte Clusterkette als BAK und
+flusht sie, veroeffentlicht die neue Kette im kurzen ZIP-Eintrag und flusht,
+entfernt dann den kurzen PART-Eintrag ohne die nun ZIP-eigenen Cluster
+freizugeben. Erst danach werden dessen LFN-Slots rueckwaerts entfernt.
+Nach Ruecklesen/SHA256 werden BAK und zuletzt TXN geprueft geloescht.
+Ein identisches Original-ZIP benoetigt keine neue Austauschtransaktion.
+
+Start und Quellenwahl werten offene Journale erneut aus. Nur zur
+protokollierten Generation passende Inhalte und erlaubte Aliaszustaende
+werden fortgesetzt. Fremde/mehrdeutige Dateien bleiben fuer die Diagnose
+erhalten; unvollstaendiges PART ohne Journal wird vor einem neuen Download
+verworfen. Der Cache ist ein einzelner Paketplatz, kein Versionsarchiv.
+Die Folge deckt bestaetigte Flush-Grenzen ab, ersetzt jedoch kein
+allgemeines FAT-Journal und keine Absicherung zerrissener Sektorschreibungen.
+
 RECOVERY:/CURRENT/{recovery.elf,runtime.img,manifest.json,Legal/...}
 RECOVERY:/PREVIOUS/{recovery.elf,runtime.img,manifest.json,Legal/...}
 RECOVERY:/INSTALL/RELEASE.ZIP       R4OS-Quelle, exakt Original-ZIP

@@ -7,7 +7,7 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
 - Schema: v11, Baseline `standalone-contract-0.64.11`
 - Reachability: 153 von 153 Typen aufgelöst oder explizit klassifiziert
 - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
-- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1434; Limits: 109
+- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1435; Limits: 109
 
 ## App-Profile
 
@@ -7143,6 +7143,7 @@ Geltung: `storage`, Einheit: `status_code`, Stabilität: `fixed_contract`.
 | `storage_raw_max_sectors` | `256` | `u32` | identity | number | `storage` | fixed_contract |
 | `storage_bus_virtio` | `6` | `u32` | identity | number | `storage` | fixed_contract |
 | `vm_commit_flag_resident` | `1` | `u64` | flag | bitmask | `vm_commit` | fixed_contract |
+| `file_update_atomic_checked_flag_long_stage` | `16` | `u32` | flag | bitmask | `file_update_atomic_checked` | fixed_contract |
 | `vm_commit_resident_max_bytes` | `262144` | `u64` | value | bytes | `vm_commit` | fixed_contract |
 
 ## Limits

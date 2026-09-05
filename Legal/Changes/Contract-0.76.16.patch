@@ -1,0 +1,166 @@
+diff --git a/API/ApiContract.baseline.json b/API/ApiContract.baseline.json
+index 20a035b..b55093e 100644
+--- a/API/ApiContract.baseline.json
++++ b/API/ApiContract.baseline.json
+@@ -8787,7 +8787,7 @@
+           "name": "file_update_atomic_checked",
+           "state": "function",
+           "required": false,
+-          "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate.",
++          "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate. The additive long_stage flag permits an existing FAT32 long-name stage for forward completion only; the backup and newly created target remain short names, and the stage short entry is durably detached before its LFN slots are reclaimed.",
+           "signature": {
+             "calling_convention": "c",
+             "parameters": [
+@@ -90022,6 +90022,16 @@
+       "stability": "fixed_contract",
+       "description": "Commit and pin physical pages before returning success; additive flag for vm_commit."
+     },
++    {
++      "name": "file_update_atomic_checked_flag_long_stage",
++      "value": "16",
++      "value_type": "u32",
++      "category": "flag",
++      "unit": "bitmask",
++      "scope": "file_update_atomic_checked",
++      "stability": "fixed_contract",
++      "description": "Permit an existing long-name FAT32 stage in a checked forward ownership transfer; unsupported backends and rollback reject the flag without mutation."
++    },
+     {
+       "name": "vm_commit_resident_max_bytes",
+       "value": "262144",
+diff --git a/API/ApiContract.json b/API/ApiContract.json
+index 20a035b..b55093e 100644
+--- a/API/ApiContract.json
++++ b/API/ApiContract.json
+@@ -8787,7 +8787,7 @@
+           "name": "file_update_atomic_checked",
+           "state": "function",
+           "required": false,
+-          "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate.",
++          "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate. The additive long_stage flag permits an existing FAT32 long-name stage for forward completion only; the backup and newly created target remain short names, and the stage short entry is durably detached before its LFN slots are reclaimed.",
+           "signature": {
+             "calling_convention": "c",
+             "parameters": [
+@@ -90022,6 +90022,16 @@
+       "stability": "fixed_contract",
+       "description": "Commit and pin physical pages before returning success; additive flag for vm_commit."
+     },
++    {
++      "name": "file_update_atomic_checked_flag_long_stage",
++      "value": "16",
++      "value_type": "u32",
++      "category": "flag",
++      "unit": "bitmask",
++      "scope": "file_update_atomic_checked",
++      "stability": "fixed_contract",
++      "description": "Permit an existing long-name FAT32 stage in a checked forward ownership transfer; unsupported backends and rollback reject the flag without mutation."
++    },
+     {
+       "name": "vm_commit_resident_max_bytes",
+       "value": "262144",
+diff --git a/Generated/Docs/PayloadTypes.md b/Generated/Docs/PayloadTypes.md
+index ce92988..76abf72 100644
+--- a/Generated/Docs/PayloadTypes.md
++++ b/Generated/Docs/PayloadTypes.md
+@@ -7,7 +7,7 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
+ - Schema: v11, Baseline `standalone-contract-0.64.11`
+ - Reachability: 153 von 153 Typen aufgelöst oder explizit klassifiziert
+ - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
+-- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1434; Limits: 109
++- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1435; Limits: 109
+ 
+ ## App-Profile
+ 
+@@ -7143,6 +7143,7 @@ Geltung: `storage`, Einheit: `status_code`, Stabilität: `fixed_contract`.
+ | `storage_raw_max_sectors` | `256` | `u32` | identity | number | `storage` | fixed_contract |
+ | `storage_bus_virtio` | `6` | `u32` | identity | number | `storage` | fixed_contract |
+ | `vm_commit_flag_resident` | `1` | `u64` | flag | bitmask | `vm_commit` | fixed_contract |
++| `file_update_atomic_checked_flag_long_stage` | `16` | `u32` | flag | bitmask | `file_update_atomic_checked` | fixed_contract |
+ | `vm_commit_resident_max_bytes` | `262144` | `u64` | value | bytes | `vm_commit` | fixed_contract |
+ 
+ ## Limits
+diff --git a/Generated/Inventory/API.json b/Generated/Inventory/API.json
+index 4270c74..5995672 100644
+--- a/Generated/Inventory/API.json
++++ b/Generated/Inventory/API.json
+@@ -1300,7 +1300,7 @@
+       "kind": "group_slot",
+       "slot": 110,
+       "exposure": "advanced",
+-      "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate.",
++      "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate. The additive long_stage flag permits an existing FAT32 long-name stage for forward completion only; the backup and newly created target remain short names, and the stage short entry is durably detached before its LFN slots are reclaimed.",
+       "locations": {
+         "sdk": "Generated/SDK/Zig/abi_generated.zig",
+         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+diff --git a/Generated/Kernel/Zig/r4x_api_exports.zig b/Generated/Kernel/Zig/r4x_api_exports.zig
+index 580bfd1..d241b0c 100644
+--- a/Generated/Kernel/Zig/r4x_api_exports.zig
++++ b/Generated/Kernel/Zig/r4x_api_exports.zig
+@@ -1433,6 +1433,7 @@ pub const storage_bus_ram = generated.storage_bus_ram;
+ pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
+ pub const storage_bus_virtio = generated.storage_bus_virtio;
+ pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
++pub const file_update_atomic_checked_flag_long_stage = generated.file_update_atomic_checked_flag_long_stage;
+ pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+diff --git a/Generated/Kernel/Zig/r4x_api_generated.zig b/Generated/Kernel/Zig/r4x_api_generated.zig
+index 1fa4f70..9c1c7fe 100644
+--- a/Generated/Kernel/Zig/r4x_api_generated.zig
++++ b/Generated/Kernel/Zig/r4x_api_generated.zig
+@@ -1434,6 +1434,7 @@ pub const storage_bus_ram: u32 = 5;
+ pub const storage_raw_max_sectors: u32 = 256;
+ pub const storage_bus_virtio: u32 = 6;
+ pub const vm_commit_flag_resident: u64 = 1;
++pub const file_update_atomic_checked_flag_long_stage: u32 = 16;
+ pub const vm_commit_resident_max_bytes: u64 = 262144;
+ pub const audio_service_error_bytes: usize = 32;
+ pub const audio_service_max_sessions: u32 = 8;
+diff --git a/Generated/SDK/C/include/r4os/abi_generated.h b/Generated/SDK/C/include/r4os/abi_generated.h
+index 1c0c169..46e3da7 100644
+--- a/Generated/SDK/C/include/r4os/abi_generated.h
++++ b/Generated/SDK/C/include/r4os/abi_generated.h
+@@ -1446,6 +1446,7 @@ extern "C" {
+ #define R4OS_STORAGE_RAW_MAX_SECTORS 256u
+ #define R4OS_STORAGE_BUS_VIRTIO 6u
+ #define R4OS_VM_COMMIT_FLAG_RESIDENT 1ull
++#define R4OS_FILE_UPDATE_ATOMIC_CHECKED_FLAG_LONG_STAGE 16u
+ #define R4OS_VM_COMMIT_RESIDENT_MAX_BYTES 262144ull
+ #define R4OS_AUDIO_SERVICE_ERROR_BYTES 32ull
+ #define R4OS_AUDIO_SERVICE_MAX_SESSIONS 8u
+diff --git a/Generated/SDK/Zig/abi.zig b/Generated/SDK/Zig/abi.zig
+index f82cc11..05092ce 100644
+--- a/Generated/SDK/Zig/abi.zig
++++ b/Generated/SDK/Zig/abi.zig
+@@ -1433,6 +1433,7 @@ pub const storage_bus_ram = generated.storage_bus_ram;
+ pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
+ pub const storage_bus_virtio = generated.storage_bus_virtio;
+ pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
++pub const file_update_atomic_checked_flag_long_stage = generated.file_update_atomic_checked_flag_long_stage;
+ pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+diff --git a/Generated/SDK/Zig/abi_exports.zig b/Generated/SDK/Zig/abi_exports.zig
+index c177d69..a96c9c0 100644
+--- a/Generated/SDK/Zig/abi_exports.zig
++++ b/Generated/SDK/Zig/abi_exports.zig
+@@ -1433,6 +1433,7 @@ pub const storage_bus_ram = generated.storage_bus_ram;
+ pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
+ pub const storage_bus_virtio = generated.storage_bus_virtio;
+ pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
++pub const file_update_atomic_checked_flag_long_stage = generated.file_update_atomic_checked_flag_long_stage;
+ pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+diff --git a/Generated/SDK/Zig/abi_generated.zig b/Generated/SDK/Zig/abi_generated.zig
+index 5a1082d..0376fad 100644
+--- a/Generated/SDK/Zig/abi_generated.zig
++++ b/Generated/SDK/Zig/abi_generated.zig
+@@ -1434,6 +1434,7 @@ pub const storage_bus_ram: u32 = 5;
+ pub const storage_raw_max_sectors: u32 = 256;
+ pub const storage_bus_virtio: u32 = 6;
+ pub const vm_commit_flag_resident: u64 = 1;
++pub const file_update_atomic_checked_flag_long_stage: u32 = 16;
+ pub const vm_commit_resident_max_bytes: u64 = 262144;
+ pub const audio_service_error_bytes: usize = 32;
+ pub const audio_service_max_sessions: u32 = 8;

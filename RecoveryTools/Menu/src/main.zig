@@ -5,6 +5,8 @@ const diagnostic = @import("diagnostic.zig");
 const selection = @import("selection.zig");
 const targets = selection.model;
 const packages = @import("package_session.zig");
+const downloads = @import("download.zig");
+const github = @import("github.zig");
 const abi = r4os.abi;
 const terminal_path = "C:\\R4OS\\SOFTWARE\\TERMINAL\\TERMINAL.R4X";
 const Page = enum { menu, source, targets, review, dialog, terminal, progress };
@@ -15,6 +17,9 @@ const State = struct {
     draw: r4os.r4draw.Context,
     net: r4os.r4net.Context,
     dev: r4os.r4dev.Context,
+    web: ?r4os.WebTransport,
+    profile: github.Profile = .slim,
+    source_warning: []const u8 = "",
     cache: packages.Preview = .{},
     work_view_tick: u64 = 0,
     canvas: view.Canvas,
@@ -224,7 +229,8 @@ const State = struct {
     fn renderSource(self: *State, area: view.Rect) void {
         const step = self.font_height + 6;
         self.text(area.x, area.y, "Choose release source", view.foreground);
-        for ([_][]const u8{ "Cached release ZIP", "Download from GitHub", "Back" }, 0..) |label, i|
+        const remote = if (self.kind() == .recovery) "Download Recovery from GitHub" else if (self.profile == .slim) "GitHub: Slim (Left/Right)" else "GitHub: Full (Left/Right)";
+        for ([_][]const u8{ "Cached release ZIP", remote, "Back" }, 0..) |label, i|
             self.option(area, area.y + step * @as(u32, @intCast(i + 2)), label, self.choice == i);
         var label: [128]u8 = undefined;
         const detail = switch (self.cache.state) {
@@ -236,7 +242,7 @@ const State = struct {
         };
         self.text(area.x, area.y + step, detail, view.muted);
         const bottom = area.y + step * 6;
-        self.wrap(targets.cachePath(self.operation()), .{ .x = area.x, .y = bottom, .w = area.w, .h = (area.y + area.h) -| bottom }, view.muted);
+        self.wrap(if (self.source_warning.len != 0) self.source_warning else targets.cachePath(self.operation()), .{ .x = area.x, .y = bottom, .w = area.w, .h = (area.y + area.h) -| bottom }, view.muted);
     }
 
     fn renderTargets(self: *State, area: view.Rect) void {
@@ -341,6 +347,11 @@ const State = struct {
             self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] cache={s} version={s} source=READY\r\n", .{ @tagName(self.cache.state), std.mem.sliceTo(&self.cache.version, 0) }) catch "");
         }
         self.cache = .{};
+        self.source_warning = "";
+        self.page = .progress;
+        downloads.recover(&self.sys, self.kind(), .{ .context = self, .function = pump }) catch |err| {
+            self.source_warning = downloads.message(err);
+        };
         const path = targets.cachePath(self.operation());
         const info = self.sys.fileInfo(path) orelse return;
         self.cache = .{ .state = .unchecked, .bytes = info.size };
@@ -366,11 +377,6 @@ const State = struct {
     fn preparePackage(self: *State) void {
         self.notice_return = .review;
         self.choice = 0;
-        if (self.source == .github) {
-            self.page = .dialog;
-            self.message = "GitHub downloading is not available in this build.";
-            return;
-        }
         self.page = .progress;
         self.working = true;
         self.message = "Preparing package...";
@@ -404,6 +410,33 @@ const State = struct {
         @memcpy(self.cache.version[0..actual_version.len], actual_version);
         var detail: [192]u8 = undefined;
         self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] prepared={s} version={s} ram_peak={d} original_zip={d} writes=0\r\n", .{ @tagName(self.kind()), session.prepared.?.version(), session.pool.peak, session.prepared.?.archive.original.len }) catch "");
+    }
+    fn downloadPackage(self: *State) bool {
+        self.page = .progress;
+        self.working = true;
+        self.message = "Checking GitHub release...";
+        self.progress = 0;
+        _ = self.render(false);
+        defer {
+            self.working = false;
+            self.dirty = true;
+        }
+        self.notice_return = .source;
+        var client = downloads.Client{ .sys = &self.sys, .dev = &self.dev, .web = self.web orelse {
+            self.page = .dialog;
+            self.message = downloads.message(error.NetworkUnavailable);
+            return false;
+        }, .kind = self.kind(), .profile = self.profile, .pump = .{ .context = self, .function = pump } };
+        self.cache = client.run() catch |err| {
+            self.page = .dialog;
+            self.message = downloads.message(err);
+            var detail: [192]u8 = undefined;
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYDOWNLOAD] error={s} network={s} target_writes=0\r\n", .{ @errorName(err), if (client.last_network_error) |network| @tagName(network) else "none" }) catch "");
+            return false;
+        };
+        self.source_warning = "";
+        self.sys.write("[RECOVERYDOWNLOAD] cache=VERIFIED target_writes=0\r\n");
+        return true;
     }
     fn prepareTargetPackage(self: *State, session: *packages.Session) !void {
         try session.prepare(targets.cachePath(self.operation()), self.kind(), if (self.cache.state == .manifest or self.cache.state == .verified) self.cache.digest else null);
@@ -496,11 +529,15 @@ const State = struct {
             .source => switch (key) {
                 0x80 => self.choice = (self.choice + 2) % 3,
                 0x81 => self.choice = (self.choice + 1) % 3,
+                0x88, 0x89 => if (self.choice == 1 and self.kind() == .r4os) {
+                    self.profile = if (self.profile == .slim) .full else .slim;
+                },
                 '\n' => if (self.choice == 2) {
                     self.clearCatalog();
                     self.page = .menu;
                 } else {
                     self.source = @enumFromInt(self.choice);
+                    if (self.source == .github and !self.downloadPackage()) return true;
                     self.scanTargets();
                 },
                 0x1b => {
@@ -596,6 +633,8 @@ pub fn r4_app_main(app: *r4os.App) i32 {
 fn run(app: *r4os.App) i32 {
     const sys = app.system();
     const args = std.mem.span(sys.argsRaw());
+    const download_prefix = "/DOWNLOADSMOKE ";
+    if (std.mem.startsWith(u8, args, download_prefix)) return @import("download_diagnostic.zig").run(app, args[download_prefix.len..]);
     const package_prefix = "/PACKAGESMOKE ";
     if (std.mem.startsWith(u8, args, package_prefix)) return @import("package_diagnostic.zig").run(app, args[package_prefix.len..]);
     const storage_prefix = "/STORAGESMOKE ";
@@ -615,7 +654,7 @@ fn run(app: *r4os.App) i32 {
     defer allocator.free(pixels);
     const state = allocator.create(State) catch return -7;
     defer allocator.destroy(state);
-    state.* = .{ .sys = sys, .desk = desk, .draw = draw, .net = net, .dev = dev, .geometry = geometry, .canvas = .{ .pixels = pixels, .width = width, .height = height, .clip = geometry.monitor } };
+    state.* = .{ .sys = sys, .desk = desk, .draw = draw, .net = net, .dev = dev, .web = app.web(), .geometry = geometry, .canvas = .{ .pixels = pixels, .width = width, .height = height, .clip = geometry.monitor } };
     defer state.test_session.close(sys);
     defer state.clearCatalog();
     const path = "C:\\R4OS\\MEDIA\\RECOVERY.BMP";
@@ -649,6 +688,14 @@ fn run(app: *r4os.App) i32 {
         }
         state.page = .menu;
     }
+    for ([_]github.Kind{ .r4os, .recovery }) |kind| {
+        state.page = .progress;
+        downloads.recover(&state.sys, kind, .{ .context = state, .function = State.pump }) catch |err| {
+            state.source_warning = downloads.message(err);
+            sys.write("[RECOVERYDOWNLOAD] startup=RETAINED check=INSTALL\r\n");
+        };
+    }
+    state.page = .menu;
     if (!state.render(true)) return -12;
     _ = sys.bootReady();
     state.marker();

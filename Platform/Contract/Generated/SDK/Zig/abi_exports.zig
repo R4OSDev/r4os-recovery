@@ -1433,6 +1433,7 @@ pub const storage_bus_ram = generated.storage_bus_ram;
 pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
 pub const storage_bus_virtio = generated.storage_bus_virtio;
 pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
+pub const file_update_atomic_checked_flag_long_stage = generated.file_update_atomic_checked_flag_long_stage;
 pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
 pub const audio_service_error_bytes = generated.audio_service_error_bytes;
 pub const audio_service_max_sessions = generated.audio_service_max_sessions;

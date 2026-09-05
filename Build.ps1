@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'NetworkTest')][string]$Mode = 'Verify',
+    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'DownloadTest', 'NetworkTest')][string]$Mode = 'Verify',
     [string]$Zig = '',
     [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
@@ -21,7 +21,7 @@ try {
         if ($Mode -eq 'StorageTest') { $BootProbe = 'storage' }
         if ($Mode -eq 'InputTest') { $BootProbe = 'input' }
         if ($Mode -in @('UITest', 'PackageTest')) { $BootProbe = 'ui' }
-        if ($Mode -in @('NetworkTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest')) { $BootProbe = 'none' }
+        if ($Mode -in @('NetworkTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'DownloadTest')) { $BootProbe = 'none' }
         if (!$Zig) {
             $Zig = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot $(if ($IsWindows) {'../../DevKit/Toolchains/Zig/zig.exe'} else {'../../DevKit/Toolchains/Zig/zig'})))
         }
@@ -71,6 +71,10 @@ try {
         if ($Mode -eq 'PackageTest') {
             & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Packages.ps1') -Zig $Zig
             if ($LASTEXITCODE -ne 0) { throw 'Recovery package acceptance failed.' }
+        }
+        if ($Mode -eq 'DownloadTest') {
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Downloads.ps1') -Zig $Zig
+            if ($LASTEXITCODE -ne 0) { throw 'Recovery download acceptance failed.' }
         }
     }
     exit 0

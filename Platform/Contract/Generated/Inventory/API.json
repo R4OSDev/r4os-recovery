@@ -1300,7 +1300,7 @@
       "kind": "group_slot",
       "slot": 110,
       "exposure": "advanced",
-      "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate.",
+      "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate. The additive long_stage flag permits an existing FAT32 long-name stage for forward completion only; the backup and newly created target remain short names, and the stage short entry is durably detached before its LFN slots are reclaimed.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"

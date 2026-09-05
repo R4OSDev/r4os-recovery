@@ -1,5 +1,5 @@
 # Host clients for isolated QEMU acceptances; credentials are the Recovery default.
-function Client([string]$Program,[string[]]$Arguments,[string]$InputText='',[ValidateRange(1,60000)][int]$TimeoutMilliseconds=20000,[ValidateRange(0,255)][int]$ExpectedExitCode=0){
+function Client([string]$Program,[string[]]$Arguments,[string]$InputText='',[ValidateRange(1,300000)][int]$TimeoutMilliseconds=20000,[ValidateRange(0,255)][int]$ExpectedExitCode=0){
     $start=[Diagnostics.ProcessStartInfo]::new($Program);$start.UseShellExecute=$false
     $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true;$start.RedirectStandardInput=$true
     $start.Environment['SSH_ASKPASS']=$askpass;$start.Environment['SSH_ASKPASS_REQUIRE']='force';$start.Environment['DISPLAY']='recovery-acceptance'

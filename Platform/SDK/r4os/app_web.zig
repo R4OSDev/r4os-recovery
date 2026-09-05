@@ -383,7 +383,8 @@ pub const WebTransport = struct {
     pub fn fetch(self: *WebTransport, raw_url: []const u8, raw_response: []u8, body_out: []u8, scratch: []u8, options: FetchOptions) FetchResult {
         if (scratch.len < tls_scratch_bytes) return .{ .failure = .scratch_too_small };
         if (raw_url.len == 0 or raw_url.len > max_url_bytes) return .{ .failure = .invalid_url };
-        const deadline = RequestDeadline.start(&self.network, options.timeout);
+        var deadline: RequestDeadline = undefined;
+        var deadline_started = false;
         var url_a: [max_url_bytes]u8 = undefined;
         var url_b: [max_url_bytes]u8 = undefined;
         @memcpy(url_a[0..raw_url.len], raw_url);
@@ -399,12 +400,19 @@ pub const WebTransport = struct {
 
         while (true) {
             if (shouldStop(options)) return .{ .failure = .cancelled };
-            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
             if (!targetAuthorized(options, current)) return .{ .failure = .policy_rejected };
             const parsed = switch (http.parseUrl(current)) {
                 .value => |value| value,
                 .failure => |err| return .{ .failure = if (err == .unsupported_scheme) .unsupported_scheme else .invalid_url },
             };
+            // Pure cancellation/policy/URL rejection must not dereference a
+            // transport clock or open a network context. Start the one shared
+            // request deadline only after the first approved URL.
+            if (!deadline_started) {
+                deadline = RequestDeadline.start(&self.network, options.timeout);
+                deadline_started = true;
+            }
+            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
             if (options.cors and isCrossOrigin(options.origin, parsed)) {
                 var preflight_headers_buffer: [max_request_bytes]u8 = undefined;
                 const preflight_headers = corsPreflightHeaders(method, request_headers, preflight_headers_buffer[0..]) orelse return .{ .failure = .cors_preflight_failed };
@@ -489,7 +497,8 @@ pub const WebTransport = struct {
         if (options.method != .get and options.method != .head) return .{ .failure = .unsupported_method };
         if (options.method == .head and options.resume_from != 0) return .{ .failure = .content_range_mismatch };
         if (http.serializedHeadersContain(options.headers, "Range")) return .{ .failure = .range_header_conflict };
-        const deadline = RequestDeadline.start(&self.network, options.timeout);
+        var deadline: RequestDeadline = undefined;
+        var deadline_started = false;
 
         var url_a: [max_url_bytes]u8 = undefined;
         var url_b: [max_url_bytes]u8 = undefined;
@@ -507,12 +516,16 @@ pub const WebTransport = struct {
 
         while (true) {
             if (downloadStopped(options)) return .{ .failure = .cancelled };
-            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
             if (!downloadTargetAuthorized(options, current)) return .{ .failure = .policy_rejected };
             const parsed = switch (http.parseUrl(current)) {
                 .value => |value| value,
                 .failure => |failure| return .{ .failure = if (failure == .unsupported_scheme) .unsupported_scheme else .invalid_url },
             };
+            if (!deadline_started) {
+                deadline = RequestDeadline.start(&self.network, options.timeout);
+                deadline_started = true;
+            }
+            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
             var ranged_headers: [max_request_bytes]u8 = undefined;
             const headers = appendRangeHeader(request_headers, resume_offset, ranged_headers[0..]) orelse return .{ .failure = .request_too_large };
             const attempt = self.downloadOnce(parsed, headers, header_buffer, io_buffer, scratch, sink, resume_offset, expected_size, options, deadline);
@@ -1251,6 +1264,20 @@ test "transport target authorizer observes and rejects redirect path targets" {
         .failure => |err| try std.testing.expectEqual(Error.policy_rejected, err),
         .response => return error.TestUnexpectedResult,
     }
+    var download_header: [http.max_header_bytes]u8 = undefined;
+    const NeverSink = struct {
+        fn write(_: ?*anyopaque, _: u64, _: []const u8) bool {
+            unreachable;
+        }
+    };
+    const rejected_download = transport.download("http://blocked.example/hop", &download_header, &body, &scratch, .{ .context = null, .write_fn = NeverSink.write }, .{
+        .target_authorizer = Trace.authorize,
+        .target_authorization_context = &trace,
+    });
+    try std.testing.expect(switch (rejected_download) {
+        .failure => |err| err == .policy_rejected,
+        else => false,
+    });
 }
 
 test "read retry is single and restricted to idempotent retrieval" {

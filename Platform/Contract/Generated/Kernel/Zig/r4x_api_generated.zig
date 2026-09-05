@@ -1434,6 +1434,7 @@ pub const storage_bus_ram: u32 = 5;
 pub const storage_raw_max_sectors: u32 = 256;
 pub const storage_bus_virtio: u32 = 6;
 pub const vm_commit_flag_resident: u64 = 1;
+pub const file_update_atomic_checked_flag_long_stage: u32 = 16;
 pub const vm_commit_resident_max_bytes: u64 = 262144;
 pub const audio_service_error_bytes: usize = 32;
 pub const audio_service_max_sessions: u32 = 8;

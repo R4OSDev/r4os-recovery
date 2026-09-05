@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.15
+Stand 0.76.16
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -783,3 +783,72 @@ einer neuen 32-MB-NTFS-Geometrie; ntfsfix -n bestaetigt deren Struktur. R4ZIP
 6/6, eigenstaendiger Protokollbuild mit oeffentlichen Abhaengigkeiten und
 bytegleichem R4P. Normaler Kernel 0.1.95: frisches Testimage und SMP4-testquick
 einschliesslich TLB-/Lock-/Heapnachweisen bestanden. Windows/Lenovo ungetestet.
+
+0.76.16: GitHub und persistenter Release-Cache
+-------------------------------------------
+
+Das Quellenmenue kann nun ueber den bestehenden Webtransport ein passendes
+veroeffentlichtes Paket beziehen. R4OS und Recovery benutzen getrennte
+GitHub-Endpunkte, feste Assetnamen, Version/Architektur und SHA256-Digests.
+R4OS waehlt Slim/Full mit Links/Rechts. Die Downloadroutine folgt nur
+freigegebenen HTTPS-Hosts und verwendet DNS, TCP, R4HTTP und das unveraenderte
+R4TLS 0.2.5. Die fuer die beobachteten GitHub-Zertifikatsketten erforderlichen
+USERTrust-RSA-/ECC-Wurzeln wurden im Distribution-Besitzer ergaenzt und
+gezielt eingefroren. Herkunft, DER-Hashes und oeffentliche Zertifikate sind
+im Trust-Katalog beziehungsweise in den Lizenz-/Provenance-Dateien enthalten.
+
+Originale ZIPs bleiben ausschliesslich R:/INSTALL/RELEASE.ZIP und
+R:/INSTALL/RECOVERY.ZIP. Ein neues PART muss fertig geschrieben, geflusht
+und vollstaendig im RAM validiert sein, bevor eine Austauschtransaktion
+beginnt. Groesse, Asset-SHA256, ZIP/CRC, Manifest und jeder Nutzdatenhash
+werden geprueft. Ein Download benoetigt Platz neben dem alten ZIP und
+1 MB Verwaltungsreserve; DATA wird nicht als Ausweichspeicher benutzt.
+
+RecoveryTools besitzt das kleine R4CACHE1-Journal und die Wiederanlaufpolicy.
+Der Kernel besitzt weiterhin die gepruefte FAT-Uebernahme unter einem
+Dateisystemgate. Das neue additive Contract-Flag erlaubt nur fuer diesen
+Vorwaertspfad einen langen Stagingnamen. Die kurze Eigentumseintragung
+wird vor den LFN-Slots entfernt und geflusht. Unvollstaendige LFN-Anlage
+oder -Loeschung darf beim Wiederverwenden freier Slots keinem anderen
+Dateinamen zugeschlagen werden. Namen, Statusfolge, Generationen und
+Fehlerzustaende stehen in RecoveryTools/Contracts.de.txt.
+
+Die normale FAT32-Dateikettenverwaltung wurde ebenfalls korrigiert:
+Freigabe und zufaellige Dateioffsets folgen der realen Volumegrenze statt
+einer festen 4096-Cluster-Grenze. Fehler von FAT-/FSInfo-Schreiboperationen
+werden gemeldet. Der vorherige Code konnte grosse geloeschte ZIP-Enden
+belegt lassen oder einen entfernten Offset auf einen frueheren Cluster
+abbilden. Die Aenderung gilt fuer den normalen Kernel und dessen bewussten
+Recovery-Import. Das ist kein allgemeines FAT-Journal; eine Unterbrechung
+innerhalb der Clusterfreigabe oder ein zerrissener Sektor kann weiterhin
+eine Dateisystemreparatur erfordern.
+
+Build.ps1 -Mode DownloadTest baut die Produktartefakte. Der gemeinsame
+PowerShell-Lauf erzeugt gueltige, bewusst beschaedigte und alte Original-
+ZIPs selbst, startet SMP4-Gaeste und nutzt die echte Guest-Downloadroutine.
+Er prueft getrennte Kanaele, Redirect, Netzabbruch, falschen SHA256,
+ungueltige Nutzdaten, Platzmangel und ein identisches Paket. Echte QEMU-
+Abbrueche erfolgen nach dauerhaftem Journal, veroeffentlichtem ZIP und
+entfernter Sicherung; synthetische FAT-Alias-/LFN-Zustaende ergaenzen diese
+Grenzen. Ein 4100-Cluster-Dateitest prueft kalte zufaellige Offsets,
+Schreiben, Nachbardaten und die Rueckgabe des gesamten freien Platzes.
+Ein unabhaengiger Hostdurchlauf vergleicht beide FATs, alle erreichbaren
+Dateiketten und den Freispeicherzaehler. Ein zusaetzlicher physischer
+Installationsdatentraeger muss bytegleich bleiben. Es werden nur technische
+Dateiimages beschrieben; vollstaendige oeffentliche Releasekanal-Abnahmen
+folgen nach der geplanten Release-Integration.
+
+Abnahme: Alle acht Downloadgruppen bestanden unter Linux/KVM BIOS mit vier
+vCPUs und 4096 MB RAM, einschliesslich drei echten QEMU-Abbruechen und vier
+FAT-Alias-/LFN-Fixtures. Nach jedem Lauf waren FAT-Spiegel, Erreichbarkeit
+aller belegten Cluster und FSInfo konsistent; der separate 2-GB-Zieldatentraeger
+blieb SHA256-identisch. Echter GitHub-API-/Redirect-TLS-Lauf bestanden.
+Normaler Kernel 0.1.96: Build, frisches Testimage und SMP4-testquick bestanden.
+Contractgenerator 26 Mutationen, SDK-Webtransport 40/40 und Menu 8/8 bestanden.
+Der bestehende Menue-Gasttest BIOS/USB-Tastatur/1024x768 bestand in 19.98 s
+mit 28 Framevergleichen inklusive Profilwechsel und netzloser Rueckkehr.
+Recovery/Recovery-Kernel 0.1.14, Menu 0.1.6. Windows/Lenovo nicht ausgefuehrt.
+Der Menue-Gasttest korrigierte nach dem Downloadlauf die neuen Links-/Rechts-
+Tastencodes auf 0x88/0x89. Dieser separat erneut gepruefte Eingabezweig ist die
+einzige Produktquellenabweichung gegenueber dem festgehaltenen Downloadlauf;
+Download-, Paket-, Transport- und FAT-Quellen sind SHA256-identisch geblieben.

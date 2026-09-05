@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "reason": "0.76.16: explicit owner import of checked FAT32 long-stage replacement, durable LFN ownership, volume-bounded file chains, authorized WebTransport deadlines and GitHub USERTrust roots. Pending owner commits are development-only.",
+  "owners": [
+    {
+      "owner": "Contract",
+      "baseCommit": "16ffd60671a83b97af1dc8b1c4752cc9bed1b732",
+      "sourceCommit": "4b4e7324ec02a000b635a99f653e42a0afa7ac45",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Contract-0.76.16.patch",
+      "patchSha256": "65b675a19eb3e5b98a24344ee18fb40a0dcc01cde98fe2291b65abfdaa1ef6d8",
+      "files": [
+        {
+          "path": "Platform/Contract/API/ApiContract.baseline.json",
+          "sha256": "7c6f6123102975544559b0194df7aea3199d0402793b055d067857ebca8f37ce"
+        },
+        {
+          "path": "Platform/Contract/API/ApiContract.json",
+          "sha256": "7c6f6123102975544559b0194df7aea3199d0402793b055d067857ebca8f37ce"
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
+          "sha256": "d0cf2b8305a6943a0959f7afb5a805bcdd70f828561ff9efed492f38e70bb8d7"
+        },
+        {
+          "path": "Platform/Contract/Generated/Inventory/API.json",
+          "sha256": "5da8958f1f7218b2c9e19a0b73b97e08470c0fbb273b8f7799d4de39af4b61d6"
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
+          "sha256": "c993abb4152af6c234d960b5a1acfc6b0230ee56268645c855a231dd46d68898"
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
+          "sha256": "e994217abd339cda87c17dc0d1a131afa0aaf1ed780d9178eaca3f56a3e74ee3"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
+          "sha256": "ac7b662c0c7fbd47bbf4642207753db432530a03273acb38b35826a2025f6437"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
+          "sha256": "edad2f87dc4e6620a7a8dadfa08652fe58833f469b54fca9560747b947053940"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
+          "sha256": "17b9d9c0ac9a7e3189bc63aee5be0693004ed5196e5cf279e9da3cf9fcef2c0e"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
+          "sha256": "67c09e5698597c7a63b15b8ac4582490c20afc7d2ad88f4cc53981df6de79d92"
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseCommit": "df4c9fa762037164ae5d5cabcba21585f9c7a3b2",
+      "sourceCommit": "0d5f253486309c78770916f9cefa5d192f492be5",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.76.16.patch",
+      "patchSha256": "39fa13b273353a82ee0abcecc6474f63c4eaec44ebfc2b33f3ac6326fefcb1a8",
+      "files": [
+        {
+          "path": "Platform/SDK/build.zig.zon",
+          "sha256": "73f65a8fa5053092daab768e8435464714ef2ec73e90e353231290f9eb2ae5a4"
+        },
+        {
+          "path": "Platform/SDK/r4os/app_web.zig",
+          "sha256": "6e57804f61b771117c24ec2a91e4f3765ed653502f9c9c057a5e382b3dd3b8c5"
+        },
+        {
+          "path": "Platform/SDK/r4os/r4sys.zig",
+          "sha256": "22723fa26c783afea492c547d79018d82bf9c4c300396b4f3c3f52ef502a1981"
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseCommit": "4e7c3c1b0dac97052dc3dc5fd76da764ca4df833",
+      "sourceCommit": "8345b5d6bd4cb939b41be58e2be55eeef47cb8ef",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.76.16.patch",
+      "patchSha256": "b07682f0932cf32fab01dd2844a4b6bf6129815f8d79c9d19ac860f3eaf95f6c",
+      "files": [
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "sha256": "10f978e33e0d3431ec868d1c2cc55267e3df03734879f123226de633342532e9"
+        },
+        {
+          "path": "Kernel/fs/system_update_atomic.zig",
+          "sha256": "7c6c37062a92b96c11da6d11ade0fdb4f379e4f2924a808866863cf2fde6a404"
+        },
+        {
+          "path": "Kernel/program/r4sys.zig",
+          "sha256": "ecd9e38c6f21cce7f16b3c3c7300030995fa7bfd1401971509c5abd20ce1a9a6"
+        },
+        {
+          "path": "Kernel/program/r4x_api.zig",
+          "sha256": "61a6189b4315dd7e4eabd243df5183ea704d50434381feb148883c7fafeabf36"
+        }
+      ]
+    },
+    {
+      "owner": "Distribution",
+      "baseCommit": "aa2e12d15df2e9e5a5bc56db0d031b5978ec83fe",
+      "sourceCommit": "9bde2631a377f36410e03a5590dfccf08a6ccb4f",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Distribution-0.76.16.patch",
+      "patchSha256": "1c6cfaf4e0bca194d1a5983dce4ee3d96e3b895f1ab0afaafd70dec77c12f2bf",
+      "files": [
+        {
+          "path": "Runtime/R4OS/CERTS/CATALOG.R4S",
+          "sha256": "b62920746cd51824ee01bc94441f7cf551d88d9a89af6bbfe85f3078d1b968d3"
+        },
+        {
+          "path": "Runtime/R4OS/CERTS/ROOTS/USERTRUST-ECC.CRT",
+          "sha256": "c61c7c0111a711b6daa1431e7eb62e8ed5a2250049a5ac7a9f3257f556f233ff"
+        },
+        {
+          "path": "Runtime/R4OS/CERTS/ROOTS/USERTRUST-RSA.CRT",
+          "sha256": "7de39e7ff2b3b0ede479b056bce5cf74e15dd28b178e4bc2c3cf598a600f559e"
+        },
+        {
+          "path": "Legal/Notices/Distribution/THIRD_PARTY_NOTICES.md",
+          "sha256": "4c81397eaeb348b7972e4217124a7f755691487d4938b869b8228d6b6c72bddb"
+        }
+      ]
+    }
+  ]
+}

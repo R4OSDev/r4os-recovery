@@ -138,7 +138,19 @@ try{
                     if($frame.RedRow() -ne $firstRow+$selected*$itemHeight){throw "Wrong visible selection row: $selected"}
                     Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=source selected=$selected choice=0"
                     $sourceFrame=Capture "source-$selected";$sourceFrame.RequireContentChanged($frame)
-                    Send-Keys $session @('down','ret');Wait-Marker "\[RECOVERYUI\] page=targets selected=$selected choice=0"
+                    if($selected -eq 0){
+                        Send-Keys $session @('down');Wait-Marker '\[RECOVERYUI\] page=source selected=0 choice=1'
+                        $slim=Capture 'source-github-slim'
+                        Send-Keys $session @('right');Wait-Marker '\[RECOVERYUI\] page=source selected=0 choice=1' 2
+                        $full=Capture 'source-github-full';$full.RequireContentChanged($slim)
+                        Send-Keys $session @('left');Wait-Marker '\[RECOVERYUI\] page=source selected=0 choice=1' 3
+                        Send-Keys $session @('ret');Wait-Marker '\[RECOVERYDOWNLOAD\] error=Network(?:Unavailable|Download).*target_writes=0'
+                        $null=Capture 'source-network-unavailable'
+                        Send-Keys $session @('esc','up')
+                    }
+                    # Offline navigation uses the local source. A real GitHub
+                    # choice now performs its download before target selection.
+                    Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=targets selected=$selected choice=0"
                     $operation=@('install','system','recovery')[$selected]
                     $expected=if($selected -eq 0 -or $BootMedium -eq 'USB'){2}else{1}
                     Wait-Marker "\[RECOVERYTARGET\] mode=$operation boot=$BootMedium count=$expected excluded=0"

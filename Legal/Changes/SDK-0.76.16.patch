@@ -1,0 +1,113 @@
+diff --git a/build.zig.zon b/build.zig.zon
+index 3106094..92cfda0 100644
+--- a/build.zig.zon
++++ b/build.zig.zon
+@@ -7,8 +7,8 @@
+         // The identity is pinned here. Build.bat and Build.sh map the actual
+         // checkout from Settings.R4S and provide it as a local Zig fork.
+         .r4os_contract = .{
+-            .url = "https://github.com/R4OSDev/r4os-contract/archive/16ffd60671a83b97af1dc8b1c4752cc9bed1b732.tar.gz",
+-            .hash = "r4os_contract-0.64.11-ELhbYX6OmQBkEbiSbKa4YhGSUNatjKMs4n29h0AtgKOA",
++            .url = "https://github.com/R4OSDev/r4os-contract/archive/4b4e7324ec02a000b635a99f653e42a0afa7ac45.tar.gz",
++            .hash = "r4os_contract-0.64.11-ELhbYSKXmQBddQq9CEtfujAxCoRRfYRt1vOSuW0AR7V1",
+         },
+     },
+     .paths = .{
+diff --git a/r4os/app_web.zig b/r4os/app_web.zig
+index 384c3b8..203b11d 100644
+--- a/r4os/app_web.zig
++++ b/r4os/app_web.zig
+@@ -383,7 +383,8 @@ pub const WebTransport = struct {
+     pub fn fetch(self: *WebTransport, raw_url: []const u8, raw_response: []u8, body_out: []u8, scratch: []u8, options: FetchOptions) FetchResult {
+         if (scratch.len < tls_scratch_bytes) return .{ .failure = .scratch_too_small };
+         if (raw_url.len == 0 or raw_url.len > max_url_bytes) return .{ .failure = .invalid_url };
+-        const deadline = RequestDeadline.start(&self.network, options.timeout);
++        var deadline: RequestDeadline = undefined;
++        var deadline_started = false;
+         var url_a: [max_url_bytes]u8 = undefined;
+         var url_b: [max_url_bytes]u8 = undefined;
+         @memcpy(url_a[0..raw_url.len], raw_url);
+@@ -399,12 +400,19 @@ pub const WebTransport = struct {
+ 
+         while (true) {
+             if (shouldStop(options)) return .{ .failure = .cancelled };
+-            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
+             if (!targetAuthorized(options, current)) return .{ .failure = .policy_rejected };
+             const parsed = switch (http.parseUrl(current)) {
+                 .value => |value| value,
+                 .failure => |err| return .{ .failure = if (err == .unsupported_scheme) .unsupported_scheme else .invalid_url },
+             };
++            // Pure cancellation/policy/URL rejection must not dereference a
++            // transport clock or open a network context. Start the one shared
++            // request deadline only after the first approved URL.
++            if (!deadline_started) {
++                deadline = RequestDeadline.start(&self.network, options.timeout);
++                deadline_started = true;
++            }
++            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
+             if (options.cors and isCrossOrigin(options.origin, parsed)) {
+                 var preflight_headers_buffer: [max_request_bytes]u8 = undefined;
+                 const preflight_headers = corsPreflightHeaders(method, request_headers, preflight_headers_buffer[0..]) orelse return .{ .failure = .cors_preflight_failed };
+@@ -489,7 +497,8 @@ pub const WebTransport = struct {
+         if (options.method != .get and options.method != .head) return .{ .failure = .unsupported_method };
+         if (options.method == .head and options.resume_from != 0) return .{ .failure = .content_range_mismatch };
+         if (http.serializedHeadersContain(options.headers, "Range")) return .{ .failure = .range_header_conflict };
+-        const deadline = RequestDeadline.start(&self.network, options.timeout);
++        var deadline: RequestDeadline = undefined;
++        var deadline_started = false;
+ 
+         var url_a: [max_url_bytes]u8 = undefined;
+         var url_b: [max_url_bytes]u8 = undefined;
+@@ -507,12 +516,16 @@ pub const WebTransport = struct {
+ 
+         while (true) {
+             if (downloadStopped(options)) return .{ .failure = .cancelled };
+-            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
+             if (!downloadTargetAuthorized(options, current)) return .{ .failure = .policy_rejected };
+             const parsed = switch (http.parseUrl(current)) {
+                 .value => |value| value,
+                 .failure => |failure| return .{ .failure = if (failure == .unsupported_scheme) .unsupported_scheme else .invalid_url },
+             };
++            if (!deadline_started) {
++                deadline = RequestDeadline.start(&self.network, options.timeout);
++                deadline_started = true;
++            }
++            if (deadline.expired(&self.network)) return .{ .failure = .read_timeout };
+             var ranged_headers: [max_request_bytes]u8 = undefined;
+             const headers = appendRangeHeader(request_headers, resume_offset, ranged_headers[0..]) orelse return .{ .failure = .request_too_large };
+             const attempt = self.downloadOnce(parsed, headers, header_buffer, io_buffer, scratch, sink, resume_offset, expected_size, options, deadline);
+@@ -1251,6 +1264,20 @@ test "transport target authorizer observes and rejects redirect path targets" {
+         .failure => |err| try std.testing.expectEqual(Error.policy_rejected, err),
+         .response => return error.TestUnexpectedResult,
+     }
++    var download_header: [http.max_header_bytes]u8 = undefined;
++    const NeverSink = struct {
++        fn write(_: ?*anyopaque, _: u64, _: []const u8) bool {
++            unreachable;
++        }
++    };
++    const rejected_download = transport.download("http://blocked.example/hop", &download_header, &body, &scratch, .{ .context = null, .write_fn = NeverSink.write }, .{
++        .target_authorizer = Trace.authorize,
++        .target_authorization_context = &trace,
++    });
++    try std.testing.expect(switch (rejected_download) {
++        .failure => |err| err == .policy_rejected,
++        else => false,
++    });
+ }
+ 
+ test "read retry is single and restricted to idempotent retrieval" {
+diff --git a/r4os/r4sys.zig b/r4os/r4sys.zig
+index 4b288d6..c159949 100644
+--- a/r4os/r4sys.zig
++++ b/r4os/r4sys.zig
+@@ -54,6 +54,9 @@ pub const file_update_atomic_checked_flag_forward: u32 = 1 << 0;
+ pub const file_update_atomic_checked_flag_rollback: u32 = 1 << 1;
+ pub const file_update_atomic_checked_flag_target_existed: u32 = 1 << 2;
+ pub const file_update_atomic_checked_flag_old_known: u32 = 1 << 3;
++/// FAT32 forward-only replacement may consume an existing long stage name.
++/// The backup and a newly created target must still use 8.3 names.
++pub const file_update_atomic_checked_flag_long_stage = abi.file_update_atomic_checked_flag_long_stage;
+ // Declared create-only publish intent (0.60.30).
+ pub const file_stream_publish_protocol_sftp = abi.file_stream_publish_protocol_sftp;
+ pub const file_stream_publish_protocol_scp = abi.file_stream_publish_protocol_scp;
