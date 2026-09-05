@@ -11,3 +11,4 @@ pub fn standardNtfsMetadata() ntfs.Meta {
 }
 pub const ntfs_resize = @import("storage_tools/ntfs_resize.zig");
 pub const ntfs_extend = ntfs_resize;
+pub const gpt_repair = @import("storage_tools/gpt_repair.zig");

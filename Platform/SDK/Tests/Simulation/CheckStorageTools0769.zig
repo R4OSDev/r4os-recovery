@@ -539,3 +539,135 @@ test "NTFS shrink query follows fragmented files and fixed mirror, and every int
     try expectError(error.CorruptNtfs, tools.ntfs_resize.Plan.prepare(allocator, fixture.device(&progress), &before, 1, 96 * 2048, &work));
     try expect(!progress.write_attempted and fixture.writes == 0);
 }
+
+fn refreshGptCrc(sector: []u8) void {
+    std.mem.writeInt(u32, sector[16..20], 0, .little);
+    std.mem.writeInt(u32, sector[16..20], std.hash.Crc32.hash(sector[0..92]), .little);
+}
+fn repairAllocations(allocator: std.mem.Allocator, original: []const u8) !void {
+    const bytes = try allocator.dupe(u8, original);
+    defer allocator.free(bytes);
+    bytes[512 + 16] ^= 1;
+    var fixture = Fixture{ .bytes = bytes };
+    var progress = tools.io.Progress{};
+    const device = fixture.device(&progress);
+    const report = try tools.gpt_repair.Report.read(allocator, device);
+    defer report.deinit();
+    var work: [32768]u8 = undefined;
+    try report.repair(device, &work);
+}
+
+test "GPT repair preserves the unique survivor and refuses ambiguity, stale and partial I/O" {
+    const allocator = std.testing.allocator;
+    const bytes = try allocator.alloc(u8, 16 * 1024 * 1024);
+    defer allocator.free(bytes);
+    @memset(bytes, 0);
+    var fixture = Fixture{ .bytes = bytes };
+    var progress = tools.io.Progress{};
+    const device = fixture.device(&progress);
+    var work: [32768]u8 = undefined;
+    var layout = try newPlan(device, &work);
+    layout.mbr_prefix[42] = 0x76;
+    try layout.commit(device, &work);
+    @memset(bytes[2048 * 512 ..][0..4096], 0x13);
+    const original = try allocator.dupe(u8, bytes);
+    defer allocator.free(original);
+    {
+        const report = try tools.gpt_repair.Report.read(allocator, device);
+        defer report.deinit();
+        try eq(tools.gpt_repair.Status.healthy, report.status);
+        progress = .{};
+        try expectError(error.GptAlreadyHealthy, report.repair(device, &work));
+        try expect(!progress.write_attempted);
+    }
+    for (0..4) |fault| {
+        @memcpy(bytes, original);
+        const bad: usize = fault / 2;
+        const lba: usize = if (bad == 0) 1 else bytes.len / 512 - 1;
+        const array: usize = if (bad == 0) 2 else bytes.len / 512 - 33;
+        if (fault % 2 == 0) bytes[lba * 512 + 16] ^= 1 else bytes[array * 512 + 56] ^= 1;
+        const damaged = try allocator.dupe(u8, bytes);
+        defer allocator.free(damaged);
+        fixture = .{ .bytes = bytes };
+        progress = .{};
+        const report = try tools.gpt_repair.Report.read(allocator, device);
+        defer report.deinit();
+        try eq(if (bad == 0) tools.gpt_repair.Status.primary_damaged else .backup_damaged, report.status);
+        try expect(std.mem.eql(u8, bytes, damaged));
+        var readonly = device;
+        readonly.exclusive = false;
+        try expectError(error.ExclusiveRequired, report.repair(readonly, &work));
+        try expect(!progress.write_attempted);
+        try report.repair(device, &work);
+        try expect(progress.verified and progress.flushed);
+        try expect(std.mem.eql(u8, original, bytes));
+        _ = try table.Plan.read(device, &work);
+        for (0..2) |kind| for (1..3) |point| {
+            @memcpy(bytes, damaged);
+            fixture = .{ .bytes = bytes };
+            progress = .{};
+            if (kind == 0) fixture.fail_write = point else fixture.fail_flush = point;
+            if (kind == 0) try expectError(error.WriteFailed, report.repair(device, &work)) else try expectError(error.FlushFailed, report.repair(device, &work));
+            try expect(progress.write_attempted and !progress.verified);
+            // Only the bad copy's header/array may have changed.
+            try expect(std.mem.eql(u8, bytes[0..512], original[0..512]));
+            const survivor: usize = if (bad == 0) bytes.len - 33 * 512 else 512;
+            try expect(std.mem.eql(u8, bytes[survivor..][0 .. 33 * 512], original[survivor..][0 .. 33 * 512]));
+            try expect(std.mem.eql(u8, bytes[34 * 512 .. bytes.len - 33 * 512], original[34 * 512 .. bytes.len - 33 * 512]));
+        };
+        @memcpy(bytes, damaged);
+        fixture = .{ .bytes = bytes };
+        progress = .{};
+        bytes[42] ^= 1;
+        try expectError(error.Stale, report.repair(device, &work));
+        try expect(!progress.write_attempted);
+        @memcpy(bytes, damaged);
+        fixture = .{ .bytes = bytes, .corrupt_after_flush = true };
+        progress = .{};
+        try expectError(error.VerifyFailed, report.repair(device, &work));
+        try expect(!progress.verified);
+    }
+    // Two valid CRCs never grant permission to choose between different IDs,
+    // boundaries or arrays, even if one array is independently corrupt.
+    for (0..6) |kind| {
+        @memcpy(bytes, original);
+        fixture = .{ .bytes = bytes };
+        progress = .{};
+        const primary = bytes[512..1024];
+        const backup = bytes[bytes.len - 512 ..];
+        switch (kind) {
+            0 => {
+                primary[16] ^= 1;
+                backup[16] ^= 1;
+            },
+            1 => {
+                backup[56] ^= 1;
+                refreshGptCrc(backup);
+            },
+            2 => {
+                bytes[bytes.len - 33 * 512 + 56] ^= 1;
+                std.mem.writeInt(u32, backup[88..92], std.hash.Crc32.hash(bytes[bytes.len - 33 * 512 ..][0..16384]), .little);
+                refreshGptCrc(backup);
+            },
+            3 => {
+                backup[56] ^= 1;
+                refreshGptCrc(backup);
+                bytes[bytes.len - 33 * 512 + 56] ^= 1;
+            },
+            4 => bytes[466] = 7, // hybrid protective MBR
+            5 => {
+                primary[56] ^= 1;
+                refreshGptCrc(primary);
+            },
+            else => unreachable,
+        }
+        const report = try tools.gpt_repair.Report.read(allocator, device);
+        defer report.deinit();
+        try eq(if (kind == 0) tools.gpt_repair.Status.both_invalid else if (kind == 4) tools.gpt_repair.Status.protective_mbr_invalid else tools.gpt_repair.Status.conflict, report.status);
+        if (kind == 0) try expectError(error.GptBothInvalid, report.repair(device, &work)) else if (kind == 4) try expectError(error.ProtectiveMbr, report.repair(device, &work)) else try expectError(error.GptCopiesDisagree, report.repair(device, &work));
+        try expect(!progress.write_attempted);
+    }
+    @memcpy(bytes, original);
+    try std.testing.checkAllAllocationFailures(allocator, repairAllocations, .{bytes});
+    try expect(std.mem.eql(u8, original, bytes));
+}

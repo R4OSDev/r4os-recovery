@@ -1,5 +1,5 @@
 # Host clients for isolated QEMU acceptances; credentials are the Recovery default.
-function Client([string]$Program,[string[]]$Arguments,[string]$InputText='',[ValidateRange(1,60000)][int]$TimeoutMilliseconds=20000){
+function Client([string]$Program,[string[]]$Arguments,[string]$InputText='',[ValidateRange(1,60000)][int]$TimeoutMilliseconds=20000,[ValidateRange(0,255)][int]$ExpectedExitCode=0){
     $start=[Diagnostics.ProcessStartInfo]::new($Program);$start.UseShellExecute=$false
     $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true;$start.RedirectStandardInput=$true
     $start.Environment['SSH_ASKPASS']=$askpass;$start.Environment['SSH_ASKPASS_REQUIRE']='force';$start.Environment['DISPLAY']='recovery-acceptance'
@@ -14,11 +14,11 @@ function Client([string]$Program,[string[]]$Arguments,[string]$InputText='',[Val
         $text=$stdout.GetAwaiter().GetResult();$errorText=$stderr.GetAwaiter().GetResult()
         [IO.File]::AppendAllText($clientLog,"$([IO.Path]::GetFileName($Program)) $($Arguments -join ' ')`n$text$errorText`n",$utf8)
         if($timedOut){throw "Client timed out: $Program"}
-        if($client.ExitCode -ne 0){throw "Client failed ($($client.ExitCode)): $Program $errorText"}
+        if($client.ExitCode -ne $ExpectedExitCode){throw "Client failed ($($client.ExitCode)): $Program $errorText"}
         return $text
     }finally{$client.Dispose()}
 }
-function Ssh([string]$Command){return Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',$Command))}
+function Ssh([string]$Command,[ValidateRange(0,255)][int]$ExpectedExitCode=0){return Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',$Command)) -ExpectedExitCode $ExpectedExitCode}
 function Sftp([string[]]$Commands,[ValidateRange(1,60000)][int]$TimeoutMilliseconds=20000){return Client $sftp (@('-P',"$sshPort",'-o','BatchMode=no','-b','-')+$sshOptions+@('r4os@127.0.0.1')) (($Commands -join "`n")+"`n") $TimeoutMilliseconds}
 function Host-Path([string]$Path){return '"'+$Path.Replace('\','/').Replace('"','\"')+'"'}
 function Require-Hash([string]$Actual,[string]$Expected){if((Get-RecoveryHash $Actual) -cne (Get-RecoveryHash $Expected)){throw "File hash mismatch: $Actual"}}

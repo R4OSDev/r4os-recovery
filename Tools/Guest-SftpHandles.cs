@@ -76,6 +76,25 @@ public sealed class RecoverySftpHandles : IDisposable {
         if (response[0] != 101) throw new IOException("Expected close status");
         uint status = U32(response, 5); if (status == 0) handle = null; return status;
     }
+    // A separate real server session keeps two NTFS volume owners active while
+    // the ordinary OpenSSH client transfers the larger resize witness.
+    public Task WriteFileAsync(string path, byte[] block, int repetitions) {
+        if (repetitions < 1 || repetitions > 512 || block.Length < 1 || block.Length > 32768)
+            throw new ArgumentOutOfRangeException(nameof(repetitions));
+        if (Open(path, true, false) != 0) throw new IOException("Concurrent SFTP open failed");
+        return Task.Run(() => {
+            ulong offset = 0;
+            for (int i = 0; i < repetitions; i++) {
+                using var request = new MemoryStream(); uint id = ++sequence;
+                request.WriteByte(6); Put32(request, id); PutString(request, handle);
+                Put32(request, (uint)(offset >> 32)); Put32(request, (uint)offset); PutString(request, block);
+                var response = Reply(request, id);
+                if (response[0] != 101 || U32(response, 5) != 0) throw new IOException("Concurrent SFTP write failed");
+                offset += (uint)block.Length;
+            }
+            if (CloseHandle() != 0) throw new IOException("Concurrent SFTP close failed");
+        });
+    }
     public void Dispose() {
         try { if (!process.HasExited) { process.Kill(true); process.WaitForExit(3000); } }
         finally { process.Dispose(); }

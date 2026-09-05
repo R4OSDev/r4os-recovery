@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "reason": "0.76.13: explicit R4PART/SDK GPT-repair and script import; canonical Kernel mount-owned NTFS scratch with rollback/unmount release and error-only stream phase/cache diagnostics. Original platform archives retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "96a6b703a209b85fcad33084f8558d7a151ed3c3",
+      "sourceCommit": "877a89ac8d82a6df37821b1a20a163de77406d71",
+      "patch": "Legal/Changes/SDK-0.76.13.patch",
+      "patchSha256": "0bcaa071759d15c02464f12f2b01896240a4f3396dadbfcabb4f41e47ed1ec91",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "6d05aa53b75ffc7d3ef41ed24e061762857929e958473683be2ceb0e3efd6c6d"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "68de43216e1b53059426fcf9e2c719baa3b60e66995c334205b55e74bc4b08e6"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "sha256": "e1a5424f95c0dd57794c15f0adb8d29bf7db285ce3977414b243332ddc062527"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/gpt_repair.zig",
+          "sha256": "38124df4cbf48316bf098ca99da9ed46e82ea89a90443faedff34aa75d76f7aa"
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseCommit": "333204356fce55690c27d44c441d5a53664e5ffe",
+      "sourceCommit": "ba70686bbb2d74b2e88beca4d583efb15cc6a1b5",
+      "patch": "Legal/Changes/Kernel-0.76.13.patch",
+      "patchSha256": "31bc5b87eee8b8354e90b4dd958b84fb4fc88136e1fa3198fddc89b04340bbc4",
+      "files": [
+        {
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "sha256": "378a4fa51fe39c89cf041436e2d998921e3aab6034592638a1bc157ba818d8cb"
+        },
+        {
+          "path": "Kernel/program/r4sys.zig",
+          "sha256": "c3fd5af426a423e19e9b46b6f1a72095385c0e1f1c4a7468fed64ce89128397c"
+        }
+      ]
+    }
+  ],
+  "application": {
+    "source": "Apps-R4Part",
+    "commit": "0c6ea4d6b6d364353e054b0f043067b81a3ed565",
+    "archiveSha256": "9b31d1fb8af0a9c400a467e3b0935b577b30b99edd83efda934f9a99e85a4815",
+    "binary": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+    "binarySha256": "4d3106f15ff492a7b0cf81c2590cb7fc5965fdd42b80478d2a41a3d08aa1f86f",
+    "sdkCommit": "877a89ac8d82a6df37821b1a20a163de77406d71"
+  }
+}

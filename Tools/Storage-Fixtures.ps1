@@ -19,11 +19,11 @@ function Copy-Volume([IO.Stream]$Disk,[long]$Offset,[string]$Path){
     $volumeInput=[IO.File]::OpenRead($Path)
     try{$Disk.Position=$Offset;$volumeInput.CopyTo($Disk,4MB)}finally{$volumeInput.Dispose()}
 }
-function Header([byte[]]$Entries,[string]$DiskGuid,[uint64]$Current,[uint64]$Backup,[uint64]$ArrayLba){
+function Header([byte[]]$Entries,[string]$DiskGuid,[uint64]$Current,[uint64]$Backup,[uint64]$ArrayLba,[uint64]$SectorCount=4194304){
     $h=[byte[]]::new(512)
     [Text.Encoding]::ASCII.GetBytes('EFI PART').CopyTo($h,0)
     U32 $h 8 65536; U32 $h 12 92
-    U64 $h 24 $Current; U64 $h 32 $Backup; U64 $h 40 34; U64 $h 48 (4194304-34)
+    U64 $h 24 $Current; U64 $h 32 $Backup; U64 $h 40 34; U64 $h 48 ($SectorCount-34)
     ([Guid]::Parse($DiskGuid)).ToByteArray().CopyTo($h,56)
     U64 $h 72 $ArrayLba; U32 $h 80 128; U32 $h 84 128; U32 $h 88 (Crc $Entries $Entries.Length)
     U32 $h 16 (Crc $h 92)

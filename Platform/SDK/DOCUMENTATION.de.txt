@@ -662,3 +662,30 @@ Schreib-/Flushfehler sowie zu kleine Ziele, bitmapwidrige MFT-Allokation,
 MFT-Aenderung nach Planung, Readback und Planallokationsfehler sind gebuendelt.
 Die vorhandene R4PART-Gastfolge prueft zusaetzlich die durch eine 40-MB-Datei
 begrenzte Schrumpfung und nach deren Loeschung 48->16 MB samt Daten/Remount.
+
+0.76.13: GPT-Pruefung und Reparatur
+----------------------------------
+storage_tools.gpt_repair.Report liest Protective MBR, beide GPT-Header und
+deren Arrays unabhaengig. Report.status und die einzelnen Fehler unterscheiden
+intakte, einseitig beschaedigte, widerspruechliche und unbrauchbare Tabellen.
+Ein I/O-Fehler bricht die Pruefung ab und liefert keinen geratenen Kandidaten.
+Profil: 512-Byte-Sektoren, GPT1.0/92-Byte-Header, 128-Byte-Eintraege, maximal
+128 Eintraege, Hauptheader LBA1 und Sicherungsheader am tatsaechlichen Ende.
+Beide Kopien muessen zu gleicher Disk-GUID, Nutzgeometrie und Eintragszahl
+gehoeren; gueltige Arrays duerfen sich nicht unterscheiden. Auch gueltige
+Header mit widerspruechlicher Zuordnung und defektem Array sind kein Kandidat.
+Alle Partitionen muessen gueltige, eindeutige Kennungen und disjunkte Grenzen
+haben. Hybrider oder defekter Protective MBR wird nicht nebenbei repariert.
+
+repair verlangt denselben exklusiven Gesamtdiskadapter. SHA-256 bindet den
+kompletten geprueften MBR-/Header-/Arraystand an die erneute Lesepruefung nach
+ClaimBegin. Es wird nur das defekte Array geschrieben/geflusht/rueckgelesen,
+danach dessen Header. Intakte Kopie, MBR-Bootstrap und Partitionen bleiben
+unangetastet; der Abschluss verifiziert auch die erhaltene Gegenkopie/MBR.
+Ist ein defekter Header noch CRC-gueltig, bleibt seine gueltige Arrayposition
+erhalten. Sonst liegt die neue Hauptarrayposition bei LBA2, die Sicherungs-
+arrayposition direkt vor dem Endheader; beide muessen im vom intakten Header
+reservierten Bereich liegen. Unklare Quellen/Geometrie werden abgewiesen.
+Kein Resize, keine Powerfail-Atomizitaet, kein rekonstruiertes Dateisystem.
+Ein Report benoetigt weniger als 36 KB Heap, repair einen zweiten Report und
+mindestens 512 Byte Arbeitsbuffer. Keine volumeproportionale Allokation.

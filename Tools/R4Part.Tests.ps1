@@ -1,6 +1,40 @@
 # One grouped product acceptance on a newly created, disposable 128-MB NVMe.
 # Interactive commands use the real R4PART.R4X through the regular SSH shell.
 Add-Type -Path (Join-Path $PSScriptRoot 'Guest-Console.cs')
+. (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1')
+$script:partScriptSequence=0
+function New-R4PartFixture([string]$Path,[switch]$DamageBackup){
+    # Only this disposable image is passed by the two guest runners.
+    $file=[IO.File]::Create($Path)
+    try{
+        $file.SetLength(128MB);[uint64]$sectors=128MB/512
+        $entries=[byte[]]::new(16384)
+        ([Guid]::Parse('ebd0a0a2-b9e5-4433-87c0-68b6b72699c7')).ToByteArray().CopyTo($entries,0)
+        ([Guid]::Parse('07613000-2222-4333-8444-000000000001')).ToByteArray().CopyTo($entries,16)
+        U64 $entries 32 2048;U64 $entries 40 6143
+        [Text.Encoding]::Unicode.GetBytes('GPT WITNESS').CopyTo($entries,56)
+        $guid='07613000-2222-4333-8444-000000000000'
+        $primary=Header $entries $guid 1 ($sectors-1) 2 $sectors
+        $backup=Header $entries $guid ($sectors-1) 1 ($sectors-33) $sectors
+        $mbr=[byte[]]::new(512);$mbr[42]=0x76;$mbr[450]=238;$mbr[510]=85;$mbr[511]=170
+        U32 $mbr 454 1;U32 $mbr 458 ([uint32]($sectors-1))
+        Write-At $file 0 $mbr;Write-At $file 1024 $entries
+        if($DamageBackup){$entries[56]=$entries[56] -bxor 1}else{$primary[16]=$primary[16] -bxor 1}
+        Write-At $file 512 $primary;Write-At $file (($sectors-33)*512) $entries
+        Write-At $file (($sectors-1)*512) $backup;$file.Flush($true)
+    }finally{$file.Dispose()}
+}
+function Part-Script([string[]]$Lines,[string[]]$Expected=@(),[bool]$Fail=$false,[string[]]$Forbidden=@()){
+    $script:partScriptSequence++;$name='RP{0:d3}.R4S' -f $script:partScriptSequence
+    $local=Join-Path $output $name
+    [IO.File]::WriteAllText($local,(($Lines -join "`r`n")+"`r`n"),[Text.UTF8Encoding]::new($true))
+    $null=Sftp @("put $(Host-Path $local) /C/TEMP/$name")
+    $text=Ssh ("R4PART /S `"C:\TEMP\$name`"") -ExpectedExitCode ([int]$Fail)
+    foreach($pattern in $Expected){if($text -notmatch $pattern){throw "Missing script output $pattern : $text"}}
+    foreach($pattern in $Forbidden){if($text -match $pattern){throw "Script continued past error: $text"}}
+    $null=Sftp @("rm /C/TEMP/$name")
+    return $text
+}
 function Part-Run([string[]]$Commands,[string[]]$Expected=@(),[int]$Errors=0){
     $console=[RecoveryConsole]::new($ssh,(@('-tt','-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1','R4PART')),$askpass)
     try{
@@ -29,10 +63,21 @@ function Part-Read([string]$Letter){
 }
 function Test-R4Part([bool]$Recovery=$true) {
     $listing=Ssh 'R4PART LIST DISK'
-    $found=[regex]::Matches($listing,'(?m)^\s*(\d+)\s+128\s+\d+\s+none/\?\s+[^\r\n]+\[NVMe\]')
-    if($found.Count -ne 1){throw "No unique blank 128-MB scratch NVMe: $listing"}
+    $found=[regex]::Matches($listing,'(?m)^\s*(\d+)\s+128\s+(?:\d+|\?)\s+GPT\s+[^\r\n]+\[NVMe\]')
+    if($found.Count -ne 1){throw "No unique 128-MB scratch NVMe: $listing"}
     $disk=[int]$found[0].Groups[1].Value
     $select="SELECT DISK $disk";$yes="YES DISK $disk";$p1="$yes PARTITION 1";$p2="$yes PARTITION 2"
+    # The damaged primary header is deliberately not an accepted inventory ID.
+    # Selection is the unique 128-MB GPT NVMe fixture; require its real GUID
+    # after repair has made both table copies authoritative again.
+    $null=Part-Run @($select,'DETAIL DISK','CHECK GPT') @('GPT status: (primary|backup)_damaged','ERROR GptRepairRequired') 1
+    $null=Part-Script @('REM explicit repair from one intact counterpart',$select,'REPAIR GPT',$yes,'CHECK GPT','DETAIL DISK','EXIT') @('GPT repair verified','GPT status: healthy','GUID: 07613000-2222-4333-8444-000000000000')
+    $null=Part-Script @($select,'CLEAN') @('ERROR MissingConfirmation','Script stopped at line 2') $true
+    $null=Part-Script @($select,'CLEAN','YES DISK 999','CHECK GPT') @('ERROR Cancelled') $true @('GPT status:')
+    $null=Part-Script @($select,'SELECT DISK 999','CLEAN',$yes) @('Script stopped at line 2','R4PART: ERROR') $true @('Existing data')
+    $null=Part-Script @($select,'UNKNOWN','CLEAN',$yes) @('ERROR UnknownCommand') $true @('Existing data')
+    $null=Part-Script @($select,'CHECK GPT','REPAIR GPT','EXIT','CLEAN',$yes) @('GPT status: healthy') $false @('Existing data')
+    $null=Part-Run @($select,'CHECK GPT','CLEAN',$yes)
     $null=Part-Run @($select,'CONVERT MBR ID=07610010','NO','LIST PARTITION') @('ERROR Cancelled') 1
     $null=Part-Run @($select,'CONVERT MBR ID=07610010',$yes,'CREATE PARTITION PRIMARY SIZE=16 OFFSET=1024',$yes,
         'ACTIVE',$p1,'DETAIL PARTITION','INACTIVE',$p1,'SET ID=0B',$p1,'UNIQUEID DISK','CONVERT GPT','DELETE PARTITION',$p1,
@@ -61,13 +106,27 @@ function Test-R4Part([bool]$Recovery=$true) {
     $growth=Join-Path $output 'growth.bin';$growthRead=Join-Path $output 'growth-read.bin'
     $block=[byte[]]::new(65536);for($i=0;$i -lt $block.Length;$i++){$block[$i]=[byte](($i*17+39)%256)}
     $file=[IO.File]::Create($growth);try{for($i=0;$i -lt 640;$i++){$file.Write($block)}}finally{$file.Dispose()}
+    $parallel=$null;$parallelWrite=$null
     try{
+        if(!$Recovery){
+            $parallel=Storage-Sftp
+            $parallelWrite=$parallel.WriteFileAsync('/C/TEMP/NTFSPAR.BIN',$block[0..32767],512)
+        }
         $null=Sftp @("put $(Host-Path $growth) /Y/GROWTH.BIN","get /Y/GROWTH.BIN $(Host-Path $growthRead)") -TimeoutMilliseconds 60000
+        if($null -ne $parallelWrite){
+            if(!$parallelWrite.Wait(60000)){throw 'Concurrent NTFS write timed out.'}
+            $parallelWrite.GetAwaiter().GetResult()
+            $parallelExpected=Join-Path $output 'ntfs-parallel.bin';$parallelRead=Join-Path $output 'ntfs-parallel-read.bin'
+            $file=[IO.File]::Create($parallelExpected);try{for($i=0;$i -lt 256;$i++){$file.Write($block)}}finally{$file.Dispose()}
+            $null=Sftp @("get /C/TEMP/NTFSPAR.BIN $(Host-Path $parallelRead)",'rm /C/TEMP/NTFSPAR.BIN')
+            Require-Hash $parallelRead $parallelExpected
+            Write-Host 'Concurrent NTFS volumes: 16-MB C: write and 40-MB Y: transfer, both readback hashes OK.'
+        }
     }catch{
         $null=Ssh 'SERVMAN STATUS SSHD'
         $null=Ssh 'SERVMAN DIAG'
         throw
-    }
+    }finally{if($null -ne $parallel){$parallel.Dispose()}}
     Require-Hash $growthRead $growth
     Part-Read 'Y'
     $query=Part-Run @($select,'SELECT PARTITION 2','SHRINK QUERYMAX','SHRINK DESIRED=32') @('Maximum shrink:','ERROR ShrinkLimit') 1
@@ -108,22 +167,24 @@ function Test-R4Part([bool]$Recovery=$true) {
     $null=Part-Run @($select,'SELECT PARTITION 2','DELETE PARTITION',$p2,'CONVERT MBR ID=07610013',$yes,'CONVERT GPT ID=07610014-2222-4333-8444-000000000000',$yes,'CLEAN ALL',$yes,'LIST PARTITION')
     # Reserved live RAM and Recovery aliases are never assignable/removable.
     if($Recovery){$null=Part-Run @('SELECT VOLUME R','REMOVE') @('ERROR Protected') 1}
-    Write-Host 'R4PART: actual MBR/GPT, formatting, identity, mount and confirmation operations OK.'
+    $safe=Join-Path $output 'PARTSAFE.R4S'
+    [IO.File]::WriteAllText($safe,"REM caller return witness`nLIST DISK`nLIST VOLUME`nHELP`nEXIT`n",[Text.UTF8Encoding]::new($true))
+    $null=Sftp @("put $(Host-Path $safe) /C/TEMP/PARTSAFE.R4S")
+    Write-Host 'R4PART: GPT repair, script stop/exit codes, real formatting/resize, identity and mount operations OK.'
 }
 function Part-Type([string]$Command){
-    $keys=@(foreach($ch in $Command.ToLowerInvariant().ToCharArray()){if($ch -eq ' '){'spc'}elseif($ch -match '[a-z0-9]'){[string]$ch}else{throw "Unsupported R4PART UI test key: $ch"}})
+    $keys=@(foreach($ch in $Command.ToLowerInvariant().ToCharArray()){if($ch -eq ' '){'spc'}elseif($ch -match '[a-z0-9]'){[string]$ch}elseif($ch -eq ':'){'shift+semicolon'}elseif($ch -eq '\'){'backslash'}elseif($ch -eq '/'){'slash'}elseif($ch -eq '.'){'dot'}else{throw "Unsupported R4PART UI test key: $ch"}})
     Send-Keys $session ($keys+@('ret'))
 }
 function Test-R4PartMenu {
     Send-Keys $session @('down','down','down','ret')
     Wait-Marker 'R4PART - R4OS partition tool'
     Part-Type 'HELP';Wait-Marker 'R4PART uses the current Terminal/SSH console'
+    Part-Type 'SELECT DISK 0';Part-Type 'CHECK GPT';Wait-Marker 'GPT status: healthy'
     Part-Type 'EXIT';Start-Sleep -Milliseconds 300
     $menu=Capture 'r4part-return';if([RecoveryFrame]::new($menu).RedRow() -le 0){throw 'R4PART did not return to its menu.'}
     Send-Keys $session @('down','ret');Start-Sleep -Milliseconds 300
-    Part-Type 'R4PART';Start-Sleep -Milliseconds 300
-    Part-Type 'LIST DISK';Start-Sleep -Milliseconds 300
-    Part-Type 'EXIT';Start-Sleep -Milliseconds 300
+    Part-Type 'R4PART /S C:\TEMP\PARTSAFE.R4S';Start-Sleep -Milliseconds 500
     Part-Type 'ECHO TERMINALRETURNED';Wait-Marker 'TERMINALRETURNED'
     Part-Type 'EXIT';Start-Sleep -Milliseconds 300
     # Restore main selection 0 so the shared network runner restarts normally.

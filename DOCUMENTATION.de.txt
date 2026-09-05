@@ -595,3 +595,50 @@ der separate Lauf mit zusaetzlicher Fehlerdiagnose bestand unveraendert.
 Ein UEFI-Starttimeout beim SSH-Banner wurde separat erfolgreich wiederholt.
 Diese Erstfehler werden nicht als bestandene Laeufe gewertet.
 Keine Windows-/Lenovo-Ausfuehrung.
+
+0.76.13: GPT-Reparatur und R4PART-Skripte
+---------------------------------------
+R4PART 0.1.4 und der gemeinsame SDK-Stand sind ausdruecklich uebernommen.
+CHECK GPT prueft beide Kopien; REPAIR GPT schreibt ausschliesslich die defekte
+Kopie aus einer eindeutigen intakten Gegenkopie mit Flush/Readback. MBR,
+Partitionen und Gegenkopie bleiben erhalten. Unklare/ungueltige Quellen oder
+I/O-Fehler werden nicht als Erlaubnis fuer ein geratenes Layout verwendet.
+/S laedt maximal 64 KB UTF-8/BOM vorab in RAM, verwendet den normalen Parser
+und verlangt jede Bestaetigung als ausdrueckliche Zeile. Erster Fehler stoppt
+mit Exitcode 1; EXIT/Erfolg liefert 0. HELP enthaelt Vertrag und Beispiele.
+Die vorhandene Gastfolge beginnt jetzt mit defektem GPT-Header oder Array,
+repariert ihn mit der echten R4PART-Datei und prueft Skriptabbrueche/Fehlercodes.
+Unveraenderte Resize-/Dateiwitnesses bleiben Bestandteil desselben Ablaufs.
+
+Der normale Kernel 0.1.93 und der explizit uebernommene Recovery-Kernel
+verwenden jetzt Heap-Arbeitsbuffer je NTFS-Mount. Die vorherige globale
+Record-/Attribut-/Index-/Kompressionsablage passte nicht zu den unabhaengigen
+fs-request-Sperren der Laufwerke. Paralleles SYSTEM-I/O konnte so einen
+Dateischreibtransfer auf einer zweiten NTFS-Partition mit not_found abbrechen.
+Mountfehler und letzter Unmount geben den Buffer frei; freie Slots belegen
+keinen Scratchspeicher, und beim Initialisieren entsteht keine grosse
+Stackkopie. Der normale Gasttest schreibt zusaetzlich 16 MB nach C:, waehrend
+der 40-MB-Test auf Y: laeuft, und vergleicht beide gelesenen Dateien per SHA-256.
+Der erweiterte Test scheiterte vor der Korrektur auf Kernel 0.1.92; mit
+Kernel 0.1.93 bestanden beide Hashpruefungen und die gesamte R4PART-Folge.
+
+Kernel 0.1.94 ergaenzt Fehlerdiagnose, ohne Erfolgswege umzudeuten: Bei einem
+fehlgeschlagenen Stream-Schreiben stehen Phase (1 Elternpfad, 2 Dateieintrag,
+3 Besitzslot, 4 Slotzustand/Offset, 5 Volume, 6 Append, 7 Nachschlagen,
+8 Nachhergroesse), Offset, Laenge und bestehende Cache-Fehlerzaehler im Log.
+Die gemeinsamen NTFS-Unterphasen sind nur ein Diagnosehinweis, da parallele
+Volumes sie weiterschalten koennen. Ein beobachteter UEFI-I/O-Abbruch (-5,
+30474240 Bytes) ist vom behobenen Scratchkonflikt (-3/not_found) getrennt.
+Das nach Abbruch gesicherte 48-MB-Volume war konsistent; drei gezielte
+40-MB-Rundlaeufe und die komplette UEFI-Folge reproduzierten den I/O-Fehler
+nicht. Kein behaupteter I/O-Fix: Problems.txt und 0.76.24/6 bewahren den Befund
+fuer die Schlussintegration. Kein automatischer Retry in der Abnahme.
+
+Abnahme 0.76.13: Linux/KVM, SMP4, 1024 MB. Bios/virtio-net-pci 122.929 s, Uefi/rtl8139 122.943 s, Bios/offline 10.324 s.
+Getrennte BIOS-/UEFI-Laeufe sind ueber gleiche Kernel-/Runtime-Hashes gebunden.
+Normaler Full-Gast 166.191 s samt 16-MB-C:/40-MB-Y:-Paralleltransfer,
+beiden Dateihashes, lokalem Terminal und /S-Rueckweg. Alle finalen Laeufe
+bestanden; frisches Testimage/testquick, SDK 8/8 und Parser/Skript 2/2 ebenfalls.
+Oeffentlicher R4PART-Standalone-Build bytegleich. 906 gepinnte Dateien,
+38 Module; Recovery/Recovery-Kernel 0.1.11, R4PART 0.1.4, normaler Kernel 0.1.94.
+Keine Windows-/Lenovo-Ausfuehrung. Fehlversuche sind oben getrennt dokumentiert.

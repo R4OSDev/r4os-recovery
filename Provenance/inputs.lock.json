@@ -295,10 +295,10 @@
     },
     {
       "id": "Apps-R4Part",
-      "commit": "7774083e16edad97850f0901d066fcb6c558ad02",
+      "commit": "0c6ea4d6b6d364353e054b0f043067b81a3ed565",
       "remote": "https://github.com/R4OSDev/r4os-app-r4part.git",
       "archive": "Legal/Sources/Apps-R4Part.zip",
-      "archiveSha256": "041e4df1b79d6e0d05bf361553b085089c99c8929130104f12b3033fcaa562b7"
+      "archiveSha256": "9b31d1fb8af0a9c400a467e3b0935b577b30b99edd83efda934f9a99e85a4815"
     }
   ],
   "platformProviders": [
@@ -1114,12 +1114,12 @@
     },
     {
       "name": "R4PART",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "source": "Apps-R4Part",
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
       "manifest": "Legal/Manifests/R4PART/module.R4MF",
       "kind": 1,
-      "bytes": 329676,
+      "bytes": 352638,
       "imports": [
         "R4SYS:Query:1",
         "R4DESK:Query:1"
@@ -1964,8 +1964,8 @@
     },
     {
       "path": "Kernel/fs/ntfs/ntfs.zig",
-      "bytes": 36943,
-      "sha256": "2edb5f0998d1a31877144c1a9417f637d3ffd680ea75b21ebd5a80b707c7d331",
+      "bytes": 38218,
+      "sha256": "378a4fa51fe39c89cf041436e2d998921e3aab6034592638a1bc157ba818d8cb",
       "originalSha256": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
       "origin": {
         "path": "fs/ntfs/ntfs.zig",
@@ -3363,8 +3363,8 @@
     },
     {
       "path": "Kernel/program/r4sys.zig",
-      "bytes": 209428,
-      "sha256": "b7d566e35bbf43ed185f9b695c3fee675b676403248876677cf48ed01dc2b4f6",
+      "bytes": 210838,
+      "sha256": "c3fd5af426a423e19e9b46b6f1a72095385c0e1f1c4a7468fed64ce89128397c",
       "originalSha256": "d8b44cd993395db12d23057a6c8d0f76ea728e5b4d520720578c78d34111f957",
       "origin": {
         "path": "program/r4sys.zig",
@@ -3734,7 +3734,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "aa59aa91a4ff99b7914f717b6fe205b1a223c01b87f19b7f689db9eb8cb1a3ce",
+      "sha256": "42dc727ae19cf8b3704d47776736ace80f6363bb5c4cd2059fdc1b053c6377e2",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3791,6 +3791,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.76.13.patch",
+      "bytes": 9578,
+      "sha256": "31bc5b87eee8b8354e90b4dd958b84fb4fc88136e1fa3198fddc89b04340bbc4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/Kernel-0.76.4.patch",
       "bytes": 72775,
       "sha256": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049",
@@ -3843,6 +3850,13 @@
       "path": "Legal/Changes/SDK-0.76.12.patch",
       "bytes": 88915,
       "sha256": "4114a8ca59b82ea96415ddd0f903099055a20c81d2aec9142885579f36149803",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.13.patch",
+      "bytes": 18093,
+      "sha256": "0bcaa071759d15c02464f12f2b01896240a4f3396dadbfcabb4f41e47ed1ec91",
       "originalSha256": null,
       "origin": null
     },
@@ -4108,8 +4122,8 @@
     {
       "path": "Legal/Manifests/R4PART/module.R4MF",
       "bytes": 273,
-      "sha256": "734be123c5131b321e72e1dfa5a09208c7674bef67e1953b6cb587ba11d890ae",
-      "originalSha256": "734be123c5131b321e72e1dfa5a09208c7674bef67e1953b6cb587ba11d890ae",
+      "sha256": "8705667058e8724cf9e49d668f05fb218a44277d00eff6502f22b088aa3806c2",
+      "originalSha256": "8705667058e8724cf9e49d668f05fb218a44277d00eff6502f22b088aa3806c2",
       "origin": {
         "source": "Apps-R4Part",
         "path": "module.R4MF"
@@ -5203,12 +5217,12 @@
     },
     {
       "path": "Legal/Sources/Apps-R4Part.zip",
-      "bytes": 26617,
-      "sha256": "041e4df1b79d6e0d05bf361553b085089c99c8929130104f12b3033fcaa562b7",
-      "originalSha256": "041e4df1b79d6e0d05bf361553b085089c99c8929130104f12b3033fcaa562b7",
+      "bytes": 30574,
+      "sha256": "9b31d1fb8af0a9c400a467e3b0935b577b30b99edd83efda934f9a99e85a4815",
+      "originalSha256": "9b31d1fb8af0a9c400a467e3b0935b577b30b99edd83efda934f9a99e85a4815",
       "origin": {
         "source": "Apps-R4Part",
-        "path": "git archive 7774083e16edad97850f0901d066fcb6c558ad02"
+        "path": "git archive 0c6ea4d6b6d364353e054b0f043067b81a3ed565"
       }
     },
     {
@@ -6076,8 +6090,8 @@
     },
     {
       "path": "Platform/SDK/DOCUMENTATION.de.txt",
-      "bytes": 39360,
-      "sha256": "7d22699582b5fbd3fca9f99c44ba0d199e0273e45f1d2085ea957386e75c5626",
+      "bytes": 41193,
+      "sha256": "6d05aa53b75ffc7d3ef41ed24e061762857929e958473683be2ceb0e3efd6c6d",
       "originalSha256": "df240d0fb7312961eb1bf9eb53c7e51dc4d36fcaba46eb9a3135bf60720bc70a",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -6741,8 +6755,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools.zig",
-      "bytes": 643,
-      "sha256": "5023645280b150faf4444fb158acd29002bf87b22a1fce415943971b6760a16a",
+      "bytes": 707,
+      "sha256": "e1a5424f95c0dd57794c15f0adb8d29bf7db285ce3977414b243332ddc062527",
       "originalSha256": null,
       "origin": null
     },
@@ -6750,6 +6764,13 @@
       "path": "Platform/SDK/r4os/storage_tools/fat32.zig",
       "bytes": 6706,
       "sha256": "ea0eca83f8e8a0116a109db789fdf884538d0967d6f9374144473e75c6b70bf0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/SDK/r4os/storage_tools/gpt_repair.zig",
+      "bytes": 8066,
+      "sha256": "38124df4cbf48316bf098ca99da9ed46e82ea89a90443faedff34aa75d76f7aa",
       "originalSha256": null,
       "origin": null
     },
@@ -8674,8 +8695,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
-      "bytes": 28197,
-      "sha256": "d5cf417678c07c67550ca9418372992febca165f26b8bf81e5a663122fcd8531",
+      "bytes": 34470,
+      "sha256": "68de43216e1b53059426fcf9e2c719baa3b60e66995c334205b55e74bc4b08e6",
       "originalSha256": null,
       "origin": null
     },
@@ -8949,7 +8970,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "ef63ababa99a4a4b5abcf9364a87f725b3ffbbe6822c2a40f6a11f375e94bc34",
+      "sha256": "4daf0ebd926affa7e4cd29a1c51c34d4b92429983c4d9b4b561322e7607484fb",
       "originalSha256": null,
       "origin": null
     },
@@ -8973,7 +8994,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "18611d861d65739783447b5652508fc7b704d2bdb9736a2093dd4838738034c1",
+      "sha256": "02b000892248bedb934bd84085f742f8ff3ddb1dd6a947914284180796e02b78",
       "originalSha256": null,
       "origin": null
     },
@@ -9340,9 +9361,9 @@
     },
     {
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
-      "bytes": 329676,
-      "sha256": "bb4e675af6bb15d8ff1c5732b5f1102a1fe47f11f7048d888fec2a06560576ad",
-      "originalSha256": "bb4e675af6bb15d8ff1c5732b5f1102a1fe47f11f7048d888fec2a06560576ad",
+      "bytes": 352638,
+      "sha256": "4d3106f15ff492a7b0cf81c2590cb7fc5965fdd42b80478d2a41a3d08aa1f86f",
+      "originalSha256": "4d3106f15ff492a7b0cf81c2590cb7fc5965fdd42b80478d2a41a3d08aa1f86f",
       "origin": {
         "source": "Apps-R4Part",
         "path": "Artifacts/Modules/R4Part/R4PART.R4X"
@@ -10925,6 +10946,96 @@
           "before": "975be452180391591096ee9ceb4fc8d77b956da13d63e315482f5daadbc07106",
           "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
           "after": "18611d861d65739783447b5652508fc7b704d2bdb9736a2093dd4838738034c1"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.13: ausdruecklicher GPT-Reparatur- und R4PART-Skriptstand",
+      "changes": [
+        {
+          "before": "aa59aa91a4ff99b7914f717b6fe205b1a223c01b87f19b7f689db9eb8cb1a3ce",
+          "after": "42dc727ae19cf8b3704d47776736ace80f6363bb5c4cd2059fdc1b053c6377e2",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "before": null,
+          "after": "0bcaa071759d15c02464f12f2b01896240a4f3396dadbfcabb4f41e47ed1ec91",
+          "path": "Legal/Changes/SDK-0.76.13.patch"
+        },
+        {
+          "before": "7d22699582b5fbd3fca9f99c44ba0d199e0273e45f1d2085ea957386e75c5626",
+          "after": "6d05aa53b75ffc7d3ef41ed24e061762857929e958473683be2ceb0e3efd6c6d",
+          "path": "Platform/SDK/DOCUMENTATION.de.txt"
+        },
+        {
+          "before": "5023645280b150faf4444fb158acd29002bf87b22a1fce415943971b6760a16a",
+          "after": "e1a5424f95c0dd57794c15f0adb8d29bf7db285ce3977414b243332ddc062527",
+          "path": "Platform/SDK/r4os/storage_tools.zig"
+        },
+        {
+          "before": null,
+          "after": "38124df4cbf48316bf098ca99da9ed46e82ea89a90443faedff34aa75d76f7aa",
+          "path": "Platform/SDK/r4os/storage_tools/gpt_repair.zig"
+        },
+        {
+          "before": "d5cf417678c07c67550ca9418372992febca165f26b8bf81e5a663122fcd8531",
+          "after": "68de43216e1b53059426fcf9e2c719baa3b60e66995c334205b55e74bc4b08e6",
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig"
+        },
+        {
+          "before": "ef63ababa99a4a4b5abcf9364a87f725b3ffbbe6822c2a40f6a11f375e94bc34",
+          "after": "4daf0ebd926affa7e4cd29a1c51c34d4b92429983c4d9b4b561322e7607484fb",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "before": "18611d861d65739783447b5652508fc7b704d2bdb9736a2093dd4838738034c1",
+          "after": "02b000892248bedb934bd84085f742f8ff3ddb1dd6a947914284180796e02b78",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.13: explicit Kernel 0.1.93 fix with mount-owned NTFS scratch and rollback/unmount release",
+      "changes": [
+        {
+          "before": "2edb5f0998d1a31877144c1a9417f637d3ffd680ea75b21ebd5a80b707c7d331",
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "after": "378a4fa51fe39c89cf041436e2d998921e3aab6034592638a1bc157ba818d8cb"
+        },
+        {
+          "before": null,
+          "path": "Legal/Changes/Kernel-0.76.13.patch",
+          "after": "4555d3a6e79e9b6df5e0e73b109c2e28913c4ecaa5358945048d152c1d206329"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.13: explicit owner stream-write failure diagnostic for the remaining UEFI I/O error",
+      "changes": [
+        {
+          "path": "Kernel/program/r4sys.zig",
+          "after": "c3fd5af426a423e19e9b46b6f1a72095385c0e1f1c4a7468fed64ce89128397c",
+          "before": "b7d566e35bbf43ed185f9b695c3fee675b676403248876677cf48ed01dc2b4f6"
+        },
+        {
+          "path": "Legal/Changes/Kernel-diagnostic-0.76.13.patch",
+          "after": "e3f528b023a5217d9227badf062e59214f6fd4b9e01fbb8a7feafba258db0865",
+          "before": null
+        }
+      ]
+    },
+    {
+      "reason": "0.76.13: final published Kernel 0.1.94 import consolidates mount-owned NTFS scratch and stream diagnostics",
+      "changes": [
+        {
+          "after": "31bc5b87eee8b8354e90b4dd958b84fb4fc88136e1fa3198fddc89b04340bbc4",
+          "before": "4555d3a6e79e9b6df5e0e73b109c2e28913c4ecaa5358945048d152c1d206329",
+          "path": "Legal/Changes/Kernel-0.76.13.patch"
+        },
+        {
+          "after": null,
+          "before": "e3f528b023a5217d9227badf062e59214f6fd4b9e01fbb8a7feafba258db0865",
+          "path": "Legal/Changes/Kernel-diagnostic-0.76.13.patch"
         }
       ]
     }

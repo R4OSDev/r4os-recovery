@@ -31,7 +31,7 @@ $clientLog=Join-Path $output 'clients.log';$serialLog=Join-Path $output 'serial.
 $replacement=Join-Path $output 'witness.bin';$received=Join-Path $output 'received.bin';$payload=Join-Path $output 'payload.bin'
 $bytes=[byte[]]::new(131073);for($i=0;$i -lt $bytes.Length;$i++){$bytes[$i]=[byte](($i*37+19)%256)}
 [IO.File]::WriteAllBytes($payload,$bytes);[IO.File]::WriteAllBytes($replacement,$bytes[0..4096])
-$scratch=Join-Path $output 'scratch.img';$f=[IO.File]::Create($scratch);try{$f.SetLength(128MB)}finally{$f.Dispose()}
+$scratch=Join-Path $output 'scratch.img';New-R4PartFixture $scratch -DamageBackup
 $arguments=@('-readconfig',(Join-Path $distribution 'QEMU/standard.conf'),'-machine',"accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-m','1024','-smp','4','-snapshot','-display','none','-monitor','none',
     '-audiodev','driver=none,id=debug-audio','-global','hda-duplex.audiodev=debug-audio','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$qmpPort,server=on,wait=off",
     '-netdev',"user,id=rec-net,hostfwd=tcp:127.0.0.1:$sshPort-:22",'-device','virtio-net-pci,netdev=rec-net,disable-legacy=on',
@@ -68,7 +68,7 @@ try{
     $null=Qmp $session 'system_reset';Wait-Marker 'C:\\>' $offset
     Part-Type 'R4PART';Wait-Marker 'R4PART - R4OS partition tool' $offset
     Part-Type 'LIST DISK';Wait-Marker 'Free MB' $offset
-    Part-Type 'EXIT';Part-Type 'ECHO LOCALRETURNED';Wait-Marker 'LOCALRETURNED' $offset
+    Part-Type 'EXIT';Part-Type 'R4PART /S C:\TEMP\PARTSAFE.R4S';Part-Type 'ECHO LOCALRETURNED';Wait-Marker 'LOCALRETURNED' $offset
     Part-Type 'POWEROFF'
     if(!$process.WaitForExit(10000) -or $process.ExitCode -ne 0){throw 'Normal guest did not power off.'}
     Write-RecoveryJson (Join-Path $output 'results.json') @{schema=1;result='ok';cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);
