@@ -195,7 +195,7 @@ const State = struct {
                 self.message = "This operation is not available in this build.";
             },
             3, 4 => {
-                const path: [:0]const u8 = if (self.selection == 4) terminal_path else "C:\\R4OS\\SOFTWARE\\R4PART\\R4PART.R4X";
+                const path: [:0]const u8 = if (self.selection == 4) terminal_path else "C:\\R4OS\\SOFTWARE\\TERMINAL\\R4PART.R4X";
                 const args: [:0]const u8 = if (self.selection == 4) "/NOAUTOEXEC" else "";
                 if (self.sys.programSpawnWithConsoleHostHandle(path, args, .console, .terminal_mode, &self.child) < 0) {
                     self.page = .dialog;

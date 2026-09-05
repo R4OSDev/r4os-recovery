@@ -9,9 +9,11 @@ function Client([string]$Program,[string[]]$Arguments,[string]$InputText=''){
         if(!$client.Start()){throw "Client did not start: $Program"}
         $stdout=$client.StandardOutput.ReadToEndAsync();$stderr=$client.StandardError.ReadToEndAsync()
         $client.StandardInput.Write($InputText);$client.StandardInput.Close()
-        if(!$client.WaitForExit(20000)){$client.Kill($true);$client.WaitForExit();throw "Client timed out: $Program"}
+        $timedOut=!$client.WaitForExit(20000)
+        if($timedOut){$client.Kill($true);$client.WaitForExit()}
         $text=$stdout.GetAwaiter().GetResult();$errorText=$stderr.GetAwaiter().GetResult()
         [IO.File]::AppendAllText($clientLog,"$([IO.Path]::GetFileName($Program)) $($Arguments -join ' ')`n$text$errorText`n",$utf8)
+        if($timedOut){throw "Client timed out: $Program"}
         if($client.ExitCode -ne 0){throw "Client failed ($($client.ExitCode)): $Program $errorText"}
         return $text
     }finally{$client.Dispose()}

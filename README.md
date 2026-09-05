@@ -118,7 +118,7 @@ unchanged TERMINAL.R4X in a separate console session; EXIT restores the menu.
 Image scaling, text, cursor, scrolling and clear are confined to the source
 image's monitor. The shell uses existing R4DRAW and console-host APIs without
 a desktop. The footer shows the actual SSH address or network waiting state.
-Installer/update workflows and R4PART are connected in their roadmap steps;
+Installer/update workflows are connected in their roadmap steps;
 the current entries report their availability explicitly.
 
 `-Mode UITest` exercises BIOS at 800x600, 1024x768 and 1920x1080 plus UEFI at
@@ -133,3 +133,17 @@ FAT32/NTFS formatting. `-Mode StorageToolsTest` exercises those same routines
 through real guest claims on a disposable 128-MB NVMe disk, then mounts both
 filesystems and checks file access. The existing network runner provides
 BIOS/UEFI SMP4 and menu/remote-access coverage in the same sessions.
+
+Since 0.76.10, Manage Partitions starts the frozen R4PART.R4X directly.
+The same console application is installed in the normal R4OS Terminal path.
+It provides real disk/partition/volume inventory, selection, GPT/MBR creation
+and editing, FAT32/NTFS Quick/Full formatting, drive letters and mount state.
+Writes require an explicit confirmation naming the target disk/partition.
+R4PART imports the console portion of R4DESK as well as physical R4SYS storage.
+Neither a desktop nor GUI applications are required.
+
+`-Mode R4PartTest` extends the existing network acceptance with real R4PART
+operations on a disposable NVMe, identifier changes and the menu/Terminal
+return paths. `pwsh -File Tools/Test-R4Part-Normal.ps1` exercises that identical
+binary in an already built normal Full image, then verifies the ordinary
+local Terminal in a private QEMU snapshot. Both run with four virtual CPUs.

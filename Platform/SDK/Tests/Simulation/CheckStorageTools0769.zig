@@ -105,6 +105,22 @@ test "GPT/MBR roundtrip, geometry, free space, attributes and stale plans" {
     try expect(after.entries[0].active);
     bytes[450] = 0x0f;
     try expectError(error.ExtendedMbrUnsupported, table.Plan.read(device, &work));
+    bytes[450] = 7;
+    var empty = try table.Plan.read(device, &work);
+    try expectError(error.NotEmpty, empty.convertEmpty(.gpt, disk_guid, 42));
+    try empty.remove(1);
+    try empty.commit(device, &work);
+    empty = try table.Plan.read(device, &work);
+    try empty.convertEmpty(.gpt, disk_guid, 42);
+    try empty.commit(device, &work);
+    empty = try table.Plan.read(device, &work);
+    try empty.convertEmpty(.mbr, disk_guid, 77);
+    try empty.commit(device, &work);
+    const converted = try table.Plan.read(device, &work);
+    try eq(table.Kind.mbr, converted.kind);
+    try eq(@as(u32, 77), converted.disk_id);
+    for (bytes[512..34 * 512]) |byte| try eq(@as(u8, 0), byte);
+    for (bytes[bytes.len - 33 * 512 ..]) |byte| try eq(@as(u8, 0), byte);
 }
 
 test "failed write, flush, verification and cancelled commit retain exact partial status" {

@@ -292,6 +292,13 @@
       "archive": "Legal/Sources/Apps-NetCat.zip",
       "commit": "206ca6b3f07fdaa235a361d4ee5bf721c1ae23dc",
       "remote": "https://github.com/R4OSDev/r4os-app-netcat.git"
+    },
+    {
+      "id": "Apps-R4Part",
+      "commit": "e92784e9a9249934a6f6de6380937e02a55173d4",
+      "remote": "https://github.com/R4OSDev/r4os-app-r4part.git",
+      "archive": "Legal/Sources/Apps-R4Part.zip",
+      "archiveSha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842"
     }
   ],
   "platformProviders": [
@@ -911,7 +918,7 @@
     },
     {
       "name": "SSHD",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "source": "Services-SshService",
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "manifest": "Legal/Manifests/SSHD/module.R4MF",
@@ -1104,6 +1111,27 @@
       "protocolRoles": [],
       "protocolDependencies": [],
       "resources": null
+    },
+    {
+      "name": "R4PART",
+      "version": "0.1.1",
+      "source": "Apps-R4Part",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+      "manifest": "Legal/Manifests/R4PART/module.R4MF",
+      "kind": 1,
+      "bytes": 303836,
+      "imports": [
+        "R4SYS:Query:1",
+        "R4DESK:Query:1"
+      ],
+      "exports": [
+        "R4XStart:1"
+      ],
+      "protocolRoles": [],
+      "protocolDependencies": [],
+      "resources": [
+        "src/help.txt"
+      ]
     }
   ],
   "files": [
@@ -1596,8 +1624,8 @@
     },
     {
       "path": "Kernel/DOCUMENTATION.de.txt",
-      "bytes": 38246,
-      "sha256": "3753512dcade9d230353ece489cc2ef7f00f9487f4539ac217e434f7af1fb95f",
+      "bytes": 39344,
+      "sha256": "7ed6e78fc066f07fc2592ab2dcda5b25b7a72b766e4337cf6b50574d325a764f",
       "originalSha256": "24a9a6fdbdeb5803010beb59701c99b9a905dada5e4136d18d5e1dbc28911b40",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -3365,8 +3393,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 806773,
-      "sha256": "b7a27cc4b6f35136ccfe3fbb5b9f631d7289dc242028dd038b38ad866a8afe00",
+      "bytes": 808266,
+      "sha256": "3d130c716ab7b09ef213f3d47c4462be2793c6eb6fa880ea1f97aa5730da49dc",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3601,8 +3629,8 @@
     },
     {
       "path": "Kernel/storage/operations.zig",
-      "bytes": 29340,
-      "sha256": "5a12569d465a1485348f7a12b2d44bda1025134b50345bf8429aaf3e75c8c42e",
+      "bytes": 29933,
+      "sha256": "96ce50050a9a8dfa7e17aaa4874150e22721bab66690425f11f4fb6936526946",
       "originalSha256": null,
       "origin": null
     },
@@ -3706,7 +3734,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "7d79cb7e719982541d2bce80e52a60bf81b095802f6d8d38fa748062ce74b4e7",
+      "sha256": "1642a5966dd7fff2c066df4b973a6f7b4d3372c9186124d24d8c97072fe43597",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3756,6 +3784,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.76.10.patch",
+      "bytes": 8175,
+      "sha256": "d5ba8673befc9db366fcd0519da9607fad1c5bfb163dd354c6602248f730b2a2",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/Kernel-0.76.4.patch",
       "bytes": 72775,
       "sha256": "b88f54e9705c490db5e7858cf948ecebc9835936b615cd0ae6be901475f3d049",
@@ -3791,6 +3826,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/SDK-0.76.10.patch",
+      "bytes": 6303,
+      "sha256": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/SDK-0.76.7.patch",
       "bytes": 3370,
       "sha256": "1ea0ee879e26b1700fb9c1395a8c37c07faeba915a6577ceef79c7b5fc1dfdef",
@@ -3822,6 +3864,13 @@
       "path": "Legal/Changes/SSHD-0.76.8.patch",
       "bytes": 17753,
       "sha256": "cd181e92598a2b4dba5645bb991ef678ec3adee784247e55f8cb4f38968ea9e1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SshService-0.76.10.patch",
+      "bytes": 3085,
+      "sha256": "515816d425e8e53ce04b644a33561b20938c035c605449b50a4a64d27ba2ea27",
       "originalSha256": null,
       "origin": null
     },
@@ -4043,6 +4092,16 @@
       }
     },
     {
+      "path": "Legal/Manifests/R4PART/module.R4MF",
+      "bytes": 273,
+      "sha256": "cb9954bd51a3b8841fd7bf26dbd6a9895c0548328c4e0abae298d1c7b28d3ee7",
+      "originalSha256": "cb9954bd51a3b8841fd7bf26dbd6a9895c0548328c4e0abae298d1c7b28d3ee7",
+      "origin": {
+        "source": "Apps-R4Part",
+        "path": "module.R4MF"
+      }
+    },
+    {
       "path": "Legal/Manifests/R4STD/module.R4MF",
       "bytes": 1149,
       "sha256": "887a475f1ad09c94dc4b9ffa48d076093a947617631fda3814abf14cc063f38b",
@@ -4095,7 +4154,7 @@
     {
       "path": "Legal/Manifests/SSHD/module.R4MF",
       "bytes": 479,
-      "sha256": "5136224574d1dc8a7284a80b47a0de5e962173cf091f59ab8a3ffd1c6166b4d5",
+      "sha256": "7aa5ebc8a5d365492fadd0626a3886e26d441e8c5afd7dd0bc011c99a21e79c8",
       "originalSha256": "2fb151df662cb4e91b0bcd9387dc90cdb22eaa8c2ba12ee21c9188844c027f7a",
       "origin": {
         "path": "module.R4MF",
@@ -4285,6 +4344,36 @@
       "sha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
       "originalSha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
       "origin": null
+    },
+    {
+      "path": "Legal/Notices/Apps-R4Part/LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "originalSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "origin": {
+        "source": "Apps-R4Part",
+        "path": "LICENSE"
+      }
+    },
+    {
+      "path": "Legal/Notices/Apps-R4Part/NOTICE",
+      "bytes": 211,
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "originalSha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "origin": {
+        "source": "Apps-R4Part",
+        "path": "NOTICE"
+      }
+    },
+    {
+      "path": "Legal/Notices/Apps-R4Part/THIRD_PARTY_NOTICES.md",
+      "bytes": 683,
+      "sha256": "741520d1bc764fe5df7a2cb5ef51f609d04d0e990f1fcff5966db78d3a2a66b1",
+      "originalSha256": "741520d1bc764fe5df7a2cb5ef51f609d04d0e990f1fcff5966db78d3a2a66b1",
+      "origin": {
+        "source": "Apps-R4Part",
+        "path": "THIRD_PARTY_NOTICES.md"
+      }
     },
     {
       "path": "Legal/Notices/Apps-ServiceManager/LICENSE",
@@ -5097,6 +5186,16 @@
       "sha256": "ccca7ff9c4022c74ebc8ca6d15272a49ddb511b86b650f6fe48502a67a165bf6",
       "originalSha256": "ccca7ff9c4022c74ebc8ca6d15272a49ddb511b86b650f6fe48502a67a165bf6",
       "origin": null
+    },
+    {
+      "path": "Legal/Sources/Apps-R4Part.zip",
+      "bytes": 24198,
+      "sha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842",
+      "originalSha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842",
+      "origin": {
+        "source": "Apps-R4Part",
+        "path": "git archive e92784e9a9249934a6f6de6380937e02a55173d4"
+      }
     },
     {
       "path": "Legal/Sources/Apps-ServiceManager.zip",
@@ -5914,7 +6013,7 @@
     {
       "path": "Platform/SDK/build.zig.zon",
       "bytes": 1034,
-      "sha256": "84d1a70bdb8a39eab41cc49c96fea026ae1842d3018d55897f47a5408e7a38c5",
+      "sha256": "8393e9eda6233e7e68978b83a8fdafccdc00b30b7cdc0775a70074b64b920f16",
       "originalSha256": "84d1a70bdb8a39eab41cc49c96fea026ae1842d3018d55897f47a5408e7a38c5",
       "origin": {
         "path": "build.zig.zon",
@@ -5963,8 +6062,8 @@
     },
     {
       "path": "Platform/SDK/DOCUMENTATION.de.txt",
-      "bytes": 31740,
-      "sha256": "1715c518a2ae9f4233107376e6cee43253e3166cb730e1464a69f4fd4b4b326e",
+      "bytes": 32090,
+      "sha256": "c3c2c38e2f2659493e870385948f1a479f0361a4d642cd31a4d73fa182a8606d",
       "originalSha256": "df240d0fb7312961eb1bf9eb53c7e51dc4d36fcaba46eb9a3135bf60720bc70a",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -6796,8 +6895,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/partition.zig",
-      "bytes": 19915,
-      "sha256": "f64912ddd55e35593efac7132a949bb1bd377fc75bca60fe77d64df45ce62fc6",
+      "bytes": 21611,
+      "sha256": "53370e75bafd0187bc87d05538aa2715b60fe616f69b006c378fc91277744aec",
       "originalSha256": null,
       "origin": null
     },
@@ -8547,8 +8646,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
-      "bytes": 11670,
-      "sha256": "64c45cf4561d71214e386cf35d966ac1fa0232d315c091eda2a499b8ff0bb154",
+      "bytes": 12435,
+      "sha256": "2ccbcecc66b54fa12654f31243711e1a99f1cd1a3e16ca6a3196e01bcf5a233d",
       "originalSha256": null,
       "origin": null
     },
@@ -8696,7 +8795,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 326,
-      "sha256": "6fccc67f89aba0176afb3181eefe2ef13ed303b42bb841ed673a46b09a96278b",
+      "sha256": "ad1e3613300cbbb1db58b3a85ba6eb074bdc19c00786030c9a99b81d5476eed2",
       "originalSha256": null,
       "origin": null
     },
@@ -8709,8 +8808,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 17556,
-      "sha256": "4b903c57ad9be90283593963640eec5b4fc87c3dfaa12cbb14b4620d8500828e",
+      "bytes": 17558,
+      "sha256": "d632441f3a8a9183463571134815c34e3c0ec1df69bcd30e58d600648ed13341",
       "originalSha256": null,
       "origin": null
     },
@@ -8822,7 +8921,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 63,
-      "sha256": "08fb7376e5de1ce95a3f872fa05677b7f7878f8adb0e9668b28d96099b083638",
+      "sha256": "7a642fb0f99cd6446e72c7f9774e5993c2ca990f0834d45bfbc23c31354c074d",
       "originalSha256": null,
       "origin": null
     },
@@ -8846,7 +8945,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 25,
-      "sha256": "c37c55d33a5da9898201898b70ac623d3e56f94bf9768ba7dba420b882e547b6",
+      "sha256": "77559a94b7d5bf4593968a06bf6994a7df9d5fae73197b166a7e5c04217261a1",
       "originalSha256": null,
       "origin": null
     },
@@ -9144,7 +9243,7 @@
     {
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "bytes": 406122,
-      "sha256": "83e2c251de759c1a3ccb9177d1c5448a3c89cde66b12f74a6a670e80dfd53895",
+      "sha256": "fbf0f5fac3637e7a84ec9dd3cee4b07047ba2064e677d7abcc9063514ffa511a",
       "originalSha256": "bc9d8cc561009cfe157b7b895550e842f6a9087dd337acbcf55c5adc6eca167f",
       "origin": {
         "path": "Artifacts/Modules/SshService/SSHD.R4X",
@@ -9209,6 +9308,16 @@
       "origin": {
         "path": "Artifacts/Modules/NetCat/NETCAT.R4X",
         "source": "Apps-NetCat"
+      }
+    },
+    {
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+      "bytes": 303836,
+      "sha256": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112",
+      "originalSha256": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112",
+      "origin": {
+        "source": "Apps-R4Part",
+        "path": "Artifacts/Modules/R4Part/R4PART.R4X"
       }
     },
     {
@@ -10563,6 +10672,126 @@
           "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
           "before": "63266fef06efc216988ad2d7ebf7d017b33618f35dbabb8a51b0059cecb513b6",
           "after": "c37c55d33a5da9898201898b70ac623d3e56f94bf9768ba7dba420b882e547b6"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.10: canonical R4PART/SSHD import, explicit platform corrections, public build pins and local/remote Terminal integration",
+      "changes": [
+        {
+          "path": "Kernel/DOCUMENTATION.de.txt",
+          "before": "3753512dcade9d230353ece489cc2ef7f00f9487f4539ac217e434f7af1fb95f",
+          "after": "7ed6e78fc066f07fc2592ab2dcda5b25b7a72b766e4337cf6b50574d325a764f"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "7d79cb7e719982541d2bce80e52a60bf81b095802f6d8d38fa748062ce74b4e7",
+          "after": "1642a5966dd7fff2c066df4b973a6f7b4d3372c9186124d24d8c97072fe43597"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "before": "b7a27cc4b6f35136ccfe3fbb5b9f631d7289dc242028dd038b38ad866a8afe00",
+          "after": "3d130c716ab7b09ef213f3d47c4462be2793c6eb6fa880ea1f97aa5730da49dc"
+        },
+        {
+          "path": "Kernel/storage/operations.zig",
+          "before": "5a12569d465a1485348f7a12b2d44bda1025134b50345bf8429aaf3e75c8c42e",
+          "after": "96ce50050a9a8dfa7e17aaa4874150e22721bab66690425f11f4fb6936526946"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.76.10.patch",
+          "before": null,
+          "after": "d5ba8673befc9db366fcd0519da9607fad1c5bfb163dd354c6602248f730b2a2"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.76.10.patch",
+          "before": null,
+          "after": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22"
+        },
+        {
+          "path": "Legal/Changes/SshService-0.76.10.patch",
+          "before": null,
+          "after": "515816d425e8e53ce04b644a33561b20938c035c605449b50a4a64d27ba2ea27"
+        },
+        {
+          "path": "Legal/Manifests/R4PART/module.R4MF",
+          "before": null,
+          "after": "cb9954bd51a3b8841fd7bf26dbd6a9895c0548328c4e0abae298d1c7b28d3ee7"
+        },
+        {
+          "path": "Legal/Manifests/SSHD/module.R4MF",
+          "before": "5136224574d1dc8a7284a80b47a0de5e962173cf091f59ab8a3ffd1c6166b4d5",
+          "after": "7aa5ebc8a5d365492fadd0626a3886e26d441e8c5afd7dd0bc011c99a21e79c8"
+        },
+        {
+          "path": "Legal/Notices/Apps-R4Part/LICENSE",
+          "before": null,
+          "after": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "Legal/Notices/Apps-R4Part/NOTICE",
+          "before": null,
+          "after": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998"
+        },
+        {
+          "path": "Legal/Notices/Apps-R4Part/THIRD_PARTY_NOTICES.md",
+          "before": null,
+          "after": "741520d1bc764fe5df7a2cb5ef51f609d04d0e990f1fcff5966db78d3a2a66b1"
+        },
+        {
+          "path": "Legal/Sources/Apps-R4Part.zip",
+          "before": null,
+          "after": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842"
+        },
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "before": "1715c518a2ae9f4233107376e6cee43253e3166cb730e1464a69f4fd4b4b326e",
+          "after": "c3c2c38e2f2659493e870385948f1a479f0361a4d642cd31a4d73fa182a8606d"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "before": "64c45cf4561d71214e386cf35d966ac1fa0232d315c091eda2a499b8ff0bb154",
+          "after": "2ccbcecc66b54fa12654f31243711e1a99f1cd1a3e16ca6a3196e01bcf5a233d"
+        },
+        {
+          "path": "Platform/SDK/build.zig.zon",
+          "before": "84d1a70bdb8a39eab41cc49c96fea026ae1842d3018d55897f47a5408e7a38c5",
+          "after": "8393e9eda6233e7e68978b83a8fdafccdc00b30b7cdc0775a70074b64b920f16"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/partition.zig",
+          "before": "f64912ddd55e35593efac7132a949bb1bd377fc75bca60fe77d64df45ce62fc6",
+          "after": "53370e75bafd0187bc87d05538aa2715b60fe616f69b006c378fc91277744aec"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "6fccc67f89aba0176afb3181eefe2ef13ed303b42bb841ed673a46b09a96278b",
+          "after": "ad1e3613300cbbb1db58b3a85ba6eb074bdc19c00786030c9a99b81d5476eed2"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "4b903c57ad9be90283593963640eec5b4fc87c3dfaa12cbb14b4620d8500828e",
+          "after": "d632441f3a8a9183463571134815c34e3c0ec1df69bcd30e58d600648ed13341"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "08fb7376e5de1ce95a3f872fa05677b7f7878f8adb0e9668b28d96099b083638",
+          "after": "7a642fb0f99cd6446e72c7f9774e5993c2ca990f0834d45bfbc23c31354c074d"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "c37c55d33a5da9898201898b70ac623d3e56f94bf9768ba7dba420b882e547b6",
+          "after": "77559a94b7d5bf4593968a06bf6994a7df9d5fae73197b166a7e5c04217261a1"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+          "before": "83e2c251de759c1a3ccb9177d1c5448a3c89cde66b12f74a6a670e80dfd53895",
+          "after": "fbf0f5fac3637e7a84ec9dd3cee4b07047ba2064e677d7abcc9063514ffa511a"
+        },
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+          "before": null,
+          "after": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112"
         }
       ]
     }

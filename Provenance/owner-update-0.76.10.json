@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "reason": "0.76.10: explicit R4PART owner build/source import, common empty-table conversion and identity-aware mount restoration; original platform archives retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "ba51dc6115f2ee77408a780759472da9c54e0e92",
+      "sourceCommit": "df6caecb534c7d5d96b3b35b2bc3be207b233205",
+      "patch": "Legal/Changes/SDK-0.76.10.patch",
+      "patchSha256": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "c3c2c38e2f2659493e870385948f1a479f0361a4d642cd31a4d73fa182a8606d"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "2ccbcecc66b54fa12654f31243711e1a99f1cd1a3e16ca6a3196e01bcf5a233d"
+        },
+        {
+          "path": "Platform/SDK/build.zig.zon",
+          "sha256": "8393e9eda6233e7e68978b83a8fdafccdc00b30b7cdc0775a70074b64b920f16"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/partition.zig",
+          "sha256": "53370e75bafd0187bc87d05538aa2715b60fe616f69b006c378fc91277744aec"
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseCommit": "53a69743874c0f07413ff87bb67095e9e2bece17",
+      "sourceCommit": "53a69743874c0f07413ff87bb67095e9e2bece17",
+      "patch": "Legal/Changes/Kernel-0.76.10.patch",
+      "patchSha256": "d5ba8673befc9db366fcd0519da9607fad1c5bfb163dd354c6602248f730b2a2",
+      "files": [
+        {
+          "path": "Kernel/DOCUMENTATION.de.txt",
+          "sha256": "7ed6e78fc066f07fc2592ab2dcda5b25b7a72b766e4337cf6b50574d325a764f"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "3d130c716ab7b09ef213f3d47c4462be2793c6eb6fa880ea1f97aa5730da49dc"
+        },
+        {
+          "path": "Kernel/storage/operations.zig",
+          "sha256": "96ce50050a9a8dfa7e17aaa4874150e22721bab66690425f11f4fb6936526946"
+        }
+      ]
+    },
+    {
+      "owner": "SshService",
+      "baseCommit": "66487b866b16ba2336fabac92c366fcf8185486f",
+      "patch": "Legal/Changes/SshService-0.76.10.patch",
+      "patchSha256": "515816d425e8e53ce04b644a33561b20938c035c605449b50a4a64d27ba2ea27",
+      "files": [],
+      "binary": {
+        "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+        "sha256": "fbf0f5fac3637e7a84ec9dd3cee4b07047ba2064e677d7abcc9063514ffa511a",
+        "manifest": "Legal/Manifests/SSHD/module.R4MF",
+        "manifestSha256": "7aa5ebc8a5d365492fadd0626a3886e26d441e8c5afd7dd0bc011c99a21e79c8"
+      }
+    }
+  ],
+  "application": {
+    "source": "Apps-R4Part",
+    "commit": "e92784e9a9249934a6f6de6380937e02a55173d4",
+    "archiveSha256": "8323974f2ce09a20a6859f3698d2706b2be82c65b6f26cfccf6c8e7e7952d842",
+    "binary": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+    "binarySha256": "6d41a34ce103d4aeb94eca46beebddb46347535a7c77ba9dc63600757c6b5112",
+    "sdkCommit": "df6caecb534c7d5d96b3b35b2bc3be207b233205"
+  }
+}

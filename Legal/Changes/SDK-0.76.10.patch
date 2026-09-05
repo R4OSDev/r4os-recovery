@@ -1,0 +1,122 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 3593e2d..5b70a69 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -550,3 +550,9 @@ gebuendelten Komponentenbestand mit Layout-, Kapazitaets-, Schreib-/Flush-/
+ Readback-/Abbruchfaellen und Allokationsfehlern aus. Ein 128-GB-NTFS-Plan wird
+ mit insgesamt 2 MB Formatter-Allocator inklusive Arbeitsbuffer ausgefuehrt;
+ der simulierte Datentraeger besitzt separaten, begrenzten Metadatenspeicher.
++
++0.76.10: Plan.convertEmpty erlaubt eine Konvertierung nur nach erkannter
++leerer Tabelle; der alte Fingerprint bleibt gebunden. GPT->MBR entfernt
++explizit beide alten GPT-Header und Arrays vor der MBR-Publikation.
++Der vorhandene Komponentenbestand prueft belegte Abweisung und beide
++Konvertierungsrichtungen mit leerem GPT-Verwaltungsbereich danach.
+diff --git a/Tests/Simulation/CheckStorageTools0769.zig b/Tests/Simulation/CheckStorageTools0769.zig
+index f3f2526..9b21638 100644
+--- a/Tests/Simulation/CheckStorageTools0769.zig
++++ b/Tests/Simulation/CheckStorageTools0769.zig
+@@ -105,6 +105,22 @@ test "GPT/MBR roundtrip, geometry, free space, attributes and stale plans" {
+     try expect(after.entries[0].active);
+     bytes[450] = 0x0f;
+     try expectError(error.ExtendedMbrUnsupported, table.Plan.read(device, &work));
++    bytes[450] = 7;
++    var empty = try table.Plan.read(device, &work);
++    try expectError(error.NotEmpty, empty.convertEmpty(.gpt, disk_guid, 42));
++    try empty.remove(1);
++    try empty.commit(device, &work);
++    empty = try table.Plan.read(device, &work);
++    try empty.convertEmpty(.gpt, disk_guid, 42);
++    try empty.commit(device, &work);
++    empty = try table.Plan.read(device, &work);
++    try empty.convertEmpty(.mbr, disk_guid, 77);
++    try empty.commit(device, &work);
++    const converted = try table.Plan.read(device, &work);
++    try eq(table.Kind.mbr, converted.kind);
++    try eq(@as(u32, 77), converted.disk_id);
++    for (bytes[512..34 * 512]) |byte| try eq(@as(u8, 0), byte);
++    for (bytes[bytes.len - 33 * 512 ..]) |byte| try eq(@as(u8, 0), byte);
+ }
+ 
+ test "failed write, flush, verification and cancelled commit retain exact partial status" {
+diff --git a/build.zig.zon b/build.zig.zon
+index 8e5f37e..ccfad3c 100644
+--- a/build.zig.zon
++++ b/build.zig.zon
+@@ -7,8 +7,8 @@
+         // The identity is pinned here. Build.bat and Build.sh map the actual
+         // checkout from Settings.R4S and provide it as a local Zig fork.
+         .r4os_contract = .{
+-            .url = "https://github.com/R4OSDev/r4os-contract/archive/5521df06871b4cee158e44853db01380934d6c4c.tar.gz",
+-            .hash = "r4os_contract-0.64.11-ELhbYa_UcgBuo-SnWc6plpYE5WHMo3UJlk7o7Daeerdo",
++            .url = "https://github.com/R4OSDev/r4os-contract/archive/f896945745f96ff4cc35a3bbdac80065be0b3de8.tar.gz",
++            .hash = "r4os_contract-0.64.11-ELhbYaCBmQBifruGA90jlS8gDuUZk1SlS4hA3BpMTjFZ",
+         },
+     },
+     .paths = .{
+diff --git a/r4os/storage_tools/partition.zig b/r4os/storage_tools/partition.zig
+index 869d6e7..c397283 100644
+--- a/r4os/storage_tools/partition.zig
++++ b/r4os/storage_tools/partition.zig
+@@ -67,6 +67,7 @@ pub const Plan = struct {
+     mbr_prefix: [446]u8 = .{0} ** 446,
+     entries: [max_entries]Entry = .{Entry{}} ** max_entries,
+     source: Source = .{},
++    erase_source_gpt: bool = false,
+ 
+     pub fn read(device: block.Device, scratch: []u8) !Plan {
+         try device.validate();
+@@ -197,6 +198,7 @@ pub const Plan = struct {
+         if (self.kind != .none or !self.blank) return error.NotEmpty;
+         if (self.sectors > @as(u64, std.math.maxInt(u32)) + 1 or disk_id == 0) return error.Geometry;
+         self.kind = .mbr;
++        self.disk_guid = guid.zero;
+         self.disk_id = disk_id;
+         self.entry_count = 4;
+         self.first_usable = 1;
+@@ -204,6 +206,22 @@ pub const Plan = struct {
+         self.mbr_prefix = .{0} ** 446;
+     }
+ 
++    /// Conversion is supported only for an empty, recognised table. Keep
++    /// its source fingerprint, and retire old GPT metadata when making MBR.
++    pub fn convertEmpty(self: *Plan, kind: Kind, disk_guid: guid.Guid, disk_id: u32) !void {
++        try self.validate();
++        for (self.entries[0..self.entry_count]) |entry| if (entry.present) return error.NotEmpty;
++        if (self.kind == .none and !self.blank) return error.NotEmpty;
++        if (kind == .none) return error.Geometry;
++        if (kind == self.kind) return error.AlreadyConverted;
++        var next = self.*;
++        next.kind = .none;
++        next.blank = true;
++        if (kind == .gpt) try next.initializeGpt(disk_guid) else try next.initializeMbr(disk_id);
++        next.erase_source_gpt = self.kind == .gpt and kind == .mbr;
++        self.* = next;
++    }
++
+     pub fn validate(self: *const Plan) !void {
+         if (self.sectors < 3 or self.sectors > std.math.maxInt(u64) / 512 or
+             self.first_usable == 0 or self.first_usable > self.last_usable or
+@@ -302,7 +320,22 @@ pub const Plan = struct {
+         try device.requireExclusive();
+         if (device.sectors != self.sectors or self.kind == .none or
+             self.source.count == 0 or work.len < max_array_bytes * 2 or work.len % 512 != 0) return error.Geometry;
++        if (self.erase_source_gpt and (self.kind != .mbr or self.source.count != 5)) return error.Geometry;
+         if (!std.mem.eql(u8, &self.source.digest, &try self.source.hash(device, work))) return error.Stale;
++        if (self.erase_source_gpt) {
++            device.phase(.erase);
++            // The original, validated spans exclude every filesystem region.
++            // Retire the backup first, then the primary, before publishing MBR.
++            for ([_]usize{ 4, 2, 3, 1 }) |i| {
++                const span = self.source.spans[i];
++                try device.fill(span.first, span.count, 0, work);
++            }
++            try device.flush();
++            @memset(work[0..512], 0);
++            for (self.source.spans[1..self.source.count]) |span| {
++                for (0..span.count) |offset| try device.verify(span.first + offset, work[0..512], work[512..1024]);
++            }
++        }
+         var mbr: [512]u8 = .{0} ** 512;
+         @memcpy(mbr[0..446], &self.mbr_prefix);
+         put32(mbr[440..444], self.disk_id);

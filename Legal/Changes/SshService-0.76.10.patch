@@ -1,0 +1,61 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 8088ff1..3c1c6cc 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -275,3 +275,9 @@ darf den bereits gehaltenen Kanalzustand nicht ueberschreiben.
+ Ein terminaler TCP-Poll mit strukturierter Closed-/Reset-/Peer-Gone-Antwort
+ wird auch bei negativem SDK-Rueckgabecode ausgewertet. Er gilt nicht als
+ voruebergehender Dienstfehler und laesst keine tote Sitzung/Belegung stehen.
++
++0.76.10: Konsolenausgabe bindet Zustandszaehler und gelesenen Text an dieselbe
++Konsolenrevision. Aenderungen zwischen den getrennten API-Aufrufen werden
++ohne Cursorfortschritt beim naechsten Servicezyklus erneut gelesen. Dadurch
++wird schneller R4PART-Output nicht mit aelteren Zaehlern kombiniert und
++nicht im folgenden Durchlauf nochmals als frischer Text gesendet.
+diff --git a/module.R4MF b/module.R4MF
+index e105279..65961fa 100644
+--- a/module.R4MF
++++ b/module.R4MF
+@@ -1,7 +1,7 @@
+ R4OS_MODULE_MANIFEST=2
+ KIND=R4X
+ NAME=SSHD
+-VERSION=0.1.5
++VERSION=0.1.6
+ LANGUAGE=Zig
+ SOURCE=src/main.zig
+ ENTRY_MODE=app
+diff --git a/src/main.zig b/src/main.zig
+index e1ce300..9f85e71 100644
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -3943,6 +3943,11 @@ fn pumpConsoleOutput(app: *const App, conn_id: u32, stats: *ServiceStats, key: [
+     _ = seq_out;
+     if (!channel.shell_started or channel.shell_instance == 0) return true;
+     if (!buffers.channel_output.empty()) return true;
++    // State counters and transcript bytes are separate kernel calls. A
++    // producer can append between them; combining old counters with newer
++    // bytes replays a prefix on the next pump. Accept one stable revision,
++    // otherwise retry on the next service iteration without moving cursors.
++    const revision = app.sys.consoleRevision(channel.shell_instance);
+     var state: r4os.abi.ConsoleState = .{};
+     const state_rc = app.sys.consoleState(channel.shell_instance, &state);
+     stats.last_console_state_rc = state_rc;
+@@ -3955,6 +3960,8 @@ fn pumpConsoleOutput(app: *const App, conn_id: u32, stats: *ServiceStats, key: [
+         return false;
+     }
+     const got: usize = @intCast(got_raw);
++    if (app.sys.consoleRevision(channel.shell_instance) != revision or
++        got != @min(@as(usize, state.output_len), buffers.console_output.len - 1)) return true;
+     stats.last_console_read_len = @intCast(@min(got, std.math.maxInt(u32)));
+     const stream_bytes = state.stdout_bytes +% state.stderr_bytes;
+     const stream_delta = stream_bytes -% channel.last_console_stream_bytes;
+@@ -4027,7 +4034,7 @@ fn pumpConsoleOutput(app: *const App, conn_id: u32, stats: *ServiceStats, key: [
+         if (channel.exec_started and (stream_bytes != 0 or sent_any)) channel.exec_output_observed = true;
+     }
+     channel.last_output_len = @intCast(got);
+-    channel.last_console_revision = app.sys.consoleRevision(channel.shell_instance);
++    channel.last_console_revision = revision;
+     channel.last_console_stream_bytes = stream_bytes;
+     channel.last_output_dropped_bytes = state.output_dropped_bytes;
+     return true;

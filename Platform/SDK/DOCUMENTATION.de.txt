@@ -550,3 +550,9 @@ gebuendelten Komponentenbestand mit Layout-, Kapazitaets-, Schreib-/Flush-/
 Readback-/Abbruchfaellen und Allokationsfehlern aus. Ein 128-GB-NTFS-Plan wird
 mit insgesamt 2 MB Formatter-Allocator inklusive Arbeitsbuffer ausgefuehrt;
 der simulierte Datentraeger besitzt separaten, begrenzten Metadatenspeicher.
+
+0.76.10: Plan.convertEmpty erlaubt eine Konvertierung nur nach erkannter
+leerer Tabelle; der alte Fingerprint bleibt gebunden. GPT->MBR entfernt
+explizit beide alten GPT-Header und Arrays vor der MBR-Publikation.
+Der vorhandene Komponentenbestand prueft belegte Abweisung und beide
+Konvertierungsrichtungen mit leerem GPT-Verwaltungsbereich danach.

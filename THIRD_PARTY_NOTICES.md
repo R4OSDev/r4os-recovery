@@ -32,3 +32,11 @@ the existing Windows-generated NTFS fixture data. Their source paths and
 hashes are recorded in `provenance.json`; the pinned SDK notices and original
 fixture generation records remain included. The shared formatter is R4OS
 source explicitly imported from Distribution, not Microsoft formatter code.
+
+## R4PART console application
+
+R4PART is imported from `R4OSDev/r4os-app-r4part` with the exact committed
+source archive in `Legal/Sources/Apps-R4Part.zip` and original notices in
+`Legal/Notices/Apps-R4Part`. Its common formatter includes the same documented
+NTFS metadata templates described above. The owner build, source revision,
+SDK revision and binary hash are recorded in `Provenance/owner-update-0.76.10.json`.

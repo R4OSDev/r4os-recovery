@@ -117,7 +117,7 @@ try{
                 $last=Capture 'menu-5'
                 if($last.RedRow() -ne $firstRow+5*$itemHeight){throw 'Up did not wrap to the last visible menu row.'}
                 Send-Keys $session @('down');Wait-Marker '\[RECOVERYUI\] page=menu selected=0' 2
-                for($selected=0;$selected -lt 4;$selected++){
+                for($selected=0;$selected -lt 3;$selected++){
                     $frame=Capture "menu-$selected"
                     if($frame.RedRow() -ne $firstRow+$selected*$itemHeight){throw "Wrong visible selection row: $selected"}
                     Send-Keys $session @('ret');Wait-Marker "\[RECOVERYUI\] page=dialog selected=$selected"
@@ -125,6 +125,7 @@ try{
                     Send-Keys $session @('esc');Wait-Marker "\[RECOVERYUI\] page=menu selected=$selected" $(if($selected -eq 0){3}else{2})
                     Send-Keys $session @('down');Wait-Marker "\[RECOVERYUI\] page=menu selected=$($selected+1)"
                 }
+                Send-Keys $session @('down');Wait-Marker '\[RECOVERYUI\] page=menu selected=4'
                 $frame=Capture 'menu-4'
                 if($frame.RedRow() -ne $firstRow+4*$itemHeight){throw 'Terminal selection row missing.'}
                 Send-Keys $session @('ret');Wait-Marker '\[RECOVERYUI\] page=terminal selected=4'
@@ -143,7 +144,14 @@ try{
                 Wait-Marker '\[RECOVERYUI\] independent-session=UNCHANGED cleanup=OK'
                 $returned=Capture 'terminal-return';$returned.RequireContentChanged($scrolled)
                 if($returned.RedRow() -ne $firstRow+4*$itemHeight){throw 'EXIT did not restore the Terminal menu selection.'}
-                Send-Keys $session @('down','ret');Wait-Marker '\[RECOVERYUI\] restart=REQUESTED'
+                Send-Keys $session @('up','ret');Wait-Marker '\[RECOVERYUI\] page=terminal selected=3'
+                Wait-Marker 'R4PART - R4OS partition tool'
+                Type-Command 'HELP';Wait-Marker 'R4PART uses the current Terminal/SSH console'
+                $part=Capture 'partition-tool';$part.RequireContentChanged($returned)
+                Type-Command 'EXIT';Wait-Marker '\[RECOVERYUI\] terminal=RETURNED' 2
+                $partReturned=Capture 'partition-return'
+                if($partReturned.RedRow() -ne $firstRow+3*$itemHeight){throw 'R4PART EXIT did not restore its menu selection.'}
+                Send-Keys $session @('down','down','ret');Wait-Marker '\[RECOVERYUI\] restart=REQUESTED'
                 while(!$process.WaitForExit(100)){if($watch.Elapsed.TotalSeconds -ge $TimeoutSeconds){throw 'Recovery restart timed out.'}}
                 if($process.ExitCode -ne 0){throw 'QEMU did not exit normally on guest reset.'}
             }catch{

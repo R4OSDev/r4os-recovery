@@ -499,3 +499,47 @@ Readbackfehler sowie Quick/Full. Ein 128-GB-NTFS-Formatter laeuft mit insgesamt
 2 MB Formatter-Allocator inklusive Arbeitsbuffer; die virtuelle Platte hat
 separaten begrenzten Metadatenspeicher. Bestehende NtfsVerify-Pruefungen
 validieren die kleinen realen Hostdateien weiterhin unabhaengig.
+
+0.76.10: R4PART als gemeinsame Konsolenanwendung
+------------------------------------------------
+R4OSDev/r4os-app-r4part besitzt R4PART.R4X, IMAGE_SCOPE=slim und den normalen
+Terminalpfad. Recovery importiert den beim Besitzer gebauten Stand 0.1.1
+samt Quellarchiv, Manifest, Lizenzen und Hashes. Manage Partitions startet
+ihn direkt; EXIT kehrt ins Menue zurueck. Im Terminal kehrt EXIT zum Prompt
+zurueck. R4SYS plus die R4DESK-Konsolenfunktionen bilden seine Plattformbasis.
+
+Die interaktive Auswahl bindet Geraet/Generation/Partition; Geometrie und
+Metadaten werden vor I/O vorbereitet. CREATE, DELETE, CLEAN, CONVERT und
+FORMAT zeigen zuerst das konkrete Ziel und verlangen YES DISK n, fuer eine
+Partition zusaetzlich PARTITION n. Konvertierung ist nur fuer leere Tabellen
+moeglich. ASSIGN/REMOVE und ONLINE/OFFLINE nutzen den gemeinsamen Mountzustand.
+OFFLINE bleibt nach EXIT bestehen; ONLINE bindet explizit erneut ein.
+Geaenderte Datentraeger-/Partitionskennungen erben keine alten Laufwerks-
+zuordnungen oder Installationsrollen. Echte Dateisystemfehler bei gleicher
+Identitaet bleiben Remountfehler. Normale und eingefrorene Storagebesitzer
+sind ueber den expliziten 0.76.10-Quellpatch dokumentiert.
+
+Ein gebuendelter Parserfall prueft Argumentgrenzen, Tippfehler, Einheiten,
+Ueberlaeufe und Zielbestaetigungen. -Mode R4PartTest fuehrt die echten Befehle
+im vorhandenen Netzwerkpruefer aus, mit 128 MB NVMe nur fuer diese Abnahme.
+Der normale Full-Gast nutzt denselben Bestand und eine private QEMU-Snapshot-
+Konfiguration fuer den lokalen Terminalstart. Kein Benutzer-Sichttest.
+
+SSHD 0.1.6 liest Konsolenzustand und Transcript unter einem gemeinsamen
+Revisionsvergleich. Bei zwischenzeitlichem Schreiben bleiben die Sendecursor
+unveraendert, bis beide Abfragen denselben Stand beschreiben. Der normale
+R4PART-Gast deckt die zuvor beobachtete doppelte Ausgabe mit ab.
+
+R4PART ist auch mit den veroeffentlichten Paket-Pins ohne Workspace-Forks
+baubar. Das Artefakt ist bytegleich mit dem regulaeren Besitzerbuild. Der
+primaere lokale Terminalhost nutzt dieselbe physische Tastaturwarteschlange
+wie seine Konsolenkinder; gehostete SSH-/Menuesitzungen bleiben getrennt.
+
+Abnahme 0.76.10: Linux/KVM SMP4, 1024 MB. Recovery BIOS/VirtioNet 50.343 s,
+UEFI/RTL8139 47.4 s, offline/beschaedigtes SYSTEM 10.312 s.
+Normaler Full-Gast einschliesslich lokalem Terminal 58.015 s;
+USB-Menuepruefung BIOS/1024x768 15.85 s mit 16 Framebuffervergleichen.
+Alle bestanden; normaler testquick und gebuendelte SDK-/R4PART-/SSHD-Hosttests
+ebenfalls. 899 gepinnte Dateien, 38 Runtimeimporte, 20 lokale Revisionen.
+Stand: Recovery/Recovery-Kernel 0.1.8, Menue 0.1.3, R4PART 0.1.1,
+SSHD 0.1.6, normaler Kernel 0.1.92. Kein Windows-/Lenovo-Lauf.

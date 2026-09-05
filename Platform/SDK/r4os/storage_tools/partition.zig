@@ -67,6 +67,7 @@ pub const Plan = struct {
     mbr_prefix: [446]u8 = .{0} ** 446,
     entries: [max_entries]Entry = .{Entry{}} ** max_entries,
     source: Source = .{},
+    erase_source_gpt: bool = false,
 
     pub fn read(device: block.Device, scratch: []u8) !Plan {
         try device.validate();
@@ -197,11 +198,28 @@ pub const Plan = struct {
         if (self.kind != .none or !self.blank) return error.NotEmpty;
         if (self.sectors > @as(u64, std.math.maxInt(u32)) + 1 or disk_id == 0) return error.Geometry;
         self.kind = .mbr;
+        self.disk_guid = guid.zero;
         self.disk_id = disk_id;
         self.entry_count = 4;
         self.first_usable = 1;
         self.last_usable = self.sectors - 1;
         self.mbr_prefix = .{0} ** 446;
+    }
+
+    /// Conversion is supported only for an empty, recognised table. Keep
+    /// its source fingerprint, and retire old GPT metadata when making MBR.
+    pub fn convertEmpty(self: *Plan, kind: Kind, disk_guid: guid.Guid, disk_id: u32) !void {
+        try self.validate();
+        for (self.entries[0..self.entry_count]) |entry| if (entry.present) return error.NotEmpty;
+        if (self.kind == .none and !self.blank) return error.NotEmpty;
+        if (kind == .none) return error.Geometry;
+        if (kind == self.kind) return error.AlreadyConverted;
+        var next = self.*;
+        next.kind = .none;
+        next.blank = true;
+        if (kind == .gpt) try next.initializeGpt(disk_guid) else try next.initializeMbr(disk_id);
+        next.erase_source_gpt = self.kind == .gpt and kind == .mbr;
+        self.* = next;
     }
 
     pub fn validate(self: *const Plan) !void {
@@ -302,7 +320,22 @@ pub const Plan = struct {
         try device.requireExclusive();
         if (device.sectors != self.sectors or self.kind == .none or
             self.source.count == 0 or work.len < max_array_bytes * 2 or work.len % 512 != 0) return error.Geometry;
+        if (self.erase_source_gpt and (self.kind != .mbr or self.source.count != 5)) return error.Geometry;
         if (!std.mem.eql(u8, &self.source.digest, &try self.source.hash(device, work))) return error.Stale;
+        if (self.erase_source_gpt) {
+            device.phase(.erase);
+            // The original, validated spans exclude every filesystem region.
+            // Retire the backup first, then the primary, before publishing MBR.
+            for ([_]usize{ 4, 2, 3, 1 }) |i| {
+                const span = self.source.spans[i];
+                try device.fill(span.first, span.count, 0, work);
+            }
+            try device.flush();
+            @memset(work[0..512], 0);
+            for (self.source.spans[1..self.source.count]) |span| {
+                for (0..span.count) |offset| try device.verify(span.first + offset, work[0..512], work[512..1024]);
+            }
+        }
         var mbr: [512]u8 = .{0} ** 512;
         @memcpy(mbr[0..446], &self.mbr_prefix);
         put32(mbr[440..444], self.disk_id);
