@@ -9,4 +9,5 @@ pub const ntfs = @import("ntfs_builder.zig").WithFormat(ntfs_format);
 pub fn standardNtfsMetadata() ntfs.Meta {
     return @import("storage_tools/ntfs_metadata.zig").standard(ntfs.Meta);
 }
-pub const ntfs_extend = @import("storage_tools/ntfs_extend.zig");
+pub const ntfs_resize = @import("storage_tools/ntfs_resize.zig");
+pub const ntfs_extend = ntfs_resize;

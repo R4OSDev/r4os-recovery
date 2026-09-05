@@ -28,9 +28,9 @@ function Free-Port {$l=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,
 $sshPort=Free-Port;$qmpPort=Free-Port
 $clientLog=Join-Path $output 'clients.log';$serialLog=Join-Path $output 'serial.log'
 [IO.File]::WriteAllText($clientLog,'',$utf8);[IO.File]::WriteAllText($serialLog,'',$utf8)
-$replacement=Join-Path $output 'witness.bin';$received=Join-Path $output 'received.bin'
-$bytes=[byte[]]::new(4097);for($i=0;$i -lt $bytes.Length;$i++){$bytes[$i]=[byte](($i*37+19)%256)}
-[IO.File]::WriteAllBytes($replacement,$bytes)
+$replacement=Join-Path $output 'witness.bin';$received=Join-Path $output 'received.bin';$payload=Join-Path $output 'payload.bin'
+$bytes=[byte[]]::new(131073);for($i=0;$i -lt $bytes.Length;$i++){$bytes[$i]=[byte](($i*37+19)%256)}
+[IO.File]::WriteAllBytes($payload,$bytes);[IO.File]::WriteAllBytes($replacement,$bytes[0..4096])
 $scratch=Join-Path $output 'scratch.img';$f=[IO.File]::Create($scratch);try{$f.SetLength(128MB)}finally{$f.Dispose()}
 $arguments=@('-readconfig',(Join-Path $distribution 'QEMU/standard.conf'),'-machine',"accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-m','1024','-smp','4','-snapshot','-display','none','-monitor','none',
     '-audiodev','driver=none,id=debug-audio','-global','hda-duplex.audiodev=debug-audio','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$qmpPort,server=on,wait=off",

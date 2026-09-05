@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.11
+Stand 0.76.12
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -566,4 +566,32 @@ SDK 6/6, R4PART-Parser 1/1; Standalone-Build mit oeffentlichen Pins bytegleich.
 R4PART SHA-256: 24dd8217acec684fed2d68713ca1c499ea995faa82b7895a1e8e16bf22092098.
 901 gepinnte Dateien, 38 Module, 21 lokale Revisionen; Recovery/Recovery-
 Kernel 0.1.9, R4PART 0.1.2; normaler Kernel 0.1.92 unveraendert.
+Keine Windows-/Lenovo-Ausfuehrung.
+
+0.76.12: NTFS-Verkleinerung mit tatsaechlicher Schrumpfgrenze
+-----------------------------------------------------------
+R4PART 0.1.3 bietet SHRINK QUERYMAX und SHRINK [DESIRED=MB]. Beide Richtungen
+verwenden den gemeinsamen ntfs_resize-Plan. Die echte Bitmap und MFT-Runlists
+bestimmen die Grenze; Dateidaten/sonstige Metadaten bleiben fest, nur die Bitmap
+kann im Volume umziehen. Die Allocation muss zu den MFT-Runs passen; der gesamte
+MFT-/Bitmaplesestand wird vor Schreibbeginn erneut geprueft. Keine geschaetzte
+Grenze aus dem freien Gesamtplatz und keine vollstaendige Defragmentierung.
+Die kleinere FS-Geometrie wird vor der kleineren Tabelle haltbar gemacht.
+Dateisystem, Tabelle und anschliessender Remount muessen zusammen erfolgreich
+sein. Grenzen/Unterbrechungsfenster: Platform/SDK/DOCUMENTATION.de.txt.
+Die vorhandene R4PART-SMP4-Folge erweitert den Grossdateinachweis um QUERYMAX,
+abgewiesenes SHRINK bei grosser Datei/offenem Handle und 48->16 MB nach deren
+Loeschung, vorhandene Daten und anschliessende neue Schreibzugriffe.
+
+Abnahme 0.76.12: Linux/KVM, SMP4, 1024 MB. Bios/virtio-net-pci 94.191 s, Uefi/rtl8139 94.428 s, Bios/offline 10.199 s.
+Normaler Full-Gast 100.876 s samt lokalem Terminal; alle bestanden.
+SDK 7/7, Parser 1/1; oeffentlicher Standalone-Build bytegleich.
+903 gepinnte Dateien, 38 Module; Recovery/Recovery-Kernel 0.1.10,
+R4PART 0.1.3, normaler Kernel 0.1.92 unveraendert.
+Neue Allokation nach SHRINK wird via SFTP unter neuem Namen geprueft;
+Ueberschreiben/Trunkierung ueber natives COPY, jeweils mit SHA-256-Vergleich.
+Ein erster paralleler Normal-Lauf scheiterte beim SFTP-Grossdateischreiben;
+der separate Lauf mit zusaetzlicher Fehlerdiagnose bestand unveraendert.
+Ein UEFI-Starttimeout beim SSH-Banner wurde separat erfolgreich wiederholt.
+Diese Erstfehler werden nicht als bestandene Laeufe gewertet.
 Keine Windows-/Lenovo-Ausfuehrung.

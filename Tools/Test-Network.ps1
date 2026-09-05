@@ -189,7 +189,7 @@ try{
             coverage=$(if($online){'SSH shell/exec; SFTP/SCP; active/passive FTP; offline FAT32/NTFS read/create/copy/replace/rename/delete; hashes; executable admission; unchanged menu'}else{'no network; damaged SYSTEM; local Terminal; return and restart'})}
         if($StorageAccess -and $online){$run.storageAccess=$true;$run.coverage+='; local/remote volume uses; raw bounds; exclusive/foreign owner denial; abandoned-claim cleanup; stale generations; real remount/flush failures'}
         if($StorageTools -and $online){$run.storageTools=$true;$run.coverage+='; shared MBR/GPT creation/readback; FAT32 quick and NTFS full; partition claims; mount/read/write/unmount'}
-        if($R4Part -and $online){$run.r4part=$true;$run.coverage+='; same imported R4PART binary: confirmations, MBR/GPT, create/delete/convert/clean, FAT32/NTFS format, mount/letter/online/offline, identity changes, NTFS EXTEND and 40-MB hash/space witness, no-space/unsupported/busy refusals, unrelated volumes and menu/Terminal EXIT'}
+        if($R4Part -and $online){$run.r4part=$true;$run.coverage+='; same imported R4PART binary: confirmations, MBR/GPT, create/delete/convert/clean, FAT32/NTFS format, mount/letter/online/offline, identity changes, NTFS EXTEND/SHRINK, actual QUERYMAX and 40-MB hash/space witness, no-space/unsupported/busy refusals, unrelated volumes and menu/Terminal EXIT'}
         $runs+=$run;Write-RecoveryJson $resultPath @{schema=1;runs=$runs};Write-Host "Recovery network $name OK ($($run.seconds) seconds)."
     }
     exit 0

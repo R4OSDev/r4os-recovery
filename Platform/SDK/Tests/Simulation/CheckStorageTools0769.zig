@@ -376,3 +376,166 @@ test "offline NTFS growth relocates bitmap, preserves data and exposes interrupt
     try expectError(error.UnsupportedNtfs, tools.ntfs_extend.Plan.prepare(allocator, fixture.device(&progress), &layout, 1, 128 * 2048, &work));
     try expect(!progress.write_attempted and fixture.writes == 0);
 }
+
+fn shrinkAllocation(allocator: std.mem.Allocator, disk: tools.io.Device, layout: *table.Plan, work: []u8) !void {
+    const plan = try tools.ntfs_resize.Plan.prepare(allocator, disk, layout, 1, 96 * 2048, work);
+    plan.deinit();
+}
+
+fn fixtureRuns(record: []u8, runs: []const tools.ntfs_format.Run) !void {
+    const ntfs = tools.ntfs_format;
+    try eq(ntfs.FixupError.ok, ntfs.applyFixups(record));
+    const header = ntfs.FileRecordHeader.parse(record).?;
+    var iter = ntfs.AttributeIterator.init(record, header);
+    while (true) {
+        const start = iter.offset;
+        const attr = iter.next() orelse return error.Fixture;
+        if (attr.attr_type != @intFromEnum(ntfs.AttrType.data) or attr.name.len != 0) continue;
+        try expect(attr.non_resident);
+        // These formatter fixtures have their unnamed DATA attribute last.
+        try eq(ntfs.END_MARKER, std.mem.readInt(u32, record[start + attr.length ..][0..4], .little));
+        const at = @intFromPtr(attr.mapping_pairs.ptr) - @intFromPtr(record.ptr);
+        var pos = at;
+        var previous: i64 = 0;
+        var clusters: u64 = 0;
+        @memset(record[at..], 0);
+        for (runs) |run| {
+            const lcn: i64 = @intCast(run.lcn.?);
+            pos += ntfs.encodeRun(record[pos..], run.length_clusters, lcn - previous).?;
+            previous = lcn;
+            clusters += run.length_clusters;
+        }
+        const end = std.mem.alignForward(usize, pos + 1, 8);
+        std.mem.writeInt(u32, record[start + 4 ..][0..4], @intCast(end - start), .little);
+        std.mem.writeInt(u32, record[0x18..][0..4], @intCast(end + 8), .little);
+        std.mem.writeInt(u64, record[start + 0x18 ..][0..8], clusters - 1, .little);
+        std.mem.writeInt(u32, record[end..][0..4], ntfs.END_MARKER, .little);
+        const usa = std.mem.readInt(u16, record[4..6], .little);
+        const usn = std.mem.readInt(u16, record[usa..][0..2], .little);
+        try eq(ntfs.FixupError.ok, ntfs.installFixups(record, usn));
+        return;
+    }
+}
+fn fixtureBits(bytes: []u8, bitmap_offset: u64, first: u64, count: u64, set: bool) void {
+    for (first..first + count) |cluster| {
+        const byte = &bytes[@intCast(bitmap_offset + cluster / 8)];
+        const mask = @as(u8, 1) << @intCast(cluster % 8);
+        if (set) byte.* |= mask else byte.* &= ~mask;
+    }
+}
+
+test "NTFS shrink query follows fragmented files and fixed mirror, and every interrupted writer fails" {
+    const ntfs = tools.ntfs_format;
+    const allocator = std.testing.allocator;
+    const bytes = try allocator.alloc(u8, 128 * 1024 * 1024);
+    defer allocator.free(bytes);
+    @memset(bytes, 0);
+    var memory = tools.io.Memory{ .bytes = bytes };
+    var work: [32768]u8 = undefined;
+    var layout = try table.Plan.read(memory.device(), &work);
+    try layout.initializeMbr(0x7612);
+    _ = try layout.add(.{ .present = true, .first = 2048, .count = 96 * 2048, .mbr_type = 7 });
+    try layout.commit(memory.device(), &work);
+    var region = tools.io.Region{ .parent = memory.device(), .first = 2048, .count = 96 * 2048 };
+    var builder = try tools.ntfs.Builder.init(allocator, 96 * 1024 * 1024, "SHRINK", 2048, tools.standardNtfsMetadata(), 0, 73);
+    defer builder.deinit();
+    const witness = try allocator.alloc(u8, 64 * 1024);
+    defer allocator.free(witness);
+    for (witness, 0..) |*byte, i| byte.* = @truncate(i *% 31 +% 23);
+    try builder.addFile(builder.root(), "FRAGMENT.BIN", witness);
+    var formatted = try builder.prepare();
+    defer formatted.deinit();
+    try formatted.execute(try region.device(), false, &work);
+    const volume = bytes[1024 * 1024 ..][0 .. 96 * 1024 * 1024];
+    var boot: ntfs.BootSector = undefined;
+    try eq(ntfs.BootSector.ParseError.ok, ntfs.BootSector.parse(volume, &boot));
+    const mft: usize = @intCast(boot.mft_lcn * 4096);
+    var old_file_lcn: ?u64 = null;
+    for (formatted.segments.items) |segment| {
+        if (segment.data.ptr == witness.ptr) old_file_lcn = segment.offset / 4096;
+    }
+    try expect(old_file_lcn != null);
+    @memcpy(volume[16 * 1024 * 1024 ..][0 .. 16 * 1024], witness[0 .. 16 * 1024]);
+    @memcpy(volume[80 * 1024 * 1024 ..][0 .. 48 * 1024], witness[16 * 1024 ..]);
+    try fixtureRuns(volume[mft + @as(usize, @intCast(builder.nodes.items[1].record)) * 1024 ..][0..1024], &.{ .{ .lcn = 4096, .length_clusters = 4 }, .{ .lcn = 20480, .length_clusters = 12 } });
+    fixtureBits(volume, formatted.bitmap_offset, old_file_lcn.?, 16, false);
+    fixtureBits(volume, formatted.bitmap_offset, 4096, 4, true);
+    fixtureBits(volume, formatted.bitmap_offset, 20480, 12, true);
+    layout = try table.Plan.read(memory.device(), &work);
+    var readonly = memory.device();
+    readonly.exclusive = false;
+    const fragmented = try tools.ntfs_resize.Plan.prepare(allocator, readonly, &layout, 1, 96 * 2048, &work);
+    try eq(@as(u64, 15 * 2048), fragmented.shrink.maximum_sectors);
+    try eq(@as(u64, 81 * 2048), fragmented.shrink.minimum_sectors);
+    try eq(@as(u64, 20491), fragmented.shrink.highest_fixed_cluster);
+    fragmented.deinit();
+    // A real $MFTMirr relocation in the fixture adds a nonmovable metadata
+    // bound. Its record and both boots agree; all four mirror records match.
+    try fixtureRuns(volume[mft + 1024 ..][0..1024], &.{.{ .lcn = 23040, .length_clusters = 1 }});
+    @memcpy(volume[90 * 1024 * 1024 ..][0..4096], volume[mft..][0..4096]);
+    fixtureBits(volume, formatted.bitmap_offset, boot.mftmirr_lcn, 1, false);
+    fixtureBits(volume, formatted.bitmap_offset, 23040, 1, true);
+    std.mem.writeInt(u64, volume[0x38..][0..8], 23040, .little);
+    @memcpy(volume[volume.len - 512 ..], volume[0..512]);
+    const original = try allocator.dupe(u8, bytes);
+    defer allocator.free(original);
+    var progress = tools.io.Progress{};
+    var fixture = Fixture{ .bytes = bytes };
+    const query = try tools.ntfs_resize.Plan.prepare(allocator, fixture.device(&progress), &layout, 1, 96 * 2048, &work);
+    try expect(!progress.write_attempted and fixture.writes == 0 and std.mem.eql(u8, bytes, original));
+    try eq(@as(u64, 5 * 2048), query.shrink.maximum_sectors);
+    try eq(@as(u64, 91 * 2048), query.shrink.minimum_sectors);
+    try eq(@as(u64, 23040), query.shrink.highest_fixed_cluster);
+    try std.testing.checkAllAllocationFailures(allocator, shrinkAllocation, .{ memory.device(), &layout, &work });
+    try expectError(error.Geometry, query.execute(fixture.device(&progress), &layout, &work));
+    query.deinit();
+    var rejected = layout;
+    _ = try rejected.shrink(1, 6 * 2048);
+    try expectError(error.ShrinkLimit, tools.ntfs_resize.Plan.prepare(allocator, fixture.device(&progress), &rejected, 1, 96 * 2048, &work));
+    try expect(fixture.writes == 0 and !progress.write_attempted);
+    _ = try layout.shrink(1, 5 * 2048);
+    const plan = try tools.ntfs_resize.Plan.prepare(allocator, memory.device(), &layout, 1, 96 * 2048, &work);
+    defer plan.deinit();
+    try plan.execute(fixture.device(&progress), &layout, &work);
+    const writes = fixture.writes;
+    const flushes = fixture.flushes;
+    try expect(progress.verified and progress.flushed);
+    var after = try table.Plan.read(memory.device(), &work);
+    try eq(@as(u64, 91 * 2048), after.entries[0].count);
+    try eq(@as(u64, 2048), after.entries[0].first);
+    try eq(@as(u32, 0x7612), after.disk_id);
+    try eq(ntfs.BootSector.ParseError.ok, ntfs.BootSector.parse(volume, &boot));
+    try eq(@as(u64, 91 * 2048 - 1), boot.total_sectors);
+    try expect(std.mem.eql(u8, volume[0..512], volume[91 * 1024 * 1024 - 512 ..][0..512]));
+    try expect(std.mem.eql(u8, volume[16 * 1024 * 1024 ..][0 .. 16 * 1024], witness[0 .. 16 * 1024]));
+    try expect(std.mem.eql(u8, volume[80 * 1024 * 1024 ..][0 .. 48 * 1024], witness[16 * 1024 ..]));
+    const again = try tools.ntfs_resize.Plan.prepare(allocator, readonly, &after, 1, 91 * 2048, &work);
+    try eq(@as(u64, 0), again.shrink.maximum_sectors);
+    again.deinit();
+    for (0..writes + flushes) |fault| {
+        @memcpy(bytes, original);
+        progress = .{};
+        fixture = .{ .bytes = bytes };
+        if (fault < writes) fixture.fail_write = fault + 1 else fixture.fail_flush = fault - writes + 1;
+        try expectError(if (fault < writes) error.WriteFailed else error.FlushFailed, plan.execute(fixture.device(&progress), &layout, &work));
+        try expect(progress.write_attempted and !progress.verified);
+    }
+    @memcpy(bytes, original);
+    progress = .{};
+    fixture = .{ .bytes = bytes, .corrupt_after_flush = true };
+    try expectError(error.VerifyFailed, plan.execute(fixture.device(&progress), &layout, &work));
+    try expect(progress.write_attempted and !progress.verified);
+    @memcpy(bytes, original);
+    progress = .{};
+    fixture = .{ .bytes = bytes };
+    // A file-record change with unchanged table/bitmap is also stale.
+    const file_record = mft + @as(usize, @intCast(builder.nodes.items[1].record)) * 1024;
+    volume[file_record + 0x50] ^= 1;
+    try expectError(error.Stale, plan.execute(fixture.device(&progress), &layout, &work));
+    try expect(!progress.write_attempted and fixture.writes == 0);
+    @memcpy(bytes, original);
+    var before = try table.Plan.read(memory.device(), &work);
+    fixtureBits(volume, formatted.bitmap_offset, 23040, 1, false);
+    try expectError(error.CorruptNtfs, tools.ntfs_resize.Plan.prepare(allocator, fixture.device(&progress), &before, 1, 96 * 2048, &work));
+    try expect(!progress.write_attempted and fixture.writes == 0);
+}

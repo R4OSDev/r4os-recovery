@@ -606,3 +606,59 @@ Der bestehende storage-tools-test enthaelt einen gebuendelten Resizefall:
 128->192 MB mit Bitmaprelokation und mehrteiligem Rootindex, Datenbytevergleich,
 erneuter Planung, jedem Schreib-/Flushfehler, Readback, Stale, Cancel,
 Exklusivitaet, abgelehnter Geometrie und allen Planallokationsfehlern.
+
+0.76.12: Gemeinsamer NTFS-Resizeplan und SHRINK QUERYMAX
+-----------------------------------------------------
+ntfs_resize besitzt jetzt beide Richtungen; ntfs_extend bleibt als kompatible
+Schreibweise erhalten. QUERYMAX verwendet denselben vorbereiteten Plan bei
+unveraenderter Groesse und kann nicht ausgefuehrt werden. Die gesamte echte
+Clusterbitmap und alle aktiven MFT-Records werden ausgewertet. Physische
+Attributruns muessen innerhalb des Volumes liegen und als belegt markiert
+sein. Fremde Referenzen auf die alte Bitmap werden vor ihrer Freigabe
+abgewiesen. Diese Belegungspruefung gilt auch fuer EXTEND.
+
+Bestehende Datei-, Stream- und sonstige Metadatencluster werden nicht bewegt;
+auch Fragmentierung und ein weit hinten liegender MFT-Spiegel begrenzen den
+freigebbaren Bereich. Nur die Bitmap kann umziehen. Ein tatsaechlich freier,
+zusammenhaengender Bereich muss ihre bisherige Allokationskapazitaet aufnehmen;
+diese Kapazitaet bleibt nach Verkleinerung erhalten, die logische Bitmaplaenge
+wird angepasst. Die alte Bitmap wird bei der Zielsuche nicht als frei behandelt.
+Die Grenze folgt aus dem hoechsten festen Cluster, dem Ende der neuen Bitmap,
+dem Backupbootsektor und einer Untergrenze von 16 MB. Rueckgabe sind die maximal
+freigebbaren ganzen MB sowie die minimale verbleibende Volumegroesse. Kein
+freier Bitmapbereich oder keine vollen freigebbaren MB ergibt QUERYMAX 0.
+Das ist die ausfuehrbare Grenze dieses dokumentierten Verfahrens, kein
+Versprechen einer vollstaendigen Defragmentierung. Ein erneuter, veraenderter
+Dateibestand wird erneut ausgewertet; freier Gesamtplatz ist keine Schrumpfgrenze.
+
+SHRINK DESIRED=MB entfernt exakt diese Menge oder weist sie vor Bestaetigung
+ab. SHRINK ohne DESIRED verwendet QUERYMAX. Die vorhandene Partitionsposition
+bleibt unveraendert. Persistenz: Dirty+Spiegel, neue Bitmap, MFT/Root/$Bad,
+neuer Backupbootsektor, Hauptbootsektor, erst dann kleinere Partitionstabelle,
+zuletzt Clean+Spiegel. Alle Phasen werden geflusht/zurueckgelesen. Ein Fehler
+zwischen kleinerem Dateisystem und Tabellenabschluss darf nicht als Erfolg
+gemeldet werden; das Volume bleibt ausgehaengt und kann externen Reparaturbedarf
+haben. Neue Partitions- und Dateisystemgroessen sind nur nach beiden Abschluessen
+gueltig. Erfolgreicher Remount folgt der bestehenden R4PART-Identitaetspruefung.
+
+Zusaetzliche Grenzen der gemeinsamen MFT-Pruefung: hoechstens 1048576 Records
+(1 GB MFT-Daten, blockweise gelesen), keine Attribute-List-/Erweiterungsrecords,
+maximal 256 Runs pro sonstigem Dateiattribut; bearbeitete Metadaten behalten
+die strengere 64-Run-Grenze. Null-Runs bleiben virtuelle Sparsebereiche, ihre
+physischen Nachbarruns werden wie jede andere Allokation geprueft. Dateidaten
+werden nicht interpretiert oder entschluesselt. Das ist keine vollstaendige
+NTFS-Reparatur, kein Index-/Sicherheitsdatenbank-Fsck und keine Defragmentierung.
+Die gesamte gelesene MFT und der zur Grenzberechnung gelesene Bitmapstrom sind
+mit SHA-256 gebunden; erneute Pruefung nach Claim erfasst auch Aenderungen, die
+keine Tabellen-/Bitmapbytes aendern. Eine begrenzte Bitmap-Leseprojektion im
+caller-eigenen Arbeitsbuffer vermeidet volumenproportionale Allokation. R4PART
+meldet auch beim Vorablesen Fortschritt und akzeptiert Ctrl+C.
+
+Der bestehende Komponentenbestand prueft eine echte Datei mit zwei Runs bei
+16/80 MB: QUERYMAX ergibt fuer 96 MB genau 15 MB. Ein gueltig nach 90 MB
+verlagerter $MFTMirr reduziert dies auf 5 MB. Die genau passende Verkleinerung
+auf 91 MB erhaelt beide Dateifragmente, Bootkopien und MBR-Identitaet. Alle
+Schreib-/Flushfehler sowie zu kleine Ziele, bitmapwidrige MFT-Allokation,
+MFT-Aenderung nach Planung, Readback und Planallokationsfehler sind gebuendelt.
+Die vorhandene R4PART-Gastfolge prueft zusaetzlich die durch eine 40-MB-Datei
+begrenzte Schrumpfung und nach deren Loeschung 48->16 MB samt Daten/Remount.

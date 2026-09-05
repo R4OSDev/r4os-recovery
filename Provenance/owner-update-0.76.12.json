@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "reason": "0.76.12: explicit R4PART owner build/source import, common NTFS resize with real MFT/bitmap shrink bounds, metadata allocation checks, bounded bitmap relocation and correct filesystem/table persistence order; original platform archives retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "9ce07d5e0063aa1536c6e33032215ed96b2af684",
+      "sourceCommit": "96a6b703a209b85fcad33084f8558d7a151ed3c3",
+      "patch": "Legal/Changes/SDK-0.76.12.patch",
+      "patchSha256": "4114a8ca59b82ea96415ddd0f903099055a20c81d2aec9142885579f36149803",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "7d22699582b5fbd3fca9f99c44ba0d199e0273e45f1d2085ea957386e75c5626"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "d5cf417678c07c67550ca9418372992febca165f26b8bf81e5a663122fcd8531"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "sha256": "5023645280b150faf4444fb158acd29002bf87b22a1fce415943971b6760a16a"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_extend.zig",
+          "sha256": "e39b9122f4fff972ac346719cbd5e03de52c233b641e6cbdd0224efdbe69949f"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/ntfs_resize.zig",
+          "sha256": "e7a645a80edcbfea5695db7e9f97005ec2dc82561cbdc38465883b7642de1594"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/partition.zig",
+          "sha256": "39d32c37753bf2b7bf53b5831bf32dd58a89488aa69545000136608982999459"
+        }
+      ]
+    }
+  ],
+  "application": {
+    "source": "Apps-R4Part",
+    "commit": "7774083e16edad97850f0901d066fcb6c558ad02",
+    "archiveSha256": "041e4df1b79d6e0d05bf361553b085089c99c8929130104f12b3033fcaa562b7",
+    "binary": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+    "binarySha256": "bb4e675af6bb15d8ff1c5732b5f1102a1fe47f11f7048d888fec2a06560576ad",
+    "sdkCommit": "96a6b703a209b85fcad33084f8558d7a151ed3c3"
+  }
+}

@@ -335,6 +335,19 @@ pub const Plan = struct {
         return entry.count;
     }
 
+    pub fn shrink(self: *Plan, number: u32, remove_sectors: u64) !u64 {
+        try self.validate();
+        const entry = try self.get(number);
+        if (remove_sectors == 0 or remove_sectors >= entry.count) return error.NoSpace;
+        const old_count = entry.count;
+        entry.count -= remove_sectors;
+        self.validate() catch |err| {
+            entry.count = old_count;
+            return err;
+        };
+        return entry.count;
+    }
+
     pub fn revalidate(self: *const Plan, device: block.Device, work: []u8) !void {
         try self.validate();
         if (device.sectors != self.sectors or self.source.count == 0) return error.Geometry;

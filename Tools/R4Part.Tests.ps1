@@ -61,10 +61,36 @@ function Test-R4Part([bool]$Recovery=$true) {
     $growth=Join-Path $output 'growth.bin';$growthRead=Join-Path $output 'growth-read.bin'
     $block=[byte[]]::new(65536);for($i=0;$i -lt $block.Length;$i++){$block[$i]=[byte](($i*17+39)%256)}
     $file=[IO.File]::Create($growth);try{for($i=0;$i -lt 640;$i++){$file.Write($block)}}finally{$file.Dispose()}
-    $null=Sftp @("put $(Host-Path $growth) /Y/GROWTH.BIN","get /Y/GROWTH.BIN $(Host-Path $growthRead)") -TimeoutMilliseconds 60000
+    try{
+        $null=Sftp @("put $(Host-Path $growth) /Y/GROWTH.BIN","get /Y/GROWTH.BIN $(Host-Path $growthRead)") -TimeoutMilliseconds 60000
+    }catch{
+        $null=Ssh 'SERVMAN STATUS SSHD'
+        $null=Ssh 'SERVMAN DIAG'
+        throw
+    }
     Require-Hash $growthRead $growth
     Part-Read 'Y'
+    $query=Part-Run @($select,'SELECT PARTITION 2','SHRINK QUERYMAX','SHRINK DESIRED=32') @('Maximum shrink:','ERROR ShrinkLimit') 1
+    if($query -notmatch 'Maximum shrink: (\d+) MB' -or [int]$Matches[1] -ge 32){throw 'Live 40-MB file did not constrain QUERYMAX.'}
     $null=Sftp @('rm /Y/GROWTH.BIN')
+    $query=Part-Run @($select,'SELECT PARTITION 2','SHRINK QUERYMAX') @('Maximum shrink: 32 MB; minimum volume: 16 MB')
+    $held=Storage-Sftp
+    try{
+        if($held.Open('/Y/WITNESS.BIN',$false,$false) -ne 0){throw 'Could not hold NTFS shrink witness.'}
+        $null=Part-Run @($select,'SELECT PARTITION 2','SHRINK DESIRED=32',$p2,'DETAIL PARTITION') @('ERROR Storage \(-3: in use','sectors 98304') 1
+        if($held.CloseHandle() -ne 0){throw 'Held shrink witness close failed.'}
+    }finally{$held.Dispose()}
+    $null=Part-Run @($select,'SELECT PARTITION 2','SHRINK DESIRED=32',$p2,'DETAIL PARTITION','SHRINK QUERYMAX') @('SHRINK NTFS: 48 MB -> 16 MB','first LBA 133120, sectors 32768','Assigned Y:','Maximum shrink: 0 MB')
+    Part-Read 'X';Part-Read 'Y'
+    # SFTP intentionally creates only new targets. Exercise post-shrink
+    # allocation with a fresh file, then native COPY overwrite/truncation.
+    $null=Sftp @("put $(Host-Path $payload) /Y/AFTERSHRINK.BIN","get /Y/AFTERSHRINK.BIN $(Host-Path $received)")
+    Require-Hash $received $payload
+    $copy=Ssh 'COPY Y:\WITNESS.BIN Y:\AFTERSHRINK.BIN'
+    if($copy -notmatch '1 file\(s\) copied'){throw 'Native overwrite after shrink failed.'}
+    $null=Sftp @("get /Y/AFTERSHRINK.BIN $(Host-Path $received)",'rm /Y/AFTERSHRINK.BIN')
+    Require-Hash $received $replacement
+
     $null=Part-Run @($select,'SELECT PARTITION 1','OFFLINE PARTITION','LIST VOLUME') @('Offline: affected volumes flushed and unmounted')
     $text=Ssh 'R4PART LIST VOLUME';if($text -match '(?m)^\s*23\s+X\s'){throw 'OFFLINE did not survive EXIT.'}
     Part-Read 'Y'
