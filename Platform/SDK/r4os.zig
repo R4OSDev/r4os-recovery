@@ -1,6 +1,7 @@
 pub const abi = @import("r4os_contract").abi;
 pub const program = @import("r4os/program.zig");
 pub const runtime_context = @import("r4os/runtime_context.zig");
+pub const storage = @import("r4os/storage.zig");
 pub const version_info = @import("r4os/version_info.zig");
 pub const r4u_manifest = @import("r4os/r4u_manifest.zig");
 pub const r4u_artifact = @import("r4os/r4u_artifact.zig");

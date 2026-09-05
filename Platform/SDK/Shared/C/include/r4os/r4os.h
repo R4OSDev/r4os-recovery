@@ -13,6 +13,7 @@
 #include "r4draw.h"
 #include "app_contract.h"
 #include "app_storage.h"
+#include "storage.h"
 #include "app_gui.h"
 #include "app_resources.h"
 #include "app_services.h"

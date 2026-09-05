@@ -483,3 +483,23 @@ SSH/FTP verwenden diesen gemeinsamen Kontext fuer ihre Offline-Ausnahme;
 eine gleichnamige Datei auf einer physischen Systempartition reicht nicht.
 Der zentrale Contract benennt die bestehenden DriveInfo.role-Werte als
 drive_role_none/system/data/ram. Layout und bisherige Zahlen bleiben gleich.
+
+0.76.8: Physischer Storagevertrag
+--------------------------------
+r4os.storage.Context und Shared/C/include/r4os/storage.h bieten gleichwertige
+Fassaden fuer generationiertes Inventar, exklusiven Regionszugriff, begrenzte
+Raw-Transfers, Flush, Rescan, Mount/Unmount, Laufwerkszuordnung und
+Dateitransfer-Nutzungen. Optionale R4SYS-Slots werden vor Aufruf ueber ihre
+Tabellengrenzen geprueft; der bisherige erforderliche Praefix bleibt erhalten.
+
+Keine direkten Treiberzugriffe und keine neuen Handles fuer pfadbasierte
+Dateiaufrufe. Ein expliziter Use haelt das betroffene Volume ueber mehrere
+Aufrufe; ein Claim gehoert dem logischen Thread. BUSY beim Abschluss behaelt
+den Claim, abgeschlossene I/O-/Remountfehler verbrauchen ihn. Die Fassade
+nullt den Aufruferwert entsprechend. Buffergroessen muessen sektorgranular
+sein und bleiben auf 128 KB je Raw-Aufruf begrenzt.
+
+Die bestehenden Zig/C-Storage-Conformancefaelle pruefen auch einen kuerzeren
+R4SYS-Praefix, einen nur teilweise verfuegbaren neuen Provider, fehlerhafte
+Raw-Laengen sowie das unterschiedliche Eigentum bei BUSY und terminalem
+Abschlussfehler. Ausfuehrliche Semantik: Docs/API/StorageFacade.md.

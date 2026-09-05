@@ -3,10 +3,10 @@
   "generated_from": "API/ApiContract.json",
   "contract_schema_version": 11,
   "summary": {
-    "function_count": 324,
-    "group_slot_count": 324,
+    "function_count": 339,
+    "group_slot_count": 339,
     "sdk_only_count": 0,
-    "public_count": 232,
+    "public_count": 247,
     "advanced_count": 92
   },
   "functions": [
@@ -1481,6 +1481,186 @@
       "slot": 125,
       "exposure": "public",
       "description": "Asynchronously acquires or exactly releases a caller-owned advisory byte-range lock; conflicts complete with io_error_lock_violation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_inventory",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 126,
+      "exposure": "public",
+      "description": "Refresh newly registered devices and return a topology snapshot. All payloads are copied; no borrowed driver strings escape.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_device",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 127,
+      "exposure": "public",
+      "description": "Read one device slot from the exact inventory generation. Absent slots return zero.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_partition",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 128,
+      "exposure": "public",
+      "description": "Read one partition from the exact complete inventory; invalid or partial tables remain explicit.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_volume",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 129,
+      "exposure": "public",
+      "description": "Read one exact mounted-volume snapshot, including the internal boot alias.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_claim_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 130,
+      "exposure": "public",
+      "description": "Reject stale, partial, protected or used targets before modification; close admissions, drain, flush and unmount, then return an exact logical-thread-owned exclusive claim. Failure returns no claim and performs no raw mutation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_claim_end",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 131,
+      "exposure": "public",
+      "description": "Close raw admission, flush, rescan and remount prior identities unless KEEP_UNMOUNTED is set. A completed close consumes the claim even when I/O or remount fails; BUSY retains a finishing claim for retry. Failed targets remain visible.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 132,
+      "exposure": "public",
+      "description": "Read at most storage_raw_max_sectors from a complete validated target; concurrent exclusive claims return BUSY. The output buffer holds sectors times 512 bytes.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_claim_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 133,
+      "exposure": "public",
+      "description": "Perform bounded synchronous read within an active caller-owned claim. Buffer remains caller-owned for the call. An I/O error may follow partial hardware progress; never replay writes automatically.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_claim_write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 134,
+      "exposure": "public",
+      "description": "Perform bounded synchronous write within an active caller-owned claim. Buffer remains caller-owned for the call. An I/O error may follow partial hardware progress; never replay writes automatically.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_claim_flush",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 135,
+      "exposure": "public",
+      "description": "Issue the durability barrier for an active caller-owned claim and report backend failure.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_rescan",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 136,
+      "exposure": "public",
+      "description": "Acquire the complete device, drain/unmount, reread its table and remount matching previous identities. Open uses reject rescan before unmount.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_mount",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 137,
+      "exposure": "public",
+      "description": "Probe and mount a complete partition with a fresh generation. Letter zero assigns the first free D through Z except reserved R; C and R cannot be reassigned through this call.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_unmount",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 138,
+      "exposure": "public",
+      "description": "Drain and unmount the selected physical volume and its aliases. Required runtime volumes and open uses reject the operation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_use_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 139,
+      "exposure": "public",
+      "description": "Acquire a real physical-volume use lease for a resolved path, including the system boot alias. File and directory handles hold this lease until close or logical owner retirement.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.storage_use_end",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 140,
+      "exposure": "public",
+      "description": "Release an exact caller-owned volume use lease; stale or foreign identifiers are rejected.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"

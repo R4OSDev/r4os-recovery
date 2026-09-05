@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'InputTest', 'UITest', 'NetworkTest')][string]$Mode = 'Verify',
+    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'InputTest', 'UITest', 'NetworkTest')][string]$Mode = 'Verify',
     [string]$Zig = '',
     [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
@@ -21,7 +21,7 @@ try {
         if ($Mode -eq 'StorageTest') { $BootProbe = 'storage' }
         if ($Mode -eq 'InputTest') { $BootProbe = 'input' }
         if ($Mode -eq 'UITest') { $BootProbe = 'ui' }
-        if ($Mode -eq 'NetworkTest') { $BootProbe = 'none' }
+        if ($Mode -in @('NetworkTest', 'StorageAccessTest')) { $BootProbe = 'none' }
         if (!$Zig) {
             $Zig = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot $(if ($IsWindows) {'../../DevKit/Toolchains/Zig/zig.exe'} else {'../../DevKit/Toolchains/Zig/zig'})))
         }
@@ -57,8 +57,8 @@ try {
             & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Input.ps1') -Firmware $Firmware -Zig $Zig
             if ($LASTEXITCODE -ne 0) { throw 'Recovery input acceptance failed.' }
         }
-        if ($Mode -eq 'NetworkTest') {
-            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Network.ps1') -Firmware $Firmware -Zig $Zig
+        if ($Mode -in @('NetworkTest', 'StorageAccessTest')) {
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Network.ps1') -Firmware $Firmware -Zig $Zig -StorageAccess:($Mode -eq 'StorageAccessTest') -TimeoutSeconds 300
             if ($LASTEXITCODE -ne 0) { throw 'Recovery network acceptance failed.' }
         }
         if ($Mode -eq 'UITest') {

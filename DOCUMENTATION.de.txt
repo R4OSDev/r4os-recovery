@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.7
+Stand 0.76.8
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -342,7 +342,7 @@ dauerhafte ProgramHandle besitzt Wait/Reap und fuehrt EXIT zur gleichen
 Menueauswahl zurueck. Weitere Konsolen und Dienste behalten ihren Kontext.
 Der Neustarteintrag steht nur ohne aktives Unterprogramm oder laufenden
 Menueauftrag zur Verfuegung und nutzt den vorhandenen Flush-/Resetpfad.
-Die geraeteweiten Auftragssperren folgen mit dem Storagevertrag in 0.76.8.
+Die gemeinsamen Regionsbelegungen sind seit 0.76.8 ueber den Storagevertrag verfuegbar.
 
 SSH zeigt eine vom Netzkonfigurations-Snapshot gemeldete IPv4-Adresse erst
 bei Link, Konfiguration und laufender SSHD an. Andernfalls erscheint der
@@ -422,3 +422,47 @@ Zig-cc fuer den kleinen nativen ASKPASS-Helfer muessen vorhanden sein. Der
 passive Gastport 2020 wird nur fuer diesen isolierten Runner lokal gebunden.
 Der normale netzlose testquick bleibt unveraendert; kein manueller Sichttest
 vor der vereinbarten Lenovo-Abnahme am Ende der Roadmap.
+
+0.76.8: Gemeinsame Storage-API und exklusive Bearbeitung
+------------------------------------------------------
+Der explizit uebernommene Contract und SDK bieten generationiertes Inventar,
+begrenztes Raw-I/O, Flush, Mount/Unmount, Rescan und Laufwerkszuordnung.
+Kernel/access_state und operations koordinieren Geraete-/Volume-Generationen,
+Dateinutzungen und exklusive ganze Datentraeger oder einzelne Partitionen.
+Offene lokale Streams und SFTP/SCP/FTP-Nutzungen melden Belegt vor der
+Aenderung. Neue betroffene Zugriffe werden waehrend des Claims abgewiesen;
+unbeteiligte Laufwerke, Netzwerk und RAM-C: bleiben benutzbar.
+
+Vor Raw-Zugriff wird betroffener Cache-Writeback abgeschlossen, Backend-Flush
+bestaetigt und das Ziel ausgehaengt. Abschluss prueft Flush, liest die Tabelle
+neu und bindet passende vorherige Identitaeten mit neuer Generation ein.
+Fehlgeschlagene Ziele bleiben im Inventar. Programmende drainiert I/O und
+uebergibt liegengebliebene Claims an den Cleanup-Worker. USB-BOT darf nach
+Medienwechsel nicht auf der alten Geraeteregistrierung weiter schreiben.
+Die fachliche GPT-/Formatierungslogik bleibt Aufgabe externer Werkzeuge.
+
+SSHD 0.1.5 und FTPSVC 0.1.6 wurden beim Besitzer gebaut und ausdruecklich
+uebernommen. SSH wertet terminale TCP-Pollantworten auch bei negativem
+Rueckgabecode aus und gibt abgebrochene Sitzungen frei. FTP beruecksichtigt
+das Laufwerkswurzelverzeichnis als gueltigen Elternpfad fuer Uploads.
+Zig/C-Fassaden und ihre bestehenden Conformancefaelle sind im eingefrorenen
+SDK enthalten. Legal/Changes und Provenance/owner-update-0.76.8.json halten
+Quellpatches, Ausgangscommits, Artefakte und Hashes fest; die urspruenglichen
+Quellarchive bleiben bestehen.
+
+-Mode StorageAccessTest erweitert denselben PS7-Netzwerkpruefer mit echten
+gehaltenen SFTP-Datei-/Verzeichnishandles, einem angehaltenen FTP-Upload,
+parallelem exklusivem Zugriff, fremden Tokenbesitzern, Programmende und
+Remountfehler samt Reparatur. Ein eigener 16-MB-NVMe-Testdatentraeger mit
+QEMU blkdebug erzeugt nach erfolgreichem Raw-Schreiben einen echten
+Flushfehler. Die Diagnose in RECOVERY.R4X verwendet ausschliesslich das
+SDK und verweigert alle mutierenden Pfade ohne die feste technische
+Fixture-GUID. Ergebnisdateien: Artifacts/BootProbe/storage-access/.
+
+Abnahme: BIOS/VirtioNet 37.987 s, UEFI/RTL8139 35.450 s sowie netzlos mit
+beschaedigtem SYSTEM 10.141 s, jeweils Linux/KVM SMP4 mit 1024 MB RAM.
+Contract-Selbsttests, bestehende Storage-Hosttests und Zig/C-Conformance sowie
+der normale SMP4-testquick bestanden. Keine Windows-/Lenovo-Ausfuehrung;
+der vereinbarte einzelne Hardwaretest bleibt der finalen Unterversion
+vorbehalten. Das Eingabeinventar enthaelt 858 Dateien und 37 importierte
+Module; die Menuediagnose bleibt Teil des Recovery-eigenen Konsolenmoduls.

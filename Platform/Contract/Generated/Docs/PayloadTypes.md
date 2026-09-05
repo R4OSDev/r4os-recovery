@@ -5,9 +5,9 @@ Diese Datei wird deterministisch aus `API/ApiContract.json` erzeugt. Manuelle Ä
 Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenzen und Conformance-Fixtures werden produktiv aus diesem Schema erzeugt; handgeschriebene Dateien bleiben nur Fassaden oder erklaerende Texte.
 
 - Schema: v11, Baseline `standalone-contract-0.64.11`
-- Reachability: 146 von 146 Typen aufgelöst oder explizit klassifiziert
+- Reachability: 153 von 153 Typen aufgelöst oder explizit klassifiziert
 - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
-- Operationen: 0; Fehlerdomänen: 62; Konstanten: 1402; Limits: 109
+- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1432; Limits: 109
 
 ## App-Profile
 
@@ -167,6 +167,13 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
 | `GuiSharedRasterMap` | fixed_layout | extern_struct | 120/8 | 120/8 | 120/8 | 120/8 |
 | `GuiSharedRasterResource` | fixed_layout | extern_struct | 80/8 | 80/8 | 80/8 | 80/8 |
 | `TcpPerformanceInfo` | extensible | extern_struct | 208/8 | 208/8 | 208/8 | 208/8 |
+| `StorageDeviceRef` | fixed_layout | extern_struct | 16/8 | 16/8 | 16/8 | 16/8 |
+| `StorageVolumeRef` | fixed_layout | extern_struct | 16/8 | 16/8 | 16/8 | 16/8 |
+| `StorageTarget` | fixed_layout | extern_struct | 72/8 | 72/8 | 72/8 | 72/8 |
+| `StorageInventory` | fixed_layout | extern_struct | 32/8 | 32/8 | 32/8 | 32/8 |
+| `StorageDeviceInfo` | fixed_layout | extern_struct | 288/8 | 288/8 | 288/8 | 288/8 |
+| `StoragePartitionInfo` | fixed_layout | extern_struct | 192/8 | 192/8 | 192/8 | 192/8 |
+| `StorageVolumeInfo` | fixed_layout | extern_struct | 112/8 | 112/8 | 112/8 | 112/8 |
 
 ## Typdetails
 
@@ -4836,6 +4843,134 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
 | `mss_negotiated` | 192 | 8 | 8 | `u64` | - |
 | `window_scale_negotiated` | 200 | 8 | 8 | `u64` | - |
 
+### `StorageDeviceRef`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 16 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `slot` | 0 | 4 | 4 | `u32` | - |
+| `reserved` | 4 | 4 | 4 | `u32` | - |
+| `generation` | 8 | 8 | 8 | `u64` | - |
+
+### `StorageVolumeRef`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 16 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `slot` | 0 | 4 | 4 | `u32` | - |
+| `reserved` | 4 | 4 | 4 | `u32` | - |
+| `generation` | 8 | 8 | 8 | `u64` | - |
+
+### `StorageTarget`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 72 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `device` | 8 | 16 | 8 | `StorageDeviceRef` | - |
+| `layout_generation` | 24 | 8 | 8 | `u64` | - |
+| `first_lba` | 32 | 8 | 8 | `u64` | - |
+| `sector_count` | 40 | 8 | 8 | `u64` | - |
+| `partition_number` | 48 | 4 | 4 | `u32` | - |
+| `kind` | 52 | 4 | 4 | `u32` | - |
+| `partition_guid` | 56 | 16 | 1 | `[16]u8` | - |
+
+### `StorageInventory`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 32 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `generation` | 8 | 8 | 8 | `u64` | - |
+| `device_slots` | 16 | 4 | 4 | `u32` | - |
+| `volume_slots` | 20 | 4 | 4 | `u32` | - |
+| `flags` | 24 | 4 | 4 | `u32` | - |
+| `reserved` | 28 | 4 | 4 | `u32` | - |
+
+### `StorageDeviceInfo`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 288 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `reference` | 8 | 16 | 8 | `StorageDeviceRef` | - |
+| `layout_generation` | 24 | 8 | 8 | `u64` | - |
+| `sector_count` | 32 | 8 | 8 | `u64` | - |
+| `disk_guid` | 40 | 16 | 1 | `[16]u8` | - |
+| `first_usable` | 56 | 8 | 8 | `u64` | - |
+| `last_usable` | 64 | 8 | 8 | `u64` | - |
+| `bus` | 72 | 4 | 4 | `u32` | - |
+| `flags` | 76 | 4 | 4 | `u32` | - |
+| `sector_bytes` | 80 | 4 | 4 | `u32` | - |
+| `partition_slots` | 84 | 4 | 4 | `u32` | - |
+| `last_error` | 88 | 4 | 4 | `i32` | - |
+| `reserved` | 92 | 4 | 4 | `u32` | - |
+| `model` | 96 | 64 | 1 | `[64]u8` | - |
+| `name` | 160 | 32 | 1 | `[32]u8` | - |
+| `driver` | 192 | 32 | 1 | `[32]u8` | - |
+| `reason` | 224 | 64 | 1 | `[64]u8` | - |
+
+### `StoragePartitionInfo`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 192 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `target` | 8 | 72 | 8 | `StorageTarget` | - |
+| `type_guid` | 80 | 16 | 1 | `[16]u8` | - |
+| `attributes` | 96 | 8 | 8 | `u64` | - |
+| `filesystem` | 104 | 4 | 4 | `u32` | - |
+| `flags` | 108 | 4 | 4 | `u32` | - |
+| `last_error` | 112 | 4 | 4 | `i32` | - |
+| `mbr_type` | 116 | 4 | 4 | `u32` | - |
+| `name` | 120 | 72 | 2 | `[36]u16` | - |
+
+### `StorageVolumeInfo`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 112 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `reference` | 8 | 16 | 8 | `StorageVolumeRef` | - |
+| `target` | 24 | 72 | 8 | `StorageTarget` | - |
+| `letter` | 96 | 4 | 4 | `u32` | - |
+| `filesystem` | 100 | 4 | 4 | `u32` | - |
+| `role` | 104 | 4 | 4 | `u32` | - |
+| `flags` | 108 | 4 | 4 | `u32` | - |
+
 ## Fehlerdomänen
 
 ### `arp`
@@ -5549,6 +5684,27 @@ Geltung: `window_service`, Einheit: `status_code`, Stabilität: `fixed_contract`
 | `window_service_result_not_found` | -1 | `i32` |
 | `window_service_result_ok` | 0 | `i32` |
 | `window_service_result_version` | 1 | `u16` |
+
+### `storage`
+
+Geltung: `storage`, Einheit: `status_code`, Stabilität: `fixed_contract`.
+
+| Name | Wert | Typ |
+|---|---:|---|
+| `storage_result_ok` | 0 | `i32` |
+| `storage_result_present` | 1 | `i32` |
+| `storage_result_absent` | 0 | `i32` |
+| `storage_error_invalid` | -1 | `i32` |
+| `storage_error_stale` | -2 | `i32` |
+| `storage_error_busy` | -3 | `i32` |
+| `storage_error_protected` | -4 | `i32` |
+| `storage_error_capacity` | -5 | `i32` |
+| `storage_error_owner` | -6 | `i32` |
+| `storage_error_io` | -7 | `i32` |
+| `storage_error_unsupported` | -8 | `i32` |
+| `storage_error_remount` | -9 | `i32` |
+| `storage_error_incomplete` | -10 | `i32` |
+| `storage_error_not_found` | -11 | `i32` |
 
 ## Konstanten
 
@@ -6956,6 +7112,36 @@ Geltung: `window_service`, Einheit: `status_code`, Stabilität: `fixed_contract`
 | `drive_role_none` | `0` | `u8` | identity | number | `drive_role` | fixed_contract |
 | `drive_role_ram` | `3` | `u8` | identity | number | `drive_role` | fixed_contract |
 | `drive_role_system` | `1` | `u8` | identity | number | `drive_role` | fixed_contract |
+| `storage_target_device` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_target_partition` | `2` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_inventory_partial` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_writable` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_table_valid` | `2` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_gpt` | `4` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_mbr` | `8` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_claimed` | `16` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_failed` | `32` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_unsupported` | `64` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_partial` | `128` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_device_ram` | `256` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_partition_claimed` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_partition_mounted` | `2` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_partition_failed` | `4` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_volume_required` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_volume_claimed` | `2` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_claim_end_keep_unmounted` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_filesystem_unknown` | `0` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_filesystem_fat32` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_filesystem_ntfs` | `2` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_filesystem_none` | `3` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_unknown` | `0` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_ata` | `1` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_sata` | `2` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_nvme` | `3` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_usb` | `4` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_ram` | `5` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_raw_max_sectors` | `256` | `u32` | identity | number | `storage` | fixed_contract |
+| `storage_bus_virtio` | `6` | `u32` | identity | number | `storage` | fixed_contract |
 
 ## Limits
 

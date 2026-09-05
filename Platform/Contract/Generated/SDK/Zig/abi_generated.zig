@@ -1403,6 +1403,36 @@ pub const drive_role_data: u8 = 2;
 pub const drive_role_none: u8 = 0;
 pub const drive_role_ram: u8 = 3;
 pub const drive_role_system: u8 = 1;
+pub const storage_target_device: u32 = 1;
+pub const storage_target_partition: u32 = 2;
+pub const storage_inventory_partial: u32 = 1;
+pub const storage_device_writable: u32 = 1;
+pub const storage_device_table_valid: u32 = 2;
+pub const storage_device_gpt: u32 = 4;
+pub const storage_device_mbr: u32 = 8;
+pub const storage_device_claimed: u32 = 16;
+pub const storage_device_failed: u32 = 32;
+pub const storage_device_unsupported: u32 = 64;
+pub const storage_device_partial: u32 = 128;
+pub const storage_device_ram: u32 = 256;
+pub const storage_partition_claimed: u32 = 1;
+pub const storage_partition_mounted: u32 = 2;
+pub const storage_partition_failed: u32 = 4;
+pub const storage_volume_required: u32 = 1;
+pub const storage_volume_claimed: u32 = 2;
+pub const storage_claim_end_keep_unmounted: u32 = 1;
+pub const storage_filesystem_unknown: u32 = 0;
+pub const storage_filesystem_fat32: u32 = 1;
+pub const storage_filesystem_ntfs: u32 = 2;
+pub const storage_filesystem_none: u32 = 3;
+pub const storage_bus_unknown: u32 = 0;
+pub const storage_bus_ata: u32 = 1;
+pub const storage_bus_sata: u32 = 2;
+pub const storage_bus_nvme: u32 = 3;
+pub const storage_bus_usb: u32 = 4;
+pub const storage_bus_ram: u32 = 5;
+pub const storage_raw_max_sectors: u32 = 256;
+pub const storage_bus_virtio: u32 = 6;
 pub const audio_service_error_bytes: usize = 32;
 pub const audio_service_max_sessions: u32 = 8;
 pub const audio_service_name_bytes: usize = 32;
@@ -1790,6 +1820,20 @@ pub const window_service_result_magic: u32 = 1364676183;
 pub const window_service_result_not_found: i32 = -1;
 pub const window_service_result_ok: i32 = 0;
 pub const window_service_result_version: u16 = 1;
+pub const storage_result_ok: i32 = 0;
+pub const storage_result_present: i32 = 1;
+pub const storage_result_absent: i32 = 0;
+pub const storage_error_invalid: i32 = -1;
+pub const storage_error_stale: i32 = -2;
+pub const storage_error_busy: i32 = -3;
+pub const storage_error_protected: i32 = -4;
+pub const storage_error_capacity: i32 = -5;
+pub const storage_error_owner: i32 = -6;
+pub const storage_error_io: i32 = -7;
+pub const storage_error_unsupported: i32 = -8;
+pub const storage_error_remount: i32 = -9;
+pub const storage_error_incomplete: i32 = -10;
+pub const storage_error_not_found: i32 = -11;
 
 pub const R4ErrorDomain = enum(u16) {
     none = 0,
@@ -1808,6 +1852,7 @@ pub const R4ErrorDomain = enum(u16) {
     network = 13,
     audio = 14,
     device = 15,
+    storage = 16,
 };
 
 pub const R4XStartAppClass = enum(u32) {
@@ -5544,6 +5589,85 @@ pub const TcpPerformanceInfo = extern struct {
     window_scale_negotiated: u64 = 0,
 };
 
+pub const StorageDeviceRef = extern struct {
+    slot: u32 = 0,
+    reserved: u32 = 0,
+    generation: u64 = 0,
+};
+
+pub const StorageVolumeRef = extern struct {
+    slot: u32 = 0,
+    reserved: u32 = 0,
+    generation: u64 = 0,
+};
+
+pub const StorageTarget = extern struct {
+    version: u32 = 1,
+    size: u32 = 72,
+    device: StorageDeviceRef = .{},
+    layout_generation: u64 = 0,
+    first_lba: u64 = 0,
+    sector_count: u64 = 0,
+    partition_number: u32 = 0,
+    kind: u32 = 0,
+    partition_guid: [16]u8 = .{0} ** 16,
+};
+
+pub const StorageInventory = extern struct {
+    version: u32 = 1,
+    size: u32 = 32,
+    generation: u64 = 0,
+    device_slots: u32 = 0,
+    volume_slots: u32 = 0,
+    flags: u32 = 0,
+    reserved: u32 = 0,
+};
+
+pub const StorageDeviceInfo = extern struct {
+    version: u32 = 1,
+    size: u32 = 288,
+    reference: StorageDeviceRef = .{},
+    layout_generation: u64 = 0,
+    sector_count: u64 = 0,
+    disk_guid: [16]u8 = .{0} ** 16,
+    first_usable: u64 = 0,
+    last_usable: u64 = 0,
+    bus: u32 = 0,
+    flags: u32 = 0,
+    sector_bytes: u32 = 0,
+    partition_slots: u32 = 0,
+    last_error: i32 = 0,
+    reserved: u32 = 0,
+    model: [64]u8 = .{0} ** 64,
+    name: [32]u8 = .{0} ** 32,
+    driver: [32]u8 = .{0} ** 32,
+    reason: [64]u8 = .{0} ** 64,
+};
+
+pub const StoragePartitionInfo = extern struct {
+    version: u32 = 1,
+    size: u32 = 192,
+    target: StorageTarget = .{},
+    type_guid: [16]u8 = .{0} ** 16,
+    attributes: u64 = 0,
+    filesystem: u32 = 0,
+    flags: u32 = 0,
+    last_error: i32 = 0,
+    mbr_type: u32 = 0,
+    name: [36]u16 = .{0} ** 36,
+};
+
+pub const StorageVolumeInfo = extern struct {
+    version: u32 = 1,
+    size: u32 = 112,
+    reference: StorageVolumeRef = .{},
+    target: StorageTarget = .{},
+    letter: u32 = 0,
+    filesystem: u32 = 0,
+    role: u32 = 0,
+    flags: u32 = 0,
+};
+
 pub const R4SysFns = struct {
     pub const write = *const fn ([*]const u8, u32) callconv(.c) i32;
     pub const putc = *const fn (u8) callconv(.c) void;
@@ -5668,12 +5792,27 @@ pub const R4SysFns = struct {
     pub const io_file_write_at = *const fn ([*:0]const u8, u64, [*]const u8, u64, u32, *u32) callconv(.c) i32;
     pub const io_file_info = *const fn ([*:0]const u8, u32, *u32) callconv(.c) i32;
     pub const io_file_lock = *const fn ([*:0]const u8, u64, u64, u32, *u32) callconv(.c) i32;
+    pub const storage_inventory = *const fn (*StorageInventory) callconv(.c) i32;
+    pub const storage_device = *const fn (u64, u32, *StorageDeviceInfo) callconv(.c) i32;
+    pub const storage_partition = *const fn (u64, *const StorageDeviceRef, u32, *StoragePartitionInfo) callconv(.c) i32;
+    pub const storage_volume = *const fn (u64, u32, *StorageVolumeInfo) callconv(.c) i32;
+    pub const storage_claim_begin = *const fn (*const StorageTarget, *u64) callconv(.c) i32;
+    pub const storage_claim_end = *const fn (u64, u32) callconv(.c) i32;
+    pub const storage_read = *const fn (*const StorageTarget, u64, u32, [*]u8, u32) callconv(.c) i32;
+    pub const storage_claim_read = *const fn (u64, u64, u32, [*]u8, u32) callconv(.c) i32;
+    pub const storage_claim_write = *const fn (u64, u64, u32, [*]const u8, u32) callconv(.c) i32;
+    pub const storage_claim_flush = *const fn (u64) callconv(.c) i32;
+    pub const storage_rescan = *const fn (*const StorageDeviceRef) callconv(.c) i32;
+    pub const storage_mount = *const fn (*const StorageTarget, u32, *StorageVolumeRef) callconv(.c) i32;
+    pub const storage_unmount = *const fn (*const StorageVolumeRef) callconv(.c) i32;
+    pub const storage_use_begin = *const fn ([*:0]const u8, *u64) callconv(.c) i32;
+    pub const storage_use_end = *const fn (u64) callconv(.c) i32;
 };
 
 pub const R4XStartR4Sys = extern struct {
     magic: u32 = 827937618,
-    abi_version: u32 = 15,
-    size: u32 = 1024,
+    abi_version: u32 = 16,
+    size: u32 = 1144,
     flags: u32 = 0,
     write: usize = 0,
     putc: usize = 0,
@@ -5801,6 +5940,21 @@ pub const R4XStartR4Sys = extern struct {
     io_file_write_at: usize = 0,
     io_file_info: usize = 0,
     io_file_lock: usize = 0,
+    storage_inventory: usize = 0,
+    storage_device: usize = 0,
+    storage_partition: usize = 0,
+    storage_volume: usize = 0,
+    storage_claim_begin: usize = 0,
+    storage_claim_end: usize = 0,
+    storage_read: usize = 0,
+    storage_claim_read: usize = 0,
+    storage_claim_write: usize = 0,
+    storage_claim_flush: usize = 0,
+    storage_rescan: usize = 0,
+    storage_mount: usize = 0,
+    storage_unmount: usize = 0,
+    storage_use_begin: usize = 0,
+    storage_use_end: usize = 0,
 };
 
 pub const R4DeskFns = struct {
@@ -6390,6 +6544,21 @@ pub const R4SysSlots = [_]R4ApiSlotMeta{
     .{ .number = 123, .offset = 1000, .name = "io_file_write_at", .state = .function, .required = false },
     .{ .number = 124, .offset = 1008, .name = "io_file_info", .state = .function, .required = false },
     .{ .number = 125, .offset = 1016, .name = "io_file_lock", .state = .function, .required = false },
+    .{ .number = 126, .offset = 1024, .name = "storage_inventory", .state = .function, .required = false },
+    .{ .number = 127, .offset = 1032, .name = "storage_device", .state = .function, .required = false },
+    .{ .number = 128, .offset = 1040, .name = "storage_partition", .state = .function, .required = false },
+    .{ .number = 129, .offset = 1048, .name = "storage_volume", .state = .function, .required = false },
+    .{ .number = 130, .offset = 1056, .name = "storage_claim_begin", .state = .function, .required = false },
+    .{ .number = 131, .offset = 1064, .name = "storage_claim_end", .state = .function, .required = false },
+    .{ .number = 132, .offset = 1072, .name = "storage_read", .state = .function, .required = false },
+    .{ .number = 133, .offset = 1080, .name = "storage_claim_read", .state = .function, .required = false },
+    .{ .number = 134, .offset = 1088, .name = "storage_claim_write", .state = .function, .required = false },
+    .{ .number = 135, .offset = 1096, .name = "storage_claim_flush", .state = .function, .required = false },
+    .{ .number = 136, .offset = 1104, .name = "storage_rescan", .state = .function, .required = false },
+    .{ .number = 137, .offset = 1112, .name = "storage_mount", .state = .function, .required = false },
+    .{ .number = 138, .offset = 1120, .name = "storage_unmount", .state = .function, .required = false },
+    .{ .number = 139, .offset = 1128, .name = "storage_use_begin", .state = .function, .required = false },
+    .{ .number = 140, .offset = 1136, .name = "storage_use_end", .state = .function, .required = false },
 };
 
 pub const R4DeskSlots = [_]R4ApiSlotMeta{
@@ -10150,7 +10319,79 @@ comptime {
     if (@offsetOf(TcpPerformanceInfo, "retransmits") != 184) @compileError("generated ABI offset drift: TcpPerformanceInfo.retransmits");
     if (@offsetOf(TcpPerformanceInfo, "mss_negotiated") != 192) @compileError("generated ABI offset drift: TcpPerformanceInfo.mss_negotiated");
     if (@offsetOf(TcpPerformanceInfo, "window_scale_negotiated") != 200) @compileError("generated ABI offset drift: TcpPerformanceInfo.window_scale_negotiated");
-    if (@sizeOf(R4XStartR4Sys) != 1024) @compileError("generated ABI size drift: R4XStartR4Sys");
+    if (@sizeOf(StorageDeviceRef) != 16) @compileError("generated ABI size drift: StorageDeviceRef");
+    if (@alignOf(StorageDeviceRef) != 8) @compileError("generated ABI alignment drift: StorageDeviceRef");
+    if (@offsetOf(StorageDeviceRef, "slot") != 0) @compileError("generated ABI offset drift: StorageDeviceRef.slot");
+    if (@offsetOf(StorageDeviceRef, "reserved") != 4) @compileError("generated ABI offset drift: StorageDeviceRef.reserved");
+    if (@offsetOf(StorageDeviceRef, "generation") != 8) @compileError("generated ABI offset drift: StorageDeviceRef.generation");
+    if (@sizeOf(StorageVolumeRef) != 16) @compileError("generated ABI size drift: StorageVolumeRef");
+    if (@alignOf(StorageVolumeRef) != 8) @compileError("generated ABI alignment drift: StorageVolumeRef");
+    if (@offsetOf(StorageVolumeRef, "slot") != 0) @compileError("generated ABI offset drift: StorageVolumeRef.slot");
+    if (@offsetOf(StorageVolumeRef, "reserved") != 4) @compileError("generated ABI offset drift: StorageVolumeRef.reserved");
+    if (@offsetOf(StorageVolumeRef, "generation") != 8) @compileError("generated ABI offset drift: StorageVolumeRef.generation");
+    if (@sizeOf(StorageTarget) != 72) @compileError("generated ABI size drift: StorageTarget");
+    if (@alignOf(StorageTarget) != 8) @compileError("generated ABI alignment drift: StorageTarget");
+    if (@offsetOf(StorageTarget, "version") != 0) @compileError("generated ABI offset drift: StorageTarget.version");
+    if (@offsetOf(StorageTarget, "size") != 4) @compileError("generated ABI offset drift: StorageTarget.size");
+    if (@offsetOf(StorageTarget, "device") != 8) @compileError("generated ABI offset drift: StorageTarget.device");
+    if (@offsetOf(StorageTarget, "layout_generation") != 24) @compileError("generated ABI offset drift: StorageTarget.layout_generation");
+    if (@offsetOf(StorageTarget, "first_lba") != 32) @compileError("generated ABI offset drift: StorageTarget.first_lba");
+    if (@offsetOf(StorageTarget, "sector_count") != 40) @compileError("generated ABI offset drift: StorageTarget.sector_count");
+    if (@offsetOf(StorageTarget, "partition_number") != 48) @compileError("generated ABI offset drift: StorageTarget.partition_number");
+    if (@offsetOf(StorageTarget, "kind") != 52) @compileError("generated ABI offset drift: StorageTarget.kind");
+    if (@offsetOf(StorageTarget, "partition_guid") != 56) @compileError("generated ABI offset drift: StorageTarget.partition_guid");
+    if (@sizeOf(StorageInventory) != 32) @compileError("generated ABI size drift: StorageInventory");
+    if (@alignOf(StorageInventory) != 8) @compileError("generated ABI alignment drift: StorageInventory");
+    if (@offsetOf(StorageInventory, "version") != 0) @compileError("generated ABI offset drift: StorageInventory.version");
+    if (@offsetOf(StorageInventory, "size") != 4) @compileError("generated ABI offset drift: StorageInventory.size");
+    if (@offsetOf(StorageInventory, "generation") != 8) @compileError("generated ABI offset drift: StorageInventory.generation");
+    if (@offsetOf(StorageInventory, "device_slots") != 16) @compileError("generated ABI offset drift: StorageInventory.device_slots");
+    if (@offsetOf(StorageInventory, "volume_slots") != 20) @compileError("generated ABI offset drift: StorageInventory.volume_slots");
+    if (@offsetOf(StorageInventory, "flags") != 24) @compileError("generated ABI offset drift: StorageInventory.flags");
+    if (@offsetOf(StorageInventory, "reserved") != 28) @compileError("generated ABI offset drift: StorageInventory.reserved");
+    if (@sizeOf(StorageDeviceInfo) != 288) @compileError("generated ABI size drift: StorageDeviceInfo");
+    if (@alignOf(StorageDeviceInfo) != 8) @compileError("generated ABI alignment drift: StorageDeviceInfo");
+    if (@offsetOf(StorageDeviceInfo, "version") != 0) @compileError("generated ABI offset drift: StorageDeviceInfo.version");
+    if (@offsetOf(StorageDeviceInfo, "size") != 4) @compileError("generated ABI offset drift: StorageDeviceInfo.size");
+    if (@offsetOf(StorageDeviceInfo, "reference") != 8) @compileError("generated ABI offset drift: StorageDeviceInfo.reference");
+    if (@offsetOf(StorageDeviceInfo, "layout_generation") != 24) @compileError("generated ABI offset drift: StorageDeviceInfo.layout_generation");
+    if (@offsetOf(StorageDeviceInfo, "sector_count") != 32) @compileError("generated ABI offset drift: StorageDeviceInfo.sector_count");
+    if (@offsetOf(StorageDeviceInfo, "disk_guid") != 40) @compileError("generated ABI offset drift: StorageDeviceInfo.disk_guid");
+    if (@offsetOf(StorageDeviceInfo, "first_usable") != 56) @compileError("generated ABI offset drift: StorageDeviceInfo.first_usable");
+    if (@offsetOf(StorageDeviceInfo, "last_usable") != 64) @compileError("generated ABI offset drift: StorageDeviceInfo.last_usable");
+    if (@offsetOf(StorageDeviceInfo, "bus") != 72) @compileError("generated ABI offset drift: StorageDeviceInfo.bus");
+    if (@offsetOf(StorageDeviceInfo, "flags") != 76) @compileError("generated ABI offset drift: StorageDeviceInfo.flags");
+    if (@offsetOf(StorageDeviceInfo, "sector_bytes") != 80) @compileError("generated ABI offset drift: StorageDeviceInfo.sector_bytes");
+    if (@offsetOf(StorageDeviceInfo, "partition_slots") != 84) @compileError("generated ABI offset drift: StorageDeviceInfo.partition_slots");
+    if (@offsetOf(StorageDeviceInfo, "last_error") != 88) @compileError("generated ABI offset drift: StorageDeviceInfo.last_error");
+    if (@offsetOf(StorageDeviceInfo, "reserved") != 92) @compileError("generated ABI offset drift: StorageDeviceInfo.reserved");
+    if (@offsetOf(StorageDeviceInfo, "model") != 96) @compileError("generated ABI offset drift: StorageDeviceInfo.model");
+    if (@offsetOf(StorageDeviceInfo, "name") != 160) @compileError("generated ABI offset drift: StorageDeviceInfo.name");
+    if (@offsetOf(StorageDeviceInfo, "driver") != 192) @compileError("generated ABI offset drift: StorageDeviceInfo.driver");
+    if (@offsetOf(StorageDeviceInfo, "reason") != 224) @compileError("generated ABI offset drift: StorageDeviceInfo.reason");
+    if (@sizeOf(StoragePartitionInfo) != 192) @compileError("generated ABI size drift: StoragePartitionInfo");
+    if (@alignOf(StoragePartitionInfo) != 8) @compileError("generated ABI alignment drift: StoragePartitionInfo");
+    if (@offsetOf(StoragePartitionInfo, "version") != 0) @compileError("generated ABI offset drift: StoragePartitionInfo.version");
+    if (@offsetOf(StoragePartitionInfo, "size") != 4) @compileError("generated ABI offset drift: StoragePartitionInfo.size");
+    if (@offsetOf(StoragePartitionInfo, "target") != 8) @compileError("generated ABI offset drift: StoragePartitionInfo.target");
+    if (@offsetOf(StoragePartitionInfo, "type_guid") != 80) @compileError("generated ABI offset drift: StoragePartitionInfo.type_guid");
+    if (@offsetOf(StoragePartitionInfo, "attributes") != 96) @compileError("generated ABI offset drift: StoragePartitionInfo.attributes");
+    if (@offsetOf(StoragePartitionInfo, "filesystem") != 104) @compileError("generated ABI offset drift: StoragePartitionInfo.filesystem");
+    if (@offsetOf(StoragePartitionInfo, "flags") != 108) @compileError("generated ABI offset drift: StoragePartitionInfo.flags");
+    if (@offsetOf(StoragePartitionInfo, "last_error") != 112) @compileError("generated ABI offset drift: StoragePartitionInfo.last_error");
+    if (@offsetOf(StoragePartitionInfo, "mbr_type") != 116) @compileError("generated ABI offset drift: StoragePartitionInfo.mbr_type");
+    if (@offsetOf(StoragePartitionInfo, "name") != 120) @compileError("generated ABI offset drift: StoragePartitionInfo.name");
+    if (@sizeOf(StorageVolumeInfo) != 112) @compileError("generated ABI size drift: StorageVolumeInfo");
+    if (@alignOf(StorageVolumeInfo) != 8) @compileError("generated ABI alignment drift: StorageVolumeInfo");
+    if (@offsetOf(StorageVolumeInfo, "version") != 0) @compileError("generated ABI offset drift: StorageVolumeInfo.version");
+    if (@offsetOf(StorageVolumeInfo, "size") != 4) @compileError("generated ABI offset drift: StorageVolumeInfo.size");
+    if (@offsetOf(StorageVolumeInfo, "reference") != 8) @compileError("generated ABI offset drift: StorageVolumeInfo.reference");
+    if (@offsetOf(StorageVolumeInfo, "target") != 24) @compileError("generated ABI offset drift: StorageVolumeInfo.target");
+    if (@offsetOf(StorageVolumeInfo, "letter") != 96) @compileError("generated ABI offset drift: StorageVolumeInfo.letter");
+    if (@offsetOf(StorageVolumeInfo, "filesystem") != 100) @compileError("generated ABI offset drift: StorageVolumeInfo.filesystem");
+    if (@offsetOf(StorageVolumeInfo, "role") != 104) @compileError("generated ABI offset drift: StorageVolumeInfo.role");
+    if (@offsetOf(StorageVolumeInfo, "flags") != 108) @compileError("generated ABI offset drift: StorageVolumeInfo.flags");
+    if (@sizeOf(R4XStartR4Sys) != 1144) @compileError("generated ABI size drift: R4XStartR4Sys");
     if (@offsetOf(R4XStartR4Sys, "write") != 16) @compileError("generated ABI offset drift: R4XStartR4Sys.write");
     if (@offsetOf(R4XStartR4Sys, "putc") != 24) @compileError("generated ABI offset drift: R4XStartR4Sys.putc");
     if (@offsetOf(R4XStartR4Sys, "sleep_ticks") != 32) @compileError("generated ABI offset drift: R4XStartR4Sys.sleep_ticks");
@@ -10277,6 +10518,21 @@ comptime {
     if (@offsetOf(R4XStartR4Sys, "io_file_write_at") != 1000) @compileError("generated ABI offset drift: R4XStartR4Sys.io_file_write_at");
     if (@offsetOf(R4XStartR4Sys, "io_file_info") != 1008) @compileError("generated ABI offset drift: R4XStartR4Sys.io_file_info");
     if (@offsetOf(R4XStartR4Sys, "io_file_lock") != 1016) @compileError("generated ABI offset drift: R4XStartR4Sys.io_file_lock");
+    if (@offsetOf(R4XStartR4Sys, "storage_inventory") != 1024) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_inventory");
+    if (@offsetOf(R4XStartR4Sys, "storage_device") != 1032) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_device");
+    if (@offsetOf(R4XStartR4Sys, "storage_partition") != 1040) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_partition");
+    if (@offsetOf(R4XStartR4Sys, "storage_volume") != 1048) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_volume");
+    if (@offsetOf(R4XStartR4Sys, "storage_claim_begin") != 1056) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_claim_begin");
+    if (@offsetOf(R4XStartR4Sys, "storage_claim_end") != 1064) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_claim_end");
+    if (@offsetOf(R4XStartR4Sys, "storage_read") != 1072) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_read");
+    if (@offsetOf(R4XStartR4Sys, "storage_claim_read") != 1080) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_claim_read");
+    if (@offsetOf(R4XStartR4Sys, "storage_claim_write") != 1088) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_claim_write");
+    if (@offsetOf(R4XStartR4Sys, "storage_claim_flush") != 1096) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_claim_flush");
+    if (@offsetOf(R4XStartR4Sys, "storage_rescan") != 1104) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_rescan");
+    if (@offsetOf(R4XStartR4Sys, "storage_mount") != 1112) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_mount");
+    if (@offsetOf(R4XStartR4Sys, "storage_unmount") != 1120) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_unmount");
+    if (@offsetOf(R4XStartR4Sys, "storage_use_begin") != 1128) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_use_begin");
+    if (@offsetOf(R4XStartR4Sys, "storage_use_end") != 1136) @compileError("generated ABI offset drift: R4XStartR4Sys.storage_use_end");
     if (@sizeOf(R4XStartR4Desk) != 488) @compileError("generated ABI size drift: R4XStartR4Desk");
     if (@offsetOf(R4XStartR4Desk, "read_key") != 16) @compileError("generated ABI offset drift: R4XStartR4Desk.read_key");
     if (@offsetOf(R4XStartR4Desk, "mouse_state") != 24) @compileError("generated ABI offset drift: R4XStartR4Desk.mouse_state");

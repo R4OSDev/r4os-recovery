@@ -166,7 +166,9 @@ comptime {
     if (@sizeOf(abi.R4XStartImport) != abi.r4xstart_import_size) {
         @compileError("R4XStartImport ABI size mismatch");
     }
-    if (@sizeOf(abi.R4XStartR4Sys) != abi.r4xstart_r4sys_size) {
+    // The frozen minimum prefix remains compatible with older providers;
+    // appended optional capabilities are checked individually by hasFn.
+    if (@sizeOf(abi.R4XStartR4Sys) < abi.r4xstart_r4sys_size) {
         @compileError("R4XStartR4Sys ABI size mismatch");
     }
     if (@offsetOf(abi.R4XStartR4Sys, "reserved_shell_run") != 408 or

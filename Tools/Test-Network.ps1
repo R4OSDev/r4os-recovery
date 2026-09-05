@@ -1,6 +1,7 @@
 param(
     [ValidateSet('Bios','Uefi','Both')][string]$Firmware='Both',
     [switch]$OfflineOnly,
+    [switch]$StorageAccess,
     [string]$Zig='', [string]$Qemu='', [string]$LimineRoot='',
     [string]$OvmfCode='', [string]$OvmfVars='',
     [ValidateRange(30,300)][int]$TimeoutSeconds=120
@@ -12,6 +13,7 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1')
 . (Join-Path $PSScriptRoot 'Guest-Qmp.ps1')
 . (Join-Path $PSScriptRoot 'Guest-NetClients.ps1')
+if($StorageAccess){. (Join-Path $PSScriptRoot 'Storage-Access.Tests.ps1')}
 Add-Type -Path (Join-Path $PSScriptRoot 'UI-Framebuffer.cs')
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
@@ -22,7 +24,7 @@ if(!$LimineRoot){$LimineRoot=Join-Path $workspace 'DevKit/Boot/Limine'}
 if(!$OvmfCode){$OvmfCode=if($IsLinux){'/usr/share/OVMF/OVMF_CODE_4M.fd'}else{Join-Path $workspace 'DevKit/Emulation/QEMU/share/edk2-x86_64-code.fd'}}
 if(!$OvmfVars){$OvmfVars=if($IsLinux){'/usr/share/OVMF/OVMF_VARS_4M.fd'}else{Join-Path $workspace 'DevKit/Emulation/QEMU/share/edk2-i386-vars.fd'}}
 $limine=Join-Path $LimineRoot $(if($IsWindows){'limine-tool-windows-x86/limine.exe'}else{'limine'})
-$output=Join-Path $root 'Artifacts/BootProbe/network'
+$output=Join-Path $root $(if($StorageAccess){'Artifacts/BootProbe/storage-access'}else{'Artifacts/BootProbe/network'})
 $kernel=Join-Path $root 'Artifacts/Kernel/bin/recovery.elf'
 $runtime=Join-Path $root 'Artifacts/Runtime/runtime.img'
 $askpass=Join-Path $output "askpass$suffix"
@@ -79,6 +81,15 @@ try{
         $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-m','1024','-smp','4','-display','none','-monitor','none','-no-reboot','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$qmpPort,server=on,wait=off",'-device','qemu-xhci,id=rec-xhci',
             '-drive',"if=none,id=usb-media,format=raw,file=$(Join-Path $output 'disk-1.img'),snapshot=on",'-device','usb-storage,drive=usb-media,bootindex=1')
         if($online){$arguments+=@('-netdev',"user,id=rec-net,hostfwd=tcp:127.0.0.1:$sshPort-:22,hostfwd=tcp:127.0.0.1:$ftpPort-:21,hostfwd=tcp:127.0.0.1:2020-:2020",'-device',"$($case.nic),netdev=rec-net")}else{$arguments+=@('-nic','none')}
+        if($StorageAccess -and $online){
+            $scratch=Join-Path $output "$name-flush-fault.img"
+            $file=[IO.File]::Create($scratch);try{$file.SetLength(16MB)}finally{$file.Dispose()}
+            # pwritev arms one flush-only error: opening/scanning/claim preparation
+            # succeeds, the first raw write succeeds, then the device flush fails.
+            $backend=@{driver='blkdebug';'node-name'='storage-fault';image=@{driver='file';filename=$scratch};
+                'inject-error'=@(@{event='pwritev';iotype='flush';errno=5;once=$true;immediately=$true})}|ConvertTo-Json -Depth 8 -Compress
+            $arguments+=@('-blockdev',$backend,'-device','nvme,drive=storage-fault,serial=R4OS-FAULT-0768')
+        }
         if($case.mode -eq 'Uefi'){$vars=Join-Path $output 'network-vars.fd';Copy-Item $OvmfVars $vars -Force;$arguments+=@('-drive',"if=pflash,format=raw,unit=0,readonly=on,file=$OvmfCode",'-drive',"if=pflash,format=raw,unit=1,file=$vars")}
         $start=[Diagnostics.ProcessStartInfo]::new($Qemu);$start.UseShellExecute=$false;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
         foreach($argument in $arguments){$start.ArgumentList.Add($argument)}
@@ -100,6 +111,7 @@ try{
                 $before=Capture 'before';([RecoveryFrame]::new($before)).RequireArtwork((Join-Path $root 'Runtime/R4OS/MEDIA/RECOVERY.BMP'))
                 $banner=Client $ssh (@('-tt','-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1')) "ECHO SSH-ISOLATED`nEXIT`n"
                 foreach($pattern in @(('R4OS Recovery '+[regex]::Escape($releaseVersion)),'Boot medium: USB','running RAM','offline volume','SSH-ISOLATED')){if($banner -notmatch $pattern){throw "Missing SSH session context: $pattern"}}
+                if($StorageAccess){Test-StorageAccess}
                 $null=Sftp @("get /E/VOLUME.TXT $(Host-Path $received)")
                 if([IO.File]::ReadAllText($received) -cne '1/SYSTEM'){throw 'SFTP SYSTEM does not match the mounted volume.'}
                 $null=Sftp @('mkdir /E/R4OS','mkdir /E/R4OS/CONFIG',"put $(Host-Path $payload) /E/R4OS/CONFIG/REPAIR.BIN","get /E/R4OS/CONFIG/REPAIR.BIN $(Host-Path $received)")
@@ -155,6 +167,7 @@ try{
         if($text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0' -or $text -notmatch '\[RESET\]' -or $text -match '\[CRASH\]'){throw 'Incomplete SMP4 network acceptance.'}
         $run=[ordered]@{firmware=$case.mode;adapter=$case.nic;result='ok';cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog;clients=$clientLog;
             coverage=$(if($online){'SSH shell/exec; SFTP/SCP; active/passive FTP; offline FAT32/NTFS read/create/copy/replace/rename/delete; hashes; executable admission; unchanged menu'}else{'no network; damaged SYSTEM; local Terminal; return and restart'})}
+        if($StorageAccess -and $online){$run.storageAccess=$true;$run.coverage+='; local/remote volume uses; raw bounds; exclusive/foreign owner denial; abandoned-claim cleanup; stale generations; real remount/flush failures'}
         $runs+=$run;Write-RecoveryJson $resultPath @{schema=1;runs=$runs};Write-Host "Recovery network $name OK ($($run.seconds) seconds)."
     }
     exit 0

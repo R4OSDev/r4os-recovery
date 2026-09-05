@@ -597,10 +597,10 @@
       "fn_namespace": "R4SysFns",
       "required": true,
       "magic": 827937618,
-      "abi_version": 15,
+      "abi_version": 16,
       "header_size": 16,
       "pointer_size": 8,
-      "size": 1024,
+      "size": 1144,
       "slots": [
         {
           "number": 0,
@@ -10299,6 +10299,1080 @@
             "side_effects": "atomic_on_success",
             "retry": "never_automatic",
             "buffer_too_small": "none",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 126,
+          "offset": 1024,
+          "name": "storage_inventory",
+          "state": "function",
+          "required": false,
+          "description": "Refresh newly registered devices and return a topology snapshot. All payloads are copied; no borrowed driver strings escape.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageInventory"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 127,
+          "offset": 1032,
+          "name": "storage_device",
+          "state": "function",
+          "required": false,
+          "description": "Read one device slot from the exact inventory generation. Absent slots return zero.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "generation",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "slot",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageDeviceInfo"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 128,
+          "offset": 1040,
+          "name": "storage_partition",
+          "state": "function",
+          "required": false,
+          "description": "Read one partition from the exact complete inventory; invalid or partial tables remain explicit.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "generation",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "device",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageDeviceRef"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "slot",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "StoragePartitionInfo"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 129,
+          "offset": 1048,
+          "name": "storage_volume",
+          "state": "function",
+          "required": false,
+          "description": "Read one exact mounted-volume snapshot, including the internal boot alias.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "generation",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "slot",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageVolumeInfo"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 130,
+          "offset": 1056,
+          "name": "storage_claim_begin",
+          "state": "function",
+          "required": false,
+          "description": "Reject stale, partial, protected or used targets before modification; close admissions, drain, flush and unmount, then return an exact logical-thread-owned exclusive claim. Failure returns no claim and performs no raw mutation.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "target",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageTarget"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "out_claim",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u64"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "returns_owned_handle",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "explicit_close_required",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 131,
+          "offset": 1064,
+          "name": "storage_claim_end",
+          "state": "function",
+          "required": false,
+          "description": "Close raw admission, flush, rescan and remount prior identities unless KEEP_UNMOUNTED is set. A completed close consumes the claim even when I/O or remount fails; BUSY retains a finishing claim for retry. Failed targets remain visible.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "claim",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "flags",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "consumes_owned_handle",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 132,
+          "offset": 1072,
+          "name": "storage_read",
+          "state": "function",
+          "required": false,
+          "description": "Read at most storage_raw_max_sectors from a complete validated target; concurrent exclusive claims return BUSY. The output buffer holds sectors times 512 bytes.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "target",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageTarget"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "relative_lba",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "sectors",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "many",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "buffer_len",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "buffer_len",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 133,
+          "offset": 1080,
+          "name": "storage_claim_read",
+          "state": "function",
+          "required": false,
+          "description": "Perform bounded synchronous read within an active caller-owned claim. Buffer remains caller-owned for the call. An I/O error may follow partial hardware progress; never replay writes automatically.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "claim",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "relative_lba",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "sectors",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "buffer",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "many",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "buffer_len",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "buffer_len",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 134,
+          "offset": 1088,
+          "name": "storage_claim_write",
+          "state": "function",
+          "required": false,
+          "description": "Perform bounded synchronous write within an active caller-owned claim. Buffer remains caller-owned for the call. An I/O error may follow partial hardware progress; never replay writes automatically.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "claim",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "relative_lba",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "sectors",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "buffer",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "many",
+                  "is_const": true,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "buffer_len",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "buffer_len",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 135,
+          "offset": 1096,
+          "name": "storage_claim_flush",
+          "state": "function",
+          "required": false,
+          "description": "Issue the durability barrier for an active caller-owned claim and report backend failure.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "claim",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 136,
+          "offset": 1104,
+          "name": "storage_rescan",
+          "state": "function",
+          "required": false,
+          "description": "Acquire the complete device, drain/unmount, reread its table and remount matching previous identities. Open uses reject rescan before unmount.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "device",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageDeviceRef"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 137,
+          "offset": 1112,
+          "name": "storage_mount",
+          "state": "function",
+          "required": false,
+          "description": "Probe and mount a complete partition with a fresh generation. Letter zero assigns the first free D through Z except reserved R; C and R cannot be reassigned through this call.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "target",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageTarget"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "letter",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageVolumeRef"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 138,
+          "offset": 1120,
+          "name": "storage_unmount",
+          "state": "function",
+          "required": false,
+          "description": "Drain and unmount the selected physical volume and its aliases. Required runtime volumes and open uses reject the operation.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "volume",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "named",
+                    "name": "StorageVolumeRef"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 139,
+          "offset": 1128,
+          "name": "storage_use_begin",
+          "state": "function",
+          "required": false,
+          "description": "Acquire a real physical-volume use lease for a resolved path, including the system boot alias. File and directory handles hold this lease until close or logical owner retirement.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "path",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "sentinel",
+                  "is_const": true,
+                  "sentinel": 0,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "nul_terminator",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "out_use",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u64"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "returns_owned_handle",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "explicit_close_required",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 140,
+          "offset": 1136,
+          "name": "storage_use_end",
+          "state": "function",
+          "required": false,
+          "description": "Release an exact caller-owned volume use lease; stale or foreign identifiers are rejected.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "use",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "storage",
+            "ownership": "consumes_owned_handle",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "invalidates_on_success",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
             "language_parity": "zig_and_c_required"
           }
         }
@@ -71277,6 +72351,935 @@
       ],
       "values": [],
       "description": "Append-only TCP burst, ACK, polling and negotiated-option performance snapshot."
+    },
+    {
+      "name": "StorageDeviceRef",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 16,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "slot",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Bounded registry slot.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Must be zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Exact nonzero lifetime generation; never revived by slot reuse.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Borrowed storage identity, not an open resource."
+    },
+    {
+      "name": "StorageVolumeRef",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 16,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "slot",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Bounded registry slot.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Must be zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Exact nonzero lifetime generation; never revived by slot reuse.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Borrowed storage identity, not an open resource."
+    },
+    {
+      "name": "StorageTarget",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 72,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Payload version; must be one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Exact payload size; must match version one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "72"
+        },
+        {
+          "name": "device",
+          "offset": 8,
+          "type": {
+            "kind": "named",
+            "name": "StorageDeviceRef"
+          },
+          "description": "Exact physical registration.",
+          "size": 16,
+          "alignment": 8,
+          "source_type": "StorageDeviceRef",
+          "default_kind": "empty"
+        },
+        {
+          "name": "layout_generation",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Exact observed partition-table generation.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "first_lba",
+          "offset": 32,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "First sector of the complete selected scope.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "sector_count",
+          "offset": 40,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Complete selected sector count.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "partition_number",
+          "offset": 48,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "On-disk partition number, zero for whole device.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "kind",
+          "offset": 52,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_target_device or storage_target_partition.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "partition_guid",
+          "offset": 56,
+          "type": {
+            "kind": "array",
+            "length": 16,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "GPT unique GUID in disk byte order; zero for MBR or whole device.",
+          "size": 16,
+          "alignment": 1,
+          "source_type": "[16]u8",
+          "default_kind": "zero_array"
+        }
+      ],
+      "values": [],
+      "description": "Complete validated device or partition selection. Subranges cannot be substituted for a selection; raw offsets are relative to this scope."
+    },
+    {
+      "name": "StorageInventory",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 32,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Payload version; must be one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Exact payload size; must match version one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "32"
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Topology snapshot generation. Enumeration rejects changes with storage_error_stale.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "device_slots",
+          "offset": 16,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Enumerate every slot below this bound; holes return storage_result_absent.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "volume_slots",
+          "offset": 20,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Includes the internal boot alias after A through Z.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "flags",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_inventory_partial if any device cannot be fully inventoried.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 28,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Bounded complete enumeration header; callers must consume all advertised slots and inspect per-device validity flags."
+    },
+    {
+      "name": "StorageDeviceInfo",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 288,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Payload version; must be one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Exact payload size; must match version one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "288"
+        },
+        {
+          "name": "reference",
+          "offset": 8,
+          "type": {
+            "kind": "named",
+            "name": "StorageDeviceRef"
+          },
+          "description": "Exact physical identity.",
+          "size": 16,
+          "alignment": 8,
+          "source_type": "StorageDeviceRef",
+          "default_kind": "empty"
+        },
+        {
+          "name": "layout_generation",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Partition layout generation.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "sector_count",
+          "offset": 32,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Physical logical-sector capacity.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "disk_guid",
+          "offset": 40,
+          "type": {
+            "kind": "array",
+            "length": 16,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "GPT disk GUID or zero.",
+          "size": 16,
+          "alignment": 1,
+          "source_type": "[16]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "first_usable",
+          "offset": 56,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "First usable sector when table is valid.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "last_usable",
+          "offset": 64,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Last usable sector when table is valid.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "bus",
+          "offset": 72,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_bus value.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "flags",
+          "offset": 76,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_device flags.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "sector_bytes",
+          "offset": 80,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Logical sector size; raw version one accepts 512 only.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "partition_slots",
+          "offset": 84,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Every discovered partition, including unmountable and foreign types.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "last_error",
+          "offset": 88,
+          "type": {
+            "kind": "scalar",
+            "name": "i32"
+          },
+          "description": "Most recent maintenance or inventory failure, retained while target stays visible.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "i32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 92,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "model",
+          "offset": 96,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Copied NUL-terminated hardware model.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "name",
+          "offset": 160,
+          "type": {
+            "kind": "array",
+            "length": 32,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Copied NUL-terminated kernel device name.",
+          "size": 32,
+          "alignment": 1,
+          "source_type": "[32]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "driver",
+          "offset": 192,
+          "type": {
+            "kind": "array",
+            "length": 32,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Copied NUL-terminated driver name.",
+          "size": 32,
+          "alignment": 1,
+          "source_type": "[32]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "reason",
+          "offset": 224,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Copied NUL-terminated table diagnostic.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        }
+      ],
+      "values": [],
+      "description": "Device inventory includes invalid, unsupported and partially inventoried media. Invalid tables permit only a complete-device operation; unsupported capacity and partial tables reject destructive selection."
+    },
+    {
+      "name": "StoragePartitionInfo",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 192,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Payload version; must be one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Exact payload size; must match version one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "192"
+        },
+        {
+          "name": "target",
+          "offset": 8,
+          "type": {
+            "kind": "named",
+            "name": "StorageTarget"
+          },
+          "description": "Exact complete partition selection.",
+          "size": 72,
+          "alignment": 8,
+          "source_type": "StorageTarget",
+          "default_kind": "empty"
+        },
+        {
+          "name": "type_guid",
+          "offset": 80,
+          "type": {
+            "kind": "array",
+            "length": 16,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "GPT type GUID or zero.",
+          "size": 16,
+          "alignment": 1,
+          "source_type": "[16]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "attributes",
+          "offset": 96,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "GPT attributes.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "filesystem",
+          "offset": 104,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_filesystem hint from the boot sector; not a successful mount guarantee.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "flags",
+          "offset": 108,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_partition flags.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "last_error",
+          "offset": 112,
+          "type": {
+            "kind": "scalar",
+            "name": "i32"
+          },
+          "description": "Last remount/probe failure.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "i32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "mbr_type",
+          "offset": 116,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "MBR type, zero for GPT.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "name",
+          "offset": 120,
+          "type": {
+            "kind": "array",
+            "length": 36,
+            "child": {
+              "kind": "scalar",
+              "name": "u16"
+            }
+          },
+          "description": "GPT UTF-16 name; all 36 code units may be occupied.",
+          "size": 72,
+          "alignment": 2,
+          "source_type": "[36]u16",
+          "default_kind": "zero_array"
+        }
+      ],
+      "values": [],
+      "description": "All discovered partitions remain visible when unmounted, exclusively held, unknown or failed."
+    },
+    {
+      "name": "StorageVolumeInfo",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 112,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Payload version; must be one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Exact payload size; must match version one.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "112"
+        },
+        {
+          "name": "reference",
+          "offset": 8,
+          "type": {
+            "kind": "named",
+            "name": "StorageVolumeRef"
+          },
+          "description": "Exact current mount generation.",
+          "size": 16,
+          "alignment": 8,
+          "source_type": "StorageVolumeRef",
+          "default_kind": "empty"
+        },
+        {
+          "name": "target",
+          "offset": 24,
+          "type": {
+            "kind": "named",
+            "name": "StorageTarget"
+          },
+          "description": "Complete backing partition or device.",
+          "size": 72,
+          "alignment": 8,
+          "source_type": "StorageTarget",
+          "default_kind": "empty"
+        },
+        {
+          "name": "letter",
+          "offset": 96,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "ASCII letter; zero for internal boot alias.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "filesystem",
+          "offset": 100,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_filesystem value.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "role",
+          "offset": 104,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Existing drive_role value.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "flags",
+          "offset": 108,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "storage_volume flags.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Mounted volume snapshot. A use lease protects the physical region, including aliases such as the system boot subtree."
     }
   ],
   "operations": [],
@@ -71360,6 +73363,11 @@
       "name": "device",
       "id": 15,
       "description": "Device- und Diagnoseoperation."
+    },
+    {
+      "name": "storage",
+      "id": 16,
+      "description": "Storage identity, exclusive operations, bounded raw I/O and volume mounts."
     }
   ],
   "error_domains": [
@@ -73588,6 +75596,99 @@
         }
       ],
       "description": "Public result and error domain."
+    },
+    {
+      "name": "storage",
+      "unit": "status_code",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "values": [
+        {
+          "name": "storage_result_ok",
+          "value": 0,
+          "value_type": "i32",
+          "description": "storage result ok."
+        },
+        {
+          "name": "storage_result_present",
+          "value": 1,
+          "value_type": "i32",
+          "description": "storage result present."
+        },
+        {
+          "name": "storage_result_absent",
+          "value": 0,
+          "value_type": "i32",
+          "description": "storage result absent."
+        },
+        {
+          "name": "storage_error_invalid",
+          "value": -1,
+          "value_type": "i32",
+          "description": "storage error invalid."
+        },
+        {
+          "name": "storage_error_stale",
+          "value": -2,
+          "value_type": "i32",
+          "description": "storage error stale."
+        },
+        {
+          "name": "storage_error_busy",
+          "value": -3,
+          "value_type": "i32",
+          "description": "storage error busy."
+        },
+        {
+          "name": "storage_error_protected",
+          "value": -4,
+          "value_type": "i32",
+          "description": "storage error protected."
+        },
+        {
+          "name": "storage_error_capacity",
+          "value": -5,
+          "value_type": "i32",
+          "description": "storage error capacity."
+        },
+        {
+          "name": "storage_error_owner",
+          "value": -6,
+          "value_type": "i32",
+          "description": "storage error owner."
+        },
+        {
+          "name": "storage_error_io",
+          "value": -7,
+          "value_type": "i32",
+          "description": "storage error io."
+        },
+        {
+          "name": "storage_error_unsupported",
+          "value": -8,
+          "value_type": "i32",
+          "description": "storage error unsupported."
+        },
+        {
+          "name": "storage_error_remount",
+          "value": -9,
+          "value_type": "i32",
+          "description": "storage error remount."
+        },
+        {
+          "name": "storage_error_incomplete",
+          "value": -10,
+          "value_type": "i32",
+          "description": "storage error incomplete."
+        },
+        {
+          "name": "storage_error_not_found",
+          "value": -11,
+          "value_type": "i32",
+          "description": "storage error not found."
+        }
+      ],
+      "description": "Storage admission, identity, I/O and remount result domain."
     }
   ],
   "constants": [
@@ -87610,6 +89711,306 @@
       "scope": "drive_role",
       "stability": "fixed_contract",
       "description": "DriveInfo.role: system. Existing layout and numeric role preserved."
+    },
+    {
+      "name": "storage_target_device",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage target device."
+    },
+    {
+      "name": "storage_target_partition",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage target partition."
+    },
+    {
+      "name": "storage_inventory_partial",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage inventory partial."
+    },
+    {
+      "name": "storage_device_writable",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device writable."
+    },
+    {
+      "name": "storage_device_table_valid",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device table valid."
+    },
+    {
+      "name": "storage_device_gpt",
+      "value": "4",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device gpt."
+    },
+    {
+      "name": "storage_device_mbr",
+      "value": "8",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device mbr."
+    },
+    {
+      "name": "storage_device_claimed",
+      "value": "16",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device claimed."
+    },
+    {
+      "name": "storage_device_failed",
+      "value": "32",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device failed."
+    },
+    {
+      "name": "storage_device_unsupported",
+      "value": "64",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device unsupported."
+    },
+    {
+      "name": "storage_device_partial",
+      "value": "128",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device partial."
+    },
+    {
+      "name": "storage_device_ram",
+      "value": "256",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage device ram."
+    },
+    {
+      "name": "storage_partition_claimed",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage partition claimed."
+    },
+    {
+      "name": "storage_partition_mounted",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage partition mounted."
+    },
+    {
+      "name": "storage_partition_failed",
+      "value": "4",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage partition failed."
+    },
+    {
+      "name": "storage_volume_required",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage volume required."
+    },
+    {
+      "name": "storage_volume_claimed",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage volume claimed."
+    },
+    {
+      "name": "storage_claim_end_keep_unmounted",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage claim end keep unmounted."
+    },
+    {
+      "name": "storage_filesystem_unknown",
+      "value": "0",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage filesystem unknown."
+    },
+    {
+      "name": "storage_filesystem_fat32",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage filesystem fat32."
+    },
+    {
+      "name": "storage_filesystem_ntfs",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage filesystem ntfs."
+    },
+    {
+      "name": "storage_filesystem_none",
+      "value": "3",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage filesystem none."
+    },
+    {
+      "name": "storage_bus_unknown",
+      "value": "0",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage bus unknown."
+    },
+    {
+      "name": "storage_bus_ata",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage bus ata."
+    },
+    {
+      "name": "storage_bus_sata",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage bus sata."
+    },
+    {
+      "name": "storage_bus_nvme",
+      "value": "3",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage bus nvme."
+    },
+    {
+      "name": "storage_bus_usb",
+      "value": "4",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage bus usb."
+    },
+    {
+      "name": "storage_bus_ram",
+      "value": "5",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage bus ram."
+    },
+    {
+      "name": "storage_raw_max_sectors",
+      "value": "256",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "storage raw max sectors."
+    },
+    {
+      "name": "storage_bus_virtio",
+      "value": "6",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "storage",
+      "stability": "fixed_contract",
+      "description": "Virtio block transport."
     }
   ],
   "limits": [

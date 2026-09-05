@@ -13,6 +13,32 @@ static uint8_t stream_active;
 static uint8_t stream_aborted;
 static uint64_t registry_value;
 static uint16_t registry_type;
+static int32_t storage_close_result;
+static int32_t fake_storage_end(uint64_t claim, uint32_t flags) {
+    assert(claim == 17 && flags == 0); return storage_close_result;
+}
+static int32_t fake_storage_begin(const R4StorageTarget *target, uint64_t *claim) {
+    (void)target; *claim = 17; return 0;
+}
+
+static void physical_storage_contract(void) {
+    R4XStartR4Sys table = {0}; table.size = R4XSTART_R4SYS_SIZE;
+    R4Sys sys = {0}; sys.table = &table; R4Storage storage = {&sys};
+    uint64_t use = 123;
+    assert(!r4_storage_available(&storage));
+    assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == 0 && use == 0);
+    table.size = sizeof(table); table.storage_claim_begin = (uintptr_t)&fake_storage_begin;
+    assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == R4OS_STORAGE_ERROR_UNSUPPORTED);
+    R4StorageTarget target = r4_storage_whole_device(0); uint8_t bytes[512] = {0};
+    assert(target.version == 1 && target.size == sizeof(target));
+    assert(r4_storage_read(&storage, &target, 0, bytes, 511) == R4OS_STORAGE_ERROR_INVALID);
+    assert(r4_storage_claim_begin(&storage, &target, &use) == 0 && use == 17);
+    table.storage_claim_end = (uintptr_t)&fake_storage_end;
+    storage_close_result = R4OS_STORAGE_ERROR_BUSY;
+    assert(r4_storage_claim_end(&storage, &use, 0) == R4OS_STORAGE_ERROR_BUSY && use == 17);
+    storage_close_result = R4OS_STORAGE_ERROR_IO;
+    assert(r4_storage_claim_end(&storage, &use, 0) == R4OS_STORAGE_ERROR_IO && use == 0);
+}
 
 static int32_t fake_write(const uint8_t *bytes, uint32_t length) {
     uint32_t count = length < sizeof(written) ? length : (uint32_t)sizeof(written);
@@ -176,6 +202,7 @@ static R4XStartR4Sys make_table(int full) {
 }
 
 int main(void) {
+    physical_storage_contract();
     R4XStartR4Sys table = make_table(1);
     R4App app = {0};
     app.system.table = &table;

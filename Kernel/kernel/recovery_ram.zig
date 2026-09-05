@@ -44,7 +44,7 @@ pub fn mount() bool {
         volume.totalClusters() < 65525 or volume.root_cluster < 2 or volume.root_cluster >= volume.totalClusters() + 2)
         return fail("fat32-geometry");
     if (!drive.mountBlockRole('C', .fat32, .ram, "Recovery runtime", module.size, index)) return fail("drive-mount");
-    vfs.mountForDrive('C', .{ .fat32 = volume });
+    if (!vfs.mountForDrive('C', .{ .fat32 = volume })) return fail("mount-generation");
     if (!drive.setCurrent('C')) return fail("current-drive");
     device_index = index;
     log.puts("[RECOVERYRAM] C:=READY filesystem=FAT32 backing=RAM persistent=0\r\n");

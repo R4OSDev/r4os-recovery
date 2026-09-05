@@ -10,6 +10,43 @@ var stream_aborted = false;
 var registry_set_value: u32 = 0;
 var registry_set_wide: u64 = 0;
 var registry_set_type: u16 = 0;
+var storage_close_result: i32 = 0;
+fn fakeStorageEnd(claim: u64, flags: u32) callconv(.c) i32 {
+    std.debug.assert(claim == 17 and flags == 0);
+    return storage_close_result;
+}
+fn fakeStorageBegin(_: *const r4os.abi.StorageTarget, out: *u64) callconv(.c) i32 {
+    out.* = 17;
+    return 0;
+}
+
+test "physical storage checks append-only availability and consuming close outcomes" {
+    var table = makeSys(true);
+    table.size = r4os.abi.r4xstart_r4sys_size;
+    var imports: [1]r4os.abi.R4XStartImport = undefined;
+    var context: r4os.abi.R4XStartContext = undefined;
+    const app = try makeApp(&table, &imports, &context);
+    const sys = app.system();
+    const storage = r4os.storage.Context{ .sys = &sys };
+    var use: u64 = 123;
+    try std.testing.expect(!storage.available());
+    try std.testing.expectEqual(@as(i32, 0), storage.transferUseBegin("E:\\FILE", &use));
+    try std.testing.expectEqual(@as(u64, 0), use);
+    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
+    table.storage_claim_begin = @intFromPtr(&fakeStorageBegin);
+    try std.testing.expectEqual(r4os.abi.storage_error_unsupported, storage.transferUseBegin("E:\\FILE", &use));
+    const target = r4os.storage.Context.wholeDevice(.{});
+    var bytes: [512]u8 = undefined;
+    try std.testing.expectEqual(r4os.abi.storage_error_invalid, storage.read(&target, 0, bytes[0..511]));
+    try std.testing.expectEqual(@as(i32, 0), storage.claimBegin(&target, &use));
+    table.storage_claim_end = @intFromPtr(&fakeStorageEnd);
+    storage_close_result = r4os.abi.storage_error_busy;
+    try std.testing.expectEqual(storage_close_result, storage.claimEnd(&use, false));
+    try std.testing.expectEqual(@as(u64, 17), use);
+    storage_close_result = r4os.abi.storage_error_io;
+    try std.testing.expectEqual(storage_close_result, storage.claimEnd(&use, false));
+    try std.testing.expectEqual(@as(u64, 0), use);
+}
 
 fn pathSpan(path: [*:0]const u8) []const u8 {
     return std.mem.span(path);

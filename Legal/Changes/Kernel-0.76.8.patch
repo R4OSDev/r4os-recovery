@@ -1,0 +1,2472 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 74e7320..17d9407 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -626,3 +626,46 @@ Recovery setzt C: vor dem ersten Library-Import; offline eingebundene Module
+ bleiben als Dateien lesbar und reparierbar, starten aber nicht von dort.
+ Dies ist eine Laufzeit-/Kompatibilitaetsvorgabe im vertrauten Single-User-OS,
+ kein Benutzer- oder Sandboxmodell.
++
++0.76.8: Exklusive physische Storageoperationen
++--------------------------------------------
++storage/access_state und access_runtime binden Geraete, Mounts, Datei-/Transfer-
++Nutzungen und exklusive Regionen an Generationen und den logischen
++ProgramThread. Der kurze Storage-Owner schuetzt nur Metadaten. operations
++koordiniert die additive R4SYS-API fuer Inventar, Raw-I/O, Flush, Mount,
++Unmount, Rescan und Laufwerkszuordnung; Partitions-/Formatierungsregeln
++gehoeren weiterhin externen Werkzeugen.
++
++Dateiaufrufe pinnen das wirkliche Zielvolume vor dem FS-Queue-Warten;
++Stream-Slots halten es bis Abschluss/Abbruch. Ein belegtes Ziel wird vor
++Schreibarbeiten abgewiesen. Angenommene Claims schliessen neue Zugriffe,
++drainieren/flushen/invalideren betroffene Caches und haengen Mounts aus.
++Nach Abschluss werden Tabellen und passende vorherige Mounts neu erkannt;
++alte Referenzen bleiben ungueltig. Fehlgeschlagene Ziele bleiben sichtbar.
++Aufgaben-/Programmende baut nach dem bestehenden I/O-/Streamdrain zuerst
++Uses und dann Claims ueber den asynchronen Cleanup-Worker ab.
++
++xHCI-Inkarnationen und SCSI-Medienwechsel verhindern, dass ein bestehender
++USB-BOT-Blockslot nach Abziehen/Ersetzen auf das neue Medium schreibt.
++Build.sh storage-test enthaelt die begrenzten Zustands-/Generationsfaelle;
++Recovery -Mode StorageAccessTest nutzt die echte oeffentliche API und reale
++lokale/SSH/FTP-Nutzungen mit Backend-/Remountfehlern.
++
++NTFS-Mount und Invalidierung verwenden Cache-Owner per Referenz; grosse
++VolumeState-/Cachekopien duerfen den 64-KB-Kernelstack des Cleanup-Workers
++nicht beanspruchen. beginMount/invalidateExternal erhalten Generationen.
++
++0.76.8: Rechtzeitige Interruptfreigabe im normalen Boot
++-------------------------------------------------------
++initTaskRuntime aktiviert IF nach erfolgreicher Einrichtung aller Runtime-
++Worker. Der normale Boot-Thread erreicht damit schon Treiber-Policy und
++SMP-/R4L-Abnahme mit Timerzustellung. Der bisherige spaetere Uebergang in
++start() konnte einen zurueckgestellten Programm-Reaper mit ueberfaelligen
++Fristen blockieren; die Fehlerdiagnose zeigte IF=0 trotz aktivem HPET.
++Die Schedulerregeln fuer absichtlich gesperrte Aufrufer bleiben bestehen.
++
++Die bestehende SMP-Abnahme bindet ihre vier internen Rechenarbeiter vor der
++Ready-Publikation an die jeweiligen Online-CPUs. Wechselnde Runtime-Lasten
++waehrend der Stackanlage duerfen die fuer den Skalierungs- und TLB-Nachweis
++erforderliche Eins-zu-eins-Verteilung nicht veraendern. Der normale Scheduler
++behaelt seine lastabhaengige Platzierung fuer produktive Programme.
+diff --git a/VERSION.R4S b/VERSION.R4S
+index 2230b1b..9956301 100644
+--- a/VERSION.R4S
++++ b/VERSION.R4S
+@@ -1 +1 @@
+-﻿KERNEL_VERSION=0.1.90
++﻿KERNEL_VERSION=0.1.91
+diff --git a/build.zig b/build.zig
+index 432ec1d..783f3bd 100644
+--- a/build.zig
++++ b/build.zig
+@@ -176,6 +176,7 @@ pub fn build(b: *std.Build) void {
+     const test_step = b.step("test", "Build the kernel and run kernel-owned host tests");
+     const storage_test_step = b.step("storage-test", "Bounded partition identity and installation boot tests");
+     addUnitTest(b, storage_test_step, "storage_boot_tests.zig");
++    addUnitTest(b, storage_test_step, "storage/access_state.zig");
+     test_step.dependOn(storage_test_step);
+     const input_test_step = b.step("input-test", "Run the existing bounded input and USB owner tests");
+     for ([_][]const u8{
+diff --git a/driver/usb/msc.zig b/driver/usb/msc.zig
+index 4240352..7a5c929 100644
+--- a/driver/usb/msc.zig
++++ b/driver/usb/msc.zig
+@@ -112,6 +112,7 @@ pub const Status = struct {
+     command_failures: u64 = 0,
+     transport_failures: u64 = 0,
+     transport_faulted: bool = false,
++    media_changed: bool = false,
+     last_failure_transport: bool = false,
+     last_recovery_ok: bool = false,
+     invalid_csw: u64 = 0,
+@@ -483,6 +484,12 @@ fn flushBlock(ctx: ?*anyopaque) bool {
+ }
+ 
+ fn ensureSelected() bool {
++    if (current.media_changed or (current.block_registered and !xhci.deviceHandleCurrent(current.device))) {
++        current.media_changed = true;
++        current.failures += 1;
++        current.reason = "USBMSC medium identity changed; old registration retired from I/O";
++        return false;
++    }
+     if (current.transport_faulted) {
+         current.failures += 1;
+         current.reason = "USBMSC transport recovery incomplete";
+@@ -815,6 +822,12 @@ fn parseScsiSenseR4p(data: []const u8, failed_opcode: u8) bool {
+     current.sense_key = op.sense_key;
+     current.sense_asc = op.sense_asc;
+     current.sense_ascq = op.sense_ascq;
++    // Media-change/medium-absent/capacity-change is not a transport retry.
++    // Keep the old registration unusable until its owner is removed; never
++    // replay a failed write against a newly inserted LUN behind the same USB
++    // bridge. Initial power-on unit attention (ASC 29) retains its boot policy.
++    if (current.block_registered and (op.sense_asc == 0x28 or op.sense_asc == 0x3a or
++        (op.sense_asc == 0x2a and op.sense_ascq == 0x09))) current.media_changed = true;
+     classifySense();
+     if (current.block_index) |idx| {
+         block.recordSense(idx, current.sense_for_opcode, current.sense_key, current.sense_asc, current.sense_ascq);
+@@ -892,7 +905,7 @@ fn command(cdb: []const u8, direction: Direction, transfer_len: u32, buffer: []u
+     defer resolveTransportIncident();
+     current.last_failure_transport = false;
+     current.last_recovery_ok = false;
+-    if (current.transport_faulted) {
++    if (current.transport_faulted or current.media_changed) {
+         current.last_failure_transport = true;
+         current.reason = "USBMSC transport recovery incomplete";
+         return false;
+diff --git a/driver/usb/xhci.zig b/driver/usb/xhci.zig
+index 8cffb1e..396af81 100644
+--- a/driver/usb/xhci.zig
++++ b/driver/usb/xhci.zig
+@@ -290,6 +290,7 @@ const ControlRequest = struct {
+ 
+ const DeviceRuntime = struct {
+     active: bool = false,
++    generation: u64 = 0,
+     slot_id: u8 = 0,
+     port: u8 = 0,
+     speed: u8 = 0,
+@@ -362,6 +363,7 @@ pub const EndpointKind = enum {
+ };
+ 
+ pub const DeviceHandle = struct {
++    generation: u64 = 0,
+     controller: []const u8 = "xhci",
+     port: u8 = 0,
+     slot_id: u8 = 0,
+@@ -730,6 +732,9 @@ var first_bulk_out_ring_virt: u64 = 0;
+ var first_bulk_buffer_virt: u64 = 0;
+ var first_descriptor_virt: u64 = 0;
+ var runtimes: [MAX_USB_DEVICES]DeviceRuntime = .{DeviceRuntime{}} ** MAX_USB_DEVICES;
++// Never reset during controller recovery: a reused slot/port must not revive
++// an old storage handle, even when USB vendor/product identifiers match.
++var runtime_generation: u64 = 0;
+ var active_runtime_index: ?usize = null;
+ var deferred_events = event_router.Mailbox.init();
+ var pending_port_changes = event_router.PortChanges.init();
+@@ -1365,6 +1370,7 @@ fn hostStatus(_: ?*anyopaque, out: *usb_host.Status) callconv(.c) i32 {
+ 
+ pub fn deviceHandleFromCore(dev: *const usb_core.Device) DeviceHandle {
+     return .{
++        .generation = if (runtimeIndexForIdentity(dev.slot_id, dev.port)) |i| runtimes[i].generation else 0,
+         .controller = dev.controller,
+         .port = dev.port,
+         .slot_id = dev.slot_id,
+@@ -1420,6 +1426,10 @@ pub fn selectDeviceHandle(handle: *DeviceHandle) bool {
+     }
+     if (!portIsConnected(handle.port)) return false;
+     if (handle.slot_id != 0) {
++        if (handle.generation != 0) {
++            const i = runtimeIndexForIdentity(handle.slot_id, handle.port) orelse return false;
++            if (runtimes[i].generation != handle.generation) return false;
++        }
+         if (!activateRuntimeByIdentity(handle.slot_id, handle.port)) return false;
+         if (current.addressed_slot_id != handle.slot_id or current.addressed_port != handle.port) return false;
+         refreshHandleFromCurrent(handle);
+@@ -1431,6 +1441,7 @@ pub fn selectDeviceHandle(handle: *DeviceHandle) bool {
+ }
+ 
+ fn refreshHandleFromCurrent(handle: *DeviceHandle) void {
++    handle.generation = if (runtimeIndexForIdentity(current.addressed_slot_id, current.addressed_port)) |i| runtimes[i].generation else 0;
+     handle.controller = "xhci";
+     handle.slot_id = current.addressed_slot_id;
+     handle.port = current.addressed_port;
+@@ -1442,7 +1453,17 @@ fn refreshHandleFromCurrent(handle: *DeviceHandle) void {
+ 
+ fn sameDeviceTarget(a: DeviceHandle, b: DeviceHandle) bool {
+     if (a.port == 0 or b.port == 0 or a.slot_id == 0 or b.slot_id == 0) return false;
+-    return a.port == b.port and a.slot_id == b.slot_id;
++    return a.port == b.port and a.slot_id == b.slot_id and
++        (a.generation == 0 or b.generation == 0 or a.generation == b.generation);
++}
++
++pub fn deviceHandleCurrent(handle: DeviceHandle) bool {
++    if (handle.generation == 0 or handle.port == 0 or handle.port > current.port_count_seen) return false;
++    refreshPortSnapshotByNumber(handle.port);
++    const port = current.first_ports[handle.port - 1];
++    if (!port.connected or (port.change_bits & PORTSC_CSC) != 0) return false;
++    const index = runtimeIndexForIdentity(handle.slot_id, handle.port) orelse return false;
++    return runtimes[index].generation == handle.generation;
+ }
+ 
+ fn enablePciMemoryAndBusMaster() void {
+@@ -2412,9 +2433,12 @@ fn allocateRuntime(slot_id: u8, port: u8, speed: u8) ?usize {
+     var i: usize = 0;
+     while (i < runtimes.len) : (i += 1) {
+         if (runtimes[i].active) continue;
++        if (runtime_generation == 0xffff_ffff_ffff_ffff) return null;
++        runtime_generation += 1;
+         var rt = &runtimes[i];
+         rt.* = .{
+             .active = true,
++            .generation = runtime_generation,
+             .slot_id = slot_id,
+             .port = port,
+             .speed = speed,
+diff --git a/fs/drive.zig b/fs/drive.zig
+index 94b33aa..9d07095 100644
+--- a/fs/drive.zig
++++ b/fs/drive.zig
+@@ -88,6 +88,14 @@ pub fn setCurrent(letter: u8) bool {
+     return true;
+ }
+ 
++// Called only as part of the VFS storage-owner publication after I/O drains.
++pub fn unmountLocked(letter: u8) void {
++    if (letter < 'A' or letter > 'Z') return;
++    const index = letterToIndex(letter);
++    drives[index] = .{};
++    if (current_index == index) current_index = letterToIndex('C');
++}
++
+ pub fn current() ?*Drive {
+     if (!initialized or !drives[current_index].mounted) return null;
+     return &drives[current_index];
+diff --git a/fs/fat/fat32.zig b/fs/fat/fat32.zig
+index c394fa0..421d158 100644
+--- a/fs/fat/fat32.zig
++++ b/fs/fat/fat32.zig
+@@ -34,6 +34,7 @@ const FSINFO_TRAIL_SIGNATURE: u32 = 0xAA55_0000;
+ const FSINFO_UNKNOWN: u32 = 0xFFFF_FFFF;
+ 
+ pub const Volume = struct {
++    mount_ref: ?@import("../../storage/access_state.zig").MountRef = null,
+     device_index: usize,
+     partition_lba: u32,
+     bytes_per_sector: u16,
+@@ -244,6 +245,20 @@ var read_range_cache_clock: u64 = 0;
+ var allocation_hints: [MAX_MOUNTED_VOLUMES]VolumeAllocationHint = .{VolumeAllocationHint{}} ** MAX_MOUNTED_VOLUMES;
+ var volume_states: [MAX_MOUNTED_VOLUMES]VolumeRuntimeState = .{VolumeRuntimeState{}} ** MAX_MOUNTED_VOLUMES;
+ 
++// Only after all aliases of this physical volume have drained and unmounted.
++pub fn forgetStorage(device: usize, first: u64, count: u64) void {
++    for (&volume_states) |*state| if (state.valid and state.device_index == device and state.partition_lba >= first and state.partition_lba - first < count) {
++        state.valid = false;
++    };
++    for (&allocation_hints) |*hint| if (hint.valid and hint.device_index == device and hint.partition_lba >= first and hint.partition_lba - first < count) {
++        hint.valid = false;
++    };
++    for (&read_range_extents) |*extent| if (extent.valid and extent.device_index == device and extent.partition_lba >= first and extent.partition_lba - first < count) {
++        extent.valid = false;
++    };
++    if (append_cache.valid and append_cache.device_index == device and append_cache.partition_lba >= first and append_cache.partition_lba - first < count) append_cache.valid = false;
++}
++
+ pub const Operation = enum(u32) {
+     none = 0,
+     resolve_entry = 1,
+diff --git a/fs/ntfs/ntfs.zig b/fs/ntfs/ntfs.zig
+index 0555f2e..b2164f3 100644
+--- a/fs/ntfs/ntfs.zig
++++ b/fs/ntfs/ntfs.zig
+@@ -68,6 +68,7 @@ pub const RecoveryDeleteResult = enum(u8) {
+ };
+ 
+ pub const Volume = struct {
++    mount_ref: ?@import("../../storage/access_state.zig").MountRef = null,
+     state_slot: u8,
+     cluster_bytes: u32,
+     total_sectors: u64,
+@@ -110,6 +111,25 @@ var states: [MAX_VOLUMES]VolumeState = .{VolumeState{}} ** MAX_VOLUMES;
+ var scratch: nv.Scratch = .{};
+ var metadata_reclaim_volume_cursor: usize = 0;
+ 
++pub const StorageLocation = struct { device: usize, first: u64, count: u64 };
++pub fn storageLocation(volume: Volume) ?StorageLocation {
++    if (volume.state_slot >= states.len) return null;
++    const state = &states[volume.state_slot];
++    if (!state.in_use) return null;
++    return .{ .device = state.device_index, .first = state.partition_lba, .count = state.total_sectors };
++}
++
++// Storage orchestration calls this after the last mount alias is gone.
++pub fn forgetStorage(device: usize, first: u64, count: u64) void {
++    for (&states) |*state| {
++        if (!state.in_use or state.device_index != device or state.partition_lba < first or state.partition_lba - first >= count) continue;
++        if (state.upcase) |memory| _ = heap.free(memory);
++        state.upcase = null;
++        state.in_use = false;
++        state.metadata_cache.invalidateExternal();
++    }
++}
++
+ // ---------------------------------------------------------------------------
+ // Page-cache device seam
+ // ---------------------------------------------------------------------------
+@@ -229,7 +249,9 @@ pub fn inspectBounded(device_index: usize, first_lba: u32, partition_sectors: u6
+     const physical = block.get(device_index) orelse return null;
+     if (physical.sector_size != SECTOR_SIZE or first_lba >= physical.sector_count or partition_sectors > physical.sector_count - first_lba) return null;
+     var slot_index: usize = MAX_VOLUMES;
+-    for (states, 0..) |state, i| {
++    // Metadata caches are large; inspect their owners by reference. A mount
++    // can run on the bounded storage-cleanup kernel stack after program exit.
++    for (&states, 0..) |*state, i| {
+         if (state.in_use and state.device_index == device_index and state.partition_lba == first_lba) {
+             slot_index = i;
+             break;
+diff --git a/fs/page_cache.zig b/fs/page_cache.zig
+index 832a4e5..6c6b6bc 100644
+--- a/fs/page_cache.zig
++++ b/fs/page_cache.zig
+@@ -1003,6 +1003,55 @@ pub fn flushDevice(device_index: usize) bool {
+     return true;
+ }
+ 
++// Storage maintenance has closed filesystem admission for this range. Drain
++// already-pinned fills/writeback as well as dirty sectors, retaining every
++// unrelated sector even when a foreign partition shares the same cache page.
++pub fn flushInvalidateRange(device_index: usize, first: u64, count: u64) bool {
++    const device = block.get(device_index) orelse return false;
++    if (count == 0 or first >= device.sector_count or count > device.sector_count - first) return false;
++    const guard = acquireLock() orelse return false;
++    defer releaseLock(guard);
++    const unwind = enterOperation() orelse return false;
++    defer _ = task_context.leaveUnwind(unwind);
++    while (true) {
++        var restart = false;
++        for (&entries, 0..) |*entry, i| {
++            if (!entry.valid or entry.device_index != device_index) continue;
++            const mask = rangeMask(entry.page_lba, first, count);
++            if (mask == 0) continue;
++            if (entry.io_busy) {
++                if (!guard or !waitBusy(guard)) return false;
++                restart = true;
++                break;
++            }
++            if (entry.dirty_mask & mask != 0) {
++                if (!writebackEntryMaskUnlocked(guard, i, null, mask)) return false;
++                restart = true;
++                break;
++            }
++            entry.valid_mask &= ~mask;
++            stats.invalidations +%= 1;
++            if (entry.valid_mask == 0) clearEntry(i, false);
++        }
++        if (!restart) break;
++    }
++    releaseLock(guard);
++    const durable = block.flush(device_index);
++    relock(guard);
++    if (!durable) stats.writeback_errors +%= 1;
++    return durable;
++}
++
++fn rangeMask(page: u64, first: u64, count: u64) u8 {
++    var mask: u8 = 0;
++    for (0..PAGE_SECTORS) |i| {
++        if (page > std.math.maxInt(u64) - i) break;
++        const lba = page + i;
++        if (lba >= first and lba - first < count) mask |= @as(u8, 1) << @intCast(i);
++    }
++    return mask;
++}
++
+ /// Commits only dirty sectors tagged with `batch`, then issues the same
+ /// backend durability barrier as flushDevice(). Dirty sectors from earlier or
+ /// concurrent operations remain cached, including when they share a 4-KB
+@@ -1750,6 +1799,10 @@ fn writebackEntryBatchUnlocked(guard: bool, index: usize, batch: WriteBatch) boo
+ }
+ 
+ fn writebackEntrySelectedUnlocked(guard: bool, index: usize, batch: ?WriteBatch) bool {
++    return writebackEntryMaskUnlocked(guard, index, batch, FULL_MASK);
++}
++
++fn writebackEntryMaskUnlocked(guard: bool, index: usize, batch: ?WriteBatch, selected: u8) bool {
+     if (index >= entries.len) return true;
+     while (entries[index].valid and entries[index].io_busy) {
+         if (!waitBusy(guard)) return false;
+@@ -1758,10 +1811,10 @@ fn writebackEntrySelectedUnlocked(guard: bool, index: usize, batch: ?WriteBatch)
+         // immer korrekt, die Drain-Schleifen re-scannen ohnehin.
+     }
+     if (!entries[index].valid) return true;
+-    const dirty_snapshot = if (batch) |owner|
++    const dirty_snapshot = (if (batch) |owner|
+         dirtyMaskForBatch(&entries[index], owner)
+     else
+-        entries[index].dirty_mask;
++        entries[index].dirty_mask) & selected;
+     if (dirty_snapshot == 0) return true;
+     const device = entries[index].device_index;
+     const page = entries[index].page_lba;
+diff --git a/fs/request.zig b/fs/request.zig
+index 58ce7ea..bb2ba6d 100644
+--- a/fs/request.zig
++++ b/fs/request.zig
+@@ -4,6 +4,9 @@ const scheduler = @import("../sched/scheduler.zig");
+ const sync = @import("../sched/sync.zig");
+ const timer = @import("../kernel/timer.zig");
+ const request_scope = @import("request_scope.zig");
++const access = @import("../storage/access_runtime.zig");
++const task_context = @import("../sched/task_context.zig");
++const vfs = @import("vfs.zig");
+ 
+ pub const drive_gate_count: usize = request_scope.lane_count;
+ 
+@@ -82,6 +85,8 @@ pub const Guard = struct {
+     gates_locked: bool = false,
+     start_tick: u64 = 0,
+     active: bool = false,
++    uses: [drive_gate_count]?access.UseToken = .{null} ** drive_gate_count,
++    unwind: task_context.UnwindToken = .{},
+ };
+ 
+ pub const GateSnapshot = struct {
+@@ -170,18 +175,33 @@ pub fn gateSnapshot(drive_letter: u8) ?GateSnapshot {
+ }
+ 
+ pub fn begin(kind: Kind, drive_letter: u8) ?Guard {
+-    return beginPlan(kind, drive_letter, 0, request_scope.single(drive_letter), .bounded_wait);
++    return beginPlan(kind, drive_letter, 0, request_scope.single(drive_letter), .bounded_wait, null);
++}
++
++pub fn beginVolume(kind: Kind, letter: u8, volume: vfs.Volume) ?Guard {
++    if (scheduler.currentId() != null and volume.accessReference() == null) return null;
++    return beginPlan(kind, letter, 0, request_scope.single(letter), .bounded_wait, &.{volume.accessReference()});
++}
++
++pub fn tryBeginVolume(kind: Kind, letter: u8, volume: vfs.Volume) ?Guard {
++    if (scheduler.currentId() != null and volume.accessReference() == null) return null;
++    return beginPlan(kind, letter, 0, request_scope.single(letter), .immediate, &.{volume.accessReference()});
++}
++
++pub fn beginPairVolumes(kind: Kind, first: u8, second: u8, a: vfs.Volume, b: vfs.Volume) ?Guard {
++    if (scheduler.currentId() != null and (a.accessReference() == null or b.accessReference() == null)) return null;
++    return beginPlan(kind, first, second, request_scope.pair(first, second), .bounded_wait, &.{ a.accessReference(), b.accessReference() });
+ }
+ 
+ /// Starts a request only when every lane in its scope is immediately
+ /// available. Lifecycle reapers use this form so ownership-free cleanup can
+ /// be deferred without parking the reaper behind an unrelated volume owner.
+ pub fn tryBegin(kind: Kind, drive_letter: u8) ?Guard {
+-    return beginPlan(kind, drive_letter, 0, request_scope.single(drive_letter), .immediate);
++    return beginPlan(kind, drive_letter, 0, request_scope.single(drive_letter), .immediate, null);
+ }
+ 
+ pub fn beginPair(kind: Kind, first_drive: u8, second_drive: u8) ?Guard {
+-    return beginPlan(kind, first_drive, second_drive, request_scope.pair(first_drive, second_drive), .bounded_wait);
++    return beginPlan(kind, first_drive, second_drive, request_scope.pair(first_drive, second_drive), .bounded_wait, null);
+ }
+ 
+ const GateAcquireMode = enum {
+@@ -195,10 +215,32 @@ fn beginPlan(
+     second_drive: u8,
+     plan: request_scope.Plan,
+     acquire_mode: GateAcquireMode,
++    bound_refs: ?[]const ?access.MountRef,
+ ) ?Guard {
++    // Cover admission and queued waits as well as the backend call itself.
++    // A forced task termination may not skip release of either kind of owner.
++    const unwind = task_context.enterUnwind();
++    if (!unwind.admitted()) return null;
++    var uses: [drive_gate_count]?access.UseToken = .{null} ** drive_gate_count;
++    var transferred = false;
++    defer if (!transferred) {
++        for (uses) |token| if (token) |use| access.endUse(use) catch {};
++        _ = task_context.leaveUnwind(unwind);
++    };
+     var acquired_count: u8 = 0;
+     const runtime_owned = scheduler.currentId() != null;
+     if (runtime_owned) {
++        if (bound_refs) |refs| {
++            if (refs.len > uses.len) return null;
++            for (refs, 0..) |ref, i| if (ref) |mount| {
++                uses[i] = access.beginUse(mount, .request) catch return null;
++            };
++        } else {
++            for (plan.lanes[0..plan.count], 0..) |lane, i| {
++                const volume = vfs.volumeForDrive('A' + lane) orelse continue;
++                uses[i] = access.beginUse(volume.accessReference() orelse return null, .request) catch return null;
++            }
++        }
+         while (acquired_count < plan.count) : (acquired_count += 1) {
+             const lane = plan.lanes[acquired_count];
+             const acquired = switch (acquire_mode) {
+@@ -247,6 +289,7 @@ fn beginPlan(
+         state.progress_sequence +%= 1;
+     }
+ 
++    transferred = true;
+     return .{
+         .kind = kind,
+         .drive = drive_letter,
+@@ -256,6 +299,8 @@ fn beginPlan(
+         .gates_locked = runtime_owned,
+         .start_tick = timer.tickCount(),
+         .active = true,
++        .uses = uses,
++        .unwind = unwind,
+     };
+ }
+ 
+@@ -289,6 +334,11 @@ pub fn finish(guard: *Guard, ok: bool) void {
+         if (guard.gates_locked) _ = request_gates[lane].leave();
+     }
+     guard.active = false;
++    for (&guard.uses) |*token| if (token.*) |use| {
++        access.endUse(use) catch {};
++        token.* = null;
++    };
++    _ = task_context.leaveUnwind(guard.unwind);
+ }
+ 
+ pub fn kindCode(kind: Kind) u32 {
+diff --git a/fs/vfs.zig b/fs/vfs.zig
+index 525b785..3d5f4bc 100644
+--- a/fs/vfs.zig
++++ b/fs/vfs.zig
+@@ -14,6 +14,9 @@
+ 
+ const fat32 = @import("fat/fat32.zig");
+ const ntfs_fs = @import("ntfs/ntfs.zig");
++const access = @import("../storage/access_runtime.zig");
++const locks = @import("../memory/owner_locks.zig");
++const drive = @import("drive.zig");
+ 
+ /// Windows-parity component limit (0.60.19): 255 characters, UTF-8 (BMP)
+ /// worst case 765 bytes, buffered as 768.
+@@ -124,6 +127,27 @@ pub const Volume = union(enum) {
+     fat32: fat32.Volume,
+     ntfs: ntfs_fs.Volume,
+ 
++    pub fn accessReference(self: Volume) ?access.MountRef {
++        return switch (self) {
++            inline else => |v| v.mount_ref,
++        };
++    }
++
++    pub fn storageRegion(self: Volume) ?access.Region {
++        if (self.accessReference()) |ref| return (access.mountSnapshot(ref) catch return null).region;
++        const location: ntfs_fs.StorageLocation = switch (self) {
++            .fat32 => |v| .{ .device = v.device_index, .first = @as(u64, v.partition_lba), .count = @as(u64, v.total_sectors) },
++            .ntfs => |v| ntfs_fs.storageLocation(v) orelse return null,
++        };
++        return .{ .device = access.deviceReference(@intCast(location.device)) orelse return null, .first = location.first, .count = location.count };
++    }
++
++    fn bind(self: *Volume, ref: access.MountRef) void {
++        switch (self.*) {
++            inline else => |*v| v.mount_ref = ref,
++        }
++    }
++
+     pub fn clusterBytes(self: Volume) u32 {
+         return switch (self) {
+             .fat32 => |v| v.clusterBytes(),
+@@ -168,24 +192,55 @@ pub fn init() void {
+     boot_volume_slot = null;
+ }
+ 
+-pub fn mountBootVolume(volume: Volume) void {
+-    if (boot_volume_slot == null) boot_volume_slot = volume;
++pub fn mountBootVolume(volume: Volume) bool {
++    const region = volume.storageRegion() orelse return false;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    if (boot_volume_slot != null) return false;
++    var bound = volume;
++    bound.bind(access.bindMountLocked(26, region, true) catch return false);
++    boot_volume_slot = bound;
++    return true;
+ }
+ 
+ pub fn bootVolume() ?Volume {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
+     return boot_volume_slot;
+ }
+ 
+-pub fn mountForDrive(letter: u8, volume: Volume) void {
+-    const index = driveIndex(letter) orelse return;
+-    mounted_volumes[index] = volume;
++pub fn mountForDrive(letter: u8, volume: Volume) bool {
++    const index = driveIndex(letter) orelse return false;
++    const region = volume.storageRegion() orelse return false;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    if (mounted_volumes[index] != null) return false;
++    var bound = volume;
++    bound.bind(access.bindMountLocked(@intCast(index), region, index == 'C' - 'A') catch return false);
++    mounted_volumes[index] = bound;
++    return true;
+ }
+ 
+ pub fn volumeForDrive(letter: u8) ?Volume {
+     const index = driveIndex(letter) orelse return null;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
+     return mounted_volumes[index];
+ }
+ 
++// The storage transaction has already stopped admissions and drained I/O.
++// Generation invalidation and removal are one short metadata publication.
++pub fn unmount(ref: access.MountRef) bool {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    access.unbindMountLocked(ref) catch return false;
++    if (ref.slot == 26) boot_volume_slot = null else {
++        mounted_volumes[ref.slot] = null;
++        drive.unmountLocked(@intCast('A' + ref.slot));
++    }
++    return true;
++}
++
+ pub fn resolvePathStatus(volume: Volume, path: []const u8, out: *NodeRef) LookupStatus {
+     return switch (volume) {
+         .fat32 => |v| blk: {
+diff --git a/kernel/module_file.zig b/kernel/module_file.zig
+index fe0ce6f..8b9d086 100644
+--- a/kernel/module_file.zig
++++ b/kernel/module_file.zig
+@@ -74,7 +74,7 @@ pub fn stats() Stats {
+ 
+ pub fn readRange(req: RangeReadRequest) ?usize {
+     if (req.out.len == 0) return 0;
+-    var fs_req = fs_request.begin(.loader_read, req.source.drive_letter) orelse {
++    var fs_req = fs_request.beginVolume(.loader_read, req.source.drive_letter, req.source.volume) orelse {
+         stats_state.read_failures += 1;
+         logFailure(req.verbose, req.name, "request");
+         return null;
+diff --git a/kernel/runtime_boot.zig b/kernel/runtime_boot.zig
+index 1ab9b03..3101947 100644
+--- a/kernel/runtime_boot.zig
++++ b/kernel/runtime_boot.zig
+@@ -85,6 +85,13 @@ pub fn initTaskRuntime() bool {
+     log.puts("[OK]\r\n");
+ 
+     task_runtime_initialized = true;
++    // The platform timer handoff leaves the boot stack with IF=0. New tasks
++    // enable interrupts in their trampoline, but kernel-main needs the same
++    // transition as soon as the scheduler and runtime workers are ready.
++    // Driver-policy I/O, preemption acceptance and protocol loading below
++    // may already await timed work; deferring this to start() strands those
++    // waits whenever only kernel-main remains runnable on the BSP.
++    interrupts.enable();
+     return true;
+ }
+ 
+@@ -101,14 +108,6 @@ pub fn start() noreturn {
+         fatal.kernelFatal(.runtime, "Task runtime init failed");
+     }
+ 
+-    // The platform timer handoff deliberately returns to the single-threaded
+-    // boot path with IF=0. Newly created tasks enable interrupts in their
+-    // trampoline, but kernel-main keeps executing on its original stack and
+-    // therefore needs an explicit runtime boundary. Without this transition,
+-    // a USB block worker can correctly park for one timer tick while the
+-    // launcher spins with IF=0, preventing the very wakeup it is waiting for.
+-    interrupts.enable();
+-
+     if (config.enable_page_fault_test) triggerPageFaultTest();
+ 
+     // Runtime diagnostic, deliberately last in the boot: everything the
+diff --git a/kernel/smp.zig b/kernel/smp.zig
+index 49a2570..9928dab 100644
+--- a/kernel/smp.zig
++++ b/kernel/smp.zig
+@@ -384,10 +384,18 @@ pub fn runAcceptanceProbeIfEnabled(usable_bytes: u64) bool {
+ 
+     var workers: [percpu.max_cpus]?*task.Task = .{null} ** percpu.max_cpus;
+     var worker_count: u32 = 0;
+-    while (worker_count < online_count) : (worker_count += 1) {
+-        workers[worker_count] = task.createParallelWorkerBlocked("smp-kwork", acceptanceWorkerMain) orelse {
++    cpu_index = 0;
++    while (cpu_index < percpu.max_cpus) : (cpu_index += 1) {
++        if ((online_mask & (@as(u64, 1) << @intCast(cpu_index))) == 0) continue;
++        const worker = task.createParallelWorkerBlocked("smp-kwork", acceptanceWorkerMain) orelse {
+             return acceptanceFail("worker-create");
+         };
++        // This probe compares one fixed work item per online CPU. Runtime
++        // IRQs can change Ready loads while stacks are allocated, so the
++        // ordinary load balancer cannot guarantee that test placement.
++        if (!task.bindBlockedHomeCpu(worker, cpu_index)) return acceptanceFail("worker-bind");
++        workers[worker_count] = worker;
++        worker_count += 1;
+     }
+ 
+     const ready_tick = timer.tickCount();
+diff --git a/program/r4sys.zig b/program/r4sys.zig
+index 038fe06..d2ab2ca 100644
+--- a/program/r4sys.zig
++++ b/program/r4sys.zig
+@@ -4,6 +4,7 @@ const drive = @import("../fs/drive.zig");
+ const vfs = @import("../fs/vfs.zig");
+ const page_cache = @import("../fs/page_cache.zig");
+ const fs_request = @import("../fs/request.zig");
++const storage_access = @import("../storage/access_runtime.zig");
+ const system_update_atomic = @import("../fs/system_update_atomic.zig");
+ const upload_claim_store = @import("../fs/upload_claim_store.zig");
+ const upc = @import("upload_publish_claim");
+@@ -209,6 +210,7 @@ var file_delete_if_match_buffer: [32768]u8 = undefined;
+ const max_stream_ancestors: usize = @as(usize, r4x_api.file_path_max_chars);
+ 
+ const StreamSlot = struct {
++    volume_use: ?storage_access.UseToken = null,
+     active: bool = false,
+     // Published before the mutating Begin so an ambiguous create can still
+     // be aborted. Write/Finish accept only a fully ready slot.
+@@ -894,7 +896,7 @@ pub fn driveInfo(index: u32, out: *DriveInfo) callconv(.c) i32 {
+     copyFixedZ(out.name[0..], d.name);
+     {
+         if (vfs.volumeForDrive(d.letter)) |volume| {
+-            var req = fs_request.begin(.drive_info, d.letter) orelse return -2;
++            var req = fs_request.beginVolume(.drive_info, d.letter, volume) orelse return -2;
+             var ok = false;
+             defer fs_request.finish(&req, ok);
+             const cluster_bytes = volume.clusterBytes();
+@@ -1043,6 +1045,12 @@ fn resolveModuleFile(path_ptr: [*:0]const u8, status: *i32) ?ResolvedModuleFile
+         status.* = module_resource_error_volume;
+         return null;
+     };
++    var req = fs_request.beginVolume(.file_info, target.drive_ref.letter, volume) orelse {
++        status.* = module_resource_error_io;
++        return null;
++    };
++    var ok = false;
++    defer fs_request.finish(&req, ok);
+     var entry: vfs.Entry = undefined;
+     switch (vfs.resolveEntryStatus(volume, target.path, &entry)) {
+         .found => {},
+@@ -1059,6 +1067,7 @@ fn resolveModuleFile(path_ptr: [*:0]const u8, status: *i32) ?ResolvedModuleFile
+         status.* = module_resource_error_not_found;
+         return null;
+     }
++    ok = true;
+     return .{ .volume = volume, .entry = entry, .letter = target.drive_ref.letter };
+ }
+ 
+@@ -1078,7 +1087,7 @@ pub fn moduleResourceStat(path_ptr: [*:0]const u8, resource_type: u32, resource_
+     var name_buf: [rsrc_max_name + 1]u8 = undefined;
+     const resource_name = moduleResourceNameSlice(name_ptr, name_buf[0..]);
+     if (resource_name != null and resource_name.?.len == 0) return module_resource_error_invalid;
+-    var req = fs_request.begin(.file_read, file.letter) orelse return module_resource_error_io;
++    var req = fs_request.beginVolume(.file_read, file.letter, file.volume) orelse return module_resource_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var located: LocatedResource = undefined;
+@@ -1099,7 +1108,7 @@ pub fn moduleResourceRead(path_ptr: [*:0]const u8, resource_type: u32, resource_
+     var name_buf: [rsrc_max_name + 1]u8 = undefined;
+     const resource_name = moduleResourceNameSlice(name_ptr, name_buf[0..]);
+     if (resource_name != null and resource_name.?.len == 0) return module_resource_error_invalid;
+-    var req = fs_request.begin(.file_read, file.letter) orelse return module_resource_error_io;
++    var req = fs_request.beginVolume(.file_read, file.letter, file.volume) orelse return module_resource_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var located: LocatedResource = undefined;
+@@ -1119,7 +1128,7 @@ pub fn fileRead(path_ptr: [*:0]const u8, out_ptr: [*]u8, max_len: u32) callconv(
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+-    var req = fs_request.begin(.file_read, target.drive_ref.letter) orelse return -7;
++    var req = fs_request.beginVolume(.file_read, target.drive_ref.letter, volume) orelse return -7;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var entry: vfs.Entry = undefined;
+@@ -1142,7 +1151,7 @@ pub fn fileWrite(path_ptr: [*:0]const u8, data_ptr: [*]const u8, len: u32) callc
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+-    var req = fs_request.begin(.file_write, target.drive_ref.letter) orelse return -5;
++    var req = fs_request.beginVolume(.file_write, target.drive_ref.letter, volume) orelse return -5;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1179,7 +1188,7 @@ pub fn rewriteFileUnderGate(
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+     if (isRootPath(target.path)) return -3;
+-    var req = fs_request.begin(.config_write, target.drive_ref.letter) orelse return -5;
++    var req = fs_request.beginVolume(.config_write, target.drive_ref.letter, volume) orelse return -5;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+ 
+@@ -1225,7 +1234,7 @@ pub fn fileReadAt64(path_ptr: [*:0]const u8, offset: u64, out_ptr: [*]u8, max_le
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+-    var req = fs_request.begin(.file_read_at, target.drive_ref.letter) orelse return -7;
++    var req = fs_request.beginVolume(.file_read_at, target.drive_ref.letter, volume) orelse return -7;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var entry: vfs.Entry = undefined;
+@@ -1257,7 +1266,7 @@ pub fn fileWriteAt(path_ptr: [*:0]const u8, offset: u64, data_ptr: [*]const u8,
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+-    var req = fs_request.begin(.file_write_at, target.drive_ref.letter) orelse return -7;
++    var req = fs_request.beginVolume(.file_write_at, target.drive_ref.letter, volume) orelse return -7;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1283,7 +1292,7 @@ pub fn fileAppend(path_ptr: [*:0]const u8, data_ptr: [*]const u8, len: u32) call
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+-    var req = fs_request.begin(.file_append, target.drive_ref.letter) orelse return -5;
++    var req = fs_request.beginVolume(.file_append, target.drive_ref.letter, volume) orelse return -5;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1310,7 +1319,7 @@ pub fn fileStreamBegin(path_ptr: [*:0]const u8, flags: u32) callconv(.c) i32 {
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return file_stream_error_invalid;
+     const volume = targetVolume(target) orelse return file_stream_error_io;
+     if (isRootPath(target.path)) return file_stream_error_io;
+-    var req = fs_request.begin(.stream_begin, target.drive_ref.letter) orelse return file_stream_error_io;
++    var req = fs_request.beginVolume(.stream_begin, target.drive_ref.letter, volume) orelse return file_stream_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+ 
+@@ -1359,6 +1368,15 @@ pub fn fileStreamBegin(path_ptr: [*:0]const u8, flags: u32) callconv(.c) i32 {
+         flags,
+         owner,
+     );
++    if (volume.accessReference()) |ref| {
++        reserved_slot.volume_use = storage_access.beginUse(ref, .lease) catch {
++            clearStreamSlot(reserved_slot);
++            return file_stream_error_io;
++        };
++    } else if (scheduler.currentId() != null) {
++        clearStreamSlot(reserved_slot);
++        return file_stream_error_io;
++    }
+     // Resolve and bind the complete physical ancestor chain before the first
+     // namespace mutation. Overflow, a missing component or an I/O ambiguity
+     // therefore leaves neither a half-described slot nor a newly-created file.
+@@ -1415,6 +1433,29 @@ pub fn fileStreamBegin(path_ptr: [*:0]const u8, flags: u32) callconv(.c) i32 {
+     return file_stream_result_ok;
+ }
+ 
++pub fn storageUseBegin(path: [*:0]const u8, out: *u64) callconv(.c) i32 {
++    out.* = 0;
++    const unwind = @import("../sched/task_context.zig").enterUnwind();
++    if (!unwind.admitted()) return r4x_api_storage.storage_error_capacity;
++    defer _ = @import("../sched/task_context.zig").leaveUnwind(unwind);
++    var path_buf: [max_api_path]u8 = undefined;
++    const raw = copyZ(path, &path_buf) orelse return r4x_api_storage.storage_error_invalid;
++    var resolved: [max_api_path]u8 = undefined;
++    const target = resolveTarget(raw, &resolved) orelse return r4x_api_storage.storage_error_invalid;
++    const volume = targetVolume(target) orelse return r4x_api_storage.storage_error_not_found;
++    const ref = volume.accessReference() orelse return r4x_api_storage.storage_error_stale;
++    const use = storage_access.beginUse(ref, .lease) catch |err| return switch (err) {
++        error.Busy => r4x_api_storage.storage_error_busy,
++        error.Stale => r4x_api_storage.storage_error_stale,
++        error.Capacity => r4x_api_storage.storage_error_capacity,
++        else => r4x_api_storage.storage_error_invalid,
++    };
++    out.* = use.id;
++    return r4x_api_storage.storage_result_ok;
++}
++
++const r4x_api_storage = @import("r4os_kernel_contract");
++
+ pub fn fileStreamWrite(path_ptr: [*:0]const u8, offset: u64, data_ptr: [*]const u8, len: u32, flags: u32) callconv(.c) i32 {
+     if (flags != 0) return file_stream_error_unsupported;
+     const len64: u64 = @intCast(len);
+@@ -1425,7 +1466,7 @@ pub fn fileStreamWrite(path_ptr: [*:0]const u8, offset: u64, data_ptr: [*]const
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return file_stream_error_invalid;
+     const volume = targetVolume(target) orelse return file_stream_error_io;
+-    var req = fs_request.begin(.stream_write, target.drive_ref.letter) orelse return file_stream_error_io;
++    var req = fs_request.beginVolume(.stream_write, target.drive_ref.letter, volume) orelse return file_stream_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1500,7 +1541,7 @@ pub fn fileStreamFinish(path_ptr: [*:0]const u8, expected_size: u64, flags: u32)
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return file_stream_error_invalid;
+     const volume = targetVolume(target) orelse return file_stream_error_io;
+-    var req = fs_request.begin(.stream_finish, target.drive_ref.letter) orelse return file_stream_error_io;
++    var req = fs_request.beginVolume(.stream_finish, target.drive_ref.letter, volume) orelse return file_stream_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1541,7 +1582,7 @@ pub fn fileStreamAbort(path_ptr: [*:0]const u8) callconv(.c) i32 {
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return file_stream_error_invalid;
+     const volume = targetVolume(target) orelse return file_stream_error_io;
+     if (isRootPath(target.path)) return file_stream_error_io;
+-    var req = fs_request.begin(.stream_abort, target.drive_ref.letter) orelse return file_stream_error_io;
++    var req = fs_request.beginVolume(.stream_abort, target.drive_ref.letter, volume) orelse return file_stream_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1628,7 +1669,7 @@ pub fn dirList(path_ptr: [*:0]const u8, out_ptr: [*]u8, max_len: u32) callconv(.
+     var resolved_buf: [max_api_path]u8 = undefined;
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -2;
+     const volume = targetVolume(target) orelse return -3;
+-    var req = fs_request.begin(.dir_list, target.drive_ref.letter) orelse return -6;
++    var req = fs_request.beginVolume(.dir_list, target.drive_ref.letter, volume) orelse return -6;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     const cluster = vfs.resolvePath(volume, target.path) orelse return -4;
+@@ -1656,7 +1697,7 @@ pub fn dirEntry(path_ptr: [*:0]const u8, index: u32, out_ptr: [*]u8, max_len: u3
+         return 1;
+     }
+     const volume = targetVolume(target) orelse return -3;
+-    var req = fs_request.begin(.dir_entry, target.drive_ref.letter) orelse return -8;
++    var req = fs_request.beginVolume(.dir_entry, target.drive_ref.letter, volume) orelse return -8;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var cluster: vfs.NodeRef = undefined;
+@@ -1692,7 +1733,7 @@ pub fn fileInfo(path_ptr: [*:0]const u8, out: *FileInfo) callconv(.c) i32 {
+     out.drive = target.drive_ref.letter;
+     copyFixedZ(out.name[0..], baseName(target.path));
+     const volume = targetVolume(target) orelse return -2;
+-    var req = fs_request.begin(.file_info, target.drive_ref.letter) orelse return -3;
++    var req = fs_request.beginVolume(.file_info, target.drive_ref.letter, volume) orelse return -3;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     if (isRootPath(target.path)) {
+@@ -1738,7 +1779,7 @@ pub fn fileDelete(path_ptr: [*:0]const u8) callconv(.c) i32 {
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+     if (isRootPath(target.path)) return -3;
+-    var req = fs_request.begin(.file_delete, target.drive_ref.letter) orelse return -5;
++    var req = fs_request.beginVolume(.file_delete, target.drive_ref.letter, volume) orelse return -5;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -1809,7 +1850,7 @@ pub fn fileDeleteIfMatch(
+         return file_delete_if_match_error_unsupported;
+     if (isRootPath(target.path)) return file_delete_if_match_error_invalid;
+ 
+-    var req = fs_request.begin(.file_delete_if_match, target.drive_ref.letter) orelse
++    var req = fs_request.beginVolume(.file_delete_if_match, target.drive_ref.letter, volume) orelse
+         return file_delete_if_match_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -1953,7 +1994,7 @@ pub fn fileUpdateAtomicChecked(
+     if (!vfs.validateShortName83(staged_name) or !vfs.validateShortName83(backup_name))
+         return file_update_atomic_checked_error_not_atomic;
+ 
+-    var req = fs_request.begin(.file_update_atomic_checked, target.drive_ref.letter) orelse
++    var req = fs_request.beginVolume(.file_update_atomic_checked, target.drive_ref.letter, volume) orelse
+         return file_update_atomic_checked_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -2093,7 +2134,7 @@ pub fn fileStreamDeclarePublish(
+     if (!vfs.validateShortName83(staged_name) or !vfs.validateShortName83(backup_name))
+         return file_stream_declare_publish_error_not_atomic;
+ 
+-    var req = fs_request.begin(.stream_begin, staged.drive_ref.letter) orelse
++    var req = fs_request.beginVolume(.stream_begin, staged.drive_ref.letter, volume) orelse
+         return file_stream_declare_publish_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -2304,7 +2345,7 @@ pub fn fileUpdateCleanupChecked(
+     if (!vfs.validateShortName83(staged_name) or !vfs.validateShortName83(backup_name))
+         return file_update_cleanup_checked_error_not_atomic;
+ 
+-    var req = fs_request.begin(.file_update_atomic_checked, target.drive_ref.letter) orelse
++    var req = fs_request.beginVolume(.file_update_atomic_checked, target.drive_ref.letter, volume) orelse
+         return file_update_cleanup_checked_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -2382,7 +2423,7 @@ pub fn dirCreate(path_ptr: [*:0]const u8) callconv(.c) i32 {
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+     if (isRootPath(target.path)) return -3;
+-    var req = fs_request.begin(.dir_create, target.drive_ref.letter) orelse return -5;
++    var req = fs_request.beginVolume(.dir_create, target.drive_ref.letter, volume) orelse return -5;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -2427,7 +2468,7 @@ pub fn dirDelete(path_ptr: [*:0]const u8) callconv(.c) i32 {
+     const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+     const volume = targetVolume(target) orelse return -2;
+     if (isRootPath(target.path)) return -3;
+-    var req = fs_request.begin(.dir_delete, target.drive_ref.letter) orelse return -5;
++    var req = fs_request.beginVolume(.dir_delete, target.drive_ref.letter, volume) orelse return -5;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -2483,7 +2524,7 @@ pub fn fileRename(old_ptr: [*:0]const u8, new_ptr: [*:0]const u8) callconv(.c) i
+     const old_parent_path = parentPath(old_target.path);
+     const new_parent_path = parentPath(new_target.path);
+     if (!stdMemEql(old_parent_path, new_parent_path)) return -5;
+-    var req = fs_request.begin(.file_rename, old_target.drive_ref.letter) orelse return -7;
++    var req = fs_request.beginVolume(.file_rename, old_target.drive_ref.letter, volume) orelse return -7;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     var parent: vfs.NodeRef = undefined;
+@@ -2625,7 +2666,7 @@ pub fn fileReplaceAtomic(target_ptr: [*:0]const u8, staged_ptr: [*:0]const u8, b
+     const backup_name = baseName(backup.path);
+     if (!vfs.validateShortName83(staged_name) or !vfs.validateShortName83(backup_name)) return file_replace_atomic_error_not_atomic;
+ 
+-    var req = fs_request.begin(.file_replace_atomic, target.drive_ref.letter) orelse return file_replace_atomic_error_io;
++    var req = fs_request.beginVolume(.file_replace_atomic, target.drive_ref.letter, volume) orelse return file_replace_atomic_error_io;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+     // An atomic publish only invalidates streams whose exact names it owns.
+@@ -2809,10 +2850,12 @@ pub fn fileCopy(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8) callconv(.c) i32
+     if (isRootPath(src_target.path) or isRootPath(dst_target.path)) return -3;
+     if (src_target.drive_ref.letter == dst_target.drive_ref.letter and stdMemEql(src_target.path, dst_target.path)) return -8;
+ 
+-    var req = fs_request.beginPair(
++    var req = fs_request.beginPairVolumes(
+         .file_copy,
+         src_target.drive_ref.letter,
+         dst_target.drive_ref.letter,
++        src_volume,
++        dst_volume,
+     ) orelse return -10;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -2854,10 +2897,12 @@ pub fn fileMove(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8) callconv(.c) i32
+     if (isRootPath(src_target.path) or isRootPath(dst_target.path)) return -3;
+     if (src_target.drive_ref.letter == dst_target.drive_ref.letter and stdMemEql(src_target.path, dst_target.path)) return -8;
+ 
+-    var req = fs_request.beginPair(
++    var req = fs_request.beginPairVolumes(
+         .file_move,
+         src_target.drive_ref.letter,
+         dst_target.drive_ref.letter,
++        src_volume,
++        dst_volume,
+     ) orelse return -12;
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -3465,6 +3510,8 @@ fn streamSlotName(slot: *const StreamSlot) []const u8 {
+ }
+ 
+ fn clearStreamSlot(slot: *StreamSlot) void {
++    if (slot.volume_use) |use| storage_access.endUse(use) catch {};
++    slot.volume_use = null;
+     slot.active = false;
+     slot.ready = false;
+     slot.finished = false;
+diff --git a/program/r4x.zig b/program/r4x.zig
+index 11fba32..5bf7b3a 100644
+--- a/program/r4x.zig
++++ b/program/r4x.zig
+@@ -7075,6 +7075,7 @@ pub fn initializeRuntime(usable_bytes: u64) void {
+ fn configureApiGroups() void {
+     r4api.r4sys.setPathResolver(resolveApiTarget);
+     r4api.r4sys.setStreamOwnerResolver(resolveR4SysStreamOwner);
++    @import("../storage/access_runtime.zig").setOwnerResolver(resolveStorageOwner);
+     r4api.r4sys.setProgramModuleRunningProvider(programModuleRunningByPath);
+     r4api.r4draw.setDisplayUsedHook(noteDisplayUsed);
+     r4api.r4draw.setFontCatalogChangedHook(broadcastGuiFontCatalogChanged);
+@@ -7211,6 +7212,21 @@ fn configureR4XStartR4SysTable() void {
+         .io_file_write_at = &apiIoFileWriteAt,
+         .io_file_info = &apiIoFileInfo,
+         .io_file_lock = &apiIoFileLock,
++        .storage_inventory = &@import("../storage/operations.zig").inventory,
++        .storage_device = &@import("../storage/operations.zig").deviceInfo,
++        .storage_partition = &@import("../storage/operations.zig").partitionInfo,
++        .storage_volume = &@import("../storage/operations.zig").volumeInfo,
++        .storage_claim_begin = &@import("../storage/operations.zig").claimBegin,
++        .storage_claim_end = &@import("../storage/operations.zig").claimEnd,
++        .storage_read = &@import("../storage/operations.zig").read,
++        .storage_claim_read = &@import("../storage/operations.zig").claimRead,
++        .storage_claim_write = &@import("../storage/operations.zig").claimWrite,
++        .storage_claim_flush = &@import("../storage/operations.zig").claimFlush,
++        .storage_rescan = &@import("../storage/operations.zig").rescan,
++        .storage_mount = &@import("../storage/operations.zig").mount,
++        .storage_unmount = &@import("../storage/operations.zig").unmount,
++        .storage_use_begin = &r4api.r4sys.storageUseBegin,
++        .storage_use_end = &@import("../storage/operations.zig").useEnd,
+     });
+ }
+ 
+@@ -7946,12 +7962,12 @@ fn resolveProgramFileWithBootReport(d: *drive.Drive, path: []const u8, report_bo
+     }
+     const volume = vfs.volumeForDrive(d.letter) orelse return null;
+     reportBootLaunchStage(report_boot_launch, "FS-Sperre pruefen");
+-    var req = fs_request.tryBegin(.loader_read, d.letter) orelse blk: {
++    var req = fs_request.tryBeginVolume(.loader_read, d.letter, volume) orelse blk: {
+         // Preserve the normal bounded wait after an immediate, observation-
+         // only probe.  The persistent marker distinguishes a foreign volume
+         // owner from a stall in the following path lookup on real hardware.
+         reportBootFilesystemWait(report_boot_launch, d.letter);
+-        break :blk fs_request.begin(.loader_read, d.letter) orelse return null;
++        break :blk fs_request.beginVolume(.loader_read, d.letter, volume) orelse return null;
+     };
+     var ok = false;
+     defer fs_request.finish(&req, ok);
+@@ -9976,6 +9992,8 @@ fn runR4lPreemptionScenario(
+     const before = scheduler.cpuPreemptionStats(target_cpu);
+     const start = monotonic.capture();
+     const start_tick = timer.tickCount();
++    const entry_flags = @import("../arch/x86_64/io.zig").readRflags();
++    const entry_timer = timer.deadlineStats();
+ 
+     r4l_preemption_mode = mode;
+     r4l_preemption_event = sync.Event.init(false);
+@@ -10079,6 +10097,29 @@ fn runR4lPreemptionScenario(
+ 
+     var completion: ProgramProcessCompletion = .{};
+     const completion_ok = consumeProgramCompletion(handle, &completion) == PROGRAM_HANDLE_OK;
++    if (!completion_ok) {
++        var detail: [6]u64 = .{0} ** 6;
++        if (lockProgramRegistry()) {
++            if (lookupProgramRegistryHandleLocked(handle, true)) |slot| {
++                detail = .{ @intFromEnum(slot.state), @intFromEnum(slot.retire_phase), slot.pin_count, slot.retire_attempts, @intFromBool(slot.retire_in_progress), @intFromBool(program_reaper_started) };
++            }
++            unlockProgramRegistry();
++        }
++        k.puts("[R4LPREEMPT] incomplete state/phase/pins/retries/owner/reaper=");
++        for (detail) |value| {
++            k.putDec(value);
++            k.puts(" ");
++        }
++        k.puts("\r\n");
++        const failed_flags = @import("../arch/x86_64/io.zig").readRflags();
++        const failed_timer = timer.deadlineStats();
++        k.puts("[R4LPREEMPT] flags/irq_delta/last_irq/now/mode=");
++        for ([_]u64{ entry_flags, failed_flags, failed_timer.timer_irqs -% entry_timer.timer_irqs, failed_timer.last_irq_tick, timer.tickCount(), @intFromEnum(failed_timer.mode) }) |value| {
++            k.putDec(value);
++            k.puts(" ");
++        }
++        k.puts("\r\n");
++    }
+     if (@atomicLoad(u8, &r4l_preemption_witness_done, .acquire) == 0) abortR4lPreemptionWitness();
+     const witness_ok = waitForR4lPreemptionWitness(cleanup_start, cleanup_tick);
+     const after = scheduler.cpuPreemptionStats(target_cpu);
+@@ -12045,6 +12086,10 @@ fn completeProgramThreadRetire(
+         clearProgramThreadRetireClaim(thread_ctx);
+         return false;
+     }
++    if (!@import("../storage/operations.zig").releaseOwner(thread_ctx.instance_id, thread_ctx.instance_generation, owner_task_id, owner_task_generation)) {
++        clearProgramThreadRetireClaim(thread_ctx);
++        return false;
++    }
+     if (thread_ctx.task_id != 0 or thread_ctx.task_generation != 0) {
+         thread_ctx.task_id = 0;
+         thread_ctx.task_generation = 0;
+@@ -17465,6 +17510,7 @@ fn retireProgramSlot(slot: *ProgramRegistrySlot) ProgramRetireResult {
+                 if (!purgeCancelledAsyncIoRequestsForHandle(handle)) return deferProgramRetire(handle);
+                 if (!releaseFileRangeLocksForHandle(handle)) return deferProgramRetire(handle);
+                 if (!r4api.r4sys.releaseStreamSlotsForProgram(handle.instance_id, handle.generation)) return deferProgramRetire(handle);
++                if (!@import("../storage/operations.zig").releaseOwner(handle.instance_id, handle.generation, 0, 0)) return deferProgramRetire(handle);
+                 if (!audio.closeStreamsForOwner(.{
+                     .instance_id = handle.instance_id,
+                     .generation = handle.generation,
+@@ -17761,6 +17807,11 @@ fn currentProgramHandle() ?ProgramProcessHandle {
+     return null;
+ }
+ 
++fn resolveStorageOwner() ?@import("../storage/access_runtime.zig").Owner {
++    const owner = resolveR4SysStreamOwner() orelse return null;
++    return .{ .task = owner.id, .task_generation = owner.generation, .program = owner.program_id, .program_generation = owner.program_generation };
++}
++
+ fn resolveR4SysStreamOwner() ?r4api.r4sys.StreamOwner {
+     // Most file-stream calls run in short-lived async-I/O workers, but
+     // fileReplaceAtomic is an existing direct R4SYS slot and therefore runs
+diff --git a/storage/block.zig b/storage/block.zig
+index 2cfc151..8ae2d92 100644
+--- a/storage/block.zig
++++ b/storage/block.zig
+@@ -1,6 +1,7 @@
+ const diag_screen = @import("../kernel/diag_screen.zig");
+ const block_dispatch = @import("block_dispatch.zig");
+ const block_split = @import("block_split.zig");
++const access = @import("access_runtime.zig");
+ const drive = @import("../fs/drive.zig");
+ const heap = @import("../memory/heap.zig");
+ const owner_locks = @import("../memory/owner_locks.zig");
+@@ -266,6 +267,8 @@ pub const RuntimeSummary = struct {
+ };
+ 
+ pub const Device = struct {
++    // Assigned by the registry; never supplied by a driver or reused after retirement.
++    access_ref: access.DeviceRef = .{ .slot = 0, .generation = 0 },
+     name: []const u8,
+     // Hardware-provided text when available; distinct from the registry name.
+     model: []const u8 = "",
+@@ -359,6 +362,7 @@ var runtime_summary: RuntimeSummary = .{};
+ var next_backend_handle_sequence: u64 = 0;
+ 
+ pub fn init() void {
++    access.initForBoot();
+     devices = .{DeviceSlot{}} ** MAX_DEVICES;
+     device_count = 0;
+     device_slot_count = 0;
+@@ -500,6 +504,7 @@ fn registerLocked(device: Device) ?usize {
+     // adapted through one execution lane even if an old descriptor advertised
+     // a larger software queue.
+     if (normalized.async_submit_fn == null) normalized.queue_depth = 1;
++    normalized.access_ref = access.registerDeviceLocked(@intCast(target_index), device.sector_count) catch return null;
+     normalized.state = .registered;
+     normalized.resetting = false;
+     normalized.slot_index = @intCast(target_index);
+@@ -603,6 +608,7 @@ fn beginRetirement(index: usize) ?*DeviceSlot {
+     const slot = &devices[index];
+     if (!slot.used or slot.retiring) return null;
+     if (slot.retire_generation == 0xFFFF_FFFF_FFFF_FFFF) return null;
++    access.beginRetirementLocked(slot.device.access_ref) catch return null;
+ 
+     // Admission is stopped before the pin snapshot. A live operation makes
+     // unregister a non-destructive retryable failure; it can then unwind its
+@@ -611,6 +617,7 @@ fn beginRetirement(index: usize) ?*DeviceSlot {
+     slot.retire_generation += 1;
+     if (slot.pin_count != 0) {
+         slot.retiring = false;
++        access.cancelRetirementLocked(slot.device.access_ref);
+         return null;
+     }
+     return slot;
+@@ -619,13 +626,17 @@ fn beginRetirement(index: usize) ?*DeviceSlot {
+ fn cancelRetirement(slot: *DeviceSlot) void {
+     const irq_flags = owner_locks.storage.acquire();
+     defer owner_locks.storage.release(irq_flags);
+-    if (slot.used) slot.retiring = false;
++    if (slot.used) {
++        slot.retiring = false;
++        access.cancelRetirementLocked(slot.device.access_ref);
++    }
+ }
+ 
+ fn commitRetirement(slot: *DeviceSlot) bool {
+     const irq_flags = owner_locks.storage.acquire();
+     defer owner_locks.storage.release(irq_flags);
+     if (!slot.used or !slot.retiring or slot.pin_count != 0) return false;
++    access.retireDeviceLocked(slot.device.access_ref) catch return false;
+     const retired_lane = slot.device.controller_lane;
+     slot.used = false;
+     slot.retiring = false;
+@@ -722,6 +733,38 @@ pub fn maxDevices() usize {
+     return MAX_DEVICES;
+ }
+ 
++pub const Identity = struct {
++    reference: access.DeviceRef,
++    sectors: u64,
++    sector_bytes: u32,
++    writable: bool,
++    bus: Bus,
++    name: [32]u8 = .{0} ** 32,
++    model: [64]u8 = .{0} ** 64,
++    driver: [32]u8 = .{0} ** 32,
++};
++
++// Copy under the registry owner; no pointer into a driver-owned string or a
++// reusable DeviceSlot crosses the public inventory boundary.
++pub fn identity(index: usize) ?Identity {
++    const guard = owner_locks.storage.acquire();
++    defer owner_locks.storage.release(guard);
++    if (index >= device_slot_count) return null;
++    const slot = &devices[index];
++    if (!slot.used or slot.retiring or busExcluded(slot.device.bus)) return null;
++    const d = &slot.device;
++    var result: Identity = .{ .reference = d.access_ref, .sectors = d.sector_count, .sector_bytes = d.sector_size, .writable = d.writable, .bus = d.bus };
++    copyIdentityText(&result.name, d.name);
++    copyIdentityText(&result.model, d.model);
++    copyIdentityText(&result.driver, d.driver);
++    return result;
++}
++
++fn copyIdentityText(out: []u8, value: []const u8) void {
++    const len = @min(out.len - 1, value.len);
++    @memcpy(out[0..len], value[0..len]);
++}
++
+ pub fn get(index: usize) ?*const Device {
+     const irq_flags = owner_locks.storage.acquire();
+     defer owner_locks.storage.release(irq_flags);
+diff --git a/storage/mbr.zig b/storage/mbr.zig
+index f6e7c57..301647c 100644
+--- a/storage/mbr.zig
++++ b/storage/mbr.zig
+@@ -434,7 +434,10 @@ fn mountPartition(
+     // unlettered by design.  MBR's active flag, the GPT ESP type or GPT's
+     // legacy-boot attribute supplies the scheme-specific boot indication.
+     if (isBootPartition(volume, boot_candidate, system_score)) {
+-        vfs.mountBootVolume(volume);
++        if (!vfs.mountBootVolume(volume)) {
++            report.note(.mount_rejected, "boot-mount-generation");
++            return;
++        }
+         k.puts("      boot partition (Limine): internal mount, unlettered by design\r\n");
+         report.note(.boot_volume_only, "limine-volume");
+         return;
+@@ -463,7 +466,11 @@ fn mountPartition(
+     const role = roleFor(system_score);
+     if (drive.mountBlockRole(letter, kind, role, type_name, @intCast(byte_count), device_index)) {
+         if (letter == 'C') _ = drive.setCurrent('C');
+-        vfs.mountForDrive(letter, volume);
++        if (!vfs.mountForDrive(letter, volume)) {
++            drive.unmountLocked(letter); // Boot scan runs before user admission.
++            report.note(.mount_rejected, "mount-generation");
++            return;
++        }
+         k.puts("    mounted as ");
+         k.putc(letter);
+         k.puts(":\\ role=");
+diff --git a/storage/access_runtime.zig b/storage/access_runtime.zig
+new file mode 100644
+index 0000000..fe3aa6f
+--- /dev/null
++++ b/storage/access_runtime.zig
+@@ -0,0 +1,183 @@
++// Runtime serialization for storage admission metadata. This owner is always
++// released before filesystem, cache, driver or scheduler work begins.
++const core = @import("access_state.zig");
++const locks = @import("../memory/owner_locks.zig");
++const scheduler = @import("../sched/scheduler.zig");
++
++pub const Owner = core.Owner;
++pub const DeviceRef = core.DeviceRef;
++pub const MountRef = core.MountRef;
++pub const Region = core.Region;
++pub const Error = core.Error;
++pub const UseKind = core.UseKind;
++pub const OwnerResolver = *const fn () ?Owner;
++pub const UseToken = struct { id: u64, owner: Owner };
++
++var state: core.State = .{};
++var owner_resolver: ?OwnerResolver = null;
++
++// Same boot-only reset boundary as block.init; no live resources may survive.
++pub fn initForBoot() void {
++    state = .{};
++    owner_resolver = null;
++}
++
++pub fn setOwnerResolver(resolver: OwnerResolver) void {
++    owner_resolver = resolver;
++}
++
++pub fn currentOwner() ?Owner {
++    if (owner_resolver) |resolve| if (resolve()) |owner| return owner;
++    const running = scheduler.current() orelse return null;
++    return .{ .task = running.id, .task_generation = running.generation };
++}
++
++// The block registry already owns locks.storage at these two boundaries.
++// Neither helper acquires another owner or performs I/O.
++pub fn registerDeviceLocked(slot: u32, sectors: u64) Error!DeviceRef {
++    return state.registerDevice(slot, sectors);
++}
++pub fn retireDeviceLocked(ref: DeviceRef) Error!void {
++    return state.retireDevice(ref);
++}
++pub fn beginRetirementLocked(ref: DeviceRef) Error!void {
++    return state.beginRetirement(ref);
++}
++pub fn cancelRetirementLocked(ref: DeviceRef) void {
++    state.cancelRetirement(ref);
++}
++pub fn bindMountLocked(slot: u32, region: Region, required: bool) Error!MountRef {
++    return state.bindMount(slot, region, required);
++}
++pub fn unbindMountLocked(ref: MountRef) Error!void {
++    return state.unbindMount(ref);
++}
++pub fn topologyGeneration() u64 {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.topology_generation;
++}
++pub fn topologyChanged() Error!void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    try state.changed();
++}
++
++pub fn deviceReference(slot: u32) ?DeviceRef {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    if (slot >= state.devices.len or !state.devices[slot].active) return null;
++    return .{ .slot = slot, .generation = state.devices[slot].generation };
++}
++
++pub fn bindMount(slot: u32, region: Region, runtime_required: bool) Error!MountRef {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.bindMount(slot, region, runtime_required);
++}
++
++pub fn unbindMount(ref: MountRef) Error!void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.unbindMount(ref);
++}
++
++pub fn mountSnapshot(ref: MountRef) Error!core.Mount {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return (try state.mountValue(ref)).*;
++}
++
++pub fn mountReference(slot: u32) ?MountRef {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    if (slot >= state.mounts.len or !state.mounts[slot].active) return null;
++    return .{ .slot = slot, .generation = state.mounts[slot].generation };
++}
++
++pub fn beginUse(ref: MountRef, kind: UseKind) Error!UseToken {
++    const owner = currentOwner() orelse return error.Invalid;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return .{ .id = try state.beginUse(ref, owner, kind), .owner = owner };
++}
++
++pub fn endUse(token: UseToken) Error!void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.endUse(token.id, token.owner);
++}
++
++pub fn beginRawRead(region: Region) Error!UseToken {
++    const owner = currentOwner() orelse return error.Invalid;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return .{ .id = try state.beginRawRead(region, owner), .owner = owner };
++}
++
++pub fn prepareClaim(region: Region) Error!u64 {
++    const owner = currentOwner() orelse return error.Invalid;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.prepareClaim(region, owner);
++}
++
++pub fn claimSnapshot(id: u64, owner: Owner) Error!core.Claim {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return (try state.claimValue(id, owner)).*;
++}
++
++pub fn activateClaim(id: u64, owner: Owner) Error!void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.activateClaim(id, owner);
++}
++
++pub fn beginClaimIo(id: u64, region: Region) Error!UseToken {
++    const owner = currentOwner() orelse return error.Invalid;
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return .{ .id = try state.beginClaimIo(id, owner, region), .owner = owner };
++}
++
++pub fn finishClaim(id: u64, owner: Owner) Error!void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.finishClaim(id, owner);
++}
++
++pub fn releaseClaim(id: u64, owner: Owner) Error!void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.releaseClaim(id, owner);
++}
++
++pub fn regionClaimed(region: Region) bool {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    return state.regionClaimed(region);
++}
++
++// Program lifecycle has already drained actual I/O and kernel streams.
++// Only persistent user leases are retired here; never discard a live request.
++pub fn releaseOwnerLeases(program: u32, generation: u64, task_id: u32, task_generation: u64) void {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    for (&state.uses) |*use| {
++        if (use.id == 0 or use.kind != .lease or use.owner.program != program or use.owner.program_generation != generation) continue;
++        if (task_id != 0 and (use.owner.task != task_id or use.owner.task_generation != task_generation)) continue;
++        use.id = 0;
++    }
++}
++
++pub fn ownerHasClaims(program: u32, generation: u64, task_id: u32, task_generation: u64) bool {
++    const guard = locks.storage.acquire();
++    defer locks.storage.release(guard);
++    for (state.claims) |claim| {
++        if (claim.id == 0 or claim.owner.program != program or claim.owner.program_generation != generation) continue;
++        if (task_id != 0 and (claim.owner.task != task_id or claim.owner.task_generation != task_generation)) continue;
++        return true;
++    }
++    return false;
++}
+diff --git a/storage/access_state.zig b/storage/access_state.zig
+new file mode 100644
+index 0000000..2516384
+--- /dev/null
++++ b/storage/access_state.zig
+@@ -0,0 +1,384 @@
++// Bounded storage admission state. The runtime owner serializes calls; this
++// layer never waits, calls a driver, touches a filesystem or allocates memory.
++const std = @import("std");
++
++pub const max_devices = 16;
++pub const max_mounts = 27; // A..Z plus the internal boot-volume mount.
++pub const max_uses = 256;
++pub const max_claims = 16;
++pub const Error = error{ Invalid, Stale, Busy, Protected, Capacity, WrongOwner };
++
++pub const Owner = struct {
++    task: u32,
++    task_generation: u64,
++    program: u32 = 0,
++    program_generation: u64 = 0,
++
++    pub fn eql(a: Owner, b: Owner) bool {
++        return std.meta.eql(a, b);
++    }
++};
++
++pub const DeviceRef = struct { slot: u32, generation: u64 };
++pub const MountRef = struct { slot: u32, generation: u64 };
++pub const Region = struct {
++    device: DeviceRef,
++    first: u64,
++    count: u64,
++
++    pub fn overlaps(a: Region, b: Region) bool {
++        if (!std.meta.eql(a.device, b.device) or a.count == 0 or b.count == 0) return false;
++        // Difference comparisons also remain well-defined for rejected input
++        // whose first+count would overflow.
++        return if (a.first <= b.first) b.first - a.first < a.count else a.first - b.first < b.count;
++    }
++
++    pub fn contains(outer: Region, inner: Region) bool {
++        return std.meta.eql(outer.device, inner.device) and inner.count != 0 and
++            inner.first >= outer.first and inner.first - outer.first <= outer.count and
++            inner.count <= outer.count - (inner.first - outer.first);
++    }
++};
++
++pub const Device = struct { active: bool = false, retiring: bool = false, generation: u64 = 0, sectors: u64 = 0 };
++pub const Mount = struct {
++    active: bool = false,
++    generation: u64 = 0,
++    region: Region = undefined,
++    runtime_required: bool = false,
++};
++pub const UseKind = enum { request, lease, raw };
++pub const Use = struct {
++    id: u64 = 0,
++    owner: Owner = undefined,
++    region: Region = undefined,
++    kind: UseKind = .request,
++};
++pub const Phase = enum { preparing, active, finishing };
++pub const Claim = struct {
++    id: u64 = 0,
++    owner: Owner = undefined,
++    region: Region = undefined,
++    phase: Phase = .preparing,
++};
++
++pub const State = struct {
++    devices: [max_devices]Device = .{Device{}} ** max_devices,
++    mounts: [max_mounts]Mount = .{Mount{}} ** max_mounts,
++    uses: [max_uses]Use = .{Use{}} ** max_uses,
++    claims: [max_claims]Claim = .{Claim{}} ** max_claims,
++    sequence: u64 = 0,
++    topology_generation: u64 = 1,
++
++    pub fn changed(self: *State) Error!void {
++        if (self.topology_generation == std.math.maxInt(u64)) return error.Capacity;
++        self.topology_generation += 1;
++    }
++
++    fn next(self: *State) Error!u64 {
++        if (self.sequence == std.math.maxInt(u64)) return error.Capacity;
++        self.sequence += 1;
++        return self.sequence;
++    }
++
++    pub fn registerDevice(self: *State, slot: u32, sectors: u64) Error!DeviceRef {
++        if (slot >= max_devices or sectors == 0) return error.Invalid;
++        if (self.devices[slot].active) return error.Busy;
++        const generation = try self.next();
++        try self.changed();
++        self.devices[slot] = .{ .active = true, .generation = generation, .sectors = sectors };
++        return .{ .slot = slot, .generation = generation };
++    }
++
++    fn canRetire(self: *State, ref: DeviceRef) Error!*Device {
++        if (ref.slot >= max_devices or ref.generation == 0) return error.Stale;
++        const device = &self.devices[ref.slot];
++        if (!device.active or device.generation != ref.generation) return error.Stale;
++        const all: Region = .{ .device = ref, .first = 0, .count = device.sectors };
++        if (self.regionUsed(all) or self.regionClaimed(all)) return error.Busy;
++        for (self.mounts) |mount| {
++            if (mount.active and mount.region.overlaps(all)) return error.Busy;
++        }
++        return device;
++    }
++
++    pub fn beginRetirement(self: *State, ref: DeviceRef) Error!void {
++        const device = try self.canRetire(ref);
++        if (device.retiring) return error.Busy;
++        device.retiring = true;
++    }
++
++    pub fn cancelRetirement(self: *State, ref: DeviceRef) void {
++        if (ref.slot < max_devices and self.devices[ref.slot].generation == ref.generation)
++            self.devices[ref.slot].retiring = false;
++    }
++
++    pub fn retireDevice(self: *State, ref: DeviceRef) Error!void {
++        const device = try self.canRetire(ref);
++        try self.changed();
++        device.active = false;
++    }
++
++    pub fn deviceValue(self: *State, ref: DeviceRef) Error!*Device {
++        if (ref.slot >= max_devices or ref.generation == 0) return error.Stale;
++        const value = &self.devices[ref.slot];
++        if (!value.active or value.retiring or value.generation != ref.generation) return error.Stale;
++        return value;
++    }
++
++    pub fn validateRegion(self: *State, region: Region) Error!void {
++        const d = try self.deviceValue(region.device);
++        if (region.count == 0 or region.first >= d.sectors or region.count > d.sectors - region.first) return error.Invalid;
++    }
++
++    pub fn bindMount(self: *State, slot: u32, region: Region, runtime_required: bool) Error!MountRef {
++        try self.validateRegion(region);
++        if (slot >= max_mounts) return error.Invalid;
++        if (self.mounts[slot].active) return error.Busy;
++        const generation = try self.next();
++        try self.changed();
++        self.mounts[slot] = .{ .active = true, .generation = generation, .region = region, .runtime_required = runtime_required };
++        return .{ .slot = slot, .generation = generation };
++    }
++
++    pub fn mountValue(self: *State, ref: MountRef) Error!*Mount {
++        if (ref.slot >= max_mounts or ref.generation == 0) return error.Stale;
++        const value = &self.mounts[ref.slot];
++        if (!value.active or value.generation != ref.generation) return error.Stale;
++        try self.validateRegion(value.region);
++        return value;
++    }
++
++    // Orchestration calls this after admission closes and its flush succeeds.
++    // An unrelated mount on the same physical device keeps its generation.
++    pub fn unbindMount(self: *State, ref: MountRef) Error!void {
++        const value = try self.mountValue(ref);
++        if (value.runtime_required) return error.Protected;
++        if (self.regionUsed(value.region)) return error.Busy;
++        try self.changed();
++        value.active = false;
++    }
++
++    pub fn beginUse(self: *State, ref: MountRef, owner: Owner, kind: UseKind) Error!u64 {
++        if (kind == .raw) return error.Invalid;
++        const value = try self.mountValue(ref);
++        if (self.regionClaimed(value.region)) return error.Busy;
++        return self.reserveUse(value.region, owner, kind);
++    }
++
++    pub fn beginRawRead(self: *State, region: Region, owner: Owner) Error!u64 {
++        try self.validateRegion(region);
++        if (self.regionClaimed(region)) return error.Busy;
++        return self.reserveUse(region, owner, .raw);
++    }
++
++    fn reserveUse(self: *State, region: Region, owner: Owner, kind: UseKind) Error!u64 {
++        if (owner.task == 0 or owner.task_generation == 0 or
++            (owner.program == 0) != (owner.program_generation == 0)) return error.Invalid;
++        for (&self.uses) |*use| {
++            if (use.id != 0) continue;
++            use.* = .{ .id = try self.next(), .region = region, .owner = owner, .kind = kind };
++            return use.id;
++        }
++        return error.Capacity;
++    }
++
++    pub fn endUse(self: *State, id: u64, owner: Owner) Error!void {
++        if (id == 0) return error.Stale;
++        for (&self.uses) |*use| {
++            if (use.id != id) continue;
++            if (!use.owner.eql(owner)) return error.WrongOwner;
++            use.id = 0;
++            return;
++        }
++        return error.Stale;
++    }
++
++    pub fn prepareClaim(self: *State, region: Region, owner: Owner) Error!u64 {
++        try self.validateRegion(region);
++        if (owner.task == 0 or owner.task_generation == 0 or
++            (owner.program == 0) != (owner.program_generation == 0)) return error.Invalid;
++        for (self.mounts) |value| {
++            if (value.active and value.runtime_required and value.region.overlaps(region)) return error.Protected;
++        }
++        if (self.regionUsed(region) or self.regionClaimed(region)) return error.Busy;
++        for (&self.claims) |*claim| {
++            if (claim.id != 0) continue;
++            try self.changed();
++            claim.* = .{ .id = try self.next(), .owner = owner, .region = region };
++            return claim.id;
++        }
++        return error.Capacity;
++    }
++
++    pub fn claimValue(self: *State, id: u64, owner: Owner) Error!*Claim {
++        if (id == 0) return error.Stale;
++        for (&self.claims) |*value| {
++            if (value.id != id) continue;
++            if (!value.owner.eql(owner)) return error.WrongOwner;
++            try self.validateRegion(value.region);
++            return value;
++        }
++        return error.Stale;
++    }
++
++    pub fn activateClaim(self: *State, id: u64, owner: Owner) Error!void {
++        const value = try self.claimValue(id, owner);
++        if (value.phase != .preparing) return error.Invalid;
++        value.phase = .active;
++    }
++
++    pub fn beginClaimIo(self: *State, id: u64, owner: Owner, region: Region) Error!u64 {
++        const value = try self.claimValue(id, owner);
++        if (value.phase != .active) return error.Busy;
++        if (!value.region.contains(region)) return error.Invalid;
++        return self.reserveUse(region, owner, .raw);
++    }
++
++    pub fn finishClaim(self: *State, id: u64, owner: Owner) Error!void {
++        const value = try self.claimValue(id, owner);
++        // Reject new claim I/O even while the caller waits for an outstanding
++        // request to physically finish; dropping its buffers is not a drain.
++        value.phase = .finishing;
++        if (self.regionUsed(value.region)) return error.Busy;
++    }
++
++    // Called only after the orchestrator records flush/rescan/remount results.
++    // A failed preparation also uses finish/release, with no raw write allowed.
++    pub fn releaseClaim(self: *State, id: u64, owner: Owner) Error!void {
++        const value = try self.claimValue(id, owner);
++        if (value.phase != .finishing or self.regionUsed(value.region)) return error.Busy;
++        // Exhaustion forbids new topology publication, never final cleanup.
++        self.changed() catch {};
++        value.id = 0;
++    }
++
++    pub fn regionUsed(self: *const State, region: Region) bool {
++        for (self.uses) |use| if (use.id != 0 and use.region.overlaps(region)) return true;
++        return false;
++    }
++
++    pub fn regionClaimed(self: *const State, region: Region) bool {
++        for (self.claims) |value| if (value.id != 0 and value.region.overlaps(region)) return true;
++        return false;
++    }
++};
++
++const testing = std.testing;
++const test_owner: Owner = .{ .task = 1, .task_generation = 10, .program = 1, .program_generation = 20 };
++const test_other: Owner = .{ .task = 2, .task_generation = 11, .program = 2, .program_generation = 21 };
++
++test "read lease and in-flight request block a claim before admission closes" {
++    var s: State = .{};
++    const device = try s.registerDevice(0, 10000);
++    const region: Region = .{ .device = device, .first = 100, .count = 500 };
++    const mount = try s.bindMount(4, region, false);
++    for ([_]UseKind{ .request, .lease }) |kind| {
++        const use = try s.beginUse(mount, test_other, kind);
++        try testing.expectError(error.Busy, s.prepareClaim(region, test_owner));
++        try testing.expect(!s.regionClaimed(region));
++        try testing.expectError(error.WrongOwner, s.endUse(use, test_owner));
++        try s.endUse(use, test_other);
++        try testing.expectError(error.Stale, s.endUse(use, test_other));
++    }
++    _ = try s.prepareClaim(region, test_owner);
++    try testing.expectError(error.Busy, s.beginUse(mount, test_other, .lease));
++    try testing.expectError(error.Busy, s.beginRawRead(region, test_other));
++}
++
++test "partition claim preserves a disjoint volume and protects the RAM runtime" {
++    var s: State = .{};
++    const disk = try s.registerDevice(0, 10000);
++    const ram = try s.registerDevice(1, 1000);
++    const a: Region = .{ .device = disk, .first = 100, .count = 500 };
++    const b: Region = .{ .device = disk, .first = 600, .count = 500 };
++    const mb = try s.bindMount(5, b, false);
++    const memory: Region = .{ .device = ram, .first = 0, .count = 1000 };
++    const mc = try s.bindMount(2, memory, true);
++    _ = try s.prepareClaim(a, test_owner);
++    const use = try s.beginUse(mb, test_other, .request);
++    try s.endUse(use, test_other);
++    try testing.expectError(error.Busy, s.prepareClaim(.{ .device = disk, .first = 0, .count = 10000 }, test_other));
++    try testing.expectError(error.Protected, s.prepareClaim(memory, test_owner));
++    try testing.expectError(error.Protected, s.unbindMount(mc));
++}
++
++test "raw claim I/O is owner and range bound; finish closes admission before draining" {
++    var s: State = .{};
++    const disk = try s.registerDevice(0, 10000);
++    const region: Region = .{ .device = disk, .first = 100, .count = 500 };
++    const id = try s.prepareClaim(region, test_owner);
++    try testing.expectError(error.Busy, s.beginClaimIo(id, test_owner, region));
++    try testing.expectError(error.WrongOwner, s.activateClaim(id, test_other));
++    try s.activateClaim(id, test_owner);
++    try testing.expectError(error.Invalid, s.beginClaimIo(id, test_owner, .{ .device = disk, .first = 99, .count = 2 }));
++    const use = try s.beginClaimIo(id, test_owner, .{ .device = disk, .first = 599, .count = 1 });
++    try testing.expectError(error.Busy, s.finishClaim(id, test_owner));
++    try testing.expectError(error.Busy, s.releaseClaim(id, test_owner));
++    try testing.expectError(error.Busy, s.beginClaimIo(id, test_owner, region));
++    try s.endUse(use, test_owner);
++    try s.finishClaim(id, test_owner);
++    try s.releaseClaim(id, test_owner);
++    try testing.expectError(error.Stale, s.claimValue(id, test_owner));
++    _ = try s.beginRawRead(region, test_other);
++}
++
++test "remount and physical slot reuse never resurrect old references" {
++    var s: State = .{};
++    const first = try s.registerDevice(0, 1000);
++    const region: Region = .{ .device = first, .first = 1, .count = 500 };
++    const old_mount = try s.bindMount(4, region, false);
++    try s.unbindMount(old_mount);
++    const new_mount = try s.bindMount(4, region, false);
++    try testing.expectError(error.Stale, s.beginUse(old_mount, test_owner, .lease));
++    try testing.expectError(error.Busy, s.retireDevice(first));
++    try s.unbindMount(new_mount);
++    try s.retireDevice(first);
++    const second = try s.registerDevice(0, 1000);
++    try testing.expect(first.generation != second.generation);
++    try testing.expectError(error.Stale, s.beginRawRead(region, test_owner));
++    try testing.expectError(error.Invalid, s.validateRegion(.{ .device = second, .first = std.math.maxInt(u64), .count = 2 }));
++}
++
++test "bounded capacity and exhausted generations fail without aliasing a live use" {
++    var s: State = .{};
++    const disk = try s.registerDevice(0, 1000);
++    const region: Region = .{ .device = disk, .first = 1, .count = 500 };
++    const mount = try s.bindMount(4, region, false);
++    var ids: [max_uses]u64 = undefined;
++    for (&ids) |*id| id.* = try s.beginUse(mount, test_owner, .lease);
++    try testing.expectError(error.Capacity, s.beginUse(mount, test_owner, .lease));
++    for (ids) |id| try s.endUse(id, test_owner);
++    s.sequence = std.math.maxInt(u64);
++    try testing.expectError(error.Capacity, s.prepareClaim(region, test_owner));
++    try testing.expect(!s.regionClaimed(region));
++    s.sequence = 1000;
++    const claim = try s.prepareClaim(region, test_owner);
++    s.topology_generation = std.math.maxInt(u64);
++    try s.finishClaim(claim, test_owner);
++    try s.releaseClaim(claim, test_owner);
++    try testing.expect(!s.regionClaimed(region));
++    try testing.expectError(error.Capacity, s.prepareClaim(region, test_owner));
++}
++
++test "topology generations ignore file traffic and retiring registration closes new claims" {
++    var s: State = .{};
++    const disk = try s.registerDevice(0, 1000);
++    const region: Region = .{ .device = disk, .first = 1, .count = 500 };
++    const mounted = try s.bindMount(4, region, false);
++    const before = s.topology_generation;
++    const use = try s.beginUse(mounted, test_owner, .request);
++    try s.endUse(use, test_owner);
++    try testing.expectEqual(before, s.topology_generation);
++    try s.unbindMount(mounted);
++    try s.beginRetirement(disk);
++    try testing.expectError(error.Stale, s.prepareClaim(region, test_owner));
++    s.cancelRetirement(disk);
++    const claim = try s.prepareClaim(region, test_owner);
++    try testing.expectError(error.Busy, s.beginRetirement(disk));
++    try s.finishClaim(claim, test_owner);
++    try s.releaseClaim(claim, test_owner);
++    try s.beginRetirement(disk);
++    try s.retireDevice(disk);
++    try testing.expectError(error.Stale, s.prepareClaim(region, test_owner));
++}
+diff --git a/storage/operations.zig b/storage/operations.zig
+new file mode 100644
+index 0000000..ce682df
+--- /dev/null
++++ b/storage/operations.zig
+@@ -0,0 +1,592 @@
++// Kernel mechanism behind the public storage facade. Partition policy and
++// filesystem construction belong to external tools; this owner coordinates
++// identity, admission, cache durability and mount publication only.
++const std = @import("std");
++const api = @import("r4os_kernel_contract");
++const access = @import("access_runtime.zig");
++const core = @import("access_state.zig");
++const block = @import("block.zig");
++const table = @import("partition_table.zig");
++const vfs = @import("../fs/vfs.zig");
++const drive = @import("../fs/drive.zig");
++const fat = @import("../fs/fat/fat32.zig");
++const ntfs = @import("../fs/ntfs/ntfs.zig");
++const cache = @import("../fs/page_cache.zig");
++const sync = @import("../sched/sync.zig");
++const context = @import("../sched/task_context.zig");
++const task = @import("../sched/task.zig");
++const scheduler = @import("../sched/scheduler.zig");
++
++const Error = core.Error || error{ Io, Unsupported, Remount, Incomplete, NotFound };
++const Record = struct {
++    ready: bool = false,
++    identity: block.Identity = undefined,
++    generation: u64 = 0,
++    layout: table.Table = .{},
++    hints: [table.max_partitions]u32 = .{0} ** table.max_partitions,
++    errors: [table.max_partitions]i32 = .{0} ** table.max_partitions,
++    last_error: i32 = 0,
++};
++const SavedMount = struct {
++    slot: u32,
++    reference: access.MountRef,
++    region: access.Region,
++    partition: table.Partition,
++    kind: drive.Kind,
++    role: drive.Role,
++    bytes: usize,
++    name: [32]u8,
++};
++const Operation = struct {
++    id: u64 = 0,
++    owner: access.Owner = undefined,
++    region: access.Region = undefined,
++    saved: [core.max_mounts]SavedMount = undefined,
++    saved_count: usize = 0,
++    cleanup: bool = false,
++};
++
++// A sleepable, unwind-aware orchestration gate; it never spans the lifetime
++// of a returned claim or ordinary file traffic on unaffected volumes.
++var gate = sync.UnwindGuard.init("storage-topology");
++var records: [core.max_devices]Record = .{Record{}} ** core.max_devices;
++var operations: [core.max_claims]Operation = .{Operation{}} ** core.max_claims;
++var scan_scratch: table.Table = .{};
++var cleanup_started = false;
++
++fn enter() bool {
++    return gate.enter(2000);
++}
++
++fn code(err: Error) i32 {
++    return switch (err) {
++        error.Invalid => api.storage_error_invalid,
++        error.Stale => api.storage_error_stale,
++        error.Busy => api.storage_error_busy,
++        error.Protected => api.storage_error_protected,
++        error.Capacity => api.storage_error_capacity,
++        error.WrongOwner => api.storage_error_owner,
++        error.Io => api.storage_error_io,
++        error.Unsupported => api.storage_error_unsupported,
++        error.Remount => api.storage_error_remount,
++        error.Incomplete => api.storage_error_incomplete,
++        error.NotFound => api.storage_error_not_found,
++    };
++}
++
++fn publicDevice(ref: access.DeviceRef) api.StorageDeviceRef {
++    return .{ .slot = ref.slot, .generation = ref.generation };
++}
++fn privateDevice(ref: api.StorageDeviceRef) Error!access.DeviceRef {
++    if (ref.reserved != 0 or ref.generation == 0 or ref.slot >= records.len) return error.Invalid;
++    const found = block.identity(ref.slot) orelse return error.Stale;
++    if (found.reference.generation != ref.generation) return error.Stale;
++    return found.reference;
++}
++fn all(identity: block.Identity) access.Region {
++    return .{ .device = identity.reference, .first = 0, .count = identity.sectors };
++}
++fn copyText(out: []u8, value: []const u8) void {
++    @memset(out, 0);
++    const len = @min(out.len - 1, value.len);
++    @memcpy(out[0..len], value[0..len]);
++}
++fn span(value: []const u8) []const u8 {
++    return value[0 .. std.mem.indexOfScalar(u8, value, 0) orelse value.len];
++}
++fn reader(ctx: *anyopaque, lba: u64, out: *[512]u8) bool {
++    const slot: *const usize = @ptrCast(@alignCast(ctx));
++    return block.read(slot.*, lba, 1, out);
++}
++fn incomplete(record: *const Record) bool {
++    return std.mem.eql(u8, record.layout.reason, "TooManyPartitions") or
++        std.mem.eql(u8, record.layout.reason, "UnsupportedEntryLayout");
++}
++fn unsupported(record: *const Record) bool {
++    return record.identity.sector_bytes != 512 or record.identity.sectors == 0 or
++        record.identity.sectors > std.math.maxInt(u64) / 512;
++}
++
++// Called with a transient complete-device read use or an exclusive claim.
++// Only the partition scanner runs here; live NTFS/FAT state is never probed
++// again during inventory enumeration.
++fn scanRecord(record: *Record, identity: block.Identity, own: ?access.Region) Error!void {
++    var slot: usize = identity.reference.slot;
++    table.scan(.{ .ctx = &slot, .read = reader, .sector_bytes = identity.sector_bytes, .sectors = identity.sectors }, &scan_scratch);
++    try access.topologyChanged();
++    record.ready = true;
++    record.identity = identity;
++    record.generation = access.topologyGeneration();
++    record.layout = scan_scratch;
++    for (record.layout.items(), 0..) |part, i| {
++        const region: access.Region = .{ .device = identity.reference, .first = part.first_lba, .count = part.sector_count };
++        if (access.regionClaimed(region) and (own == null or !own.?.contains(region))) continue;
++        record.hints[i] = api.storage_filesystem_unknown;
++        if (!record.layout.valid or identity.sector_bytes != 512) continue;
++        if (table.guid.eql(part.type_guid, table.bios_boot_guid)) {
++            record.hints[i] = api.storage_filesystem_none;
++            continue;
++        }
++        var sector: [512]u8 = undefined;
++        if (!block.read(slot, part.first_lba, 1, &sector)) {
++            record.errors[i] = api.storage_error_io;
++            continue;
++        }
++        if (std.mem.eql(u8, sector[3..11], "NTFS    ")) record.hints[i] = api.storage_filesystem_ntfs;
++        if (std.mem.eql(u8, sector[82..90], "FAT32   ")) record.hints[i] = api.storage_filesystem_fat32;
++    }
++}
++
++fn ensureRecords() Error!void {
++    for (0..records.len) |i| {
++        const identity = block.identity(i) orelse {
++            records[i].ready = false;
++            continue;
++        };
++        const record = &records[i];
++        if (record.ready and std.meta.eql(record.identity.reference, identity.reference)) continue;
++        const use = try access.beginRawRead(all(identity));
++        defer access.endUse(use) catch {};
++        record.* = .{};
++        try scanRecord(record, identity, null);
++    }
++}
++
++fn wholeTarget(record: *const Record) api.StorageTarget {
++    return .{ .device = publicDevice(record.identity.reference), .layout_generation = record.generation, .sector_count = record.identity.sectors, .kind = api.storage_target_device };
++}
++fn partitionTarget(record: *const Record, part: table.Partition) api.StorageTarget {
++    return .{ .device = publicDevice(record.identity.reference), .layout_generation = record.generation, .first_lba = part.first_lba, .sector_count = part.sector_count, .partition_number = part.number, .kind = api.storage_target_partition, .partition_guid = part.unique_guid };
++}
++fn targetForRegion(record: *const Record, region: access.Region) api.StorageTarget {
++    for (record.layout.items()) |part| if (part.first_lba == region.first and part.sector_count >= region.count)
++        return partitionTarget(record, part);
++    return wholeTarget(record);
++}
++
++fn validate(target: *const api.StorageTarget, mutation: bool) Error!access.Region {
++    if (target.version != 1 or target.size != @sizeOf(api.StorageTarget)) return error.Invalid;
++    const ref = try privateDevice(target.device);
++    const record = &records[ref.slot];
++    if (!record.ready or !std.meta.eql(record.identity.reference, ref) or record.generation != target.layout_generation) return error.Stale;
++    if (unsupported(record)) return error.Unsupported;
++    if (mutation and incomplete(record)) return error.Incomplete;
++    if (mutation and !record.identity.writable) return error.Protected;
++    if (target.kind == api.storage_target_device) {
++        if (target.first_lba != 0 or target.sector_count != record.identity.sectors or target.partition_number != 0 or
++            !table.guid.eql(target.partition_guid, table.guid.zero)) return error.Invalid;
++        return all(record.identity);
++    }
++    if (target.kind != api.storage_target_partition) return error.Invalid;
++    if (!record.layout.valid) return error.Incomplete;
++    for (record.layout.items()) |part| {
++        if (part.number != target.partition_number) continue;
++        if (part.first_lba != target.first_lba or part.sector_count != target.sector_count or
++            !table.guid.eql(part.unique_guid, target.partition_guid)) return error.Stale;
++        return .{ .device = ref, .first = part.first_lba, .count = part.sector_count };
++    }
++    return error.Stale;
++}
++
++pub fn inventory(out: *api.StorageInventory) callconv(.c) i32 {
++    if (out.version != 1 or out.size != @sizeOf(api.StorageInventory)) return api.storage_error_invalid;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    ensureRecords() catch |err| return code(err);
++    if (access.topologyGeneration() == std.math.maxInt(u64)) return api.storage_error_capacity;
++    var flags: u32 = 0;
++    for (&records) |*record| if (record.ready and incomplete(record)) {
++        flags |= api.storage_inventory_partial;
++    };
++    out.* = .{ .generation = access.topologyGeneration(), .device_slots = @intCast(block.slotCount()), .volume_slots = core.max_mounts, .flags = flags };
++    return api.storage_result_ok;
++}
++
++pub fn deviceInfo(generation: u64, slot: u32, out: *api.StorageDeviceInfo) callconv(.c) i32 {
++    if (out.version != 1 or out.size != @sizeOf(api.StorageDeviceInfo) or slot >= records.len) return api.storage_error_invalid;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    if (generation != access.topologyGeneration()) return api.storage_error_stale;
++    const identity = block.identity(slot) orelse return api.storage_result_absent;
++    const record = &records[slot];
++    if (!record.ready or !std.meta.eql(record.identity.reference, identity.reference)) return api.storage_error_stale;
++    var flags: u32 = if (identity.writable) api.storage_device_writable else 0;
++    if (record.layout.valid) flags |= api.storage_device_table_valid;
++    if (record.layout.kind == .gpt) flags |= api.storage_device_gpt;
++    if (record.layout.kind == .mbr) flags |= api.storage_device_mbr;
++    if (identity.bus == .ram) flags |= api.storage_device_ram;
++    if (access.regionClaimed(all(identity))) flags |= api.storage_device_claimed;
++    if (record.last_error != 0) flags |= api.storage_device_failed;
++    if (unsupported(record)) flags |= api.storage_device_unsupported;
++    if (incomplete(record)) flags |= api.storage_device_partial;
++    out.* = .{ .reference = publicDevice(identity.reference), .layout_generation = record.generation, .sector_count = identity.sectors, .disk_guid = record.layout.disk_guid, .first_usable = record.layout.first_usable, .last_usable = record.layout.last_usable, .bus = @intFromEnum(identity.bus), .flags = flags, .sector_bytes = identity.sector_bytes, .partition_slots = @intCast(record.layout.count), .last_error = record.last_error, .model = identity.model, .name = identity.name, .driver = identity.driver };
++    copyText(&out.reason, record.layout.reason);
++    return api.storage_result_present;
++}
++
++pub fn partitionInfo(generation: u64, device: *const api.StorageDeviceRef, slot: u32, out: *api.StoragePartitionInfo) callconv(.c) i32 {
++    if (out.version != 1 or out.size != @sizeOf(api.StoragePartitionInfo)) return api.storage_error_invalid;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    if (generation != access.topologyGeneration()) return api.storage_error_stale;
++    const ref = privateDevice(device.*) catch |err| return code(err);
++    const record = &records[ref.slot];
++    if (!record.ready or !std.meta.eql(record.identity.reference, ref)) return api.storage_error_stale;
++    if (slot >= record.layout.count) return api.storage_result_absent;
++    const part = record.layout.partitions[slot];
++    const region: access.Region = .{ .device = ref, .first = part.first_lba, .count = part.sector_count };
++    var flags: u32 = if (access.regionClaimed(region)) api.storage_partition_claimed else 0;
++    for (0..core.max_mounts) |i| {
++        const mounted_ref = access.mountReference(@intCast(i)) orelse continue;
++        const value = access.mountSnapshot(mounted_ref) catch continue;
++        if (value.region.overlaps(region)) flags |= api.storage_partition_mounted;
++    }
++    if (record.errors[slot] != 0) flags |= api.storage_partition_failed;
++    out.* = .{ .target = partitionTarget(record, part), .type_guid = part.type_guid, .attributes = part.attributes, .filesystem = record.hints[slot], .flags = flags, .last_error = record.errors[slot], .mbr_type = part.mbr_type, .name = part.name };
++    return api.storage_result_present;
++}
++
++pub fn volumeInfo(generation: u64, slot: u32, out: *api.StorageVolumeInfo) callconv(.c) i32 {
++    if (out.version != 1 or out.size != @sizeOf(api.StorageVolumeInfo) or slot >= core.max_mounts) return api.storage_error_invalid;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    if (generation != access.topologyGeneration()) return api.storage_error_stale;
++    const ref = access.mountReference(slot) orelse return api.storage_result_absent;
++    const value = access.mountSnapshot(ref) catch |err| return code(err);
++    const record = &records[value.region.device.slot];
++    if (!record.ready) return api.storage_error_stale;
++    const volume = if (slot == 26) vfs.bootVolume() else vfs.volumeForDrive(@intCast('A' + slot));
++    const mounted = volume orelse return api.storage_error_stale;
++    const d = if (slot == 26) null else drive.get(@intCast('A' + slot));
++    out.* = .{ .reference = .{ .slot = slot, .generation = ref.generation }, .target = targetForRegion(record, value.region), .letter = if (slot == 26) 0 else 'A' + slot, .filesystem = switch (mounted) {
++        .fat32 => api.storage_filesystem_fat32,
++        .ntfs => api.storage_filesystem_ntfs,
++    }, .role = if (d) |item| @intFromEnum(item.role) else 0, .flags = (if (value.runtime_required) @as(u32, api.storage_volume_required) else 0) |
++        (if (access.regionClaimed(value.region)) @as(u32, api.storage_volume_claimed) else 0) };
++    return api.storage_result_present;
++}
++
++fn rememberMounts(operation: *Operation) Error!void {
++    const record = &records[operation.region.device.slot];
++    for (0..core.max_mounts) |i| {
++        const ref = access.mountReference(@intCast(i)) orelse continue;
++        const mounted = try access.mountSnapshot(ref);
++        if (!mounted.region.overlaps(operation.region)) continue;
++        if (!operation.region.contains(mounted.region)) return error.Invalid;
++        if (mounted.runtime_required or i == 26) return error.Protected;
++        const d = drive.get(@intCast('A' + i)) orelse return error.Stale;
++        var part: ?table.Partition = null;
++        for (record.layout.items()) |candidate| if (candidate.first_lba == mounted.region.first and candidate.sector_count >= mounted.region.count) {
++            part = candidate;
++            break;
++        };
++        var saved = SavedMount{ .slot = @intCast(i), .reference = ref, .region = mounted.region, .partition = part orelse return error.Incomplete, .kind = d.kind, .role = d.role, .bytes = d.bytes, .name = .{0} ** 32 };
++        copyText(&saved.name, d.name);
++        operation.saved[operation.saved_count] = saved;
++        operation.saved_count += 1;
++    }
++}
++
++fn forget(region: access.Region) void {
++    fat.forgetStorage(region.device.slot, region.first, region.count);
++    ntfs.forgetStorage(region.device.slot, region.first, region.count);
++}
++
++fn prepare(target: *const api.StorageTarget) Error!*Operation {
++    const region = try validate(target, true);
++    const owner = access.currentOwner() orelse return error.Invalid;
++    var operation: *Operation = blk: {
++        for (&operations) |*candidate| if (candidate.id == 0) break :blk candidate;
++        return error.Capacity;
++    };
++    operation.* = .{ .owner = owner, .region = region };
++    try rememberMounts(operation);
++    const id = try access.prepareClaim(region);
++    operation.id = id;
++    var accepted = false;
++    defer if (!accepted) {
++        access.finishClaim(id, owner) catch {};
++        access.releaseClaim(id, owner) catch {};
++        operation.id = 0;
++    };
++    if (!cache.flushInvalidateRange(region.device.slot, region.first, region.count)) {
++        records[region.device.slot].last_error = api.storage_error_io;
++        return error.Io;
++    }
++    var detached: usize = 0;
++    for (operation.saved[0..operation.saved_count]) |saved| {
++        if (!vfs.unmount(saved.reference)) {
++            // Admission was closed before the snapshot; only exhausted
++            // generation capacity can fail here. Restore what was detached.
++            for (operation.saved[0..detached]) |old| restore(old) catch {};
++            return error.Busy;
++        }
++        detached += 1;
++    }
++    forget(region);
++    try access.activateClaim(id, owner);
++    accepted = true;
++    return operation;
++}
++
++fn findOperation(id: u64, owner: access.Owner) Error!*Operation {
++    for (&operations) |*operation| if (operation.id == id and id != 0) {
++        if (!operation.owner.eql(owner)) return error.WrongOwner;
++        return operation;
++    };
++    return error.Stale;
++}
++
++pub fn claimBegin(target: *const api.StorageTarget, out: *u64) callconv(.c) i32 {
++    out.* = 0;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    if (!cleanup_started) {
++        if (task.createKernelThreadCriticalWithRole("storage-cleanup", cleanupMain, .batch) == null) return api.storage_error_capacity;
++        cleanup_started = true;
++    }
++    const operation = prepare(target) catch |err| return code(err);
++    out.* = operation.id;
++    return api.storage_result_ok;
++}
++
++fn probe(record: *Record, index: usize) Error!vfs.Volume {
++    const part = record.layout.partitions[index];
++    if (part.first_lba > std.math.maxInt(u32)) return error.Unsupported;
++    return switch (record.hints[index]) {
++        api.storage_filesystem_fat32 => .{ .fat32 = fat.parseBounded(record.identity.reference.slot, @intCast(part.first_lba), part.sector_count) orelse return error.Remount },
++        api.storage_filesystem_ntfs => .{ .ntfs = ntfs.inspectBounded(record.identity.reference.slot, @intCast(part.first_lba), part.sector_count) orelse return error.Remount },
++        else => error.Unsupported,
++    };
++}
++
++fn publishMount(record: *Record, index: usize, letter: u8, role: drive.Role, name: []const u8) Error!access.MountRef {
++    if (drive.get(letter) != null or vfs.volumeForDrive(letter) != null) return error.Busy;
++    const volume = try probe(record, index);
++    const kind: drive.Kind = switch (volume) {
++        .fat32 => .fat32,
++        .ntfs => .ntfs,
++    };
++    const part = record.layout.partitions[index];
++    if (!drive.mountBlockRole(letter, kind, role, name, @intCast(part.sector_count * 512), record.identity.reference.slot)) return error.Capacity;
++    if (!vfs.mountForDrive(letter, volume)) {
++        drive.unmountLocked(letter);
++        return error.Capacity;
++    }
++    record.errors[index] = 0;
++    return vfs.volumeForDrive(letter).?.accessReference().?;
++}
++
++fn restore(saved: SavedMount) Error!void {
++    const record = &records[saved.region.device.slot];
++    if (!record.layout.valid) return error.Remount;
++    for (record.layout.items(), 0..) |part, i| {
++        if (part.number != saved.partition.number or part.first_lba != saved.partition.first_lba or
++            part.sector_count != saved.partition.sector_count or !table.guid.eql(part.unique_guid, saved.partition.unique_guid)) continue;
++        _ = publishMount(record, i, @intCast('A' + saved.slot), saved.role, span(&record.identity.name)) catch |err| {
++            record.errors[i] = code(err);
++            return err;
++        };
++        return;
++    }
++    return error.Remount;
++}
++
++fn finish(operation: *Operation, keep_unmounted: bool) Error!void {
++    try access.finishClaim(operation.id, operation.owner);
++    // Every path below consumes the claim after recording the final outcome.
++    defer {
++        access.releaseClaim(operation.id, operation.owner) catch {};
++        operation.id = 0;
++    }
++    const region = operation.region;
++    const record = &records[region.device.slot];
++    if (!cache.flushInvalidateRange(region.device.slot, region.first, region.count)) {
++        record.last_error = api.storage_error_io;
++        return error.Io;
++    }
++    const identity = block.identity(region.device.slot) orelse {
++        record.last_error = api.storage_error_io;
++        return error.Io;
++    };
++    scanRecord(record, identity, region) catch |err| {
++        record.last_error = code(err);
++        return error.Remount;
++    };
++    var failed = false;
++    if (!keep_unmounted) for (operation.saved[0..operation.saved_count]) |saved| {
++        restore(saved) catch {
++            failed = true;
++        };
++    };
++    record.last_error = if (failed) api.storage_error_remount else 0;
++    if (failed) return error.Remount;
++}
++
++pub fn claimEnd(id: u64, flags: u32) callconv(.c) i32 {
++    if (flags & ~@as(u32, api.storage_claim_end_keep_unmounted) != 0) return api.storage_error_invalid;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    const owner = access.currentOwner() orelse return api.storage_error_invalid;
++    const operation = findOperation(id, owner) catch |err| return code(err);
++    finish(operation, flags != 0) catch |err| return code(err);
++    return api.storage_result_ok;
++}
++
++fn rawRegion(region: access.Region, relative: u64, sectors: u32, len: u32) Error!access.Region {
++    if (sectors == 0 or sectors > api.storage_raw_max_sectors or len < sectors * 512 or
++        relative >= region.count or sectors > region.count - relative) return error.Invalid;
++    return .{ .device = region.device, .first = region.first + relative, .count = sectors };
++}
++
++pub fn read(target: *const api.StorageTarget, relative: u64, sectors: u32, out: [*]u8, len: u32) callconv(.c) i32 {
++    const unwind = context.enterUnwind();
++    if (!unwind.admitted()) return api.storage_error_capacity;
++    defer _ = context.leaveUnwind(unwind);
++    if (!enter()) return api.storage_error_busy;
++    const scope = validate(target, false) catch |err| {
++        _ = gate.leave();
++        return code(err);
++    };
++    const region = rawRegion(scope, relative, sectors, len) catch |err| {
++        _ = gate.leave();
++        return code(err);
++    };
++    const use = access.beginRawRead(region) catch |err| {
++        _ = gate.leave();
++        return code(err);
++    };
++    _ = gate.leave();
++    defer access.endUse(use) catch {};
++    return if (block.read(region.device.slot, region.first, @intCast(sectors), out[0 .. sectors * 512])) api.storage_result_ok else api.storage_error_io;
++}
++
++fn claimRaw(id: u64, relative: u64, sectors: u32, data: [*]u8, len: u32, write: bool) i32 {
++    const unwind = context.enterUnwind();
++    if (!unwind.admitted()) return api.storage_error_capacity;
++    defer _ = context.leaveUnwind(unwind);
++    const owner = access.currentOwner() orelse return api.storage_error_invalid;
++    const claim = access.claimSnapshot(id, owner) catch |err| return code(err);
++    const region = rawRegion(claim.region, relative, sectors, len) catch |err| return code(err);
++    const use = access.beginClaimIo(id, region) catch |err| return code(err);
++    defer access.endUse(use) catch {};
++    const bytes = data[0 .. sectors * 512];
++    const ok = if (write) block.write(region.device.slot, region.first, @intCast(sectors), bytes) else block.read(region.device.slot, region.first, @intCast(sectors), bytes);
++    return if (ok) api.storage_result_ok else api.storage_error_io;
++}
++pub fn claimRead(id: u64, relative: u64, sectors: u32, data: [*]u8, len: u32) callconv(.c) i32 {
++    return claimRaw(id, relative, sectors, data, len, false);
++}
++pub fn claimWrite(id: u64, relative: u64, sectors: u32, data: [*]const u8, len: u32) callconv(.c) i32 {
++    return claimRaw(id, relative, sectors, @constCast(data), len, true);
++}
++pub fn claimFlush(id: u64) callconv(.c) i32 {
++    const unwind = context.enterUnwind();
++    if (!unwind.admitted()) return api.storage_error_capacity;
++    defer _ = context.leaveUnwind(unwind);
++    const owner = access.currentOwner() orelse return api.storage_error_invalid;
++    const claim = access.claimSnapshot(id, owner) catch |err| return code(err);
++    const use = access.beginClaimIo(id, claim.region) catch |err| return code(err);
++    defer access.endUse(use) catch {};
++    return if (block.flush(claim.region.device.slot)) api.storage_result_ok else api.storage_error_io;
++}
++
++pub fn rescan(device: *const api.StorageDeviceRef) callconv(.c) i32 {
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    const ref = privateDevice(device.*) catch |err| return code(err);
++    const record = &records[ref.slot];
++    if (!record.ready) return api.storage_error_stale;
++    const target = wholeTarget(record);
++    const operation = prepare(&target) catch |err| return code(err);
++    finish(operation, false) catch |err| return code(err);
++    return api.storage_result_ok;
++}
++
++pub fn mount(target: *const api.StorageTarget, letter_arg: u32, out: *api.StorageVolumeRef) callconv(.c) i32 {
++    out.* = .{};
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    const region = validate(target, true) catch |err| return code(err);
++    if (target.kind != api.storage_target_partition) return api.storage_error_unsupported;
++    var letter = letter_arg;
++    if (letter == 0) {
++        letter = 'D';
++        while (letter <= 'Z' and (letter == 'R' or drive.get(@intCast(letter)) != null)) : (letter += 1) {}
++    }
++    if (letter < 'D' or letter > 'Z' or letter == 'R') return api.storage_error_protected;
++    if (drive.get(@intCast(letter)) != null) return api.storage_error_busy;
++    for (0..core.max_mounts) |i| {
++        const ref = access.mountReference(@intCast(i)) orelse continue;
++        const value = access.mountSnapshot(ref) catch continue;
++        if (value.region.overlaps(region)) return api.storage_error_busy;
++    }
++    const operation = prepare(target) catch |err| return code(err);
++    defer {
++        access.finishClaim(operation.id, operation.owner) catch {};
++        access.releaseClaim(operation.id, operation.owner) catch {};
++        operation.id = 0;
++    }
++    const record = &records[region.device.slot];
++    for (record.layout.items(), 0..) |part, i| if (part.number == target.partition_number) {
++        const ref = publishMount(record, i, @intCast(letter), .none, span(&record.identity.name)) catch |err| {
++            record.errors[i] = code(err);
++            record.last_error = code(err);
++            return code(err);
++        };
++        out.* = .{ .slot = ref.slot, .generation = ref.generation };
++        return api.storage_result_ok;
++    };
++    return api.storage_error_stale;
++}
++
++pub fn unmount(volume: *const api.StorageVolumeRef) callconv(.c) i32 {
++    if (volume.reserved != 0) return api.storage_error_invalid;
++    if (!enter()) return api.storage_error_busy;
++    defer _ = gate.leave();
++    ensureRecords() catch |err| return code(err);
++    const value = access.mountSnapshot(.{ .slot = volume.slot, .generation = volume.generation }) catch |err| return code(err);
++    const record = &records[value.region.device.slot];
++    if (!record.ready or !std.meta.eql(record.identity.reference, value.region.device)) return api.storage_error_stale;
++    const target = targetForRegion(record, value.region);
++    const operation = prepare(&target) catch |err| return code(err);
++    finish(operation, true) catch |err| return code(err);
++    return api.storage_result_ok;
++}
++
++pub fn useEnd(id: u64) callconv(.c) i32 {
++    const owner = access.currentOwner() orelse return api.storage_error_invalid;
++    access.endUse(.{ .id = id, .owner = owner }) catch |err| return code(err);
++    return api.storage_result_ok;
++}
++
++// Called only after caller-bound asynchronous I/O and stream owners drained.
++// Cleanup is deferred to its own worker; the program reaper never waits on
++// storage I/O or a filesystem lane belonging to another process.
++pub fn releaseOwner(program: u32, generation: u64, task_id: u32, task_generation: u64) bool {
++    access.releaseOwnerLeases(program, generation, task_id, task_generation);
++    if (!access.ownerHasClaims(program, generation, task_id, task_generation)) return true;
++    if (!gate.tryEnter()) return false;
++    defer _ = gate.leave();
++    var complete = true;
++    for (&operations) |*operation| {
++        if (operation.id == 0 or operation.owner.program != program or operation.owner.program_generation != generation) continue;
++        if (task_id != 0 and (operation.owner.task != task_id or operation.owner.task_generation != task_generation)) continue;
++        operation.cleanup = true;
++        complete = false;
++    }
++    return complete;
++}
++
++fn cleanupMain() callconv(.c) noreturn {
++    while (true) {
++        if (gate.tryEnter()) {
++            for (&operations) |*operation| if (operation.id != 0 and operation.cleanup) {
++                finish(operation, false) catch {};
++                break;
++            };
++            _ = gate.leave();
++        }
++        scheduler.sleepTicks(100);
++    }
++}

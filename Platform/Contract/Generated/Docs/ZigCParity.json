@@ -4,9 +4,9 @@
   "source_schema_version": 11,
   "source_baseline_id": "standalone-contract-0.64.11",
   "summary": {
-    "group_function_signatures": 324,
+    "group_function_signatures": 339,
     "sdk_operation_contracts": 0,
-    "parity_entries": 324,
+    "parity_entries": 339,
     "cross_language_fixtures": 1
   },
   "signature_parity": [
@@ -1115,6 +1115,141 @@
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4SysFns.io_file_lock",
       "c_contract": "R4SysIoFileLockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_inventory",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_inventory",
+      "c_contract": "R4SysStorageInventoryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_device",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_device",
+      "c_contract": "R4SysStorageDeviceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_partition",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_partition",
+      "c_contract": "R4SysStoragePartitionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_volume",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_volume",
+      "c_contract": "R4SysStorageVolumeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_claim_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_claim_begin",
+      "c_contract": "R4SysStorageClaimBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_claim_end",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_claim_end",
+      "c_contract": "R4SysStorageClaimEndFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_read",
+      "c_contract": "R4SysStorageReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_claim_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_claim_read",
+      "c_contract": "R4SysStorageClaimReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_claim_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_claim_write",
+      "c_contract": "R4SysStorageClaimWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_claim_flush",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_claim_flush",
+      "c_contract": "R4SysStorageClaimFlushFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_rescan",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_rescan",
+      "c_contract": "R4SysStorageRescanFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_mount",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_mount",
+      "c_contract": "R4SysStorageMountFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_unmount",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_unmount",
+      "c_contract": "R4SysStorageUnmountFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_use_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_use_begin",
+      "c_contract": "R4SysStorageUseBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.storage_use_end",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.storage_use_end",
+      "c_contract": "R4SysStorageUseEndFn",
       "coverage": "generated_signature"
     },
     {

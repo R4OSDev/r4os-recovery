@@ -1,0 +1,382 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 253dadd..5166648 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -483,3 +483,23 @@ SSH/FTP verwenden diesen gemeinsamen Kontext fuer ihre Offline-Ausnahme;
+ eine gleichnamige Datei auf einer physischen Systempartition reicht nicht.
+ Der zentrale Contract benennt die bestehenden DriveInfo.role-Werte als
+ drive_role_none/system/data/ram. Layout und bisherige Zahlen bleiben gleich.
++
++0.76.8: Physischer Storagevertrag
++--------------------------------
++r4os.storage.Context und Shared/C/include/r4os/storage.h bieten gleichwertige
++Fassaden fuer generationiertes Inventar, exklusiven Regionszugriff, begrenzte
++Raw-Transfers, Flush, Rescan, Mount/Unmount, Laufwerkszuordnung und
++Dateitransfer-Nutzungen. Optionale R4SYS-Slots werden vor Aufruf ueber ihre
++Tabellengrenzen geprueft; der bisherige erforderliche Praefix bleibt erhalten.
++
++Keine direkten Treiberzugriffe und keine neuen Handles fuer pfadbasierte
++Dateiaufrufe. Ein expliziter Use haelt das betroffene Volume ueber mehrere
++Aufrufe; ein Claim gehoert dem logischen Thread. BUSY beim Abschluss behaelt
++den Claim, abgeschlossene I/O-/Remountfehler verbrauchen ihn. Die Fassade
++nullt den Aufruferwert entsprechend. Buffergroessen muessen sektorgranular
++sein und bleiben auf 128 KB je Raw-Aufruf begrenzt.
++
++Die bestehenden Zig/C-Storage-Conformancefaelle pruefen auch einen kuerzeren
++R4SYS-Praefix, einen nur teilweise verfuegbaren neuen Provider, fehlerhafte
++Raw-Laengen sowie das unterschiedliche Eigentum bei BUSY und terminalem
++Abschlussfehler. Ausfuehrliche Semantik: Docs/API/StorageFacade.md.
+diff --git a/Shared/C/include/r4os/r4os.h b/Shared/C/include/r4os/r4os.h
+index eefb64d..464d138 100644
+--- a/Shared/C/include/r4os/r4os.h
++++ b/Shared/C/include/r4os/r4os.h
+@@ -13,6 +13,7 @@
+ #include "r4draw.h"
+ #include "app_contract.h"
+ #include "app_storage.h"
++#include "storage.h"
+ #include "app_gui.h"
+ #include "app_resources.h"
+ #include "app_services.h"
+diff --git a/Tests/Conformance/StorageFacadePrototype05823.c b/Tests/Conformance/StorageFacadePrototype05823.c
+index 12b2e39..e653dd8 100644
+--- a/Tests/Conformance/StorageFacadePrototype05823.c
++++ b/Tests/Conformance/StorageFacadePrototype05823.c
+@@ -13,6 +13,32 @@ static uint8_t stream_active;
+ static uint8_t stream_aborted;
+ static uint64_t registry_value;
+ static uint16_t registry_type;
++static int32_t storage_close_result;
++static int32_t fake_storage_end(uint64_t claim, uint32_t flags) {
++    assert(claim == 17 && flags == 0); return storage_close_result;
++}
++static int32_t fake_storage_begin(const R4StorageTarget *target, uint64_t *claim) {
++    (void)target; *claim = 17; return 0;
++}
++
++static void physical_storage_contract(void) {
++    R4XStartR4Sys table = {0}; table.size = R4XSTART_R4SYS_SIZE;
++    R4Sys sys = {0}; sys.table = &table; R4Storage storage = {&sys};
++    uint64_t use = 123;
++    assert(!r4_storage_available(&storage));
++    assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == 0 && use == 0);
++    table.size = sizeof(table); table.storage_claim_begin = (uintptr_t)&fake_storage_begin;
++    assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == R4OS_STORAGE_ERROR_UNSUPPORTED);
++    R4StorageTarget target = r4_storage_whole_device(0); uint8_t bytes[512] = {0};
++    assert(target.version == 1 && target.size == sizeof(target));
++    assert(r4_storage_read(&storage, &target, 0, bytes, 511) == R4OS_STORAGE_ERROR_INVALID);
++    assert(r4_storage_claim_begin(&storage, &target, &use) == 0 && use == 17);
++    table.storage_claim_end = (uintptr_t)&fake_storage_end;
++    storage_close_result = R4OS_STORAGE_ERROR_BUSY;
++    assert(r4_storage_claim_end(&storage, &use, 0) == R4OS_STORAGE_ERROR_BUSY && use == 17);
++    storage_close_result = R4OS_STORAGE_ERROR_IO;
++    assert(r4_storage_claim_end(&storage, &use, 0) == R4OS_STORAGE_ERROR_IO && use == 0);
++}
+ 
+ static int32_t fake_write(const uint8_t *bytes, uint32_t length) {
+     uint32_t count = length < sizeof(written) ? length : (uint32_t)sizeof(written);
+@@ -176,6 +202,7 @@ static R4XStartR4Sys make_table(int full) {
+ }
+ 
+ int main(void) {
++    physical_storage_contract();
+     R4XStartR4Sys table = make_table(1);
+     R4App app = {0};
+     app.system.table = &table;
+diff --git a/Tests/Conformance/StorageFacadePrototype05823.zig b/Tests/Conformance/StorageFacadePrototype05823.zig
+index dc1693d..f9de842 100644
+--- a/Tests/Conformance/StorageFacadePrototype05823.zig
++++ b/Tests/Conformance/StorageFacadePrototype05823.zig
+@@ -10,6 +10,43 @@ var stream_aborted = false;
+ var registry_set_value: u32 = 0;
+ var registry_set_wide: u64 = 0;
+ var registry_set_type: u16 = 0;
++var storage_close_result: i32 = 0;
++fn fakeStorageEnd(claim: u64, flags: u32) callconv(.c) i32 {
++    std.debug.assert(claim == 17 and flags == 0);
++    return storage_close_result;
++}
++fn fakeStorageBegin(_: *const r4os.abi.StorageTarget, out: *u64) callconv(.c) i32 {
++    out.* = 17;
++    return 0;
++}
++
++test "physical storage checks append-only availability and consuming close outcomes" {
++    var table = makeSys(true);
++    table.size = r4os.abi.r4xstart_r4sys_size;
++    var imports: [1]r4os.abi.R4XStartImport = undefined;
++    var context: r4os.abi.R4XStartContext = undefined;
++    const app = try makeApp(&table, &imports, &context);
++    const sys = app.system();
++    const storage = r4os.storage.Context{ .sys = &sys };
++    var use: u64 = 123;
++    try std.testing.expect(!storage.available());
++    try std.testing.expectEqual(@as(i32, 0), storage.transferUseBegin("E:\\FILE", &use));
++    try std.testing.expectEqual(@as(u64, 0), use);
++    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
++    table.storage_claim_begin = @intFromPtr(&fakeStorageBegin);
++    try std.testing.expectEqual(r4os.abi.storage_error_unsupported, storage.transferUseBegin("E:\\FILE", &use));
++    const target = r4os.storage.Context.wholeDevice(.{});
++    var bytes: [512]u8 = undefined;
++    try std.testing.expectEqual(r4os.abi.storage_error_invalid, storage.read(&target, 0, bytes[0..511]));
++    try std.testing.expectEqual(@as(i32, 0), storage.claimBegin(&target, &use));
++    table.storage_claim_end = @intFromPtr(&fakeStorageEnd);
++    storage_close_result = r4os.abi.storage_error_busy;
++    try std.testing.expectEqual(storage_close_result, storage.claimEnd(&use, false));
++    try std.testing.expectEqual(@as(u64, 17), use);
++    storage_close_result = r4os.abi.storage_error_io;
++    try std.testing.expectEqual(storage_close_result, storage.claimEnd(&use, false));
++    try std.testing.expectEqual(@as(u64, 0), use);
++}
+ 
+ fn pathSpan(path: [*:0]const u8) []const u8 {
+     return std.mem.span(path);
+diff --git a/r4os.zig b/r4os.zig
+index c9886b2..358abbe 100644
+--- a/r4os.zig
++++ b/r4os.zig
+@@ -1,6 +1,7 @@
+ pub const abi = @import("r4os_contract").abi;
+ pub const program = @import("r4os/program.zig");
+ pub const runtime_context = @import("r4os/runtime_context.zig");
++pub const storage = @import("r4os/storage.zig");
+ pub const version_info = @import("r4os/version_info.zig");
+ pub const r4u_manifest = @import("r4os/r4u_manifest.zig");
+ pub const r4u_artifact = @import("r4os/r4u_artifact.zig");
+diff --git a/r4os/r4xstart.zig b/r4os/r4xstart.zig
+index c11f505..edc73c7 100644
+--- a/r4os/r4xstart.zig
++++ b/r4os/r4xstart.zig
+@@ -166,7 +166,9 @@ comptime {
+     if (@sizeOf(abi.R4XStartImport) != abi.r4xstart_import_size) {
+         @compileError("R4XStartImport ABI size mismatch");
+     }
+-    if (@sizeOf(abi.R4XStartR4Sys) != abi.r4xstart_r4sys_size) {
++    // The frozen minimum prefix remains compatible with older providers;
++    // appended optional capabilities are checked individually by hasFn.
++    if (@sizeOf(abi.R4XStartR4Sys) < abi.r4xstart_r4sys_size) {
+         @compileError("R4XStartR4Sys ABI size mismatch");
+     }
+     if (@offsetOf(abi.R4XStartR4Sys, "reserved_shell_run") != 408 or
+diff --git a/Shared/C/include/r4os/storage.h b/Shared/C/include/r4os/storage.h
+new file mode 100644
+index 0000000..f6f7916
+--- /dev/null
++++ b/Shared/C/include/r4os/storage.h
+@@ -0,0 +1,110 @@
++#ifndef R4OS_STORAGE_H
++#define R4OS_STORAGE_H
++#include "r4sys.h"
++
++/* Physical storage identities and claims belong to R4SYS. No driver access. */
++typedef struct R4Storage { R4Sys *system; } R4Storage;
++#define R4_STORAGE_HAS(s, name) ((s) && (s)->system && (s)->system->table && \
++    (s)->system->table->size >= offsetof(R4XStartR4Sys, name) + sizeof(uintptr_t) && \
++    (s)->system->table->name != 0)
++#define R4_STORAGE_CALL(s, name, type, ...) (R4_STORAGE_HAS(s, name) ? \
++    ((type)(uintptr_t)(s)->system->table->name)(__VA_ARGS__) : R4OS_STORAGE_ERROR_UNSUPPORTED)
++
++static inline int r4_storage_available(const R4Storage *s) {
++    return R4_STORAGE_HAS(s, storage_inventory) && R4_STORAGE_HAS(s, storage_claim_begin) &&
++        R4_STORAGE_HAS(s, storage_use_begin) && R4_STORAGE_HAS(s, storage_use_end);
++}
++
++static inline int32_t r4_storage_inventory(R4Storage *s, R4StorageInventory *out) {
++    if (!out) return R4OS_STORAGE_ERROR_INVALID;
++    R4StorageInventory value = {0}; value.version = 1; value.size = sizeof(value); *out = value;
++    return R4_STORAGE_CALL(s, storage_inventory, R4SysStorageInventoryFn, out);
++}
++
++static inline int32_t r4_storage_device(R4Storage *s, uint64_t generation, uint32_t slot, R4StorageDeviceInfo *out) {
++    if (!out) return R4OS_STORAGE_ERROR_INVALID;
++    R4StorageDeviceInfo value = {0}; value.version = 1; value.size = sizeof(value); *out = value;
++    return R4_STORAGE_CALL(s, storage_device, R4SysStorageDeviceFn, generation, slot, out);
++}
++
++static inline int32_t r4_storage_partition(R4Storage *s, uint64_t generation, const R4StorageDeviceRef *device, uint32_t slot, R4StoragePartitionInfo *out) {
++    if (!out) return R4OS_STORAGE_ERROR_INVALID;
++    R4StoragePartitionInfo value = {0}; value.version = 1; value.size = sizeof(value); *out = value;
++    return R4_STORAGE_CALL(s, storage_partition, R4SysStoragePartitionFn, generation, device, slot, out);
++}
++
++static inline int32_t r4_storage_volume(R4Storage *s, uint64_t generation, uint32_t slot, R4StorageVolumeInfo *out) {
++    if (!out) return R4OS_STORAGE_ERROR_INVALID;
++    R4StorageVolumeInfo value = {0}; value.version = 1; value.size = sizeof(value); *out = value;
++    return R4_STORAGE_CALL(s, storage_volume, R4SysStorageVolumeFn, generation, slot, out);
++}
++
++static inline R4StorageTarget r4_storage_whole_device(const R4StorageDeviceInfo *disk) {
++    R4StorageTarget target = {0}; target.version = 1; target.size = sizeof(target);
++    if (disk) { target.device = disk->reference; target.layout_generation = disk->layout_generation;
++        target.sector_count = disk->sector_count; target.kind = R4OS_STORAGE_TARGET_DEVICE; }
++    return target;
++}
++static inline int32_t r4_storage_claim_begin(R4Storage *s, const R4StorageTarget *target, uint64_t *claim) {
++    if (!target || !claim) return R4OS_STORAGE_ERROR_INVALID;
++    *claim = 0; return R4_STORAGE_CALL(s, storage_claim_begin, R4SysStorageClaimBeginFn, target, claim);
++}
++/* BUSY retains the handle; a completed I/O/remount failure consumes it. */
++static inline int32_t r4_storage_claim_end(R4Storage *s, uint64_t *claim, int keep_unmounted) {
++    if (!claim) return R4OS_STORAGE_ERROR_INVALID;
++    int32_t result = R4_STORAGE_CALL(s, storage_claim_end, R4SysStorageClaimEndFn, *claim,
++        keep_unmounted ? R4OS_STORAGE_CLAIM_END_KEEP_UNMOUNTED : 0);
++    if (result == R4OS_STORAGE_RESULT_OK || result == R4OS_STORAGE_ERROR_IO || result == R4OS_STORAGE_ERROR_REMOUNT) *claim = 0;
++    return result;
++}
++
++static inline int32_t r4_storage_read(R4Storage *s, const R4StorageTarget *target, uint64_t relative_lba, uint8_t *buffer, uint32_t bytes) {
++    if (!buffer || !target || !bytes || bytes % 512 || bytes / 512 > R4OS_STORAGE_RAW_MAX_SECTORS) return R4OS_STORAGE_ERROR_INVALID;
++    return R4_STORAGE_CALL(s, storage_read, R4SysStorageReadFn, target, relative_lba, bytes / 512, buffer, bytes);
++}
++
++static inline int32_t r4_storage_claim_read(R4Storage *s, uint64_t claim, uint64_t relative_lba, uint8_t *buffer, uint32_t bytes) {
++    if (!buffer || !claim || !bytes || bytes % 512 || bytes / 512 > R4OS_STORAGE_RAW_MAX_SECTORS) return R4OS_STORAGE_ERROR_INVALID;
++    return R4_STORAGE_CALL(s, storage_claim_read, R4SysStorageClaimReadFn, claim, relative_lba, bytes / 512, buffer, bytes);
++}
++
++static inline int32_t r4_storage_claim_write(R4Storage *s, uint64_t claim, uint64_t relative_lba, const uint8_t *buffer, uint32_t bytes) {
++    if (!buffer || !claim || !bytes || bytes % 512 || bytes / 512 > R4OS_STORAGE_RAW_MAX_SECTORS) return R4OS_STORAGE_ERROR_INVALID;
++    return R4_STORAGE_CALL(s, storage_claim_write, R4SysStorageClaimWriteFn, claim, relative_lba, bytes / 512, buffer, bytes);
++}
++
++static inline int32_t r4_storage_claim_flush(R4Storage *s, uint64_t claim) {
++    return R4_STORAGE_CALL(s, storage_claim_flush, R4SysStorageClaimFlushFn, claim);
++}
++static inline int32_t r4_storage_rescan(R4Storage *s, const R4StorageDeviceRef *device) {
++    if (!device) return R4OS_STORAGE_ERROR_INVALID;
++    return R4_STORAGE_CALL(s, storage_rescan, R4SysStorageRescanFn, device);
++}
++static inline int32_t r4_storage_mount(R4Storage *s, const R4StorageTarget *target, uint8_t letter, R4StorageVolumeRef *out) {
++    if (!target || !out) return R4OS_STORAGE_ERROR_INVALID;
++    R4StorageVolumeRef empty = {0}; *out = empty;
++    return R4_STORAGE_CALL(s, storage_mount, R4SysStorageMountFn, target, letter, out);
++}
++static inline int32_t r4_storage_unmount(R4Storage *s, const R4StorageVolumeRef *volume) {
++    if (!volume) return R4OS_STORAGE_ERROR_INVALID;
++    return R4_STORAGE_CALL(s, storage_unmount, R4SysStorageUnmountFn, volume);
++}
++static inline int32_t r4_storage_use_begin(R4Storage *s, const uint8_t *path, uint64_t *use) {
++    if (!path || !use) return R4OS_STORAGE_ERROR_INVALID;
++    *use = 0; return R4_STORAGE_CALL(s, storage_use_begin, R4SysStorageUseBeginFn, path, use);
++}
++static inline int32_t r4_storage_use_end(R4Storage *s, uint64_t *use) {
++    if (!use) return R4OS_STORAGE_ERROR_INVALID;
++    if (!*use) return R4OS_STORAGE_RESULT_OK;
++    int32_t result = R4_STORAGE_CALL(s, storage_use_end, R4SysStorageUseEndFn, *use);
++    if (result == R4OS_STORAGE_RESULT_OK) *use = 0;
++    return result;
++}
++static inline int32_t r4_storage_transfer_use_begin(R4Storage *s, const uint8_t *path, uint64_t *use) {
++    if (!path || !use) return R4OS_STORAGE_ERROR_INVALID;
++    if (!R4_STORAGE_HAS(s, storage_use_begin) && !R4_STORAGE_HAS(s, storage_claim_begin)) { *use = 0; return R4OS_STORAGE_RESULT_OK; }
++    return r4_storage_use_begin(s, path, use);
++}
++#undef R4_STORAGE_CALL
++#undef R4_STORAGE_HAS
++#endif
+diff --git a/r4os/storage.zig b/r4os/storage.zig
+new file mode 100644
+index 0000000..3edfdc8
+--- /dev/null
++++ b/r4os/storage.zig
+@@ -0,0 +1,100 @@
++// Physical storage facade. All identities and ownership come from R4SYS;
++// this layer never talks to drivers or reinterprets filesystem internals.
++const abi = @import("r4os_contract").abi;
++const r4sys = @import("r4sys.zig");
++const std = @import("std");
++
++pub const Context = struct {
++    sys: *const r4sys.Context,
++
++    pub fn available(self: Context) bool {
++        return self.sys.hasFn("storage_inventory") and self.sys.hasFn("storage_claim_begin") and
++            self.sys.hasFn("storage_use_begin") and self.sys.hasFn("storage_use_end");
++    }
++    fn call(self: Context, comptime name: []const u8, args: anytype) i32 {
++        if (!self.sys.hasFn(name)) return abi.storage_error_unsupported;
++        const function: @field(abi.R4SysFns, name) = @ptrFromInt(@field(self.sys.base.bundle.?.sys.?.*, name));
++        return @call(.auto, function, args);
++    }
++    pub fn inventory(self: Context, out: *abi.StorageInventory) i32 {
++        out.* = .{};
++        return self.call("storage_inventory", .{out});
++    }
++    pub fn device(self: Context, generation: u64, slot: u32, out: *abi.StorageDeviceInfo) i32 {
++        out.* = .{};
++        return self.call("storage_device", .{ generation, slot, out });
++    }
++    pub fn partition(self: Context, generation: u64, device_ref: *const abi.StorageDeviceRef, slot: u32, out: *abi.StoragePartitionInfo) i32 {
++        out.* = .{};
++        return self.call("storage_partition", .{ generation, device_ref, slot, out });
++    }
++    pub fn volume(self: Context, generation: u64, slot: u32, out: *abi.StorageVolumeInfo) i32 {
++        out.* = .{};
++        return self.call("storage_volume", .{ generation, slot, out });
++    }
++    pub fn wholeDevice(info: abi.StorageDeviceInfo) abi.StorageTarget {
++        return .{ .device = info.reference, .layout_generation = info.layout_generation, .sector_count = info.sector_count, .kind = abi.storage_target_device };
++    }
++    pub fn claimBegin(self: Context, target: *const abi.StorageTarget, out: *u64) i32 {
++        out.* = 0;
++        return self.call("storage_claim_begin", .{ target, out });
++    }
++    // BUSY means raw I/O is still draining; the caller retains this handle.
++    // I/O/remount failures consume it and leave the failed target inventoried.
++    pub fn claimEnd(self: Context, claim: *u64, keep_unmounted: bool) i32 {
++        const result = self.call("storage_claim_end", .{ claim.*, @as(u32, if (keep_unmounted) abi.storage_claim_end_keep_unmounted else 0) });
++        if (result == abi.storage_result_ok or result == abi.storage_error_io or result == abi.storage_error_remount) claim.* = 0;
++        return result;
++    }
++    pub fn read(self: Context, target: *const abi.StorageTarget, relative_lba: u64, out: []u8) i32 {
++        const sectors = sectorCount(out.len) orelse return abi.storage_error_invalid;
++        return self.call("storage_read", .{ target, relative_lba, sectors, out.ptr, @as(u32, @intCast(out.len)) });
++    }
++    pub fn claimRead(self: Context, claim: u64, relative_lba: u64, out: []u8) i32 {
++        const sectors = sectorCount(out.len) orelse return abi.storage_error_invalid;
++        return self.call("storage_claim_read", .{ claim, relative_lba, sectors, out.ptr, @as(u32, @intCast(out.len)) });
++    }
++    pub fn claimWrite(self: Context, claim: u64, relative_lba: u64, bytes: []const u8) i32 {
++        const sectors = sectorCount(bytes.len) orelse return abi.storage_error_invalid;
++        return self.call("storage_claim_write", .{ claim, relative_lba, sectors, bytes.ptr, @as(u32, @intCast(bytes.len)) });
++    }
++    pub fn claimFlush(self: Context, claim: u64) i32 {
++        return self.call("storage_claim_flush", .{claim});
++    }
++    pub fn rescan(self: Context, device_ref: *const abi.StorageDeviceRef) i32 {
++        return self.call("storage_rescan", .{device_ref});
++    }
++    pub fn mount(self: Context, target: *const abi.StorageTarget, letter: u8, out: *abi.StorageVolumeRef) i32 {
++        out.* = .{};
++        return self.call("storage_mount", .{ target, @as(u32, letter), out });
++    }
++    pub fn unmount(self: Context, volume_ref: *const abi.StorageVolumeRef) i32 {
++        return self.call("storage_unmount", .{volume_ref});
++    }
++    pub fn useBegin(self: Context, path: [*:0]const u8, out: *u64) i32 {
++        out.* = 0;
++        return self.call("storage_use_begin", .{ path, out });
++    }
++    pub fn useEnd(self: Context, use: *u64) i32 {
++        if (use.* == 0) return abi.storage_result_ok;
++        const result = self.call("storage_use_end", .{use.*});
++        if (result == abi.storage_result_ok) use.* = 0;
++        return result;
++    }
++
++    // Old kernels have neither exclusive raw maintenance nor volume leases.
++    // Transfer services may retain that older behavior only when both slots
++    // are absent. A partially available new contract always fails closed.
++    pub fn transferUseBegin(self: Context, path: [*:0]const u8, out: *u64) i32 {
++        if (!self.sys.hasFn("storage_use_begin") and !self.sys.hasFn("storage_claim_begin")) {
++            out.* = 0;
++            return abi.storage_result_ok;
++        }
++        return self.useBegin(path, out);
++    }
++};
++
++fn sectorCount(bytes: usize) ?u32 {
++    if (bytes == 0 or bytes % 512 != 0 or bytes > @as(usize, abi.storage_raw_max_sectors) * 512 or bytes > std.math.maxInt(u32)) return null;
++    return @intCast(bytes / 512);
++}

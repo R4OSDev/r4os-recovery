@@ -1415,6 +1415,36 @@ extern "C" {
 #define R4OS_DRIVE_ROLE_NONE 0u
 #define R4OS_DRIVE_ROLE_RAM 3u
 #define R4OS_DRIVE_ROLE_SYSTEM 1u
+#define R4OS_STORAGE_TARGET_DEVICE 1u
+#define R4OS_STORAGE_TARGET_PARTITION 2u
+#define R4OS_STORAGE_INVENTORY_PARTIAL 1u
+#define R4OS_STORAGE_DEVICE_WRITABLE 1u
+#define R4OS_STORAGE_DEVICE_TABLE_VALID 2u
+#define R4OS_STORAGE_DEVICE_GPT 4u
+#define R4OS_STORAGE_DEVICE_MBR 8u
+#define R4OS_STORAGE_DEVICE_CLAIMED 16u
+#define R4OS_STORAGE_DEVICE_FAILED 32u
+#define R4OS_STORAGE_DEVICE_UNSUPPORTED 64u
+#define R4OS_STORAGE_DEVICE_PARTIAL 128u
+#define R4OS_STORAGE_DEVICE_RAM 256u
+#define R4OS_STORAGE_PARTITION_CLAIMED 1u
+#define R4OS_STORAGE_PARTITION_MOUNTED 2u
+#define R4OS_STORAGE_PARTITION_FAILED 4u
+#define R4OS_STORAGE_VOLUME_REQUIRED 1u
+#define R4OS_STORAGE_VOLUME_CLAIMED 2u
+#define R4OS_STORAGE_CLAIM_END_KEEP_UNMOUNTED 1u
+#define R4OS_STORAGE_FILESYSTEM_UNKNOWN 0u
+#define R4OS_STORAGE_FILESYSTEM_FAT32 1u
+#define R4OS_STORAGE_FILESYSTEM_NTFS 2u
+#define R4OS_STORAGE_FILESYSTEM_NONE 3u
+#define R4OS_STORAGE_BUS_UNKNOWN 0u
+#define R4OS_STORAGE_BUS_ATA 1u
+#define R4OS_STORAGE_BUS_SATA 2u
+#define R4OS_STORAGE_BUS_NVME 3u
+#define R4OS_STORAGE_BUS_USB 4u
+#define R4OS_STORAGE_BUS_RAM 5u
+#define R4OS_STORAGE_RAW_MAX_SECTORS 256u
+#define R4OS_STORAGE_BUS_VIRTIO 6u
 #define R4OS_AUDIO_SERVICE_ERROR_BYTES 32ull
 #define R4OS_AUDIO_SERVICE_MAX_SESSIONS 8u
 #define R4OS_AUDIO_SERVICE_NAME_BYTES 32ull
@@ -1802,6 +1832,20 @@ extern "C" {
 #define R4OS_WINDOW_SERVICE_RESULT_NOT_FOUND ((int32_t)-1)
 #define R4OS_WINDOW_SERVICE_RESULT_OK ((int32_t)0)
 #define R4OS_WINDOW_SERVICE_RESULT_VERSION 1u
+#define R4OS_STORAGE_RESULT_OK ((int32_t)0)
+#define R4OS_STORAGE_RESULT_PRESENT ((int32_t)1)
+#define R4OS_STORAGE_RESULT_ABSENT ((int32_t)0)
+#define R4OS_STORAGE_ERROR_INVALID ((int32_t)-1)
+#define R4OS_STORAGE_ERROR_STALE ((int32_t)-2)
+#define R4OS_STORAGE_ERROR_BUSY ((int32_t)-3)
+#define R4OS_STORAGE_ERROR_PROTECTED ((int32_t)-4)
+#define R4OS_STORAGE_ERROR_CAPACITY ((int32_t)-5)
+#define R4OS_STORAGE_ERROR_OWNER ((int32_t)-6)
+#define R4OS_STORAGE_ERROR_IO ((int32_t)-7)
+#define R4OS_STORAGE_ERROR_UNSUPPORTED ((int32_t)-8)
+#define R4OS_STORAGE_ERROR_REMOUNT ((int32_t)-9)
+#define R4OS_STORAGE_ERROR_INCOMPLETE ((int32_t)-10)
+#define R4OS_STORAGE_ERROR_NOT_FOUND ((int32_t)-11)
 
 typedef enum R4ErrorDomain {
     R4_ERROR_DOMAIN_NONE = 0,
@@ -1819,7 +1863,8 @@ typedef enum R4ErrorDomain {
     R4_ERROR_DOMAIN_DRAW = 12,
     R4_ERROR_DOMAIN_NETWORK = 13,
     R4_ERROR_DOMAIN_AUDIO = 14,
-    R4_ERROR_DOMAIN_DEVICE = 15
+    R4_ERROR_DOMAIN_DEVICE = 15,
+    R4_ERROR_DOMAIN_STORAGE = 16
 } R4ErrorDomain;
 
 #define R4L_GROUP_R4SYS 1u
@@ -1990,6 +2035,13 @@ typedef struct R4GuiSharedRasterLease R4GuiSharedRasterLease;
 typedef struct R4GuiSharedRasterMap R4GuiSharedRasterMap;
 typedef struct R4GuiSharedRasterResource R4GuiSharedRasterResource;
 typedef struct R4TcpPerformanceInfo R4TcpPerformanceInfo;
+typedef struct R4StorageDeviceRef R4StorageDeviceRef;
+typedef struct R4StorageVolumeRef R4StorageVolumeRef;
+typedef struct R4StorageTarget R4StorageTarget;
+typedef struct R4StorageInventory R4StorageInventory;
+typedef struct R4StorageDeviceInfo R4StorageDeviceInfo;
+typedef struct R4StoragePartitionInfo R4StoragePartitionInfo;
+typedef struct R4StorageVolumeInfo R4StorageVolumeInfo;
 
 typedef struct R4BootInfoSummary {
     uint32_t flags;
@@ -5635,6 +5687,85 @@ typedef struct R4TcpPerformanceInfo {
     uint64_t window_scale_negotiated;
 } R4TcpPerformanceInfo;
 
+typedef struct R4StorageDeviceRef {
+    uint32_t slot;
+    uint32_t reserved;
+    uint64_t generation;
+} R4StorageDeviceRef;
+
+typedef struct R4StorageVolumeRef {
+    uint32_t slot;
+    uint32_t reserved;
+    uint64_t generation;
+} R4StorageVolumeRef;
+
+typedef struct R4StorageTarget {
+    uint32_t version;
+    uint32_t size;
+    R4StorageDeviceRef device;
+    uint64_t layout_generation;
+    uint64_t first_lba;
+    uint64_t sector_count;
+    uint32_t partition_number;
+    uint32_t kind;
+    uint8_t partition_guid[16];
+} R4StorageTarget;
+
+typedef struct R4StorageInventory {
+    uint32_t version;
+    uint32_t size;
+    uint64_t generation;
+    uint32_t device_slots;
+    uint32_t volume_slots;
+    uint32_t flags;
+    uint32_t reserved;
+} R4StorageInventory;
+
+typedef struct R4StorageDeviceInfo {
+    uint32_t version;
+    uint32_t size;
+    R4StorageDeviceRef reference;
+    uint64_t layout_generation;
+    uint64_t sector_count;
+    uint8_t disk_guid[16];
+    uint64_t first_usable;
+    uint64_t last_usable;
+    uint32_t bus;
+    uint32_t flags;
+    uint32_t sector_bytes;
+    uint32_t partition_slots;
+    int32_t last_error;
+    uint32_t reserved;
+    uint8_t model[64];
+    uint8_t name[32];
+    uint8_t driver[32];
+    uint8_t reason[64];
+} R4StorageDeviceInfo;
+
+typedef struct R4StoragePartitionInfo {
+    uint32_t version;
+    uint32_t size;
+    R4StorageTarget target;
+    uint8_t type_guid[16];
+    uint64_t attributes;
+    uint32_t filesystem;
+    uint32_t flags;
+    int32_t last_error;
+    uint32_t mbr_type;
+    uint16_t name[36];
+} R4StoragePartitionInfo;
+
+typedef struct R4StorageVolumeInfo {
+    uint32_t version;
+    uint32_t size;
+    R4StorageVolumeRef reference;
+    R4StorageTarget target;
+    uint32_t letter;
+    uint32_t filesystem;
+    uint32_t role;
+    uint32_t flags;
+} R4StorageVolumeInfo;
+
 typedef int32_t (*R4ThreadEntryFn)(uint64_t arg);
 
 typedef struct R4XStartContext {
@@ -5806,6 +5937,21 @@ typedef int32_t (*R4SysRegistryBatchMutateFn)(const R4RegistryBatchOperation * o
 typedef int32_t (*R4SysIoFileWriteAtFn)(const uint8_t * path, uint64_t offset, const uint8_t * data, uint64_t data_len, uint32_t flags, uint32_t * out_request_id);
 typedef int32_t (*R4SysIoFileInfoFn)(const uint8_t * path, uint32_t flags, uint32_t * out_request_id);
 typedef int32_t (*R4SysIoFileLockFn)(const uint8_t * path, uint64_t offset, uint64_t length, uint32_t flags, uint32_t * out_request_id);
+typedef int32_t (*R4SysStorageInventoryFn)(R4StorageInventory * out);
+typedef int32_t (*R4SysStorageDeviceFn)(uint64_t generation, uint32_t slot, R4StorageDeviceInfo * out);
+typedef int32_t (*R4SysStoragePartitionFn)(uint64_t generation, const R4StorageDeviceRef * device, uint32_t slot, R4StoragePartitionInfo * out);
+typedef int32_t (*R4SysStorageVolumeFn)(uint64_t generation, uint32_t slot, R4StorageVolumeInfo * out);
+typedef int32_t (*R4SysStorageClaimBeginFn)(const R4StorageTarget * target, uint64_t * out_claim);
+typedef int32_t (*R4SysStorageClaimEndFn)(uint64_t claim, uint32_t flags);
+typedef int32_t (*R4SysStorageReadFn)(const R4StorageTarget * target, uint64_t relative_lba, uint32_t sectors, uint8_t * out, uint32_t buffer_len);
+typedef int32_t (*R4SysStorageClaimReadFn)(uint64_t claim, uint64_t relative_lba, uint32_t sectors, uint8_t * buffer, uint32_t buffer_len);
+typedef int32_t (*R4SysStorageClaimWriteFn)(uint64_t claim, uint64_t relative_lba, uint32_t sectors, const uint8_t * buffer, uint32_t buffer_len);
+typedef int32_t (*R4SysStorageClaimFlushFn)(uint64_t claim);
+typedef int32_t (*R4SysStorageRescanFn)(const R4StorageDeviceRef * device);
+typedef int32_t (*R4SysStorageMountFn)(const R4StorageTarget * target, uint32_t letter, R4StorageVolumeRef * out);
+typedef int32_t (*R4SysStorageUnmountFn)(const R4StorageVolumeRef * volume);
+typedef int32_t (*R4SysStorageUseBeginFn)(const uint8_t * path, uint64_t * out_use);
+typedef int32_t (*R4SysStorageUseEndFn)(uint64_t use);
 
 typedef struct R4XStartR4Sys {
     uint32_t magic;
@@ -5938,6 +6084,21 @@ typedef struct R4XStartR4Sys {
     uintptr_t io_file_write_at;
     uintptr_t io_file_info;
     uintptr_t io_file_lock;
+    uintptr_t storage_inventory;
+    uintptr_t storage_device;
+    uintptr_t storage_partition;
+    uintptr_t storage_volume;
+    uintptr_t storage_claim_begin;
+    uintptr_t storage_claim_end;
+    uintptr_t storage_read;
+    uintptr_t storage_claim_read;
+    uintptr_t storage_claim_write;
+    uintptr_t storage_claim_flush;
+    uintptr_t storage_rescan;
+    uintptr_t storage_mount;
+    uintptr_t storage_unmount;
+    uintptr_t storage_use_begin;
+    uintptr_t storage_use_end;
 } R4XStartR4Sys;
 
 typedef uint8_t (*R4DeskReadKeyFn)(void);
@@ -9780,7 +9941,72 @@ _Static_assert(offsetof(R4TcpPerformanceInfo, service_poll_skips) == 176u, "TcpP
 _Static_assert(offsetof(R4TcpPerformanceInfo, retransmits) == 184u, "TcpPerformanceInfo.retransmits offset mismatch");
 _Static_assert(offsetof(R4TcpPerformanceInfo, mss_negotiated) == 192u, "TcpPerformanceInfo.mss_negotiated offset mismatch");
 _Static_assert(offsetof(R4TcpPerformanceInfo, window_scale_negotiated) == 200u, "TcpPerformanceInfo.window_scale_negotiated offset mismatch");
-_Static_assert(sizeof(R4XStartR4Sys) == 1024u, "R4XStartR4Sys size mismatch");
+_Static_assert(sizeof(R4StorageDeviceRef) == 16u, "StorageDeviceRef size mismatch");
+_Static_assert(offsetof(R4StorageDeviceRef, slot) == 0u, "StorageDeviceRef.slot offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceRef, reserved) == 4u, "StorageDeviceRef.reserved offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceRef, generation) == 8u, "StorageDeviceRef.generation offset mismatch");
+_Static_assert(sizeof(R4StorageVolumeRef) == 16u, "StorageVolumeRef size mismatch");
+_Static_assert(offsetof(R4StorageVolumeRef, slot) == 0u, "StorageVolumeRef.slot offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeRef, reserved) == 4u, "StorageVolumeRef.reserved offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeRef, generation) == 8u, "StorageVolumeRef.generation offset mismatch");
+_Static_assert(sizeof(R4StorageTarget) == 72u, "StorageTarget size mismatch");
+_Static_assert(offsetof(R4StorageTarget, version) == 0u, "StorageTarget.version offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, size) == 4u, "StorageTarget.size offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, device) == 8u, "StorageTarget.device offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, layout_generation) == 24u, "StorageTarget.layout_generation offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, first_lba) == 32u, "StorageTarget.first_lba offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, sector_count) == 40u, "StorageTarget.sector_count offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, partition_number) == 48u, "StorageTarget.partition_number offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, kind) == 52u, "StorageTarget.kind offset mismatch");
+_Static_assert(offsetof(R4StorageTarget, partition_guid) == 56u, "StorageTarget.partition_guid offset mismatch");
+_Static_assert(sizeof(R4StorageInventory) == 32u, "StorageInventory size mismatch");
+_Static_assert(offsetof(R4StorageInventory, version) == 0u, "StorageInventory.version offset mismatch");
+_Static_assert(offsetof(R4StorageInventory, size) == 4u, "StorageInventory.size offset mismatch");
+_Static_assert(offsetof(R4StorageInventory, generation) == 8u, "StorageInventory.generation offset mismatch");
+_Static_assert(offsetof(R4StorageInventory, device_slots) == 16u, "StorageInventory.device_slots offset mismatch");
+_Static_assert(offsetof(R4StorageInventory, volume_slots) == 20u, "StorageInventory.volume_slots offset mismatch");
+_Static_assert(offsetof(R4StorageInventory, flags) == 24u, "StorageInventory.flags offset mismatch");
+_Static_assert(offsetof(R4StorageInventory, reserved) == 28u, "StorageInventory.reserved offset mismatch");
+_Static_assert(sizeof(R4StorageDeviceInfo) == 288u, "StorageDeviceInfo size mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, version) == 0u, "StorageDeviceInfo.version offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, size) == 4u, "StorageDeviceInfo.size offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, reference) == 8u, "StorageDeviceInfo.reference offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, layout_generation) == 24u, "StorageDeviceInfo.layout_generation offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, sector_count) == 32u, "StorageDeviceInfo.sector_count offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, disk_guid) == 40u, "StorageDeviceInfo.disk_guid offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, first_usable) == 56u, "StorageDeviceInfo.first_usable offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, last_usable) == 64u, "StorageDeviceInfo.last_usable offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, bus) == 72u, "StorageDeviceInfo.bus offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, flags) == 76u, "StorageDeviceInfo.flags offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, sector_bytes) == 80u, "StorageDeviceInfo.sector_bytes offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, partition_slots) == 84u, "StorageDeviceInfo.partition_slots offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, last_error) == 88u, "StorageDeviceInfo.last_error offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, reserved) == 92u, "StorageDeviceInfo.reserved offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, model) == 96u, "StorageDeviceInfo.model offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, name) == 160u, "StorageDeviceInfo.name offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, driver) == 192u, "StorageDeviceInfo.driver offset mismatch");
+_Static_assert(offsetof(R4StorageDeviceInfo, reason) == 224u, "StorageDeviceInfo.reason offset mismatch");
+_Static_assert(sizeof(R4StoragePartitionInfo) == 192u, "StoragePartitionInfo size mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, version) == 0u, "StoragePartitionInfo.version offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, size) == 4u, "StoragePartitionInfo.size offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, target) == 8u, "StoragePartitionInfo.target offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, type_guid) == 80u, "StoragePartitionInfo.type_guid offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, attributes) == 96u, "StoragePartitionInfo.attributes offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, filesystem) == 104u, "StoragePartitionInfo.filesystem offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, flags) == 108u, "StoragePartitionInfo.flags offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, last_error) == 112u, "StoragePartitionInfo.last_error offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, mbr_type) == 116u, "StoragePartitionInfo.mbr_type offset mismatch");
+_Static_assert(offsetof(R4StoragePartitionInfo, name) == 120u, "StoragePartitionInfo.name offset mismatch");
+_Static_assert(sizeof(R4StorageVolumeInfo) == 112u, "StorageVolumeInfo size mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, version) == 0u, "StorageVolumeInfo.version offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, size) == 4u, "StorageVolumeInfo.size offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, reference) == 8u, "StorageVolumeInfo.reference offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, target) == 24u, "StorageVolumeInfo.target offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, letter) == 96u, "StorageVolumeInfo.letter offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, filesystem) == 100u, "StorageVolumeInfo.filesystem offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, role) == 104u, "StorageVolumeInfo.role offset mismatch");
+_Static_assert(offsetof(R4StorageVolumeInfo, flags) == 108u, "StorageVolumeInfo.flags offset mismatch");
+_Static_assert(sizeof(R4XStartR4Sys) == 1144u, "R4XStartR4Sys size mismatch");
 _Static_assert(offsetof(R4XStartR4Sys, write) == 16u, "R4XStartR4Sys.write offset mismatch");
 _Static_assert(sizeof(R4SysWriteFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
 _Static_assert(offsetof(R4XStartR4Sys, putc) == 24u, "R4XStartR4Sys.putc offset mismatch");
@@ -10030,6 +10256,36 @@ _Static_assert(offsetof(R4XStartR4Sys, io_file_info) == 1008u, "R4XStartR4Sys.io
 _Static_assert(sizeof(R4SysIoFileInfoFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
 _Static_assert(offsetof(R4XStartR4Sys, io_file_lock) == 1016u, "R4XStartR4Sys.io_file_lock offset mismatch");
 _Static_assert(sizeof(R4SysIoFileLockFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_inventory) == 1024u, "R4XStartR4Sys.storage_inventory offset mismatch");
+_Static_assert(sizeof(R4SysStorageInventoryFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_device) == 1032u, "R4XStartR4Sys.storage_device offset mismatch");
+_Static_assert(sizeof(R4SysStorageDeviceFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_partition) == 1040u, "R4XStartR4Sys.storage_partition offset mismatch");
+_Static_assert(sizeof(R4SysStoragePartitionFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_volume) == 1048u, "R4XStartR4Sys.storage_volume offset mismatch");
+_Static_assert(sizeof(R4SysStorageVolumeFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_claim_begin) == 1056u, "R4XStartR4Sys.storage_claim_begin offset mismatch");
+_Static_assert(sizeof(R4SysStorageClaimBeginFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_claim_end) == 1064u, "R4XStartR4Sys.storage_claim_end offset mismatch");
+_Static_assert(sizeof(R4SysStorageClaimEndFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_read) == 1072u, "R4XStartR4Sys.storage_read offset mismatch");
+_Static_assert(sizeof(R4SysStorageReadFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_claim_read) == 1080u, "R4XStartR4Sys.storage_claim_read offset mismatch");
+_Static_assert(sizeof(R4SysStorageClaimReadFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_claim_write) == 1088u, "R4XStartR4Sys.storage_claim_write offset mismatch");
+_Static_assert(sizeof(R4SysStorageClaimWriteFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_claim_flush) == 1096u, "R4XStartR4Sys.storage_claim_flush offset mismatch");
+_Static_assert(sizeof(R4SysStorageClaimFlushFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_rescan) == 1104u, "R4XStartR4Sys.storage_rescan offset mismatch");
+_Static_assert(sizeof(R4SysStorageRescanFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_mount) == 1112u, "R4XStartR4Sys.storage_mount offset mismatch");
+_Static_assert(sizeof(R4SysStorageMountFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_unmount) == 1120u, "R4XStartR4Sys.storage_unmount offset mismatch");
+_Static_assert(sizeof(R4SysStorageUnmountFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_use_begin) == 1128u, "R4XStartR4Sys.storage_use_begin offset mismatch");
+_Static_assert(sizeof(R4SysStorageUseBeginFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
+_Static_assert(offsetof(R4XStartR4Sys, storage_use_end) == 1136u, "R4XStartR4Sys.storage_use_end offset mismatch");
+_Static_assert(sizeof(R4SysStorageUseEndFn) == sizeof(uintptr_t), "generated function pointer size mismatch");
 _Static_assert(sizeof(R4XStartR4Desk) == 488u, "R4XStartR4Desk size mismatch");
 _Static_assert(offsetof(R4XStartR4Desk, read_key) == 16u, "R4XStartR4Desk.read_key offset mismatch");
 _Static_assert(sizeof(R4DeskReadKeyFn) == sizeof(uintptr_t), "generated function pointer size mismatch");

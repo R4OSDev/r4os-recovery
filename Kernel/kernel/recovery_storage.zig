@@ -100,7 +100,10 @@ fn mount(record: *inventory.DeviceRecord, part_index: usize, letter: u8) bool {
         .ntfs => .ntfs,
     };
     if (!drive.mountBlockRole(letter, kind, .none, record.name, @intCast(part.sector_count * 512), record.index)) return false;
-    vfs.mountForDrive(letter, volume);
+    if (!vfs.mountForDrive(letter, volume)) {
+        drive.unmountLocked(letter); // Boot-only mount publication.
+        return false;
+    }
     state.letter = letter;
     return true;
 }

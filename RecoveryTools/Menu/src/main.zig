@@ -277,6 +277,10 @@ pub fn r4_app_main(app: *r4os.App) i32 {
 
 fn run(app: *r4os.App) i32 {
     const sys = app.system();
+    const args = std.mem.span(sys.argsRaw());
+    const storage_prefix = "/STORAGESMOKE ";
+    if (args.len >= storage_prefix.len and std.ascii.eqlIgnoreCase(args[0..storage_prefix.len], storage_prefix))
+        return @import("storage_diagnostic.zig").run(&sys, std.mem.trim(u8, args[storage_prefix.len..], " "));
     const desk = app.desktop() orelse return -1;
     const draw = app.drawing() orelse return -2;
     const net = app.networkLowLevel() orelse return -3;
