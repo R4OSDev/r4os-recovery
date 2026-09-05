@@ -69,8 +69,9 @@ function Remove-RecoveryBootMedium([int]$Port, [bool]$InteractiveTerminal) {
         $nodes = @(Send-Qmp 'query-named-block-nodes')
         if (@($nodes | Where-Object {$_['node-name'] -in @('recovery-source','recovery-file')}).Count -ne 0) { throw 'Boot medium still present in QEMU.' }
         if ($InteractiveTerminal) {
-            # Exercise the production console host and a real child program.
-            foreach ($key in @('h','e','l','p','ret','p','o','w','e','r','o','f','f','ret')) {
+            # Open Terminal in the production Recovery menu after removing
+            # the boot medium, then load a real child program from RAM.
+            foreach ($key in @('up','up','ret','h','e','l','p','ret','p','o','w','e','r','o','f','f','ret')) {
                 $null = Send-Qmp 'send-key' @{keys=@(@{type='qcode'; data=$key}); 'hold-time'=40}
                 Start-Sleep -Milliseconds 60
             }
@@ -185,7 +186,7 @@ try {
                 while (!$process.WaitForExit(250)) {
                     if ($watch.Elapsed.TotalSeconds -ge $TimeoutSeconds) { throw "Recovery $mode/$case timed out; inspect $serialLog" }
                     $serial = if (Test-Path -LiteralPath $serialLog) {Get-Content -Raw -LiteralPath $serialLog} else {''}
-                    $readyMarker = if ($Action -eq 'terminal') {'\[RECOVERYRAM\] terminal=STARTED'} else {'\[RECOVERYRAM\] boot-medium=WAIT'}
+                    $readyMarker = if ($Action -eq 'terminal') {'\[RECOVERY\] shell=READY'} else {'\[RECOVERYRAM\] boot-medium=WAIT'}
                     if ($usesRuntime -and $case -eq 'valid' -and !$removed -and $serial -match $readyMarker) {
                         Remove-RecoveryBootMedium $qmpPort ($Action -eq 'terminal'); $removed = $true
                     }

@@ -297,6 +297,7 @@
   "platformProviders": [
     "R4SYS:Query:1",
     "R4DESK:Query:1",
+    "R4DRAW:Query:1",
     "R4DEV:Query:1",
     "R4NET:Query:1"
   ],
@@ -1485,8 +1486,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 15854,
-      "sha256": "edde57184afece6dafc8add39eca6d74eae2b06061eb1937c90d356e686228de",
+      "bytes": 15883,
+      "sha256": "5f55dce831a446776880e8490c0346a03048853c06427501e4b8819b354cf5f1",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -1595,8 +1596,8 @@
     },
     {
       "path": "Kernel/DOCUMENTATION.de.txt",
-      "bytes": 34663,
-      "sha256": "54c0f9879d3cb1ff5d46ece92e83192afe657ea781855bd9ac6ee452a953952e",
+      "bytes": 35122,
+      "sha256": "1bde44762286bd04713f402d56fbbe1b255115db09c192d4048e084cf50cc35c",
       "originalSha256": "24a9a6fdbdeb5803010beb59701c99b9a905dada5e4136d18d5e1dbc28911b40",
       "origin": {
         "path": "DOCUMENTATION.de.txt",
@@ -1915,8 +1916,8 @@
     },
     {
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 140968,
-      "sha256": "a03dc2d6082fdcc25d898d59385fd4de1c2053c82c4daf9abdafa6c78b81757e",
+      "bytes": 141477,
+      "sha256": "6cac32f2c5ddef0c3d041c55f971d4a1577b44b5b0408c4a85b8a71c965024da",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "origin": {
         "path": "fs/fat/fat32.zig",
@@ -2512,8 +2513,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_input_probe.zig",
-      "bytes": 5300,
-      "sha256": "cb62d2f68978829e17591c65a1ffd011944259b467d133cdc683ed9bf7666850",
+      "bytes": 5303,
+      "sha256": "38f019eaef847786eb96b53bc52fc44bdfe8b0a3ac1e1d8183e9a01fba3dbf87",
       "originalSha256": null,
       "origin": null
     },
@@ -2533,8 +2534,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_runtime.zig",
-      "bytes": 8027,
-      "sha256": "6028c35c9733315e0ea9505ffccfb95842e21e62915b5261c723cdd990a4458e",
+      "bytes": 8857,
+      "sha256": "c9e5bacba972960bd21d71744f5ef64addb88025b42bdabd842ac0d75d25356c",
       "originalSha256": null,
       "origin": null
     },
@@ -3407,8 +3408,8 @@
     },
     {
       "path": "Kernel/recovery_main.zig",
-      "bytes": 5443,
-      "sha256": "ff81568771999f66ce95c50a6721b751edcd22436dfc8248917173050f5388df",
+      "bytes": 5475,
+      "sha256": "30e0907e2d78cdeab42ca0ded5d5723a17a9aa606c739315b1a5c2b5e4294006",
       "originalSha256": null,
       "origin": null
     },
@@ -3677,7 +3678,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "890c5ba266783da62ee2e4a1deff6c8765b01fbd7d57d9f5f0ef779f7ff7f3eb",
+      "sha256": "3fdc5e6e8a3123cfa8e589337ab9efb82e0a6062da8edc3d2d31bb72a54012dd",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3702,6 +3703,13 @@
       "path": "Legal/Changes/Kernel-0.76.5.patch",
       "bytes": 4754,
       "sha256": "5cf3560003ed9f480340d755dd1a962e84239ac8fe78b795537eec5a53c0cb76",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.76.6.patch",
+      "bytes": 2719,
+      "sha256": "25d4e90f309d8bdd610edab0eb5b509d2026eee5ea76d047a44e6f5a4e7af1f4",
       "originalSha256": null,
       "origin": null
     },
@@ -8322,9 +8330,65 @@
       }
     },
     {
+      "path": "RecoveryTools/Contracts.de.txt",
+      "bytes": 10730,
+      "sha256": "5e53886379984c3d5eb838d71f4c7b26be01734d925a147d1ece2dec79c4c482",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/build.zig",
+      "bytes": 618,
+      "sha256": "f075eb5bf0d4ccbaf47de09202d6f0285ca7df4b611e1498c976eb9b01e50189",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/build.zig.zon",
+      "bytes": 293,
+      "sha256": "c458d3d5908ca1b49e46ec4963de57cfa4420575b0dc0025f9072197bd1f42c1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/module.R4MF",
+      "bytes": 326,
+      "sha256": "103c334c36bb8abf49a96acd635fc069165d9cd040e492c17cf686e322af270a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/diagnostic.zig",
+      "bytes": 3844,
+      "sha256": "5e9625fc40a8fcce0dd262eb581a8c4c8f34f881b15907715daf47f1bd64a79f",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/main.zig",
+      "bytes": 17241,
+      "sha256": "589683c65aa96c7913dcd9a6b161f9526bad9e7df11dc0478fc10e8847f9ed78",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/view.zig",
+      "bytes": 7707,
+      "sha256": "dfda99629c712c1b137463563d56b2b3a856b4bd517a995032d685df79fe47e6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/README.md",
+      "bytes": 994,
+      "sha256": "f83d394261576da8c03e491bd752cb7aed13960ee35ac13717e0428478838d65",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Runtime/CONFIG.R4S",
-      "bytes": 210,
-      "sha256": "4b1e6d632323a18cdd256eced6f49e3bc53cf2f3c252db9cea91930c2e133909",
+      "bytes": 222,
+      "sha256": "ad1607ffe5ad5f027d0a32b61d09590ee10eb3376cc3075e5f43a7e59224ea07",
       "originalSha256": "4b1e6d632323a18cdd256eced6f49e3bc53cf2f3c252db9cea91930c2e133909",
       "origin": null
     },
@@ -8401,7 +8465,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 63,
-      "sha256": "94bc4413bcccc37c51c4ca6e8a52c90ad09fe334f1f96ec40e7725635f3cf2ea",
+      "sha256": "f25a2940000200099d545314c80364ab86d99b4825253bbfd917080c24959a11",
       "originalSha256": null,
       "origin": null
     },
@@ -8425,7 +8489,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 25,
-      "sha256": "669d1bf95a49ec6ce128a07ebfcc3de9adc8575343f7e1073f564214ca8ebd83",
+      "sha256": "3a17301098abff55dc431eaf45143184731201d29c1baf0f5f37af6e57a84170",
       "originalSha256": null,
       "origin": null
     },
@@ -9319,6 +9383,106 @@
         }
       ],
       "reason": "0.76.5: align Terminal witness with canonical uppercase input and document HID policy"
+    },
+    {
+      "reason": "0.76.6: Recovery-eigener Consolehost und Menue, echte Shell-Bereitschaft, gekapselte Terminal-Sitzungen und Gastdiagnose; explizite kanonische FAT32-Lesekorrektur. Vorhandenen R4DRAW:Query:1-Provider aufnehmen.",
+      "changes": [
+        {
+          "path": "Kernel/DOCUMENTATION.de.txt",
+          "before": "54c0f9879d3cb1ff5d46ece92e83192afe657ea781855bd9ac6ee452a953952e",
+          "after": "1bde44762286bd04713f402d56fbbe1b255115db09c192d4048e084cf50cc35c"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "890c5ba266783da62ee2e4a1deff6c8765b01fbd7d57d9f5f0ef779f7ff7f3eb",
+          "after": "3fdc5e6e8a3123cfa8e589337ab9efb82e0a6062da8edc3d2d31bb72a54012dd"
+        },
+        {
+          "path": "Kernel/build.zig",
+          "before": "edde57184afece6dafc8add39eca6d74eae2b06061eb1937c90d356e686228de",
+          "after": "5f55dce831a446776880e8490c0346a03048853c06427501e4b8819b354cf5f1"
+        },
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "a03dc2d6082fdcc25d898d59385fd4de1c2053c82c4daf9abdafa6c78b81757e",
+          "after": "6cac32f2c5ddef0c3d041c55f971d4a1577b44b5b0408c4a85b8a71c965024da"
+        },
+        {
+          "path": "Kernel/kernel/recovery_input_probe.zig",
+          "before": "cb62d2f68978829e17591c65a1ffd011944259b467d133cdc683ed9bf7666850",
+          "after": "38f019eaef847786eb96b53bc52fc44bdfe8b0a3ac1e1d8183e9a01fba3dbf87"
+        },
+        {
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "before": "6028c35c9733315e0ea9505ffccfb95842e21e62915b5261c723cdd990a4458e",
+          "after": "c9e5bacba972960bd21d71744f5ef64addb88025b42bdabd842ac0d75d25356c"
+        },
+        {
+          "path": "Kernel/recovery_main.zig",
+          "before": "ff81568771999f66ce95c50a6721b751edcd22436dfc8248917173050f5388df",
+          "after": "30e0907e2d78cdeab42ca0ded5d5723a17a9aa606c739315b1a5c2b5e4294006"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.76.6.patch",
+          "before": null,
+          "after": "25d4e90f309d8bdd610edab0eb5b509d2026eee5ea76d047a44e6f5a4e7af1f4"
+        },
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": null,
+          "after": "5e53886379984c3d5eb838d71f4c7b26be01734d925a147d1ece2dec79c4c482"
+        },
+        {
+          "path": "RecoveryTools/Menu/build.zig",
+          "before": null,
+          "after": "f075eb5bf0d4ccbaf47de09202d6f0285ca7df4b611e1498c976eb9b01e50189"
+        },
+        {
+          "path": "RecoveryTools/Menu/build.zig.zon",
+          "before": null,
+          "after": "c458d3d5908ca1b49e46ec4963de57cfa4420575b0dc0025f9072197bd1f42c1"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": null,
+          "after": "103c334c36bb8abf49a96acd635fc069165d9cd040e492c17cf686e322af270a"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/diagnostic.zig",
+          "before": null,
+          "after": "5e9625fc40a8fcce0dd262eb581a8c4c8f34f881b15907715daf47f1bd64a79f"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": null,
+          "after": "589683c65aa96c7913dcd9a6b161f9526bad9e7df11dc0478fc10e8847f9ed78"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/view.zig",
+          "before": null,
+          "after": "dfda99629c712c1b137463563d56b2b3a856b4bd517a995032d685df79fe47e6"
+        },
+        {
+          "path": "RecoveryTools/README.md",
+          "before": null,
+          "after": "f83d394261576da8c03e491bd752cb7aed13960ee35ac13717e0428478838d65"
+        },
+        {
+          "path": "Runtime/CONFIG.R4S",
+          "before": "4b1e6d632323a18cdd256eced6f49e3bc53cf2f3c252db9cea91930c2e133909",
+          "after": "ad1607ffe5ad5f027d0a32b61d09590ee10eb3376cc3075e5f43a7e59224ea07"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "94bc4413bcccc37c51c4ca6e8a52c90ad09fe334f1f96ec40e7725635f3cf2ea",
+          "after": "f25a2940000200099d545314c80364ab86d99b4825253bbfd917080c24959a11"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "669d1bf95a49ec6ce128a07ebfcc3de9adc8575343f7e1073f564214ca8ebd83",
+          "after": "3a17301098abff55dc431eaf45143184731201d29c1baf0f5f37af6e57a84170"
+        }
+      ]
     }
   ]
 }

@@ -9,8 +9,9 @@ The 0.76.1 baseline contains pinned kernel, platform contract and SDK sources,
 their original source archives and license notices. Since 0.76.2 the separate
 Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
 complete 64-MB FAT32 runtime is loaded by Limine, checked against the paired
-kernel hash, and mounted as writable RAM drive C: in 0.76.3. The standard
-Terminal runs from that volume; service autostart follows the network step.
+kernel hash, and mounted as writable RAM drive C: in 0.76.3. Since 0.76.6,
+RECOVERY.R4X hosts the menu and the standard Terminal inside the supplied
+background's monitor. Service autostart follows the network step.
 
 Run `Build.bat` on Windows or `./Build.sh` on Linux with PowerShell 7 to verify
 the local inventory. The shared `Build.ps1` checks file hashes, actual binary
@@ -20,11 +21,13 @@ from the normal workspace or fetch dependencies. Results are written to
 
 Add `-Mode Kernel` to build `Artifacts/Kernel/bin/recovery.elf` using the
 recorded Zig version and the paired `Artifacts/Runtime/runtime.img`.
-`-Mode Runtime` builds only that volume. `-Mode RuntimeTest` checks late
+`-Mode Runtime` builds that volume and the Recovery-owned console tools.
+`-Mode RuntimeTest` checks late
 module/media access after removing the USB boot medium, normal console
 commands, RAM writes and rejection of invalid boot payloads. After the normal
 kernel build, `pwsh -File Tools/Test-Boot.ps1 -Action terminal` exercises the
-interactive production Terminal with keyboard input and regular shutdown.
+production menu's Terminal with keyboard input and regular shutdown after
+removing the boot medium.
 Add `-Mode BootTest` for the bounded BIOS/UEFI SMP4
 foundation check, or `-Mode BootTest -BootProbe reboot` to verify reset.
 Diagnostic kernels and logs remain in `Artifacts/BootProbe/`. The Linux UEFI
@@ -97,3 +100,25 @@ PS/2 and USB keyboards through BIOS/UEFI Recovery guests with four CPUs.
 USB-only cases disable the emulated PS/2 controller. The shared input path
 supports R4OS layouts, navigation and the existing Terminal; Recovery does
 not bind a mouse. Results live under `Artifacts/BootProbe/input/`.
+
+## Recovery console host
+
+`RecoveryTools/Menu` owns RECOVERY.R4X and builds against the pinned SDK and
+Contract. The 37 imported binaries stay fixed; the runtime image additionally
+contains the locally built Recovery application. Its manifest and source
+participate in input verification, and the build checks its real imports.
+
+The six English menu entries use Up/Down and Enter. Terminal starts the
+unchanged TERMINAL.R4X in a separate console session; EXIT restores the menu.
+Image scaling, text, cursor, scrolling and clear are confined to the source
+image's monitor. The shell uses existing R4DRAW and console-host APIs without
+a desktop. The footer shows the actual SSH address or network waiting state.
+Installer/update workflows and R4PART are connected in their roadmap steps;
+the current entries report their availability explicitly.
+
+`-Mode UITest` exercises BIOS at 800x600, 1024x768 and 1920x1080 plus UEFI at
+1024x768, with four CPUs and a USB keyboard. Its `/UISMOKE` diagnostic session
+uses the existing shell stdout mirror and a second standard Terminal to
+check console isolation. QMP screendumps compare every pixel outside the
+monitor, and verify visible selection, dialogs, progress, clear, scrolling,
+Terminal return and reset. Artifacts stay under `Artifacts/BootProbe/ui/`.

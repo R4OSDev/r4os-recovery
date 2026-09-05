@@ -11,6 +11,8 @@ function Get-RecoveryImageCreator([string]$Root, [string]$Zig) {
 }
 
 function Build-RecoveryRuntime([string]$Root, [string]$Zig) {
+    . (Join-Path $Root 'Tools/RecoveryTools.ps1')
+    $applications = @(Build-RecoveryTools $Root $Zig)
     $release = Get-RecoveryFields (Join-Path $Root 'VERSION.R4S')
     $identity = Get-RecoveryFields (Join-Path $Root 'Runtime/R4OS/CONFIG/RECOVERY.R4S')
     $shellVersion = Get-RecoveryFields (Join-Path $Root 'Runtime/R4OS/CONFIG/VERSION.R4S')
@@ -28,10 +30,16 @@ function Build-RecoveryRuntime([string]$Root, [string]$Zig) {
         if ($_.FullName.Contains('|') -or $_.FullName.Contains("`n") -or $_.FullName.Contains("`r")) { throw 'Runtime path cannot be represented in the image list.' }
         "$($_.FullName)|/$relative"
     })
+    foreach ($application in $applications) {
+        if (Test-Path -LiteralPath (Join-Path $Root "Runtime$($application.imagePath)")) {
+            throw "Recovery application would replace a frozen input: $($application.name)"
+        }
+        $entries += "$($application.binary)|$($application.imagePath)"
+    }
     [IO.File]::WriteAllText($list, ($entries -join "`n")+"`n", [Text.UTF8Encoding]::new($false))
     & $program --output $image --size 64 --volume-only --add-list $list
     if ($LASTEXITCODE -ne 0) { throw 'Recovery runtime volume build failed.' }
-    $result = [ordered]@{schema=1; filesystem='FAT32'; partitionStart=0; files=$files.Count;
+    $result = [ordered]@{schema=1; filesystem='FAT32'; partitionStart=0; files=$entries.Count; ownedApplications=$applications;
         image=$image; bytes=([IO.FileInfo]::new($image)).Length; sha256=Get-RecoveryHash $image}
     Write-RecoveryJson (Join-Path $output 'runtime.json') $result
     Write-Host "Recovery runtime: $image ($($result.bytes) bytes, SHA-256 $($result.sha256))"

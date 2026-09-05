@@ -77,7 +77,7 @@ export fn kmain() callconv(.c) noreturn {
     require(recovery_runtime.admitFilesystem(), .loader, "Recovery RAM userland admission failed");
     if (comptime config.recovery_probe != .ram)
         require(recovery_storage.init(), .storage, "Recovery media admission failed");
-    if (comptime config.recovery_probe == .none or config.recovery_probe == .input)
+    if (comptime config.recovery_probe == .none or config.recovery_probe == .input or config.recovery_probe == .ui)
         require(recovery_input.init(), .input, "Recovery keyboard admission failed");
     boot_status.releaseForUserSession();
     log.setOutputHook(null);

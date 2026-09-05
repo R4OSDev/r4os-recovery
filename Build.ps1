@@ -1,7 +1,7 @@
 param(
-    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'InputTest')][string]$Mode = 'Verify',
+    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'InputTest', 'UITest')][string]$Mode = 'Verify',
     [string]$Zig = '',
-    [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input')][string]$BootProbe = 'none',
+    [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
 )
 
@@ -20,6 +20,7 @@ try {
         if ($Mode -eq 'RuntimeTest') { $BootProbe = 'ram' }
         if ($Mode -eq 'StorageTest') { $BootProbe = 'storage' }
         if ($Mode -eq 'InputTest') { $BootProbe = 'input' }
+        if ($Mode -eq 'UITest') { $BootProbe = 'ui' }
         if (!$Zig) {
             $Zig = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot $(if ($IsWindows) {'../../DevKit/Toolchains/Zig/zig.exe'} else {'../../DevKit/Toolchains/Zig/zig'})))
         }
@@ -30,7 +31,7 @@ try {
         $version = $release.RECOVERY_VERSION[0]
         if ($version -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'Invalid Recovery version.' }
         $runtimeArguments = @()
-        if ($BootProbe -in @('none', 'ram', 'storage', 'input') -or $Mode -eq 'Runtime') {
+        if ($BootProbe -in @('none', 'ram', 'storage', 'input', 'ui') -or $Mode -eq 'Runtime') {
             . (Join-Path $PSScriptRoot 'Tools/Runtime.ps1')
             $runtime = Build-RecoveryRuntime $PSScriptRoot $Zig
             $runtimeArguments = @("-Druntime-sha256=$($runtime.sha256)", "-Druntime-bytes=$($runtime.bytes)")
@@ -54,6 +55,10 @@ try {
         if ($Mode -eq 'InputTest') {
             & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Input.ps1') -Firmware $Firmware -Zig $Zig
             if ($LASTEXITCODE -ne 0) { throw 'Recovery input acceptance failed.' }
+        }
+        if ($Mode -eq 'UITest') {
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-UI.ps1') -Firmware $Firmware -Zig $Zig
+            if ($LASTEXITCODE -ne 0) { throw 'Recovery UI acceptance failed.' }
         }
     }
     exit 0

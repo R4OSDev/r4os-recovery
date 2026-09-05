@@ -1,0 +1,10 @@
+.{
+    .name = .r4os_recovery_menu,
+    .version = "0.1.0",
+    .fingerprint = 0x19a1d0c05790da49,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .r4os_sdk = .{ .path = "../../Platform/SDK" },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "module.R4MF", "src" },
+}

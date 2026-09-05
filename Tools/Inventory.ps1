@@ -77,7 +77,7 @@ function Read-RecoveryContainer([string]$Path) {
 }
 
 function Get-RecoveryInputFiles([string]$Root) {
-    foreach ($dir in @('Kernel', 'Platform', 'Runtime', 'Legal')) {
+    foreach ($dir in @('Kernel', 'Platform', 'Runtime', 'RecoveryTools', 'Legal')) {
         $base = Join-Path $Root $dir
         if (!(Test-Path -LiteralPath $base)) { continue }
         foreach ($item in Get-ChildItem -LiteralPath $base -File -Recurse -Force) {

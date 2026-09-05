@@ -6,5 +6,6 @@
 Kernel/** -text
 Platform/** -text
 Runtime/** -text
+RecoveryTools/** -text
 Legal/** -text
 Provenance/** -text

@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.5
+Stand 0.76.6
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -9,7 +9,8 @@ einen eigenen Recovery-Kernel. recovery.elf startet mit Limine unter BIOS
 und x64-UEFI ohne SYSTEM-Partition. Seit 0.76.3 laedt Limine ein vollstaendiges
 FAT32-Laufzeitvolume in den RAM; C: und das regulaere Terminal arbeiten daraus.
 Seit 0.76.4 erkennt Recovery physische Medien und ordnet sie anhand der
-tatsaechlichen Limine-Startdatei zu. Menue und Netzwerkdienste folgen spaeter.
+tatsaechlichen Limine-Startdatei zu. Seit 0.76.6 besitzt RECOVERY.R4X das Menue
+und den eingebetteten Konsolenhost. Netzwerkdienste folgen in 0.76.7.
 
 Pruefen: Build.bat beziehungsweise ./Build.sh, optional -Mode Verify.
 Beide duennen Starter rufen dieselbe Build.ps1 mit PowerShell 7 auf.
@@ -32,8 +33,11 @@ Besitzern. Sie startet keinen Desktop und sucht keine SYSTEM-Partition.
 Limine-Modulbereiche muessen vollstaendig als kernel_and_modules reserviert
 sein; sie werden nicht als freie PMM-Seiten aufgenommen. Controllergebundene
 Blockworker starten nach dem Einbinden des RAM-Blockgeraets. Das regulaere
-Artefakt startet das vorhandene TERMINAL.R4X direkt an der Systemkonsole
-ohne externen Eingabehost und gibt den Boot-Task frei; Kommandoparser und Programmverwaltung bleiben unveraendert.
+Artefakt startet RECOVERY.R4X als konfigurierte Shell. Der Kernel bindet deren
+BootReady-Meldung an die gestartete Instanz und ueberwacht den Shellbestand.
+Ein unerwartetes Ende erreicht den regulaeren Fatalpfad. Die Anwendung
+uebernimmt den Framebuffer; Hintergrundlogs bleiben seriell und im Bootlog.
+Das vorhandene TERMINAL.R4X laeuft als eigener gehosteter Konsolenprozess.
 
 Bootnachweis
 ------------
@@ -93,7 +97,7 @@ die RAM-Laufzeit nicht.
 
 Zwei unveraenderte Terminalfonts stammen aus dem Besitzerbuild. Das vom
 Benutzer gelieferte Hintergrundbild liegt bytegleich unter
-C:\R4OS\MEDIA\RECOVERY.BMP; dargestellt wird es erst mit dem Menueschritt.
+C:\R4OS\MEDIA\RECOVERY.BMP; RECOVERY.R4X stellt es seit 0.76.6 dar.
 Die regulaeren R4M0-Lader, R4XStart-Tabellen und R4L-Bindungen sind uebernommen.
 Die Hintergrunddienste werden erst nach ihrer Netzwerkgrundlage automatisch
 gestartet; SERVMAN und die Dienstmodule liegen bereits im Laufzeitvolume.
@@ -110,12 +114,11 @@ Rueckkehrcodes, vererbte Konsolenausgabe und Programmbereinigung werden
 geprueft. Vier weitere kurze Faelle belegen die vorgenannten Modulfehler.
 Logs, Kernel-/Imagehashes und QMP-Nachweis liegen in Artifacts/BootProbe/ram.
 Nach -Mode Kernel prueft Tools/Test-Boot.ps1 -Action terminal ausserdem den
-regulaeren interaktiven Shellstart: USB entfernen, HELP und POWEROFF ueber
-die Tastatur eingeben und den echten Kernel-Poweroff mit QEMU-Abschluss
-verlangen. Die unhosted Shellausgabe geht dabei zum Framebuffer; die
-Unterprogrammausgabe selbst ist im gesonderten RAM-Nachweis geprueft.
-Ein external terminal_mode benoetigt einen weiterleitenden Consolehost;
-der gegenwaertige direkte Shellstart verwendet deshalb Hostkind none.
+regulaeren interaktiven Shellstart: nach der Bereitschaft USB entfernen,
+Terminal im Menue waehlen, HELP und POWEROFF ueber die Tastatur eingeben und
+den echten Kernel-Poweroff mit QEMU-Abschluss verlangen. RECOVERY.R4X nutzt
+Hostkind none und liest damit die physische Tastatur. Das untergeordnete
+Terminal nutzt terminal_mode und erhaelt Eingaben vom Recovery-Consolehost.
 
 Die 64-MB-Laufzeitgroesse und 1024 MB Gast-RAM sind vorlaeufige Build-/
 Testgroessen. Der verbindliche reale Kapazitaetsnachweis bleibt 0.76.23.
@@ -300,5 +303,75 @@ Unicode-Codepoints werden am gemeinsamen Eingabepfad geprueft. Danach
 tippt der Host einen Befehl mit Korrekturtaste in die echte TERMINAL.R4X;
 die resultierende Datei und das geordnete EXIT werden im Gast geprueft.
 Dabei bleibt die normale ASCII-/Grossschreibungslogik des Terminals bestehen.
-Der Nachweis der sichtbaren Menuezustaende folgt mit der Oberflaeche in
-0.76.6; reale Lenovo-/USB-Tastaturmodelle sind damit noch nicht abgenommen.
+Sichtbare Menuezustaende prueft seit 0.76.6 die gesonderte UI-Abnahme;
+reale Lenovo-/USB-Tastaturmodelle sind damit noch nicht abgenommen.
+
+Menue und Consolehost (0.76.6)
+-----------------------------
+
+RecoveryTools/Menu besitzt RECOVERY.R4X als normale Konsolenanwendung.
+module.R4MF bestimmt Version, Console-Klasse, Zielpfad und die vorhandenen
+R4SYS-/R4DESK-/R4DRAW-/R4NET-Imports. Tools/RecoveryTools.ps1 baut sie gegen
+den lokalen festgehaltenen SDK-/Contract-Stand und prueft den R4M0-Container
+und seine Imports vor dem Imageeintrag. Artifacts/RecoveryTools/modules.json
+beschreibt das eigene Artefakt. Die 37 uebernommenen Runtime-Module bleiben
+unveraendert; runtime.img enthaelt zusaetzlich die eigene Anwendung. Auch
+RecoveryTools-Quellen und Manifeste gehoeren zur SHA-256-Eingabepruefung.
+
+Das originale 1672x941-BMP wird proportional eingepasst und zentriert.
+Aus den Quellkoordinaten [391,223)-[1284,680) entsteht ein nach innen
+gerundeter Monitorbereich. Nur dort werden Menue, Dialog, Fortschrittsbalken,
+Status, Cursor und Konsolenzellen gezeichnet. Restflaechen bleiben schwarz;
+der Rahmen wird nie zu Konsolenflaeche. Terminalfonts mit 8 oder 16 Pixeln
+Hoehe kommen aus dem vorhandenen R4OS-Fontkatalog. Das Menue benoetigt
+mindestens 280x160 Monitorpixel; kleinere Modi werden konkret abgewiesen.
+
+Reihenfolge: Install R4OS, Update R4OS, Update Recovery, Manage Partitions,
+Terminal, Exit and Restart. Pfeile wechseln mit Umlauf, Enter oeffnet den
+Eintrag, Escape oder Enter schliesst einen Dialog. Rote Auswahl und helle
+Schrift gelten fuer alle Modi. Die ersten drei Aufrufkanten melden ihren
+noch ausstehenden Implementierungsstand; Manage Partitions startet R4PART
+sobald dessen Modul vorliegt und meldet andernfalls den Startfehler.
+
+Terminal startet die festgehaltene TERMINAL.R4X mit /NOAUTOEXEC und eigenem
+Consolehost. Der Host liest begrenztes Transcript, Zustand und Revision,
+meldet die verfuegbaren Zeilen/Spalten und leitet Tasteneingaben weiter.
+Cursor, Farben, CLS und Scrollen gelten nur fuer diese Sitzung. Der
+dauerhafte ProgramHandle besitzt Wait/Reap und fuehrt EXIT zur gleichen
+Menueauswahl zurueck. Weitere Konsolen und Dienste behalten ihren Kontext.
+Der Neustarteintrag steht nur ohne aktives Unterprogramm oder laufenden
+Menueauftrag zur Verfuegung und nutzt den vorhandenen Flush-/Resetpfad.
+Die geraeteweiten Auftragssperren folgen mit dem Storagevertrag in 0.76.8.
+
+SSH zeigt eine vom Netzkonfigurations-Snapshot gemeldete IPv4-Adresse erst
+bei Link, Konfiguration und laufender SSHD an. Andernfalls erscheint der
+Warte-/Startzustand. Es wird keine Beispieladresse als Gastadresse gezeigt.
+
+-Mode UITest verwendet den echten Anwendungscode und einen Diagnosekernel,
+der ausschliesslich das Argument /UISMOKE an die konfigurierte Shell reicht.
+Der vorhandene SMOKE-Mirror macht deren stdout seriell beobachtbar. Eine
+zweite unveraenderte Terminalinstanz mit terminal_window bleibt unsichtbar;
+ihr vollstaendiges Transcript muss lokale Eingabe, CLS, Scrollen und EXIT
+bytegleich ueberstehen und danach geordnet beendet und gereapt werden.
+Die sichtbare Eingabe kommt ausschliesslich von der QEMU-USB-Tastatur bei
+i8042=off. Der Test prueft sechs sichtbare Auswahlzeilen, Umlauf, Dialoge,
+Fortschritt, Text/CLS/Scrollen, Rueckkehr und regulaeren Reset. P6-Screendumps
+werden ausserhalb des Monitors gegen das Originalbild und alle Folgezustaende
+pixelgenau verglichen. Gemeinsame PS7-Orchestrierung und ein kleines
+frameworkfreies C#-Pruefmodul unterstuetzen beide Hosts. Dieser Nachweis ist
+unabhaengig von der Gespraechs-Preview und verlangt keinen Benutzersichttest.
+
+Der reale Bildstart deckte eine gemeinsame FAT32-Grenze auf: readFile
+beendete den Lauf nach 4096 Clustern mit scheinbarem Teilerfolg. Bei den
+512-Byte-Clustern des RAM-Volumes waren so nur 2 MB lesbar. Der kanonische
+Kernel begrenzt nun durch Dateigroesse und Volume-Geometrie, prueft gueltige
+Cluster und meldet ein vorzeitiges Kettenende als Fehler. Die ausdrueckliche
+Uebernahme steht in Provenance/owner-update-0.76.6.json und der zugehoerigen
+Legal-Patchdatei. Das originale 4720110-Byte-Bild wird danach vollstaendig
+ueber die normale Datei-API geladen und in den Gast-Screendumps verifiziert.
+
+Abnahme: Linux/KVM, SMP4, 1024 MB RAM. BIOS 800x600, 1024x768 und 1920x1080
+sowie UEFI 1024x768 bestanden mit jeweils 16 Framebuffervergleichen, allen
+Menueaktionen, Terminal- und Konsolenisolationspruefung. Windowsausfuehrung
+und physische Hardware bleiben davon getrennt; der einzige Benutzersichttest
+bleibt die abschliessende Lenovo-USB-Installation in 0.76.26.

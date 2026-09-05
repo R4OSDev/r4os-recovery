@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "owner": "Kernel",
+  "baseCommit": "fcfc052e8e57b6e770806c63d111f66a8bf90a6a",
+  "patch": "Legal/Changes/Kernel-0.76.6.patch",
+  "patchSha256": "25d4e90f309d8bdd610edab0eb5b509d2026eee5ea76d047a44e6f5a4e7af1f4",
+  "files": [
+    {
+      "path": "Kernel/DOCUMENTATION.de.txt",
+      "sha256": "1bde44762286bd04713f402d56fbbe1b255115db09c192d4048e084cf50cc35c"
+    },
+    {
+      "path": "Kernel/fs/fat/fat32.zig",
+      "sha256": "6cac32f2c5ddef0c3d041c55f971d4a1577b44b5b0408c4a85b8a71c965024da"
+    }
+  ],
+  "reason": "0.76.6: complete FAT32 file reads bounded by file and volume geometry, rejecting premature chain termination."
+}

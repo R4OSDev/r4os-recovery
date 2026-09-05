@@ -33,7 +33,7 @@ pub fn run() bool {
     // Its line editor must also process a deliberate typo and Backspace.
     keyboard.setLayout(.en_en);
     const programs_before = r4x.programRegistryStats();
-    if (!runtime.launchShell()) return false;
+    if (!runtime.launchTerminal()) return false;
     log.puts("[RECOVERYINPUT] phase=TERMINAL\r\n");
     const deadline = timer.deadlineAfter(timer.tickCount(), @as(u64, timer.frequency()) * 30);
     var file_ok = false;

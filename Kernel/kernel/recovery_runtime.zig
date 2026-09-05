@@ -36,6 +36,7 @@ const modules = @import("modules.zig");
 const fonts = @import("font_catalog.zig");
 const memory_boot = @import("memory_boot.zig");
 const fatal = @import("fatal.zig");
+const boot_perf = @import("boot_perf.zig");
 const keyboard = @import("../driver/input/keyboard.zig");
 const r4d = @import("../program/r4d.zig");
 const r4p = @import("../program/r4p.zig");
@@ -67,21 +68,41 @@ pub fn admitFilesystem() bool {
 }
 
 pub fn startShell() noreturn {
-    if (!launchShell()) fatal.kernelFatal(.shell, "Recovery Terminal admission failed");
-    scheduler.exitCurrentAndRetire();
+    // Userland owns the complete display after admission. Background kernel
+    // diagnostics keep their serial sink without painting over that display.
+    log.setConsoleSink(null);
+    const config = boot_config.get();
+    const args = if (@import("config").recovery_probe == .ui) "/UISMOKE" else boot_config.shellArgs(config);
+    if (!launchShellPath(boot_config.shellPath(config), args))
+        fatal.kernelFatal(.shell, "Recovery menu admission failed");
+    var ready = false;
+    while (r4x.activeShellInstanceId() != 0) {
+        if (!ready and boot_perf.snapshot().state == .ready) {
+            ready = true;
+            log.puts("[RECOVERY] shell=READY\r\n");
+        }
+        scheduler.sleepTicks(1);
+    }
+    fatal.kernelFatal(.shell, "Recovery menu exited unexpectedly");
 }
 
-pub fn launchShell() bool {
-    // The standard Terminal owns parsing, commands and console sessions.
+pub fn launchTerminal() bool {
+    return launchShellPath(terminal_path, "/NOAUTOEXEC");
+}
+
+fn launchShellPath(path: []const u8, args: []const u8) bool {
     // SERVMAN autostart follows the network foundation in 0.76.7.
     r4x.initializeRuntime(memory_boot.usableBytes());
     const boot_drive = drive.get('C') orelse return false;
-    const config = boot_config.get();
     // With no external console host, the standard shell consumes the physical
     // keyboard directly. terminal_mode expects a host to forward input.
-    if (r4x.runShellPathWithHost(boot_drive, boot_config.shellPath(config), boot_config.shellArgs(config), boot_drive, .none) != .ran)
+    boot_perf.beginShellAttempt(.configured);
+    if (r4x.runShellPathWithHost(boot_drive, path, args, boot_drive, .none) != .ran) {
+        boot_perf.noteShellLaunchFailure();
         return false;
-    log.puts("[RECOVERYRAM] terminal=STARTED\r\n");
+    }
+    boot_perf.noteShellLaunched(r4x.activeShellInstanceId());
+    log.puts("[RECOVERYRAM] shell=STARTED\r\n");
     return true;
 }
 

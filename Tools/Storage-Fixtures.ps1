@@ -29,7 +29,7 @@ function Header([byte[]]$Entries,[string]$DiskGuid,[uint64]$Current,[uint64]$Bac
     U32 $h 16 (Crc $h 92)
     return ,$h
 }
-function New-Installation([int]$Number,[bool]$BadManifest=$false){
+function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolution='1024x768x32'){
     $name=if($BadManifest){'damaged'}else{"disk-$Number"}
     $dir=Join-Path $output $name
     [IO.Directory]::CreateDirectory($dir)|Out-Null
@@ -55,7 +55,7 @@ function New-Installation([int]$Number,[bool]$BadManifest=$false){
     $slot=if($Number -eq 3){'PREVIOUS'}else{'CURRENT'}
     $config=Join-Path $dir 'limine.conf'
     $recoveryGuid=$parts.RECOVERY.partitionGuid
-    [IO.File]::WriteAllText($config,"timeout: 0`n`n/Recovery storage probe`n    protocol: limine`n    path: guid($recoveryGuid):/$slot/recovery.elf`n    resolution: 1024x768x32`n    module_path: guid($recoveryGuid):/$slot/runtime.img`n    module_string: recovery.runtime=1`n",$utf8)
+    [IO.File]::WriteAllText($config,"timeout: 0`n`n/Recovery storage probe`n    protocol: limine`n    path: guid($recoveryGuid):/$slot/recovery.elf`n    resolution: $Resolution`n    module_path: guid($recoveryGuid):/$slot/runtime.img`n    module_string: recovery.runtime=1`n",$utf8)
     $diskPath=Join-Path $output "$name.img"
     $disk=[IO.File]::Open($diskPath,[IO.FileMode]::Create,[IO.FileAccess]::ReadWrite)
     try{
@@ -97,4 +97,3 @@ function New-Installation([int]$Number,[bool]$BadManifest=$false){
     Checked $limine @('bios-install',$diskPath)
     return $diskPath
 }
-
