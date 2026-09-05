@@ -7,7 +7,6 @@ const boot_display = @import("display/boot_display.zig");
 const interrupts = @import("arch/x86_64/interrupts.zig");
 const power = @import("arch/x86_64/power.zig");
 const reset = @import("arch/x86_64/reset.zig");
-const keyboard = @import("driver/input/keyboard.zig");
 const crash = @import("kernel/crash.zig");
 const fatal = @import("kernel/fatal.zig");
 const log = @import("kernel/log.zig");
@@ -24,9 +23,9 @@ const platform_irq_boot = @import("kernel/platform_irq_boot.zig");
 const module_boot = @import("kernel/module_boot.zig");
 const service_boot = @import("kernel/service_boot.zig");
 const recovery_runtime = @import("kernel/recovery_runtime.zig");
-const scheduler = @import("sched/scheduler.zig");
 const version = @import("kernel/version.zig");
 const recovery_boot = @import("kernel/recovery_boot.zig");
+const recovery_ram = @import("kernel/recovery_ram.zig");
 
 pub const panic = std.debug.FullPanic(handleZigPanic);
 
@@ -62,26 +61,25 @@ export fn kmain() callconv(.c) noreturn {
     interrupts.enable();
     require(recovery_boot.modulesReserved(), .memory, "Recovery boot module reservation lost");
     log.puts("[RECOVERY] foundation=READY system_required=0\r\n");
-    if (comptime config.recovery_probe != .none) {
+    if (comptime config.recovery_probe == .poweroff or config.recovery_probe == .reboot) {
         require(recovery_boot.runProbe(), .runtime, "Recovery foundation probe failed");
         log.serialFlush();
         if (comptime config.recovery_probe == .reboot) reset.reboot();
         power.poweroff();
     }
 
-    // 0.76.2 foundation prompt. RAM filesystem/userland admission follows in
-    // 0.76.3; keyboard commands keep this intermediate artifact controllable.
+    require(recovery_ram.mount(), .storage, "Recovery RAM image rejected");
+    if (comptime config.recovery_probe == .ram)
+        require(recovery_runtime.waitForMediaRemoval(), .storage, "Recovery boot medium removal not acknowledged");
+    require(recovery_runtime.admitFilesystem(), .loader, "Recovery RAM userland admission failed");
     boot_status.releaseForUserSession();
     log.setOutputHook(null);
-    log.puts("Recovery foundation ready. R: restart; P: power off.\r\n");
-    while (true) {
-        if (keyboard.readChar()) |ch| switch (ch) {
-            'r', 'R' => reset.reboot(),
-            'p', 'P' => power.poweroff(),
-            else => {},
-        };
-        scheduler.sleepTicks(1);
+    if (comptime config.recovery_probe == .ram) {
+        require(recovery_runtime.runRamProbe(), .runtime, "Recovery RAM runtime probe failed");
+        log.serialFlush();
+        power.poweroff();
     }
+    recovery_runtime.startShell();
 }
 
 fn require(ok: bool, phase: crash.BootPhase, message: []const u8) void {

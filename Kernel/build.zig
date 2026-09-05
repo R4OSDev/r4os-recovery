@@ -1,9 +1,13 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const RecoveryProbe = enum { none, poweroff, reboot };
+    const RecoveryProbe = enum { none, poweroff, reboot, ram };
     const recovery_probe = b.option(RecoveryProbe, "recovery-probe", "Bounded Recovery foundation guest witness") orelse .none;
     const recovery_version_source = b.option([]const u8, "recovery-version", "Recovery release version") orelse @panic("Recovery version must be supplied by Build.ps1");
+    const runtime_sha256 = b.option([]const u8, "runtime-sha256", "SHA-256 of the paired complete RAM volume") orelse "";
+    const runtime_bytes = b.option(u64, "runtime-bytes", "Size of the paired complete RAM volume") orelse 0;
+    if ((recovery_probe == .none or recovery_probe == .ram) and (runtime_sha256.len != 64 or runtime_bytes == 0))
+        @panic("Build the paired runtime.img through Build.ps1 before building the Recovery kernel");
     // The R4OS kernel is pinned to ReleaseSafe. Debug overflows the Zig 0.16
     // ELF linker, while the kernel must never inherit a caller optimization.
     const optimize: std.builtin.OptimizeMode = .ReleaseSafe;
@@ -116,6 +120,8 @@ pub fn build(b: *std.Build) void {
     const config = b.addOptions();
     config.addOption(RecoveryProbe, "recovery_probe", recovery_probe);
     config.addOption([]const u8, "recovery_version", recovery_version_source);
+    config.addOption([]const u8, "runtime_sha256", runtime_sha256);
+    config.addOption(u64, "runtime_bytes", runtime_bytes);
     config.addOption(bool, "enable_exception_test", enable_exception_test);
     config.addOption(bool, "enable_page_fault_test", enable_page_fault_test);
     config.addOption(bool, "enable_general_protection_test", enable_general_protection_test);

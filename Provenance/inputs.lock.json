@@ -1478,8 +1478,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 15201,
-      "sha256": "a3ce2cf1610390651ef5feaf654c96a78429b7a294812a35a1a41d02eb501a24",
+      "bytes": 15780,
+      "sha256": "97ce84c2274b447e9f10caad42197029a14329373864c8b946e6471d9e93139d",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -2504,9 +2504,16 @@
       "origin": null
     },
     {
+      "path": "Kernel/kernel/recovery_ram.zig",
+      "bytes": 4038,
+      "sha256": "ad9fb5c711a6a28e070e66e8d6ef64e24d7288daf29d7d9d2c644a3dd8406ad1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/kernel/recovery_runtime.zig",
-      "bytes": 1181,
-      "sha256": "34da3cdf8adca2fa5841b78b68e09b3f8162d99901799e19797179fd45ca6fb5",
+      "bytes": 7925,
+      "sha256": "80a7bffed33d4c7b80c4be1d613feacfd1f5f094dbd36e6b30ef104c45eab887",
       "originalSha256": null,
       "origin": null
     },
@@ -3362,8 +3369,8 @@
     },
     {
       "path": "Kernel/README.md",
-      "bytes": 1493,
-      "sha256": "cc1376236a749687ff8545bce3b10815bbbea302a4b33655cda92e310776a3c9",
+      "bytes": 1846,
+      "sha256": "ea39baa16acc3e5dbb204630424ba0b556cb909e1ea301393a51f5a6957d9701",
       "originalSha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
       "origin": {
         "path": "README.md",
@@ -3372,8 +3379,8 @@
     },
     {
       "path": "Kernel/recovery_main.zig",
-      "bytes": 4428,
-      "sha256": "2078c6400cef1cb0009e77d79934a991586c36fb4720cac792b62e499ec89f1b",
+      "bytes": 4542,
+      "sha256": "b5b7c3b2accd18811317bcb0a9cf401c6522b6e29408cd4fe20be33a107c731d",
       "originalSha256": null,
       "origin": null
     },
@@ -3600,12 +3607,19 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 24,
-      "sha256": "98924c6c909f83c4129fae79730dd744d043d38a7fc305e38c48aa52258c029c",
+      "sha256": "fa41f673b977e775e0c2b0927f7842ef022388e0158b3c5893630535b60286aa",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
         "source": "Kernel"
       }
+    },
+    {
+      "path": "Legal/Changes/Distribution-0.76.3.patch",
+      "bytes": 10342,
+      "sha256": "77a38487016b88613decbc6f299fbcad0391c9e270eadc2193b899240a1be6e6",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Legal/Manifests/AHCI/module.R4MF",
@@ -5621,6 +5635,27 @@
         "path": "Tools/ApiContractGen/src/main.zig",
         "source": "Contract"
       }
+    },
+    {
+      "path": "Platform/Distribution/Tools/ImageCreator/src/main.zig",
+      "bytes": 36033,
+      "sha256": "e450ffb7636f6108a61bcb9048adc3b7d53efd96eee0466fa4fe6a4c498ce414",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_cli.zig",
+      "bytes": 8135,
+      "sha256": "5c1ba42aca0d3e2e54e395bc0dc205b9856db828eb6cc30074d137e552f35e55",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_mkfs.zig",
+      "bytes": 48925,
+      "sha256": "c2e953ffcae062a6c385a8e15f14a0af11dbf1189238463a79ab462a884d8956",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Platform/SDK/.gitattributes",
@@ -8280,6 +8315,13 @@
       }
     },
     {
+      "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+      "bytes": 63,
+      "sha256": "b38dbaf2d6f484a7871a5d122ae4bfcf4c7f7ed4c733cdb5eb9427b1a1a55392",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Runtime/R4OS/CONFIG/SERVICES.R4S",
       "bytes": 784,
       "sha256": "fcc9018e9e75fab6f721b4b998a5aa6a79e6a2ec81b6a65f14b442d8af9442ad",
@@ -8295,6 +8337,13 @@
         "path": "Injection/R4OS/CONFIG/TIME.R4S",
         "source": "Distribution"
       }
+    },
+    {
+      "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+      "bytes": 25,
+      "sha256": "6b6abe4b4d69630d7bb34cbaa0339d15f6b21afadd0c1ed0459600cc49630f8a",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
@@ -8377,6 +8426,20 @@
       }
     },
     {
+      "path": "Runtime/R4OS/FONTS/TERMINAL16.R4F",
+      "bytes": 7652,
+      "sha256": "c27c8a1b22acdcd937b0e0b2d98bf62641325cda9a62a951d3ef9ab5e2ff0e9e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Runtime/R4OS/FONTS/TERMINAL8.R4F",
+      "bytes": 6836,
+      "sha256": "567dd1bd4ef30a4019923c4e0b138324229015d58395dffe1e6a8eeb068694e5",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Runtime/R4OS/LIBS/R4STD.R4L",
       "bytes": 50200,
       "sha256": "461213fd536bac193762bf9719f59e8f220209f038ce468aeba0e3e523eacabd",
@@ -8385,6 +8448,13 @@
         "path": "Repositories/Libraries/R4STD/zig-out/R4STD.R4L",
         "source": "Libraries"
       }
+    },
+    {
+      "path": "Runtime/R4OS/MEDIA/RECOVERY.BMP",
+      "bytes": 4720110,
+      "sha256": "be7137ab201586fb805ab3b1c7a648224cad32210b14e0985c1256edecb40e16",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Runtime/R4OS/PROTOCOLS/HIDREPORT.R4P",
@@ -8665,6 +8735,13 @@
         "path": "Artifacts/Modules/Terminal/TERMINAL.R4X",
         "source": "Apps-Terminal"
       }
+    },
+    {
+      "path": "Runtime/TEMP/README.TXT",
+      "bytes": 72,
+      "sha256": "0b2d1bc4949c34ae923aa9958e2510e4b59125945ddef35542a247c9b7f81db5",
+      "originalSha256": null,
+      "origin": null
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -8793,6 +8870,121 @@
         }
       ],
       "reason": "0.76.2: Disable inherited checkout normalization for byte-pinned Recovery sources on both hosts."
+    },
+    {
+      "reason": "0.76.3: Full FAT32 RAM volume, paired image verification and existing module/Terminal admission; explicit checked ImageCreator/font transfer and user-provided background.",
+      "changes": [
+        {
+          "after": "97ce84c2274b447e9f10caad42197029a14329373864c8b946e6471d9e93139d",
+          "path": "Kernel/build.zig",
+          "before": "a3ce2cf1610390651ef5feaf654c96a78429b7a294812a35a1a41d02eb501a24"
+        },
+        {
+          "after": "ad9fb5c711a6a28e070e66e8d6ef64e24d7288daf29d7d9d2c644a3dd8406ad1",
+          "path": "Kernel/kernel/recovery_ram.zig",
+          "before": null
+        },
+        {
+          "after": "afd4463b93a91bffdc6f08a4ef5cf90bfcfec3680e26546b3952b97848f3f896",
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "before": "34da3cdf8adca2fa5841b78b68e09b3f8162d99901799e19797179fd45ca6fb5"
+        },
+        {
+          "after": "c96e4aa5075b9847aa925c2db13be74c55824f556074df7f7f376895db5ef0e3",
+          "path": "Kernel/recovery_main.zig",
+          "before": "2078c6400cef1cb0009e77d79934a991586c36fb4720cac792b62e499ec89f1b"
+        },
+        {
+          "after": "fa41f673b977e775e0c2b0927f7842ef022388e0158b3c5893630535b60286aa",
+          "path": "Kernel/VERSION.R4S",
+          "before": "98924c6c909f83c4129fae79730dd744d043d38a7fc305e38c48aa52258c029c"
+        },
+        {
+          "after": "77a38487016b88613decbc6f299fbcad0391c9e270eadc2193b899240a1be6e6",
+          "path": "Legal/Changes/Distribution-0.76.3.patch",
+          "before": null
+        },
+        {
+          "after": "e450ffb7636f6108a61bcb9048adc3b7d53efd96eee0466fa4fe6a4c498ce414",
+          "path": "Platform/Distribution/Tools/ImageCreator/src/main.zig",
+          "before": null
+        },
+        {
+          "after": "5c1ba42aca0d3e2e54e395bc0dc205b9856db828eb6cc30074d137e552f35e55",
+          "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_cli.zig",
+          "before": null
+        },
+        {
+          "after": "c2e953ffcae062a6c385a8e15f14a0af11dbf1189238463a79ab462a884d8956",
+          "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_mkfs.zig",
+          "before": null
+        },
+        {
+          "after": "b38dbaf2d6f484a7871a5d122ae4bfcf4c7f7ed4c733cdb5eb9427b1a1a55392",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": null
+        },
+        {
+          "after": "6b6abe4b4d69630d7bb34cbaa0339d15f6b21afadd0c1ed0459600cc49630f8a",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": null
+        },
+        {
+          "after": "c27c8a1b22acdcd937b0e0b2d98bf62641325cda9a62a951d3ef9ab5e2ff0e9e",
+          "path": "Runtime/R4OS/FONTS/TERMINAL16.R4F",
+          "before": null
+        },
+        {
+          "after": "567dd1bd4ef30a4019923c4e0b138324229015d58395dffe1e6a8eeb068694e5",
+          "path": "Runtime/R4OS/FONTS/TERMINAL8.R4F",
+          "before": null
+        },
+        {
+          "after": "be7137ab201586fb805ab3b1c7a648224cad32210b14e0985c1256edecb40e16",
+          "path": "Runtime/R4OS/MEDIA/RECOVERY.BMP",
+          "before": null
+        },
+        {
+          "after": "0b2d1bc4949c34ae923aa9958e2510e4b59125945ddef35542a247c9b7f81db5",
+          "path": "Runtime/TEMP/README.TXT",
+          "before": null
+        }
+      ]
+    },
+    {
+      "reason": "0.76.3: Move the physical-media removal boundary before every userland admission; check the actual R4P source label.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "after": "d2df26927542c6e9b27ea9813e4f5bb7337b50e914f00b1859113720bcceac76",
+          "before": "afd4463b93a91bffdc6f08a4ef5cf90bfcfec3680e26546b3952b97848f3f896"
+        },
+        {
+          "path": "Kernel/recovery_main.zig",
+          "after": "b5b7c3b2accd18811317bcb0a9cf401c6522b6e29408cd4fe20be33a107c731d",
+          "before": "c96e4aa5075b9847aa925c2db13be74c55824f556074df7f7f376895db5ef0e3"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "d2df26927542c6e9b27ea9813e4f5bb7337b50e914f00b1859113720bcceac76",
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "after": "80a7bffed33d4c7b80c4be1d613feacfd1f5f094dbd36e6b30ef104c45eab887"
+        }
+      ],
+      "reason": "0.76.3: Use the standard unhosted Terminal input contract until the Recovery menu supplies its console host."
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/README.md",
+          "before": "cc1376236a749687ff8545bce3b10815bbbea302a4b33655cda92e310776a3c9",
+          "after": "ea39baa16acc3e5dbb204630424ba0b556cb909e1ea301393a51f5a6957d9701"
+        }
+      ],
+      "reason": "0.76.3: Document the complete RAM/kernel pair and direct Terminal boot in the kernel checkout."
     }
   ]
 }

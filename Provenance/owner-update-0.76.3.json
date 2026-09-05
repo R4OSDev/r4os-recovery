@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "reason": "0.76.3: Complete RAM volume via canonical ImageCreator --volume-only; checked multi-cluster root, capacity and volume-label fixes. Explicit frozen source/resource transfer after owner build.",
+  "owner": "R4OSDev/r4os-distribution",
+  "baseCommit": "318c468d4074cbbefb4310f9dc59020680110055",
+  "patch": "Legal/Changes/Distribution-0.76.3.patch",
+  "patchSha256": "77a38487016b88613decbc6f299fbcad0391c9e270eadc2193b899240a1be6e6",
+  "files": [
+    {
+      "ownerPath": "Tools/ImageCreator/src/main.zig",
+      "recoveryPath": "Platform/Distribution/Tools/ImageCreator/src/main.zig",
+      "sha256": "e450ffb7636f6108a61bcb9048adc3b7d53efd96eee0466fa4fe6a4c498ce414"
+    },
+    {
+      "ownerPath": "Tools/ImageCreator/src/ntfs_cli.zig",
+      "recoveryPath": "Platform/Distribution/Tools/ImageCreator/src/ntfs_cli.zig",
+      "sha256": "5c1ba42aca0d3e2e54e395bc0dc205b9856db828eb6cc30074d137e552f35e55"
+    },
+    {
+      "ownerPath": "Tools/ImageCreator/src/ntfs_mkfs.zig",
+      "recoveryPath": "Platform/Distribution/Tools/ImageCreator/src/ntfs_mkfs.zig",
+      "sha256": "c2e953ffcae062a6c385a8e15f14a0af11dbf1189238463a79ab462a884d8956"
+    },
+    {
+      "generatedBy": "Distribution/Assets/SystemFonts/Terminal8",
+      "recoveryPath": "Runtime/R4OS/FONTS/TERMINAL8.R4F",
+      "sha256": "567dd1bd4ef30a4019923c4e0b138324229015d58395dffe1e6a8eeb068694e5"
+    },
+    {
+      "generatedBy": "Distribution/Assets/SystemFonts/Terminal16",
+      "recoveryPath": "Runtime/R4OS/FONTS/TERMINAL16.R4F",
+      "sha256": "c27c8a1b22acdcd937b0e0b2d98bf62641325cda9a62a951d3ef9ab5e2ff0e9e"
+    }
+  ],
+  "userAsset": {
+    "path": "Runtime/R4OS/MEDIA/RECOVERY.BMP",
+    "sha256": "be7137ab201586fb805ab3b1c7a648224cad32210b14e0985c1256edecb40e16",
+    "origin": "User-supplied Recovery.bmp; unchanged bytes."
+  }
+}

@@ -8,7 +8,9 @@ The 0.76.1 baseline contains pinned kernel, platform contract and SDK sources,
 37 precompiled console, service, driver, protocol and library modules, and
 their original source archives and license notices. Since 0.76.2 the separate
 Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
-complete RAM filesystem and console runtime follow in 0.76.3.
+complete 64-MB FAT32 runtime is loaded by Limine, checked against the paired
+kernel hash, and mounted as writable RAM drive C: in 0.76.3. The standard
+Terminal runs from that volume; service autostart follows the network step.
 
 Run `Build.bat` on Windows or `./Build.sh` on Linux with PowerShell 7 to verify
 the local inventory. The shared `Build.ps1` checks file hashes, actual binary
@@ -17,13 +19,21 @@ from the normal workspace or fetch dependencies. Results are written to
 `Artifacts/Verification/inventory.json`.
 
 Add `-Mode Kernel` to build `Artifacts/Kernel/bin/recovery.elf` using the
-recorded Zig version. Add `-Mode BootTest` for the bounded BIOS/UEFI SMP4
+recorded Zig version and the paired `Artifacts/Runtime/runtime.img`.
+`-Mode Runtime` builds only that volume. `-Mode RuntimeTest` checks late
+module/media access after removing the USB boot medium, normal console
+commands, RAM writes and rejection of invalid boot payloads. After the normal
+kernel build, `pwsh -File Tools/Test-Boot.ps1 -Action terminal` exercises the
+interactive production Terminal with keyboard input and regular shutdown.
+Add `-Mode BootTest` for the bounded BIOS/UEFI SMP4
 foundation check, or `-Mode BootTest -BootProbe reboot` to verify reset.
 Diagnostic kernels and logs remain in `Artifacts/BootProbe/`. The Linux UEFI
 check uses the Debian `ovmf` package; Windows uses matching firmware from QEMU.
 
 An explicit initial import uses `Tools/Import.ps1` and the source revisions in
-`Provenance/import-plan.json`. Source and configuration changes are recorded
+`Provenance/import-plan.json`. Later explicit owner transfers record the
+base commit, source patch and content hashes under Provenance and Legal.
+Source and configuration changes are recorded
 separately with `Tools/Record-Inputs.ps1 -Reason 'description'`; this is never
 an automatic build action. See [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt)
 and [the technical contracts](RecoveryTools/Contracts.de.txt) for details.
@@ -49,6 +59,7 @@ The frozen inputs and their owners are separated explicitly:
     Kernel/             Recovery kernel sources
     Platform/Contract/  Pinned platform API and ABI contract
     Platform/SDK/       Pinned SDK sources
+    Platform/Distribution/  Explicitly frozen ImageCreator sources
     RecoveryTools/      Recovery menu and installation/update workflows
     Runtime/            Configuration, imported modules, and recovery media
     Provenance/         Import versions, source commits, hashes, and manifests

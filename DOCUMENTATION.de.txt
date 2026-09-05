@@ -1,13 +1,14 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.2
+Stand 0.76.3
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
 einen eigenen Recovery-Kernel. recovery.elf startet mit Limine unter BIOS
-und x64-UEFI ohne SYSTEM-Partition. Die vollstaendige RAM-Dateisystem- und
-Userland-Aufnahme folgt in 0.76.3; ein Recovery-Menue ist noch nicht enthalten.
+und x64-UEFI ohne SYSTEM-Partition. Seit 0.76.3 laedt Limine ein vollstaendiges
+FAT32-Laufzeitvolume in den RAM; C: und das regulaere Terminal arbeiten daraus.
+Ein Recovery-Menue und automatische Netzwerkdienste folgen spaeter.
 
 Pruefen: Build.bat beziehungsweise ./Build.sh, optional -Mode Verify.
 Beide duennen Starter rufen dieselbe Build.ps1 mit PowerShell 7 auf.
@@ -16,7 +17,8 @@ Recovery-Eingaben. Ergebnis: Artifacts/Verification/inventory.json.
 Es werden weder normale Workspace-Module neu gebaut noch Eingaben aus dem
 Workspace kopiert oder ueber das Netz nachgeladen.
 
--Mode Kernel baut Artifacts/Kernel/bin/recovery.elf mit dem festgehaltenen
+-Mode Kernel baut das zugehoerige Artifacts/Runtime/runtime.img und
+Artifacts/Kernel/bin/recovery.elf mit dem festgehaltenen
 Zig, lokalem Contract und ReleaseSafe/soft_float. -Zig waehlt bei Bedarf das
 Hostwerkzeug; der Default kommt aus dem benachbarten DevKit. Kernel/Build.sh
 und Kernel/Build.bat delegieren denselben Einstieg. Kernel/recovery_main.zig
@@ -28,8 +30,9 @@ Programmlebenszyklus, Service-IPC und DriverWork aus den festgehaltenen
 Besitzern. Sie startet keinen Desktop und sucht keine SYSTEM-Partition.
 Limine-Modulbereiche muessen vollstaendig als kernel_and_modules reserviert
 sein; sie werden nicht als freie PMM-Seiten aufgenommen. Controllergebundene
-Blockworker starten erst, wenn ein Blockgeraet vorhanden ist. Das regulaere
-Zwischenartefakt zeigt eine Textkonsole mit R fuer Neustart und P fuer Aus.
+Blockworker starten nach dem Einbinden des RAM-Blockgeraets. Das regulaere
+Artefakt startet das vorhandene TERMINAL.R4X direkt an der Systemkonsole
+ohne externen Eingabehost und gibt den Boot-Task frei; Kommandoparser und Programmverwaltung bleiben unveraendert.
 
 Bootnachweis
 ------------
@@ -41,8 +44,9 @@ Standard ist Herunterfahren. Der Diagnosecode fehlt im regulaeren Artefakt.
 
 Tools/Test-Boot.ps1 erstellt eine technische 128-MB-Fixture mit genau einer
 FAT32-Partition und ohne SYSTEM/NTFS. Sie ist nicht das geplante Releaseimage.
-Der ImageCreator und die QEMU-Hostauswahl stammen aus dem festgehaltenen
-Distribution-Quellenarchiv. Neben recovery.elf laedt Limine einen bekannten
+Der ImageCreator kommt aus der ausdruecklich aktualisierten lokalen
+Platform/Distribution-Kopie, die QEMU-Hostauswahl weiterhin aus dem
+urspruenglichen Distribution-Quellenarchiv. Neben recovery.elf laedt Limine einen bekannten
 4096-Byte-Pruefblock. Vier an CPU 0 bis 3 gebundene Worker allozieren, warten,
 pruefen und geben Speicher frei. Vorher und danach bleibt der Pruefblock
 unveraendert. Der Test verlangt den vollstaendigen SMP4-Erfolgsmarker und
@@ -55,6 +59,65 @@ Der Teststarter erlaubt explizite -Qemu, -LimineRoot, -OvmfCode und -OvmfVars.
 Die vorliegende Abnahme lief auf Linux mit KVM: BIOS/UEFI, Poweroff/Reset,
 vier vCPUs und 1024 MB RAM. Eine Windows- oder Hardwareabnahme wird damit
 nicht behauptet. Die RAM-Menge ist noch keine finale Kapazitaetszusage.
+
+
+Vollstaendige RAM-Laufzeit
+-------------------------
+
+-Mode Runtime erzeugt Artifacts/Runtime/runtime.img: ein 64-MB-FAT32-Volume
+mit Bootsektor bei null, beiden FATs, Verzeichnissen und saemtlichen Runtime-
+Dateien. Der explizit uebernommene kanonische ImageCreator verwendet dafuer
+--volume-only. Normale MBR-Images und reine Volumes teilen denselben Code.
+Die Aenderung beim Besitzer behebt zugleich ueberlappende mehrclusterige
+Hauptverzeichnisse, fehlende Kapazitaetsgrenzen und die nur im BPB vorhandene
+Datentraegerbezeichnung. Herkunft: Provenance/owner-update-0.76.3.json und
+Legal/Changes/Distribution-0.76.3.patch auf dem genannten Basiscommit.
+
+Der Build bindet Groesse und SHA-256 des gesamten Images in recovery.elf.
+Limine muss genau ein Laufzeitmodul mit module_string recovery.runtime=1
+laden. Fehlende, doppelte, verkuerzte oder byteveraenderte Module werden vor
+der Einbindung von C: mit einem konkreten RECOVERYRAM-Fehler abgewiesen.
+Die Root-Recovery-Version, Runtime-Identitaet und Terminal-Versionsdatei
+muessen beim Build uebereinstimmen. recovery.elf und runtime.img bilden damit
+ein festes Paar, das spaeter gemeinsam veroeffentlicht und ersetzt wird.
+
+Das bereits von Limine geladene Image bleibt in seinen reservierten
+Speicherbereichen. Der fruehe RAM-Blockadapter verwendet begrenzte synchrone
+Lese-/Schreiboperationen; die vorhandenen Blockworker, Cache-, FAT32-, VFS-
+und Dateianfragen bleiben der produktive I/O-Weg. C: wird vor jeglicher
+physischer SYSTEM-Suche fest als FAT32 mit Rolle ram gebunden. Es ist
+beschreibbar; Konfiguration, R4STD, Module, Fonts, Media und C:\TEMP sind
+vollstaendig im RAM. Aenderungen gehen beim Neustart verloren. R: ist in
+diesem Schritt noch nicht eingebunden; dessen Zuordnung folgt in 0.76.4.
+
+Zwei unveraenderte Terminalfonts stammen aus dem Besitzerbuild. Das vom
+Benutzer gelieferte Hintergrundbild liegt bytegleich unter
+C:\R4OS\MEDIA\RECOVERY.BMP; dargestellt wird es erst mit dem Menueschritt.
+Die regulaeren R4M0-Lader, R4XStart-Tabellen und R4L-Bindungen sind uebernommen.
+Die Hintergrunddienste werden erst nach ihrer Netzwerkgrundlage automatisch
+gestartet; SERVMAN und die Dienstmodule liegen bereits im Laufzeitvolume.
+
+-Mode RuntimeTest verwendet denselben begrenzten SMP4-Runner. Unter BIOS und
+UEFI bootet die technische Fixture von USB. Nach der C:-Einbindung entfernt
+der Host per QMP den USB-Datentraeger und beide Blockbackends, prueft ihre
+Abwesenheit und setzt erst dann die Gastabnahme fort. Saemtliche Userland-
+Aufnahme erfolgt danach: R4STD, R4D-Erkennung und -Aktivierung, bedarfsgeladenes
+JSON.R4P, Terminalfonts und vollstaendige BMP-Dateilesung mit Hashvergleich.
+Das unveraenderte Terminal startet HELP und SERVMAN, liest Konfiguration,
+schreibt/liest/loescht C:\TEMP\LATE.TXT und benutzt die R4STD-Datums-API.
+Rueckkehrcodes, vererbte Konsolenausgabe und Programmbereinigung werden
+geprueft. Vier weitere kurze Faelle belegen die vorgenannten Modulfehler.
+Logs, Kernel-/Imagehashes und QMP-Nachweis liegen in Artifacts/BootProbe/ram.
+Nach -Mode Kernel prueft Tools/Test-Boot.ps1 -Action terminal ausserdem den
+regulaeren interaktiven Shellstart: USB entfernen, HELP und POWEROFF ueber
+die Tastatur eingeben und den echten Kernel-Poweroff mit QEMU-Abschluss
+verlangen. Die unhosted Shellausgabe geht dabei zum Framebuffer; die
+Unterprogrammausgabe selbst ist im gesonderten RAM-Nachweis geprueft.
+Ein external terminal_mode benoetigt einen weiterleitenden Consolehost;
+der gegenwaertige direkte Shellstart verwendet deshalb Hostkind none.
+
+Die 64-MB-Laufzeitgroesse und 1024 MB Gast-RAM sind vorlaeufige Build-/
+Testgroessen. Der verbindliche reale Kapazitaetsnachweis bleibt 0.76.23.
 
 Uebernahme
 ----------
@@ -127,11 +190,11 @@ den Ausgangsstand unveraendert nachvollziehen zu koennen. Welche Kernelteile
 tatsaechlich im getrennten Artefakt benoetigt werden, wird beim Build und
 der Gastabnahme nachgewiesen, nicht durch eine reine Textsuche behauptet.
 
-Die gegenwaertige Pruefung belegt statische Kompatibilitaet und Integritaet.
-Sie behauptet noch keine gemeinsame Gast-Laufzeitabnahme der kopierten
-Module. Die Kernel-Bootgrundlage ist unter BIOS/UEFI mit SMP4 geprueft;
-RAM-Dateisystem, spaete Modul-/Ressourcenstarts, USB, Netzwerk und SSH/FTP
-erhalten ihre folgenden begrenzten SMP4-Nachweise.
+Die Bestandspruefung belegt statische Kompatibilitaet und Integritaet.
+Der RAM-Gastnachweis prueft die benoetigten Lader und repraesentative
+unveraenderte Module. Damit sind noch keine echte Datentraeger-, Netzwerk-
+oder SSH-/FTP-Abnahme und keine vollstaendige Treiber-Hardwarematrix belegt;
+diese erhalten ihre folgenden begrenzten SMP4-Nachweise.
 
 Vertraege und Platzbedarf
 ------------------------
