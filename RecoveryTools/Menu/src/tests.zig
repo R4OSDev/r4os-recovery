@@ -4,4 +4,5 @@ test {
     _ = @import("os_probe.zig");
     _ = @import("github.zig");
     _ = @import("cache.zig");
+    _ = @import("boot_config.zig");
 }

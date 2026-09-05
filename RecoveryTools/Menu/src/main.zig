@@ -6,6 +6,7 @@ const selection = @import("selection.zig");
 const targets = selection.model;
 const packages = @import("package_session.zig");
 const install = @import("install.zig");
+const system_update = @import("system_update.zig");
 const downloads = @import("download.zig");
 const github = @import("github.zig");
 const abi = r4os.abi;
@@ -435,6 +436,34 @@ const State = struct {
             const digest = std.fmt.bytesToHex(session.original_digest, .lower);
             self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYINSTALL] result=OK disk={d} sectors={d} original_sha256={s}\r\n", .{ installer.target.target.device.slot, installer.layout.sectors, digest }) catch "");
             result_message = "R4OS installed. SYSTEM, BOOT, both Recovery slots and the original ZIP were verified. DATA is ready. Restart to boot R4OS.";
+            self.clearCatalog();
+            self.notice_return = .menu;
+        } else if (self.operation() == .system) {
+            var update_detail: [512]u8 = undefined;
+            const updater = session.arena.allocator().create(system_update.Updater) catch {
+                result_message = packages.message(error.OutOfMemory);
+                return;
+            };
+            updater.* = system_update.Updater.prepare(session, &self.catalog.?, self.target_index) catch |err| {
+                result_message = system_update.message(if (session.pool.cancelled) error.Cancelled else err, false);
+                self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYSYSUPDATE] preflight={s} writes=0 ram_peak={d}\r\n", .{ @errorName(err), session.pool.peak }) catch "");
+                return;
+            };
+            self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYSYSUPDATE] prepared=OK system_sectors={d} boot_files={d} ram_peak={d} writes=0\r\n", .{ updater.system.target.sector_count, updater.boot_plan.changed_files, session.pool.peak }) catch "");
+            updater.execute() catch |err| {
+                result_message = system_update.message(err, updater.progress.write_attempted);
+                self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYSYSUPDATE] result={s} phase={s} attempted={d} sectors={d} native={d} relative_lba={d} boot_claim={d} system_claim={d}\r\n", .{
+                    @errorName(err),                                                                                 updater.phase,                        @intFromBool(updater.progress.write_attempted), updater.progress.written_sectors,
+                    if (updater.progress.native_error != 0) updater.progress.native_error else updater.native_error, updater.progress.failed_lba orelse 0, updater.boot.claim,                             updater.system.claim,
+                }) catch "");
+                self.clearCatalog();
+                self.notice_return = .menu;
+                return;
+            };
+            self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYSYSUPDATE] result=OK version={s} kernel={s} system_sectors={d} ram_peak={d}\r\n", .{
+                session.prepared.?.system.?.releaseVersion, session.prepared.?.system.?.kernelVersion, updater.system.target.sector_count, session.pool.peak,
+            }) catch "");
+            result_message = "R4OS updated. SYSTEM and its matching BOOT files were verified. Restart to boot the updated system.";
             self.clearCatalog();
             self.notice_return = .menu;
         }

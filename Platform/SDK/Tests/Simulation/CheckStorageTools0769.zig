@@ -5,6 +5,7 @@ const tools = @import("storage_tools");
 const expect = std.testing.expect;
 const eq = std.testing.expectEqual;
 const expectError = std.testing.expectError;
+const expectEqualSlices = std.testing.expectEqualSlices;
 const table = tools.partition;
 const disk_guid = table.guid.parse("00112233-4455-6677-8899-aabbccddeeff").?;
 
@@ -96,6 +97,19 @@ test "five-role layout, GUID boot references and Limine GPT publication" {
         try eq(@as(u64, 2048 * 512), std.mem.readInt(u64, fixture.bytes[0][0x1a4..][0..8], .little));
         try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(before[1..67]), std.mem.sliceAsBytes(fixture.bytes[1..67]));
         try std.testing.expectEqualSlices(u8, tools.limine.payload[512..], std.mem.sliceAsBytes(fixture.bytes[67..])[0 .. tools.limine.payload.len - 512]);
+        const writes = fixture.writes;
+        var readonly = device;
+        readonly.exclusive = false;
+        const installed_table = try table.Plan.read(readonly, &work);
+        try tools.limine.verifyBios(readonly, &installed_table, &work);
+        fixture.bytes[0][100] ^= 1;
+        const different_loader = try table.Plan.read(readonly, &work);
+        try expectError(error.IncompatibleBootChain, tools.limine.verifyBios(readonly, &different_loader, &work));
+        fixture.bytes[0][100] ^= 1;
+        fixture.bytes[67][100] ^= 1;
+        try expectError(error.IncompatibleBootChain, tools.limine.verifyBios(readonly, &installed_table, &work));
+        fixture.bytes[67][100] ^= 1;
+        try eq(writes, fixture.writes);
         for (0..5) |failure| {
             fixture = .{ .sectors = sectors, .bytes = before };
             progress = .{};
@@ -234,6 +248,123 @@ test "prepared FAT file trees, long root chains, bounded import and publication 
     @memcpy(bytes, prepared.bytes);
     bytes[32 * 512 + 8] ^= 1;
     try expectError(error.SourceFat, tools.fat32_view.View.init(bytes, 4096));
+}
+
+fn fatUpdateAllocationCase(allocator: std.mem.Allocator, original: []const u8) !void {
+    const payload = [_]u8{0x93} ** 9000;
+    var update = try tools.fat32_update.prepare(allocator, original, 4096, &.{
+        .{ .path = "BOOT/r4os.elf", .bytes = &payload },
+        .{ .path = "EXTRA/deep/new-release-file.txt", .bytes = "new file" },
+    });
+    defer update.deinit();
+    const view = try tools.fat32_view.View.init(update.bytes, 4096);
+    try view.matches("boot/r4os.elf", &payload);
+    try view.matches("EXTRA/deep/new-release-file.txt", "new file");
+    try view.matches("boot/limine.conf", "custom configuration\r\n");
+    try view.matches("FOREIGN/KEEP.BIN", "foreign boot payload");
+}
+
+test "FAT file replacement preserves boot config and foreign data with bounded failure publication" {
+    const a = std.testing.allocator;
+    var original = try tools.fat32_image.prepare(a, 64 * 2048, 4096, "BOOT", 99, &.{
+        .{ .path = "boot/r4os.elf", .bytes = "old kernel" },
+        .{ .path = "boot/limine.conf", .bytes = "custom configuration\r\n" },
+        .{ .path = "boot/FOREIGN-LONG.txt", .bytes = "Unicode neighbour" },
+        .{ .path = "FOREIGN/KEEP.BIN", .bytes = "foreign boot payload" },
+        .{ .path = "R4UP0001.BIN", .bytes = "preserve short alias" },
+    });
+    defer original.deinit();
+    const source_root = @as(usize, original.stats.geometry.data_start) * 512;
+    var alias_found = false;
+    for (0..16) |slot| {
+        const raw = original.bytes[source_root + slot * 32 ..][0..32];
+        if (std.mem.eql(u8, raw[0..11], "R4UP0001BIN")) {
+            raw[0] = 'r'; // Existing aliases are case-insensitive too.
+            alias_found = true;
+        }
+    }
+    try expect(alias_found);
+    // Keep a valid non-ASCII LFN next to managed files. Its UTF-16 name,
+    // short alias and payload must survive without blocking ASCII lookup.
+    var unicode_at: ?usize = null;
+    var entry_at: usize = @as(usize, original.stats.geometry.data_start) * 512;
+    while (entry_at + 32 <= original.bytes.len) : (entry_at += 32) {
+        const raw = original.bytes[entry_at..][0..32];
+        if (raw[11] == 15 and raw[0] & 31 == 1 and std.mem.readInt(u16, raw[1..3], .little) == 'F' and std.mem.readInt(u16, raw[3..5], .little) == 'O') {
+            std.mem.writeInt(u16, raw[1..3], 0xe9, .little);
+            unicode_at = entry_at;
+            break;
+        }
+    }
+    try expect(unicode_at != null);
+    try std.testing.checkAllAllocationFailures(a, fatUpdateAllocationCase, .{original.bytes});
+    try expectError(error.Path, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/../bad", .bytes = "bad" }}));
+    try expectError(error.PathConflict, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf/sub", .bytes = "bad" }}));
+    try expectError(error.ImageFull, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf", .bytes = original.bytes }}));
+    var unchanged = try tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf", .bytes = "old kernel" }});
+    defer unchanged.deinit();
+    try eq(@as(usize, 0), unchanged.changed_files);
+    try expectEqualSlices(u8, original.bytes, unchanged.bytes);
+    const payload = [_]u8{0x45} ** 10000;
+    var update = try tools.fat32_update.prepare(a, original.bytes, 4096, &.{
+        .{ .path = "boot/r4os.elf", .bytes = &payload },
+        .{ .path = "boot/installation description.json", .bytes = "new manifest" },
+        .{ .path = "EXTRA/deep/new-release-file.txt", .bytes = "new file" },
+    });
+    defer update.deinit();
+    try expectEqualSlices(u8, original.bytes[unicode_at.?..][0..32], update.bytes[unicode_at.?..][0..32]);
+    try eq(@as(usize, 3), update.changed_files);
+    try expectEqualSlices(u8, original.bytes[0..512], update.bytes[0..512]);
+    try expectEqualSlices(u8, original.bytes[6 * 512 ..][0..512], update.bytes[6 * 512 ..][0..512]);
+    const bytes = try a.dupe(u8, original.bytes);
+    defer a.free(bytes);
+    var fixture = Fixture{ .bytes = bytes };
+    var progress = tools.io.Progress{};
+    var work: [tools.io.scratch_bytes]u8 = undefined;
+    var device = fixture.device(&progress);
+    device.exclusive = false;
+    try expectError(error.ExclusiveRequired, update.execute(device, &work));
+    try expect(!progress.write_attempted);
+    device.exclusive = true;
+    bytes[120] ^= 1;
+    try expectError(error.SourceChanged, update.execute(device, &work));
+    try expect(!progress.write_attempted);
+    @memcpy(bytes, original.bytes);
+    try update.execute(device, &work);
+    try expect(progress.verified and progress.flushed);
+    try expectEqualSlices(u8, update.bytes, bytes);
+    const view = try tools.fat32_view.View.init(bytes, 4096);
+    try view.matches("boot/r4os.elf", &payload);
+    try view.matches("boot/installation description.json", "new manifest");
+    try view.matches("boot/limine.conf", "custom configuration\r\n");
+    try view.matches("FOREIGN/KEEP.BIN", "foreign boot payload");
+    try view.matches("R4UP0001.BIN", "preserve short alias");
+    for (0..16) |slot| {
+        const raw = bytes[source_root + slot * 32 ..][0..32];
+        try expect(!std.mem.eql(u8, raw[0..11], "R4UP0001BIN"));
+    }
+    const writes = fixture.writes;
+    const flushes = fixture.flushes;
+    for (0..writes + flushes) |fault| {
+        @memcpy(bytes, original.bytes);
+        fixture = .{ .bytes = bytes };
+        progress = .{};
+        if (fault < writes) fixture.fail_write = fault + 1 else fixture.fail_flush = fault - writes + 1;
+        try expectError(if (fault < writes) error.WriteFailed else error.FlushFailed, update.execute(fixture.device(&progress), &work));
+        try expect(progress.write_attempted and !progress.verified);
+        try expectEqualSlices(u8, original.bytes[0..512], bytes[0..512]);
+    }
+    @memcpy(bytes, original.bytes);
+    fixture = .{ .bytes = bytes, .corrupt_after_flush = true };
+    progress = .{};
+    try expectError(error.VerifyFailed, update.execute(fixture.device(&progress), &work));
+    try expect(!progress.verified);
+    // A crosslinked unrelated file must stop preparation before it can be
+    // overwritten through the other name. Both FAT copies remain identical.
+    @memcpy(bytes, original.bytes);
+    const root_offset = @as(usize, original.stats.geometry.data_start) * 512;
+    bytes[root_offset + 64 + 26] = bytes[root_offset + 32 + 26];
+    try expectError(error.SourceAllocation, tools.fat32_update.prepare(a, bytes, 4096, &.{.{ .path = "boot/r4os.elf", .bytes = "new" }}));
 }
 
 test "GPT/MBR roundtrip, geometry, free space, attributes and stale plans" {

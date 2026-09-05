@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "reason": "0.76.19: explicit shared FAT32 file-update and read-only Limine compatibility import; pending owner commits are development-only.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "337ab022efe3cc5c562c76157e47db1ebeb43563",
+      "sourceCommit": "4cc7d03f94e7e7727b3ada188b54fb091605fa08",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.76.19.patch",
+      "patchSha256": "d037182c27d7938a06f529e0b06755d549908c7fbfd270f2ba60f31650080209",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "92bfb330fb7a47fdd4e1d7105432e47836e7a3bce14972b89b16a37c9433449e"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "592a73048ee451b815ef66c1b5ed11c9f3b7b75a680aac84701975437a27cfec"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "sha256": "e04b2b615d6aa04e2758b3aa538dfdf7a5228775d15969ba28f5bf5a35d64b09"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "sha256": "7f1f3c20ed0038660eeb5d04a36e5f10c486f76a2b42bd55f396a67cdf84a71a"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_view.zig",
+          "sha256": "037ef080cb25d774e4a991b9f6ffb9cd30034aa10f59d0d08215eb55785f0a8f"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/limine.zig",
+          "sha256": "eb87e0432a4782b0843f4afeb5557273fe799edce501997504081831feda40d4"
+        }
+      ]
+    }
+  ]
+}

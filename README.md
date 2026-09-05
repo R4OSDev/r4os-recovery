@@ -122,8 +122,8 @@ The first three entries select a fixed cached ZIP or their GitHub channel,
 then a live disk or an identified SYSTEM/RECOVERY partition. Review defaults
 to Back and revalidates the target before dispatch. Since 0.76.15, local
 packages are checked through the frozen R4ZIP protocol and prepared in pinned
-physical RAM. Writes follow in their respective roadmap steps; no placeholder claims a
-completed installation. Readable OS markers add comma-separated names; no
+physical RAM. Install R4OS and Update R4OS execute their validated write plans;
+Update Recovery follows in its own roadmap step. Readable OS markers add comma-separated names; no
 marker leaves the extra display empty. Details and current limits are in
 [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).
 
@@ -194,3 +194,26 @@ SMP4 QEMU media. It covers USB installation, own-device local replacement,
 write failure and low RAM, then independently checks and boots successful
 results. `-ReuseFixture` requires matching hashes; `-VerifyInstalled` only
 rechecks already recorded results and boots them through snapshots.
+
+Since 0.76.19, Update R4OS rebuilds the selected SYSTEM in its existing
+partition and updates the matching normal kernel/preload/BOOT files from
+the same validated release ZIP. Capacity includes NTFS metadata; a fitting
+nonstandard SYSTEM size is retained. All old SYSTEM files and settings are
+replaced. DATA, RECOVERY, GPT identities and partition boundaries persist.
+
+BOOT is updated at file level. Its existing limine.conf bytes, foreign files,
+names and attributes are retained. Preparation requires canonical R4OS
+kernel/preload references in the existing configuration and the supported
+Limine BIOS chain. A private FAT plan checks allocation ownership and space
+before either write claim. BOOT and SYSTEM have separate exclusive claims;
+the table and original BOOT fingerprint are checked again before writing.
+Failure after writes is reported as incomplete, with affected claims closed
+and unfinished filesystems kept offline. This recovery operation has no
+transaction rollback or power-failure guarantee.
+
+`Tools/Test-SystemUpdate.ps1 -SourcePackage PATH -BaseImage PATH` exercises
+the menu on disposable USB/NVMe SMP4 guests. The fixture uses a standard old
+2048-MB image and creates 768-MB and too-small SYSTEM variants. Independent
+checks compare persistent partitions, GPT, custom menu bytes and foreign
+BOOT files; a read-only NTFS witness checks the complete replacement tree.
+The successfully updated normal system must boot and respond to Terminal.

@@ -110,20 +110,32 @@ pub const View = struct {
                 }
                 var name: [260]u8 = undefined;
                 var length: usize = 0;
+                var ascii_name = true;
                 if (lfn_active) {
                     var actual: u8 = 0;
                     for (raw[0..11]) |c| actual = (if (actual & 1 != 0) @as(u8, 0x80) else 0) +% (actual >> 1) +% c;
                     if (sequence != 0 or actual != checksum or raw[11] & 8 != 0) return error.SourceFat;
                     var ended = false;
+                    var high_surrogate = false;
                     for (lfn) |c| {
                         if (c == 0 or c == 0xffff) {
+                            if (high_surrogate) return error.SourceFat;
                             ended = true;
                             continue;
                         }
-                        if (ended or c < 32 or c > 126 or length >= 255) return error.SourceFat;
-                        name[length] = @intCast(c);
+                        if (ended or c < 32 or length >= 255) return error.SourceFat;
+                        if (c >= 0xd800 and c <= 0xdbff) {
+                            if (high_surrogate) return error.SourceFat;
+                            high_surrogate = true;
+                        } else if (c >= 0xdc00 and c <= 0xdfff) {
+                            if (!high_surrogate) return error.SourceFat;
+                            high_surrogate = false;
+                        } else if (high_surrogate) return error.SourceFat;
+                        if (c > 126) ascii_name = false;
+                        name[length] = if (c <= 126) @intCast(c) else '?';
                         length += 1;
                     }
+                    if (high_surrogate) return error.SourceFat;
                 } else {
                     const base = std.mem.trimEnd(u8, raw[0..8], " ");
                     const ext = std.mem.trimEnd(u8, raw[8..11], " ");
@@ -138,7 +150,7 @@ pub const View = struct {
                 }
                 lfn_active = false;
                 if (raw[11] & 8 != 0 or std.mem.eql(u8, name[0..length], ".") or std.mem.eql(u8, name[0..length], "..")) continue;
-                if (std.ascii.eqlIgnoreCase(name[0..length], wanted)) {
+                if (ascii_name and std.ascii.eqlIgnoreCase(name[0..length], wanted)) {
                     if (found != null) return error.SourceFat;
                     found = .{ .cluster = (@as(u32, u16at(raw, 20)) << 16) | u16at(raw, 26), .size = u32at(raw, 28), .directory = raw[11] & 16 != 0 };
                 }

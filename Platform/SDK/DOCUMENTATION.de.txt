@@ -766,3 +766,31 @@ und Dateigroesse. matches vergleicht jede Datei an ihrem aufgeloesten Pfad;
 eine bloss irgendwo gefundene Bytefolge gilt nicht als Inhaltsnachweis.
 limine.supportsBiosSystem bindet den Stage-3-Begleiter limine-bios.sys an
 denselben festgehaltenen Limine-12.0.1-Stand wie den eingebetteten BIOS-Code.
+
+0.76.19: Einzelne FAT32-Dateien ersetzen
+---------------------------------------
+
+storage_tools.fat32_update.prepare erzeugt aus einem vorhandenen kanonischen
+Volume und einer Liste Change{path,bytes} einen privaten Ersatzplan. Es
+prueft alle Datei-/Verzeichnisketten auf Zyklen, fremde Clusterbesitzer und
+verwaiste Belegung. Unbeteiligte Eintraege, Daten, Attribute, Namen und
+Bootsektoren bleiben bytegleich. Unicode-Namen werden geprueft und erhalten;
+angeforderte Pfade bleiben portable ASCII-Namen. Fehlende Dateien und
+Elternverzeichnisse werden mit kollisionsfreien kurzen Aliasnamen angelegt.
+Grenzen: Volume 1024 MB, 8192 vorhandene Eintraege, 4096 Aenderungen,
+1023 Pfadbytes und 24 Ebenen. Platz- und Allokationsfehler bleiben privat.
+
+Prepared.checkSource vergleicht den gesamten Original-SHA256 unter einem
+exklusiven Device. execute prueft erneut, schreibt nur geaenderte Sektoren
+und allokiert nichts. Dateidaten, FAT-Sicherung, primaere FAT, tiefste
+Verzeichnisse bis Root und schliesslich FSInfo werden in dieser Reihenfolge
+geflusht und rueckgelesen. Es gibt keine atomare Ruecknahme bei Stromverlust;
+der Aufrufer muss unvollstaendige Vorgaenge melden und betroffenes I/O
+koordinieren. fat32_view kann ASCII-Dateien neben gueltigen fremden
+UTF-16-Namen lesen, ohne deren Namen umzucodieren.
+
+limine.verifyBios prueft ohne Schreibrecht den GPT-Fingerprint sowie den
+installierten Stage-1/Stage-2-Code mit realem BIOSBOOT-Verweis. Nur die vom
+Installer erhaltenen Zeitstempel-/Signatur-/MBR-Tabellenfelder sind variabel.
+Das erlaubt vor einem Austausch des passenden Stage-3-Begleiters die
+Kompatibilitaetspruefung, ohne MBR oder BIOSBOOT zu aendern.

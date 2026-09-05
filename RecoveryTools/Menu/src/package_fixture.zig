@@ -51,6 +51,71 @@ const Memory = struct {
 pub fn main(init: std.process.Init) !void {
     const a = init.arena.allocator();
     const args = try init.minimal.args.toSlice(a);
+    if (args.len == 3 and std.mem.eql(u8, args[1], "--shrink-fixture")) {
+        // The private host fixture has a 16-MB GPT extent but a freshly built
+        // 32-MB NTFS in otherwise unused space. Shrink its metadata to the
+        // declared extent before any guest can see the fixture.
+        const image = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(2048 * 1024 * 1024 + 1));
+        try expect(image.len == 2048 * 1024 * 1024);
+        var memory = r4os.storage_tools.io.Memory{ .bytes = image };
+        const work = try a.alloc(u8, r4os.storage_tools.io.scratch_bytes);
+        var table = try r4os.storage_tools.partition.Plan.read(memory.device(), work);
+        try expect(table.entries[2].count == 16 * 2048);
+        const shrink = try r4os.storage_tools.ntfs_resize.Plan.prepare(a, memory.device(), &table, 3, 32 * 2048, work);
+        try shrink.execute(memory.device(), &table, work);
+        try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = args[2], .data = image });
+        std.debug.print("[PACKAGEHOST] fixture_system=16MB valid_ntfs=SHRUNK\n", .{});
+        return;
+    }
+    if (args.len == 4 and std.mem.eql(u8, args[1], "--updated-system")) {
+        const zip = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(package.max_archive_bytes));
+        const prepared = try package.prepare(a, Codec{}, zip, .r4os, .{});
+        const tree = try source.Tree.read(a, prepared.archive.get("disk.img").?, prepared.version(), .{});
+        const image = try std.Io.Dir.cwd().readFileAlloc(init.io, args[3], a, .limited(32 * 1024 * 1024 * 1024));
+        var disk = Memory{ .bytes = image };
+        const work = try a.alloc(u8, r4os.storage_tools.io.scratch_bytes);
+        const table = try r4os.storage_tools.partition.Plan.read(.{ .context = &disk, .sectors = image.len / 512, .read_fn = Memory.read, .write_fn = Memory.write, .flush_fn = Memory.flush }, work);
+        try expect(table.kind == .gpt and table.entries[2].present);
+        const part = table.entries[2];
+        var volume_bytes = Memory{ .bytes = image[@intCast(part.first * 512)..][0..@intCast(part.count * 512)] };
+        const scratch = try a.create(nv.Scratch);
+        scratch.* = .{};
+        const runs = try a.alloc(ntfs.Run, nv.MAX_MFT_RUNS);
+        const device = nv.Device{ .ctx = &volume_bytes, .read_sectors = Memory.readNv, .write_sectors = Memory.noWrite, .flush = Memory.noFlush };
+        const mounted = nv.mount(device, 0, scratch, runs) orelse return error.TargetMount;
+        var count = mounted.mft_run_count;
+        const volume = nv.Volume{ .device = device, .partition_lba = 0, .cluster_bytes = mounted.cluster_bytes, .record_bytes = mounted.record_bytes, .index_block_bytes = mounted.index_block_bytes, .total_sectors = mounted.total_sectors, .mft_runs_buf = runs, .mft_run_count = &count, .upcase = r4os.storage_tools.standardNtfsMetadata().upcase, .scratch = scratch };
+        try expect(mounted.total_sectors + 1 == part.count and !(nv.isDirty(&volume) orelse return error.TargetDirty));
+        for (tree.nodes.items, 0..) |node, i| {
+            const record = if (i == 0) ntfs.MFT_RECORD_ROOT else blk: {
+                const entry = nv.resolveEntry(&volume, node.path) orelse return error.TargetEntry;
+                try expect(entry.entry.isDir() == node.directory and (node.directory or entry.entry.size == node.data.len));
+                break :blk entry.entry.record;
+            };
+            if (node.directory) {
+                var expected_children: usize = 0;
+                for (tree.nodes.items[1..]) |child| if (child.parent == i) {
+                    expected_children += 1;
+                };
+                for (0..expected_children + 1) |wanted| {
+                    var sink = nv.EnumSink{ .wanted = wanted };
+                    try expect(nv.enumerateDirectory(&volume, record, &sink));
+                    try expect((sink.found != null) == (wanted < expected_children));
+                }
+            } else {
+                var offset: usize = 0;
+                while (offset < node.data.len) {
+                    const amount = @min(work.len, node.data.len - offset);
+                    try expect((nv.readFileRange(&volume, record, offset, work[0..amount]) orelse return error.TargetRead) == amount);
+                    try std.testing.expectEqualSlices(u8, node.data[offset..][0..amount], work[0..amount]);
+                    offset += amount;
+                }
+            }
+        }
+        try expect(volume_bytes.writes == 0 and disk.writes == 0);
+        std.debug.print("[PACKAGEHOST] updated_system={s} sectors={d} nodes={d} exact_tree=OK writes=0\n", .{ prepared.version(), part.count, tree.nodes.items.len });
+        return;
+    }
     if (args.len == 3 and std.mem.eql(u8, args[1], "--installation")) {
         const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(package.max_archive_bytes));
         const prepared = try package.prepare(a, Codec{}, bytes, .r4os, .{});

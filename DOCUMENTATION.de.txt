@@ -916,3 +916,47 @@ Recovery-Baum in einem Pfad mit Leerzeichen baute Kernel und Runtime
 SHA-256-identisch. Der beobachtete SeaBIOS/NVMe-Startfehler mit 4/8 GB liegt
 vor dem Kernel und bleibt in Problems.txt fuer die Integrationspruefung
 festgehalten; die lokale 8-GB-Installationsabnahme verwendet UEFI.
+
+SYSTEM-Ersatz bei vorhandener Installation (0.76.19)
+---------------------------------------------------
+
+Update R4OS verbindet die ausgewaehlte SYSTEM-Partition mit ihrer BOOT-
+Partition ueber Installationsmanifest und echte GPT-Identitaeten. Quelle
+bleibt R:\INSTALL\RELEASE.ZIP beziehungsweise der vollstaendig gepruefte
+Ersatzdownload. Das neue SYSTEM wird mit allen NTFS-Metadaten auf seine
+bestehende Groesse vorbereitet. Vom 1024-MB-Standard abweichende Ziele
+sind erlaubt, wenn der Inhalt passt. Alte SYSTEM-Dateien und Einstellungen
+verschwinden; GPT, Partitionsgrenzen, Identitaeten, DATA und RECOVERY bleiben.
+
+BOOT wird dateiweise erneuert. Normales Kernelartefakt, Preload und Begleiter
+stammen aus demselben Release. limine.conf bleibt bytegleich, ebenso fremde
+Bootdateien und deren Namen/Attribute. Der vorhandene normale Limine-Eintrag
+muss die kanonischen Kernel-/Preload-Verweise und Modulkennungen enthalten;
+weitere Menueeintraege, Einstellungen und Kommentare sind erlaubt. Die
+installierte BIOS-Kette muss dem unterstuetzten Limine-Stand entsprechen.
+
+Der gemeinsame SDK-Plan prueft die gesamte FAT-Belegung und bereitet alle
+Aenderungen privat vor. Zwei getrennte exklusive Claims koordinieren BOOT
+und SYSTEM. Unter ihnen werden GPT/Bootkette und der komplette SHA-256 des
+vorbereiteten BOOT-Ausgangsstands erneut gelesen, bevor SYSTEM ersetzt wird.
+Alle Schreibschritte verlangen Flush und Readback. Erfolgreicher Abschluss
+prueft Mounts und neues Installationsmanifest. Ein Abbruch nach Schreibbeginn
+wird als unvollstaendig gemeldet; Recovery arbeitet weiter aus RAM. Es gibt
+keinen atomaren Rollback bei Stromverlust.
+
+Tools/Test-SystemUpdate.ps1 verwendet nur entbehrliche QEMU-Dateiimages mit
+vier vCPUs. Ein 768-MB-SYSTEM wird aus einem vollstaendigen Release ersetzt;
+ein gueltiges, im Host vorbereitetes 16-MB-SYSTEM muss vor Schreibbeginn
+abgewiesen werden. Die Fixture verkleinert dazu ein frisches 32-MB-NTFS. Ein
+unabhaengiger FAT-/GPT-Pruefer vergleicht Geometrie, fremde BOOT-Dateien,
+eigene Limine-Konfiguration und die vollstaendigen DATA-/RECOVERY-Hashes.
+Ein lesender NTFS-Nachweis vergleicht jeden Releasepfad und jede Datei sowie
+die genaue Anzahl von Kindern je Verzeichnis. Der normale Ergebnisboot
+muss die bisherige Installation zuordnen und im Terminal herunterfahren.
+
+Abnahme: Alle drei Linux/KVM-SMP4-Faelle bestanden: System768 126.309 s, SystemTooSmall 105.706 s, UpdatedNormalBoot 29.347 s.
+Quelle 0.76.18 mit normalem Kernel 0.1.98 und festem Recovery 0.1.14;
+Ausfuehrung Recovery/Kernel 0.1.16 und Menu 0.1.8. Vorbereitungs-Spitze
+3628724224 Bytes. SDK 11/11 und Menu 9/9 Gruppen, Produktions-/UI-Build
+und unabhaengige Inhalts-/Strukturpruefung bestanden. Keine Windows- oder
+Lenovo-Abnahme; der Hardware-Sichttest bleibt dem Roadmapabschluss vorbehalten.
