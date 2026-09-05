@@ -689,3 +689,26 @@ reservierten Bereich liegen. Unklare Quellen/Geometrie werden abgewiesen.
 Kein Resize, keine Powerfail-Atomizitaet, kein rekonstruiertes Dateisystem.
 Ein Report benoetigt weniger als 36 KB Heap, repair einen zweiten Report und
 mindestens 512 Byte Arbeitsbuffer. Keine volumeproportionale Allokation.
+
+0.76.15: ZIP-Protokoll und gemeinsame NTFS-Verbraucher
+---------------------------------------------------
+
+r4os.zip ist die typisierte Fassade fuer R4ZIP.R4P, Rolle format.zip.
+inspect prueft das Archivverzeichnis; begin/step entpacken in Speicher des
+Aufrufers. Auch der 16-KB-Decoderzustand gehoert ihm. Zwischen den Schritten
+(258 Bytes bis 4 MB Ausgabe) darf er Fortschritt zeichnen, abbrechen und
+Yield ausfuehren; das Protokoll haelt keine globale Sitzung. CRC- und
+Pfadpruefung gehoeren zum Protokoll, Release-Manifeste zum jeweiligen Produkt.
+
+ZIG_MODULE-Abhaengigkeiten sehen alle anderen ausdruecklich im gleichen
+Manifest genannten Zig-Module. Gleiche Quelldateien bleiben dadurch in genau
+einer Modulinstanz. ntfs_volume akzeptiert im benannten ntfs_format-Modul
+optional shared_format, die bereits durch r4os.storage_tools verwendete
+Formatinstanz. Standalone-Verbraucher behalten den bisherigen Formatimport.
+ntfs.PreparedPlan nennt den vorbereiteten Formatierplan; dessen geliehene
+Datei-, Metadaten- und Indexpuffer leben bis zum letzten execute weiter.
+
+vmCommitFlags mit abi.vm_commit_flag_resident stellt physische, gepinnte RAM-
+Seiten vor Erfolg bereit, hoechstens abi.vm_commit_resident_max_bytes pro
+Aufruf. Flags 0 und der normale Allocator bleiben lazy. Fehler koennen eine
+teilweise belegte Region hinterlassen; Aufrufer geben sie kontrolliert frei.

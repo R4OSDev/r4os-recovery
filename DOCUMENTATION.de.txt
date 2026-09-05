@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.14
+Stand 0.76.15
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -725,3 +725,61 @@ zusammengefasste und leere Anzeigen sowie die reale Identitaetspruefung
 sind in den seriellen Markern beobachtbar. Keine neue manuelle Abnahme.
 
 Abnahme: 0.76.14: Linux/KVM SMP4,1024MB, USB keyboard/i8042=off. BIOS USB 640x480 19.092s,800x600 19.131s,1024x768 19.566s,1920x1080 20.222s; UEFI USB1024x768 20.795s; BIOS LOCAL1024x768 18.523s. Six passes/150 framebuffer comparisons, real target identity revalidation and default Back, combined Windows/Linux/R4OS markers, blank extra display, local USB exclusion and own-local eligibility. Existing Terminal/R4PART, independent console and reset passed. Host group6/6. No Windows or Lenovo run.
+
+0.76.15: Releasepakete und vorbereiteter RAM
+------------------------------------------
+
+Recovery und R4OS besitzen getrennte Schema-1-Paketmanifeste; Details stehen
+in RecoveryTools/Contracts.de.txt. Tools/Package.ps1 erzeugt das unabhängige
+Recovery-ZIP. Distribution besitzt Tools/ReleasePackage.ps1 fuer das neue,
+mit Recovery gepaarte R4OS-ZIP. Die produktiven Veroeffentlichungsstarter
+werden in den folgenden Unterversionen an diesen Erzeuger angeschlossen.
+
+R4ZIP.R4P 0.1.1 ist ein regulaeres oeffentliches R4OS-Protokoll und der 39.
+eingefrorene Runtimeimport. Stored, Deflate, benoetigtes ZIP64, Eintrags- und
+Pfadgrenzen sowie CRC32 gehoeren diesem Besitzer. Die gemeinsame SDK-Fassade
+enthaelt nur den Aufrufvertrag. Der korrigierte Zig-Deflate-Baustein begrenzt
+auch beim Wechsel von Huffman- zu Stored-Bloecken jeden Ausgabeschritt.
+Originalherkunft, Lizenz und geaenderte Quellen werden im Paket mitgefuehrt.
+
+Das Menue beschreibt ausschliesslich den passenden festen Cache auf R:.
+Die schnelle Anzeige unterscheidet fehlend, ungeprueft, ungueltig und
+geprueftes Manifest mit Version; sie bezeichnet noch keine vollstaendige
+Nutzdatenpruefung. Continue liest das Original erneut, bindet dessen SHA256
+an die angezeigte Quelle und prueft alle Dateien, Images und das gepaarte
+Recovery. ESC beendet die Vorbereitung vor einer Zielaenderung.
+
+Jede Vorbereitungsallokation verwendet den neuen resident-VM-Commit des
+normalen Kernelbesitzers. Erfolg bedeutet genullte, physisch vorhandene und
+bis zur Freigabe gepinnte Seiten. Aufrufe und Freigaben erfolgen in 256-KB-
+Schritten mit Yield und sichtbarem Fortschritt. Das bestehende flags=0 bleibt
+lazy. Programmlimits, physische Reserve und sichere TLB-Freigabe bleiben
+verbindlich. Ein fehlgeschlagener Abbau kann wiederholt werden, ohne bereits
+freigegebene Arenadaten ein zweites Mal zu durchlaufen.
+
+Die Sitzung haelt das originale ZIP, alle entpackten Images, den vollstaendigen
+SYSTEM-Dateibaum und den vorab berechneten NTFS-Zielplan bis zum Operationsende.
+Sie benoetigt weder DATA noch eine temporaere Partition. Der Inhalt wird mit
+dem gemeinsamen NTFS-Leser importiert und fuer die echte Zielgroesse vorbereitet;
+Quellgrenzen werden nicht als Zielgeometrie uebernommen. Die gemessene Spitze
+enthaelt auch Arenareserve und teilweise vorbereitete Allokationen bei OOM.
+Erst nach erfolgreicher Vorbereitung darf ein spaeterer Schreiber beginnen.
+In diesem Stand nennt der Dialog den noch ausstehenden Installationsvollzug.
+
+Build.ps1 -Mode PackageTest baut Produkt- und vorhandenen UI-Diagnosekernel
+sowie die Runtime. Tools/Test-Packages.ps1 verwendet die echten .NET-Erzeuger,
+denselben ZIP-Kern und NTFS-Import auf dem Host sowie SMP4-Gaeste. HostOnly und
+GuestOnly begrenzen einen Wiederholungslauf nach diesen Builds. Testimages
+enthalten technische ELF-/SYSTEM-Fixtures und sind keine R4OS-Releases.
+
+Abnahme: Linux/KVM BIOS mit vier vCPUs und USB-Tastatur. 4096 MB: 91.410 s,
+Recovery-Paket und Menueweg, falscher SHA256, R4OS-Quelle nach physischer USB-
+und Backendentfernung vollstaendig per SHA256 erhalten. 1024 MB: 21.549 s,
+kontrollierter OOM mit erfolgreichem Abbau. Die Hashes der 2-GB-Zieldatentraeger
+blieben identisch. Vorbereitete RAM-Spitze: R4OS-Fixture 3416813568 Bytes,
+Recovery-Fixture 262656000 Bytes, jeweils einschliesslich Arenareserve.
+Der Hostimport prueft alle sieben Dateien/Verzeichnisse und Dateiinhalte auf
+einer neuen 32-MB-NTFS-Geometrie; ntfsfix -n bestaetigt deren Struktur. R4ZIP
+6/6, eigenstaendiger Protokollbuild mit oeffentlichen Abhaengigkeiten und
+bytegleichem R4P. Normaler Kernel 0.1.95: frisches Testimage und SMP4-testquick
+einschliesslich TLB-/Lock-/Heapnachweisen bestanden. Windows/Lenovo ungetestet.

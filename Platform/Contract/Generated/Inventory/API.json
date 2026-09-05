@@ -316,7 +316,7 @@
       "kind": "group_slot",
       "slot": 27,
       "exposure": "public",
-      "description": "Commits pages in a reserved virtual memory region.",
+      "description": "Commits pages in a reserved virtual memory region. Flags 0 retain lazy commitment. vm_commit_flag_resident commits, zeroes and pins physical RAM before success, in calls of at most vm_commit_resident_max_bytes; pages stay pinned until decommit/release. Unsupported flags fail explicitly. On failure a partially committed region may remain and must be released; no I/O or reclaim wait occurs during commitment.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"

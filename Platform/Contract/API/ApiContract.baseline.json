@@ -2511,7 +2511,7 @@
           "name": "vm_commit",
           "state": "function",
           "required": false,
-          "description": "Commits pages in a reserved virtual memory region.",
+          "description": "Commits pages in a reserved virtual memory region. Flags 0 retain lazy commitment. vm_commit_flag_resident commits, zeroes and pins physical RAM before success, in calls of at most vm_commit_resident_max_bytes; pages stay pinned until decommit/release. Unsupported flags fail explicitly. On failure a partially committed region may remain and must be released; no I/O or reclaim wait occurs during commitment.",
           "signature": {
             "calling_convention": "c",
             "parameters": [
@@ -90011,6 +90011,26 @@
       "scope": "storage",
       "stability": "fixed_contract",
       "description": "Virtio block transport."
+    },
+    {
+      "name": "vm_commit_flag_resident",
+      "value": "1",
+      "value_type": "u64",
+      "category": "flag",
+      "unit": "bitmask",
+      "scope": "vm_commit",
+      "stability": "fixed_contract",
+      "description": "Commit and pin physical pages before returning success; additive flag for vm_commit."
+    },
+    {
+      "name": "vm_commit_resident_max_bytes",
+      "value": "262144",
+      "value_type": "u64",
+      "category": "value",
+      "unit": "bytes",
+      "scope": "vm_commit",
+      "stability": "fixed_contract",
+      "description": "Maximum rounded bytes in one resident vm_commit call (64 pages)."
     }
   ],
   "limits": [

@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
     const module_filter = b.option([]const u8, "module-filter", "Build only matching SDK smoke R4X names") orelse "";
     _ = sdk_profile.addR4MFCatalog(&.{b.path("Smoke")}, module_filter);
     _ = sdk_profile.addR4MFWithOptions(b.path("Tests/Build/R4MFMapping/module.R4MF"), .{
-        .zig_module_roots = &.{b.path("Tests/Build/R4MFMapping/Bindings/external.zig")},
+        .zig_module_roots = &.{ b.path("Tests/Build/R4MFMapping/Bindings/external.zig"), b.path("Tests/Build/R4MFMapping/Bindings/shared.zig") },
     });
     _ = sdk_profile.addR4MF(b.path("Tests/Build/SubsystemManifest/module.R4MF"));
     _ = sdk_profile.addR4D(.{

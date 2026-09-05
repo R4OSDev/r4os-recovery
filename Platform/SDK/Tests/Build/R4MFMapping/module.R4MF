@@ -10,3 +10,4 @@ TARGET=/R4OS/SOFTWARE/TERMINAL/DIAG/SDKMAP.R4X
 IMAGE_SCOPE=test
 IMPORT=R4SYS:Query:1
 ZIG_MODULE=external:Declared/NotPresent.zig
+ZIG_MODULE=shared:Declared/SharedNotPresent.zig

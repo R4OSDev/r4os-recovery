@@ -1,0 +1,152 @@
+{
+  "schema": 1,
+  "reason": "0.76.15: explicit ZIP protocol/owner import, pinned resident VM and Recovery package preparation. Pending owner commits denote local development only and must be resolved before publishing Recovery.",
+  "owners": [
+    {
+      "owner": "Contract",
+      "baseCommit": "10b98b5e639db3440aaf176cf97b4ec73c7b519d",
+      "sourceCommit": "16ffd60671a83b97af1dc8b1c4752cc9bed1b732",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Contract-0.76.15.patch",
+      "patchSha256": "e1e39459a07f83906cee5c76a8ecde8fb8b50209470f3979975d266b13efe071",
+      "files": [
+        {
+          "path": "Platform/Contract/API/ApiContract.baseline.json",
+          "sha256": "fcf9fb64cf391eaf58198cfed6d3611d97f8349be5d84dd2755ea2736c11ca90"
+        },
+        {
+          "path": "Platform/Contract/API/ApiContract.json",
+          "sha256": "fcf9fb64cf391eaf58198cfed6d3611d97f8349be5d84dd2755ea2736c11ca90"
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
+          "sha256": "f96d57940d3fab55847efbdc681814cfe0870a401118507e2c7b0b28485b5d82"
+        },
+        {
+          "path": "Platform/Contract/Generated/Inventory/API.json",
+          "sha256": "933ecdb2ef22e53ba91cf8d14e695eb4c236f57f9b3b90cb593baa9c8bbd3d70"
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
+          "sha256": "8f837ff2b435f4f4e9dbbd054ff211d82faee9803b48c52d7ff09455dd6facbf"
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
+          "sha256": "2e8f7dfda0c3b0d5bd47a2941ef69ab77abfc13421f760416d533f3e1366dd91"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
+          "sha256": "272784cdaecf4f88cc3cf9ef6a21decfd774ab605faecf6acf157bf5507f4de4"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
+          "sha256": "efecd5ffce913b54cf72161b383b8e537473161a2777b2ead6e93ace45088935"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
+          "sha256": "eaa2a428095dcf2fdef55b9a6650ddef54b0727f5c5f109700ba5fae67213fb9"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
+          "sha256": "ab0cf319c87294d52e9bf4c946791df7d597724111f07e075ebcd81539eee421"
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseCommit": "877a89ac8d82a6df37821b1a20a163de77406d71",
+      "sourceCommit": "df4c9fa762037164ae5d5cabcba21585f9c7a3b2",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.76.15.patch",
+      "patchSha256": "b3aca177d31fa411a36664d50d01e4573300225fe356fcce25d45f0ce6a9c7e5",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "ce91c061c02b4776cff6935a515b9f642df073443a9ccddaefba309a8398c5d6"
+        },
+        {
+          "path": "Platform/SDK/Tests/Build/R4MFMapping/Bindings/external.zig",
+          "sha256": "46af10d6c059031ff91ec340a82bfb8ad8b18400362daf096bb84992539471de"
+        },
+        {
+          "path": "Platform/SDK/Tests/Build/R4MFMapping/Bindings/shared.zig",
+          "sha256": "fa3171ea394086ea5ee10cee83c54549dd29a00b66fc87a2ec500f1ad40305f7"
+        },
+        {
+          "path": "Platform/SDK/Tests/Build/R4MFMapping/module.R4MF",
+          "sha256": "6c7172a904b1ea252a72aed749914996ffe8b232f780b0ef33ce3d38990f61d0"
+        },
+        {
+          "path": "Platform/SDK/build.zig",
+          "sha256": "fd0d5f29682b465b2b70a3b17b080ed79d742601b32507492460e8d9c9e5e822"
+        },
+        {
+          "path": "Platform/SDK/build.zig.zon",
+          "sha256": "cd2709ab0f7c82190e9169069aed1404592d95744b60f40fa693a44966e8cb65"
+        },
+        {
+          "path": "Platform/SDK/r4os.zig",
+          "sha256": "28b3aa9e09855f762b00d363c64fa596e1c482b127bdceaf44aa56708c044de1"
+        },
+        {
+          "path": "Platform/SDK/r4os/build.zig",
+          "sha256": "409a6e30ac7f72fc2b9b67ee34ebc620e306f1f4ea422fbee4069b73707e3d96"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_builder.zig",
+          "sha256": "ebc09acda46c5ebc1b27fe0b0653ddcc58d55495c2a220a78c725c354d7c3e04"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "sha256": "30a5452c54d7a5523f2946b7293a53f3e84fa1f6e1ed3c758dd34e1d5e769a79"
+        },
+        {
+          "path": "Platform/SDK/r4os/zip.zig",
+          "sha256": "61d3c77c14eb74ae083e2bffc6fd7a30e491e979328e4f043f15bbb9c8797bb1"
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseCommit": "ba70686bbb2d74b2e88beca4d583efb15cc6a1b5",
+      "sourceCommit": "4e7c3c1b0dac97052dc3dc5fd76da764ca4df833",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.76.15.patch",
+      "patchSha256": "dabbc9d99872ab34a6cf3ad9ed54e1df6e58c747783d92b81386793691df2b06",
+      "files": [
+        {
+          "path": "Kernel/memory/virt.zig",
+          "sha256": "88f81d3a4be64a5440744e5b969d2a7ec4290d3178a3f44861ea0e1d4ea922ae"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "0f331dde0c11008cc337595dcf34d76d3141cf7d1f530cfc0cd81a5add762409"
+        },
+        {
+          "path": "Kernel/program/r4x_api.zig",
+          "sha256": "1a9fd7406fdae2d28c1a5546edf59b1125a8be7b8ce8b8054dad8d62145e66da"
+        }
+      ]
+    },
+    {
+      "owner": "Distribution",
+      "baseCommit": "b7c602caf99b4a871b67ddac16235d6d2245b21c",
+      "sourceCommit": "aa2e12d15df2e9e5a5bc56db0d031b5978ec83fe",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Distribution-0.76.15.patch",
+      "patchSha256": "0d6fddc9dce06eec060cf4e15f8b1299faaa8dff7883a8af4816aa5dc6aee7e4",
+      "files": [
+        {
+          "path": "Platform/Distribution/Tools/ReleasePackage.ps1",
+          "sha256": "926b17abb6b48cc0bc0495b157869c7f52d3fe0aa1a75cb0b11f43dfdfde866b"
+        }
+      ]
+    }
+  ],
+  "protocol": {
+    "source": "Protocols-R4Zip",
+    "commit": "279434d24b94f76d3edb8ed9d53f6f8eb6b7ebe0",
+    "archiveSha256": "61d870746695ee88ae1d97be8f59b8118bc7b7bfcd8c135c75471645a88d52c3",
+    "binarySha256": "a6111e11977411c6ec9e9ca9e1af2716a5ed5e0a5d0c7d3361a54dd3ed01e76f"
+  }
+}

@@ -1,1 +1,1 @@
-pub const marker: u32 = 0x524D4150;
+pub const marker = @import("shared").marker;

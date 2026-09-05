@@ -1,0 +1,48 @@
+# Recovery owns its independent release package. No normal R4OS build is run.
+function New-RecoveryPackage {
+    param([string]$Root=(Split-Path $PSScriptRoot -Parent),[string]$Destination='',
+          [uint64]$MinimumRamBytes=1073741824)
+    $ErrorActionPreference='Stop'
+    . (Join-Path $PSScriptRoot 'Inventory.ps1')
+    $version=(Get-RecoveryFields (Join-Path $Root 'VERSION.R4S')).RECOVERY_VERSION[0]
+    $kernelVersion=(Get-RecoveryFields (Join-Path $Root 'Kernel/VERSION.R4S')).KERNEL_VERSION[0]
+    if($version -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $kernelVersion -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'){throw 'Invalid Recovery version.'}
+    $output=Join-Path $Root 'Artifacts/Packages'
+    [IO.Directory]::CreateDirectory($output)|Out-Null
+    if(!$Destination){$Destination=Join-Path $output "R4OS-Recovery-$version-x86_64.zip"}
+    $stage=Join-Path $output 'staging'
+    if(Test-Path -LiteralPath $stage){Remove-Item -LiteralPath $stage -Recurse -Force}
+    [IO.Directory]::CreateDirectory($stage)|Out-Null
+    Copy-Item -LiteralPath (Join-Path $Root 'Artifacts/Kernel/bin/recovery.elf') -Destination (Join-Path $stage 'recovery.elf')
+    Copy-Item -LiteralPath (Join-Path $Root 'Artifacts/Runtime/runtime.img') -Destination (Join-Path $stage 'runtime.img')
+    Copy-Item -LiteralPath (Join-Path $Root 'Legal') -Destination (Join-Path $stage 'Legal') -Recurse
+    $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $files=@(Get-ChildItem -LiteralPath $stage -File -Recurse | Sort-Object FullName -CaseSensitive | ForEach-Object {
+        $path=[IO.Path]::GetRelativePath($stage,$_.FullName).Replace('\','/')
+        if($path.Length -gt 255 -or $path -cmatch '[^\x20-\x7e]|[<>:"\\|?*]' -or !$seen.Add($path)){throw "Unsupported package path: $path"}
+        foreach($part in $path.Split('/')){if(!$part -or $part -in @('.','..') -or $part.EndsWith('.') -or $part.EndsWith(' ')){throw "Unsupported path component: $path"}}
+        [ordered]@{path=$path;bytes=$_.Length;sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
+    })
+    if($files.Count -ge 4096){throw 'Too many Recovery package files.'}
+    $lock=Get-Content -Raw -LiteralPath (Join-Path $Root 'Provenance/inputs.lock.json')|ConvertFrom-Json -AsHashtable
+    $contract=@($lock.sources|Where-Object {$_.id -eq 'Contract'})[0]
+    $ownerReceipts=@(Get-ChildItem -LiteralPath (Join-Path $Root 'Provenance') -Filter 'owner-update-*.json' | Sort-Object { [version]($_.BaseName.Substring('owner-update-'.Length)) })
+    $contractCommit=$contract.commit
+    foreach($receipt in $ownerReceipts){
+        $value=Get-Content -Raw -LiteralPath $receipt.FullName|ConvertFrom-Json -AsHashtable
+        if(!$value.ContainsKey('owners')){continue}
+        foreach($owner in @($value.owners)){
+            if($owner.owner -eq 'Contract' -and $owner.ContainsKey('sourceCommit')){
+                $contractCommit=$owner.sourceCommit
+            }
+        }
+    }
+    if($contractCommit -cnotmatch '^[0-9a-f]{40}$'){throw 'The platform Contract owner commit is not finalized.'}
+    $manifest=[ordered]@{schema=1;product='r4os-recovery';architecture='x86_64';recoveryVersion=$version;recoveryKernelVersion=$kernelVersion;
+        platformContract=[ordered]@{commit=$contractCommit;sha256=(Get-FileHash -LiteralPath (Join-Path $Root 'Platform/Contract/API/ApiContract.json') -Algorithm SHA256).Hash.ToLowerInvariant()};
+        runtime=[ordered]@{format='fat32';logicalSectorBytes=512};files=$files;minimumRamBytes=$MinimumRamBytes}
+    Write-RecoveryJson (Join-Path $stage 'manifest.json') $manifest
+    if(Test-Path -LiteralPath $Destination){Remove-Item -LiteralPath $Destination -Force}
+    [IO.Compression.ZipFile]::CreateFromDirectory($stage,$Destination,[IO.Compression.CompressionLevel]::Optimal,$false)
+    return [ordered]@{path=$Destination;version=$version;bytes=([IO.FileInfo]$Destination).Length;sha256=(Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash.ToLowerInvariant();manifest=$manifest}
+}

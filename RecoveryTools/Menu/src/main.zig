@@ -4,6 +4,7 @@ const view = @import("view.zig");
 const diagnostic = @import("diagnostic.zig");
 const selection = @import("selection.zig");
 const targets = selection.model;
+const packages = @import("package_session.zig");
 const abi = r4os.abi;
 const terminal_path = "C:\\R4OS\\SOFTWARE\\TERMINAL\\TERMINAL.R4X";
 const Page = enum { menu, source, targets, review, dialog, terminal, progress };
@@ -13,6 +14,9 @@ const State = struct {
     desk: r4os.r4desk.Context,
     draw: r4os.r4draw.Context,
     net: r4os.r4net.Context,
+    dev: r4os.r4dev.Context,
+    cache: packages.Preview = .{},
+    work_view_tick: u64 = 0,
     canvas: view.Canvas,
     geometry: view.Geometry,
     font_width: u32 = 8,
@@ -222,6 +226,15 @@ const State = struct {
         self.text(area.x, area.y, "Choose release source", view.foreground);
         for ([_][]const u8{ "Cached release ZIP", "Download from GitHub", "Back" }, 0..) |label, i|
             self.option(area, area.y + step * @as(u32, @intCast(i + 2)), label, self.choice == i);
+        var label: [128]u8 = undefined;
+        const detail = switch (self.cache.state) {
+            .missing => "No cached ZIP",
+            .unchecked => "ZIP present; unable to inspect",
+            .invalid => "Cached ZIP is invalid/incompatible",
+            .manifest => std.fmt.bufPrint(&label, "Version {s}; full check on Continue", .{std.mem.sliceTo(&self.cache.version, 0)}) catch "Manifest checked",
+            .verified => std.fmt.bufPrint(&label, "Version {s}; fully verified", .{std.mem.sliceTo(&self.cache.version, 0)}) catch "Package verified",
+        };
+        self.text(area.x, area.y + step, detail, view.muted);
         const bottom = area.y + step * 6;
         self.wrap(targets.cachePath(self.operation()), .{ .x = area.x, .y = bottom, .w = area.w, .h = (area.y + area.h) -| bottom }, view.muted);
     }
@@ -296,6 +309,113 @@ const State = struct {
         self.option(area, area.y + area.h -| step, "Continue", self.choice == 1);
     }
 
+    fn kind(self: *const State) packages.package.Kind {
+        return if (self.operation() == .recovery) .recovery else .r4os;
+    }
+
+    fn pump(raw: ?*anyopaque, phase: []const u8, done: u64, total: u64) bool {
+        const self: *State = @ptrCast(@alignCast(raw.?));
+        self.message = phase;
+        self.progress = if (total == 0) 0 else @intCast(@min(100, done * 100 / total));
+        if (self.sys.programShouldClose()) return false;
+        const now = self.sys.ticks();
+        if (now - self.work_view_tick >= self.sys.ticksFromMilliseconds(100)) {
+            self.work_view_tick = now;
+            _ = self.status();
+            if (!self.render(false)) return false;
+        }
+        var count: usize = 0;
+        while (count < 32) : (count += 1) {
+            const key = self.sys.readKey();
+            if (key == 0) break;
+            if (key == 0x1b) return false;
+        }
+        self.sys.taskYield();
+        return true;
+    }
+    fn inspectCache(self: *State) void {
+        defer {
+            self.page = .source;
+            self.dirty = true;
+            var detail: [144]u8 = undefined;
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] cache={s} version={s} source=READY\r\n", .{ @tagName(self.cache.state), std.mem.sliceTo(&self.cache.version, 0) }) catch "");
+        }
+        self.cache = .{};
+        const path = targets.cachePath(self.operation());
+        const info = self.sys.fileInfo(path) orelse return;
+        self.cache = .{ .state = .unchecked, .bytes = info.size };
+        self.page = .progress;
+        self.message = "Inspecting cached ZIP...";
+        _ = self.render(false);
+        const session = self.sys.allocator().create(packages.Session) catch {
+            self.page = .source;
+            return;
+        };
+        defer self.sys.allocator().destroy(session);
+        session.init(&self.sys, &self.dev, .{ .context = self, .function = pump });
+        defer {
+            if (!session.deinit()) self.sys.write("[RECOVERYPACKAGE] cleanup=RETAINED\r\n");
+            self.page = .source;
+            self.dirty = true;
+        }
+        self.cache = session.describe(path, self.kind()) catch |err| {
+            self.cache.state = if (err == error.OutOfMemory or err == error.Cancelled or session.pool.cancelled) .unchecked else .invalid;
+            return;
+        };
+    }
+    fn preparePackage(self: *State) void {
+        self.notice_return = .review;
+        self.choice = 0;
+        if (self.source == .github) {
+            self.page = .dialog;
+            self.message = "GitHub downloading is not available in this build.";
+            return;
+        }
+        self.page = .progress;
+        self.working = true;
+        self.message = "Preparing package...";
+        self.progress = 0;
+        _ = self.render(false);
+        defer {
+            self.working = false;
+            self.page = .dialog;
+            self.dirty = true;
+        }
+        const session = self.sys.allocator().create(packages.Session) catch {
+            self.message = packages.message(error.OutOfMemory);
+            return;
+        };
+        defer self.sys.allocator().destroy(session);
+        session.init(&self.sys, &self.dev, .{ .context = self, .function = pump });
+        var result_message: []const u8 = "Package and target prepared. Installation is not available in this build.";
+        defer {
+            if (!session.deinit()) result_message = "Temporary RAM cleanup is incomplete. Restart Recovery before continuing.";
+            self.message = result_message;
+        }
+        self.prepareTargetPackage(session) catch |err| {
+            const actual = if (session.pool.cancelled) error.Cancelled else err;
+            result_message = packages.message(actual);
+            var detail: [160]u8 = undefined;
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] rejected={s} vm_error={d} writes=0\r\n", .{ @errorName(actual), session.pool.last_error }) catch "");
+            return;
+        };
+        self.cache = .{ .state = .verified, .digest = session.original_digest, .bytes = session.prepared.?.archive.original.len };
+        const actual_version = session.prepared.?.version();
+        @memcpy(self.cache.version[0..actual_version.len], actual_version);
+        var detail: [192]u8 = undefined;
+        self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] prepared={s} version={s} ram_peak={d} original_zip={d} writes=0\r\n", .{ @tagName(self.kind()), session.prepared.?.version(), session.pool.peak, session.prepared.?.archive.original.len }) catch "");
+    }
+    fn prepareTargetPackage(self: *State, session: *packages.Session) !void {
+        try session.prepare(targets.cachePath(self.operation()), self.kind(), if (self.cache.state == .manifest or self.cache.state == .verified) self.cache.digest else null);
+        const catalog = &self.catalog.?;
+        const target = catalog.targets.items[self.target_index];
+        if (self.operation() != .recovery) {
+            const affected = targets.affected(target, catalog.disks.items, catalog.installed.items);
+            try session.targetSystem(if (self.operation() == .install) 266240 else affected.first_lba, if (self.operation() == .install) 2097152 else affected.sector_count, self.sys.ticks());
+        }
+        try catalog.revalidate(&self.sys, self.target_index);
+    }
+
     fn renderTerminal(self: *State, area: view.Rect) bool {
         const cols = @min(area.w / self.font_width, 256);
         const rows = @min(area.h / self.font_height, 128);
@@ -368,6 +488,7 @@ const State = struct {
                 0x81 => self.selection = (self.selection + 1) % view.labels.len,
                 '\n' => {
                     self.open();
+                    if (self.page == .source) self.inspectCache();
                     return true;
                 },
                 else => return true,
@@ -427,10 +548,7 @@ const State = struct {
                         return true;
                     };
                     self.sys.write("[RECOVERYTARGET] identity=REVALIDATED writes=0\r\n");
-                    self.page = .dialog;
-                    self.notice_return = .review;
-                    self.choice = 0;
-                    self.message = "Target verified. Package processing is not available in this build.";
+                    self.preparePackage();
                 },
                 else => return true,
             },
@@ -478,12 +596,15 @@ pub fn r4_app_main(app: *r4os.App) i32 {
 fn run(app: *r4os.App) i32 {
     const sys = app.system();
     const args = std.mem.span(sys.argsRaw());
+    const package_prefix = "/PACKAGESMOKE ";
+    if (std.mem.startsWith(u8, args, package_prefix)) return @import("package_diagnostic.zig").run(app, args[package_prefix.len..]);
     const storage_prefix = "/STORAGESMOKE ";
     if (args.len >= storage_prefix.len and std.ascii.eqlIgnoreCase(args[0..storage_prefix.len], storage_prefix))
         return @import("storage_diagnostic.zig").run(&sys, std.mem.trim(u8, args[storage_prefix.len..], " "));
     const desk = app.desktop() orelse return -1;
     const draw = app.drawing() orelse return -2;
     const net = app.networkLowLevel() orelse return -3;
+    const dev = app.devicesLowLevel() orelse return -22;
     const allocator = sys.allocator();
     const width = draw.screenWidth();
     const height = draw.screenHeight();
@@ -494,7 +615,7 @@ fn run(app: *r4os.App) i32 {
     defer allocator.free(pixels);
     const state = allocator.create(State) catch return -7;
     defer allocator.destroy(state);
-    state.* = .{ .sys = sys, .desk = desk, .draw = draw, .net = net, .geometry = geometry, .canvas = .{ .pixels = pixels, .width = width, .height = height, .clip = geometry.monitor } };
+    state.* = .{ .sys = sys, .desk = desk, .draw = draw, .net = net, .dev = dev, .geometry = geometry, .canvas = .{ .pixels = pixels, .width = width, .height = height, .clip = geometry.monitor } };
     defer state.test_session.close(sys);
     defer state.clearCatalog();
     const path = "C:\\R4OS\\MEDIA\\RECOVERY.BMP";

@@ -1,10 +1,12 @@
 R4OS_MODULE_MANIFEST=2
 KIND=R4X
 NAME=RECOVERY
-VERSION=0.1.4
+VERSION=0.1.5
 LANGUAGE=Zig
 SOURCE=src/main.zig
 ZIG_MODULE=installation:../../Kernel/storage/installation.zig
+ZIG_MODULE=ntfs_volume:../../Platform/SDK/r4os/ntfs_volume.zig
+ZIG_MODULE=ntfs_format:src/ntfs_format.zig
 ENTRY_MODE=app
 APP_CLASS=console
 TARGET=/R4OS/SOFTWARE/RECOVERY/RECOVERY.R4X
@@ -13,5 +15,9 @@ IMPORT=R4SYS:Query:1
 IMPORT=R4DESK:Query:1
 IMPORT=R4DRAW:Query:1
 IMPORT=R4NET:Query:1
+IMPORT=R4DEV:Query:1
 META=app.role=recovery_host
 META=memory.tag=recovery
+META=memory.reserve=16GB
+META=memory.commit=8GB
+META=memory.resident=8GB

@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'NetworkTest')][string]$Mode = 'Verify',
+    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'NetworkTest')][string]$Mode = 'Verify',
     [string]$Zig = '',
     [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
@@ -20,7 +20,7 @@ try {
         if ($Mode -eq 'RuntimeTest') { $BootProbe = 'ram' }
         if ($Mode -eq 'StorageTest') { $BootProbe = 'storage' }
         if ($Mode -eq 'InputTest') { $BootProbe = 'input' }
-        if ($Mode -eq 'UITest') { $BootProbe = 'ui' }
+        if ($Mode -in @('UITest', 'PackageTest')) { $BootProbe = 'ui' }
         if ($Mode -in @('NetworkTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest')) { $BootProbe = 'none' }
         if (!$Zig) {
             $Zig = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot $(if ($IsWindows) {'../../DevKit/Toolchains/Zig/zig.exe'} else {'../../DevKit/Toolchains/Zig/zig'})))
@@ -38,13 +38,16 @@ try {
             $runtimeArguments = @("-Druntime-sha256=$($runtime.sha256)", "-Druntime-bytes=$($runtime.bytes)")
         }
         if ($Mode -eq 'Runtime') { exit 0 }
-        $prefix = Join-Path $PSScriptRoot $(if ($BootProbe -eq 'none') {'Artifacts/Kernel'} else {"Artifacts/BootProbe/$BootProbe"})
-        Push-Location (Join-Path $PSScriptRoot 'Kernel')
-        try {
-            & $Zig build --prefix $prefix "--fork=$(Join-Path $PSScriptRoot 'Platform/Contract')" "-Drecovery-version=$version" "-Drecovery-probe=$BootProbe" @runtimeArguments
-            if ($LASTEXITCODE -ne 0) { throw 'Recovery kernel build failed.' }
-        } finally { Pop-Location }
-        Write-Host "Recovery kernel: $(Join-Path $prefix 'bin/recovery.elf')"
+        $probes = if ($Mode -eq 'PackageTest') { @('none', 'ui') } else { @($BootProbe) }
+        foreach ($probe in $probes) {
+            $prefix = Join-Path $PSScriptRoot $(if ($probe -eq 'none') {'Artifacts/Kernel'} else {"Artifacts/BootProbe/$probe"})
+            Push-Location (Join-Path $PSScriptRoot 'Kernel')
+            try {
+                & $Zig build --prefix $prefix "--fork=$(Join-Path $PSScriptRoot 'Platform/Contract')" "-Drecovery-version=$version" "-Drecovery-probe=$probe" @runtimeArguments
+                if ($LASTEXITCODE -ne 0) { throw 'Recovery kernel build failed.' }
+            } finally { Pop-Location }
+            Write-Host "Recovery kernel: $(Join-Path $prefix 'bin/recovery.elf')"
+        }
         if ($Mode -in @('BootTest', 'RuntimeTest')) {
             & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Boot.ps1') -Firmware $Firmware -Action $BootProbe -Zig $Zig
             if ($LASTEXITCODE -ne 0) { throw 'Recovery boot acceptance failed.' }
@@ -64,6 +67,10 @@ try {
         if ($Mode -eq 'UITest') {
             & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-UI.ps1') -Firmware $Firmware -Zig $Zig
             if ($LASTEXITCODE -ne 0) { throw 'Recovery UI acceptance failed.' }
+        }
+        if ($Mode -eq 'PackageTest') {
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Packages.ps1') -Zig $Zig
+            if ($LASTEXITCODE -ne 0) { throw 'Recovery package acceptance failed.' }
         }
     }
     exit 0

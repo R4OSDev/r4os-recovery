@@ -109,7 +109,7 @@ not bind a mouse. Results live under `Artifacts/BootProbe/input/`.
 ## Recovery console host
 
 `RecoveryTools/Menu` owns RECOVERY.R4X and builds against the pinned SDK and
-Contract. The 38 imported binaries stay fixed; the runtime image additionally
+Contract. The 39 imported binaries stay fixed; the runtime image additionally
 contains the locally built Recovery application. Its manifest and source
 participate in input verification, and the build checks its real imports.
 
@@ -120,8 +120,9 @@ image's monitor. The shell uses existing R4DRAW and console-host APIs without
 a desktop. The footer shows the actual SSH address or network waiting state.
 The first three entries select a fixed cached ZIP or their GitHub channel,
 then a live disk or an identified SYSTEM/RECOVERY partition. Review defaults
-to Back and revalidates the target before dispatch. Package processing and
-writes follow in their respective roadmap steps; no placeholder claims a
+to Back and revalidates the target before dispatch. Since 0.76.15, local
+packages are checked through the frozen R4ZIP protocol and prepared in pinned
+physical RAM. Writes follow in their respective roadmap steps; no placeholder claims a
 completed installation. Readable OS markers add comma-separated names; no
 marker leaves the extra display empty. Details and current limits are in
 [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).
@@ -135,6 +136,16 @@ Terminal return and reset. The disk fixtures cover an existing installation,
 a blank disk and combined OS markers. `Tools/Test-UI.ps1 -BootMedium LOCAL
 -Firmware Bios -Resolution 1024x768x32` checks local-source USB exclusion and
 own-disk eligibility. Artifacts stay under `Artifacts/BootProbe/ui/`.
+
+`Tools/Package.ps1` owns the independent Recovery ZIP producer; the frozen
+Distribution `Tools/ReleasePackage.ps1` defines the paired OS package.
+`./Build.sh -Mode PackageTest` (Windows: `Build.bat -Mode PackageTest`)
+builds the production package kernel and existing UI diagnostic kernel, then
+generates real .NET ZIP fixtures, checks
+the shared guest decoder and NTFS content import on the host, and runs bounded
+SMP4 guest package checks. After those builds,
+`pwsh -File Tools/Test-Packages.ps1 -HostOnly` or `-GuestOnly` selects one half.
+Release publication and physical installation remain separate roadmap steps.
 
 Since 0.76.9, the pinned SDK and ImageCreator share GPT/MBR editing and streamed
 FAT32/NTFS formatting. `-Mode StorageToolsTest` exercises those same routines

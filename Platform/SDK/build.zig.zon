@@ -7,8 +7,8 @@
         // The identity is pinned here. Build.bat and Build.sh map the actual
         // checkout from Settings.R4S and provide it as a local Zig fork.
         .r4os_contract = .{
-            .url = "https://github.com/R4OSDev/r4os-contract/archive/f896945745f96ff4cc35a3bbdac80065be0b3de8.tar.gz",
-            .hash = "r4os_contract-0.64.11-ELhbYaCBmQBifruGA90jlS8gDuUZk1SlS4hA3BpMTjFZ",
+            .url = "https://github.com/R4OSDev/r4os-contract/archive/16ffd60671a83b97af1dc8b1c4752cc9bed1b732.tar.gz",
+            .hash = "r4os_contract-0.64.11-ELhbYX6OmQBkEbiSbKa4YhGSUNatjKMs4n29h0AtgKOA",
         },
     },
     .paths = .{

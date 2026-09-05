@@ -1,0 +1,333 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 9361544..312c808 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -689,3 +689,26 @@ reservierten Bereich liegen. Unklare Quellen/Geometrie werden abgewiesen.
+ Kein Resize, keine Powerfail-Atomizitaet, kein rekonstruiertes Dateisystem.
+ Ein Report benoetigt weniger als 36 KB Heap, repair einen zweiten Report und
+ mindestens 512 Byte Arbeitsbuffer. Keine volumeproportionale Allokation.
++
++0.76.15: ZIP-Protokoll und gemeinsame NTFS-Verbraucher
++---------------------------------------------------
++
++r4os.zip ist die typisierte Fassade fuer R4ZIP.R4P, Rolle format.zip.
++inspect prueft das Archivverzeichnis; begin/step entpacken in Speicher des
++Aufrufers. Auch der 16-KB-Decoderzustand gehoert ihm. Zwischen den Schritten
++(258 Bytes bis 4 MB Ausgabe) darf er Fortschritt zeichnen, abbrechen und
++Yield ausfuehren; das Protokoll haelt keine globale Sitzung. CRC- und
++Pfadpruefung gehoeren zum Protokoll, Release-Manifeste zum jeweiligen Produkt.
++
++ZIG_MODULE-Abhaengigkeiten sehen alle anderen ausdruecklich im gleichen
++Manifest genannten Zig-Module. Gleiche Quelldateien bleiben dadurch in genau
++einer Modulinstanz. ntfs_volume akzeptiert im benannten ntfs_format-Modul
++optional shared_format, die bereits durch r4os.storage_tools verwendete
++Formatinstanz. Standalone-Verbraucher behalten den bisherigen Formatimport.
++ntfs.PreparedPlan nennt den vorbereiteten Formatierplan; dessen geliehene
++Datei-, Metadaten- und Indexpuffer leben bis zum letzten execute weiter.
++
++vmCommitFlags mit abi.vm_commit_flag_resident stellt physische, gepinnte RAM-
++Seiten vor Erfolg bereit, hoechstens abi.vm_commit_resident_max_bytes pro
++Aufruf. Flags 0 und der normale Allocator bleiben lazy. Fehler koennen eine
++teilweise belegte Region hinterlassen; Aufrufer geben sie kontrolliert frei.
+diff --git a/Tests/Build/R4MFMapping/Bindings/external.zig b/Tests/Build/R4MFMapping/Bindings/external.zig
+index 93cb3b6..6546320 100644
+--- a/Tests/Build/R4MFMapping/Bindings/external.zig
++++ b/Tests/Build/R4MFMapping/Bindings/external.zig
+@@ -1 +1 @@
+-pub const marker: u32 = 0x524D4150;
++pub const marker = @import("shared").marker;
+diff --git a/Tests/Build/R4MFMapping/Bindings/shared.zig b/Tests/Build/R4MFMapping/Bindings/shared.zig
+new file mode 100644
+index 0000000..93cb3b6
+--- /dev/null
++++ b/Tests/Build/R4MFMapping/Bindings/shared.zig
+@@ -0,0 +1 @@
++pub const marker: u32 = 0x524D4150;
+diff --git a/Tests/Build/R4MFMapping/module.R4MF b/Tests/Build/R4MFMapping/module.R4MF
+index 141575d..c34d77e 100644
+--- a/Tests/Build/R4MFMapping/module.R4MF
++++ b/Tests/Build/R4MFMapping/module.R4MF
+@@ -10,3 +10,4 @@ TARGET=/R4OS/SOFTWARE/TERMINAL/DIAG/SDKMAP.R4X
+ IMAGE_SCOPE=test
+ IMPORT=R4SYS:Query:1
+ ZIG_MODULE=external:Declared/NotPresent.zig
++ZIG_MODULE=shared:Declared/SharedNotPresent.zig
+diff --git a/build.zig b/build.zig
+index d6f3251..15259c7 100644
+--- a/build.zig
++++ b/build.zig
+@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
+     const module_filter = b.option([]const u8, "module-filter", "Build only matching SDK smoke R4X names") orelse "";
+     _ = sdk_profile.addR4MFCatalog(&.{b.path("Smoke")}, module_filter);
+     _ = sdk_profile.addR4MFWithOptions(b.path("Tests/Build/R4MFMapping/module.R4MF"), .{
+-        .zig_module_roots = &.{b.path("Tests/Build/R4MFMapping/Bindings/external.zig")},
++        .zig_module_roots = &.{ b.path("Tests/Build/R4MFMapping/Bindings/external.zig"), b.path("Tests/Build/R4MFMapping/Bindings/shared.zig") },
+     });
+     _ = sdk_profile.addR4MF(b.path("Tests/Build/SubsystemManifest/module.R4MF"));
+     _ = sdk_profile.addR4D(.{
+diff --git a/build.zig.zon b/build.zig.zon
+index ccfad3c..3106094 100644
+--- a/build.zig.zon
++++ b/build.zig.zon
+@@ -7,8 +7,8 @@
+         // The identity is pinned here. Build.bat and Build.sh map the actual
+         // checkout from Settings.R4S and provide it as a local Zig fork.
+         .r4os_contract = .{
+-            .url = "https://github.com/R4OSDev/r4os-contract/archive/f896945745f96ff4cc35a3bbdac80065be0b3de8.tar.gz",
+-            .hash = "r4os_contract-0.64.11-ELhbYaCBmQBifruGA90jlS8gDuUZk1SlS4hA3BpMTjFZ",
++            .url = "https://github.com/R4OSDev/r4os-contract/archive/16ffd60671a83b97af1dc8b1c4752cc9bed1b732.tar.gz",
++            .hash = "r4os_contract-0.64.11-ELhbYX6OmQBkEbiSbKa4YhGSUNatjKMs4n29h0AtgKOA",
+         },
+     },
+     .paths = .{
+diff --git a/r4os.zig b/r4os.zig
+index 3c1fbfd..58f03f4 100644
+--- a/r4os.zig
++++ b/r4os.zig
+@@ -28,6 +28,7 @@ pub const app_devices = @import("r4os/app_devices.zig");
+ pub const app_web = @import("r4os/app_web.zig");
+ pub const http = @import("r4os/http.zig");
+ pub const json = @import("r4os/json.zig");
++pub const zip = @import("r4os/zip.zig");
+ pub const html = @import("r4os/html.zig");
+ pub const css = @import("r4os/css.zig");
+ pub const web_layout = @import("r4os/web_layout.zig");
+diff --git a/r4os/build.zig b/r4os/build.zig
+index 5160e2c..d890c1e 100644
+--- a/r4os/build.zig
++++ b/r4os/build.zig
+@@ -1582,22 +1582,26 @@ fn addRawModule(b: *std.Build, opts: RawOptions) std.Build.LazyPath {
+     });
+     r4os_module.addImport("r4os_contract", opts.contract_module);
+     exe.root_module.addImport("r4os", r4os_module);
+-    if (opts.app_source_file == null) {
+-        for (opts.zig_modules) |module| {
+-            const dependency = b.createModule(.{
+-                .root_source_file = module.root_source_file,
+-                .target = target,
+-                .optimize = opts.optimize,
+-                .single_threaded = false,
+-                .strip = false,
+-                .red_zone = false,
+-                .sanitize_c = .off,
+-                .stack_check = false,
+-                .stack_protector = false,
+-            });
+-            dependency.addImport("r4os", r4os_module);
+-            exe.root_module.addImport(module.name, dependency);
++    const dependencies = b.allocator.alloc(*std.Build.Module, opts.zig_modules.len) catch @panic("OOM");
++    for (opts.zig_modules, 0..) |module, index| {
++        dependencies[index] = b.createModule(.{
++            .root_source_file = module.root_source_file,
++            .target = target,
++            .optimize = opts.optimize,
++            .single_threaded = false,
++            .strip = false,
++            .red_zone = false,
++            .sanitize_c = .off,
++            .stack_check = false,
++            .stack_protector = false,
++        });
++        dependencies[index].addImport("r4os", r4os_module);
++    }
++    for (dependencies, 0..) |dependency, index| {
++        for (opts.zig_modules, 0..) |other, other_index| {
++            if (index != other_index) dependency.addImport(other.name, dependencies[other_index]);
+         }
++        if (opts.app_source_file == null) exe.root_module.addImport(opts.zig_modules[index].name, dependency);
+     }
+     if (opts.app_source_file) |source_file| {
+         const app_module = b.createModule(.{
+@@ -1612,21 +1616,7 @@ fn addRawModule(b: *std.Build, opts: RawOptions) std.Build.LazyPath {
+             .stack_protector = false,
+         });
+         app_module.addImport("r4os", r4os_module);
+-        for (opts.zig_modules) |module| {
+-            const dependency = b.createModule(.{
+-                .root_source_file = module.root_source_file,
+-                .target = target,
+-                .optimize = opts.optimize,
+-                .single_threaded = false,
+-                .strip = false,
+-                .red_zone = false,
+-                .sanitize_c = .off,
+-                .stack_check = false,
+-                .stack_protector = false,
+-            });
+-            dependency.addImport("r4os", r4os_module);
+-            app_module.addImport(module.name, dependency);
+-        }
++        for (opts.zig_modules, 0..) |module, index| app_module.addImport(module.name, dependencies[index]);
+         exe.root_module.addImport("r4_app_source", app_module);
+         const app_options = b.addOptions();
+         app_options.addOption(u8, "profile", @intFromEnum(opts.app_profile.?));
+diff --git a/r4os/ntfs_builder.zig b/r4os/ntfs_builder.zig
+index 76d623a..9f0f286 100644
+--- a/r4os/ntfs_builder.zig
++++ b/r4os/ntfs_builder.zig
+@@ -18,6 +18,7 @@ const prepared = @import("storage_tools/ntfs_plan.zig");
+ /// host models, with their already-shared NTFS format module.
+ pub fn WithFormat(comptime ntfs: type) type {
+     return struct {
++        pub const PreparedPlan = prepared.Plan;
+         const SECTOR: usize = 512;
+         const CLUSTER: usize = 4096;
+         const RECORD: usize = 1024;
+diff --git a/r4os/ntfs_volume.zig b/r4os/ntfs_volume.zig
+index 18e8336..842b484 100644
+--- a/r4os/ntfs_volume.zig
++++ b/r4os/ntfs_volume.zig
+@@ -23,7 +23,10 @@
+ // allocated (valid NTFS); their space returns when the directory shrinks
+ // structurally or is removed.
+ 
+-const ntfs = @import("ntfs_format");
++// Callers already using the SDK namespace pass its shared format type.
++// Standalone kernel/host owners keep their existing named format module.
++const format_provider = @import("ntfs_format");
++const ntfs = if (@hasDecl(format_provider, "shared_format")) format_provider.shared_format else format_provider;
+ 
+ pub const SECTOR_SIZE: usize = 512;
+ /// Windows-parity name limits (0.60.19): NTFS names carry at most 255
+diff --git a/r4os/zip.zig b/r4os/zip.zig
+new file mode 100644
+index 0000000..d65978e
+--- /dev/null
++++ b/r4os/zip.zig
+@@ -0,0 +1,136 @@
++// R4ZIP.R4P wire contract and typed facade; no ZIP parser is embedded here.
++const std = @import("std");
++const abi = @import("r4os_contract").abi;
++const r4dev = @import("r4dev.zig");
++pub const role = "format.zip";
++pub const contract_version: u32 = 1;
++pub const max_entries: u32 = 4096;
++pub const max_path: u32 = 255;
++pub const work_bytes: usize = 16384;
++pub const work_alignment = 16;
++pub const max_step_bytes: u32 = 4 * 1024 * 1024;
++pub const min_step_bytes: u32 = 258; // One complete maximum Deflate match.
++pub const op_inspect: u32 = 1;
++pub const op_begin: u32 = 2;
++pub const op_step: u32 = 3;
++
++pub const Error = error{ Unavailable, BadRequest, InvalidArchive, Unsupported, Bounds, Checksum, OutputTooSmall, DuplicatePath, UnsafePath, Limit, Inflate, Stale };
++pub fn status(err: Error) i32 {
++    return switch (err) {
++        error.Unavailable => -21000,
++        error.BadRequest => -21001,
++        error.InvalidArchive => -21002,
++        error.Unsupported => -21003,
++        error.Bounds => -21004,
++        error.Checksum => -21005,
++        error.OutputTooSmall => -21006,
++        error.DuplicatePath => -21007,
++        error.UnsafePath => -21008,
++        error.Limit => -21009,
++        error.Inflate => -21010,
++        error.Stale => -21011,
++    };
++}
++pub fn check(value: i32) Error!void {
++    switch (value) {
++        0 => {},
++        -21001 => return error.BadRequest,
++        -21002 => return error.InvalidArchive,
++        -21003 => return error.Unsupported,
++        -21004 => return error.Bounds,
++        -21005 => return error.Checksum,
++        -21006 => return error.OutputTooSmall,
++        -21007 => return error.DuplicatePath,
++        -21008 => return error.UnsafePath,
++        -21009 => return error.Limit,
++        -21010 => return error.Inflate,
++        -21011 => return error.Stale,
++        else => return error.Unavailable,
++    }
++}
++pub const Info = extern struct {
++    version: u32 = contract_version,
++    size: u32 = @sizeOf(Info),
++    entries: u32 = 0,
++    files: u32 = 0,
++    total_bytes: u64 = 0,
++    central_offset: u64 = 0,
++    central_bytes: u64 = 0,
++};
++pub const Entry = extern struct {
++    central_offset: u64 = 0,
++    local_offset: u64 = 0,
++    data_offset: u64 = 0,
++    end_offset: u64 = 0,
++    compressed_bytes: u64 = 0,
++    bytes: u64 = 0,
++    name_offset: u64 = 0,
++    name_bytes: u32 = 0,
++    crc32: u32 = 0,
++    method: u16 = 0,
++    flags: u16 = 0,
++    directory: u32 = 0,
++    pub fn name(self: Entry, archive: []const u8) Error![]const u8 {
++        if (self.name_offset > archive.len or self.name_bytes > archive.len - self.name_offset) return error.Bounds;
++        return archive[@intCast(self.name_offset)..][0..self.name_bytes];
++    }
++};
++pub const Progress = extern struct {
++    written: u64 = 0,
++    done: u32 = 0,
++    reserved: u32 = 0,
++};
++pub const Request = extern struct {
++    version: u32 = contract_version,
++    size: u32 = @sizeOf(Request),
++    archive: ?[*]const u8 = null,
++    archive_bytes: u64 = 0,
++    entries: ?[*]Entry = null,
++    entry_capacity: u32 = 0,
++    step_bytes: u32 = max_step_bytes,
++    entry: ?*const Entry = null,
++    work: ?[*]align(work_alignment) u8 = null,
++    work_len: u32 = 0,
++    reserved: u32 = 0,
++    output: ?[*]u8 = null,
++    output_bytes: u64 = 0,
++};
++pub const Work = struct { data: [work_bytes]u8 align(work_alignment) = undefined };
++pub const Context = struct {
++    dev: *const r4dev.Context,
++    fn invoke(self: Context, op: u32, request: *const Request, out: anytype) Error!void {
++        var input = abi.ProtocolBuffer{ .data = @ptrCast(@constCast(request)), .len = @sizeOf(Request), .capacity = @sizeOf(Request) };
++        var output = abi.ProtocolBuffer{ .data = @ptrCast(out), .len = 0, .capacity = @sizeOf(@TypeOf(out.*)) };
++        try check(self.dev.protocolDispatch(role, op, &input, &output));
++        if (output.len != @sizeOf(@TypeOf(out.*))) return error.BadRequest;
++    }
++    // Entries are sorted by portable, case-insensitive path. No filesystem is
++    // accessed. Caller retains immutable archive and output storage through
++    // inspection/preparation; failed outputs must be discarded.
++    pub fn inspect(self: Context, archive: []const u8, entries: []Entry) Error!Info {
++        if (entries.len > max_entries) return error.Limit;
++        var out = Info{};
++        try self.invoke(op_inspect, &.{ .archive = archive.ptr, .archive_bytes = archive.len, .entries = entries.ptr, .entry_capacity = @intCast(entries.len) }, &out);
++        return out;
++    }
++    pub fn begin(self: Context, archive: []const u8, entry: *const Entry, output: []u8, work: *Work) Error!Progress {
++        var out = Progress{};
++        try self.invoke(op_begin, &.{ .archive = archive.ptr, .archive_bytes = archive.len, .entry = entry, .output = output.ptr, .output_bytes = output.len, .work = &work.data, .work_len = work_bytes }, &out);
++        return out;
++    }
++    // Between these calls the application can paint progress, process input
++    // and yield. No protocol callback or global decoder state remains active.
++    pub fn step(self: Context, work: *Work, budget: u32) Error!Progress {
++        var out = Progress{};
++        try self.invoke(op_step, &.{ .work = &work.data, .work_len = work_bytes, .step_bytes = budget }, &out);
++        return out;
++    }
++};
++
++test "ZIP protocol status values cannot collide with generic role failure" {
++    inline for (std.meta.fields(Error)) |field| {
++        const err = @field(Error, field.name);
++        try std.testing.expectError(err, check(status(err)));
++    }
++    try std.testing.expectError(error.Unavailable, check(-5));
++}

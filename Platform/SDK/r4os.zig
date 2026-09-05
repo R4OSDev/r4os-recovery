@@ -28,6 +28,7 @@ pub const app_devices = @import("r4os/app_devices.zig");
 pub const app_web = @import("r4os/app_web.zig");
 pub const http = @import("r4os/http.zig");
 pub const json = @import("r4os/json.zig");
+pub const zip = @import("r4os/zip.zig");
 pub const html = @import("r4os/html.zig");
 pub const css = @import("r4os/css.zig");
 pub const web_layout = @import("r4os/web_layout.zig");

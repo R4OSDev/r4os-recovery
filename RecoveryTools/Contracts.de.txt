@@ -122,7 +122,41 @@ Installation vor dem ersten Zielschreibzugriff. Integritaet ersetzt keine
 Authentifizierung: GitHub-Downloads verwenden den geprueften HTTPS-Pfad.
 Die fuer einen konkreten Install-/Updateauftrag benoetigte RAM-Spitze wird
 zusaetzlich berechnet und reserviert; minimumRamBytes deckt keinen beliebig
-grossen Auftrag ab. Paketstruktur und Grenzen werden in 0.76.15 umgesetzt.
+grossen Auftrag ab. Seit 0.76.15 prueft Recovery diesen Paketvertrag ueber
+das eingefrorene R4ZIP.R4P; die Veroeffentlichung folgt separat.
+
+R4OS-Paket ab 0.76.X
+-------------------
+
+Asset: R4OS-<releaseVersion>-<slim|full>-x86_64.zip, ohne umschliessenden
+Ordner. Die Root-manifest.json verwendet Schema 1 mit diesen Pflichtfeldern:
+product="r4os", architecture="x86_64", releaseVersion, kernelVersion,
+profile, asset, layout="r4os-gpt-1", recovery={version,package:"recovery.zip"},
+bootFiles und files. Semantische Versionen sind MAJOR.MINOR.PATCH. files
+enthaelt wie beim Recovery-Paket jeden Nutzpfad mit bytes und sha256.
+
+Nutzdateien sind exakt disk.img, recovery.zip, BOOT/<verwalteter Bootpfad>
+und Legal/... . bootFiles ist eine eindeutige Liste relativer BOOT-Pfade;
+boot/r4os.elf ist Pflicht. limine.conf darf in keinem verwalteten Pfad
+vorkommen. Das verschachtelte eigenstaendige Recovery-ZIP muss vollstaendig
+gueltig sein und genau zur angegebenen Recovery-Version passen. Das
+Diskimage ist das vereinbarte einzelne 2048-MB-GPT-Image mit fuenf Rollen.
+Es gibt kein DATA-Ersatzimage. Alte ZIP-Formate und GitHub-Source-ZIPs ohne
+diesen Vertrag gelten nicht als Installationspaket.
+
+Die Paketvorbereitung haelt Original-ZIP, entpackte Nutzdaten, Recovery-
+Bestand, SYSTEM-Dateibaum und vorbereitete Zielmetadaten gemeinsam im RAM.
+Das SYSTEM wird mit dem gemeinsamen NTFS-Leser gelesen und fuer die echte
+Zielgroesse mit dem gemeinsamen Builder vorbereitet. Dessen Plan borgt
+Dateidaten und Indexpuffer; Vorbereitungssitzung und Builder muessen bis
+zum letzten Schreib-/Flush-Aufruf leben. In 0.76.15 wird der Plan noch
+nicht auf einen physischen Zieldatentraeger ausgefuehrt.
+
+Ein Archiv ist auf 2 GB komprimiert, 4 GB Gesamtausgabe, 4096 Eintraege und
+255 ASCII-Bytes pro ZIP-Pfad begrenzt. Ein Manifest darf hoechstens 1 MB
+haben. Der SYSTEM-Import erlaubt 4000 Baumknoten, 1023 UTF-8-Pfadbytes und
+24 Ebenen; Reparse-Punkte, Hardlinks und inkonsistentes NTFS werden verworfen.
+Diese technischen Grenzen sind keine Zusage fuer das finale RAM-Minimum.
 
 Feste Ablage und Startbestaetigung
 --------------------------------

@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const sdk_build = b.lazyImport(@This(), "r4os_sdk") orelse return;
     const dependency = b.dependencyFromBuildZig(sdk_build, .{});
     const sdk = sdk_build.sdk(b, dependency, .{});
-    _ = sdk.addR4MFWithOptions(b.path("module.R4MF"), .{ .zig_module_roots = &.{b.path("../../Kernel/storage/installation.zig")} });
+    _ = sdk.addR4MFWithOptions(b.path("module.R4MF"), .{ .zig_module_roots = &.{ b.path("../../Kernel/storage/installation.zig"), dependency.path("r4os/ntfs_volume.zig"), b.path("src/ntfs_format.zig") } });
     const test_module = b.createModule(.{
         .root_source_file = b.path("src/tests.zig"),
         .target = b.graph.host,

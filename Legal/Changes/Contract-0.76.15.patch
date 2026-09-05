@@ -1,0 +1,193 @@
+diff --git a/API/ApiContract.baseline.json b/API/ApiContract.baseline.json
+index ab32e28..20a035b 100644
+--- a/API/ApiContract.baseline.json
++++ b/API/ApiContract.baseline.json
+@@ -2511,7 +2511,7 @@
+           "name": "vm_commit",
+           "state": "function",
+           "required": false,
+-          "description": "Commits pages in a reserved virtual memory region.",
++          "description": "Commits pages in a reserved virtual memory region. Flags 0 retain lazy commitment. vm_commit_flag_resident commits, zeroes and pins physical RAM before success, in calls of at most vm_commit_resident_max_bytes; pages stay pinned until decommit/release. Unsupported flags fail explicitly. On failure a partially committed region may remain and must be released; no I/O or reclaim wait occurs during commitment.",
+           "signature": {
+             "calling_convention": "c",
+             "parameters": [
+@@ -90011,6 +90011,26 @@
+       "scope": "storage",
+       "stability": "fixed_contract",
+       "description": "Virtio block transport."
++    },
++    {
++      "name": "vm_commit_flag_resident",
++      "value": "1",
++      "value_type": "u64",
++      "category": "flag",
++      "unit": "bitmask",
++      "scope": "vm_commit",
++      "stability": "fixed_contract",
++      "description": "Commit and pin physical pages before returning success; additive flag for vm_commit."
++    },
++    {
++      "name": "vm_commit_resident_max_bytes",
++      "value": "262144",
++      "value_type": "u64",
++      "category": "value",
++      "unit": "bytes",
++      "scope": "vm_commit",
++      "stability": "fixed_contract",
++      "description": "Maximum rounded bytes in one resident vm_commit call (64 pages)."
+     }
+   ],
+   "limits": [
+diff --git a/API/ApiContract.json b/API/ApiContract.json
+index ab32e28..20a035b 100644
+--- a/API/ApiContract.json
++++ b/API/ApiContract.json
+@@ -2511,7 +2511,7 @@
+           "name": "vm_commit",
+           "state": "function",
+           "required": false,
+-          "description": "Commits pages in a reserved virtual memory region.",
++          "description": "Commits pages in a reserved virtual memory region. Flags 0 retain lazy commitment. vm_commit_flag_resident commits, zeroes and pins physical RAM before success, in calls of at most vm_commit_resident_max_bytes; pages stay pinned until decommit/release. Unsupported flags fail explicitly. On failure a partially committed region may remain and must be released; no I/O or reclaim wait occurs during commitment.",
+           "signature": {
+             "calling_convention": "c",
+             "parameters": [
+@@ -90011,6 +90011,26 @@
+       "scope": "storage",
+       "stability": "fixed_contract",
+       "description": "Virtio block transport."
++    },
++    {
++      "name": "vm_commit_flag_resident",
++      "value": "1",
++      "value_type": "u64",
++      "category": "flag",
++      "unit": "bitmask",
++      "scope": "vm_commit",
++      "stability": "fixed_contract",
++      "description": "Commit and pin physical pages before returning success; additive flag for vm_commit."
++    },
++    {
++      "name": "vm_commit_resident_max_bytes",
++      "value": "262144",
++      "value_type": "u64",
++      "category": "value",
++      "unit": "bytes",
++      "scope": "vm_commit",
++      "stability": "fixed_contract",
++      "description": "Maximum rounded bytes in one resident vm_commit call (64 pages)."
+     }
+   ],
+   "limits": [
+diff --git a/Generated/Docs/PayloadTypes.md b/Generated/Docs/PayloadTypes.md
+index e89bf50..ce92988 100644
+--- a/Generated/Docs/PayloadTypes.md
++++ b/Generated/Docs/PayloadTypes.md
+@@ -7,7 +7,7 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
+ - Schema: v11, Baseline `standalone-contract-0.64.11`
+ - Reachability: 153 von 153 Typen aufgelöst oder explizit klassifiziert
+ - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
+-- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1432; Limits: 109
++- Operationen: 0; Fehlerdomänen: 63; Konstanten: 1434; Limits: 109
+ 
+ ## App-Profile
+ 
+@@ -7142,6 +7142,8 @@ Geltung: `storage`, Einheit: `status_code`, Stabilität: `fixed_contract`.
+ | `storage_bus_ram` | `5` | `u32` | identity | number | `storage` | fixed_contract |
+ | `storage_raw_max_sectors` | `256` | `u32` | identity | number | `storage` | fixed_contract |
+ | `storage_bus_virtio` | `6` | `u32` | identity | number | `storage` | fixed_contract |
++| `vm_commit_flag_resident` | `1` | `u64` | flag | bitmask | `vm_commit` | fixed_contract |
++| `vm_commit_resident_max_bytes` | `262144` | `u64` | value | bytes | `vm_commit` | fixed_contract |
+ 
+ ## Limits
+ 
+diff --git a/Generated/Inventory/API.json b/Generated/Inventory/API.json
+index 57645ff..4270c74 100644
+--- a/Generated/Inventory/API.json
++++ b/Generated/Inventory/API.json
+@@ -316,7 +316,7 @@
+       "kind": "group_slot",
+       "slot": 27,
+       "exposure": "public",
+-      "description": "Commits pages in a reserved virtual memory region.",
++      "description": "Commits pages in a reserved virtual memory region. Flags 0 retain lazy commitment. vm_commit_flag_resident commits, zeroes and pins physical RAM before success, in calls of at most vm_commit_resident_max_bytes; pages stay pinned until decommit/release. Unsupported flags fail explicitly. On failure a partially committed region may remain and must be released; no I/O or reclaim wait occurs during commitment.",
+       "locations": {
+         "sdk": "Generated/SDK/Zig/abi_generated.zig",
+         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+diff --git a/Generated/Kernel/Zig/r4x_api_exports.zig b/Generated/Kernel/Zig/r4x_api_exports.zig
+index 638101a..580bfd1 100644
+--- a/Generated/Kernel/Zig/r4x_api_exports.zig
++++ b/Generated/Kernel/Zig/r4x_api_exports.zig
+@@ -1432,6 +1432,8 @@ pub const storage_bus_usb = generated.storage_bus_usb;
+ pub const storage_bus_ram = generated.storage_bus_ram;
+ pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
+ pub const storage_bus_virtio = generated.storage_bus_virtio;
++pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
++pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+ pub const audio_service_name_bytes = generated.audio_service_name_bytes;
+diff --git a/Generated/Kernel/Zig/r4x_api_generated.zig b/Generated/Kernel/Zig/r4x_api_generated.zig
+index cd28d92..1fa4f70 100644
+--- a/Generated/Kernel/Zig/r4x_api_generated.zig
++++ b/Generated/Kernel/Zig/r4x_api_generated.zig
+@@ -1433,6 +1433,8 @@ pub const storage_bus_usb: u32 = 4;
+ pub const storage_bus_ram: u32 = 5;
+ pub const storage_raw_max_sectors: u32 = 256;
+ pub const storage_bus_virtio: u32 = 6;
++pub const vm_commit_flag_resident: u64 = 1;
++pub const vm_commit_resident_max_bytes: u64 = 262144;
+ pub const audio_service_error_bytes: usize = 32;
+ pub const audio_service_max_sessions: u32 = 8;
+ pub const audio_service_name_bytes: usize = 32;
+diff --git a/Generated/SDK/C/include/r4os/abi_generated.h b/Generated/SDK/C/include/r4os/abi_generated.h
+index bc5f61d..1c0c169 100644
+--- a/Generated/SDK/C/include/r4os/abi_generated.h
++++ b/Generated/SDK/C/include/r4os/abi_generated.h
+@@ -1445,6 +1445,8 @@ extern "C" {
+ #define R4OS_STORAGE_BUS_RAM 5u
+ #define R4OS_STORAGE_RAW_MAX_SECTORS 256u
+ #define R4OS_STORAGE_BUS_VIRTIO 6u
++#define R4OS_VM_COMMIT_FLAG_RESIDENT 1ull
++#define R4OS_VM_COMMIT_RESIDENT_MAX_BYTES 262144ull
+ #define R4OS_AUDIO_SERVICE_ERROR_BYTES 32ull
+ #define R4OS_AUDIO_SERVICE_MAX_SESSIONS 8u
+ #define R4OS_AUDIO_SERVICE_NAME_BYTES 32ull
+diff --git a/Generated/SDK/Zig/abi.zig b/Generated/SDK/Zig/abi.zig
+index d958f79..f82cc11 100644
+--- a/Generated/SDK/Zig/abi.zig
++++ b/Generated/SDK/Zig/abi.zig
+@@ -1432,6 +1432,8 @@ pub const storage_bus_usb = generated.storage_bus_usb;
+ pub const storage_bus_ram = generated.storage_bus_ram;
+ pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
+ pub const storage_bus_virtio = generated.storage_bus_virtio;
++pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
++pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+ pub const audio_service_name_bytes = generated.audio_service_name_bytes;
+diff --git a/Generated/SDK/Zig/abi_exports.zig b/Generated/SDK/Zig/abi_exports.zig
+index fbb1d43..c177d69 100644
+--- a/Generated/SDK/Zig/abi_exports.zig
++++ b/Generated/SDK/Zig/abi_exports.zig
+@@ -1432,6 +1432,8 @@ pub const storage_bus_usb = generated.storage_bus_usb;
+ pub const storage_bus_ram = generated.storage_bus_ram;
+ pub const storage_raw_max_sectors = generated.storage_raw_max_sectors;
+ pub const storage_bus_virtio = generated.storage_bus_virtio;
++pub const vm_commit_flag_resident = generated.vm_commit_flag_resident;
++pub const vm_commit_resident_max_bytes = generated.vm_commit_resident_max_bytes;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+ pub const audio_service_name_bytes = generated.audio_service_name_bytes;
+diff --git a/Generated/SDK/Zig/abi_generated.zig b/Generated/SDK/Zig/abi_generated.zig
+index fda7324..5a1082d 100644
+--- a/Generated/SDK/Zig/abi_generated.zig
++++ b/Generated/SDK/Zig/abi_generated.zig
+@@ -1433,6 +1433,8 @@ pub const storage_bus_usb: u32 = 4;
+ pub const storage_bus_ram: u32 = 5;
+ pub const storage_raw_max_sectors: u32 = 256;
+ pub const storage_bus_virtio: u32 = 6;
++pub const vm_commit_flag_resident: u64 = 1;
++pub const vm_commit_resident_max_bytes: u64 = 262144;
+ pub const audio_service_error_bytes: usize = 32;
+ pub const audio_service_max_sessions: u32 = 8;
+ pub const audio_service_name_bytes: usize = 32;

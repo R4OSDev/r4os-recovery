@@ -23,7 +23,10 @@
 // allocated (valid NTFS); their space returns when the directory shrinks
 // structurally or is removed.
 
-const ntfs = @import("ntfs_format");
+// Callers already using the SDK namespace pass its shared format type.
+// Standalone kernel/host owners keep their existing named format module.
+const format_provider = @import("ntfs_format");
+const ntfs = if (@hasDecl(format_provider, "shared_format")) format_provider.shared_format else format_provider;
 
 pub const SECTOR_SIZE: usize = 512;
 /// Windows-parity name limits (0.60.19): NTFS names carry at most 255

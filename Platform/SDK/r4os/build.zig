@@ -1582,22 +1582,26 @@ fn addRawModule(b: *std.Build, opts: RawOptions) std.Build.LazyPath {
     });
     r4os_module.addImport("r4os_contract", opts.contract_module);
     exe.root_module.addImport("r4os", r4os_module);
-    if (opts.app_source_file == null) {
-        for (opts.zig_modules) |module| {
-            const dependency = b.createModule(.{
-                .root_source_file = module.root_source_file,
-                .target = target,
-                .optimize = opts.optimize,
-                .single_threaded = false,
-                .strip = false,
-                .red_zone = false,
-                .sanitize_c = .off,
-                .stack_check = false,
-                .stack_protector = false,
-            });
-            dependency.addImport("r4os", r4os_module);
-            exe.root_module.addImport(module.name, dependency);
+    const dependencies = b.allocator.alloc(*std.Build.Module, opts.zig_modules.len) catch @panic("OOM");
+    for (opts.zig_modules, 0..) |module, index| {
+        dependencies[index] = b.createModule(.{
+            .root_source_file = module.root_source_file,
+            .target = target,
+            .optimize = opts.optimize,
+            .single_threaded = false,
+            .strip = false,
+            .red_zone = false,
+            .sanitize_c = .off,
+            .stack_check = false,
+            .stack_protector = false,
+        });
+        dependencies[index].addImport("r4os", r4os_module);
+    }
+    for (dependencies, 0..) |dependency, index| {
+        for (opts.zig_modules, 0..) |other, other_index| {
+            if (index != other_index) dependency.addImport(other.name, dependencies[other_index]);
         }
+        if (opts.app_source_file == null) exe.root_module.addImport(opts.zig_modules[index].name, dependency);
     }
     if (opts.app_source_file) |source_file| {
         const app_module = b.createModule(.{
@@ -1612,21 +1616,7 @@ fn addRawModule(b: *std.Build, opts: RawOptions) std.Build.LazyPath {
             .stack_protector = false,
         });
         app_module.addImport("r4os", r4os_module);
-        for (opts.zig_modules) |module| {
-            const dependency = b.createModule(.{
-                .root_source_file = module.root_source_file,
-                .target = target,
-                .optimize = opts.optimize,
-                .single_threaded = false,
-                .strip = false,
-                .red_zone = false,
-                .sanitize_c = .off,
-                .stack_check = false,
-                .stack_protector = false,
-            });
-            dependency.addImport("r4os", r4os_module);
-            app_module.addImport(module.name, dependency);
-        }
+        for (opts.zig_modules, 0..) |module, index| app_module.addImport(module.name, dependencies[index]);
         exe.root_module.addImport("r4_app_source", app_module);
         const app_options = b.addOptions();
         app_options.addOption(u8, "profile", @intFromEnum(opts.app_profile.?));

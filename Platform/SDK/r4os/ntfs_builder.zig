@@ -18,6 +18,7 @@ const prepared = @import("storage_tools/ntfs_plan.zig");
 /// host models, with their already-shared NTFS format module.
 pub fn WithFormat(comptime ntfs: type) type {
     return struct {
+        pub const PreparedPlan = prepared.Plan;
         const SECTOR: usize = 512;
         const CLUSTER: usize = 4096;
         const RECORD: usize = 1024;
