@@ -11,7 +11,9 @@ Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
 complete 64-MB FAT32 runtime is loaded by Limine, checked against the paired
 kernel hash, and mounted as writable RAM drive C: in 0.76.3. Since 0.76.6,
 RECOVERY.R4X hosts the menu and the standard Terminal inside the supplied
-background's monitor. Service autostart follows the network step.
+background's monitor. Since 0.76.7, DHCP and the frozen SSH/FTP services start
+from RAM; independent remote shells and transfers can repair offline volumes.
+Both services use the agreed `r4os` / `rosebud` login.
 
 Run `Build.bat` on Windows or `./Build.sh` on Linux with PowerShell 7 to verify
 the local inventory. The shared `Build.ps1` checks file hashes, actual binary
@@ -28,6 +30,9 @@ commands, RAM writes and rejection of invalid boot payloads. After the normal
 kernel build, `pwsh -File Tools/Test-Boot.ps1 -Action terminal` exercises the
 production menu's Terminal with keyboard input and regular shutdown after
 removing the boot medium.
+`-Mode NetworkTest` checks SSH/SFTP/SCP, active/passive FTP, offline file
+repair, isolated console output, and an offline boot with damaged SYSTEM.
+It needs host OpenSSH clients.
 Add `-Mode BootTest` for the bounded BIOS/UEFI SMP4
 foundation check, or `-Mode BootTest -BootProbe reboot` to verify reset.
 Diagnostic kernels and logs remain in `Artifacts/BootProbe/`. The Linux UEFI

@@ -87570,6 +87570,46 @@
       "scope": "gui_shared_raster",
       "stability": "fixed_contract",
       "description": "Current GuiSharedRasterWriteMap contract version."
+    },
+    {
+      "name": "drive_role_data",
+      "value": "2",
+      "value_type": "u8",
+      "category": "identity",
+      "unit": "number",
+      "scope": "drive_role",
+      "stability": "fixed_contract",
+      "description": "DriveInfo.role: data. Existing layout and numeric role preserved."
+    },
+    {
+      "name": "drive_role_none",
+      "value": "0",
+      "value_type": "u8",
+      "category": "identity",
+      "unit": "number",
+      "scope": "drive_role",
+      "stability": "fixed_contract",
+      "description": "DriveInfo.role: none. Existing layout and numeric role preserved."
+    },
+    {
+      "name": "drive_role_ram",
+      "value": "3",
+      "value_type": "u8",
+      "category": "identity",
+      "unit": "number",
+      "scope": "drive_role",
+      "stability": "fixed_contract",
+      "description": "DriveInfo.role: ram. Existing layout and numeric role preserved."
+    },
+    {
+      "name": "drive_role_system",
+      "value": "1",
+      "value_type": "u8",
+      "category": "identity",
+      "unit": "number",
+      "scope": "drive_role",
+      "stability": "fixed_contract",
+      "description": "DriveInfo.role: system. Existing layout and numeric role preserved."
     }
   ],
   "limits": [

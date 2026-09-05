@@ -1,0 +1,78 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 12050a2..74e7320 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -616,3 +616,13 @@ Die fruehere feste 4096-Cluster-Grenze kuerzte Dateien bei 512-Byte-Clustern
+ auf 2 MB. Ungueltige Cluster und vorzeitiges Kettenende ergeben einen Fehler
+ statt eines scheinbar erfolgreichen Teilinhalts. Das Recovery-Hintergrundbild
+ mit 4720110 Bytes dient als realer Gastnachweis ueber den regulaeren Datei-API-Pfad.
++
++0.76.7: Recovery-Modulquellen
++----------------------------
++module_file.restrictExecutionToDrive wird nur waehrend des Boots gesetzt.
++R4X-Pfadaufloesung und der gemeinsame R4M0-Lader pruefen dann das gewaehlte
++RAM-Laufwerk, bevor sie Code laden. Normales R4OS setzt diese Vorgabe nicht.
++Recovery setzt C: vor dem ersten Library-Import; offline eingebundene Module
++bleiben als Dateien lesbar und reparierbar, starten aber nicht von dort.
++Dies ist eine Laufzeit-/Kompatibilitaetsvorgabe im vertrauten Single-User-OS,
++kein Benutzer- oder Sandboxmodell.
+diff --git a/VERSION.R4S b/VERSION.R4S
+index b991f6b..2230b1b 100644
+--- a/VERSION.R4S
++++ b/VERSION.R4S
+@@ -1 +1 @@
+-﻿KERNEL_VERSION=0.1.89
++﻿KERNEL_VERSION=0.1.90
+diff --git a/kernel/module_file.zig b/kernel/module_file.zig
+index 798cd36..fe0ce6f 100644
+--- a/kernel/module_file.zig
++++ b/kernel/module_file.zig
+@@ -1,6 +1,21 @@
+ const vfs = @import("../fs/vfs.zig");
+ const fs_request = @import("../fs/request.zig");
+ const k = @import("log.zig");
++const drive = @import("../fs/drive.zig");
++
++var execution_drive: ?u8 = null;
++
++/// Boot-only admission policy, installed before userland starts. Normal R4OS
++/// leaves it unset; a RAM runtime can restrict executable sources to itself.
++pub fn restrictExecutionToDrive(letter: u8) void {
++    execution_drive = letter;
++}
++
++pub fn executionDriveAllowed(letter: u8) bool {
++    const required = execution_drive orelse return true;
++    const mounted = drive.get(letter) orelse return false;
++    return letter == required and mounted.role == .ram;
++}
+ 
+ pub const FileSource = struct {
+     volume: vfs.Volume,
+diff --git a/kernel/modules.zig b/kernel/modules.zig
+index 1cd2258..dc8aa95 100644
+--- a/kernel/modules.zig
++++ b/kernel/modules.zig
+@@ -835,6 +835,7 @@ fn resolveImportFromEntry(provider: *const Entry, import: ImportRecord, importer
+ }
+ 
+ fn loadR4MFile(source: module_file.FileSource, file_size: usize, tables: *const ValidatedFileTables, expected_kind: Kind, fallback_name: []const u8, path: []const u8, resolved_imports: []const ResolvedImport) ?usize {
++    if (!module_file.executionDriveAllowed(source.drive_letter)) return null;
+     const header = tables.header;
+     const kind = header.kind() orelse {
+         k.puts("[MOD] unknown ModuleKind: ");
+diff --git a/program/r4x.zig b/program/r4x.zig
+index dbebc2c..11fba32 100644
+--- a/program/r4x.zig
++++ b/program/r4x.zig
+@@ -7940,6 +7940,10 @@ fn resolveProgramFile(d: *drive.Drive, path: []const u8) ?ProgramFile {
+ }
+ 
+ fn resolveProgramFileWithBootReport(d: *drive.Drive, path: []const u8, report_boot_launch: bool) ?ProgramFile {
++    if (!module_file.executionDriveAllowed(d.letter)) {
++        k.puts("Module start requires the running RAM volume\r\n");
++        return null;
++    }
+     const volume = vfs.volumeForDrive(d.letter) orelse return null;
+     reportBootLaunchStage(report_boot_launch, "FS-Sperre pruefen");
+     var req = fs_request.tryBegin(.loader_read, d.letter) orelse blk: {

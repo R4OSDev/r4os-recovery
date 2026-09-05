@@ -1,0 +1,67 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 4f694c8..3fada0b 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -102,3 +102,12 @@ Unter Linux:
+ Ergebnis:
+ 
+     Artifacts/Modules/Terminal/TERMINAL.R4X
++
++0.76.7: Recovery-Sitzungsanzeige
++------------------------------
++Interaktive Sitzungen erkennen die gestartete Recovery-RAM-Laufzeit ueber
++das SDK und zeigen deren Version, die aus der Limine-Identitaet ermittelte
++Bootmediumbeschreibung und die aktuellen gemeinsamen Laufwerke. Dies gilt
++fuer den lokalen Menuehost und SSH. /C-Befehle erhalten keinen Banner.
++BOOTMED.TXT entsteht beim Recovery-Boot im RAM; Offline-Installationen
++liefern weder den Banner noch die gestarteten Werkzeuge.
+diff --git a/module.R4MF b/module.R4MF
+index 98d0cd5..f5d1db8 100644
+--- a/module.R4MF
++++ b/module.R4MF
+@@ -1,7 +1,7 @@
+ R4OS_MODULE_MANIFEST=2
+ KIND=R4X
+ NAME=TERMINAL
+-VERSION=0.1.8
++VERSION=0.1.9
+ LANGUAGE=Zig
+ SOURCE=src/main.zig
+ ENTRY_MODE=app
+diff --git a/src/main.zig b/src/main.zig
+index 67230a3..46575f6 100644
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -98,6 +98,7 @@ const TerminalState = struct {
+ 
+     fn run(self: *TerminalState, run_autoexec: bool) i32 {
+         self.initializeSession();
++        self.printRecoveryBanner();
+         if (run_autoexec) self.runAutoexec();
+         self.printPrompt();
+         _ = self.sys.bootReady();
+@@ -167,6 +168,24 @@ const TerminalState = struct {
+         }
+     }
+ 
++    fn printRecoveryBanner(self: *TerminalState) void {
++        if (!r4os.runtime_context.isRecovery(&self.sys)) return;
++        var buffer: [512]u8 = undefined;
++        self.write("R4OS Recovery ");
++        self.println(self.releaseVersion(&buffer));
++        const count = self.sys.fileRead("C:\\R4OS\\CONFIG\\BOOTMED.TXT", &buffer);
++        if (count > 0) self.write(buffer[0..@intCast(count)]);
++        self.write("Mounted drives (also /<letter>/ in SFTP and FTP):\r\n");
++        for (0..26) |index| {
++            const info = self.sys.driveInfo(@intCast(index)) orelse continue;
++            if (info.mounted == 0) continue;
++            self.putc(info.letter);
++            self.write(":  ");
++            self.write(spanZFixed(&info.name));
++            self.write(if (info.role == r4os.abi.drive_role_ram) " [running RAM]\r\n" else " [offline volume]\r\n");
++        }
++    }
++
+     fn initializeSession(self: *TerminalState) void {
+         self.echo_on = true;
+         self.errorlevel = 0;

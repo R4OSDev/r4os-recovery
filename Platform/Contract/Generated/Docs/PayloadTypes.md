@@ -7,7 +7,7 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
 - Schema: v11, Baseline `standalone-contract-0.64.11`
 - Reachability: 146 von 146 Typen aufgelöst oder explizit klassifiziert
 - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
-- Operationen: 0; Fehlerdomänen: 62; Konstanten: 1398; Limits: 109
+- Operationen: 0; Fehlerdomänen: 62; Konstanten: 1402; Limits: 109
 
 ## App-Profile
 
@@ -6952,6 +6952,10 @@ Geltung: `window_service`, Einheit: `status_code`, Stabilität: `fixed_contract`
 | `gui_shared_raster_resource_version` | `1` | `u32` | version | number | `gui_shared_raster` | fixed_contract |
 | `gui_shared_raster_write_map_size` | `56` | `u32` | value | bytes | `gui_shared_raster` | fixed_contract |
 | `gui_shared_raster_write_map_version` | `1` | `u32` | version | number | `gui_shared_raster` | fixed_contract |
+| `drive_role_data` | `2` | `u8` | identity | number | `drive_role` | fixed_contract |
+| `drive_role_none` | `0` | `u8` | identity | number | `drive_role` | fixed_contract |
+| `drive_role_ram` | `3` | `u8` | identity | number | `drive_role` | fixed_contract |
+| `drive_role_system` | `1` | `u8` | identity | number | `drive_role` | fixed_contract |
 
 ## Limits
 

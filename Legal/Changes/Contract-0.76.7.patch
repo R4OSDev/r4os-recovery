@@ -1,0 +1,231 @@
+diff --git a/API/ApiContract.baseline.json b/API/ApiContract.baseline.json
+index 5c5719d..235e59d 100644
+--- a/API/ApiContract.baseline.json
++++ b/API/ApiContract.baseline.json
+@@ -87570,6 +87570,46 @@
+       "scope": "gui_shared_raster",
+       "stability": "fixed_contract",
+       "description": "Current GuiSharedRasterWriteMap contract version."
++    },
++    {
++      "name": "drive_role_data",
++      "value": "2",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: data. Existing layout and numeric role preserved."
++    },
++    {
++      "name": "drive_role_none",
++      "value": "0",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: none. Existing layout and numeric role preserved."
++    },
++    {
++      "name": "drive_role_ram",
++      "value": "3",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: ram. Existing layout and numeric role preserved."
++    },
++    {
++      "name": "drive_role_system",
++      "value": "1",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: system. Existing layout and numeric role preserved."
+     }
+   ],
+   "limits": [
+diff --git a/API/ApiContract.json b/API/ApiContract.json
+index 5c5719d..235e59d 100644
+--- a/API/ApiContract.json
++++ b/API/ApiContract.json
+@@ -87570,6 +87570,46 @@
+       "scope": "gui_shared_raster",
+       "stability": "fixed_contract",
+       "description": "Current GuiSharedRasterWriteMap contract version."
++    },
++    {
++      "name": "drive_role_data",
++      "value": "2",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: data. Existing layout and numeric role preserved."
++    },
++    {
++      "name": "drive_role_none",
++      "value": "0",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: none. Existing layout and numeric role preserved."
++    },
++    {
++      "name": "drive_role_ram",
++      "value": "3",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: ram. Existing layout and numeric role preserved."
++    },
++    {
++      "name": "drive_role_system",
++      "value": "1",
++      "value_type": "u8",
++      "category": "identity",
++      "unit": "number",
++      "scope": "drive_role",
++      "stability": "fixed_contract",
++      "description": "DriveInfo.role: system. Existing layout and numeric role preserved."
+     }
+   ],
+   "limits": [
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index 5ad040b..ec3ee3b 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -105,3 +105,10 @@ Bytes.
+ 
+ Die Herkunft des uebernommenen 0.64.9-Stands und die repo-neutrale Anpassung
+ sind in `PROVENANCE.txt` festgehalten.
++
++0.76.7: Recovery-Laufwerksrollen
++-------------------------------
++Vier additive drive_role_* Konstanten benennen die schon vorhandenen
++DriveInfo.role-Werte none=0, system=1, data=2, ram=3. Keine bestehende
++Konstante, Funktion, Tabelle oder Payloadgroesse aendert sich. Die explizite
++Baseline-Aktualisierung wurde auf genau diese Ergaenzungen begrenzt.
+diff --git a/Generated/Docs/PayloadTypes.md b/Generated/Docs/PayloadTypes.md
+index 01d6f18..729b1ab 100644
+--- a/Generated/Docs/PayloadTypes.md
++++ b/Generated/Docs/PayloadTypes.md
+@@ -7,7 +7,7 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
+ - Schema: v11, Baseline `standalone-contract-0.64.11`
+ - Reachability: 146 von 146 Typen aufgelöst oder explizit klassifiziert
+ - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
+-- Operationen: 0; Fehlerdomänen: 62; Konstanten: 1398; Limits: 109
++- Operationen: 0; Fehlerdomänen: 62; Konstanten: 1402; Limits: 109
+ 
+ ## App-Profile
+ 
+@@ -6952,6 +6952,10 @@ Geltung: `window_service`, Einheit: `status_code`, Stabilität: `fixed_contract`
+ | `gui_shared_raster_resource_version` | `1` | `u32` | version | number | `gui_shared_raster` | fixed_contract |
+ | `gui_shared_raster_write_map_size` | `56` | `u32` | value | bytes | `gui_shared_raster` | fixed_contract |
+ | `gui_shared_raster_write_map_version` | `1` | `u32` | version | number | `gui_shared_raster` | fixed_contract |
++| `drive_role_data` | `2` | `u8` | identity | number | `drive_role` | fixed_contract |
++| `drive_role_none` | `0` | `u8` | identity | number | `drive_role` | fixed_contract |
++| `drive_role_ram` | `3` | `u8` | identity | number | `drive_role` | fixed_contract |
++| `drive_role_system` | `1` | `u8` | identity | number | `drive_role` | fixed_contract |
+ 
+ ## Limits
+ 
+diff --git a/Generated/Kernel/Zig/r4x_api_exports.zig b/Generated/Kernel/Zig/r4x_api_exports.zig
+index c6b1ff3..e83950b 100644
+--- a/Generated/Kernel/Zig/r4x_api_exports.zig
++++ b/Generated/Kernel/Zig/r4x_api_exports.zig
+@@ -1398,6 +1398,10 @@ pub const gui_shared_raster_resource_size = generated.gui_shared_raster_resource
+ pub const gui_shared_raster_resource_version = generated.gui_shared_raster_resource_version;
+ pub const gui_shared_raster_write_map_size = generated.gui_shared_raster_write_map_size;
+ pub const gui_shared_raster_write_map_version = generated.gui_shared_raster_write_map_version;
++pub const drive_role_data = generated.drive_role_data;
++pub const drive_role_none = generated.drive_role_none;
++pub const drive_role_ram = generated.drive_role_ram;
++pub const drive_role_system = generated.drive_role_system;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+ pub const audio_service_name_bytes = generated.audio_service_name_bytes;
+diff --git a/Generated/Kernel/Zig/r4x_api_generated.zig b/Generated/Kernel/Zig/r4x_api_generated.zig
+index 29257a0..8e93250 100644
+--- a/Generated/Kernel/Zig/r4x_api_generated.zig
++++ b/Generated/Kernel/Zig/r4x_api_generated.zig
+@@ -1399,6 +1399,10 @@ pub const gui_shared_raster_resource_size: u32 = 80;
+ pub const gui_shared_raster_resource_version: u32 = 1;
+ pub const gui_shared_raster_write_map_size: u32 = 56;
+ pub const gui_shared_raster_write_map_version: u32 = 1;
++pub const drive_role_data: u8 = 2;
++pub const drive_role_none: u8 = 0;
++pub const drive_role_ram: u8 = 3;
++pub const drive_role_system: u8 = 1;
+ pub const audio_service_error_bytes: usize = 32;
+ pub const audio_service_max_sessions: u32 = 8;
+ pub const audio_service_name_bytes: usize = 32;
+diff --git a/Generated/SDK/C/include/r4os/abi_generated.h b/Generated/SDK/C/include/r4os/abi_generated.h
+index aa3b90b..341749d 100644
+--- a/Generated/SDK/C/include/r4os/abi_generated.h
++++ b/Generated/SDK/C/include/r4os/abi_generated.h
+@@ -1411,6 +1411,10 @@ extern "C" {
+ #define R4OS_GUI_SHARED_RASTER_RESOURCE_VERSION 1u
+ #define R4OS_GUI_SHARED_RASTER_WRITE_MAP_SIZE 56u
+ #define R4OS_GUI_SHARED_RASTER_WRITE_MAP_VERSION 1u
++#define R4OS_DRIVE_ROLE_DATA 2u
++#define R4OS_DRIVE_ROLE_NONE 0u
++#define R4OS_DRIVE_ROLE_RAM 3u
++#define R4OS_DRIVE_ROLE_SYSTEM 1u
+ #define R4OS_AUDIO_SERVICE_ERROR_BYTES 32ull
+ #define R4OS_AUDIO_SERVICE_MAX_SESSIONS 8u
+ #define R4OS_AUDIO_SERVICE_NAME_BYTES 32ull
+diff --git a/Generated/SDK/Zig/abi.zig b/Generated/SDK/Zig/abi.zig
+index 2bdc367..cb1c761 100644
+--- a/Generated/SDK/Zig/abi.zig
++++ b/Generated/SDK/Zig/abi.zig
+@@ -1398,6 +1398,10 @@ pub const gui_shared_raster_resource_size = generated.gui_shared_raster_resource
+ pub const gui_shared_raster_resource_version = generated.gui_shared_raster_resource_version;
+ pub const gui_shared_raster_write_map_size = generated.gui_shared_raster_write_map_size;
+ pub const gui_shared_raster_write_map_version = generated.gui_shared_raster_write_map_version;
++pub const drive_role_data = generated.drive_role_data;
++pub const drive_role_none = generated.drive_role_none;
++pub const drive_role_ram = generated.drive_role_ram;
++pub const drive_role_system = generated.drive_role_system;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+ pub const audio_service_name_bytes = generated.audio_service_name_bytes;
+diff --git a/Generated/SDK/Zig/abi_exports.zig b/Generated/SDK/Zig/abi_exports.zig
+index 285c1d9..24876a3 100644
+--- a/Generated/SDK/Zig/abi_exports.zig
++++ b/Generated/SDK/Zig/abi_exports.zig
+@@ -1398,6 +1398,10 @@ pub const gui_shared_raster_resource_size = generated.gui_shared_raster_resource
+ pub const gui_shared_raster_resource_version = generated.gui_shared_raster_resource_version;
+ pub const gui_shared_raster_write_map_size = generated.gui_shared_raster_write_map_size;
+ pub const gui_shared_raster_write_map_version = generated.gui_shared_raster_write_map_version;
++pub const drive_role_data = generated.drive_role_data;
++pub const drive_role_none = generated.drive_role_none;
++pub const drive_role_ram = generated.drive_role_ram;
++pub const drive_role_system = generated.drive_role_system;
+ pub const audio_service_error_bytes = generated.audio_service_error_bytes;
+ pub const audio_service_max_sessions = generated.audio_service_max_sessions;
+ pub const audio_service_name_bytes = generated.audio_service_name_bytes;
+diff --git a/Generated/SDK/Zig/abi_generated.zig b/Generated/SDK/Zig/abi_generated.zig
+index 08258a8..8a799d8 100644
+--- a/Generated/SDK/Zig/abi_generated.zig
++++ b/Generated/SDK/Zig/abi_generated.zig
+@@ -1399,6 +1399,10 @@ pub const gui_shared_raster_resource_size: u32 = 80;
+ pub const gui_shared_raster_resource_version: u32 = 1;
+ pub const gui_shared_raster_write_map_size: u32 = 56;
+ pub const gui_shared_raster_write_map_version: u32 = 1;
++pub const drive_role_data: u8 = 2;
++pub const drive_role_none: u8 = 0;
++pub const drive_role_ram: u8 = 3;
++pub const drive_role_system: u8 = 1;
+ pub const audio_service_error_bytes: usize = 32;
+ pub const audio_service_max_sessions: u32 = 8;
+ pub const audio_service_name_bytes: usize = 32;

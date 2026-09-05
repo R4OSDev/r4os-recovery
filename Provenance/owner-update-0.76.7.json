@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "reason": "0.76.7: explicit canonical updates for RAM runtime detection, executable admission and offline repair sessions; original source archives retained with reviewed owner patches.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseCommit": "262dcb54e1a08e82a1b6d37598ff464eb60274a1",
+      "patch": "Legal/Changes/Kernel-0.76.7.patch",
+      "patchSha256": "7265219702f46dd201feb7e27d2f8f7439e452b71cd095929cb2e2af3d2286b8",
+      "files": [
+        {
+          "path": "Kernel/DOCUMENTATION.de.txt",
+          "sha256": "6d4e95e25d69c0c849b00cea6ced7ca8aafe5fac83e6aebba6a347135f20b1c6"
+        },
+        {
+          "path": "Kernel/kernel/module_file.zig",
+          "sha256": "6a0b840e4225438835e2a5f3c418d35ce820d638c92943a9da1211060c3f717f"
+        },
+        {
+          "path": "Kernel/kernel/modules.zig",
+          "sha256": "766c53a0187c17204c5d611e0f4bbb248d55e347f10cf776ac2a9df5e00c3a54"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "9af844aa8e50509e686aa55ad1d017f238884f2a7c1c3f16b65c142c82a24df3"
+        }
+      ]
+    },
+    {
+      "owner": "Contract",
+      "baseCommit": "e9f97a6e66a3a1a4daf4e01e21518fdcb62d14cb",
+      "patch": "Legal/Changes/Contract-0.76.7.patch",
+      "patchSha256": "c2b39f1f07d5fc605b85c89640da50682c8a388fbe573a89980ca6001f190c8a",
+      "files": [
+        {
+          "path": "Platform/Contract/API/ApiContract.baseline.json",
+          "sha256": "582d4cac06df20d27592389043323143adb69bbf9fd2e543d3fdd1bd231b1c31"
+        },
+        {
+          "path": "Platform/Contract/API/ApiContract.json",
+          "sha256": "582d4cac06df20d27592389043323143adb69bbf9fd2e543d3fdd1bd231b1c31"
+        },
+        {
+          "path": "Platform/Contract/DOCUMENTATION.de.txt",
+          "sha256": "4aca664cb45f32baee5a1411da66a48505022081c2186d54a633cadf90369721"
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
+          "sha256": "210a992b2410b486ba24f9ea1d00460cdf3003db0e0bf826f2eb3922d7187649"
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
+          "sha256": "7e8150b50aff135b01030374663f51f8802dc42be61a74d46162b2bee23d80c4"
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
+          "sha256": "d84d29b6aeef6267b42c24571a63ac089ff23b2c92735dbd8f3ed66a2aa1812e"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
+          "sha256": "71579b71b1c9e439e1d38a1863be84290c2e5b1773cc7ed0febeda9fad373e97"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
+          "sha256": "28fc3e843270f4f3e253331558cfb19076e480520c0707e65600acf0e33b1429"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
+          "sha256": "97b5efcb6125e7d21d49e2077c9b8912cba68fa9275cda4e1af03d5c47f1a588"
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
+          "sha256": "36e8edeff4960952c3bd2840419de759bccbdba4ac745f68241f134a67f191f6"
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseCommit": "cfc6f470b2c7dd1ba173d52d2edf5ce68a9ed18c",
+      "patch": "Legal/Changes/SDK-0.76.7.patch",
+      "patchSha256": "1ea0ee879e26b1700fb9c1395a8c37c07faeba915a6577ceef79c7b5fc1dfdef",
+      "files": [
+        {
+          "path": "Platform/SDK/DOCUMENTATION.de.txt",
+          "sha256": "1fbc2b41e7262ac922c5b0e4d5b5a1dd787b3d5a9f200724c7e1fd5521d6ff66"
+        },
+        {
+          "path": "Platform/SDK/r4os.zig",
+          "sha256": "7c374d72a583c7ad32d72690946b26a15f4e0a72ae82e746fe833b6e6bf39a54"
+        },
+        {
+          "path": "Platform/SDK/r4os/runtime_context.zig",
+          "sha256": "10e935fa11f4b2d95444280cd0cb4027441d5ebae792e62e17d70d800986a743"
+        }
+      ]
+    },
+    {
+      "owner": "SSHD",
+      "baseCommit": "b0e34927b46a22ba90bd5a32843830f8f40aa3c8",
+      "patch": "Legal/Changes/SSHD-0.76.7.patch",
+      "patchSha256": "79d1c425628ed5c794a142abe0ea85dc8cbc7496fab5ffc5e17dd70b831aef42",
+      "files": [],
+      "binary": {
+        "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+        "sha256": "d0cbbe952def3f9b9a30dff8d628aec87dd9f018abc2a29ce05a39dc5cb55583",
+        "manifest": "Legal/Manifests/SSHD/module.R4MF",
+        "manifestSha256": "16d2954adb9a7897ff88833a50415dd5e9b17839648467a0b7b8b0535bea6959"
+      }
+    },
+    {
+      "owner": "FTPSVC",
+      "baseCommit": "8b29281067c46d925a7839e3cc6f1840e1aa6a7d",
+      "patch": "Legal/Changes/FTPSVC-0.76.7.patch",
+      "patchSha256": "0e008d7ba4d168390d49e92a648035c70ffef0086be4286a295bb84e4c8ed389",
+      "files": [],
+      "binary": {
+        "path": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
+        "sha256": "932d9122cf801b93083a57fc79f2b426757bf2ce8f445e1f5544aede3bf4d26d",
+        "manifest": "Legal/Manifests/FTPSVC/module.R4MF",
+        "manifestSha256": "32c303d189f256ee88265527e0656f8b4743c2dac85926fd69fd6d86ea270a2e"
+      }
+    },
+    {
+      "owner": "TERMINAL",
+      "baseCommit": "fb64937dad93c86fd1813855f7e1e8b45f126621",
+      "patch": "Legal/Changes/TERMINAL-0.76.7.patch",
+      "patchSha256": "1f3ead81e119212c4f5aaf529a867a3274566ee0c58065e7c4ea91df8edbf843",
+      "files": [],
+      "binary": {
+        "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
+        "sha256": "b55992b1afc660de1a2e4f7390f4e7ffe0bc1ae5b4723c77d5e404df39fc4d6a",
+        "manifest": "Legal/Manifests/TERMINAL/module.R4MF",
+        "manifestSha256": "d1762c169caefc82dbc227a70f90f181f84e9e56da91d4fdc57b717c97afad1e"
+      }
+    }
+  ]
+}

@@ -105,3 +105,10 @@ Bytes.
 
 Die Herkunft des uebernommenen 0.64.9-Stands und die repo-neutrale Anpassung
 sind in `PROVENANCE.txt` festgehalten.
+
+0.76.7: Recovery-Laufwerksrollen
+-------------------------------
+Vier additive drive_role_* Konstanten benennen die schon vorhandenen
+DriveInfo.role-Werte none=0, system=1, data=2, ram=3. Keine bestehende
+Konstante, Funktion, Tabelle oder Payloadgroesse aendert sich. Die explizite
+Baseline-Aktualisierung wurde auf genau diese Ergaenzungen begrenzt.

@@ -472,3 +472,14 @@ Treiber den unveraenderten Geraetepuffer und plant eine weitere Aktivierung.
 Die uebrigen benannten Rueckgaben unterscheiden ungueltigen Adapter, Frame,
 geschlossene Admission und falschen IRQ-Kontext. Der kanonische Vertrag liegt
 in `Contract/ABI/R4DDriver.txt`.
+
+0.76.7: Recovery-Laufzeitkontext
+------------------------------
+r4os.runtime_context erkennt Recovery ausschliesslich an der tatsaechlichen
+RAM-Rolle von C: und RECOVERY_FORMAT=1/RUNTIME_VOLUME=RAM in dessen eigener
+CONFIG/RECOVERY.R4S. offlineRepairAllowed prueft einen normalisierten,
+verwurzelten DOS-Pfad auf ein gemountetes anderes Laufwerk ohne RAM-Rolle.
+SSH/FTP verwenden diesen gemeinsamen Kontext fuer ihre Offline-Ausnahme;
+eine gleichnamige Datei auf einer physischen Systempartition reicht nicht.
+Der zentrale Contract benennt die bestehenden DriveInfo.role-Werte als
+drive_role_none/system/data/ram. Layout und bisherige Zahlen bleiben gleich.

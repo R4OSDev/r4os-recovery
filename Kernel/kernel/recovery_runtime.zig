@@ -46,6 +46,7 @@ const terminal_path = "/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X";
 
 pub fn admitFilesystem() bool {
     if (!initialized or !block.initRuntimeWorker()) return false;
+    @import("module_file.zig").restrictExecutionToDrive('C');
     const volume = vfs.volumeForDrive('C') orelse return false;
     for ([_][]const u8{ "/CONFIG.R4S", "/R4OS/CONFIG/RECOVERY.R4S", "/R4OS/CONFIG/VERSION.R4S", "/R4OS/CONFIG/SERVICES.R4S", terminal_path, "/R4OS/LIBS/R4STD.R4L" }) |path| {
         const entry = vfs.resolveEntry(volume, path) orelse {
@@ -71,6 +72,9 @@ pub fn startShell() noreturn {
     // Userland owns the complete display after admission. Background kernel
     // diagnostics keep their serial sink without painting over that display.
     log.setConsoleSink(null);
+    r4x.initializeRuntime(memory_boot.usableBytes());
+    if (!writeBootMedium()) log.puts("[RECOVERY] boot-medium-description=unavailable\r\n");
+    @import("recovery_network.zig").start();
     const config = boot_config.get();
     const args = if (@import("config").recovery_probe == .ui) "/UISMOKE" else boot_config.shellArgs(config);
     if (!launchShellPath(boot_config.shellPath(config), args))
@@ -81,9 +85,25 @@ pub fn startShell() noreturn {
             ready = true;
             log.puts("[RECOVERY] shell=READY\r\n");
         }
-        scheduler.sleepTicks(1);
+        scheduler.sleepTicks(@max(1, timer.frequency() / (if (ready) @as(u32, 1) else 10)));
     }
     fatal.kernelFatal(.shell, "Recovery menu exited unexpectedly");
+}
+
+fn writeBootMedium() bool {
+    const source = @import("recovery_storage.zig").source;
+    var buffer: [256]u8 = undefined;
+    const text = std.fmt.bufPrint(&buffer, "Boot medium: {s}; slot: {s}\r\n", .{
+        if (!source.confirmed) "unknown" else if (source.usb) "USB" else "LOCAL",
+        @tagName(source.slot),
+    }) catch return false;
+    const volume = vfs.volumeForDrive('C') orelse return false;
+    var request = fs_request.begin(.file_write, 'C') orelse return false;
+    var ok = false;
+    defer fs_request.finish(&request, ok);
+    const parent = vfs.resolvePath(volume, "/R4OS/CONFIG") orelse return false;
+    ok = vfs.writeFile(volume, parent, "BOOTMED.TXT", text);
+    return ok;
 }
 
 pub fn launchTerminal() bool {
@@ -91,7 +111,6 @@ pub fn launchTerminal() bool {
 }
 
 fn launchShellPath(path: []const u8, args: []const u8) bool {
-    // SERVMAN autostart follows the network foundation in 0.76.7.
     r4x.initializeRuntime(memory_boot.usableBytes());
     const boot_drive = drive.get('C') orelse return false;
     // With no external console host, the standard shell consumes the physical

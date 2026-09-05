@@ -1,0 +1,68 @@
+diff --git a/DOCUMENTATION.de.txt b/DOCUMENTATION.de.txt
+index d49adce..253dadd 100644
+--- a/DOCUMENTATION.de.txt
++++ b/DOCUMENTATION.de.txt
+@@ -472,3 +472,14 @@ Treiber den unveraenderten Geraetepuffer und plant eine weitere Aktivierung.
+ Die uebrigen benannten Rueckgaben unterscheiden ungueltigen Adapter, Frame,
+ geschlossene Admission und falschen IRQ-Kontext. Der kanonische Vertrag liegt
+ in `Contract/ABI/R4DDriver.txt`.
++
++0.76.7: Recovery-Laufzeitkontext
++------------------------------
++r4os.runtime_context erkennt Recovery ausschliesslich an der tatsaechlichen
++RAM-Rolle von C: und RECOVERY_FORMAT=1/RUNTIME_VOLUME=RAM in dessen eigener
++CONFIG/RECOVERY.R4S. offlineRepairAllowed prueft einen normalisierten,
++verwurzelten DOS-Pfad auf ein gemountetes anderes Laufwerk ohne RAM-Rolle.
++SSH/FTP verwenden diesen gemeinsamen Kontext fuer ihre Offline-Ausnahme;
++eine gleichnamige Datei auf einer physischen Systempartition reicht nicht.
++Der zentrale Contract benennt die bestehenden DriveInfo.role-Werte als
++drive_role_none/system/data/ram. Layout und bisherige Zahlen bleiben gleich.
+diff --git a/r4os.zig b/r4os.zig
+index 0b31782..c9886b2 100644
+--- a/r4os.zig
++++ b/r4os.zig
+@@ -1,5 +1,6 @@
+ pub const abi = @import("r4os_contract").abi;
+ pub const program = @import("r4os/program.zig");
++pub const runtime_context = @import("r4os/runtime_context.zig");
+ pub const version_info = @import("r4os/version_info.zig");
+ pub const r4u_manifest = @import("r4os/r4u_manifest.zig");
+ pub const r4u_artifact = @import("r4os/r4u_artifact.zig");
+diff --git a/r4os/runtime_context.zig b/r4os/runtime_context.zig
+new file mode 100644
+index 0000000..d9714fb
+--- /dev/null
++++ b/r4os/runtime_context.zig
+@@ -0,0 +1,32 @@
++// Read the actual mounted runtime, never infer recovery from the current
++// directory or the presence of a config file on an offline installation.
++const std = @import("std");
++const abi = @import("r4os_contract").abi;
++const Context = @import("r4sys.zig").Context;
++
++pub fn isRecovery(sys: *const Context) bool {
++    const runtime = sys.driveInfo('C' - 'A') orelse return false;
++    if (runtime.mounted == 0 or runtime.role != abi.drive_role_ram) return false;
++    var buffer: [256]u8 = undefined;
++    const count = sys.fileRead("C:\\R4OS\\CONFIG\\RECOVERY.R4S", &buffer);
++    if (count <= 0) return false;
++    var lines = std.mem.splitScalar(u8, buffer[0..@intCast(count)], '\n');
++    var format = false;
++    var ram = false;
++    while (lines.next()) |raw| {
++        const line = std.mem.trim(u8, std.mem.trimStart(u8, raw, "\xef\xbb\xbf"), "\r");
++        format = format or std.mem.eql(u8, line, "RECOVERY_FORMAT=1");
++        ram = ram or std.mem.eql(u8, line, "RUNTIME_VOLUME=RAM");
++    }
++    return format and ram;
++}
++
++pub fn offlineRepairAllowed(sys: *const Context, path: []const u8) bool {
++    // Transfer services normalize their paths to rooted DOS spelling first.
++    // Relative paths and RAM targets cannot obtain the offline exception.
++    if (path.len < 3 or path[1] != ':' or (path[2] != '\\' and path[2] != '/')) return false;
++    const letter = std.ascii.toUpper(path[0]);
++    if (letter < 'A' or letter > 'Z' or letter == 'C' or !isRecovery(sys)) return false;
++    const target = sys.driveInfo(letter - 'A') orelse return false;
++    return target.mounted != 0 and target.role != abi.drive_role_ram;
++}

@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.6
+Stand 0.76.7
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -10,7 +10,8 @@ und x64-UEFI ohne SYSTEM-Partition. Seit 0.76.3 laedt Limine ein vollstaendiges
 FAT32-Laufzeitvolume in den RAM; C: und das regulaere Terminal arbeiten daraus.
 Seit 0.76.4 erkennt Recovery physische Medien und ordnet sie anhand der
 tatsaechlichen Limine-Startdatei zu. Seit 0.76.6 besitzt RECOVERY.R4X das Menue
-und den eingebetteten Konsolenhost. Netzwerkdienste folgen in 0.76.7.
+und den eingebetteten Konsolenhost. Netzwerk und Fernzugriff starten seit
+0.76.7 aus der RAM-Laufzeit.
 
 Pruefen: Build.bat beziehungsweise ./Build.sh, optional -Mode Verify.
 Beide duennen Starter rufen dieselbe Build.ps1 mit PowerShell 7 auf.
@@ -375,3 +376,49 @@ sowie UEFI 1024x768 bestanden mit jeweils 16 Framebuffervergleichen, allen
 Menueaktionen, Terminal- und Konsolenisolationspruefung. Windowsausfuehrung
 und physische Hardware bleiben davon getrennt; der einzige Benutzersichttest
 bleibt die abschliessende Lenovo-USB-Installation in 0.76.26.
+
+0.76.7: Recovery-Netzwerk und Offline-Dateireparatur
+-------------------------------------------------
+recovery_network initialisiert NetCore, DHCP-Konfiguration, Service-IPC und
+Netzwerkendpunkte. NETETH/ARP/IPV4/ICMP/UDP/TCP/DNS/DHCP werden ausserhalb
+der NIC-Owner vorgeladen. VIRTNET, RTL8139 und RTL8168 werden gezielt versucht;
+fehlende Hardware bleibt optional. RX und DHCP laufen asynchron. Ein eigener
+Starttask fuehrt SERVMAN BOOT aus C: aus, ohne DHCP oder Listenerbereitschaft
+zur Voraussetzung des lokalen Menues zu machen. SERVICES.R4S registriert
+DNSSVC, DHCPSVC, TCPSVC, UDPSVC, FTPSVC und SSHD. Die verifizierten Dienst-
+Defaults benutzen r4os / rosebud, SSH-Port 22, FTP-Port 21 und passiv 2020.
+
+SSHD 0.1.4, FTPSVC 0.1.5 und TERMINAL 0.1.9 sind ausdruecklich aktualisierte
+Binaerimporte; die uebrigen 34 Module bleiben festgehalten. Zugehoerige
+Besitzerpatches, Grundcommits und neue Hashes stehen unter Legal/Changes und
+Provenance/owner-update-0.76.7.json. Build importiert niemals automatisch.
+
+SSH-Shell und Exec nutzen eigene Terminalkontexte. Interaktive lokale und
+SSH-Sitzungen zeigen Recovery-Version, Bootmedium/Slot und Laufwerke.
+SFTP/SCP/FTP benutzen dieselben Mounts, etwa /E/... fuer E:\... . Das Menue
+leitet seine SSH-Zeile aus Dienststatus und der wirklich konfigurierten IP ab.
+Ohne Netz, bei fehlendem Adapter und bei beschaedigtem SYSTEM bleibt die
+RAM-Laufzeit bedienbar. BOOTMED.TXT wird aus der erkannten Startidentitaet
+neu in C:\R4OS\CONFIG erzeugt; das physische Medium bestimmt keine Shell.
+
+Offline-Reparatur erlaubt Lesen, Kopieren, Schreiben, Umbenennen und Loeschen
+auch in BOOT/EFI auf einem physischen D:. C:-Systemdateien behalten die
+normalen Transferregeln. Vorhandene Dateien lassen sich mit SSH-COPY aus
+einem hochgeladenen RAM-Tempfile ersetzen; alternativ explizit loeschen und
+neu hochladen. Transfers behalten ihre create-only Stage-/Claim-Publikation.
+Es gibt keinen impliziten verlustfreien Mehrdatei-Updatevertrag; der regulare
+SYSUPD-Weg bleibt im normalen R4OS. Programmstarts kommen nur von C: im RAM,
+Module anderer Laufwerke bleiben als Reparaturdateien zugaenglich.
+
+-Mode NetworkTest baut die Produktionslaufzeit und fuehrt begrenzte SMP4-
+Faelle mit BIOS/VirtioNet, UEFI/RTL8139 sowie ohne NIC und mit beschaedigtem
+SYSTEM aus. Host-OpenSSH prueft Shell, Exec, SFTP und SCP; ein unabhaengiger
+Host-FTP-Client prueft aktive/passive Transfers. Binardaten-Hashes, direkte
+Offline-Dateireparatur, RAM-Zielschutz, abgewiesene Offline-Programmstarts,
+unveraenderter Menueframebuffer und regulaerer Reset gehoeren zu diesem
+gebuendelten Nachweis. Hostclients und QEMU sind zeitlich begrenzt; Ergebnisse
+stehen unter Artifacts/BootProbe/network/network-results.json. OpenSSH und
+Zig-cc fuer den kleinen nativen ASKPASS-Helfer muessen vorhanden sein. Der
+passive Gastport 2020 wird nur fuer diesen isolierten Runner lokal gebunden.
+Der normale netzlose testquick bleibt unveraendert; kein manueller Sichttest
+vor der vereinbarten Lenovo-Abnahme am Ende der Roadmap.
