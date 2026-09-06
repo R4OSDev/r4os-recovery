@@ -42,6 +42,7 @@ function Start-Guest([string[]]$Arguments){
  if(Test-Path $serialLog){Remove-Item $serialLog -Force};[IO.File]::WriteAllText($clientLog,'',$utf8)
  $script:qmpPort=Free-Port;$script:sshPort=Free-Port
  $base=@('-machine',"q35,accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-smp','4','-display','none','-monitor','none','-no-reboot','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$qmpPort,server=on,wait=off",'-device','qemu-xhci,id=xhci','-device','usb-kbd')
+ $base+=@(Get-RecoveryFirmwareArgs)
  $base+=@('-netdev',"user,id=net,hostfwd=tcp:127.0.0.1:$sshPort-:22",'-device','virtio-net-pci,netdev=net')
  $start=[Diagnostics.ProcessStartInfo]::new($Qemu);$start.UseShellExecute=$false;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
  foreach($arg in ($base+$Arguments)){$start.ArgumentList.Add($arg)}
@@ -152,7 +153,7 @@ try {
   try{$stream.CopyTo($memory);$sourceManifestBytes=$memory.ToArray();$sourceManifest=[Text.Encoding]::UTF8.GetString($sourceManifestBytes).TrimStart([char]0xfeff)|ConvertFrom-Json -AsHashtable}finally{$stream.Dispose();$memory.Dispose()}
  }finally{$zip.Dispose()}
  $uiStage=Join-Path $output 'technical-ui-package';$previousStage=Join-Path $output 'previous-package'
- $inputs=@{package=Get-RecoveryHash $SourcePackage;previous=Get-RecoveryHash $PreviousPackage;release=Get-RecoveryHash $ReleasePackage;base=Get-RecoveryHash $BaseImage;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;host=Get-RecoveryHash $hostTool;runner=Get-RecoveryHash $PSCommandPath}
+ $inputs=@{firmwarePolicy=Get-RecoveryHash (Join-Path $PSScriptRoot 'Guest-Qmp.ps1');package=Get-RecoveryHash $SourcePackage;previous=Get-RecoveryHash $PreviousPackage;release=Get-RecoveryHash $ReleasePackage;base=Get-RecoveryHash $BaseImage;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;host=Get-RecoveryHash $hostTool;runner=Get-RecoveryHash $PSCommandPath}
  $seed=Join-Path $output 'disk-20.img';$stamp=Join-Path $output 'recovery-fixture.json'
  if($ReuseFixture){
   $saved=Get-Content -Raw -LiteralPath $stamp|ConvertFrom-Json -AsHashtable
@@ -180,16 +181,17 @@ try {
  $sshOptions=@('-c','chacha20-poly1305@openssh.com','-o','StrictHostKeyChecking=no','-o',('UserKnownHostsFile='+$(if($IsWindows){'NUL'}else{'/dev/null'})),'-o','LogLevel=ERROR','-o','ConnectTimeout=5')
  $script:process=$null;$script:session=$null;$runs=@();$updated=Join-Path $output 'UsbSelfUpdate-target.img'
  $confirmationFile=Join-Path $output 'booted-state.r4s'
- $matrix=@('UsbSelfUpdate')
- if($Cases.Count){foreach($case in $Cases){if($case -notin @('UsbSelfUpdate','NewCurrentBoot','ReadonlyConfirmation','CutCurrent','PreviousAfterCut')){throw 'Unknown Recovery-update case.'}};$matrix=@($matrix|Where-Object {$_ -in $Cases})}
+ $matrix=@('UsbSelfUpdate','LocalSelfUpdate')
+ if($Cases.Count){foreach($case in $Cases){if($case -notin @('UsbSelfUpdate','LocalSelfUpdate','NewCurrentBoot','ReadonlyConfirmation','CutCurrent','PreviousAfterCut')){throw 'Unknown Recovery-update case.'}};$matrix=@($matrix|Where-Object {$_ -in $Cases})}
  foreach($case in $matrix){
   $name=$case;$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $seed -Destination $target -Force
   $before=Witness $target
-  Write-Host "Recovery update ${name}: SMP4, 8192 MB, BIOS USB boot."
+  Write-Host "Recovery update ${name}: SMP4, 8192 MB, BIOS $name boot."
   try{
-   Start-Guest @('-m','8192','-drive',"if=none,id=boot,format=raw,file=$target",'-device','usb-storage,drive=boot,bootindex=1')
+   Start-Guest @('-m','8192','-drive',"if=none,id=boot,format=raw,file=$target",'-device',$(if($name -ceq 'LocalSelfUpdate'){'nvme,drive=boot,serial=LOCAL-SELF-UPDATE,bootindex=1'}else{'usb-storage,drive=boot,bootindex=1'}))
    $null=Wait-Guest '\[RECOVERYUI\] progress=READY';$script:session=Open-Qmp $qmpPort;Send-Keys $session @('ret')
    $text=Wait-Guest '\[RECOVERYUI\] ready=1'
+   if($name -ceq 'LocalSelfUpdate' -and $text -notmatch 'source=ok bus=local slot=current'){throw 'Local Recovery self-update did not boot from the attached NVMe CURRENT.'}
    if($text -notmatch '\[RECOVERYCONFIRM\] state=CONFIRMED content=BOOTED'){throw 'Actual booted UI kernel/runtime were not confirmed.'}
    $null=Wait-Guest 'DHCP05913 state=bound'
    $confirmedRecord=Ssh 'TYPE R:\state.r4s'
@@ -227,7 +229,7 @@ try {
   $name='NewCurrentBoot';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $updated -Destination $target -Force
   $before=Witness $target;Check-Current $target
   try{
-   Start-Guest @('-m','2048','-drive',"if=none,id=boot,format=raw,file=$target",'-device','nvme,drive=boot,serial=NEW-CURRENT,bootindex=1')
+   Start-Guest @('-m','8192','-drive',"if=none,id=boot,format=raw,file=$target",'-device','nvme,drive=boot,serial=NEW-CURRENT,bootindex=1')
    $null=Wait-Guest '\[RECOVERY\] shell=READY';$null=Wait-Guest 'DHCP05913 state=bound';$script:session=Open-Qmp $qmpPort
    $deadline=[DateTime]::UtcNow.AddSeconds(40);$record=''
    do{try{$record=Ssh 'TYPE R:\state.r4s'}catch{if([DateTime]::UtcNow -ge $deadline){throw}};if($record -match 'CURRENT_CONFIRMED=yes'){break};Start-Sleep -Milliseconds 250}while([DateTime]::UtcNow -lt $deadline)

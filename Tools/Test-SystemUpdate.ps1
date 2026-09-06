@@ -48,6 +48,7 @@ function Start-Guest([string[]]$Arguments){
  if(Test-Path $serialLog){Remove-Item $serialLog -Force};[IO.File]::WriteAllText($clientLog,'',$utf8)
  $script:qmpPort=Free-Port;$script:sshPort=Free-Port
  $base=@('-machine',"q35,accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-smp','4','-display','none','-monitor','none','-no-reboot','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$qmpPort,server=on,wait=off",'-device','qemu-xhci,id=xhci','-device','usb-kbd')
+ $base+=@(Get-RecoveryFirmwareArgs)
  $base+=@('-netdev',"user,id=net,hostfwd=tcp:127.0.0.1:$sshPort-:22",'-device','virtio-net-pci,netdev=net')
  $start=[Diagnostics.ProcessStartInfo]::new($Qemu);$start.UseShellExecute=$false;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
  foreach($arg in ($base+$Arguments)){$start.ArgumentList.Add($arg)}
@@ -134,7 +135,7 @@ try {
   "-Mroot=$(Join-Path $root 'RecoveryTools/Menu/src/package_fixture.zig')",'--dep','r4os_contract',"-Mr4os=$(Join-Path $sdk 'r4os.zig')",'--dep','ntfs_format',"-Mntfs_volume=$(Join-Path $sdk 'r4os/ntfs_volume.zig')",
   '--dep','r4os',"-Mntfs_format=$(Join-Path $root 'RecoveryTools/Menu/src/ntfs_format.zig')",'--dep','r4os',"-Mzip_core=$(Join-Path $zipSource 'src/zip_core.zig')", "-Minstallation=$(Join-Path $root 'Kernel/storage/installation.zig')",
   "-Mr4os_contract=$(Join-Path $root 'Platform/Contract/Generated/SDK/Zig/package.zig')","-femit-bin=$hostTool")
- $inputs=@{package=Get-RecoveryHash $SourcePackage;base=Get-RecoveryHash $BaseImage;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;fixtures=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');runner=Get-RecoveryHash $PSCommandPath}
+ $inputs=@{firmwarePolicy=Get-RecoveryHash (Join-Path $PSScriptRoot 'Guest-Qmp.ps1');package=Get-RecoveryHash $SourcePackage;base=Get-RecoveryHash $BaseImage;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;fixtures=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');runner=Get-RecoveryHash $PSCommandPath}
  $seed=Join-Path $output 'disk-19.img';$stamp=Join-Path $output 'update-fixture.json'
  if($ReuseFixture){
   $saved=Get-Content -Raw -LiteralPath $stamp|ConvertFrom-Json -AsHashtable
@@ -192,7 +193,7 @@ try {
  foreach($result in $updated){
   $name='UpdatedNormalBoot';$before=Get-RecoveryHash $result.image;$watch=[Diagnostics.Stopwatch]::StartNew()
   try{
-   Start-Guest @('-m','2048','-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=UPDATED,bootindex=1')
+   Start-Guest @('-m','8192','-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=UPDATED,bootindex=1')
    $text=Wait-Guest '\[INSTALLBOOT\] mapping=verified C=SYSTEM D=DATA BOOT=unlettered'
    if(!$text.Contains('installation='+$result.structure.installation.installationId)){throw 'Updated normal boot identity differs.'}
    $script:session=Open-Qmp $qmpPort;Start-Sleep -Milliseconds 10000;Send-Keys $session @('d');Start-Sleep -Milliseconds 1500

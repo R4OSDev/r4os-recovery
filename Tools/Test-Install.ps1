@@ -47,6 +47,7 @@ function Start-Guest([string[]]$Arguments){
  if(Test-Path $serialLog){Remove-Item $serialLog -Force};[IO.File]::WriteAllText($clientLog,'',$utf8)
  $script:qmpPort=Free-Port;$script:sshPort=Free-Port
  $base=@('-machine',"q35,accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-smp','4','-display','none','-monitor','none','-no-reboot','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$qmpPort,server=on,wait=off",'-device','qemu-xhci,id=xhci','-device','usb-kbd')
+ $base+=@(Get-RecoveryFirmwareArgs)
  $base+=@('-netdev',"user,id=net,hostfwd=tcp:127.0.0.1:$sshPort-:22",'-device','virtio-net-pci,netdev=net')
  $start=[Diagnostics.ProcessStartInfo]::new($Qemu);$start.UseShellExecute=$false;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
  foreach($arg in ($base+$Arguments)){$start.ArgumentList.Add($arg)}
@@ -79,7 +80,7 @@ try {
  Test-RecoveryInventory $root|Out-Null
  $imageCreator=Get-RecoveryImageCreator $root $Zig
  $packageHash=Get-RecoveryHash $SourcePackage
- $inputs=@{package=$packageHash;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;fixtures=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');runner=Get-RecoveryHash $PSCommandPath}
+ $inputs=@{firmwarePolicy=Get-RecoveryHash (Join-Path $PSScriptRoot 'Guest-Qmp.ps1');package=$packageHash;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;fixtures=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');runner=Get-RecoveryHash $PSCommandPath}
  $seed=Join-Path $output 'disk-18.img';$stamp=Join-Path $output 'install-fixture.json'
  if($ReuseFixture){
   $saved=Get-Content -Raw -LiteralPath $stamp|ConvertFrom-Json -AsHashtable
@@ -167,7 +168,7 @@ try {
    $name="$($result.name)-$mode-$entry";$watch=[Diagnostics.Stopwatch]::StartNew()
    $before=Get-RecoveryHash $result.image
    try {
-    Start-Guest (@('-m','2048','-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=INSTALLED,bootindex=1')+(Firmware-Args $mode))
+    Start-Guest (@('-m','8192','-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=INSTALLED,bootindex=1')+(Firmware-Args $mode))
     Start-Sleep -Milliseconds 2000;$script:session=Open-Qmp $qmpPort
     if($entry -eq 'Recovery'){
      Send-Keys $session @('down','ret');$text=Wait-Guest '\[RECOVERY\] shell=READY'

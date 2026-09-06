@@ -4,8 +4,8 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-The 0.76.1 baseline contains pinned kernel, platform contract and SDK sources,
-37 precompiled console, service, driver, protocol and library modules, and
+The current baseline contains pinned kernel, platform contract and SDK sources,
+39 precompiled console, service, driver, protocol and library modules, and
 their original source archives and license notices. Since 0.76.2 the separate
 Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
 complete 64-MB FAT32 runtime is loaded by Limine, checked against its kernel's
@@ -65,7 +65,7 @@ The original ZIP cache and existing Limine configuration remain intact.
 The recovery kernel reuses selected R4OS kernel components. Compatible
 drivers, protocols, services, console applications, and libraries are
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
-normal R4OS releases will include an explicitly selected Recovery release.
+normal R4OS packages include an explicitly selected complete Recovery release.
 
 `./Release.sh Prepare` (Windows: `Release.bat Prepare`) creates the independent
 ZIP, input/owner provenance and SHA256SUMS from the clean, pushed Recovery
@@ -89,9 +89,9 @@ The frozen inputs and their owners are separated explicitly:
     Legal/              Original source archives, manifests and notices
     Tools/              Build, import, and release tooling
 
-Imported runtime binaries will be versioned together with their provenance and
+Imported runtime binaries are versioned together with their provenance and
 license notices. Generated build and release outputs remain untracked. Shared
-host orchestration will use PowerShell 7 with thin Windows and Linux launchers.
+host orchestration uses PowerShell 7 with thin Windows and Linux launchers.
 
 ## Workspace integration
 
@@ -109,8 +109,8 @@ Original R4OS material is licensed under Apache License 2.0. See
 
 Seit 0.76.4 stehen das physische Medieninventar, die echte Limine-Bootquelle
 und stabile C:/R:/weitere Mounts bereit. `-Mode StorageTest` prueft die
-USB-/AHCI-/NVMe- und Fehlerfaelle mit SMP4. Die Installationsaktionen folgen
-in ihren geplanten Unterversionen. Details und Grenzen stehen in
+USB-/AHCI-/NVMe- und Fehlerfaelle mit SMP4. Installation und beide Updatewege
+sind implementiert. Details und Grenzen stehen in
 [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).
 
 ## Keyboard input
@@ -138,7 +138,8 @@ then a live disk or an identified SYSTEM/RECOVERY partition. Review defaults
 to Back and revalidates the target before dispatch. Since 0.76.15, local
 packages are checked through the frozen R4ZIP protocol and prepared in pinned
 physical RAM. Install R4OS and Update R4OS execute their validated write plans;
-Update Recovery follows in its own roadmap step. Readable OS markers add comma-separated names; no
+Update Recovery rotates confirmed CURRENT to PREVIOUS before replacement.
+Readable OS markers add comma-separated names; no
 marker leaves the extra display empty. Details and current limits are in
 [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt).
 
@@ -153,14 +154,16 @@ a blank disk and combined OS markers. `Tools/Test-UI.ps1 -BootMedium LOCAL
 own-disk eligibility. Artifacts stay under `Artifacts/BootProbe/ui/`.
 
 `Tools/Package.ps1` owns the independent Recovery ZIP producer; the frozen
-Distribution `Tools/ReleasePackage.ps1` defines the paired OS package.
+Distribution `Tools/ReleasePackage.ps1` supplies self-contained test fixtures.
+The canonical Distribution owns the current production OS package.
 `./Build.sh -Mode PackageTest` (Windows: `Build.bat -Mode PackageTest`)
 builds the production package kernel and existing UI diagnostic kernel, then
 generates real .NET ZIP fixtures, checks
 the shared guest decoder and NTFS content import on the host, and runs bounded
 SMP4 guest package checks. After those builds,
 `pwsh -File Tools/Test-Packages.ps1 -HostOnly` or `-GuestOnly` selects one half.
-Release publication and physical installation remain separate roadmap steps.
+Physical installation has its separate complete-package acceptance. Public
+channel checks additionally verify the actual released assets.
 
 `./Build.sh -Mode DownloadTest` uses the production Recovery kernel and the
 same guest web transport. It checks a real GitHub HTTPS/redirect download,
@@ -232,3 +235,27 @@ the menu on disposable USB/NVMe SMP4 guests. The fixture uses a standard old
 checks compare persistent partitions, GPT, custom menu bytes and foreign
 BOOT files; a read-only NTFS witness checks the complete replacement tree.
 The successfully updated normal system must boot and respond to Terminal.
+
+
+## Qualified requirements and integration
+
+Recovery/Kernel 0.1.19 and RECOVERY.R4X 0.1.11 use a complete 64-MB RAM image.
+Install/update packages require at least 7 GB of OS-usable RAM, counted from
+the boot memory map without MMIO holes; machines with 8 GB are qualified.
+The complete source and write plans must fit in physically reserved RAM
+before any target write. The shared minimum disk is 1,763,722,240 bytes;
+BOOT/SYSTEM/RECOVERY retain 128/1024/512 MB and DATA uses the remaining space.
+
+`Artifacts/Qualification/0.76.23/report.json` records actual RAM peaks,
+capacity, complete install/update evidence and exact package identities.
+`Artifacts/Qualification/0.76.24/report.json` adds combined BIOS/UEFI,
+USB/local keyboard UI, remote repair/storage/R4PART, local self-update,
+download power cuts and normal boot integration. All automated guests use
+four CPUs and run sequentially. SeaBIOS 1.17's high-RAM NVMe boot limitation
+is handled by the shared host firmware PCI allocation setting; no kernel
+change is needed. Historical single failures remain documented separately.
+
+After publication, `Tools/Test-PublishedRelease.ps1` downloads the entire
+actual public Recovery or R4OS asset through the production keyboard menu,
+verifies its cached bytes and preserves unrelated partitions. The only user
+hardware acceptance remains the final Lenovo USB boot and local installation.

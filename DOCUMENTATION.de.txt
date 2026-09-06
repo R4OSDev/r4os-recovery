@@ -1096,3 +1096,50 @@ geprueften Imports. runtime.img enthaelt 58 Dateien. Der aggregierte Bericht
 steht unter Artifacts/Qualification/0.76.23/report.json und unterscheidet
 Ausgangsfolge, abschliessende RAM-Korrektur und Paket-Hashes. Keine manuelle
 Windows- oder Lenovo-Abnahme. Firmware-/Gesamtintegration folgt in 0.76.24.
+
+
+Gesamtintegration 0.76.24
+-----------------------
+Die begrenzte Linux/KVM-SMP4-Auswahl bestand mit dem unveraenderten
+Recovery-/Kernelstand 0.1.19, Menue 0.1.11 und runtime.img SHA256
+b44f14fa6f00990482a49254a25a9200193728f88f869c1dbd1cdb23dca74c8e.
+BIOS/lokal und UEFI/USB mit 8 GB, 1024x768, USB-Tastatur und deaktiviertem
+i8042 bestanden alle sechs Menuepfade und je 28 Bildvergleiche in
+19.607 beziehungsweise 21.483 s. Konsolenbild, Escape/EXIT, IP-Anzeige und
+unveraenderte unabhaengige Sitzung sind enthalten; keine Benutzer-Preview.
+
+Die zusammengefuegte Netzwerk-/Storage-/R4PART-Folge bestand unter BIOS
+mit VirtioNet in 137.031 s und unter UEFI mit RTL8139 in 136.377 s.
+SSH/SFTP/SCP/aktives/passives FTP, belegte Ziele, exklusive Ansprueche,
+veraltete Identitaeten, echte Remount-/Flushfehler, GPT-Reparatur, Format,
+NTFS EXTEND/SHRINK und 40-MB-Hashruecklesen sind gemeinsam abgedeckt.
+Offline mit beschaedigtem SYSTEM blieb die lokale Konsole nutzbar.
+Lokales CURRENT-Selbstupdate auf NVMe bestand in 82.45 s; PREVIOUS, Caches,
+andere Partitionen und die laufende SSH-Sitzung wurden nachgeprueft.
+Die komplette Downloadgruppe mit ungueltigen Paketen, Platzmangel, drei
+Stromabbruechen und vier FAT-Zwischenzustaenden bestand erneut mit 8 GB.
+
+Installations-, SYSTEM-Ersatz-, RAM- und weitere Recovery-Abbruchnachweise
+aus 0.76.23 werden mit ihren jeweiligen Artefakthashes weiterverwendet;
+alte Messungen werden nicht als neuer Lauf ausgegeben. Der Bericht unter
+Artifacts/Qualification/0.76.24/report.json bindet diese Belege zusammen.
+SeaBIOS 1.17/QEMU 11.0.2 benoetigt fuer NVMe-Boot mit 8 GB die gemeinsame
+Vorgabe -fw_cfg name=opt/org.seabios/pci64,string=0. Der Gegenvergleich mit
+identischem Full-Image belegt Firmware-BAR 0x7000000000 ohne Start gegen
+0xfebd4000 mit erfolgreichem normalen R4OS-Boot in 25.020 s. Die gemeinsame
+Guest-Qmp.ps1 stellt dies fuer UI, Install-/Update-Ergebnisboots bereit.
+OVMF ignoriert diesen SeaBIOS-Schluessel. Kein Kernel-/Bootloaderpatch.
+
+Der gesicherte alte NTFS-I/O-5-Einzelbefund trat in der begrenzten erneuten
+BIOS-/UEFI-Folge nicht auf. Seine Ursache bleibt unbekannt; Problems.txt
+unterscheidet ihn weiterhin vom behobenen alten NTFS-Scratchkonflikt und
+den absichtlich injizierten Flushfehlern. Auch der historische UEFI-USB-
+Startausfall trat nicht erneut auf. Kein automatisches Wiederholen bis gruen.
+
+Tools/Test-PublishedRelease.ps1 prueft nach Publikation das exakte oeffentliche
+latest-Asset und dessen SHA256 durch einen echten vollstaendigen Menue-
+Download im unveraenderten Produktionskernel. Beobachtung ueber SSH und
+QMP, unabhaengige FAT-/Dateihashpruefung nach Terminal-POWEROFF sowie
+Bytegleichheit aller anderen Partitionen. Dieser Kanalnachweis wird erst
+mit Recovery in 0.76.25 und dem finalen R4OS in 0.76.26 ausgefuehrt.
+Keine Windows-/Lenovo-Hardwareabnahme in dieser automatisierten Stufe.

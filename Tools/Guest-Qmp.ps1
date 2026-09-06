@@ -1,4 +1,11 @@
 # Shared bounded hardware keyboard/QMP control for guest acceptances.
+function Get-RecoveryFirmwareArgs {
+    # SeaBIOS 1.17 otherwise moves the NVMe BAR above 4 GB with large RAM,
+    # then cannot boot it. Keep this firmware's PCI allocations below 4 GB.
+    # OVMF ignores this SeaBIOS-specific fw_cfg key. Same policy on both hosts.
+    # Upstream: https://www.mail-archive.com/seabios%40seabios.org/msg13153.html
+    return @('-fw_cfg','name=opt/org.seabios/pci64,string=0')
+}
 function Qmp([object]$Session,[string]$Command,[hashtable]$Arguments=@{}){
     $id=[Guid]::NewGuid().ToString('N')
     $Session.Writer.WriteLine((@{execute=$Command;arguments=$Arguments;id=$id}|ConvertTo-Json -Compress -Depth 10))
@@ -30,4 +37,3 @@ function Send-Keys([object]$Session,[string[]]$Sequence){
         Start-Sleep -Milliseconds 70
     }
 }
-

@@ -80,6 +80,7 @@ try{
         foreach($size in $sizes){
             $name="$mode-$BootMedium-$size"
             $inputs=[ordered]@{schema=1;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;resolution=$size;
+                firmwarePolicy=Get-RecoveryHash (Join-Path $PSScriptRoot 'Guest-Qmp.ps1');
                 fixtureBuilder=Get-RecoveryHash (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1');test=Get-RecoveryHash $PSCommandPath;creator=Get-RecoveryHash $imageCreator;
                 efi=Get-RecoveryHash (Join-Path $LimineRoot 'BOOTX64.EFI');bios=Get-RecoveryHash (Join-Path $LimineRoot 'limine-bios.sys')}
             $serialized=$inputs|ConvertTo-Json -Compress;$cache=Join-Path $output 'fixture-inputs.json'
@@ -102,12 +103,13 @@ try{
             if(Test-Path -LiteralPath $serialLog){Remove-Item -LiteralPath $serialLog -Force}
             $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0)
             $listener.Start();$port=$listener.LocalEndpoint.Port;$listener.Stop()
-            $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain),i8042=off",'-cpu',$profile.CpuModel,'-m','1024','-smp','4',
+            $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain),i8042=off",'-cpu',$profile.CpuModel,'-m','8192','-smp','4',
                 '-display','none','-monitor','none','-no-reboot','-nic','none','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$port,server=on,wait=off",
                 '-device','qemu-xhci,id=ui-xhci','-device','usb-kbd,id=ui-keyboard','-device','usb-mouse,id=ignored-mouse',
                 '-drive',"if=none,id=usb-media,format=raw,file=$(Join-Path $output 'disk-1.img'),snapshot=on",'-device',"usb-storage,drive=usb-media,bootindex=$(if($BootMedium -eq 'USB'){1}else{2})",
                 '-drive',"if=none,id=local-media,format=raw,file=$(Join-Path $output 'disk-2.img'),snapshot=on",'-device',"nvme,drive=local-media,serial=RECOVERY-UI-LOCAL,bootindex=$(if($BootMedium -eq 'LOCAL'){1}else{2})",
                 '-drive',"if=ide,format=raw,file=$(Join-Path $output 'blank.img'),snapshot=on")
+            $arguments+=@(Get-RecoveryFirmwareArgs)
             if($mode -eq 'Uefi'){
                 $vars=Join-Path $output 'OVMF-vars.fd';Copy-Item -LiteralPath $OvmfVars -Destination $vars -Force
                 $arguments+=@('-drive',"if=pflash,format=raw,unit=0,readonly=on,file=$OvmfCode",'-drive',"if=pflash,format=raw,unit=1,file=$vars")
