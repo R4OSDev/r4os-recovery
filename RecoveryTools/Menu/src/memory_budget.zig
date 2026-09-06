@@ -53,6 +53,9 @@ test "RAM minimum excludes device windows, holes and duplicate map ranges" {
     };
     try std.testing.expectEqual(@as(u64, 6 * gb), try count(&entries));
     try std.testing.expectError(error.InsufficientRam, require(try count(&entries), 7 * gb));
+    try require(try count(&entries), 5 * gb);
+    try require(5 * gb, 5 * gb);
+    try std.testing.expectError(error.InsufficientRam, require(5 * gb - 1, 5 * gb));
     entries[1].length = 6 * gb - 1024 * 1024;
     try require(try count(&entries), 7 * gb);
     entries[2] = .{ .base = gb, .length = gb, .kind = abi.boot_memory_kind_kernel_and_modules };

@@ -124,10 +124,10 @@ Installation vor dem ersten Zielschreibzugriff. Integritaet ersetzt keine
 Authentifizierung: GitHub-Downloads verwenden den geprueften HTTPS-Pfad.
 Die fuer einen konkreten Install-/Updateauftrag benoetigte RAM-Spitze wird
 zusaetzlich vollstaendig physisch reserviert; minimumRamBytes deckt keinen
-beliebig grossen Auftrag ab. Der Paketstandard verlangt 7 GB OS-RAM aus
+beliebig grossen Auftrag ab. Der Paketstandard verlangt 5 GB OS-RAM aus
 usable, bootloader_reclaimable und kernel_and_modules; reservierte Bereiche,
 MMIO, Framebuffer und Adressluecken werden nicht mitgezaehlt. Die vollstaendigen
-Ablaeufe werden mit 8 GB installiertem RAM qualifiziert. Der Abstand laesst
+Ablaeufe werden mit 6 GB installiertem RAM qualifiziert. Der Abstand laesst
 Firmware-/Geraetereservierungen zu, ersetzt aber nicht die physische Vorab-
 reservierung jedes Auftrags. Ein reiner Menue-/Reparaturboot kann mit weniger RAM gelingen,
 er verspricht damit keine erfolgreiche Paketvorbereitung.

@@ -1,5 +1,6 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[switch]$ReuseFixture,[switch]$VerifyInstalled,[string[]]$Cases=@(),
-      [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300)
+      [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300,
+      [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
@@ -97,7 +98,7 @@ try {
  $ssh=(Get-Command "ssh$suffix" -CommandType Application|Select-Object -First 1).Source
  $sshOptions=@('-c','chacha20-poly1305@openssh.com','-o','StrictHostKeyChecking=no','-o',('UserKnownHostsFile='+$(if($IsWindows){'NUL'}else{'/dev/null'})),'-o','LogLevel=ERROR','-o','ConnectTimeout=5')
  $script:process=$null;$script:session=$null;$runs=@();$installed=@()
- $matrix=@(@{name='UsbInstall';own=$false;ram=8192;fault=$false},@{name='LocalReinstall';own=$true;ram=8192;fault=$false},@{name='WriteFailure';own=$false;ram=8192;fault=$true},@{name='RamFailure';own=$false;ram=1024;fault=$false},@{name='RamMinimum';own=$false;ram=6144;fault=$false})
+ $matrix=@(@{name='UsbInstall';own=$false;ram=$RamMB;fault=$false;reject=''},@{name='LocalReinstall';own=$true;ram=$RamMB;fault=$false;reject=''},@{name='WriteFailure';own=$false;ram=$RamMB;fault=$true;reject=''},@{name='RamFailure';own=$false;ram=1024;fault=$false;reject='OutOfMemory'},@{name='RamMinimum';own=$false;ram=4096;fault=$false;reject='InsufficientRam'})
  if($Cases.Count){$matrix=@($matrix|Where-Object {$_.name -in $Cases});if($matrix.Count -ne $Cases.Count){throw 'Unknown installation case.'}}
  if($VerifyInstalled){
   $saved=Get-Content -Raw -LiteralPath (Join-Path $output 'install-results.json')|ConvertFrom-Json -AsHashtable
@@ -133,8 +134,10 @@ try {
    Send-Keys $session @('ret');$null=Wait-Guest '\[RECOVERYUI\] page=targets selected=0 choice=0'
    Send-Keys $session @('ret');$null=Wait-Guest '\[RECOVERYUI\] page=review selected=0 choice=0'
    Send-Keys $session @('down','ret')
-   if($case.ram -eq 1024){$text=Wait-Guest '\[RECOVERYPACKAGE\] rejected=OutOfMemory .*writes=0'}
-   elseif($case.ram -eq 6144){$text=Wait-Guest '\[RECOVERYPACKAGE\] rejected=InsufficientRam .*writes=0'}
+   if($case.reject){
+    $text=Wait-Guest ('\[RECOVERYPACKAGE\] rejected='+$case.reject+' .*writes=0')
+    if($case.reject -ceq 'InsufficientRam' -and $text -notmatch 'writes=0 ram_capacity=\d+ ram_required=\d+'){throw 'RAM rejection omitted detected/required capacity.'}
+   }
    elseif($case.fault){$text=Wait-Guest '\[RECOVERYINSTALL\] result=WriteFailed attempted=1 .*claim=0'}
    else{$text=Wait-Guest '\[RECOVERYINSTALL\] result=OK'}
    $null=Wait-Guest '\[RECOVERYUI\] page=dialog selected=0'
@@ -144,31 +147,32 @@ try {
     if($current.recoveryVersion -cne $source.recovery.version){throw 'Own-device R: was not rebound to the installed Recovery.'}
    }
    Send-Keys $session @('esc')
-   if($case.ram -lt 8192){Send-Keys $session @('esc','esc','esc')}
+   if($case.reject){Send-Keys $session @('esc','esc','esc')}
    Send-Keys $session @('up','up','ret');Start-Sleep -Milliseconds 500;Keys 'POWEROFF';Send-Keys $session @('ret')
    if(!$process.WaitForExit(20000) -or $process.ExitCode -ne 0){throw 'RAM Recovery could not shut down normally.'}
   } finally {Stop-Guest}
   if((Get-RecoveryHash $other) -cne $otherHash){throw 'The other physical target changed.'}
   if(!$case.own -and (Get-RecoveryHash $boot) -cne $bootHash){throw 'The USB source changed.'}
-  if($case.ram -lt 8192 -and (Get-RecoveryHash $target) -cne $targetHash){throw 'Low-RAM rejection changed the target.'}
-  if(!$case.fault -and $case.ram -ge 8192){
+  if($case.reject -and (Get-RecoveryHash $target) -cne $targetHash){throw 'Low-RAM rejection changed the target.'}
+  if(!$case.fault -and !$case.reject){
    $structure=Test-R4OSInstallationImage -Image $target
    if($structure.installation.releaseVersion -cne $source.releaseVersion -or $structure.installation.kernelVersion -cne $source.kernelVersion -or $structure.recoveryVersion -cne $source.recovery.version){throw 'Installed package versions differ.'}
    $check=[InstallationImageCheck]::new($target)
    try{if([InstallationImageCheck]::Hash($check.Volumes['RECOVERY'].ReadFile('INSTALL/RELEASE.ZIP')) -cne $packageHash){throw 'Installed original ZIP differs.'}}finally{$check.Dispose()}
-   $installed+=@(@{name=$name;image=$target;structure=$structure})
+   $installed+=@(@{name=$name;image=$target;structure=$structure;ramMB=$case.ram})
   }
-  $runs+=@(@{case=$name;cpus=4;firmware=$firmware;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS';target=$target;otherUnchanged=$true})
+  $runs+=@(@{case=$name;cpus=4;ramMB=$case.ram;firmware=$firmware;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS';target=$target;otherUnchanged=$true})
   Write-RecoveryJson (Join-Path $output 'install-results.json') @{schema=1;inputs=$inputs;runs=$runs;installed=$installed}
   Write-Host "PASS $name ($([Math]::Round($watch.Elapsed.TotalSeconds,2)) s)"
  }
  foreach($result in $installed){
+  $resultRamMB=if($result.ContainsKey('ramMB')){[int]$result.ramMB}else{8192}
   foreach($entry in @('Normal','Recovery')){
    $mode=if(($result.name -eq 'UsbInstall') -eq ($entry -eq 'Normal')){'Bios'}else{'Uefi'}
    $name="$($result.name)-$mode-$entry";$watch=[Diagnostics.Stopwatch]::StartNew()
    $before=Get-RecoveryHash $result.image
    try {
-    Start-Guest (@('-m','8192','-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=INSTALLED,bootindex=1')+(Firmware-Args $mode))
+    Start-Guest (@('-m',"$resultRamMB",'-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=INSTALLED,bootindex=1')+(Firmware-Args $mode))
     Start-Sleep -Milliseconds 2000;$script:session=Open-Qmp $qmpPort
     if($entry -eq 'Recovery'){
      Send-Keys $session @('down','ret');$text=Wait-Guest '\[RECOVERY\] shell=READY'
@@ -183,7 +187,7 @@ try {
     if(!$process.WaitForExit(20000) -or $process.ExitCode -ne 0){throw 'Installed system did not shut down through its Terminal.'}
    }finally{Stop-Guest}
    if((Get-RecoveryHash $result.image) -cne $before){throw 'Boot acceptance changed the installed base image.'}
-   $runs+=@(@{case=$name;cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS'})
+   $runs+=@(@{case=$name;cpus=4;ramMB=$resultRamMB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS'})
    Write-RecoveryJson (Join-Path $output 'install-results.json') @{schema=1;inputs=$inputs;runs=$runs;installed=$installed}
    Write-Host "PASS $name"
   }

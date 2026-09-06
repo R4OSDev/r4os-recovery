@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[Parameter(Mandatory)][string]$PreviousPackage,[Parameter(Mandatory)][string]$BaseImage,
       [Parameter(Mandatory)][string]$ReleasePackage,[switch]$ReuseFixture,[string[]]$Cases=@(),
-      [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300)
+      [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300,
+      [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 $root=Split-Path $PSScriptRoot -Parent;$workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
 $distribution=Join-Path $workspace 'Repositories/Distribution'
@@ -38,6 +39,7 @@ function Stop-Guest {
   $null=$stdout.GetAwaiter().GetResult();$process.Dispose();$script:process=$null}
 }
 function Start-Guest([string[]]$Arguments){
+ $script:guestRamMB=[int]$Arguments[[Array]::IndexOf($Arguments,'-m')+1]
  $script:serialLog=Join-Path $output "$name-serial.log";$script:clientLog=Join-Path $output "$name-clients.log"
  if(Test-Path $serialLog){Remove-Item $serialLog -Force};[IO.File]::WriteAllText($clientLog,'',$utf8)
  $script:qmpPort=Free-Port;$script:sshPort=Free-Port
@@ -133,7 +135,7 @@ function Check-Current([string]$Image){
  }finally{$check.Dispose()}
 }
 function Record-Run([string]$Case,[Diagnostics.Stopwatch]$Watch,[string]$Image){
- $script:runs+=@(@{case=$Case;cpus=4;seconds=[Math]::Round($Watch.Elapsed.TotalSeconds,3);result='PASS';target=$Image})
+ $script:runs+=@(@{case=$Case;cpus=4;ramMB=$guestRamMB;seconds=[Math]::Round($Watch.Elapsed.TotalSeconds,3);result='PASS';target=$Image})
  Write-RecoveryJson (Join-Path $output 'recovery-update-results.json') @{schema=1;inputs=$inputs;runs=$runs}
  Write-Host "PASS $Case ($([Math]::Round($Watch.Elapsed.TotalSeconds,2)) s)"
 }
@@ -186,9 +188,9 @@ try {
  foreach($case in $matrix){
   $name=$case;$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $seed -Destination $target -Force
   $before=Witness $target
-  Write-Host "Recovery update ${name}: SMP4, 8192 MB, BIOS $name boot."
+  Write-Host "Recovery update ${name}: SMP4, $RamMB MB, BIOS $name boot."
   try{
-   Start-Guest @('-m','8192','-drive',"if=none,id=boot,format=raw,file=$target",'-device',$(if($name -ceq 'LocalSelfUpdate'){'nvme,drive=boot,serial=LOCAL-SELF-UPDATE,bootindex=1'}else{'usb-storage,drive=boot,bootindex=1'}))
+   Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=boot,format=raw,file=$target",'-device',$(if($name -ceq 'LocalSelfUpdate'){'nvme,drive=boot,serial=LOCAL-SELF-UPDATE,bootindex=1'}else{'usb-storage,drive=boot,bootindex=1'}))
    $null=Wait-Guest '\[RECOVERYUI\] progress=READY';$script:session=Open-Qmp $qmpPort;Send-Keys $session @('ret')
    $text=Wait-Guest '\[RECOVERYUI\] ready=1'
    if($name -ceq 'LocalSelfUpdate' -and $text -notmatch 'source=ok bus=local slot=current'){throw 'Local Recovery self-update did not boot from the attached NVMe CURRENT.'}
@@ -221,7 +223,7 @@ try {
    if($paths.Count -ne $manifest.files.Count+1){throw 'Old CURRENT files remain.'}
    foreach($file in $manifest.files){if([InstallationImageCheck]::Hash($check.Volumes['RECOVERY'].ReadFile('CURRENT/'+$file.path)) -cne $file.sha256){throw "New CURRENT mismatch: $($file.path)"}}
   }finally{$check.Dispose()}
-  $updated=$target;$runs+=@(@{case=$name;cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS';target=$target})
+  $updated=$target;$runs+=@(@{case=$name;cpus=4;ramMB=$guestRamMB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS';target=$target})
   Write-RecoveryJson (Join-Path $output 'recovery-update-results.json') @{schema=1;inputs=$inputs;runs=$runs}
   Write-Host "PASS $name ($([Math]::Round($watch.Elapsed.TotalSeconds,2)) s)"
  }
@@ -229,7 +231,7 @@ try {
   $name='NewCurrentBoot';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $updated -Destination $target -Force
   $before=Witness $target;Check-Current $target
   try{
-   Start-Guest @('-m','8192','-drive',"if=none,id=boot,format=raw,file=$target",'-device','nvme,drive=boot,serial=NEW-CURRENT,bootindex=1')
+   Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=boot,format=raw,file=$target",'-device','nvme,drive=boot,serial=NEW-CURRENT,bootindex=1')
    $null=Wait-Guest '\[RECOVERY\] shell=READY';$null=Wait-Guest 'DHCP05913 state=bound';$script:session=Open-Qmp $qmpPort
    $deadline=[DateTime]::UtcNow.AddSeconds(40);$record=''
    do{try{$record=Ssh 'TYPE R:\state.r4s'}catch{if([DateTime]::UtcNow -ge $deadline){throw}};if($record -match 'CURRENT_CONFIRMED=yes'){break};Start-Sleep -Milliseconds 250}while([DateTime]::UtcNow -lt $deadline)
@@ -270,7 +272,7 @@ try {
   $before=Witness $target
   $backend=@{driver='blkdebug';'node-name'='boot';image=@{driver='file';filename=$target};'inject-error'=@(@{event='none';iotype='write';errno=5;sector=$failLba;once=$false;immediately=$true})}|ConvertTo-Json -Depth 8 -Compress
   try{
-   Start-Guest @('-m','8192','-blockdev',$backend,'-device','usb-storage,drive=boot,bootindex=1')
+   Start-Guest @('-m',"$RamMB",'-blockdev',$backend,'-device','usb-storage,drive=boot,bootindex=1')
    $null=Enter-UI;Enter-Update
    $text=Wait-Guest '\[RECOVERYUPDATE\] result=(WriteFailed|FlushFailed|VerifyFailed) '
    if($text -notmatch 'previous=VERIFIED current=UNCHANGED' -or $text -notmatch 'phase=Replacing CURRENT.*attempted=1'){throw 'Fault did not interrupt CURRENT after verified PREVIOUS.'}
@@ -285,7 +287,7 @@ try {
   $name='PreviousAfterCut';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $cutImage -Destination $target -Force
   $before=Witness $target
   try{
-   Start-Guest @('-m','8192','-drive',"if=none,id=boot,format=raw,file=$target",'-device','usb-storage,drive=boot,bootindex=1')
+   Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=boot,format=raw,file=$target",'-device','usb-storage,drive=boot,bootindex=1')
    $text=Enter-UI $true
    if($text -notmatch 'source=ok bus=usb slot=previous' -or $text -match '\[RECOVERYCONFIRM\] state=CONFIRMED'){throw 'Fixed manual PREVIOUS boot or confirmation policy differs.'}
    Enter-Update;$text=Wait-Guest '\[RECOVERYUPDATE\] result=OK'

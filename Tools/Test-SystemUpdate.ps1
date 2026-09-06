@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[Parameter(Mandatory)][string]$BaseImage,
       [switch]$ReuseFixture,[string[]]$Cases=@(),[string]$Zig='', [string]$Qemu='',
-      [ValidateRange(60,600)][int]$TimeoutSeconds=300)
+      [ValidateRange(60,600)][int]$TimeoutSeconds=300,
+      [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
@@ -159,9 +160,9 @@ try {
   $target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath (Join-Path $output "fixture-$($case.size).img") -Destination $target -Force
   $boot=Join-Path $output "$name-boot.img";Copy-Item -LiteralPath $seed -Destination $boot -Force
   $before=Witness $target;$targetHash=Get-RecoveryHash $target;$bootHash=Get-RecoveryHash $boot
-  Write-Host "Recovery system update ${name}: SMP4, 8192 MB, BIOS USB boot."
+  Write-Host "Recovery system update ${name}: SMP4, $RamMB MB, BIOS USB boot."
   try{
-   Start-Guest @('-m','8192','-drive',"if=none,id=target,format=raw,file=$target",'-device','nvme,drive=target,serial=SYSTEM-UPDATE','-drive',"if=none,id=boot,format=raw,file=$boot",'-device','usb-storage,drive=boot,bootindex=1')
+   Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=target,format=raw,file=$target",'-device','nvme,drive=target,serial=SYSTEM-UPDATE','-drive',"if=none,id=boot,format=raw,file=$boot",'-device','usb-storage,drive=boot,bootindex=1')
    $null=Wait-Guest '\[RECOVERYSTORAGE\] source=ok';$null=Wait-Guest '\[RECOVERYUI\] progress=READY';$script:session=Open-Qmp $qmpPort;Send-Keys $session @('ret')
    $null=Wait-Guest '\[RECOVERYUI\] ready=1';$null=Wait-Guest '\[RECOVERYNET\] autostart=RETURNED';$null=Wait-Guest 'DHCP05913 state=bound'
    Send-Keys $session @('down','ret');$null=Wait-Guest '\[RECOVERYPACKAGE\] cache=manifest .*source=READY'
@@ -186,14 +187,14 @@ try {
    Checked $hostTool @('--updated-system',$SourcePackage,$target)
    $updated+=@(@{image=$target;structure=$structure})
   }
-  $runs+=@(@{case=$name;cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS';target=$target;persistent=$after})
+  $runs+=@(@{case=$name;cpus=4;ramMB=$RamMB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS';target=$target;persistent=$after})
   Write-RecoveryJson (Join-Path $output 'update-results.json') @{schema=1;inputs=$inputs;runs=$runs;updated=$updated}
   Write-Host "PASS $name"
  }
  foreach($result in $updated){
   $name='UpdatedNormalBoot';$before=Get-RecoveryHash $result.image;$watch=[Diagnostics.Stopwatch]::StartNew()
   try{
-   Start-Guest @('-m','8192','-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=UPDATED,bootindex=1')
+   Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=UPDATED,bootindex=1')
    $text=Wait-Guest '\[INSTALLBOOT\] mapping=verified C=SYSTEM D=DATA BOOT=unlettered'
    if(!$text.Contains('installation='+$result.structure.installation.installationId)){throw 'Updated normal boot identity differs.'}
    $script:session=Open-Qmp $qmpPort;Start-Sleep -Milliseconds 10000;Send-Keys $session @('d');Start-Sleep -Milliseconds 1500
@@ -201,7 +202,7 @@ try {
    if(!$process.WaitForExit(20000) -or $process.ExitCode -ne 0){throw 'Updated R4OS did not shut down through Terminal.'}
   }finally{Stop-Guest}
   if((Get-RecoveryHash $result.image) -cne $before){throw 'Normal boot changed the saved updated image.'}
-  $runs+=@(@{case=$name;cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS'})
+  $runs+=@(@{case=$name;cpus=4;ramMB=$RamMB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);result='PASS'})
   Write-RecoveryJson (Join-Path $output 'update-results.json') @{schema=1;inputs=$inputs;runs=$runs;updated=$updated}
   Write-Host "PASS $name"
  }

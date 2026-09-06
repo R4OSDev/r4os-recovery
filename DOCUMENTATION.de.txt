@@ -1030,8 +1030,8 @@ gegen die tatsaechliche FAT-Belegung; der Installer reserviert Platz fuer
 die weiteren Archive in seiner vollstaendigen Vorabplanung. Eine volle
 Partition wird nicht automatisch vergroessert.
 
-Install/Update werden mit 8 GB Gast-RAM qualifiziert. minimumRamBytes
-verlangt 7 GB OS-RAM aus der unverkuerzten Bootspeicherkarte: usable,
+Install/Update wurden in 0.76.23 mit 8 GB Gast-RAM qualifiziert. minimumRamBytes
+verlangte 7 GB OS-RAM aus der unverkuerzten Bootspeicherkarte: usable,
 bootloader_reclaimable und kernel_and_modules. Es zaehlen nur ganze
 4-KB-Seiten, ohne doppelte Bereiche, Adressluecken, reservierte Geraete-
 fenster, Framebuffer oder Firmwarebereiche. Der Abstand zum 8-GB-System
@@ -1176,8 +1176,48 @@ physischem Rest und Mindestgroesse. Das Ergebnis startet mit vier CPUs und
 Tastatur-/Terminal-POWEROFF sind geprueft. Keine reale USB-/Windows-Abnahme.
 Bericht: Artifacts/Qualification/0.76.25/report.json.
 
-Der unveraenderte oeffentliche Recovery-Stand wird fuer den finalen R4OS-
-Stand 0.76.26 verwendet. Nur dieser finale Stand geht in den vereinbarten
+Dieser oeffentliche Recovery-Stand war die Grundlage des ersten finalen R4OS-
+Kandidaten 0.76.26. Nur der finale Stand geht in den vereinbarten
 Lenovo-Test: USB-Boot zum Menue und lokale Installation bis zum Abschluss.
 R4OS wird erst danach mit Publish -Prepared als exakt geprueftes ZIP
 veroeffentlicht; anschliessend folgt dessen echter oeffentlicher Menuekanal.
+
+
+Lenovo-RAM-Korrektur 0.76.26
+--------------------------
+Der Benutzer bestaetigte den USB-Boot von Recovery 0.1.19 auf dem Lenovo.
+Die Installation stoppte vor Zielzugriff mit InsufficientRam. VER/SYSINFO
+ueber SSH meldeten 6136 MB physischen OS-RAM und 5782 MB frei; das alte
+Paket verlangte 7168 MB. Die Diagnose veraenderte keine Hardwarepartition.
+
+Recovery/Kernel 0.1.20 und RECOVERY.R4X 0.1.12 senken den Paketstandard auf
+5368709120 Bytes (5120 MB) nutzbaren OS-RAM. Die unveraenderte physische
+Vorabreservierung muss weiterhin die gesamte konkrete Installation oder
+Aktualisierung aufnehmen, bevor ein Ziel exklusiv beansprucht wird.
+Die Fehlermeldung zeigt nun erkannten und benoetigten OS-RAM in MB sowie
+den ausbleibenden Schreibzugriff. Der serielle Ablehnungsmarker enthaelt
+ram_capacity und ram_required. Die 39 eingefrorenen Module bleiben gleich.
+Kernel 0.1.98 des normalen R4OS ist ebenfalls unveraendert.
+
+Die Mindestanforderung gehoert zum Quellpaket: ein altes Release-ZIP mit
+Recovery 0.1.19 verlangt weiterhin 7 GB. Der korrigierte Installationsstand
+benoetigt deshalb ein neu gebautes R4OS-Full-ZIP mit Recovery 0.1.20.
+
+Abnahme: acht sequentielle Linux/KVM-SMP4-Gastfaelle bestanden. Installation,
+SYSTEM-Ersatz und Recovery-Selbstupdate sowie ihre vier Ergebnisstarts
+liefen mit 6144 MB. Die gezielte Ablehnung mit 4096 MB meldete
+ram_capacity=4294365184, ram_required=5368709120 und writes=0; der komplette
+Zieldatentraeger blieb bytegleich. Die bestehenden drei Ablaufwerkzeuge
+nehmen fuer solche gezielten Kapazitaetspruefungen nun -RamMB entgegen.
+Die Menue-Hosttests bestanden ebenfalls; es wurde kein neues Gate angelegt.
+
+  UsbInstall: 122.052 s, beobachtete Spitze 3824898048 B, gepinnt 3668520960 B.
+  System768: 131.751 s, beobachtete Spitze 3824902144 B, gepinnt 3668520960 B.
+  UsbSelfUpdate: 139.310 s, beobachtete Spitze 4091301888 B, gepinnt 3934724096 B.
+  runtime.img: 9eecc5c4ec14e1e9d3bac6341ff1fd5e6e4b05de4a82f7c166bc9cb8d71bc07d
+  recovery.elf: cb3ae4ff8740e19d2e2952a31a388eaca50a90696d7141711cd4ba98a2521fb7
+
+Bericht und individuelle Hashnachweise:
+Artifacts/Qualification/0.76.26/ram/report.json. Die noch ausstehende
+Lenovo-Installation wird dadurch nicht als bestanden ausgegeben. Der
+Benutzertest bleibt auf USB-Boot und lokale Installation begrenzt.

@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "c43db35bc44348994a2d5deea29d4b01baebedb1f4eb96e5d119dde2e0b47e43",
+      "sha256": "5f1f25bbdfa01fc2973491b739b13ccc587315a8644105e7f754611d7d94ad5d",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9103,7 +9103,7 @@
     {
       "path": "RecoveryTools/Contracts.de.txt",
       "bytes": 20641,
-      "sha256": "ac288dcab3a0fca0f80de572a22f4e1e8927a67e5cc9a20ee3e671e77e09982b",
+      "sha256": "2fbc60d5865c1672d7b0919e9398d0b1429cbb73f9935d949404409c25bf3b01",
       "originalSha256": null,
       "origin": null
     },
@@ -9124,7 +9124,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "f92d1befc3eb92854fddf5004683cf3a43037311141c09266b2306dabf339528",
+      "sha256": "f58c04ebf35a53bd8489000471c31cbc3fb8df92b1e4222eae6d22bd4d95ffdf",
       "originalSha256": null,
       "origin": null
     },
@@ -9200,15 +9200,15 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 46149,
-      "sha256": "ef71a16456848447d403267f84dd311c3bd35cdd1b52b74ab6dad83d73e69a3f",
+      "bytes": 46357,
+      "sha256": "e9c4404dc1c8a7a7498fabe151f57257eda9d4ee6ffa3fbfc7f8aa1a03ac2d7b",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/memory_budget.zig",
-      "bytes": 3171,
-      "sha256": "f53fc4ff9bc053ad485a898f974d1005781b8ebde33a9f9ff6526a20dec04330",
+      "bytes": 3335,
+      "sha256": "62ef3e01f34135e4229cc6c31f577d34d876b88c00cfdeffc6da2cf4c18eaa53",
       "originalSha256": null,
       "origin": null
     },
@@ -9242,8 +9242,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package_session.zig",
-      "bytes": 6035,
-      "sha256": "14b4200a11fdb8b46c0a4a10622104535ae7629ebaea320b2620ee38554bfda2",
+      "bytes": 6600,
+      "sha256": "6ac3701f980aa402d4b67db60b13a97707d2be22017a49256ad3f80937ffdaf2",
       "originalSha256": null,
       "origin": null
     },
@@ -9453,7 +9453,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "0dd3c796daecf538308fcbc2baf868e7af80ad8329bfba62988e1d45d29cd337",
+      "sha256": "6aa2c1b476d337d388c910d2b730897e1f13df0ab166af2991f15471128bd519",
       "originalSha256": null,
       "origin": null
     },
@@ -9477,7 +9477,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "5f1f6d223eae1c2e000442fdb6fe9935c1b913f0cfc6aad311a270007d003cf5",
+      "sha256": "6d19185327af41f5751106ab8cea5cb563af14f87c30131652ff273128f7bdfa",
       "originalSha256": null,
       "origin": null
     },
@@ -12966,6 +12966,56 @@
           "path": "RecoveryTools/Menu/src/tests.zig"
         }
       ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "after": "5f1f25bbdfa01fc2973491b739b13ccc587315a8644105e7f754611d7d94ad5d",
+          "before": "c43db35bc44348994a2d5deea29d4b01baebedb1f4eb96e5d119dde2e0b47e43"
+        },
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "after": "2fbc60d5865c1672d7b0919e9398d0b1429cbb73f9935d949404409c25bf3b01",
+          "before": "ac288dcab3a0fca0f80de572a22f4e1e8927a67e5cc9a20ee3e671e77e09982b"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "after": "f58c04ebf35a53bd8489000471c31cbc3fb8df92b1e4222eae6d22bd4d95ffdf",
+          "before": "f92d1befc3eb92854fddf5004683cf3a43037311141c09266b2306dabf339528"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "after": "e9c4404dc1c8a7a7498fabe151f57257eda9d4ee6ffa3fbfc7f8aa1a03ac2d7b",
+          "before": "ef71a16456848447d403267f84dd311c3bd35cdd1b52b74ab6dad83d73e69a3f"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/memory_budget.zig",
+          "after": "62ef3e01f34135e4229cc6c31f577d34d876b88c00cfdeffc6da2cf4c18eaa53",
+          "before": "f53fc4ff9bc053ad485a898f974d1005781b8ebde33a9f9ff6526a20dec04330"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/package_session.zig",
+          "after": "6ac3701f980aa402d4b67db60b13a97707d2be22017a49256ad3f80937ffdaf2",
+          "before": "14b4200a11fdb8b46c0a4a10622104535ae7629ebaea320b2620ee38554bfda2"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "6d19185327af41f5751106ab8cea5cb563af14f87c30131652ff273128f7bdfa",
+          "before": "5f1f6d223eae1c2e000442fdb6fe9935c1b913f0cfc6aad311a270007d003cf5"
+        }
+      ],
+      "reason": "0.76.26: Lenovo-RAM-Grenze, konkrete Fehlermeldung und Recovery 0.1.20"
+    },
+    {
+      "changes": [
+        {
+          "before": "0dd3c796daecf538308fcbc2baf868e7af80ad8329bfba62988e1d45d29cd337",
+          "after": "6aa2c1b476d337d388c910d2b730897e1f13df0ab166af2991f15471128bd519",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        }
+      ],
+      "reason": "0.76.26: vollstaendige Runtime-Identitaet fuer Recovery 0.1.20"
     }
   ]
 }

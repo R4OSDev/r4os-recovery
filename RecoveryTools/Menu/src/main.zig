@@ -405,9 +405,12 @@ const State = struct {
         }
         self.prepareTargetPackage(session) catch |err| {
             const actual = if (session.pool.cancelled) error.Cancelled else err;
-            result_message = packages.message(actual);
-            var detail: [160]u8 = undefined;
-            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] rejected={s} vm_error={d} writes=0\r\n", .{ @errorName(actual), session.pool.last_error }) catch "");
+            result_message = session.failureMessage(&self.notice, actual);
+            var detail: [256]u8 = undefined;
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] rejected={s} vm_error={d} writes=0 ram_capacity={d} ram_required={d}\r\n", .{
+                @errorName(actual), session.pool.last_error, session.pool.ram_bytes,
+                if (session.prepared) |prepared| prepared.recovery.minimumRamBytes else @as(u64, 0),
+            }) catch "");
             return;
         };
         self.cache = .{ .state = .verified, .digest = session.original_digest, .bytes = session.prepared.?.archive.original.len };

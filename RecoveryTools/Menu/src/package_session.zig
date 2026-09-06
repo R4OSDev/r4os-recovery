@@ -84,6 +84,16 @@ pub const Session = struct {
     pub fn targetSystem(self: *Session, first: u64, sectors: u64, serial: u64) !void {
         self.target = try self.tree.?.prepareTarget(self.arena.allocator(), first, sectors, serial, self.pool.pump);
     }
+    pub fn failureMessage(self: *const Session, buffer: []u8, err: anyerror) []const u8 {
+        if (err == error.InsufficientRam) if (self.prepared) |prepared| {
+            const mb = 1024 * 1024;
+            return std.fmt.bufPrint(buffer, "Not enough RAM for this release.\nDetected OS RAM: {d} MB\nRequired OS RAM: {d} MB\nNo disk changes made.", .{
+                self.pool.ram_bytes / mb,
+                std.math.divCeil(u64, prepared.recovery.minimumRamBytes, mb) catch 0,
+            }) catch message(err);
+        };
+        return message(err);
+    }
 };
 pub fn message(err: anyerror) []const u8 {
     return switch (err) {

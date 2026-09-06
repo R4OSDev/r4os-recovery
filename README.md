@@ -239,9 +239,9 @@ The successfully updated normal system must boot and respond to Terminal.
 
 ## Qualified requirements and integration
 
-Recovery/Kernel 0.1.19 and RECOVERY.R4X 0.1.11 use a complete 64-MB RAM image.
-Install/update packages require at least 7 GB of OS-usable RAM, counted from
-the boot memory map without MMIO holes; machines with 8 GB are qualified.
+Recovery/Kernel 0.1.20 and RECOVERY.R4X 0.1.12 use a complete 64-MB RAM image.
+Since Recovery 0.1.20, install/update packages require 5 GB of OS-usable RAM, counted from
+the boot memory map without MMIO holes; machines with 6 GB are qualified.
 The complete source and write plans must fit in physically reserved RAM
 before any target write. The shared minimum disk is 1,763,722,240 bytes;
 BOOT/SYSTEM/RECOVERY retain 128/1024/512 MB and DATA uses the remaining space.
@@ -266,3 +266,14 @@ is published with its source receipt and checksums. The full public asset
 passed the production-menu download acceptance; its unpacked contents match
 the qualified kernel/runtime/license payloads exactly. Normal Distribution
 pins the release ID and complete ZIP SHA256 explicitly.
+
+The Lenovo USB boot with 0.1.19 succeeded, but its package rejected the
+reported 6136 MB of usable RAM against the old 7168-MB minimum. Recovery
+0.1.20 lowers the package minimum to 5120 MB and reports detected/required
+RAM on rejection. The source package supplies this requirement, so an old
+R4OS ZIP must be replaced with one containing the corrected Recovery.
+`Artifacts/Qualification/0.76.26/ram/report.json` records eight passing SMP4
+cases: installation, SYSTEM update, Recovery self-update and their result
+boots at 6 GB, plus a 4-GB rejection that leaves the target byte-identical.
+The largest observed RAM peak was 4,091,301,888 bytes during self-update.
+The corrected Lenovo installation remains pending.

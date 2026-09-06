@@ -1,7 +1,7 @@
 # Recovery owns its independent release package. No normal R4OS build is run.
 function New-RecoveryPackage {
     param([string]$Root=(Split-Path $PSScriptRoot -Parent),[string]$Destination='',
-          [ValidateRange(1,8589934592)][uint64]$MinimumRamBytes=7516192768)
+          [ValidateRange(1,8589934592)][uint64]$MinimumRamBytes=5368709120)
     $ErrorActionPreference='Stop'
     . (Join-Path $PSScriptRoot 'Inventory.ps1')
     $null=Test-RecoveryInventory $Root
