@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "reason": "0.76.20: explicit shared FAT32 tree replacement and exact tree verification import; pending owner commits are development-only.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "4cc7d03f94e7e7727b3ada188b54fb091605fa08",
+      "sourceCommit": "84af380c0ab6e7f0046f354e3b3921f033d40fe1",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.76.20.patch",
+      "patchSha256": "c0fad09bd5c0bd6b3cd3eb3efbaebdfcf003ab449e44a2983fa336c6b489fdf0",
+      "files": [
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "217c8ecd23ed1bb9938fc4a02537790da543c8feb7745d350da4d0c57194c73e"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "sha256": "ff3588c77bcc9e243c76c8f1b3bc4dee7fc581452f110c4c80917081ae94ca0c"
+        }
+      ]
+    }
+  ]
+}

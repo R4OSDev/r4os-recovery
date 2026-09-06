@@ -2571,6 +2571,13 @@
       "origin": null
     },
     {
+      "path": "Kernel/kernel/recovery_identity.zig",
+      "bytes": 2236,
+      "sha256": "68ef54076c1337520cf153cbaf05249743ae5cf73749b4f7a24688f39286419a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/kernel/recovery_input_probe.zig",
       "bytes": 5303,
       "sha256": "38f019eaef847786eb96b53bc52fc44bdfe8b0a3ac1e1d8183e9a01fba3dbf87",
@@ -2600,8 +2607,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_runtime.zig",
-      "bytes": 9808,
-      "sha256": "eb65035f633a1cc360137922e1869f71453961e6768c389671d917eb7c83f43f",
+      "bytes": 11318,
+      "sha256": "01157cb1ebcea27f2bb256e48674251502a53c3ee2a92bd2e7b31ce4671bc47c",
       "originalSha256": null,
       "origin": null
     },
@@ -3474,8 +3481,8 @@
     },
     {
       "path": "Kernel/recovery_main.zig",
-      "bytes": 5475,
-      "sha256": "30e0907e2d78cdeab42ca0ded5d5723a17a9aa606c739315b1a5c2b5e4294006",
+      "bytes": 5530,
+      "sha256": "57b871a52628f8f3be6ce3ea8aa2cada1c4dcd367fb59c11b60b13ac07a22857",
       "originalSha256": null,
       "origin": null
     },
@@ -3765,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "7d3d4445751ebc2ab82736a755903cf67ea63bf577bb7458f310b90b14729530",
+      "sha256": "d6114714ff080bad2ac7cbfe22c32f7cd824d4953f2dd79978d35aa9975e9a85",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3965,6 +3972,13 @@
       "path": "Legal/Changes/SDK-0.76.19.patch",
       "bytes": 40115,
       "sha256": "d037182c27d7938a06f529e0b06755d549908c7fbfd270f2ba60f31650080209",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.20.patch",
+      "bytes": 14687,
+      "sha256": "c0fad09bd5c0bd6b3cd3eb3efbaebdfcf003ab449e44a2983fa336c6b489fdf0",
       "originalSha256": null,
       "origin": null
     },
@@ -6944,8 +6958,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
-      "bytes": 22911,
-      "sha256": "7f1f3c20ed0038660eeb5d04a36e5f10c486f76a2b42bd55f396a67cdf84a71a",
+      "bytes": 27821,
+      "sha256": "ff3588c77bcc9e243c76c8f1b3bc4dee7fc581452f110c4c80917081ae94ca0c",
       "originalSha256": null,
       "origin": null
     },
@@ -8954,8 +8968,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
-      "bytes": 51856,
-      "sha256": "592a73048ee451b815ef66c1b5ed11c9f3b7b75a680aac84701975437a27cfec",
+      "bytes": 54586,
+      "sha256": "217c8ecd23ed1bb9938fc4a02537790da543c8feb7745d350da4d0c57194c73e",
       "originalSha256": null,
       "origin": null
     },
@@ -9081,8 +9095,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 17457,
-      "sha256": "b0dccd6dc39ccccf6023e5b5a34d7f3b2cb857c72ff096a3ee50b8a0206d26a8",
+      "bytes": 19639,
+      "sha256": "3051973e2969f600702d5fd83fa10ea936bcf0f9bf62b6a6731b33e6b9c508e8",
       "originalSha256": null,
       "origin": null
     },
@@ -9103,7 +9117,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 588,
-      "sha256": "3338ddb2e5b4a916652be3c24bc56fa25eef18539bf1d3c4fe67ddd10563866c",
+      "sha256": "7eadf9d6f35544cf701a6090296c4273812983579083abb442d2fff9b1490bbb",
       "originalSha256": null,
       "origin": null
     },
@@ -9111,6 +9125,13 @@
       "path": "RecoveryTools/Menu/src/boot_config.zig",
       "bytes": 4247,
       "sha256": "9d6e2a2db6b683ab9cdbc1c4740bc047213c8ca3a2fdc2c68d2f5a727f01fa69",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/boot_confirmation.zig",
+      "bytes": 4884,
+      "sha256": "80b9ff4c306fc0bf2b0ef6c299a7a04a2ed338675262e01abd88b53bed46ad49",
       "originalSha256": null,
       "origin": null
     },
@@ -9165,8 +9186,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 42564,
-      "sha256": "2107eb523899cfd59cb5e53418e4715c2869e089d8c22b318d8ea92392e98346",
+      "bytes": 45478,
+      "sha256": "f15d72809b125bcbbc951917f1d26ab83932fba61020cb99b0310ca778170ce0",
       "originalSha256": null,
       "origin": null
     },
@@ -9207,8 +9228,43 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package.zig",
-      "bytes": 12976,
-      "sha256": "ef2216cb94a64871237f739abc076deda21eb6ada6183118f515486907f6d894",
+      "bytes": 13313,
+      "sha256": "29d8f3eea01a9c890493771c5ef582afdaacbab577d2798369f8547ed2f65e7e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/recovery_fixture.zig",
+      "bytes": 12044,
+      "sha256": "51ed9a20d1315ee19756f08facf76769b44f55510ea4d474db83034cdb1bb54f",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/recovery_pair.zig",
+      "bytes": 2403,
+      "sha256": "ae0ca37fb6b25c8e4925bb2d6fe77042f1dc5d2ebf3cc7ff03b7fd4519e07e11",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/recovery_slots.zig",
+      "bytes": 6975,
+      "sha256": "cd75e73decee893064f66a75bfc58be7683ed99d5c39f24ff0fbf012a2e1837e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/recovery_state.zig",
+      "bytes": 6046,
+      "sha256": "d1c3fe46150173e4bd9801184166ff6244b85c65f4389c603d92ee203809a65f",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/recovery_update.zig",
+      "bytes": 8074,
+      "sha256": "ab120571795865059f24acc9da3b9d4a0e6872d82c4d46583ea6496edfcd825e",
       "originalSha256": null,
       "origin": null
     },
@@ -9263,8 +9319,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/tests.zig",
-      "bytes": 200,
-      "sha256": "6a4cd00628916616d3c347ef52f994bd3cc2f9ce0a285b354f819d77f5555192",
+      "bytes": 239,
+      "sha256": "8e02f0e8f4613d9436d4c2d6731f363016869dcd79e323848e0f908ae07751ad",
       "originalSha256": null,
       "origin": null
     },
@@ -9376,7 +9432,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "61519837adc33ea0e30e11f5c145e5ff76d77af487637181860f9a43f365547f",
+      "sha256": "c037ee3415f258f464ad9a2dd9be939c0702bdccd865df14380c6c6099e3936b",
       "originalSha256": null,
       "origin": null
     },
@@ -9400,7 +9456,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "72df566339efe01763595e03d3af45090cc4b89ad70546d2e5f880815aa3b630",
+      "sha256": "5e98ae1ec35ab91af4eef89cd573f6f44ff730a790dfdf6dbd94fff9506fc501",
       "originalSha256": null,
       "origin": null
     },
@@ -12554,6 +12610,156 @@
           "after": "b625a80c869e7264b068ba9ce3b55e62a5a154ec19d7700c1e02a967e538a9d1"
         }
       ]
+    },
+    {
+      "reason": "0.76.20: content-bound boot identity, confirmation and CURRENT/PREVIOUS update workflow",
+      "changes": [
+        {
+          "before": null,
+          "after": "68ef54076c1337520cf153cbaf05249743ae5cf73749b4f7a24688f39286419a",
+          "path": "Kernel/kernel/recovery_identity.zig"
+        },
+        {
+          "before": "eb65035f633a1cc360137922e1869f71453961e6768c389671d917eb7c83f43f",
+          "after": "01157cb1ebcea27f2bb256e48674251502a53c3ee2a92bd2e7b31ce4671bc47c",
+          "path": "Kernel/kernel/recovery_runtime.zig"
+        },
+        {
+          "before": "30e0907e2d78cdeab42ca0ded5d5723a17a9aa606c739315b1a5c2b5e4294006",
+          "after": "57b871a52628f8f3be6ce3ea8aa2cada1c4dcd367fb59c11b60b13ac07a22857",
+          "path": "Kernel/recovery_main.zig"
+        },
+        {
+          "before": "7d3d4445751ebc2ab82736a755903cf67ea63bf577bb7458f310b90b14729530",
+          "after": "d6114714ff080bad2ac7cbfe22c32f7cd824d4953f2dd79978d35aa9975e9a85",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "before": null,
+          "after": "1a41d4790854db28e5e552426710bcb18b8de1e3ffc07984d51225ae34303050",
+          "path": "Legal/Changes/SDK-0.76.20.patch"
+        },
+        {
+          "before": "7f1f3c20ed0038660eeb5d04a36e5f10c486f76a2b42bd55f396a67cdf84a71a",
+          "after": "59853bf5f965ac5aa01a2ea97ac801bdbf73e3d3036e8f582f6d0aa11f824570",
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig"
+        },
+        {
+          "before": "592a73048ee451b815ef66c1b5ed11c9f3b7b75a680aac84701975437a27cfec",
+          "after": "8bf28f523cb0d66be4578838191aafdb316b90315e35704df6503ee138ee1f0a",
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig"
+        },
+        {
+          "before": "3338ddb2e5b4a916652be3c24bc56fa25eef18539bf1d3c4fe67ddd10563866c",
+          "after": "7eadf9d6f35544cf701a6090296c4273812983579083abb442d2fff9b1490bbb",
+          "path": "RecoveryTools/Menu/module.R4MF"
+        },
+        {
+          "before": null,
+          "after": "eb16a45ab83bf3bed2c4a4e96d5658a3cbbfab4f93a579ca5613db3cdd9be1d4",
+          "path": "RecoveryTools/Menu/src/boot_confirmation.zig"
+        },
+        {
+          "before": "2107eb523899cfd59cb5e53418e4715c2869e089d8c22b318d8ea92392e98346",
+          "after": "f15d72809b125bcbbc951917f1d26ab83932fba61020cb99b0310ca778170ce0",
+          "path": "RecoveryTools/Menu/src/main.zig"
+        },
+        {
+          "before": "ef2216cb94a64871237f739abc076deda21eb6ada6183118f515486907f6d894",
+          "after": "29d8f3eea01a9c890493771c5ef582afdaacbab577d2798369f8547ed2f65e7e",
+          "path": "RecoveryTools/Menu/src/package.zig"
+        },
+        {
+          "before": null,
+          "after": "ae0ca37fb6b25c8e4925bb2d6fe77042f1dc5d2ebf3cc7ff03b7fd4519e07e11",
+          "path": "RecoveryTools/Menu/src/recovery_pair.zig"
+        },
+        {
+          "before": null,
+          "after": "cd75e73decee893064f66a75bfc58be7683ed99d5c39f24ff0fbf012a2e1837e",
+          "path": "RecoveryTools/Menu/src/recovery_slots.zig"
+        },
+        {
+          "before": null,
+          "after": "d1c3fe46150173e4bd9801184166ff6244b85c65f4389c603d92ee203809a65f",
+          "path": "RecoveryTools/Menu/src/recovery_state.zig"
+        },
+        {
+          "before": null,
+          "after": "ab120571795865059f24acc9da3b9d4a0e6872d82c4d46583ea6496edfcd825e",
+          "path": "RecoveryTools/Menu/src/recovery_update.zig"
+        },
+        {
+          "before": "6a4cd00628916616d3c347ef52f994bd3cc2f9ce0a285b354f819d77f5555192",
+          "after": "8e02f0e8f4613d9436d4c2d6731f363016869dcd79e323848e0f908ae07751ad",
+          "path": "RecoveryTools/Menu/src/tests.zig"
+        },
+        {
+          "before": "61519837adc33ea0e30e11f5c145e5ff76d77af487637181860f9a43f365547f",
+          "after": "c037ee3415f258f464ad9a2dd9be939c0702bdccd865df14380c6c6099e3936b",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "before": "72df566339efe01763595e03d3af45090cc4b89ad70546d2e5f880815aa3b630",
+          "after": "5e98ae1ec35ab91af4eef89cd573f6f44ff730a790dfdf6dbd94fff9506fc501",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.20: retain completed boot-confirmation file and add real-package slot fault witness",
+      "changes": [
+        {
+          "before": "eb16a45ab83bf3bed2c4a4e96d5658a3cbbfab4f93a579ca5613db3cdd9be1d4",
+          "after": "80b9ff4c306fc0bf2b0ef6c299a7a04a2ed338675262e01abd88b53bed46ad49",
+          "path": "RecoveryTools/Menu/src/boot_confirmation.zig"
+        },
+        {
+          "before": null,
+          "after": "19685fd32660bef7a400edb5d8a1a4631cde14aab94470916531c5ca3e4318f5",
+          "path": "RecoveryTools/Menu/src/recovery_fixture.zig"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "19685fd32660bef7a400edb5d8a1a4631cde14aab94470916531c5ca3e4318f5",
+          "path": "RecoveryTools/Menu/src/recovery_fixture.zig",
+          "after": "6c2ba9ca85f96e20a7767457a5a265f3235b2507ff2acef034b04a75802ef66c"
+        }
+      ],
+      "reason": "0.76.20: complete automated confirmation, read-only, physical-write-fault and Previous-boot witnesses"
+    },
+    {
+      "changes": [
+        {
+          "path": "Legal/Changes/SDK-0.76.20.patch",
+          "before": "1a41d4790854db28e5e552426710bcb18b8de1e3ffc07984d51225ae34303050",
+          "after": "c0fad09bd5c0bd6b3cd3eb3efbaebdfcf003ab449e44a2983fa336c6b489fdf0"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "before": "59853bf5f965ac5aa01a2ea97ac801bdbf73e3d3036e8f582f6d0aa11f824570",
+          "after": "ff3588c77bcc9e243c76c8f1b3bc4dee7fc581452f110c4c80917081ae94ca0c"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "before": "8bf28f523cb0d66be4578838191aafdb316b90315e35704df6503ee138ee1f0a",
+          "after": "217c8ecd23ed1bb9938fc4a02537790da543c8feb7745d350da4d0c57194c73e"
+        },
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "b0dccd6dc39ccccf6023e5b5a34d7f3b2cb857c72ff096a3ee50b8a0206d26a8",
+          "after": "3051973e2969f600702d5fd83fa10ea936bcf0f9bf62b6a6731b33e6b9c508e8"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/recovery_fixture.zig",
+          "before": "6c2ba9ca85f96e20a7767457a5a265f3235b2507ff2acef034b04a75802ef66c",
+          "after": "51ed9a20d1315ee19756f08facf76769b44f55510ea4d474db83034cdb1bb54f"
+        }
+      ],
+      "reason": "0.76.20: import verified SDK protection of old directory ownership during slot payload writes"
     }
   ]
 }

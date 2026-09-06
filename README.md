@@ -1,15 +1,15 @@
 ﻿# R4OS Recovery
 
-R4OS Recovery is the independent recovery environment planned for R4OS roadmap
-0.76.X. It will boot through Limine with its own lightweight kernel and a
+R4OS Recovery is the independent recovery environment developed in R4OS roadmap
+0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
 The 0.76.1 baseline contains pinned kernel, platform contract and SDK sources,
 37 precompiled console, service, driver, protocol and library modules, and
 their original source archives and license notices. Since 0.76.2 the separate
 Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
-complete 64-MB FAT32 runtime is loaded by Limine, checked against the paired
-kernel hash, and mounted as writable RAM drive C: in 0.76.3. Since 0.76.6,
+complete 64-MB FAT32 runtime is loaded by Limine, checked against its kernel's
+recorded runtime hash, and mounted as writable RAM drive C: in 0.76.3. Since 0.76.6,
 RECOVERY.R4X hosts the menu and the standard Terminal inside the supplied
 background's monitor. Since 0.76.7, DHCP and the frozen SSH/FTP services start
 from RAM; independent remote shells and transfers can repair offline volumes.
@@ -46,7 +46,7 @@ separately with `Tools/Record-Inputs.ps1 -Reason 'description'`; this is never
 an automatic build action. See [DOCUMENTATION.de.txt](DOCUMENTATION.de.txt)
 and [the technical contracts](RecoveryTools/Contracts.de.txt) for details.
 
-## Planned scope
+## Recovery tools
 
 - Install R4OS from a stored release ZIP or a release downloaded from GitHub.
 - Replace a selected R4OS system installation and update Recovery independently.
@@ -55,8 +55,15 @@ and [the technical contracts](RecoveryTools/Contracts.de.txt) for details.
 - Use keyboard input and display menus and console programs inside the recovery
   background's monitor area.
 
+Update Recovery preserves a verified PREVIOUS package before replacing CURRENT.
+Only a confirmation matching the installation, manifest and actually booted
+kernel/runtime can promote CURRENT to PREVIOUS. The running session stays in
+RAM. A failed update can be recovered through the fixed Previous entry in
+Limine; shared filesystem or bootloader damage still needs an external USB.
+The original ZIP cache and existing Limine configuration remain intact.
+
 The recovery kernel reuses selected R4OS kernel components. Compatible
-drivers, protocols, services, console applications, and libraries will be
+drivers, protocols, services, console applications, and libraries are
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
 normal R4OS releases will include an explicitly selected Recovery release.
 

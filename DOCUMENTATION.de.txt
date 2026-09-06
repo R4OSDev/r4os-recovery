@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.16
+Stand 0.76.20
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -332,7 +332,7 @@ Terminal, Exit and Restart. Pfeile wechseln mit Umlauf, Enter oeffnet den
 Eintrag, Escape oder Enter schliesst einen Dialog. Rote Auswahl und helle
 Schrift gelten fuer alle Modi. Seit 0.76.14 fuehren die ersten drei Eintraege
 ueber Quelle, echte Ziele und eine Bestaetigung mit Back als Vorauswahl.
-Paketverarbeitung und Schreibablaeufe folgen in 0.76.15 bis 0.76.20.
+Paketverarbeitung und Schreibablaeufe sind seit 0.76.15 bis 0.76.20 verbunden.
 Manage Partitions startet das seit 0.76.10 uebernommene R4PART.
 
 Terminal startet die festgehaltene TERMINAL.R4X mit /NOAUTOEXEC und eigenem
@@ -960,3 +960,52 @@ Ausfuehrung Recovery/Kernel 0.1.16 und Menu 0.1.8. Vorbereitungs-Spitze
 3628724224 Bytes. SDK 11/11 und Menu 9/9 Gruppen, Produktions-/UI-Build
 und unabhaengige Inhalts-/Strukturpruefung bestanden. Keine Windows- oder
 Lenovo-Abnahme; der Hardware-Sichttest bleibt dem Roadmapabschluss vorbehalten.
+
+Recovery-Selbsterneuerung (0.76.20)
+---------------------------------
+
+Update Recovery verwendet R:\INSTALL\RECOVERY.ZIP und denselben unabhaengigen
+GitHub-Quellenweg wie die vorhandene Quellenwahl. Ziel ist genau eine anhand
+von BOOT-Manifest und GPT gebundene RECOVERY-Partition. USB-Boot erlaubt auch
+den gestarteten Stick selbst; beim lokalen Boot bleiben USB-Medien verborgen.
+
+Das vollstaendige neue Paket, die bisherigen Slotinhalte und alle Schreib-
+und Pruefpuffer werden vor dem exklusiven Claim im RAM bereitgestellt.
+RECOVERY wird nicht formatiert. Zwei getrennte gemeinsame FAT-Plaene sichern
+zuerst ein bestaetigtes CURRENT nach PREVIOUS und ersetzen erst nach dessen
+Flush/Readback CURRENT. Beide enthalten die exakten Manifestdateien inklusive
+Legal; entfernte Dateien bleiben nicht als Altbestand im Slot zurueck.
+INSTALL, andere Partitionen und limine.conf werden erhalten.
+
+Die Startbestaetigung kommt aus dem initialisierten Menue. Der Kernel liefert
+nur die tatsaechlichen Startidentitaeten: Original-ELF-Hash und -Laenge, den
+vor dem RAM-Mount geprueften Runtime-Hash, Versionen, GPT-IDs und Slot. Das
+Menue prueft sie gegen CURRENT und schreibt state.r4s mit Flush und Readback.
+Ein Schreibfehler verhindert den RAM-Betrieb nicht. Unbestaetigtes CURRENT
+ersetzt PREVIOUS nicht; beim Start aus PREVIOUS bleibt dieser Slot erhalten.
+Ein neues Paket enthaelt zusaetzlich die explizite Kernel-/Runtime-Bindung in
+der ELF-Sektion .r4os.recovery.pair. Der Updateweg prueft sie vor dem Schreiben.
+
+Nach einem unterbrochenen CURRENT-Ersatz wird der feste Previous-Eintrag
+manuell in Limine gewaehlt. Es gibt keine automatische Slotumschaltung und
+kein allgemeines Stromausfalljournal fuer das gemeinsame FAT32. Bei defekten
+gemeinsamen FAT-/BOOT-Strukturen ist weiterhin ein externer Stick erforderlich.
+
+Tools/Test-RecoveryUpdate.ps1 verwendet ausschliesslich entbehrliche Images
+und SMP4-Gaeste. Die technische UI-Fixture besitzt dieselbe Versionsnummer
+wie das Produktionspaket, aber andere Kernel-/Manifest-Bytes. Sie darf nicht
+veroeffentlicht werden. Der Hostnachweis verwendet die echte ZIP-Pruefung
+und dieselben Slotplaene fuer Schreib-, Flush- und Ruecklesefehler sowie
+unbestaetigte, falsche und von PREVIOUS gestartete Ausgangsstaende. Die
+Gastfaelle pruefen Selbstupdate, produktiven Ergebnisstart, fehlgeschlagenes
+Speichern der Bestaetigung und echten Schreibfehler mit manuellem Previous-
+Start. Der begrenzte Lenovo-Sichttest bleibt dem Roadmapabschluss vorbehalten.
+
+Abnahme 0.76.20: Alle fuenf Linux/KVM-SMP4-Faelle bestanden: UsbSelfUpdate 136.507 s, NewCurrentBoot 38.923 s, ReadonlyConfirmation 59.553 s, CutCurrent 140.828 s, PreviousAfterCut 72.761 s.
+Recovery/Kernel 0.1.17 und Menu 0.1.9. Vorbereitungs-Spitze 3934666752 Bytes;
+8192 MB fuer Selbstupdate/Fehler/Fallback, 2048 MB fuer normalen Neuboot und
+Read-only-Bestaetigung. SDK 11/11, Menu 10/10 Gruppen und sechs Hostfehler
+plus drei Erhaltungsfaelle bestanden. Der echte CURRENT-Payload-Schreibfehler
+laesst die gesamte FAT-Belegung konsistent; manuell gewaehltes PREVIOUS kann
+CURRENT anschliessend reparieren. Gemeinsame Metadaten-/Stromausfallgrenzen
+bleiben bestehen. Keine Windows-/Lenovo-Abnahme.

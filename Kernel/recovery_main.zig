@@ -41,6 +41,7 @@ export fn kmain() callconv(.c) noreturn {
     com_debug_boot.init();
     require(boot_info.init(), .entry, "Recovery BootInfo missing");
     require(!boot_info.get().memory_map_truncated and boot_info.get().memory_map_invalid_entries == 0, .memory, "Recovery memory map incomplete");
+    @import("kernel/recovery_identity.zig").capture();
     _ = boot_display.init();
     log.puts("R4OS Recovery " ++ config.recovery_version ++ " / Kernel " ++ version.text ++ "\r\n");
     boot_status.beginBootLogRedirect();

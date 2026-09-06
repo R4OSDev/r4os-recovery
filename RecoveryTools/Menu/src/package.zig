@@ -88,7 +88,10 @@ pub fn validateRecovery(m: RecoveryManifest) !void {
     var kernel = false;
     var runtime = false;
     var legal = false;
-    for (m.files) |file| {
+    if (m.files.len == 0 or m.files.len >= 4096) return error.ManifestValue;
+    for (m.files, 0..) |file, i| {
+        if (!portablePath(file.path) or !lowerHex(file.sha256, 64) or file.bytes > max_payload_bytes) return error.ManifestValue;
+        for (m.files[0..i]) |previous| if (std.ascii.eqlIgnoreCase(file.path, previous.path)) return error.DuplicatePath;
         if (std.mem.eql(u8, file.path, "recovery.elf")) kernel = true else if (std.mem.eql(u8, file.path, "runtime.img")) runtime = true else if (std.mem.startsWith(u8, file.path, "Legal/")) legal = true else return error.UnexpectedFile;
     }
     if (!kernel or !runtime or !legal) return error.MissingFile;

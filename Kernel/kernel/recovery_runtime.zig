@@ -74,6 +74,7 @@ pub fn startShell() noreturn {
     log.setConsoleSink(null);
     r4x.initializeRuntime(memory_boot.usableBytes());
     if (!writeBootMedium()) log.puts("[RECOVERY] boot-medium-description=unavailable\r\n");
+    if (!writeBootFacts()) log.puts("[RECOVERY] boot-content-identity=unavailable\r\n");
     @import("recovery_network.zig").start();
     const config = boot_config.get();
     const args = if (@import("config").recovery_probe == .ui) "/UISMOKE" else boot_config.shellArgs(config);
@@ -103,6 +104,30 @@ fn writeBootMedium() bool {
     defer fs_request.finish(&request, ok);
     const parent = vfs.resolvePath(volume, "/R4OS/CONFIG") orelse return false;
     ok = vfs.writeFile(volume, parent, "BOOTMED.TXT", text);
+    return ok;
+}
+
+fn writeBootFacts() bool {
+    const identity = @import("recovery_identity.zig");
+    const source = @import("recovery_storage.zig").source;
+    const boot = @import("../bootloader/boot_info.zig").get().executable_source;
+    const config = @import("config");
+    if (!identity.valid or !source.confirmed) return false;
+    const guid = @import("../storage/partition_table.zig").guid;
+    var buffer: [1024]u8 = undefined;
+    const text = std.fmt.bufPrint(&buffer,
+        "\xef\xbb\xbfR4S_FORMAT=1\r\nSCHEMA=RECOVERY_BOOT\r\nSTATE_VERSION=1\r\n" ++
+        "DISK_GUID={s}\r\nPARTITION_GUID={s}\r\nSLOT={s}\r\n" ++
+        "RECOVERY_VERSION={s}\r\nKERNEL_VERSION={s}\r\nKERNEL_BYTES={d}\r\nKERNEL_SHA256={s}\r\nRUNTIME_BYTES={d}\r\nRUNTIME_SHA256={s}\r\n",
+        .{ guid.format(boot.disk_guid), guid.format(boot.partition_guid), @tagName(source.slot),
+        config.recovery_version, @import("version.zig").text, identity.elf_bytes,
+        std.fmt.bytesToHex(identity.elf_sha256, .lower), config.runtime_bytes, config.runtime_sha256 }) catch return false;
+    const volume = vfs.volumeForDrive('C') orelse return false;
+    var request = fs_request.begin(.file_write, 'C') orelse return false;
+    var ok = false;
+    defer fs_request.finish(&request, ok);
+    const parent = vfs.resolvePath(volume, "/R4OS/CONFIG") orelse return false;
+    ok = vfs.writeFile(volume, parent, "RECBOOT.R4S", text);
     return ok;
 }
 

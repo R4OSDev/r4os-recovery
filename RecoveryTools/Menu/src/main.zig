@@ -7,6 +7,7 @@ const targets = selection.model;
 const packages = @import("package_session.zig");
 const install = @import("install.zig");
 const system_update = @import("system_update.zig");
+const recovery_update = @import("recovery_update.zig");
 const downloads = @import("download.zig");
 const github = @import("github.zig");
 const abi = r4os.abi;
@@ -466,6 +467,37 @@ const State = struct {
             result_message = "R4OS updated. SYSTEM and its matching BOOT files were verified. Restart to boot the updated system.";
             self.clearCatalog();
             self.notice_return = .menu;
+        } else if (self.operation() == .recovery) {
+            var update_detail: [512]u8 = undefined;
+            const updater = session.arena.allocator().create(recovery_update.Updater) catch {
+                result_message = packages.message(error.OutOfMemory);
+                return;
+            };
+            updater.* = recovery_update.Updater.prepare(session, &self.catalog.?, self.target_index) catch |err| {
+                result_message = recovery_update.message(if (session.pool.cancelled) error.Cancelled else err, false);
+                self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYUPDATE] preflight={s} writes=0 ram_peak={d}\r\n", .{ @errorName(err), session.pool.peak }) catch "");
+                return;
+            };
+            self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYUPDATE] prepared=OK rotate={d} own_source={d} ram_peak={d} writes=0\r\n", .{
+                @intFromBool(updater.plan.previous != null), @intFromBool(updater.own_source), session.pool.peak,
+            }) catch "");
+            updater.execute() catch |err| {
+                result_message = recovery_update.message(err, updater.progress.write_attempted);
+                self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYUPDATE] result={s} phase={s} attempted={d} sectors={d} native={d} relative_lba={d} claim={d}\r\n", .{
+                    @errorName(err), updater.phase, @intFromBool(updater.progress.write_attempted), updater.progress.written_sectors,
+                    if (updater.progress.native_error != 0) updater.progress.native_error else updater.native_error, updater.progress.failed_lba orelse 0, updater.target.claim,
+                }) catch "");
+                self.clearCatalog();
+                self.notice_return = .menu;
+                return;
+            };
+            self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYUPDATE] result=OK version={s} unchanged={d} ram_peak={d}\r\n", .{
+                session.prepared.?.recovery.recoveryVersion, @intFromBool(updater.plan.unchanged), session.pool.peak,
+            }) catch "");
+            result_message = if (updater.plan.unchanged) "This Recovery package is already installed. No slot changes were needed." else
+                "Recovery updated and verified. PREVIOUS and INSTALL are preserved. The running session remains in RAM. Restart to use the new CURRENT.";
+            self.clearCatalog();
+            self.notice_return = .menu;
         }
     }
     fn downloadPackage(self: *State) bool {
@@ -755,6 +787,12 @@ fn run(app: *r4os.App) i32 {
     state.page = .menu;
     if (!state.render(true)) return -12;
     _ = sys.bootReady();
+    const confirmed = @import("boot_confirmation.zig").confirm(&state.sys) catch |err| blk: {
+        var detail: [192]u8 = undefined;
+        sys.write(std.fmt.bufPrint(&detail, "[RECOVERYCONFIRM] state=UNCONFIRMED reason={s} ram=READY\r\n", .{@errorName(err)}) catch "");
+        break :blk false;
+    };
+    if (confirmed) sys.write("[RECOVERYCONFIRM] state=CONFIRMED content=BOOTED\r\n");
     state.marker();
     sys.write("[RECOVERYUI] ready=1\r\n");
     var next_blink = sys.ticks() + sys.ticksFromMilliseconds(500);

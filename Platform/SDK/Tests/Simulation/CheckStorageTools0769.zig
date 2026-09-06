@@ -264,6 +264,30 @@ fn fatUpdateAllocationCase(allocator: std.mem.Allocator, original: []const u8) !
     try view.matches("FOREIGN/KEEP.BIN", "foreign boot payload");
 }
 
+fn fatRemoveAllocationCase(allocator: std.mem.Allocator, original: []const u8) !void {
+    var removed = try tools.fat32_update.prepare(allocator, original, 4096, &.{
+        .{ .path = "boot", .bytes = null },
+        .{ .path = "boot/new/only.txt", .bytes = "complete new tree" },
+        .{ .path = "absent/deep/file", .bytes = null },
+    });
+    defer removed.deinit();
+    const view = try tools.fat32_view.View.init(removed.bytes, 4096);
+    try view.matches("boot/new/only.txt", "complete new tree");
+    try tools.fat32_update.verifyTree(removed.bytes, 4096, "boot", &.{"new/only.txt"});
+    try expectError(error.SourceContentMismatch, tools.fat32_update.verifyTree(removed.bytes, 4096, "boot", &.{}));
+    try expectError(error.SourceFileMissing, tools.fat32_update.verifyTree(removed.bytes, 4096, "boot", &.{ "new/only.txt", "missing.bin" }));
+    try view.matches("FOREIGN/KEEP.BIN", "foreign boot payload");
+    try expectError(error.SourceFileMissing, view.matches("boot/r4os.elf", "old kernel"));
+    try expectError(error.SourceFileMissing, view.matches("boot/limine.conf", "custom configuration\r\n"));
+    // Audit the result independently, including freed directory chains and
+    // Unicode LFN slots. Then remove the newly created nested tree too.
+    var checked = try tools.fat32_update.prepare(allocator, removed.bytes, 4096, &.{.{ .path = "boot", .bytes = null }});
+    defer checked.deinit();
+    var audited = try tools.fat32_update.prepare(allocator, checked.bytes, 4096, &.{});
+    defer audited.deinit();
+    try expectEqualSlices(u8, checked.bytes, audited.bytes);
+}
+
 test "FAT file replacement preserves boot config and foreign data with bounded failure publication" {
     const a = std.testing.allocator;
     var original = try tools.fat32_image.prepare(a, 64 * 2048, 4096, "BOOT", 99, &.{
@@ -298,6 +322,28 @@ test "FAT file replacement preserves boot config and foreign data with bounded f
     }
     try expect(unicode_at != null);
     try std.testing.checkAllAllocationFailures(a, fatUpdateAllocationCase, .{original.bytes});
+    try std.testing.checkAllAllocationFailures(a, fatRemoveAllocationCase, .{original.bytes});
+    {
+        // Interrupt a complete tree replacement before any FAT or directory
+        // publication. File contents may be partial, but original directory
+        // entries must still own every old chain: no orphan allocations.
+        var removed = try tools.fat32_update.prepare(a, original.bytes, 4096, &.{
+            .{ .path = "boot", .bytes = null },
+            .{ .path = "boot/new/only.txt", .bytes = "new slot payload" },
+        });
+        defer removed.deinit();
+        const partial = try a.dupe(u8, original.bytes);
+        defer a.free(partial);
+        for (removed.writes) |write| {
+            if (write.order != 0) continue;
+            const offset = @as(usize, write.first) * 512;
+            const length = @as(usize, write.count) * 512;
+            @memcpy(partial[offset..][0..length], removed.bytes[offset..][0..length]);
+        }
+        var audit = try tools.fat32_update.prepare(a, partial, 4096, &.{});
+        defer audit.deinit();
+        try expectEqualSlices(u8, partial, audit.bytes);
+    }
     try expectError(error.Path, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/../bad", .bytes = "bad" }}));
     try expectError(error.PathConflict, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf/sub", .bytes = "bad" }}));
     try expectError(error.ImageFull, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf", .bytes = original.bytes }}));

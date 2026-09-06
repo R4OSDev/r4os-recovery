@@ -5,4 +5,5 @@ test {
     _ = @import("github.zig");
     _ = @import("cache.zig");
     _ = @import("boot_config.zig");
+    _ = @import("recovery_state.zig");
 }

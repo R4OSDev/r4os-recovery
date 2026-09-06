@@ -242,6 +242,39 @@ Dies ist kein atomarer Verzeichnistausch und keine Stromausfallgarantie fuer
 das gemeinsame FAT32. Bei defektem CURRENT wird PREVIOUS manuell in Limine
 gewaehlt; bei defektem BOOT/RECOVERY bleibt der externe Stick erforderlich.
 
+Umsetzung ab 0.76.20: Der Kernel erfasst vor der Speicherinitialisierung
+SHA-256 und Laenge seiner von Limine bereitgestellten Original-ELF-Datei.
+Die vor dem RAM-Mount gepruefte Runtime-Identitaet bleibt davon getrennt.
+C:\R4OS\CONFIG\RECBOOT.R4S enthaelt diese fluechtigen Startfakten mit
+tatsaechlicher Datentraeger-/Partitions-GUID, Slot und beiden Versionen.
+Erst das erfolgreich initialisierte Menue gleicht sie mit CURRENT ab,
+prueft dessen Manifestdateien und schreibt die dauerhafte Bestaetigung.
+Die Datei wird mit regulaerem Stream-Abschluss geflusht und rueckgelesen;
+ein Stream-Abbruch dient ausschliesslich der Bereinigung nach Schreibfehlern.
+
+Neue Update-Recovery-Pakete besitzen im Kernel die ELF-Sektion
+.r4os.recovery.pair: 112 Bytes, Magic R4RECOV1 bei Offset 0, Runtime-Laenge
+als u64 Little Endian bei 8, SHA-256 als 32 Bytes bei 16, nullaufgefuellte
+Recovery- und Kernelversion mit je 32 Bytes bei 48 beziehungsweise 80.
+Diese Sektion bindet das neue Paket schon vor dem Schreiben an genau das
+vom Kernel erwartete RAM-Abbild. Bestehende aeltere Slots ohne diese Sektion
+koennen nach vollstaendiger Versions-/Inhaltspruefung erhalten bleiben.
+
+Die Anwendung bereitet zwei getrennte FAT-Aenderungsplaene im RAM vor.
+Nur nach vollstaendigem Flush und Readback des PREVIOUS-Plans beginnt der
+CURRENT-Plan. Der gemeinsame SDK-Mechanismus prueft die gesamte Belegung,
+entfernt ersetzte Slotbaeume inklusive weggefallener Dateien und schreibt
+nur geaenderte Sektoren. INSTALL und andere Verzeichnisse bleiben erhalten.
+Alte Verzeichniscluster werden dabei nicht als fruehe Dateinutzdaten
+wiederverwendet. Bis zur Metadatenpublikation bleibt ihre bisherige
+Zuordnung erhalten, auch wenn ersetzte Dateiinhalt-Bloecke schon teilweise
+neu geschrieben wurden. Dies erweitert nicht die Zusagen fuer unterbrochene
+gemeinsame FAT-/Verzeichnis-Metadaten oder zerrissene Sektoren.
+Unbestaetigtes CURRENT mit ebenfalls unbrauchbarem PREVIOUS wird vor dem
+ersten Schreiben abgewiesen. Ein bereits vollstaendig identisches CURRENT
+benoetigt keinen Slotwechsel. Fehler nach Schreibbeginn belassen das
+betroffene Volume ungemountet; Konsole und Fernzugriff laufen aus C: weiter.
+
 Zustaendigkeiten
 ----------------
 

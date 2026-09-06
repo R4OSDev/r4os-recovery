@@ -1,0 +1,289 @@
+diff --git a/Tests/Simulation/CheckStorageTools0769.zig b/Tests/Simulation/CheckStorageTools0769.zig
+index 8de36ba..3e46523 100644
+--- a/Tests/Simulation/CheckStorageTools0769.zig
++++ b/Tests/Simulation/CheckStorageTools0769.zig
+@@ -264,6 +264,30 @@ fn fatUpdateAllocationCase(allocator: std.mem.Allocator, original: []const u8) !
+     try view.matches("FOREIGN/KEEP.BIN", "foreign boot payload");
+ }
+ 
++fn fatRemoveAllocationCase(allocator: std.mem.Allocator, original: []const u8) !void {
++    var removed = try tools.fat32_update.prepare(allocator, original, 4096, &.{
++        .{ .path = "boot", .bytes = null },
++        .{ .path = "boot/new/only.txt", .bytes = "complete new tree" },
++        .{ .path = "absent/deep/file", .bytes = null },
++    });
++    defer removed.deinit();
++    const view = try tools.fat32_view.View.init(removed.bytes, 4096);
++    try view.matches("boot/new/only.txt", "complete new tree");
++    try tools.fat32_update.verifyTree(removed.bytes, 4096, "boot", &.{"new/only.txt"});
++    try expectError(error.SourceContentMismatch, tools.fat32_update.verifyTree(removed.bytes, 4096, "boot", &.{}));
++    try expectError(error.SourceFileMissing, tools.fat32_update.verifyTree(removed.bytes, 4096, "boot", &.{ "new/only.txt", "missing.bin" }));
++    try view.matches("FOREIGN/KEEP.BIN", "foreign boot payload");
++    try expectError(error.SourceFileMissing, view.matches("boot/r4os.elf", "old kernel"));
++    try expectError(error.SourceFileMissing, view.matches("boot/limine.conf", "custom configuration\r\n"));
++    // Audit the result independently, including freed directory chains and
++    // Unicode LFN slots. Then remove the newly created nested tree too.
++    var checked = try tools.fat32_update.prepare(allocator, removed.bytes, 4096, &.{.{ .path = "boot", .bytes = null }});
++    defer checked.deinit();
++    var audited = try tools.fat32_update.prepare(allocator, checked.bytes, 4096, &.{});
++    defer audited.deinit();
++    try expectEqualSlices(u8, checked.bytes, audited.bytes);
++}
++
+ test "FAT file replacement preserves boot config and foreign data with bounded failure publication" {
+     const a = std.testing.allocator;
+     var original = try tools.fat32_image.prepare(a, 64 * 2048, 4096, "BOOT", 99, &.{
+@@ -298,6 +322,28 @@ test "FAT file replacement preserves boot config and foreign data with bounded f
+     }
+     try expect(unicode_at != null);
+     try std.testing.checkAllAllocationFailures(a, fatUpdateAllocationCase, .{original.bytes});
++    try std.testing.checkAllAllocationFailures(a, fatRemoveAllocationCase, .{original.bytes});
++    {
++        // Interrupt a complete tree replacement before any FAT or directory
++        // publication. File contents may be partial, but original directory
++        // entries must still own every old chain: no orphan allocations.
++        var removed = try tools.fat32_update.prepare(a, original.bytes, 4096, &.{
++            .{ .path = "boot", .bytes = null },
++            .{ .path = "boot/new/only.txt", .bytes = "new slot payload" },
++        });
++        defer removed.deinit();
++        const partial = try a.dupe(u8, original.bytes);
++        defer a.free(partial);
++        for (removed.writes) |write| {
++            if (write.order != 0) continue;
++            const offset = @as(usize, write.first) * 512;
++            const length = @as(usize, write.count) * 512;
++            @memcpy(partial[offset..][0..length], removed.bytes[offset..][0..length]);
++        }
++        var audit = try tools.fat32_update.prepare(a, partial, 4096, &.{});
++        defer audit.deinit();
++        try expectEqualSlices(u8, partial, audit.bytes);
++    }
+     try expectError(error.Path, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/../bad", .bytes = "bad" }}));
+     try expectError(error.PathConflict, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf/sub", .bytes = "bad" }}));
+     try expectError(error.ImageFull, tools.fat32_update.prepare(a, original.bytes, 4096, &.{.{ .path = "boot/r4os.elf", .bytes = original.bytes }}));
+diff --git a/r4os/storage_tools/fat32_update.zig b/r4os/storage_tools/fat32_update.zig
+index 130251c..a6063b4 100644
+--- a/r4os/storage_tools/fat32_update.zig
++++ b/r4os/storage_tools/fat32_update.zig
+@@ -5,11 +5,39 @@ const std = @import("std");
+ const block = @import("io.zig");
+ const format = @import("fat32.zig");
+ const view = @import("fat32_view.zig");
+-pub const Change = struct { path: []const u8, bytes: []const u8 };
++/// Null removes the named file or complete directory tree. Changes are
++/// applied in caller order to the private image, before any device writes.
++pub const Change = struct { path: []const u8, bytes: ?[]const u8 };
+ const Write = struct { first: u32, count: u32, order: u8 };
+ const maximum_depth = 24;
+ const final_order = 27;
+ 
++/// Exact file set below an existing directory. Empty extra directories and
++/// unlisted files are rejected. Read-only; no allocation or volume mutation.
++pub fn verifyTree(original: []const u8, hidden: u64, path: []const u8, expected: []const []const u8) !void {
++    const checked = try view.View.init(original, hidden);
++    if (expected.len > 4096) return error.FileLimit;
++    try validPath(path);
++    for (expected, 0..) |name, i| {
++        try validPath(name);
++        for (expected[0..i]) |other| if (std.ascii.eqlIgnoreCase(name, other)) return error.DuplicateChange;
++    }
++    // The iterator does not write bytes or use directory_depth.
++    var fat = Fat{ .bytes = @constCast(original), .geo = checked.geometry, .directory_depth = &.{} };
++    var parent: u32 = 2;
++    var parts = std.mem.splitScalar(u8, path, '/');
++    while (parts.next()) |name| {
++        const entry = (try fat.child(parent, name)) orelse return error.SourceFileMissing;
++        if (!entry.directory()) return error.PathConflict;
++        parent = entry.cluster();
++    }
++    var path_buffer: [1024]u8 = undefined;
++    var found = [_]bool{false} ** 4096;
++    var entries: usize = 0;
++    try fat.verifyChildren(parent, 0, &path_buffer, 0, expected, &found, &entries);
++    for (found[0..expected.len]) |yes| if (!yes) return error.SourceFileMissing;
++}
++
+ pub const Prepared = struct {
+     allocator: std.mem.Allocator,
+     bytes: []u8,
+@@ -66,7 +94,7 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
+     const checked = try view.View.init(original, hidden);
+     for (changes, 0..) |change, i| {
+         try validPath(change.path);
+-        if (change.bytes.len > std.math.maxInt(u32)) return error.FileLimit;
++        if (change.bytes) |data| if (data.len > std.math.maxInt(u32)) return error.FileLimit;
+         for (changes[0..i]) |other| if (std.ascii.eqlIgnoreCase(change.path, other.path)) return error.DuplicateChange;
+     }
+     const bytes = try allocator.dupe(u8, original);
+@@ -79,6 +107,9 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
+     @memset(depth, 0);
+     var fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = depth };
+     try fat.audit(allocator, owners);
++    const original_directories = try allocator.dupe(u8, depth);
++    defer allocator.free(original_directories);
++    fat.original_directories = original_directories;
+     var changed_files: usize = 0;
+     for (changes) |change| if (try fat.replace(change)) {
+         changed_files += 1;
+@@ -126,6 +157,8 @@ const Name = struct {
+ };
+ const Entry = struct {
+     offset: usize,
++    slots: [21]usize,
++    slot_count: u8,
+     raw: [32]u8,
+     name: Name,
+     fn directory(self: Entry) bool {
+@@ -194,6 +227,8 @@ const Iterator = struct {
+     entries: usize = 0,
+     finished: bool = false,
+     lfn: Lfn = .{},
++    slots: [21]usize = undefined,
++    slot_count: u8 = 0,
+     fn next(self: *Iterator) !?Entry {
+         while (!self.finished) {
+             const size = self.fat.clusterSize();
+@@ -219,10 +254,14 @@ const Iterator = struct {
+             }
+             if (raw[0] == 0xe5) {
+                 self.lfn = .{};
++                self.slot_count = 0;
+                 continue;
+             }
+             if (raw[11] == 15) {
+                 try self.lfn.consume(raw);
++                if (self.slot_count >= 20) return error.SourceFat;
++                self.slots[self.slot_count] = offset;
++                self.slot_count += 1;
+                 continue;
+             }
+             if (raw[11] & 15 == 15) return error.SourceFat;
+@@ -250,7 +289,11 @@ const Iterator = struct {
+                 }
+             }
+             if (name.len == 0) return error.SourceFat;
+-            return .{ .offset = offset, .raw = raw.*, .name = name };
++            self.slots[self.slot_count] = offset;
++            self.slot_count += 1;
++            const result = Entry{ .offset = offset, .slots = self.slots, .slot_count = self.slot_count, .raw = raw.*, .name = name };
++            self.slot_count = 0;
++            return result;
+         }
+         return null;
+     }
+@@ -260,8 +303,39 @@ const Fat = struct {
+     bytes: []u8,
+     geo: format.Geometry,
+     directory_depth: []u8,
++    original_directories: []const u8 = &.{},
+     free_hint: u32 = 2,
+ 
++    fn verifyChildren(self: *Fat, parent: u32, depth: u8, path: []u8, length: usize, expected: []const []const u8, found: []bool, entries: *usize) !void {
++        if (depth >= maximum_depth) return error.Path;
++        var iterator = Iterator{ .fat = self, .cluster = parent };
++        while (try iterator.next()) |entry| {
++            entries.* += 1;
++            if (entries.* > 8192 or length + entry.name.len > path.len) return error.FileLimit;
++            for (entry.name.units[0..entry.name.len], 0..) |c, i| {
++                if (c > 127) return error.SourceContentMismatch;
++                path[length + i] = @intCast(c);
++            }
++            const end = length + entry.name.len;
++            const name = path[0..end];
++            if (entry.directory()) {
++                for (expected) |wanted| {
++                    if (wanted.len > name.len and wanted[name.len] == '/' and std.ascii.eqlIgnoreCase(wanted[0..name.len], name)) break;
++                } else return error.SourceContentMismatch;
++                if (end == path.len) return error.Path;
++                path[end] = '/';
++                try self.verifyChildren(entry.cluster(), depth + 1, path, end + 1, expected, found, entries);
++            } else {
++                for (expected, 0..) |wanted, i| {
++                    if (!std.ascii.eqlIgnoreCase(wanted, name)) continue;
++                    if (found[i]) return error.AmbiguousPath;
++                    found[i] = true;
++                    break;
++                } else return error.SourceContentMismatch;
++            }
++        }
++    }
++
+     fn clusterSize(self: Fat) usize {
+         return @as(usize, self.geo.sectors_per_cluster) * 512;
+     }
+@@ -341,7 +415,12 @@ const Fat = struct {
+         var searched: u32 = 0;
+         while (searched < self.geo.clusters) : (searched += 1) {
+             if (cluster >= self.geo.clusters + 2) cluster = 2;
+-            if (self.value(cluster) == 0) {
++            // Until namespace publication the original directory graph must
++            // remain readable. Reusing an old directory as early payload
++            // would destroy its entries while the old FAT still owns all
++            // their chains. A failed payload write then creates orphans.
++            const payload_safe = depth != 0 or self.original_directories.len == 0 or self.original_directories[cluster] == 0;
++            if (self.value(cluster) == 0 and payload_safe) {
+                 self.set(cluster, 0x0fff_ffff);
+                 self.directory_depth[cluster] = depth;
+                 const offset = try self.clusterOffset(cluster);
+@@ -386,6 +465,7 @@ const Fat = struct {
+                 if (!entry.directory()) return error.PathConflict;
+                 parent = entry.cluster();
+             } else {
++                if (change.bytes == null) return false;
+                 const depth = self.directory_depth[parent] + 1;
+                 if (depth > maximum_depth) return error.Path;
+                 const cluster = try self.allocate(depth);
+@@ -398,31 +478,47 @@ const Fat = struct {
+             name = next_name;
+         }
+         const previous = try self.child(parent, name);
++        const bytes = change.bytes orelse {
++            if (previous) |entry| {
++                try self.removeTree(entry, 0);
++                return true;
++            }
++            return false;
++        };
+         if (previous) |entry| {
+             if (entry.directory()) return error.PathConflict;
+-            if (try self.unchanged(entry, change.bytes)) return false;
++            if (try self.unchanged(entry, bytes)) return false;
+         }
+         const entry_offset = if (previous) |entry| entry.offset else try self.create(parent, name, false, 0);
+         if (previous) |entry| try self.free(entry.cluster());
+         var first: u32 = 0;
+         var last: u32 = 0;
+         var done: usize = 0;
+-        while (done < change.bytes.len) {
++        while (done < bytes.len) {
+             const cluster = try self.allocate(0);
+             if (first == 0) first = cluster;
+             if (last != 0) self.set(last, cluster);
+             last = cluster;
+-            const amount = @min(self.clusterSize(), change.bytes.len - done);
++            const amount = @min(self.clusterSize(), bytes.len - done);
+             const offset = try self.clusterOffset(cluster);
+-            @memcpy(self.bytes[offset..][0..amount], change.bytes[done..][0..amount]);
++            @memcpy(self.bytes[offset..][0..amount], bytes[done..][0..amount]);
+             done += amount;
+         }
+         const raw = self.bytes[entry_offset..][0..32];
+         put16(raw, 20, @truncate(first >> 16));
+         put16(raw, 26, @truncate(first));
+-        put32(raw, 28, @intCast(change.bytes.len));
++        put32(raw, 28, @intCast(bytes.len));
+         return true;
+     }
++    fn removeTree(self: *Fat, entry: Entry, depth: u8) !void {
++        if (depth >= maximum_depth) return error.Path;
++        if (entry.directory()) {
++            var iterator = Iterator{ .fat = self, .cluster = entry.cluster() };
++            while (try iterator.next()) |child_entry| try self.removeTree(child_entry, depth + 1);
++        }
++        try self.free(entry.cluster());
++        for (entry.slots[0..entry.slot_count]) |offset| self.bytes[offset] = 0xe5;
++    }
+     fn create(self: *Fat, parent: u32, name: []const u8, directory: bool, cluster: u32) !usize {
+         var short = "R4UP0000BIN".*;
+         var serial: u32 = 1;
