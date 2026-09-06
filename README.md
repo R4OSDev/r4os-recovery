@@ -259,3 +259,10 @@ After publication, `Tools/Test-PublishedRelease.ps1` downloads the entire
 actual public Recovery or R4OS asset through the production keyboard menu,
 verifies its cached bytes and preserves unrelated partitions. The only user
 hardware acceptance remains the final Lenovo USB boot and local installation.
+
+
+Recovery [0.1.19](https://github.com/R4OSDev/r4os-recovery/releases/tag/v0.1.19)
+is published with its source receipt and checksums. The full public asset
+passed the production-menu download acceptance; its unpacked contents match
+the qualified kernel/runtime/license payloads exactly. Normal Distribution
+pins the release ID and complete ZIP SHA256 explicitly.

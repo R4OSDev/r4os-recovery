@@ -1143,3 +1143,41 @@ QMP, unabhaengige FAT-/Dateihashpruefung nach Terminal-POWEROFF sowie
 Bytegleichheit aller anderen Partitionen. Dieser Kanalnachweis wird erst
 mit Recovery in 0.76.25 und dem finalen R4OS in 0.76.26 ausgefuehrt.
 Keine Windows-/Lenovo-Hardwareabnahme in dieser automatisierten Stufe.
+
+
+Veroeffentlichung und Freigabevorbereitung 0.76.25
+------------------------------------------------
+Recovery 0.1.19 ist veroeffentlicht:
+  https://github.com/R4OSDev/r4os-recovery/releases/tag/v0.1.19
+  Quellcommit: c013b8c2c84d4ca65a215f916441524474e19341
+  Release-ID: 383453891
+  ZIP SHA256: 8499ed394ad8eabe1e33e27f9118251526deff3a25677b33faaff875bf76a3cd
+  ZIP-Groesse: 24684567 Bytes
+Alle entpackten Inhalte sind bytegleich zum technisch qualifizierten Paket.
+Kernel/Recovery bleiben 0.1.19, RECOVERY.R4X 0.1.11 und die festgehaltene
+RAM-Laufzeit b44f14fa6f00990482a49254a25a9200193728f88f869c1dbd1cdb23dca74c8e.
+
+Der echte vollstaendige GitHub-Menue-Download des oeffentlichen ZIPs bestand
+im Produktionskernel mit SMP4/8 GB in 105.931 s. Das gecachte ZIP
+wurde nach Terminal-POWEROFF unabhaengig byteweise geprueft; alle anderen
+Partitionen und das Quellimage blieben unveraendert. Beim ersten Start kann
+state.r4s noch fehlen: die Abnahme wartet auf die tatsaechliche Bootbestaetigung.
+Der Namespacekonflikt zwischen einem dot-geladenen Switch und der lokalen
+Releasevorbereitung wurde vor dem ersten Upload im Hostskript korrigiert.
+
+Die Distribution pinnt Version, Release-ID und exakt diesen ZIP-Hash.
+Normale Slim-/Full-Pakete 0.76.25 wurden mit Kernel 0.1.98 erzeugt, physisch
+geprueft und ihre vollstaendigen ZIP-Inhalte erneut gehasht. Ihr Quellenmanifest
+nennt den jeweiligen sauberen Buildstand. Der USB-Test verwendet mit
+-PackagedStarter die Skripte und fertigen Werkzeuge direkt aus dem ZIP,
+einschliesslich Linux-.sh-Starter, Pfad mit Leerzeichen, falscher Bestaetigung,
+physischem Rest und Mindestgroesse. Das Ergebnis startet mit vier CPUs und
+8 GB vom virtuellen USB in die Produktions-Recovery; Original-ZIP und
+Tastatur-/Terminal-POWEROFF sind geprueft. Keine reale USB-/Windows-Abnahme.
+Bericht: Artifacts/Qualification/0.76.25/report.json.
+
+Der unveraenderte oeffentliche Recovery-Stand wird fuer den finalen R4OS-
+Stand 0.76.26 verwendet. Nur dieser finale Stand geht in den vereinbarten
+Lenovo-Test: USB-Boot zum Menue und lokale Installation bis zum Abschluss.
+R4OS wird erst danach mit Publish -Prepared als exakt geprueftes ZIP
+veroeffentlicht; anschliessend folgt dessen echter oeffentlicher Menuekanal.

@@ -82,7 +82,7 @@ try{
  # and the actual published cache through ordinary SSH, without a probe build.
  $deadline=[DateTime]::UtcNow.AddSeconds(60)
  do{
-  $state=Ssh 'TYPE R:\state.r4s'
+  $state=if((Ssh 'DIR R:\') -match 'state\.r4s'){Ssh 'TYPE R:\state.r4s'}else{''}
   if($state -match 'CURRENT_CONFIRMED=yes'){break}
   if($process.HasExited -or [DateTime]::UtcNow -gt $deadline){throw 'Production menu did not confirm its boot.'}
   Start-Sleep -Milliseconds 250
