@@ -21,11 +21,17 @@ pub const Session = struct {
     target: ?source.Target = null,
 
     pub fn init(self: *Session, sys: *const r4os.r4sys.Context, dev: *const r4os.r4dev.Context, pump: resident.Pump) void {
-        self.* = .{ .sys = sys, .dev = dev, .pool = .{ .sys = sys, .pump = pump }, .arena = undefined };
+        self.* = .{ .sys = sys, .dev = dev, .pool = .{ .sys = sys, .dev = dev, .pump = pump }, .arena = undefined };
+        self.pool.ram_bytes = @import("memory_budget.zig").capacity(dev) catch 0;
+        self.pool.observe();
+        self.pool.baseline_used = self.pool.observed_peak;
         self.arena = std.heap.ArenaAllocator.init(self.pool.allocator());
         self.arena_live = true;
     }
     pub fn deinit(self: *Session) bool {
+        self.pool.observe();
+        var measurement: [192]u8 = undefined;
+        self.sys.write(std.fmt.bufPrint(&measurement, "[RECOVERYRAM] baseline_used={d} observed_used_peak={d} pinned_peak={d}\r\n", .{ self.pool.baseline_used, self.pool.observed_peak, self.pool.peak }) catch "");
         // The preparation arena owns the complete decoder/manifest/tree/plan
         // lifetime. Nothing borrowed by a write plan outlives this arena.
         if (self.arena_live) {
@@ -72,8 +78,7 @@ pub const Session = struct {
         self.original_digest = try self.digest(bytes);
         if (expected) |wanted| if (!std.mem.eql(u8, &wanted, &self.original_digest)) return error.SourceChanged;
         self.prepared = try package.prepare(self.arena.allocator(), r4os.zip.Context{ .dev = self.dev }, bytes, kind, self.pool.pump);
-        const memory = self.dev.memorySummary() orelse return error.IncompatiblePackage;
-        if (memory.physical_bytes < self.prepared.?.recovery.minimumRamBytes) return error.IncompatiblePackage;
+        try @import("memory_budget.zig").require(self.pool.ram_bytes, self.prepared.?.recovery.minimumRamBytes);
         if (self.prepared.?.system) |system| self.tree = try source.Tree.read(self.arena.allocator(), self.prepared.?.archive.get("disk.img").?, system.releaseVersion, self.pool.pump);
     }
     pub fn targetSystem(self: *Session, first: u64, sectors: u64, serial: u64) !void {
@@ -83,6 +88,8 @@ pub const Session = struct {
 pub fn message(err: anyerror) []const u8 {
     return switch (err) {
         error.OutOfMemory => "Not enough RAM to prepare this package. No disk changes made.",
+        error.InsufficientRam => "Not enough RAM for this release. No disk changes made. See the release memory requirements.",
+        error.MemoryMap => "The available RAM could not be determined. No disk changes made.",
         error.Cancelled => "Preparation cancelled. No disk changes made.",
         error.PackageMissing => "No ZIP at the fixed Recovery cache path. Download a release first.",
         error.PackageRead => "Could not read the complete cached ZIP. Check the source partition.",

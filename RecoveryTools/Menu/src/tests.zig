@@ -1,4 +1,6 @@
 test {
+    _ = @import("memory_budget.zig");
+    _ = @import("package.zig");
     _ = @import("view.zig");
     _ = @import("targets.zig");
     _ = @import("os_probe.zig");

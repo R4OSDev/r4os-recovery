@@ -87,7 +87,7 @@ function Start-Guest([string]$Image,[string]$Label){
  $script:name=$Label;$script:serialLog=Join-Path $output "$Label-serial.log";$script:clientLog=Join-Path $output "$Label-clients.log"
  if(Test-Path -LiteralPath $serialLog){Remove-Item -LiteralPath $serialLog -Force}
  [IO.File]::WriteAllText($clientLog,'',$utf8);$script:sshPort=Free-Port
- $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-m','4096','-smp','4','-display','none','-monitor','none','-no-reboot','-serial',"file:$serialLog",'-device','qemu-xhci,id=rec-xhci',
+ $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain)",'-cpu',$profile.CpuModel,'-m','8192','-smp','4','-display','none','-monitor','none','-no-reboot','-serial',"file:$serialLog",'-device','qemu-xhci,id=rec-xhci',
   '-drive',"if=none,id=usb-media,format=raw,file=$Image",'-device','usb-storage,drive=usb-media,bootindex=1',
   '-drive',"if=none,id=untouched,format=raw,file=$scratch",'-device','nvme,drive=untouched,serial=DOWNLOAD-UNTOUCHED',
   '-netdev',"user,id=rec-net,hostfwd=tcp:127.0.0.1:${sshPort}-:22",'-device','virtio-net-pci,netdev=rec-net')

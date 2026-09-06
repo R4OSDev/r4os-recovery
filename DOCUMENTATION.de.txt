@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.76.20
+Stand 0.76.23
 ------------
 
 Das Monorepo besitzt einen festgehaltenen Quell-/Binaer-Ausgangsstand und
@@ -1009,3 +1009,90 @@ plus drei Erhaltungsfaelle bestanden. Der echte CURRENT-Payload-Schreibfehler
 laesst die gesamte FAT-Belegung konsistent; manuell gewaehltes PREVIOUS kann
 CURRENT anschliessend reparieren. Gemeinsame Metadaten-/Stromausfallgrenzen
 bleiben bestehen. Keine Windows-/Lenovo-Abnahme.
+
+0.76.23: Komponenten, Kapazitaet und RAM
+--------------------------------------
+
+Recovery/Kernel 0.1.19 und RECOVERY.R4X 0.1.11 verwenden weiterhin die
+ausdruecklich eingefrorenen Treiber, Dienste, Protokolle und Konsolenmodule.
+Die letzte SDK-Uebernahme ist allein die gepruefte NTFS-Mindestgrenze aus
+0.76.21: DATA 32769 Sektoren, ganzes Medium 3444770 Sektoren. Herkunft,
+Patch und Hashes stehen in Provenance/owner-update-0.76.23.json. Es gibt
+keinen laufenden Import aus dem normalen Workspace.
+
+RECOVERY bleibt 512 MB. Der echte FAT-Nachweis verwendet zwei komplette
+Slots, RELEASE.ZIP/RELEASE.PART, RECOVERY.ZIP/RECOVERY.PART und zusaetzlich
+1 MB Metadatenreserve. Er fuehrt den Slotwechsel aus, prueft saemtliche
+Cacheinhalte und beide FATs unabhaengig und weist eine uebervolle Kombination
+vor Schreiben ab. Tools/Test-Budgets.ps1 bindet seinen Bericht an die
+konkreten Paket-/Quellimage-Hashes. Distribution prueft dieselbe Kombination
+gegen die tatsaechliche FAT-Belegung; der Installer reserviert Platz fuer
+die weiteren Archive in seiner vollstaendigen Vorabplanung. Eine volle
+Partition wird nicht automatisch vergroessert.
+
+Install/Update werden mit 8 GB Gast-RAM qualifiziert. minimumRamBytes
+verlangt 7 GB OS-RAM aus der unverkuerzten Bootspeicherkarte: usable,
+bootloader_reclaimable und kernel_and_modules. Es zaehlen nur ganze
+4-KB-Seiten, ohne doppelte Bereiche, Adressluecken, reservierte Geraete-
+fenster, Framebuffer oder Firmwarebereiche. Der Abstand zum 8-GB-System
+laesst deren Reservierungen zu. Jeder konkrete Auftrag muss ausserdem
+seine gesamte Vorbereitung physisch reservieren, bevor ein Zielclaim
+oder ein Schreibzugriff beginnt. Weniger RAM kann fuer reine Reparatur-
+terminals reichen; das sagt nichts ueber die Ausfuehrbarkeit eines Pakets.
+
+Die RECOVERYRAM-Marker geben ram_capacity, den Menuebedarf und beobachtete
+Spitzen bei jeder residenten Commit-Charge und beim Ende der Sitzung an.
+pinned_peak ist der gesamte gleichzeitig festgehaltene Vorbereitungspool;
+er umfasst auch Original-ZIP, entpacktes Image und Schreibplaene. Die
+beobachtete Gesamtspitze enthaelt zusaetzlich Kernel, Dienste und Konsole.
+Die alten PMM-Rohwerte vor dieser Korrektur enthalten Adressluecken und
+duerfen nicht als verbrauchter Arbeitsspeicher interpretiert werden.
+
+Normale Releasepakete enthalten auch die eigenstaendigen USB-Starter,
+Tools, Quellenmanifest, README und QEMU-Konfiguration. Recovery prueft
+deren portable Pfade, exakte Dateiliste, Groessen und Hashes wie alle
+anderen ZIP-Inhalte. Diese Hostbeigaben bleiben im Original-ZIP; sie
+werden nicht in SYSTEM oder BOOT installiert. Unbekannte Root-Dateien,
+Traversalpfade und ein verwaltetes limine.conf bleiben unzulaessig.
+
+Hardwareumfang: x86_64 in der AVX2-Klasse, Limine unter BIOS oder x64-UEFI,
+512-Byte-Sektoren, die aufgenommenen AHCI/NVMe/ATA-/USB-Massenspeicherpfade
+und PS/2-/USB-HID-Tastaturen. Netzwerk benutzt die aufgenommenen VirtioNet-,
+RTL8139- oder RTL8168-Treiber samt DHCP/SSH/FTP. Ein vorhandener Treiber ist
+kein Nachweis fuer jedes reale Geraet. Automatisierte Nachweise stammen
+von Linux/KVM mit vier vCPUs; Windows-Hostzweige und echte Lenovo-Hardware
+werden dadurch nicht als manuell geprueft ausgegeben. Nur der abschliessende
+USB-Boot und die lokale Installation auf dem Lenovo sind als Benutzertest
+vereinbart.
+
+Abnahme 0.76.23: Linux/KVM SMP4. Die vollstaendige Ausgangsfolge bestand mit
+8 Installations-, 3 SYSTEM-Update- und 5 Recovery-Updatefaellen. Anschliessend
+wurde ausschliesslich die RAM-Vorpruefung und deren Messung korrigiert.
+Mit dem abschliessenden Artefakt bestanden erneut USB-Installation,
+SYSTEM-Ersatz, Recovery-Selbstupdate und deren produktive Ergebnisstarts,
+zusaetzlich die neue 6-GB-Mindestanforderungsabweisung: 8 gezielte Gastfaelle.
+Der 6-GB-Gast bereitete das ZIP vor, meldete InsufficientRam und liess den
+gesamten Zieldatentraeger bytegleich. Die bestehende 1-GB-OOM-Abweisung,
+lokale Neuinstallation, Erhaltungs- und Schreibabbruchfaelle der Ausgangs-
+folge sind im Bericht getrennt an deren damaligen Artefakthash gebunden.
+Es wird kein alter Bericht als Lauf des geaenderten Artefakts ausgegeben.
+
+  UsbInstall: Menue 141.19 MB, beobachtete Spitze 3647.71 MB, gepinnt 3498.57 MB.
+  RamMinimum: Menue 141.12 MB, beobachtete Spitze 3647.58 MB, gepinnt 3498.57 MB.
+  System768: Menue 141.04 MB, beobachtete Spitze 3647.57 MB, gepinnt 3498.57 MB.
+  UsbSelfUpdate: Menue 141.86 MB, beobachtete Spitze 3901.90 MB, gepinnt 3752.44 MB.
+
+  512-MB-RECOVERY: 70475776 B / 67.21 MB frei nach beiden Slots, beiden Archivpaaren und 1 MB Reserve.
+  R4OS-0.76.22-full-x86_64.zip: 91993612 B; SHA256 87201014bf832aa288a492fab52ea7d6d2fd88cc20289d334a5cf6867bd5f5fc
+  R4OS-Recovery-0.1.19-x86_64.zip: 24684567 B; SHA256 b30a26c1294ed9c2b25e031af19ad77c933acd49feb9ba05661e05245017ce23
+  Abschliessendes runtime.img: b44f14fa6f00990482a49254a25a9200193728f88f869c1dbd1cdb23dca74c8e
+
+
+Der unabhaengige physische FAT-Nachweis, Slotrotation und negative
+Kapazitaetsfaelle bestanden. Menu-Hostgruppe 12/12; eingefrorener SDK-Test
+zur realen Mindestgeometrie bestanden. Inventar: 969 Dateien, 39 eingefrorene
+Module, 56 Binaerimporte; die eigene RECOVERY.R4X besitzt ihre gesondert
+geprueften Imports. runtime.img enthaelt 58 Dateien. Der aggregierte Bericht
+steht unter Artifacts/Qualification/0.76.23/report.json und unterscheidet
+Ausgangsfolge, abschliessende RAM-Korrektur und Paket-Hashes. Keine manuelle
+Windows- oder Lenovo-Abnahme. Firmware-/Gesamtintegration folgt in 0.76.24.

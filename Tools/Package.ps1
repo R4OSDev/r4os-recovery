@@ -1,7 +1,7 @@
 # Recovery owns its independent release package. No normal R4OS build is run.
 function New-RecoveryPackage {
     param([string]$Root=(Split-Path $PSScriptRoot -Parent),[string]$Destination='',
-          [uint64]$MinimumRamBytes=1073741824)
+          [ValidateRange(1,8589934592)][uint64]$MinimumRamBytes=7516192768)
     $ErrorActionPreference='Stop'
     . (Join-Path $PSScriptRoot 'Inventory.ps1')
     $null=Test-RecoveryInventory $Root
@@ -49,5 +49,12 @@ function New-RecoveryPackage {
     Write-RecoveryJson (Join-Path $stage 'manifest.json') $manifest
     if(Test-Path -LiteralPath $Destination){Remove-Item -LiteralPath $Destination -Force}
     [IO.Compression.ZipFile]::CreateFromDirectory($stage,$Destination,[IO.Compression.CompressionLevel]::Optimal,$false)
+    # Independent producer floor: two slots and its own ZIP/PART must fit.
+    # The normal R4OS producer checks the additional real release ZIP pair
+    # against the actual installed FAT allocation, before publication.
+    [long]$slotBytes=0
+    foreach($file in Get-ChildItem -LiteralPath $stage -File -Recurse){$slotBytes+=[long]([Math]::Ceiling($file.Length/4096.0)*4096)}
+    [long]$archiveBytes=[Math]::Ceiling(([IO.FileInfo]$Destination).Length/4096.0)*4096
+    if(2*$slotBytes+2*$archiveBytes+3MB -gt 512MB){throw 'Recovery package exceeds the shared 512 MB partition budget for two slots and its ZIP/PART workspace.'}
     return [ordered]@{path=$Destination;version=$version;bytes=([IO.FileInfo]$Destination).Length;sha256=(Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash.ToLowerInvariant();manifest=$manifest}
 }

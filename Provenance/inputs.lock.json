@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "fa1ffd11df7dfaeddebd9473007a78793f558e3b0702fdec95d20b92cff006cd",
+      "sha256": "c43db35bc44348994a2d5deea29d4b01baebedb1f4eb96e5d119dde2e0b47e43",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3979,6 +3979,13 @@
       "path": "Legal/Changes/SDK-0.76.20.patch",
       "bytes": 14687,
       "sha256": "c0fad09bd5c0bd6b3cd3eb3efbaebdfcf003ab449e44a2983fa336c6b489fdf0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.76.23.patch",
+      "bytes": 2334,
+      "sha256": "2845bfa3fd340da1133d71e4ca34f2b466b2d8993c137771ad762df4db171160",
       "originalSha256": null,
       "origin": null
     },
@@ -7000,8 +7007,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/installation.zig",
-      "bytes": 8153,
-      "sha256": "8464251ec3538d9d1ddf1261b5936c045b5b04481665532b127f27b36dab37c8",
+      "bytes": 8274,
+      "sha256": "76662ecc3ab887f1b7d43d2f4b71370328487b1939025d1b2f1352f868227c8f",
       "originalSha256": null,
       "origin": null
     },
@@ -8968,8 +8975,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
-      "bytes": 54586,
-      "sha256": "217c8ecd23ed1bb9938fc4a02537790da543c8feb7745d350da4d0c57194c73e",
+      "bytes": 55348,
+      "sha256": "3671eefca71eca0caf020cf0d9cb2f1b3ad8b4b8987f2000ac35c5c63098e967",
       "originalSha256": null,
       "origin": null
     },
@@ -9095,8 +9102,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 19639,
-      "sha256": "3051973e2969f600702d5fd83fa10ea936bcf0f9bf62b6a6731b33e6b9c508e8",
+      "bytes": 20641,
+      "sha256": "ac288dcab3a0fca0f80de572a22f4e1e8927a67e5cc9a20ee3e671e77e09982b",
       "originalSha256": null,
       "origin": null
     },
@@ -9117,7 +9124,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "5df55132e0e0a81a0155fe28740ee4798f1bc8188145ac3b9c030a8e5ecc0653",
+      "sha256": "f92d1befc3eb92854fddf5004683cf3a43037311141c09266b2306dabf339528",
       "originalSha256": null,
       "origin": null
     },
@@ -9139,6 +9146,13 @@
       "path": "RecoveryTools/Menu/src/cache.zig",
       "bytes": 13619,
       "sha256": "db524fdab67b7a3a1a30749ed0cb5b5323aa488b61b0072a438d4a8bf05ea9ce",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/capacity.zig",
+      "bytes": 913,
+      "sha256": "ac16bac78816f851432f4a6c123400a3e0e9ad50fe51695bd9879da6a8fac1e8",
       "originalSha256": null,
       "origin": null
     },
@@ -9172,8 +9186,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/install.zig",
-      "bytes": 14099,
-      "sha256": "e53374dbe91da4c05896841720f44d13a86b0b8b6d242c9997f775138d9ce37d",
+      "bytes": 14407,
+      "sha256": "88754e9b4cef7b427504c657a71df8a17a7595a55f61b016ae47a6ca8d76e75a",
       "originalSha256": null,
       "origin": null
     },
@@ -9186,8 +9200,15 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 45478,
-      "sha256": "f15d72809b125bcbbc951917f1d26ab83932fba61020cb99b0310ca778170ce0",
+      "bytes": 46149,
+      "sha256": "ef71a16456848447d403267f84dd311c3bd35cdd1b52b74ab6dad83d73e69a3f",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/memory_budget.zig",
+      "bytes": 3171,
+      "sha256": "f53fc4ff9bc053ad485a898f974d1005781b8ebde33a9f9ff6526a20dec04330",
       "originalSha256": null,
       "origin": null
     },
@@ -9221,22 +9242,22 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package_session.zig",
-      "bytes": 5429,
-      "sha256": "83ef8fdd7b7a38725a8af9b0a2e22cd4414cb879707989836af34a9e44117286",
+      "bytes": 6035,
+      "sha256": "14b4200a11fdb8b46c0a4a10622104535ae7629ebaea320b2620ee38554bfda2",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/package.zig",
-      "bytes": 13313,
-      "sha256": "29d8f3eea01a9c890493771c5ef582afdaacbab577d2798369f8547ed2f65e7e",
+      "bytes": 15456,
+      "sha256": "2a0974e383f3a2297799c6e75077d8056795efaf8c1dd7efc16e65e9066f12da",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/recovery_fixture.zig",
-      "bytes": 12044,
-      "sha256": "51ed9a20d1315ee19756f08facf76769b44f55510ea4d474db83034cdb1bb54f",
+      "bytes": 16501,
+      "sha256": "b2ca4ecf49f5d726dc41ad75d1555fa8219f6910e912e19d3589652c282ca03b",
       "originalSha256": null,
       "origin": null
     },
@@ -9270,8 +9291,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/resident.zig",
-      "bytes": 4470,
-      "sha256": "2aa231380e633695395606f00c24a7191fee2ea5ae4081e529b0a0095c38c48d",
+      "bytes": 4914,
+      "sha256": "3b8a1a9cf9cd6a1d83b67a68f893aba9d666a787b16ddf09f02315b87f36f518",
       "originalSha256": null,
       "origin": null
     },
@@ -9319,8 +9340,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/tests.zig",
-      "bytes": 239,
-      "sha256": "8e02f0e8f4613d9436d4c2d6731f363016869dcd79e323848e0f908ae07751ad",
+      "bytes": 309,
+      "sha256": "d33e299299a9fe2c9432ffd321c41196df247681fa730554e00bbb748d02ee31",
       "originalSha256": null,
       "origin": null
     },
@@ -9432,7 +9453,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "a6e12a98f27f43631e55ad45957f42596b1a418527819ad3e7202ecfcdbec21d",
+      "sha256": "0dd3c796daecf538308fcbc2baf868e7af80ad8329bfba62988e1d45d29cd337",
       "originalSha256": null,
       "origin": null
     },
@@ -9456,7 +9477,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "fa2743dfa13fd1dcfb1cb8e2ab61f34ca94e62f4c6d50a1e994f73c8726da08b",
+      "sha256": "5f1f6d223eae1c2e000442fdb6fe9935c1b913f0cfc6aad311a270007d003cf5",
       "originalSha256": null,
       "origin": null
     },
@@ -12788,6 +12809,161 @@
           "after": "fa2743dfa13fd1dcfb1cb8e2ab61f34ca94e62f4c6d50a1e994f73c8726da08b",
           "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
           "before": "5e98ae1ec35ab91af4eef89cd573f6f44ff730a790dfdf6dbd94fff9506fc501"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "fa1ffd11df7dfaeddebd9473007a78793f558e3b0702fdec95d20b92cff006cd",
+          "path": "Kernel/VERSION.R4S",
+          "after": "c43db35bc44348994a2d5deea29d4b01baebedb1f4eb96e5d119dde2e0b47e43"
+        },
+        {
+          "before": null,
+          "path": "Legal/Changes/SDK-0.76.23.patch",
+          "after": "2845bfa3fd340da1133d71e4ca34f2b466b2d8993c137771ad762df4db171160"
+        },
+        {
+          "before": "8464251ec3538d9d1ddf1261b5936c045b5b04481665532b127f27b36dab37c8",
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "after": "76662ecc3ab887f1b7d43d2f4b71370328487b1939025d1b2f1352f868227c8f"
+        },
+        {
+          "before": "217c8ecd23ed1bb9938fc4a02537790da543c8feb7745d350da4d0c57194c73e",
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "after": "3671eefca71eca0caf020cf0d9cb2f1b3ad8b4b8987f2000ac35c5c63098e967"
+        },
+        {
+          "before": "5df55132e0e0a81a0155fe28740ee4798f1bc8188145ac3b9c030a8e5ecc0653",
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "after": "f92d1befc3eb92854fddf5004683cf3a43037311141c09266b2306dabf339528"
+        },
+        {
+          "before": null,
+          "path": "RecoveryTools/Menu/src/capacity.zig",
+          "after": "ac16bac78816f851432f4a6c123400a3e0e9ad50fe51695bd9879da6a8fac1e8"
+        },
+        {
+          "before": "e53374dbe91da4c05896841720f44d13a86b0b8b6d242c9997f775138d9ce37d",
+          "path": "RecoveryTools/Menu/src/install.zig",
+          "after": "88754e9b4cef7b427504c657a71df8a17a7595a55f61b016ae47a6ca8d76e75a"
+        },
+        {
+          "before": "f15d72809b125bcbbc951917f1d26ab83932fba61020cb99b0310ca778170ce0",
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "after": "9457677378055584a26e3db4cc30d737cab36959a9718248bd94946bc269db83"
+        },
+        {
+          "before": "83ef8fdd7b7a38725a8af9b0a2e22cd4414cb879707989836af34a9e44117286",
+          "path": "RecoveryTools/Menu/src/package_session.zig",
+          "after": "c6914f5784d94fd5ac196b93ec0ff43bbdf2ed7603d8d800859c6237a5b8c223"
+        },
+        {
+          "before": "2aa231380e633695395606f00c24a7191fee2ea5ae4081e529b0a0095c38c48d",
+          "path": "RecoveryTools/Menu/src/resident.zig",
+          "after": "a9df10ff74163b66388f7a02a248c5f56159223e8aa06705852bbabe12a483b8"
+        },
+        {
+          "before": "a6e12a98f27f43631e55ad45957f42596b1a418527819ad3e7202ecfcdbec21d",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "after": "0dd3c796daecf538308fcbc2baf868e7af80ad8329bfba62988e1d45d29cd337"
+        },
+        {
+          "before": "fa2743dfa13fd1dcfb1cb8e2ab61f34ca94e62f4c6d50a1e994f73c8726da08b",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "5f1f6d223eae1c2e000442fdb6fe9935c1b913f0cfc6aad311a270007d003cf5"
+        }
+      ],
+      "reason": "0.76.23: explicit SDK minimum-media import, physical RAM measurements and installation cache headroom"
+    },
+    {
+      "reason": "0.76.23: real 512 MB FAT budget, slot rotation and overfull preflight witness",
+      "changes": [
+        {
+          "after": "b17099e9a5e572a9dbcbb4bbfff18dc218552e5aef68976d383b22cfab9f20ac",
+          "before": "51ed9a20d1315ee19756f08facf76769b44f55510ea4d474db83034cdb1bb54f",
+          "path": "RecoveryTools/Menu/src/recovery_fixture.zig"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.23: avoid Zig fixture function/codec budget name shadowing",
+      "changes": [
+        {
+          "path": "RecoveryTools/Menu/src/recovery_fixture.zig",
+          "after": "b2ca4ecf49f5d726dc41ad75d1555fa8219f6910e912e19d3589652c282ca03b",
+          "before": "b17099e9a5e572a9dbcbb4bbfff18dc218552e5aef68976d383b22cfab9f20ac"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "after": "069a181c17c6d7aafad9c63874791fcb0db9d202a5fb2bbe497a76166306deb2",
+          "before": "3051973e2969f600702d5fd83fa10ea936bcf0f9bf62b6a6731b33e6b9c508e8",
+          "path": "RecoveryTools/Contracts.de.txt"
+        },
+        {
+          "after": "1331ee1add6c29d6d4a740a2ea58250b585f56c840b2ffa0dedef3645778d441",
+          "before": "9457677378055584a26e3db4cc30d737cab36959a9718248bd94946bc269db83",
+          "path": "RecoveryTools/Menu/src/main.zig"
+        },
+        {
+          "after": "2a0974e383f3a2297799c6e75077d8056795efaf8c1dd7efc16e65e9066f12da",
+          "before": "29d8f3eea01a9c890493771c5ef582afdaacbab577d2798369f8547ed2f65e7e",
+          "path": "RecoveryTools/Menu/src/package.zig"
+        },
+        {
+          "after": "dfec6f64ac443ce6f49a8baafa127ab9a42cbd2e2e69850f17380ef936fe6d91",
+          "before": "8e02f0e8f4613d9436d4c2d6731f363016869dcd79e323848e0f908ae07751ad",
+          "path": "RecoveryTools/Menu/src/tests.zig"
+        }
+      ],
+      "reason": "0.76.23: accept hashed host USB supplements in real R4OS ZIPs, log preview rejection and clarify qualified RAM requirement"
+    },
+    {
+      "reason": "0.76.23: document implemented package supplements and shared minimum medium geometry.",
+      "changes": [
+        {
+          "before": "069a181c17c6d7aafad9c63874791fcb0db9d202a5fb2bbe497a76166306deb2",
+          "path": "RecoveryTools/Contracts.de.txt",
+          "after": "5d0e68a02a91aa6be34bb6d09ca37964985d27f1ac0db1e270d8799f3827c05f"
+        }
+      ]
+    },
+    {
+      "reason": "0.76.23: count actual OS RAM from the boot map, exclude device windows, and distinguish the 7 GB usable minimum from the qualified 8 GB machine.",
+      "changes": [
+        {
+          "after": "ac288dcab3a0fca0f80de572a22f4e1e8927a67e5cc9a20ee3e671e77e09982b",
+          "before": "5d0e68a02a91aa6be34bb6d09ca37964985d27f1ac0db1e270d8799f3827c05f",
+          "path": "RecoveryTools/Contracts.de.txt"
+        },
+        {
+          "after": "ef71a16456848447d403267f84dd311c3bd35cdd1b52b74ab6dad83d73e69a3f",
+          "before": "1331ee1add6c29d6d4a740a2ea58250b585f56c840b2ffa0dedef3645778d441",
+          "path": "RecoveryTools/Menu/src/main.zig"
+        },
+        {
+          "after": "f53fc4ff9bc053ad485a898f974d1005781b8ebde33a9f9ff6526a20dec04330",
+          "before": null,
+          "path": "RecoveryTools/Menu/src/memory_budget.zig"
+        },
+        {
+          "after": "14b4200a11fdb8b46c0a4a10622104535ae7629ebaea320b2620ee38554bfda2",
+          "before": "c6914f5784d94fd5ac196b93ec0ff43bbdf2ed7603d8d800859c6237a5b8c223",
+          "path": "RecoveryTools/Menu/src/package_session.zig"
+        },
+        {
+          "after": "3b8a1a9cf9cd6a1d83b67a68f893aba9d666a787b16ddf09f02315b87f36f518",
+          "before": "a9df10ff74163b66388f7a02a248c5f56159223e8aa06705852bbabe12a483b8",
+          "path": "RecoveryTools/Menu/src/resident.zig"
+        },
+        {
+          "after": "d33e299299a9fe2c9432ffd321c41196df247681fa730554e00bbb748d02ee31",
+          "before": "dfec6f64ac443ce6f49a8baafa127ab9a42cbd2e2e69850f17380ef936fe6d91",
+          "path": "RecoveryTools/Menu/src/tests.zig"
         }
       ]
     }

@@ -1,0 +1,35 @@
+diff --git a/Tests/Simulation/CheckStorageTools0769.zig b/Tests/Simulation/CheckStorageTools0769.zig
+index 3e46523..62b8e11 100644
+--- a/Tests/Simulation/CheckStorageTools0769.zig
++++ b/Tests/Simulation/CheckStorageTools0769.zig
+@@ -121,6 +121,15 @@ test "five-role layout, GUID boot references and Limine GPT publication" {
+     }
+     try expectError(error.Geometry, tools.installation.Layout.prepare(4194304, 4096, ids));
+     try expectError(error.Geometry, tools.installation.Layout.prepare(tools.installation.first_lbas[4] + 32, 512, ids));
++    const minimum = tools.installation.first_lbas[4] + tools.installation.minimum_data_sectors + 33;
++    try expectError(error.Geometry, tools.installation.Layout.prepare(minimum - 1, 512, ids));
++    const smallest = try tools.installation.Layout.prepare(minimum, 512, ids);
++    try eq(@as(u64, 32769), smallest.part(.DATA).count);
++    var smallest_builder = try tools.ntfs.Builder.init(a, smallest.part(.DATA).count * 512, "DATA", @intCast(smallest.part(.DATA).first), tools.standardNtfsMetadata(), 0, 1);
++    defer smallest_builder.deinit();
++    for ([_][]const u8{ "DOCS", "MEDIA", "TEMP" }) |name| _ = try smallest_builder.addDirectory(smallest_builder.root(), name);
++    var smallest_plan = try smallest_builder.prepare();
++    defer smallest_plan.deinit();
+     entropy[1] = entropy[0];
+     try expectError(error.DuplicateGuid, tools.installation.Identifiers.fromEntropy(entropy));
+ }
+diff --git a/r4os/storage_tools/installation.zig b/r4os/storage_tools/installation.zig
+index 6b351b8..3e9bfc0 100644
+--- a/r4os/storage_tools/installation.zig
++++ b/r4os/storage_tools/installation.zig
+@@ -7,7 +7,9 @@ pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
+ pub const Medium = enum { local, usb };
+ pub const standard_bytes: u64 = 2048 * 1024 * 1024;
+ pub const first_lbas = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
+-pub const minimum_data_sectors: u64 = 16 * 2048;
++// The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
++// separately addressed backup boot sector.
++pub const minimum_data_sectors: u64 = 16 * 2048 + 1;
+ pub const boot_paths = [_][]const u8{
+     "boot/r4os.elf",           "boot/preload.r4i",        "boot/preload/hidreport.r4p",
+     "boot/preload/usbhid.r4p", "boot/preload/usbbot.r4p", "boot/preload/usbscsi.r4p",

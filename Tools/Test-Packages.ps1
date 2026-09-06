@@ -140,7 +140,7 @@ try {
     $sshOptions=@('-c','chacha20-poly1305@openssh.com','-o','StrictHostKeyChecking=no','-o',('UserKnownHostsFile='+$(if($IsWindows){'NUL'}else{'/dev/null'})),'-o','LogLevel=ERROR','-o','ConnectTimeout=5')
     $askpass=Join-Path $output "askpass$suffix";Checked $Zig @('cc','-O2',(Join-Path $PSScriptRoot 'Guest-Askpass.c'),'-o',$askpass)
     $runs=@()
-    foreach($ram in @(4096,1024)){
+    foreach($ram in @(8192,1024)){
         $name="Bios-$ram";$serialLog=Join-Path $output "$name-serial.log";$clientLog=Join-Path $output "$name-clients.log"
         [IO.File]::WriteAllText($clientLog,'',$utf8)
         if(Test-Path -LiteralPath $serialLog){Remove-Item -LiteralPath $serialLog -Force}
@@ -162,7 +162,7 @@ try {
             Send-Keys $session @('ret')
             Wait-Marker '\[RECOVERYUI\] ready=1';Wait-Marker 'DHCP05913 state=bound';Wait-Marker '\[RECOVERYNET\] autostart=RETURNED'
             $evidence=@()
-            if($ram -eq 4096){
+            if($ram -eq 8192){
                 $evidence+=Package-Command 'RECOVERY'
                 Send-Keys $session @('down','down','ret')
                 Wait-Marker ("\[RECOVERYPACKAGE\] cache=manifest version="+[regex]::Escape($releaseVersion)+' source=READY')

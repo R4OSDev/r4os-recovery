@@ -14,12 +14,23 @@ pub const Pump = struct {
 const Region = struct { id: u32 = 0, base: usize = 0, bytes: u64 = 0 };
 pub const Pool = struct {
     sys: *const r4os.r4sys.Context,
+    dev: ?*const r4os.r4dev.Context = null,
+    ram_bytes: u64 = 0,
+    observed_peak: u64 = 0,
+    baseline_used: u64 = 0,
     pump: Pump = .{},
     regions: [64]Region = .{Region{}} ** 64,
     current: u64 = 0,
     peak: u64 = 0,
     last_error: i32 = 0,
     cancelled: bool = false,
+
+    pub fn observe(self: *Pool) void {
+        if (self.dev) |dev| if (dev.memoryPressure()) |memory| {
+            if (self.ram_bytes >= memory.free_physical_bytes)
+                self.observed_peak = @max(self.observed_peak, self.ram_bytes - memory.free_physical_bytes);
+        };
+    }
 
     pub fn allocator(self: *Pool) std.mem.Allocator {
         return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };
@@ -51,6 +62,7 @@ pub const Pool = struct {
             offset += amount;
             slot.bytes = offset;
             self.peak = @max(self.peak, self.current + offset);
+            self.observe();
             self.pump.run("Reserving physical RAM", offset, bytes) catch {
                 self.cancelled = true;
                 self.current += slot.bytes;

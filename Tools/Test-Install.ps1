@@ -96,7 +96,7 @@ try {
  $ssh=(Get-Command "ssh$suffix" -CommandType Application|Select-Object -First 1).Source
  $sshOptions=@('-c','chacha20-poly1305@openssh.com','-o','StrictHostKeyChecking=no','-o',('UserKnownHostsFile='+$(if($IsWindows){'NUL'}else{'/dev/null'})),'-o','LogLevel=ERROR','-o','ConnectTimeout=5')
  $script:process=$null;$script:session=$null;$runs=@();$installed=@()
- $matrix=@(@{name='UsbInstall';own=$false;ram=8192;fault=$false},@{name='LocalReinstall';own=$true;ram=8192;fault=$false},@{name='WriteFailure';own=$false;ram=8192;fault=$true},@{name='RamFailure';own=$false;ram=1024;fault=$false})
+ $matrix=@(@{name='UsbInstall';own=$false;ram=8192;fault=$false},@{name='LocalReinstall';own=$true;ram=8192;fault=$false},@{name='WriteFailure';own=$false;ram=8192;fault=$true},@{name='RamFailure';own=$false;ram=1024;fault=$false},@{name='RamMinimum';own=$false;ram=6144;fault=$false})
  if($Cases.Count){$matrix=@($matrix|Where-Object {$_.name -in $Cases});if($matrix.Count -ne $Cases.Count){throw 'Unknown installation case.'}}
  if($VerifyInstalled){
   $saved=Get-Content -Raw -LiteralPath (Join-Path $output 'install-results.json')|ConvertFrom-Json -AsHashtable
@@ -133,6 +133,7 @@ try {
    Send-Keys $session @('ret');$null=Wait-Guest '\[RECOVERYUI\] page=review selected=0 choice=0'
    Send-Keys $session @('down','ret')
    if($case.ram -eq 1024){$text=Wait-Guest '\[RECOVERYPACKAGE\] rejected=OutOfMemory .*writes=0'}
+   elseif($case.ram -eq 6144){$text=Wait-Guest '\[RECOVERYPACKAGE\] rejected=InsufficientRam .*writes=0'}
    elseif($case.fault){$text=Wait-Guest '\[RECOVERYINSTALL\] result=WriteFailed attempted=1 .*claim=0'}
    else{$text=Wait-Guest '\[RECOVERYINSTALL\] result=OK'}
    $null=Wait-Guest '\[RECOVERYUI\] page=dialog selected=0'
@@ -142,14 +143,14 @@ try {
     if($current.recoveryVersion -cne $source.recovery.version){throw 'Own-device R: was not rebound to the installed Recovery.'}
    }
    Send-Keys $session @('esc')
-   if($case.ram -eq 1024){Send-Keys $session @('esc','esc','esc')}
+   if($case.ram -lt 8192){Send-Keys $session @('esc','esc','esc')}
    Send-Keys $session @('up','up','ret');Start-Sleep -Milliseconds 500;Keys 'POWEROFF';Send-Keys $session @('ret')
    if(!$process.WaitForExit(20000) -or $process.ExitCode -ne 0){throw 'RAM Recovery could not shut down normally.'}
   } finally {Stop-Guest}
   if((Get-RecoveryHash $other) -cne $otherHash){throw 'The other physical target changed.'}
   if(!$case.own -and (Get-RecoveryHash $boot) -cne $bootHash){throw 'The USB source changed.'}
-  if($case.ram -eq 1024 -and (Get-RecoveryHash $target) -cne $targetHash){throw 'Low-RAM rejection changed the target.'}
-  if(!$case.fault -and $case.ram -ne 1024){
+  if($case.ram -lt 8192 -and (Get-RecoveryHash $target) -cne $targetHash){throw 'Low-RAM rejection changed the target.'}
+  if(!$case.fault -and $case.ram -ge 8192){
    $structure=Test-R4OSInstallationImage -Image $target
    if($structure.installation.releaseVersion -cne $source.releaseVersion -or $structure.installation.kernelVersion -cne $source.kernelVersion -or $structure.recoveryVersion -cne $source.recovery.version){throw 'Installed package versions differ.'}
    $check=[InstallationImageCheck]::new($target)

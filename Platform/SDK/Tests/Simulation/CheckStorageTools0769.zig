@@ -121,6 +121,15 @@ test "five-role layout, GUID boot references and Limine GPT publication" {
     }
     try expectError(error.Geometry, tools.installation.Layout.prepare(4194304, 4096, ids));
     try expectError(error.Geometry, tools.installation.Layout.prepare(tools.installation.first_lbas[4] + 32, 512, ids));
+    const minimum = tools.installation.first_lbas[4] + tools.installation.minimum_data_sectors + 33;
+    try expectError(error.Geometry, tools.installation.Layout.prepare(minimum - 1, 512, ids));
+    const smallest = try tools.installation.Layout.prepare(minimum, 512, ids);
+    try eq(@as(u64, 32769), smallest.part(.DATA).count);
+    var smallest_builder = try tools.ntfs.Builder.init(a, smallest.part(.DATA).count * 512, "DATA", @intCast(smallest.part(.DATA).first), tools.standardNtfsMetadata(), 0, 1);
+    defer smallest_builder.deinit();
+    for ([_][]const u8{ "DOCS", "MEDIA", "TEMP" }) |name| _ = try smallest_builder.addDirectory(smallest_builder.root(), name);
+    var smallest_plan = try smallest_builder.prepare();
+    defer smallest_plan.deinit();
     entropy[1] = entropy[0];
     try expectError(error.DuplicateGuid, tools.installation.Identifiers.fromEntropy(entropy));
 }

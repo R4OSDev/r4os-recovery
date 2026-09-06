@@ -64,6 +64,7 @@ pub const Installer = struct {
         const recovery_range = layout.part(.RECOVERY);
         try session.pool.pump.run("Preparing Recovery slots and original ZIP", 0, 0);
         const recovery = try tools.fat32_image.prepare(a, recovery_range.count, recovery_range.first, "RECOVERY", serial32(ids.partitions[3]), recovery_files.items);
+        try @import("capacity.zig").requireCacheHeadroom((recovery.stats.geometry.sectors - recovery.stats.used_sectors) * @as(u64, 512), prepared.archive.original.len, prepared.recovery_archive.original.len, recovery.stats.geometry.sectors_per_cluster * @as(u64, 512));
         const system_range = layout.part(.SYSTEM);
         try session.targetSystem(system_range.first, system_range.count, serial64(ids.partitions[2]));
         const data_range = layout.part(.DATA);
@@ -226,7 +227,7 @@ pub fn message(err: anyerror, wrote: bool) []const u8 {
     return switch (err) {
         error.TargetBusy => "The target is busy, changed or unavailable. Close its SSH/FTP transfers and try again. No installation writes made.",
         error.StorageChanged, error.InvalidTarget => "The target changed. Select it again. No installation writes made.",
-        error.ImageFull => "The Recovery slots and original ZIP do not fit in RECOVERY. No installation writes made.",
+        error.ImageFull, error.RecoveryCapacity => "RECOVERY cannot hold these slots, the original ZIP and update workspace. No installation writes made.",
         error.EntropyUnavailable => "Fresh installation identifiers could not be generated. No installation writes made.",
         else => packages.message(err),
     };

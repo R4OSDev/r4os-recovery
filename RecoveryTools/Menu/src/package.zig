@@ -119,6 +119,7 @@ pub fn validateSystem(m: SystemManifest) !void {
     var recovery = false;
     var legal = false;
     for (m.files) |file| {
+        if (!portablePath(file.path)) return error.UnsafePath;
         if (std.mem.eql(u8, file.path, "disk.img")) disk = true else if (std.mem.eql(u8, file.path, "recovery.zip")) recovery = true else if (std.mem.startsWith(u8, file.path, "Legal/")) legal = true else if (std.mem.startsWith(u8, file.path, "BOOT/")) {
             var found = false;
             for (m.bootFiles) |path| if (std.mem.eql(u8, file.path[5..], path)) {
@@ -126,7 +127,7 @@ pub fn validateSystem(m: SystemManifest) !void {
                 break;
             };
             if (!found) return error.ManagedBootPath;
-        } else return error.UnexpectedFile;
+        } else if (!hostSupplement(file.path, m.releaseVersion)) return error.UnexpectedFile;
     }
     if (!disk or !recovery or !legal) return error.MissingFile;
     for (m.bootFiles) |path| {
@@ -137,6 +138,35 @@ pub fn validateSystem(m: SystemManifest) !void {
         };
         if (!found) return error.MissingFile;
     }
+}
+fn hostSupplement(path: []const u8, release: []const u8) bool {
+    // These release files remain inside the original ZIP. They are checked
+    // by the same manifest/SHA256 pass and never copied into BOOT or SYSTEM.
+    for ([_][]const u8{ "CreateUSB.bat", "CreateUSB.sh", "CreateUSB.ps1", "README.txt", "qemu.conf" }) |name| if (std.mem.eql(u8, path, name)) return true;
+    if (std.mem.startsWith(u8, path, "Tools/")) return true;
+    var name: [128]u8 = undefined;
+    return std.mem.eql(u8, path, std.fmt.bufPrint(&name, "R4OS-SOURCES-{s}.json", .{release}) catch return false);
+}
+
+test "full release host supplements stay separate from managed boot files" {
+    const empty_hash = "0" ** 64;
+    var files = [_]File{
+        .{ .path = "disk.img", .bytes = 1, .sha256 = empty_hash },
+        .{ .path = "recovery.zip", .bytes = 1, .sha256 = empty_hash },
+        .{ .path = "Legal/LICENSE.txt", .bytes = 1, .sha256 = empty_hash },
+        .{ .path = "BOOT/boot/r4os.elf", .bytes = 1, .sha256 = empty_hash },
+        .{ .path = "CreateUSB.ps1", .bytes = 1, .sha256 = empty_hash },
+        .{ .path = "Tools/USB/windows-x86_64/imagecreater.exe", .bytes = 1, .sha256 = empty_hash },
+        .{ .path = "R4OS-SOURCES-0.76.23.json", .bytes = 1, .sha256 = empty_hash },
+    };
+    const manifest = SystemManifest{ .schema = 1, .product = "r4os", .architecture = "x86_64", .releaseVersion = "0.76.23", .kernelVersion = "0.1.98", .profile = "full", .asset = "R4OS-0.76.23-full-x86_64.zip", .layout = "r4os-gpt-1", .recovery = .{ .version = "0.1.19", .package = "recovery.zip" }, .bootFiles = &.{"boot/r4os.elf"}, .files = &files };
+    try validateSystem(manifest);
+    files[5].path = "BOOT/boot/limine.conf";
+    try std.testing.expectError(error.ManagedBootPath, validateSystem(manifest));
+    files[5].path = "Tools/../../foreign";
+    try std.testing.expectError(error.UnsafePath, validateSystem(manifest));
+    files[5].path = "foreign.bin";
+    try std.testing.expectError(error.UnexpectedFile, validateSystem(manifest));
 }
 fn extract(allocator: std.mem.Allocator, codec: anytype, input: []const u8, pump: Pump) !Archive {
     if (input.len < 22 or input.len > max_archive_bytes) return error.ArchiveSize;

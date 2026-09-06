@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "reason": "0.76.23: final explicit minimum-media boundary import, including actual NTFS formatting at 32769 DATA sectors.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseCommit": "84af380c0ab6e7f0046f354e3b3921f033d40fe1",
+      "sourceCommit": "21cc37ad2f84089e7cf2c1b4c09fa339c4695116",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.76.23.patch",
+      "patchSha256": "2845bfa3fd340da1133d71e4ca34f2b466b2d8993c137771ad762df4db171160",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "sha256": "76662ecc3ab887f1b7d43d2f4b71370328487b1939025d1b2f1352f868227c8f"
+        },
+        {
+          "path": "Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig",
+          "sha256": "3671eefca71eca0caf020cf0d9cb2f1b3ad8b4b8987f2000ac35c5c63098e967"
+        }
+      ]
+    }
+  ]
+}

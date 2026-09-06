@@ -373,6 +373,8 @@ const State = struct {
             self.dirty = true;
         }
         self.cache = session.describe(path, self.kind()) catch |err| {
+            var reason: [128]u8 = undefined;
+            self.sys.write(std.fmt.bufPrint(&reason, "[RECOVERYPACKAGE] preview_rejected={s} writes=0\r\n", .{@errorName(err)}) catch "");
             self.cache.state = if (err == error.OutOfMemory or err == error.Cancelled or session.pool.cancelled) .unchecked else .invalid;
             return;
         };
@@ -484,7 +486,7 @@ const State = struct {
             updater.execute() catch |err| {
                 result_message = recovery_update.message(err, updater.progress.write_attempted);
                 self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYUPDATE] result={s} phase={s} attempted={d} sectors={d} native={d} relative_lba={d} claim={d}\r\n", .{
-                    @errorName(err), updater.phase, @intFromBool(updater.progress.write_attempted), updater.progress.written_sectors,
+                    @errorName(err),                                                                                 updater.phase,                        @intFromBool(updater.progress.write_attempted), updater.progress.written_sectors,
                     if (updater.progress.native_error != 0) updater.progress.native_error else updater.native_error, updater.progress.failed_lba orelse 0, updater.target.claim,
                 }) catch "");
                 self.clearCatalog();
@@ -494,8 +496,7 @@ const State = struct {
             self.sys.write(std.fmt.bufPrint(&update_detail, "[RECOVERYUPDATE] result=OK version={s} unchanged={d} ram_peak={d}\r\n", .{
                 session.prepared.?.recovery.recoveryVersion, @intFromBool(updater.plan.unchanged), session.pool.peak,
             }) catch "");
-            result_message = if (updater.plan.unchanged) "This Recovery package is already installed. No slot changes were needed." else
-                "Recovery updated and verified. PREVIOUS and INSTALL are preserved. The running session remains in RAM. Restart to use the new CURRENT.";
+            result_message = if (updater.plan.unchanged) "This Recovery package is already installed. No slot changes were needed." else "Recovery updated and verified. PREVIOUS and INSTALL are preserved. The running session remains in RAM. Restart to use the new CURRENT.";
             self.clearCatalog();
             self.notice_return = .menu;
         }
@@ -795,6 +796,11 @@ fn run(app: *r4os.App) i32 {
     if (confirmed) sys.write("[RECOVERYCONFIRM] state=CONFIRMED content=BOOTED\r\n");
     state.marker();
     sys.write("[RECOVERYUI] ready=1\r\n");
+    if (state.dev.memoryPressure()) |memory| {
+        var line: [192]u8 = undefined;
+        const ram = @import("memory_budget.zig").capacity(&state.dev) catch 0;
+        sys.write(std.fmt.bufPrint(&line, "[RECOVERYRAM] ram_capacity={d} menu_used={d} free={d} available={d}\r\n", .{ ram, ram -| memory.free_physical_bytes, memory.free_physical_bytes, memory.app_available_bytes }) catch "");
+    }
     var next_blink = sys.ticks() + sys.ticksFromMilliseconds(500);
     var next_status = sys.ticks() + sys.ticksFromMilliseconds(1000);
     while (!sys.programShouldClose()) {

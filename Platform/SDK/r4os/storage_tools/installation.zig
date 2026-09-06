@@ -7,7 +7,9 @@ pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
 pub const Medium = enum { local, usb };
 pub const standard_bytes: u64 = 2048 * 1024 * 1024;
 pub const first_lbas = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
-pub const minimum_data_sectors: u64 = 16 * 2048;
+// The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
+// separately addressed backup boot sector.
+pub const minimum_data_sectors: u64 = 16 * 2048 + 1;
 pub const boot_paths = [_][]const u8{
     "boot/r4os.elf",           "boot/preload.r4i",        "boot/preload/hidreport.r4p",
     "boot/preload/usbhid.r4p", "boot/preload/usbbot.r4p", "boot/preload/usbscsi.r4p",
