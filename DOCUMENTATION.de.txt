@@ -1218,6 +1218,53 @@ Die Menue-Hosttests bestanden ebenfalls; es wurde kein neues Gate angelegt.
   recovery.elf: cb3ae4ff8740e19d2e2952a31a388eaca50a90696d7141711cd4ba98a2521fb7
 
 Bericht und individuelle Hashnachweise:
-Artifacts/Qualification/0.76.26/ram/report.json. Die noch ausstehende
-Lenovo-Installation wird dadurch nicht als bestanden ausgegeben. Der
-Benutzertest bleibt auf USB-Boot und lokale Installation begrenzt.
+Artifacts/Qualification/0.76.26/ram/report.json. Dieser automatische
+Nachweis ist von der nachfolgenden Benutzerabnahme getrennt. Der
+Benutzertest blieb auf USB-Boot und lokale Installation begrenzt.
+
+
+Lenovo-Abnahme und R4OS-Veroeffentlichung 0.76.26
+-----------------------------------------------
+Am 2026-09-06 bestaetigte der Benutzer den korrigierten Ablauf: Recovery
+vom USB-Stick, R4OS lokal bis zum Abschluss installiert. Zusaetzlich
+berichtete er den erfolgreichen lokalen Boot und das laufende R4OS.
+Es wurden keine weiteren manuellen Pruefschritte angefordert. Das Ergebnis
+steht unter Artifacts/Qualification/0.76.26/lenovo.json und ist an den
+zuletzt gelieferten Full-Kandidaten mit Recovery 0.1.20 gebunden.
+
+Danach wurden die unveraenderten vorbereiteten Standardpakete durch
+Publish -Profiles Standard -Prepared veroeffentlicht, ohne Neubau:
+  https://github.com/R4OSDev/r4os-distribution/releases/tag/v0.76.26
+  Release-ID: 383571844
+  Distribution-Quellcommit: 733cae12dffad36650a0d26062f1a16e31fe1478
+  Full: 91995916 B; SHA256 2ec19e59e46a6bb340691276d53db00e7cbd5c5ace39e9d6d12e1c67841182ce
+  Slim: 89331470 B; SHA256 8e2b01d90fccf1a43875f853c568471e67acf0b98a277350a7f3adad0fe4fcf0
+  Normaler Kernel: 0.1.98
+  Recovery: 0.1.20; Release-ID 383564986; Quellcommit ed4572bee189a79238060f086d3e862cb9528602
+  Recovery-ZIP SHA256: 1c3b48296766f05d8be3419c2976a0798f4802f0d5d95fddce2fff8452bffd6c
+
+Das oeffentliche GitHub-Assetinventar einschliesslich Quellenmanifest und
+SHA256SUMS stimmt mit jedem vorbereiteten Artefakt ueberein. Bericht:
+Artifacts/Qualification/0.76.26/public-r4os.json. Spätere reine
+Dokumentationscommits veraendern weder die veroeffentlichten Bytes noch
+deren festgehaltene Quellidentitaeten.
+
+Der echte vollstaendige GitHub-Full-Download durch das unveraenderte
+Produktionsmenue bestand mit Linux/KVM SMP4/8 GB in 263.931 s. Der Cache
+enthaelt exakt die veroeffentlichten 91995916 Bytes mit identischem SHA256;
+alle anderen Partitionen und das Quellimage blieben unveraendert. Der Gast
+wurde ueber sein Terminal regulaer heruntergefahren. Bericht:
+Artifacts/Qualification/0.76.26/public-r4os-download.json.
+
+Der erste Lauf brach ausschliesslich an der hostseitigen 20-Sekunden-Grenze
+einer SSH-Verzeichnisabfrage ab. Das gesicherte Image enthielt bereits das
+vollstaendige richtige RELEASE.ZIP samt noch offener Cachetransaktion;
+kein Gastabsturz wurde geloggt. Der Pruefer laesst fuer Cachebeobachtungen
+jetzt hoechstens 60 Sekunden innerhalb der bestehenden Downloadfrist zu
+und zeichnet deren Dauer auf. Der gezielte neue Lauf mass 35.751 s fuer
+die langsamste der 246 Abfragen und bestand vollstaendig. Alle SSH-Fehler,
+Fristen und abschliessenden Bytepruefungen bleiben verbindlich. Es wurden
+keine Gast-/Paketbytes geaendert. Der Erstbefund bleibt unter
+Temp/RecoveryImplementation/public-r4os-07626-ssh-timeout erhalten;
+public-r4os-observation.json im Qualifikationsverzeichnis ordnet ihn ein.
+Der Abschlussbericht steht unter Artifacts/Qualification/0.76.26/report.json.

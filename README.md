@@ -261,7 +261,7 @@ verifies its cached bytes and preserves unrelated partitions. The only user
 hardware acceptance remains the final Lenovo USB boot and local installation.
 
 
-Recovery [0.1.19](https://github.com/R4OSDev/r4os-recovery/releases/tag/v0.1.19)
+Recovery [0.1.20](https://github.com/R4OSDev/r4os-recovery/releases/tag/v0.1.20)
 is published with its source receipt and checksums. The full public asset
 passed the production-menu download acceptance; its unpacked contents match
 the qualified kernel/runtime/license payloads exactly. Normal Distribution
@@ -276,4 +276,13 @@ R4OS ZIP must be replaced with one containing the corrected Recovery.
 cases: installation, SYSTEM update, Recovery self-update and their result
 boots at 6 GB, plus a 4-GB rejection that leaves the target byte-identical.
 The largest observed RAM peak was 4,091,301,888 bytes during self-update.
-The corrected Lenovo installation remains pending.
+The user confirmed the corrected Lenovo USB boot and local installation,
+then also reported that the installed R4OS booted locally and was running.
+The unchanged qualified Full ZIP was published with Slim as
+[R4OS 0.76.26](https://github.com/R4OSDev/r4os-distribution/releases/tag/v0.76.26).
+`Artifacts/Qualification/0.76.26/lenovo.json` records the user acceptance;
+`public-r4os.json` records the exact published asset hashes and source receipt.
+The complete public Full ZIP passed the production-menu download acceptance
+in 263.931 seconds (SMP4/8 GB), including independent cache verification,
+unchanged other partitions and Terminal poweroff. The final report is
+`Artifacts/Qualification/0.76.26/report.json`.

@@ -72,6 +72,26 @@ function Wait-Marker([string]$Pattern){
   Start-Sleep -Milliseconds 100
  }
 }
+$cacheObservationCount=0;$cacheObservationMaxMs=0L;$cacheObservationsOver20s=@()
+function Observe-Cache([string]$Command,[DateTime]$Deadline){
+ # The checked ZIP publication fingerprints the complete large file under
+ # the volume request gate. A concurrent directory query can legitimately
+ # outlive the general 20-second SSH probe; retain a bounded observation
+ # window and the enclosing download deadline, without ignoring failures.
+ $remaining=[long][Math]::Floor(($Deadline-[DateTime]::UtcNow).TotalMilliseconds)
+ if($remaining -le 0){throw 'Public cache observation exceeded the download deadline.'}
+ $timeout=[int][Math]::Min(60000,$remaining)
+ $measurement=[Diagnostics.Stopwatch]::StartNew()
+ $value=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',$Command)) -TimeoutMilliseconds $timeout
+ $elapsed=$measurement.ElapsedMilliseconds
+ $script:cacheObservationCount++
+ $script:cacheObservationMaxMs=[Math]::Max($script:cacheObservationMaxMs,$elapsed)
+ if($elapsed -ge 20000){
+  $script:cacheObservationsOver20s+=@(@{command=$Command;milliseconds=$elapsed})
+  Write-Host "Public cache observation: $Command completed in $elapsed ms."
+ }
+ return $value
+}
 $watch=[Diagnostics.Stopwatch]::StartNew()
 try{
  if(!$process.Start()){throw 'QEMU did not start.'};$started=$true;$stdout=$process.StandardOutput.ReadToEndAsync();$stderr=$process.StandardError.ReadToEndAsync()
@@ -97,7 +117,7 @@ try{
  Send-Keys $session @('ret')
  $deadline=[DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
  do{
-  $listing=if((Ssh 'DIR R:\') -match 'INSTALL'){Ssh 'DIR R:\INSTALL'}else{''}
+  $listing=if((Observe-Cache 'DIR R:\' $deadline) -match 'INSTALL'){Observe-Cache 'DIR R:\INSTALL' $deadline}else{''}
   if($listing -match ($cacheName+'\.ZIP') -and $listing -notmatch ($cacheName+'\.(PART|TXN|BAK|TMP|JBK|LCK)')){break}
   if($process.HasExited -or [DateTime]::UtcNow -gt $deadline){throw 'The menu did not publish a complete download cache.'}
   Start-Sleep -Milliseconds 1000
@@ -124,6 +144,7 @@ try{
 }finally{$view.Dispose()}
 if((Other-Bytes) -cne $before -or (Get-RecoveryHash $BaseImage) -cne $sourceHash){throw 'Download changed an unrelated partition or its source image.'}
 $report=@{schema=1;result='PASS';product=$Product;version=$Version;profile=$Profile;asset=$assetName;releaseId=$metadata.id;assetId=$asset.id;url=$url;sha256=$Sha256;bytes=$asset.size;
- cpus=4;ramBytes=8GB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);sourceImageSha256=$sourceHash;otherPartitionsUnchanged=$true;runnerSha256=Get-RecoveryHash $PSCommandPath;serialSha256=Get-RecoveryHash $serialLog;clientsSha256=Get-RecoveryHash $clientLog}
+ cpus=4;ramBytes=8GB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);sourceImageSha256=$sourceHash;otherPartitionsUnchanged=$true;runnerSha256=Get-RecoveryHash $PSCommandPath;serialSha256=Get-RecoveryHash $serialLog;clientsSha256=Get-RecoveryHash $clientLog;
+ cacheObservationCount=$cacheObservationCount;cacheObservationTimeoutMilliseconds=60000;cacheObservationMaxMilliseconds=$cacheObservationMaxMs;cacheObservationsOver20s=$cacheObservationsOver20s}
 Write-RecoveryJson (Join-Path $output 'published-release-results.json') $report
 Write-Host "Published $Product $Version PASS: actual menu GitHub download, complete cached ZIP SHA256, SMP4/8GB, unrelated partitions unchanged."
