@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "d6114714ff080bad2ac7cbfe22c32f7cd824d4953f2dd79978d35aa9975e9a85",
+      "sha256": "fa1ffd11df7dfaeddebd9473007a78793f558e3b0702fdec95d20b92cff006cd",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9116,8 +9116,8 @@
     },
     {
       "path": "RecoveryTools/Menu/module.R4MF",
-      "bytes": 588,
-      "sha256": "7eadf9d6f35544cf701a6090296c4273812983579083abb442d2fff9b1490bbb",
+      "bytes": 589,
+      "sha256": "5df55132e0e0a81a0155fe28740ee4798f1bc8188145ac3b9c030a8e5ecc0653",
       "originalSha256": null,
       "origin": null
     },
@@ -9298,8 +9298,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/system_source.zig",
-      "bytes": 14827,
-      "sha256": "6d08547e999a1b44bff3f1e18d483d4397e5a19e1b3a1e7454a7eeeef5e1b7ab",
+      "bytes": 15052,
+      "sha256": "efc95485438be5dff36e6e631c60d6dfc40d8d25244b25549feab15667db4f4e",
       "originalSha256": null,
       "origin": null
     },
@@ -9432,7 +9432,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "c037ee3415f258f464ad9a2dd9be939c0702bdccd865df14380c6c6099e3936b",
+      "sha256": "a6e12a98f27f43631e55ad45957f42596b1a418527819ad3e7202ecfcdbec21d",
       "originalSha256": null,
       "origin": null
     },
@@ -9456,7 +9456,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "5e98ae1ec35ab91af4eef89cd573f6f44ff730a790dfdf6dbd94fff9506fc501",
+      "sha256": "fa2743dfa13fd1dcfb1cb8e2ab61f34ca94e62f4c6d50a1e994f73c8726da08b",
       "originalSha256": null,
       "origin": null
     },
@@ -12760,6 +12760,36 @@
         }
       ],
       "reason": "0.76.20: import verified SDK protection of old directory ownership during slot payload writes"
+    },
+    {
+      "reason": "0.76.22: installation source verifies the optional named Recovery kernel/runtime binding; release tooling requires a coherent production pair.",
+      "changes": [
+        {
+          "after": "fa1ffd11df7dfaeddebd9473007a78793f558e3b0702fdec95d20b92cff006cd",
+          "path": "Kernel/VERSION.R4S",
+          "before": "d6114714ff080bad2ac7cbfe22c32f7cd824d4953f2dd79978d35aa9975e9a85"
+        },
+        {
+          "after": "5df55132e0e0a81a0155fe28740ee4798f1bc8188145ac3b9c030a8e5ecc0653",
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "7eadf9d6f35544cf701a6090296c4273812983579083abb442d2fff9b1490bbb"
+        },
+        {
+          "after": "efc95485438be5dff36e6e631c60d6dfc40d8d25244b25549feab15667db4f4e",
+          "path": "RecoveryTools/Menu/src/system_source.zig",
+          "before": "6d08547e999a1b44bff3f1e18d483d4397e5a19e1b3a1e7454a7eeeef5e1b7ab"
+        },
+        {
+          "after": "a6e12a98f27f43631e55ad45957f42596b1a418527819ad3e7202ecfcdbec21d",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "c037ee3415f258f464ad9a2dd9be939c0702bdccd865df14380c6c6099e3936b"
+        },
+        {
+          "after": "fa2743dfa13fd1dcfb1cb8e2ab61f34ca94e62f4c6d50a1e994f73c8726da08b",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "5e98ae1ec35ab91af4eef89cd573f6f44ff730a790dfdf6dbd94fff9506fc501"
+        }
+      ]
     }
   ]
 }

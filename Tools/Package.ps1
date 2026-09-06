@@ -4,9 +4,12 @@ function New-RecoveryPackage {
           [uint64]$MinimumRamBytes=1073741824)
     $ErrorActionPreference='Stop'
     . (Join-Path $PSScriptRoot 'Inventory.ps1')
+    $null=Test-RecoveryInventory $Root
+    . (Join-Path $PSScriptRoot 'PackagePair.ps1')
     $version=(Get-RecoveryFields (Join-Path $Root 'VERSION.R4S')).RECOVERY_VERSION[0]
     $kernelVersion=(Get-RecoveryFields (Join-Path $Root 'Kernel/VERSION.R4S')).KERNEL_VERSION[0]
     if($version -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' -or $kernelVersion -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'){throw 'Invalid Recovery version.'}
+    Test-RecoveryPackagePair (Join-Path $Root 'Artifacts/Kernel/bin/recovery.elf') (Join-Path $Root 'Artifacts/Runtime/runtime.img') $version $kernelVersion
     $output=Join-Path $Root 'Artifacts/Packages'
     [IO.Directory]::CreateDirectory($output)|Out-Null
     if(!$Destination){$Destination=Join-Path $output "R4OS-Recovery-$version-x86_64.zip"}
@@ -32,6 +35,8 @@ function New-RecoveryPackage {
         $value=Get-Content -Raw -LiteralPath $receipt.FullName|ConvertFrom-Json -AsHashtable
         if(!$value.ContainsKey('owners')){continue}
         foreach($owner in @($value.owners)){
+            if(($owner.ContainsKey('pendingOwnerCommit') -and $owner.pendingOwnerCommit) -or
+               ($owner.ContainsKey('sourceCommit') -and $owner.sourceCommit -cnotmatch '^[0-9a-f]{40}$')){throw 'Recovery owner provenance is not finalized.'}
             if($owner.owner -eq 'Contract' -and $owner.ContainsKey('sourceCommit')){
                 $contractCommit=$owner.sourceCommit
             }

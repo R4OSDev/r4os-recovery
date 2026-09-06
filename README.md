@@ -67,6 +67,14 @@ drivers, protocols, services, console applications, and libraries are
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
 normal R4OS releases will include an explicitly selected Recovery release.
 
+`./Release.sh Prepare` (Windows: `Release.bat Prepare`) creates the independent
+ZIP, input/owner provenance and SHA256SUMS from the clean, pushed Recovery
+source. `Publish` uploads through the shared workspace GitHub transport;
+it does not build normal R4OS. The production kernel's named pair section must
+match the exact runtime and both versions. Use `Prepare -Technical` only for
+explicit local acceptance candidates; `Publish` refuses technical mode.
+`SelfTest` checks the local producer/pair contract without a network upload.
+
 ## Repository layout
 
 The frozen inputs and their owners are separated explicitly:

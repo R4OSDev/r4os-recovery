@@ -217,6 +217,7 @@ pub fn verifyInstallation(allocator: std.mem.Allocator, prepared: @import("packa
 
 pub fn verifyRecovery(allocator: std.mem.Allocator, prepared: @import("package.zig").Prepared) !void {
     try kernelVersion(prepared.recovery_archive.get("recovery.elf").?, prepared.recovery.recoveryKernelVersion);
+    try @import("recovery_pair.zig").verify(prepared.recovery_archive.get("recovery.elf").?, prepared.recovery_archive.get("runtime.img").?, prepared.recovery.recoveryVersion, prepared.recovery.recoveryKernelVersion, false);
     const runtime = try r4os.storage_tools.fat32_view.View.init(prepared.recovery_archive.get("runtime.img").?, 0);
     const version = try runtime.readFile(allocator, "R4OS/CONFIG/VERSION.R4S", 4096);
     if (!std.mem.eql(u8, r4os.version_info.parseReleaseVersion(version) orelse return error.SourceVersion, prepared.recovery.recoveryVersion)) return error.SourceVersion;
