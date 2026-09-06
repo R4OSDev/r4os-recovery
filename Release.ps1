@@ -38,9 +38,9 @@ try {
  $checksum=Join-Path $directory 'SHA256SUMS.txt';[IO.File]::WriteAllText($checksum,($package.sha256+'  '+(Split-Path $archive -Leaf)+[Environment]::NewLine+(Get-RecoveryHash $source)+'  '+(Split-Path $source -Leaf)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
  $notes=Join-Path $directory 'RELEASE-NOTES.md'
  [IO.File]::WriteAllText($notes,('R4OS Recovery '+$version+[Environment]::NewLine+[Environment]::NewLine+'Independent Limine recovery kernel and complete RAM runtime, pinned drivers/services/console tools, keyboard menu, SSH and FTP. Includes installation, SYSTEM replacement, CURRENT/PREVIOUS Recovery update and original sources/licenses. Package SHA256: '+$package.sha256+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
- $prepared=[pscustomobject]@{Version=$version;Tag='v'+$version;DisplayName='R4OS Recovery '+$version;DistributionCommit=$commit;Assets=@($archive,$source,$checksum);NotesPath=$notes;OutputRoot=$directory}
+ $releasePreparation=[pscustomobject]@{Version=$version;Tag='v'+$version;DisplayName='R4OS Recovery '+$version;DistributionCommit=$commit;Assets=@($archive,$source,$checksum);NotesPath=$notes;OutputRoot=$directory}
  if($requestedAction -ceq 'Publish'){
-  Publish-Release -Context ([pscustomobject]@{DistributionRoot=$root;CredentialFile=Join-Path $workspace 'Tools/Credentials/Github.json'}) -Preparation $prepared -IsPrerelease $requestedPrerelease
+  Publish-Release -Context ([pscustomobject]@{DistributionRoot=$root;CredentialFile=Join-Path $workspace 'Tools/Credentials/Github.json'}) -Preparation $releasePreparation -IsPrerelease $requestedPrerelease
  }
  Write-Host "Recovery assets prepared: $directory (technical=$Technical)"
  exit 0
