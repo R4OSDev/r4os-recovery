@@ -1995,8 +1995,8 @@
     },
     {
       "path": "Kernel/fs/ntfs/ntfs.zig",
-      "bytes": 38218,
-      "sha256": "378a4fa51fe39c89cf041436e2d998921e3aab6034592638a1bc157ba818d8cb",
+      "bytes": 38353,
+      "sha256": "d669fd949668f4f7c733f89ab2a8d4101b62839b0f24f9a40e7b929f7f7ed8ff",
       "originalSha256": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
       "origin": {
         "path": "fs/ntfs/ntfs.zig",
@@ -3401,8 +3401,8 @@
     },
     {
       "path": "Kernel/program/r4sys.zig",
-      "bytes": 211198,
-      "sha256": "ecd9e38c6f21cce7f16b3c3c7300030995fa7bfd1401971509c5abd20ce1a9a6",
+      "bytes": 212034,
+      "sha256": "4c66a7b3c1acd1b76a47a090b5cb9cf91c42e410e9fc00314c47dc20e3e36b18",
       "originalSha256": "d8b44cd993395db12d23057a6c8d0f76ea728e5b4d520720578c78d34111f957",
       "origin": {
         "path": "program/r4sys.zig",
@@ -3691,8 +3691,8 @@
     },
     {
       "path": "Kernel/Support/ntfs_volume.zig",
-      "bytes": 297828,
-      "sha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
+      "bytes": 306931,
+      "sha256": "8d762a2576f5be7453012edc7c06bf80efd59079b54609549d6f18f91e7e6b96",
       "originalSha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
       "origin": {
         "path": "Support/ntfs_volume.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "5f1f25bbdfa01fc2973491b739b13ccc587315a8644105e7f754611d7d94ad5d",
+      "sha256": "ac2f145176a7d7233dbe7046f76464e6f69ddec9b2250146b6719c0adadb4e69",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3920,6 +3920,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.78.3.patch",
+      "bytes": 19920,
+      "sha256": "9a2f21f1c37e8a39a7f166b6b839d4191a8fbc41029621db1a5a76b872b96d29",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/SDK-0.76.10.patch",
       "bytes": 6303,
       "sha256": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22",
@@ -4007,6 +4014,13 @@
       "path": "Legal/Changes/SDK-0.76.9.patch",
       "bytes": 311408,
       "sha256": "471585ea0aaee1a4dca201a42fbc89b321932d6ce8dd8e3b1a482edaa817bee6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.3.patch",
+      "bytes": 17636,
+      "sha256": "9b230de2d6b24a75ec3c4aed4ba4bec8c12b93c1374c794f89a0d70630c4e671",
       "originalSha256": null,
       "origin": null
     },
@@ -6717,8 +6731,8 @@
     },
     {
       "path": "Platform/SDK/r4os/ntfs_volume.zig",
-      "bytes": 298098,
-      "sha256": "30a5452c54d7a5523f2946b7293a53f3e84fa1f6e1ed3c758dd34e1d5e769a79",
+      "bytes": 307201,
+      "sha256": "3505fdf23814cd90277b143241f24d6ce93bf6f2d32910fb271191148fc179f5",
       "originalSha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
       "origin": {
         "path": "r4os/ntfs_volume.zig",
@@ -9124,7 +9138,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "f58c04ebf35a53bd8489000471c31cbc3fb8df92b1e4222eae6d22bd4d95ffdf",
+      "sha256": "6b4eef928563158eba4630e04ce0db0217d3fa979930071bf6cf11dad1fca3c8",
       "originalSha256": null,
       "origin": null
     },
@@ -9453,7 +9467,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "6aa2c1b476d337d388c910d2b730897e1f13df0ab166af2991f15471128bd519",
+      "sha256": "28b403124b7209753ed86e0cdaa88b6acf5fb371c685767a36325d1c59fad060",
       "originalSha256": null,
       "origin": null
     },
@@ -9477,7 +9491,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "6d19185327af41f5751106ab8cea5cb563af14f87c30131652ff273128f7bdfa",
+      "sha256": "472d8abd19db4002b07712913133bc146ef7fabe7dcb2b426ea5b4de9508e2bc",
       "originalSha256": null,
       "origin": null
     },
@@ -13016,6 +13030,71 @@
         }
       ],
       "reason": "0.76.26: vollstaendige Runtime-Identitaet fuer Recovery 0.1.20"
+    },
+    {
+      "reason": "0.78.3: expliziter NTFS- und FileMove-Besitzertransfer; Recovery/Kernel 0.1.21, Quellpatches und Hashes in owner-update-0.78.3.json.",
+      "changes": [
+        {
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "before": "378a4fa51fe39c89cf041436e2d998921e3aab6034592638a1bc157ba818d8cb",
+          "after": "d669fd949668f4f7c733f89ab2a8d4101b62839b0f24f9a40e7b929f7f7ed8ff"
+        },
+        {
+          "path": "Kernel/program/r4sys.zig",
+          "before": "ecd9e38c6f21cce7f16b3c3c7300030995fa7bfd1401971509c5abd20ce1a9a6",
+          "after": "4c66a7b3c1acd1b76a47a090b5cb9cf91c42e410e9fc00314c47dc20e3e36b18"
+        },
+        {
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "before": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
+          "after": "8d762a2576f5be7453012edc7c06bf80efd59079b54609549d6f18f91e7e6b96"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "5f1f25bbdfa01fc2973491b739b13ccc587315a8644105e7f754611d7d94ad5d",
+          "after": "ac2f145176a7d7233dbe7046f76464e6f69ddec9b2250146b6719c0adadb4e69"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.3.patch",
+          "before": null,
+          "after": "9a2f21f1c37e8a39a7f166b6b839d4191a8fbc41029621db1a5a76b872b96d29"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.3.patch",
+          "before": null,
+          "after": "9b230de2d6b24a75ec3c4aed4ba4bec8c12b93c1374c794f89a0d70630c4e671"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "before": "30a5452c54d7a5523f2946b7293a53f3e84fa1f6e1ed3c758dd34e1d5e769a79",
+          "after": "3505fdf23814cd90277b143241f24d6ce93bf6f2d32910fb271191148fc179f5"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.3: RecoveryMenu 0.1.13 bindet den geaenderten gemeinsamen NTFS-Lesekern ein.",
+      "changes": [
+        {
+          "after": "6b4eef928563158eba4630e04ce0db0217d3fa979930071bf6cf11dad1fca3c8",
+          "before": "f58c04ebf35a53bd8489000471c31cbc3fb8df92b1e4222eae6d22bd4d95ffdf",
+          "path": "RecoveryTools/Menu/module.R4MF"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.3: Recovery-Runtime-Identitaet passend zur Version 0.1.21.",
+      "changes": [
+        {
+          "after": "28b403124b7209753ed86e0cdaa88b6acf5fb371c685767a36325d1c59fad060",
+          "before": "6aa2c1b476d337d388c910d2b730897e1f13df0ab166af2991f15471128bd519",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "after": "472d8abd19db4002b07712913133bc146ef7fabe7dcb2b426ea5b4de9508e2bc",
+          "before": "6d19185327af41f5751106ab8cea5cb563af14f87c30131652ff273128f7bdfa",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
+        }
+      ]
     }
   ]
 }
