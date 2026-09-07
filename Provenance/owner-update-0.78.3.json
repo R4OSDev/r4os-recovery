@@ -5,8 +5,8 @@
     {
       "owner": "SDK",
       "baseCommit": "c8ec78acbcc822e45b6d410ec84c6e78fd18f9e0",
-      "sourceCommit": null,
-      "pendingOwnerCommit": true,
+      "sourceCommit": "428874906afe3948973f4fb2747121830362c63b",
+      "pendingOwnerCommit": false,
       "patch": "Legal/Changes/SDK-0.78.3.patch",
       "patchSha256": "9b230de2d6b24a75ec3c4aed4ba4bec8c12b93c1374c794f89a0d70630c4e671",
       "files": [
@@ -19,8 +19,8 @@
     {
       "owner": "Kernel",
       "baseCommit": "b0f68a791a11e4bc62a678d2880491634d0fa71f",
-      "sourceCommit": null,
-      "pendingOwnerCommit": true,
+      "sourceCommit": "c15cd21fcac3e0521ab03ef40afece19be4bd16d",
+      "pendingOwnerCommit": false,
       "patch": "Legal/Changes/Kernel-0.78.3.patch",
       "patchSha256": "9a2f21f1c37e8a39a7f166b6b839d4191a8fbc41029621db1a5a76b872b96d29",
       "files": [
