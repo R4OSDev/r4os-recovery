@@ -19,11 +19,11 @@ pub const Target = struct {
 };
 const Node = struct { path: []const u8, name: []const u8, parent: usize, directory: bool, record: u64, data: []const u8 = &.{} };
 const Ram = struct {
-    bytes: []const u8,
+    bytes: r4os.storage_tools.byte_source.Source,
     fn read(raw: *anyopaque, lba: u64, out: []u8) i32 {
         const self: *Ram = @ptrCast(@alignCast(raw));
-        if (lba > self.bytes.len / 512 or out.len > self.bytes.len - lba * 512) return -1;
-        @memcpy(out, self.bytes[@intCast(lba * 512)..][0..out.len]);
+        if (lba > self.bytes.length / 512) return -1;
+        self.bytes.read(@intCast(lba * 512), out) catch return -1;
         return 0;
     }
     fn readNv(raw: *anyopaque, lba: u64, count: u32, out: []u8) bool {
@@ -42,29 +42,29 @@ const Ram = struct {
         return false;
     }
     fn device(self: *Ram) io.Device {
-        return .{ .context = self, .sectors = self.bytes.len / 512, .read_fn = read, .write_fn = write, .flush_fn = flush };
+        return .{ .context = self, .sectors = self.bytes.length / 512, .read_fn = read, .write_fn = write, .flush_fn = flush };
     }
 };
 pub const Tree = struct {
     nodes: std.ArrayList(Node) = .empty,
     file_bytes: u64 = 0,
     layout: ?*const partition.Plan = null,
-    // The prepared image still owns the source; the tree owns independent
-    // file content too, including any non-contiguous NTFS stream.
+    // Independent file contents survive release of the temporary sparse image,
+    // including non-contiguous NTFS streams.
     pub fn get(self: Tree, path: []const u8) ?[]const u8 {
         for (self.nodes.items) |node| if (!node.directory and std.ascii.eqlIgnoreCase(path, node.path)) return node.data;
         return null;
     }
-    pub fn read(allocator: std.mem.Allocator, image: []const u8, release: []const u8, pump: Pump) !Tree {
-        if (image.len != 2048 * 1024 * 1024) return error.SourceImageSize;
+    pub fn read(allocator: std.mem.Allocator, image: r4os.storage_tools.byte_source.Source, release: []const u8, pump: Pump) !Tree {
+        if (image.length != 2048 * 1024 * 1024) return error.SourceImageSize;
         const ram = try allocator.create(Ram);
         ram.* = .{ .bytes = image };
         const scratch = try allocator.alloc(u8, io.scratch_bytes);
         const table = try allocator.create(partition.Plan);
         table.* = try partition.Plan.read(ram.device(), scratch);
-        if (table.kind != .gpt or table.first_usable != 34 or table.last_usable != image.len / 512 - 34) return error.SourceLayout;
+        if (table.kind != .gpt or table.first_usable != 34 or table.last_usable != image.length / 512 - 34) return error.SourceLayout;
         const starts = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
-        const counts = [_]u64{ 2048, 262144, 2097152, 1048576, image.len / 512 - 33 - starts[4] };
+        const counts = [_]u64{ 2048, 262144, 2097152, 1048576, image.length / 512 - 33 - starts[4] };
         for (table.entries, 0..) |entry, i| {
             if (i >= 5) {
                 if (entry.present) return error.SourceLayout;
@@ -74,14 +74,14 @@ pub const Tree = struct {
             if (!entry.present or entry.first != starts[i] or entry.count != counts[i] or !partition.guid.eql(entry.type_guid, kind)) return error.SourceLayout;
         }
         const system = table.entries[2];
-        ram.bytes = image[@intCast(system.first * 512)..][0..@intCast(system.count * 512)];
+        ram.bytes = try image.range(@intCast(system.first * 512), @intCast(system.count * 512));
         const work = try allocator.create(nv.Scratch);
         work.* = .{};
         const runs = try allocator.alloc(ntfs.Run, nv.MAX_MFT_RUNS);
         const count = try allocator.create(usize);
         const device = nv.Device{ .ctx = ram, .read_sectors = Ram.readNv, .write_sectors = Ram.writeNv, .flush = Ram.flushNv };
         const mounted = nv.mount(device, 0, work, runs) orelse return error.SourceNtfs;
-        if ((mounted.total_sectors + 1) * 512 != ram.bytes.len or mounted.cluster_bytes != 4096) return error.SourceNtfs;
+        if ((mounted.total_sectors + 1) * 512 != ram.bytes.length or mounted.cluster_bytes != 4096) return error.SourceNtfs;
         count.* = mounted.mft_run_count;
         var volume = nv.Volume{ .device = device, .partition_lba = 0, .cluster_bytes = mounted.cluster_bytes, .record_bytes = mounted.record_bytes, .index_block_bytes = mounted.index_block_bytes, .total_sectors = mounted.total_sectors, .mft_runs_buf = runs, .mft_run_count = count, .upcase = &.{}, .scratch = work };
         if (nv.isDirty(&volume) orelse true) return error.SourceNtfsDirty;
@@ -107,14 +107,14 @@ pub const Tree = struct {
                 if (path.len > 1023 or std.mem.count(u8, path, "/") > 24) return error.SourceTree;
                 var node = Node{ .path = path, .name = name, .parent = dir_index, .directory = entry.isDir(), .record = entry.record };
                 if (!node.directory) {
-                    if (entry.size > ram.bytes.len or tree.file_bytes > ram.bytes.len - entry.size) return error.SourceTree;
+                    if (entry.size > ram.bytes.length or tree.file_bytes > ram.bytes.length - entry.size) return error.SourceTree;
                     const data = try allocator.alloc(u8, @intCast(entry.size));
                     var offset: usize = 0;
                     while (offset < data.len) {
                         const amount = @min(data.len - offset, 64 * 1024);
                         if ((nv.readFileRange(&volume, entry.record, offset, data[offset..][0..amount]) orelse return error.SourceNtfs) != amount) return error.SourceNtfs;
                         offset += amount;
-                        try pump.run("Reading SYSTEM contents", tree.file_bytes + offset, ram.bytes.len);
+                        try pump.run("Reading SYSTEM contents", tree.file_bytes + offset, ram.bytes.length);
                     }
                     node.data = data;
                     tree.file_bytes += data.len;
@@ -150,12 +150,12 @@ pub fn verifyInstallation(allocator: std.mem.Allocator, prepared: @import("packa
     const system = prepared.system orelse return error.SourceLayout;
     const layout = tree.layout orelse return error.SourceLayout;
     const setup = r4os.storage_tools.installation;
-    const image = prepared.archive.get("disk.img").?;
+    const image = try prepared.archive.image();
     const boot_part = layout.entries[1];
     const recovery_part = layout.entries[3];
     const View = r4os.storage_tools.fat32_view.View;
-    const boot = try View.init(image[@intCast(boot_part.first * 512)..][0..@intCast(boot_part.count * 512)], boot_part.first);
-    const recovery = try View.init(image[@intCast(recovery_part.first * 512)..][0..@intCast(recovery_part.count * 512)], recovery_part.first);
+    const boot = try View.initSource(try image.range(@intCast(boot_part.first * 512), @intCast(boot_part.count * 512)), boot_part.first);
+    const recovery = try View.initSource(try image.range(@intCast(recovery_part.first * 512), @intCast(recovery_part.count * 512)), recovery_part.first);
     const manifest_bytes = try boot.readFile(allocator, "boot/r4os-installation.json", 16384);
     const manifest = try @import("installation").parse(allocator, manifest_bytes);
     if (!partition.guid.eql(layout.disk_guid, manifest.disk_guid)) return error.SourceLayout;
@@ -168,7 +168,7 @@ pub fn verifyInstallation(allocator: std.mem.Allocator, prepared: @import("packa
         details.value.bootFiles.len != setup.boot_paths.len or system.bootFiles.len != setup.boot_paths.len) return error.SourceVersion;
     var ids = setup.Identifiers{ .installation = manifest.installation_id, .disk = manifest.disk_guid, .partitions = undefined };
     for (manifest.partitions, 0..) |part, i| ids.partitions[i] = part.partition_guid;
-    const source_layout = try setup.Layout.prepare(image.len / 512, 512, ids);
+    const source_layout = try setup.Layout.prepare(image.length / 512, 512, ids);
     const config = try boot.readFile(allocator, "boot/limine.conf", 16384);
     const local = try source_layout.limineConfig(allocator, .local);
     const usb = try source_layout.limineConfig(allocator, .usb);

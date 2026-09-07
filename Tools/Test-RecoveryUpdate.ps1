@@ -1,5 +1,5 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[Parameter(Mandatory)][string]$PreviousPackage,[Parameter(Mandatory)][string]$BaseImage,
-      [Parameter(Mandatory)][string]$ReleasePackage,[switch]$ReuseFixture,[string[]]$Cases=@(),
+      [Parameter(Mandatory)][string]$ReleasePackage,[switch]$ReuseFixture,[switch]$SkipHostFaults,[string[]]$Cases=@(),
       [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300,
       [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
@@ -177,7 +177,7 @@ try {
  $technicalZip=Join-Path $output 'technical-ui.zip'
  if(Test-Path $technicalZip){Remove-Item $technicalZip -Force}
  [IO.Compression.ZipFile]::CreateFromDirectory($uiStage,$technicalZip,[IO.Compression.CompressionLevel]::Optimal,$false)
- Checked $hostTool @($technicalZip,$SourcePackage,$PreviousPackage,(Join-Path $output 'host-results.json'))
+ if(!$SkipHostFaults){Checked $hostTool @($technicalZip,$SourcePackage,$PreviousPackage,(Join-Path $output 'host-results.json'))}
  $askpass=Join-Path $output "askpass$suffix";Checked $Zig @('cc','-O2',(Join-Path $PSScriptRoot 'Guest-Askpass.c'),'-o',$askpass)
  $ssh=(Get-Command "ssh$suffix" -CommandType Application|Select-Object -First 1).Source
  $sshOptions=@('-c','chacha20-poly1305@openssh.com','-o','StrictHostKeyChecking=no','-o',('UserKnownHostsFile='+$(if($IsWindows){'NUL'}else{'/dev/null'})),'-o','LogLevel=ERROR','-o','ConnectTimeout=5')

@@ -12,6 +12,64 @@ const ROOT_CLUSTER: u32 = 2;
 pub const File = struct { path: []const u8, bytes: []const u8 };
 pub const Stats = struct { geometry: fat32_format.Geometry, used_sectors: u32 };
 
+/// Prepared metadata plus borrowed file payloads; no volume-sized buffer.
+/// Input files outlive execution, directory entries are owned by the plan.
+pub const Streamed = struct {
+    const Segment = struct { offset: u64, bytes: []const u8, owned: bool };
+    allocator: std.mem.Allocator,
+    metadata: []u8,
+    segments: std.ArrayList(Segment),
+    stats: Stats,
+
+    pub fn deinit(self: *Streamed) void {
+        for (self.segments.items) |segment| if (segment.owned) self.allocator.free(segment.bytes);
+        self.segments.deinit(self.allocator);
+        self.allocator.free(self.metadata);
+        self.* = undefined;
+    }
+
+    pub fn execute(self: *const Streamed, device: block.Device, full: bool, work: []u8) !void {
+        try device.requireExclusive();
+        if (device.sectors != self.stats.geometry.sectors or work.len < 512 or work.len % 512 != 0) return error.Geometry;
+        const zero: [512]u8 = .{0} ** 512;
+        device.phase(.invalidate);
+        try device.write(0, &zero);
+        try device.write(6, &zero);
+        try device.write(device.sectors - 1, &zero);
+        try device.flush();
+        device.phase(.erase);
+        try device.fill(0, if (full) device.sectors else self.stats.used_sectors, 0, work);
+        device.phase(.metadata);
+        try device.write(1, self.metadata[512 .. 6 * 512]);
+        try device.write(7, self.metadata[7 * 512 ..]);
+        for (self.segments.items) |segment| try device.writePadded(segment.offset, segment.bytes);
+        try device.flush();
+        try device.verify(1, self.metadata[512 .. 6 * 512], work);
+        try device.verify(7, self.metadata[7 * 512 ..], work);
+        // The last partial sector was zero-padded by writePadded; verify it
+        // with a separate bounded buffer, never read beyond borrowed input.
+        var tail: [512]u8 = undefined;
+        for (self.segments.items) |segment| {
+            const aligned = segment.bytes.len / 512 * 512;
+            if (aligned != 0) try device.verify(segment.offset / 512, segment.bytes[0..aligned], work);
+            if (aligned != segment.bytes.len) {
+                @memset(&tail, 0);
+                @memcpy(tail[0 .. segment.bytes.len - aligned], segment.bytes[aligned..]);
+                try device.verify((segment.offset + aligned) / 512, &tail, work);
+            }
+        }
+        device.phase(.backup);
+        try device.write(6, self.metadata[6 * 512 .. 7 * 512]);
+        try device.flush();
+        try device.verify(6, self.metadata[6 * 512 .. 7 * 512], work);
+        device.phase(.primary);
+        try device.write(0, self.metadata[0..512]);
+        try device.flush();
+        try device.verify(0, self.metadata[0..512], work);
+        device.complete();
+    }
+};
+
 pub const Prepared = struct {
     allocator: std.mem.Allocator,
     bytes: []u8,
@@ -65,6 +123,37 @@ pub fn prepare(allocator: std.mem.Allocator, sectors: u64, hidden: u64, label: [
 pub fn buildInto(allocator: std.mem.Allocator, bytes: []u8, hidden: u64, spc: u32, label: []const u8, serial: u32, files: []const File) !Stats {
     if (bytes.len % 512 != 0 or files.len > 8192) return error.Geometry;
     const geometry = try fat32_format.Geometry.init(bytes.len / 512, hidden, spc);
+    var img = try prepareTree(allocator, geometry, label, files);
+    defer img.deinit();
+    img.image = bytes;
+    @memset(bytes, 0);
+    const boot = geometry.boot(img.label, serial);
+    @memcpy(bytes[0..512], &boot);
+    @memcpy(bytes[6 * 512 ..][0..512], &boot);
+    try img.writeAll();
+    img.updateFsInfoFromFat();
+    return .{ .geometry = geometry, .used_sectors = geometry.data_start + (img.next_free_cluster - 2) * geometry.sectors_per_cluster };
+}
+
+pub fn prepareStreamed(allocator: std.mem.Allocator, sectors: u64, hidden: u64, spc: u32, label: []const u8, serial: u32, files: []const File) !Streamed {
+    const geometry = try fat32_format.Geometry.init(sectors, hidden, spc);
+    var img = try prepareTree(allocator, geometry, label, files);
+    defer img.deinit();
+    var result = Streamed{ .allocator = allocator, .metadata = try allocator.alloc(u8, @as(usize, geometry.data_start) * 512), .segments = .empty, .stats = .{ .geometry = geometry, .used_sectors = geometry.data_start + (img.next_free_cluster - 2) * geometry.sectors_per_cluster } };
+    errdefer result.deinit();
+    img.image = result.metadata;
+    img.stream_segments = &result.segments;
+    @memset(result.metadata, 0);
+    const boot = geometry.boot(img.label, serial);
+    @memcpy(result.metadata[0..512], &boot);
+    @memcpy(result.metadata[6 * 512 ..][0..512], &boot);
+    try img.writeAll();
+    img.updateFsInfoFromFat();
+    return result;
+}
+
+fn prepareTree(allocator: std.mem.Allocator, geometry: fat32_format.Geometry, label: []const u8, files: []const File) !Image {
+    if (files.len > 8192) return error.Geometry;
     const name = try fat32_format.volumeLabel(label);
     for (files, 0..) |file, i| {
         const path = std.mem.trimStart(u8, file.path, "/");
@@ -76,24 +165,12 @@ pub fn buildInto(allocator: std.mem.Allocator, bytes: []u8, hidden: u64, spc: u3
         }
         for (files[0..i]) |other| if (std.ascii.eqlIgnoreCase(path, std.mem.trimStart(u8, other.path, "/"))) return error.DuplicatePath;
     }
-    @memset(bytes, 0);
-    const boot = geometry.boot(name, serial);
-    @memcpy(bytes[0..512], &boot);
-    @memcpy(bytes[6 * 512 ..][0..512], &boot);
-    var img: Image = .{ .allocator = allocator, .image = bytes, .part_start_sector = 0, .part_sectors = geometry.sectors, .sectors_per_fat = geometry.sectors_per_fat, .sectors_per_cluster = geometry.sectors_per_cluster, .data_start_sector = geometry.data_start, .nodes = .empty, .label = name };
-    defer {
-        for (img.nodes.items) |*node| {
-            if (node.name.len != 0) allocator.free(node.name);
-            node.children.deinit(allocator);
-        }
-        img.nodes.deinit(allocator);
-    }
+    var img: Image = .{ .allocator = allocator, .image = &.{}, .part_start_sector = 0, .part_sectors = geometry.sectors, .sectors_per_fat = geometry.sectors_per_fat, .sectors_per_cluster = geometry.sectors_per_cluster, .data_start_sector = geometry.data_start, .nodes = .empty, .label = name };
+    errdefer img.deinit();
     try img.nodes.append(allocator, .{ .kind = .dir, .name = "", .parent = 0 });
     for (files) |file| try img.insertFile(file.path, file.bytes);
     try img.allocateLayout(0);
-    try img.writeAll();
-    img.updateFsInfoFromFat();
-    return .{ .geometry = geometry, .used_sectors = geometry.data_start + (img.next_free_cluster - 2) * geometry.sectors_per_cluster };
+    return img;
 }
 fn buildFsInfo(buf: []u8, free_count: u32, next_free: u32) void {
     const info = fat32_format.fsInfo(free_count, next_free);
@@ -246,6 +323,23 @@ const Image = struct {
     nodes: std.ArrayList(Node),
     next_free_cluster: u32 = ROOT_CLUSTER + 1,
     label: [11]u8,
+    stream_segments: ?*std.ArrayList(Streamed.Segment) = null,
+
+    fn deinit(self: *Image) void {
+        for (self.nodes.items) |*node| {
+            if (node.name.len != 0) self.allocator.free(node.name);
+            node.children.deinit(self.allocator);
+        }
+        self.nodes.deinit(self.allocator);
+    }
+
+    fn putData(self: *Image, offset: usize, bytes: []const u8, copy: bool) !void {
+        if (self.stream_segments) |segments| {
+            const data = if (copy) try self.allocator.dupe(u8, bytes) else bytes;
+            errdefer if (copy) self.allocator.free(data);
+            try segments.append(self.allocator, .{ .offset = offset, .bytes = data, .owned = copy });
+        } else @memcpy(self.image[offset..][0..bytes.len], bytes);
+    }
 
     fn partOffset(self: *const Image, sector_in_part: u32) usize {
         return @as(usize, self.part_start_sector + sector_in_part) * SECTOR;
@@ -450,7 +544,7 @@ const Image = struct {
                 self.writeChain(clusters.items);
                 // Write data.
                 const dst = self.clusterOffset(n.first_cluster);
-                @memcpy(self.image[dst .. dst + n.data.len], n.data);
+                try self.putData(dst, n.data, false);
             },
             .dir => {
                 // Build directory entry buffer.
@@ -499,7 +593,7 @@ const Image = struct {
                 }
                 self.writeChain(clusters.items);
                 const off = self.clusterOffset(n.first_cluster);
-                @memcpy(self.image[off .. off + buf.items.len], buf.items);
+                try self.putData(off, buf.items, true);
 
                 for (n.children.items) |ci| try self.writeNode(ci);
             },

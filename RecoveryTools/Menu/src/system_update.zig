@@ -37,6 +37,7 @@ pub const Updater = struct {
         const a = session.arena.allocator();
         const prepared = session.prepared orelse return error.PackageMissing;
         try packages.source.verifyInstallation(a, prepared, session.tree.?, session.pool.pump);
+        session.releaseImage();
         var layout = setup.Layout{
             .sectors = disk.info.sector_count,
             .ids = .{ .installation = installed.manifest.installation_id, .disk = installed.manifest.disk_guid, .partitions = undefined },
@@ -50,7 +51,8 @@ pub const Updater = struct {
         const storage = r4os.storage.Context{ .sys = session.sys };
         var boot = GuestTarget{ .storage = storage, .target = installed.parts[1] };
         if (boot.target.sector_count > 1024 * 2048) return error.BootVolumeSize;
-        const original = try a.alloc(u8, @intCast(boot.target.sector_count * 512));
+        const original = try session.pool.allocator().alloc(u8, @intCast(boot.target.sector_count * 512));
+        defer session.pool.allocator().free(original);
         const reader = boot.device(null);
         var offset: usize = 0;
         while (offset < original.len) {
@@ -74,7 +76,7 @@ pub const Updater = struct {
         }
         try changes.append(a, .{ .path = "boot/r4os-installation.json", .bytes = manifest });
         try session.pool.pump.run("Preparing changes to BOOT files", 0, 0);
-        const boot_plan = try tools.fat32_update.prepare(a, original, boot.target.first_lba, changes.items);
+        const boot_plan = try tools.fat32_update.prepareDelta(a, original, boot.target.first_lba, changes.items);
         var result = Updater{
             .session = session,
             .boot = boot,

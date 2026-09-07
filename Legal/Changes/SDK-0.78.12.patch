@@ -1,0 +1,758 @@
+diff --git a/Platform/SDK/r4os/storage_tools.zig b/Platform/SDK/r4os/storage_tools.zig
+index 503a02d..1f5dcb9 100644
+--- a/Platform/SDK/r4os/storage_tools.zig
++++ b/Platform/SDK/r4os/storage_tools.zig
+@@ -1,5 +1,7 @@
+ //! Shared userland/host partitioning and filesystem maintenance tools.
+ pub const io = @import("storage_tools/io.zig");
++pub const byte_source = @import("storage_tools/byte_source.zig");
++pub const sparse_image = @import("storage_tools/sparse_image.zig");
+ pub const host_file = @import("storage_tools/host_file.zig");
+ pub const partition = @import("storage_tools/partition.zig");
+ pub const fat32 = @import("storage_tools/fat32.zig");
+diff --git a/Platform/SDK/r4os/storage_tools/fat32_image.zig b/Platform/SDK/r4os/storage_tools/fat32_image.zig
+index 240604a..d17b456 100644
+--- a/Platform/SDK/r4os/storage_tools/fat32_image.zig
++++ b/Platform/SDK/r4os/storage_tools/fat32_image.zig
+@@ -12,6 +12,64 @@ const ROOT_CLUSTER: u32 = 2;
+ pub const File = struct { path: []const u8, bytes: []const u8 };
+ pub const Stats = struct { geometry: fat32_format.Geometry, used_sectors: u32 };
+ 
++/// Prepared metadata plus borrowed file payloads; no volume-sized buffer.
++/// Input files outlive execution, directory entries are owned by the plan.
++pub const Streamed = struct {
++    const Segment = struct { offset: u64, bytes: []const u8, owned: bool };
++    allocator: std.mem.Allocator,
++    metadata: []u8,
++    segments: std.ArrayList(Segment),
++    stats: Stats,
++
++    pub fn deinit(self: *Streamed) void {
++        for (self.segments.items) |segment| if (segment.owned) self.allocator.free(segment.bytes);
++        self.segments.deinit(self.allocator);
++        self.allocator.free(self.metadata);
++        self.* = undefined;
++    }
++
++    pub fn execute(self: *const Streamed, device: block.Device, full: bool, work: []u8) !void {
++        try device.requireExclusive();
++        if (device.sectors != self.stats.geometry.sectors or work.len < 512 or work.len % 512 != 0) return error.Geometry;
++        const zero: [512]u8 = .{0} ** 512;
++        device.phase(.invalidate);
++        try device.write(0, &zero);
++        try device.write(6, &zero);
++        try device.write(device.sectors - 1, &zero);
++        try device.flush();
++        device.phase(.erase);
++        try device.fill(0, if (full) device.sectors else self.stats.used_sectors, 0, work);
++        device.phase(.metadata);
++        try device.write(1, self.metadata[512 .. 6 * 512]);
++        try device.write(7, self.metadata[7 * 512 ..]);
++        for (self.segments.items) |segment| try device.writePadded(segment.offset, segment.bytes);
++        try device.flush();
++        try device.verify(1, self.metadata[512 .. 6 * 512], work);
++        try device.verify(7, self.metadata[7 * 512 ..], work);
++        // The last partial sector was zero-padded by writePadded; verify it
++        // with a separate bounded buffer, never read beyond borrowed input.
++        var tail: [512]u8 = undefined;
++        for (self.segments.items) |segment| {
++            const aligned = segment.bytes.len / 512 * 512;
++            if (aligned != 0) try device.verify(segment.offset / 512, segment.bytes[0..aligned], work);
++            if (aligned != segment.bytes.len) {
++                @memset(&tail, 0);
++                @memcpy(tail[0 .. segment.bytes.len - aligned], segment.bytes[aligned..]);
++                try device.verify((segment.offset + aligned) / 512, &tail, work);
++            }
++        }
++        device.phase(.backup);
++        try device.write(6, self.metadata[6 * 512 .. 7 * 512]);
++        try device.flush();
++        try device.verify(6, self.metadata[6 * 512 .. 7 * 512], work);
++        device.phase(.primary);
++        try device.write(0, self.metadata[0..512]);
++        try device.flush();
++        try device.verify(0, self.metadata[0..512], work);
++        device.complete();
++    }
++};
++
+ pub const Prepared = struct {
+     allocator: std.mem.Allocator,
+     bytes: []u8,
+@@ -65,6 +123,37 @@ pub fn prepare(allocator: std.mem.Allocator, sectors: u64, hidden: u64, label: [
+ pub fn buildInto(allocator: std.mem.Allocator, bytes: []u8, hidden: u64, spc: u32, label: []const u8, serial: u32, files: []const File) !Stats {
+     if (bytes.len % 512 != 0 or files.len > 8192) return error.Geometry;
+     const geometry = try fat32_format.Geometry.init(bytes.len / 512, hidden, spc);
++    var img = try prepareTree(allocator, geometry, label, files);
++    defer img.deinit();
++    img.image = bytes;
++    @memset(bytes, 0);
++    const boot = geometry.boot(img.label, serial);
++    @memcpy(bytes[0..512], &boot);
++    @memcpy(bytes[6 * 512 ..][0..512], &boot);
++    try img.writeAll();
++    img.updateFsInfoFromFat();
++    return .{ .geometry = geometry, .used_sectors = geometry.data_start + (img.next_free_cluster - 2) * geometry.sectors_per_cluster };
++}
++
++pub fn prepareStreamed(allocator: std.mem.Allocator, sectors: u64, hidden: u64, spc: u32, label: []const u8, serial: u32, files: []const File) !Streamed {
++    const geometry = try fat32_format.Geometry.init(sectors, hidden, spc);
++    var img = try prepareTree(allocator, geometry, label, files);
++    defer img.deinit();
++    var result = Streamed{ .allocator = allocator, .metadata = try allocator.alloc(u8, @as(usize, geometry.data_start) * 512), .segments = .empty, .stats = .{ .geometry = geometry, .used_sectors = geometry.data_start + (img.next_free_cluster - 2) * geometry.sectors_per_cluster } };
++    errdefer result.deinit();
++    img.image = result.metadata;
++    img.stream_segments = &result.segments;
++    @memset(result.metadata, 0);
++    const boot = geometry.boot(img.label, serial);
++    @memcpy(result.metadata[0..512], &boot);
++    @memcpy(result.metadata[6 * 512 ..][0..512], &boot);
++    try img.writeAll();
++    img.updateFsInfoFromFat();
++    return result;
++}
++
++fn prepareTree(allocator: std.mem.Allocator, geometry: fat32_format.Geometry, label: []const u8, files: []const File) !Image {
++    if (files.len > 8192) return error.Geometry;
+     const name = try fat32_format.volumeLabel(label);
+     for (files, 0..) |file, i| {
+         const path = std.mem.trimStart(u8, file.path, "/");
+@@ -76,24 +165,12 @@ pub fn buildInto(allocator: std.mem.Allocator, bytes: []u8, hidden: u64, spc: u3
+         }
+         for (files[0..i]) |other| if (std.ascii.eqlIgnoreCase(path, std.mem.trimStart(u8, other.path, "/"))) return error.DuplicatePath;
+     }
+-    @memset(bytes, 0);
+-    const boot = geometry.boot(name, serial);
+-    @memcpy(bytes[0..512], &boot);
+-    @memcpy(bytes[6 * 512 ..][0..512], &boot);
+-    var img: Image = .{ .allocator = allocator, .image = bytes, .part_start_sector = 0, .part_sectors = geometry.sectors, .sectors_per_fat = geometry.sectors_per_fat, .sectors_per_cluster = geometry.sectors_per_cluster, .data_start_sector = geometry.data_start, .nodes = .empty, .label = name };
+-    defer {
+-        for (img.nodes.items) |*node| {
+-            if (node.name.len != 0) allocator.free(node.name);
+-            node.children.deinit(allocator);
+-        }
+-        img.nodes.deinit(allocator);
+-    }
++    var img: Image = .{ .allocator = allocator, .image = &.{}, .part_start_sector = 0, .part_sectors = geometry.sectors, .sectors_per_fat = geometry.sectors_per_fat, .sectors_per_cluster = geometry.sectors_per_cluster, .data_start_sector = geometry.data_start, .nodes = .empty, .label = name };
++    errdefer img.deinit();
+     try img.nodes.append(allocator, .{ .kind = .dir, .name = "", .parent = 0 });
+     for (files) |file| try img.insertFile(file.path, file.bytes);
+     try img.allocateLayout(0);
+-    try img.writeAll();
+-    img.updateFsInfoFromFat();
+-    return .{ .geometry = geometry, .used_sectors = geometry.data_start + (img.next_free_cluster - 2) * geometry.sectors_per_cluster };
++    return img;
+ }
+ fn buildFsInfo(buf: []u8, free_count: u32, next_free: u32) void {
+     const info = fat32_format.fsInfo(free_count, next_free);
+@@ -246,6 +323,23 @@ const Image = struct {
+     nodes: std.ArrayList(Node),
+     next_free_cluster: u32 = ROOT_CLUSTER + 1,
+     label: [11]u8,
++    stream_segments: ?*std.ArrayList(Streamed.Segment) = null,
++
++    fn deinit(self: *Image) void {
++        for (self.nodes.items) |*node| {
++            if (node.name.len != 0) self.allocator.free(node.name);
++            node.children.deinit(self.allocator);
++        }
++        self.nodes.deinit(self.allocator);
++    }
++
++    fn putData(self: *Image, offset: usize, bytes: []const u8, copy: bool) !void {
++        if (self.stream_segments) |segments| {
++            const data = if (copy) try self.allocator.dupe(u8, bytes) else bytes;
++            errdefer if (copy) self.allocator.free(data);
++            try segments.append(self.allocator, .{ .offset = offset, .bytes = data, .owned = copy });
++        } else @memcpy(self.image[offset..][0..bytes.len], bytes);
++    }
+ 
+     fn partOffset(self: *const Image, sector_in_part: u32) usize {
+         return @as(usize, self.part_start_sector + sector_in_part) * SECTOR;
+@@ -450,7 +544,7 @@ const Image = struct {
+                 self.writeChain(clusters.items);
+                 // Write data.
+                 const dst = self.clusterOffset(n.first_cluster);
+-                @memcpy(self.image[dst .. dst + n.data.len], n.data);
++                try self.putData(dst, n.data, false);
+             },
+             .dir => {
+                 // Build directory entry buffer.
+@@ -499,7 +593,7 @@ const Image = struct {
+                 }
+                 self.writeChain(clusters.items);
+                 const off = self.clusterOffset(n.first_cluster);
+-                @memcpy(self.image[off .. off + buf.items.len], buf.items);
++                try self.putData(off, buf.items, true);
+ 
+                 for (n.children.items) |ci| try self.writeNode(ci);
+             },
+diff --git a/Platform/SDK/r4os/storage_tools/fat32_update.zig b/Platform/SDK/r4os/storage_tools/fat32_update.zig
+index a6063b4..f3a6b2c 100644
+--- a/Platform/SDK/r4os/storage_tools/fat32_update.zig
++++ b/Platform/SDK/r4os/storage_tools/fat32_update.zig
+@@ -8,7 +8,7 @@ const view = @import("fat32_view.zig");
+ /// Null removes the named file or complete directory tree. Changes are
+ /// applied in caller order to the private image, before any device writes.
+ pub const Change = struct { path: []const u8, bytes: ?[]const u8 };
+-const Write = struct { first: u32, count: u32, order: u8 };
++const Write = struct { first: u32, count: u32, order: u8, data_offset: usize = 0 };
+ const maximum_depth = 24;
+ const final_order = 27;
+ 
+@@ -44,6 +44,15 @@ pub const Prepared = struct {
+     writes: []Write,
+     source_sha256: [32]u8,
+     changed_files: usize,
++    volume_bytes: usize = 0,
++    compact: bool = false,
++
++    fn volumeLength(self: Prepared) usize {
++        return if (self.compact) self.volume_bytes else self.bytes.len;
++    }
++    fn writeOffset(self: Prepared, write: Write) usize {
++        return if (self.compact) write.data_offset else @as(usize, write.first) * 512;
++    }
+ 
+     pub fn deinit(self: *Prepared) void {
+         self.allocator.free(self.writes);
+@@ -53,11 +62,11 @@ pub const Prepared = struct {
+     }
+     pub fn checkSource(self: Prepared, device: block.Device, work: []u8) !void {
+         try device.requireExclusive();
+-        if (device.sectors * 512 != self.bytes.len or work.len < 512 or work.len % 512 != 0) return error.Geometry;
++        if (device.sectors * 512 != self.volumeLength() or work.len < 512 or work.len % 512 != 0) return error.Geometry;
+         var digest = std.crypto.hash.sha2.Sha256.init(.{});
+         var offset: usize = 0;
+-        while (offset < self.bytes.len) {
+-            const amount = @min(self.bytes.len - offset, work.len);
++        while (offset < self.volumeLength()) {
++            const amount = @min(self.volumeLength() - offset, work.len);
+             try device.read(offset / 512, work[0..amount]);
+             digest.update(work[0..amount]);
+             offset += amount;
+@@ -74,14 +83,14 @@ pub const Prepared = struct {
+             for (self.writes) |write| {
+                 if (write.order != order) continue;
+                 changed = true;
+-                const offset = @as(usize, write.first) * 512;
++                const offset = self.writeOffset(write);
+                 try device.write(write.first, self.bytes[offset..][0 .. @as(usize, write.count) * 512]);
+             }
+             if (!changed) continue;
+             try device.flush();
+             for (self.writes) |write| {
+                 if (write.order != order) continue;
+-                const offset = @as(usize, write.first) * 512;
++                const offset = self.writeOffset(write);
+                 try device.verify(write.first, self.bytes[offset..][0 .. @as(usize, write.count) * 512], work);
+             }
+         }
+@@ -99,13 +108,38 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
+     }
+     const bytes = try allocator.dupe(u8, original);
+     errdefer allocator.free(bytes);
+-    const owners = try allocator.alloc(u8, checked.geometry.clusters + 2);
++    const applied = try applyChanges(allocator, bytes, checked.geometry, changes, null);
++    defer allocator.free(applied.depth);
++    const fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = applied.depth };
++    var writes: std.ArrayList(Write) = .empty;
++    defer writes.deinit(allocator);
++    for (0..checked.geometry.sectors) |sector| {
++        const offset = sector * 512;
++        if (std.mem.eql(u8, original[offset..][0..512], bytes[offset..][0..512])) continue;
++        const order = try fat.order(@intCast(sector));
++        if (writes.items.len != 0) {
++            const previous = &writes.items[writes.items.len - 1];
++            if (previous.order == order and previous.first + previous.count == sector) {
++                previous.count += 1;
++                continue;
++            }
++        }
++        try writes.append(allocator, .{ .first = @intCast(sector), .count = 1, .order = order });
++    }
++    var sha: [32]u8 = undefined;
++    std.crypto.hash.sha2.Sha256.hash(original, &sha, .{});
++    return .{ .allocator = allocator, .bytes = bytes, .writes = try writes.toOwnedSlice(allocator), .source_sha256 = sha, .changed_files = applied.changed_files };
++}
++
++const Applied = struct { depth: []u8, changed_files: usize };
++fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geometry, changes: []const Change, dirty: ?[]bool) !Applied {
++    const owners = try allocator.alloc(u8, geometry.clusters + 2);
+     defer allocator.free(owners);
+     @memset(owners, 0);
+     const depth = try allocator.alloc(u8, owners.len);
+-    defer allocator.free(depth);
++    errdefer allocator.free(depth);
+     @memset(depth, 0);
+-    var fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = depth };
++    var fat = Fat{ .bytes = bytes, .geo = geometry, .directory_depth = depth, .dirty = dirty };
+     try fat.audit(allocator, owners);
+     const original_directories = try allocator.dupe(u8, depth);
+     defer allocator.free(original_directories);
+@@ -115,24 +149,61 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
+         changed_files += 1;
+     };
+     if (changed_files != 0) fat.updateInfo();
++    return .{ .depth = depth, .changed_files = changed_files };
++}
++
++/// Consume the caller's private mutable volume as preparation scratch. The
++/// returned plan owns only sectors touched by changes. It never borrows this
++/// volume, so a second plan may mutate the same buffer before either executes.
++/// On error discard the scratch volume; no device writes have taken place.
++pub fn prepareDelta(allocator: std.mem.Allocator, bytes: []u8, hidden: u64, changes: []const Change) !Prepared {
++    if (bytes.len > 1024 * 1024 * 1024 or changes.len > 4096) return error.VolumeLimit;
++    const checked = try view.View.init(bytes, hidden);
++    for (changes, 0..) |change, i| {
++        try validPath(change.path);
++        if (change.bytes) |data| {
++            if (data.len > std.math.maxInt(u32)) return error.FileLimit;
++            // Mutation may recycle any old file cluster. Sources must be
++            // independently owned, not slices of this consumable volume.
++            const base = @intFromPtr(bytes.ptr);
++            const source = @intFromPtr(data.ptr);
++            if (data.len != 0 and source < base + bytes.len and base < source + data.len) return error.SourceAlias;
++        }
++        for (changes[0..i]) |other| if (std.ascii.eqlIgnoreCase(change.path, other.path)) return error.DuplicateChange;
++    }
++    var sha: [32]u8 = undefined;
++    std.crypto.hash.sha2.Sha256.hash(bytes, &sha, .{});
++    if (changes.len == 0) return .{ .allocator = allocator, .bytes = &.{}, .writes = &.{}, .source_sha256 = sha, .changed_files = 0, .volume_bytes = bytes.len, .compact = true };
++    const dirty = try allocator.alloc(bool, checked.geometry.sectors);
++    defer allocator.free(dirty);
++    @memset(dirty, false);
++    const applied = try applyChanges(allocator, bytes, checked.geometry, changes, dirty);
++    defer allocator.free(applied.depth);
++    const fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = applied.depth };
++    var count: usize = 0;
++    for (dirty) |changed| if (changed) {
++        count += 1;
++    };
++    const compact = try allocator.alloc(u8, count * 512);
++    errdefer allocator.free(compact);
+     var writes: std.ArrayList(Write) = .empty;
+     defer writes.deinit(allocator);
+-    for (0..checked.geometry.sectors) |sector| {
+-        const offset = sector * 512;
+-        if (std.mem.eql(u8, original[offset..][0..512], bytes[offset..][0..512])) continue;
++    var offset: usize = 0;
++    for (dirty, 0..) |changed, sector| {
++        if (!changed) continue;
+         const order = try fat.order(@intCast(sector));
++        @memcpy(compact[offset..][0..512], bytes[sector * 512 ..][0..512]);
++        defer offset += 512;
+         if (writes.items.len != 0) {
+             const previous = &writes.items[writes.items.len - 1];
+-            if (previous.order == order and previous.first + previous.count == sector) {
++            if (previous.order == order and previous.first + previous.count == sector and previous.count < 256) {
+                 previous.count += 1;
+                 continue;
+             }
+         }
+-        try writes.append(allocator, .{ .first = @intCast(sector), .count = 1, .order = order });
++        try writes.append(allocator, .{ .first = @intCast(sector), .count = 1, .order = order, .data_offset = offset });
+     }
+-    var sha: [32]u8 = undefined;
+-    std.crypto.hash.sha2.Sha256.hash(original, &sha, .{});
+-    return .{ .allocator = allocator, .bytes = bytes, .writes = try writes.toOwnedSlice(allocator), .source_sha256 = sha, .changed_files = changed_files };
++    return .{ .allocator = allocator, .bytes = compact, .writes = try writes.toOwnedSlice(allocator), .source_sha256 = sha, .changed_files = applied.changed_files, .volume_bytes = bytes.len, .compact = true };
+ }
+ 
+ fn validPath(path: []const u8) !void {
+@@ -305,6 +376,12 @@ const Fat = struct {
+     directory_depth: []u8,
+     original_directories: []const u8 = &.{},
+     free_hint: u32 = 2,
++    dirty: ?[]bool = null,
++
++    fn mutable(self: *Fat, offset: usize, count: usize) []u8 {
++        if (self.dirty) |dirty| if (count != 0) @memset(dirty[offset / 512 .. (offset + count - 1) / 512 + 1], true);
++        return self.bytes[offset..][0..count];
++    }
+ 
+     fn verifyChildren(self: *Fat, parent: u32, depth: u8, path: []u8, length: usize, expected: []const []const u8, found: []bool, entries: *usize) !void {
+         if (depth >= maximum_depth) return error.Path;
+@@ -349,7 +426,7 @@ const Fat = struct {
+     fn set(self: *Fat, cluster: u32, value_: u32) void {
+         for (0..2) |copy| {
+             const offset = (32 + copy * self.geo.sectors_per_fat) * 512 + @as(usize, cluster) * 4;
+-            put32(self.bytes, offset, (u32at(self.bytes, offset) & 0xf000_0000) | (value_ & 0x0fff_ffff));
++            put32(self.mutable(offset, 4), 0, (u32at(self.bytes, offset) & 0xf000_0000) | (value_ & 0x0fff_ffff));
+         }
+     }
+     fn next(self: Fat, cluster: u32) !?u32 {
+@@ -424,7 +501,7 @@ const Fat = struct {
+                 self.set(cluster, 0x0fff_ffff);
+                 self.directory_depth[cluster] = depth;
+                 const offset = try self.clusterOffset(cluster);
+-                @memset(self.bytes[offset..][0..self.clusterSize()], 0);
++                @memset(self.mutable(offset, self.clusterSize()), 0);
+                 self.free_hint = cluster + 1;
+                 return cluster;
+             }
+@@ -470,8 +547,8 @@ const Fat = struct {
+                 if (depth > maximum_depth) return error.Path;
+                 const cluster = try self.allocate(depth);
+                 const offset = try self.clusterOffset(cluster);
+-                shortEntry(self.bytes[offset..][0..32], ".          ".*, true, cluster, 0);
+-                shortEntry(self.bytes[offset + 32 ..][0..32], "..         ".*, true, if (parent == 2) 0 else parent, 0);
++                shortEntry(self.mutable(offset, 32)[0..32], ".          ".*, true, cluster, 0);
++                shortEntry(self.mutable(offset + 32, 32)[0..32], "..         ".*, true, if (parent == 2) 0 else parent, 0);
+                 _ = try self.create(parent, name, true, cluster);
+                 parent = cluster;
+             }
+@@ -501,10 +578,10 @@ const Fat = struct {
+             last = cluster;
+             const amount = @min(self.clusterSize(), bytes.len - done);
+             const offset = try self.clusterOffset(cluster);
+-            @memcpy(self.bytes[offset..][0..amount], bytes[done..][0..amount]);
++            @memcpy(self.mutable(offset, amount), bytes[done..][0..amount]);
+             done += amount;
+         }
+-        const raw = self.bytes[entry_offset..][0..32];
++        const raw = self.mutable(entry_offset, 32);
+         put16(raw, 20, @truncate(first >> 16));
+         put16(raw, 26, @truncate(first));
+         put32(raw, 28, @intCast(bytes.len));
+@@ -517,7 +594,7 @@ const Fat = struct {
+             while (try iterator.next()) |child_entry| try self.removeTree(child_entry, depth + 1);
+         }
+         try self.free(entry.cluster());
+-        for (entry.slots[0..entry.slot_count]) |offset| self.bytes[offset] = 0xe5;
++        for (entry.slots[0..entry.slot_count]) |offset| self.mutable(offset, 1)[0] = 0xe5;
+     }
+     fn create(self: *Fat, parent: u32, name: []const u8, directory: bool, cluster: u32) !usize {
+         var short = "R4UP0000BIN".*;
+@@ -563,13 +640,13 @@ const Fat = struct {
+         // Consuming an end marker must not expose stale bytes after it.
+         if (past_end) {
+             if (at < self.clusterSize()) {
+-                self.bytes[(try self.clusterOffset(current)) + at] = 0;
+-            } else if (try self.next(current)) |following| self.bytes[try self.clusterOffset(following)] = 0;
++                self.mutable((try self.clusterOffset(current)) + at, 1)[0] = 0;
++            } else if (try self.next(current)) |following| self.mutable(try self.clusterOffset(following), 1)[0] = 0;
+         }
+         const sum = checksum(&short);
+         for (0..lfn_count) |i| {
+             const ordinal = lfn_count - i;
+-            const raw = self.bytes[slots[i]..][0..32];
++            const raw = self.mutable(slots[i], 32);
+             @memset(raw, 0);
+             raw[0] = @as(u8, @intCast(ordinal)) | (if (i == 0) @as(u8, 64) else 0);
+             raw[11] = 15;
+@@ -580,7 +657,7 @@ const Fat = struct {
+             }
+         }
+         const offset = slots[lfn_count];
+-        shortEntry(self.bytes[offset..][0..32], short, directory, cluster, 0);
++        shortEntry(self.mutable(offset, 32)[0..32], short, directory, cluster, 0);
+         return offset;
+     }
+     fn updateInfo(self: *Fat) void {
+@@ -591,8 +668,8 @@ const Fat = struct {
+             if (next_free == 0xffff_ffff) next_free = @intCast(i);
+         };
+         for ([_]usize{ 1, 7 }) |sector| {
+-            put32(self.bytes, sector * 512 + 488, free_count);
+-            put32(self.bytes, sector * 512 + 492, next_free);
++            put32(self.mutable(sector * 512 + 488, 4), 0, free_count);
++            put32(self.mutable(sector * 512 + 492, 4), 0, next_free);
+         }
+     }
+     fn order(self: Fat, sector: u32) !u8 {
+diff --git a/Platform/SDK/r4os/storage_tools/fat32_view.zig b/Platform/SDK/r4os/storage_tools/fat32_view.zig
+index 8380fc5..32d8da3 100644
+--- a/Platform/SDK/r4os/storage_tools/fat32_view.zig
++++ b/Platform/SDK/r4os/storage_tools/fat32_view.zig
+@@ -3,18 +3,35 @@
+ //! or copies a source partition's geometry onto a physical target.
+ const std = @import("std");
+ const format = @import("fat32.zig");
++const Source = @import("byte_source.zig").Source;
+ pub const View = struct {
+-    bytes: []const u8,
++    source: Source,
+     geometry: format.Geometry,
+ 
+     pub fn init(bytes: []const u8, hidden: u64) !View {
+-        if (bytes.len < 512 or bytes.len % 512 != 0) return error.SourceFat;
+-        const geo = try format.Geometry.init(bytes.len / 512, hidden, bytes[13]);
+-        const boot = geo.boot(bytes[71..82].*, u32at(bytes, 67));
+-        if (!std.mem.eql(u8, bytes[0..512], &boot) or !std.mem.eql(u8, bytes[6 * 512 ..][0..512], &boot)) return error.SourceFat;
++        return initSource(Source.slice(bytes), hidden);
++    }
++    pub fn initSource(source: Source, hidden: u64) !View {
++        if (source.length < 512 or source.length % 512 != 0) return error.SourceFat;
++        var bytes: [512]u8 = undefined;
++        try source.read(0, &bytes);
++        const geo = try format.Geometry.init(source.length / 512, hidden, bytes[13]);
++        const boot = geo.boot(bytes[71..82].*, u32at(&bytes, 67));
++        if (!std.mem.eql(u8, &bytes, &boot)) return error.SourceFat;
++        try source.read(6 * 512, &bytes);
++        if (!std.mem.eql(u8, &bytes, &boot)) return error.SourceFat;
+         const fat_size = @as(usize, geo.sectors_per_fat) * 512;
+-        if (!std.mem.eql(u8, bytes[32 * 512 ..][0..fat_size], bytes[32 * 512 + fat_size ..][0..fat_size])) return error.SourceFat;
+-        return .{ .bytes = bytes, .geometry = geo };
++        var first: [4096]u8 = undefined;
++        var second: [4096]u8 = undefined;
++        var at: usize = 0;
++        while (at < fat_size) {
++            const count = @min(first.len, fat_size - at);
++            try source.read(32 * 512 + at, first[0..count]);
++            try source.read(32 * 512 + fat_size + at, second[0..count]);
++            if (!std.mem.eql(u8, first[0..count], second[0..count])) return error.SourceFat;
++            at += count;
++        }
++        return .{ .source = source, .geometry = geo };
+     }
+ 
+     pub fn readFile(self: View, allocator: std.mem.Allocator, path: []const u8, limit: usize) ![]u8 {
+@@ -38,10 +55,11 @@ pub const View = struct {
+             if (entry.cluster != 0) return error.SourceFat;
+             return;
+         }
++        var buffer: [64 * 1024]u8 = undefined;
+         var cluster = entry.cluster;
+         var offset: usize = 0;
+         while (offset < entry.size) {
+-            const data = try self.clusterBytes(cluster);
++            const data = try self.clusterBytes(cluster, &buffer);
+             const amount = @min(data.len, entry.size - offset);
+             if (out) |target| @memcpy(target[offset..][0..amount], data[0..amount]);
+             if (expected) |wanted| if (!std.mem.eql(u8, wanted[offset..][0..amount], data[0..amount])) return error.SourceContentMismatch;
+@@ -67,6 +85,7 @@ pub const View = struct {
+     }
+ 
+     fn child(self: View, start: u32, wanted: []const u8) !Entry {
++        var buffer: [64 * 1024]u8 = undefined;
+         var cluster = start;
+         var traversed: u32 = 0;
+         var entries: usize = 0;
+@@ -78,7 +97,7 @@ pub const View = struct {
+         while (true) {
+             traversed += 1;
+             if (traversed > self.geometry.clusters) return error.SourceFat;
+-            const data = try self.clusterBytes(cluster);
++            const data = try self.clusterBytes(cluster, &buffer);
+             var at: usize = 0;
+             while (at < data.len) : (at += 32) {
+                 entries += 1;
+@@ -162,14 +181,19 @@ pub const View = struct {
+         }
+     }
+ 
+-    fn clusterBytes(self: View, cluster: u32) ![]const u8 {
++    fn clusterBytes(self: View, cluster: u32, buffer: []u8) ![]const u8 {
+         if (cluster < 2 or cluster >= self.geometry.clusters + 2) return error.SourceFat;
+         const sector = @as(usize, self.geometry.data_start) + @as(usize, cluster - 2) * self.geometry.sectors_per_cluster;
+-        return self.bytes[sector * 512 ..][0 .. @as(usize, self.geometry.sectors_per_cluster) * 512];
++        const count = @as(usize, self.geometry.sectors_per_cluster) * 512;
++        if (count > buffer.len) return error.SourceFat;
++        try self.source.read(sector * 512, buffer[0..count]);
++        return buffer[0..count];
+     }
+     fn next(self: View, cluster: u32) !?u32 {
+-        _ = try self.clusterBytes(cluster);
+-        const value = u32at(self.bytes, 32 * 512 + @as(usize, cluster) * 4) & 0x0fff_ffff;
++        if (cluster < 2 or cluster >= self.geometry.clusters + 2) return error.SourceFat;
++        var bytes: [4]u8 = undefined;
++        try self.source.read(32 * 512 + @as(usize, cluster) * 4, &bytes);
++        const value = u32at(&bytes, 0) & 0x0fff_ffff;
+         if (value >= 0x0fff_fff8) return null;
+         if (value < 2 or value >= self.geometry.clusters + 2) return error.SourceFat;
+         return value;
+diff --git a/Platform/SDK/r4os/zip.zig b/Platform/SDK/r4os/zip.zig
+index d65978e..1345227 100644
+--- a/Platform/SDK/r4os/zip.zig
++++ b/Platform/SDK/r4os/zip.zig
+@@ -13,6 +13,10 @@ pub const min_step_bytes: u32 = 258; // One complete maximum Deflate match.
+ pub const op_inspect: u32 = 1;
+ pub const op_begin: u32 = 2;
+ pub const op_step: u32 = 3;
++pub const op_begin_stream: u32 = 4;
++pub const op_step_stream: u32 = 5;
++pub const stream_history_bytes: usize = 32768;
++pub const stream_buffer_bytes: usize = stream_history_bytes + 128 * 1024;
+ 
+ pub const Error = error{ Unavailable, BadRequest, InvalidArchive, Unsupported, Bounds, Checksum, OutputTooSmall, DuplicatePath, UnsafePath, Limit, Inflate, Stale };
+ pub fn status(err: Error) i32 {
+@@ -78,6 +82,7 @@ pub const Entry = extern struct {
+ pub const Progress = extern struct {
+     written: u64 = 0,
+     done: u32 = 0,
++    // Stream ops: new bytes in output[stream_history_bytes..]. Normal ops: 0.
+     reserved: u32 = 0,
+ };
+ pub const Request = extern struct {
+@@ -125,6 +130,19 @@ pub const Context = struct {
+         try self.invoke(op_step, &.{ .work = &work.data, .work_len = work_bytes, .step_bytes = budget }, &out);
+         return out;
+     }
++    /// Caller keeps archive, work and window stable through the final step.
++    /// Each streamStep publishes only its new bytes at the fixed history
++    /// offset. Consume them before the next call. Final CRC covers all bytes.
++    pub fn beginStream(self: Context, archive: []const u8, entry: *const Entry, window: []u8, work: *Work) Error!Progress {
++        var out = Progress{};
++        try self.invoke(op_begin_stream, &.{ .archive = archive.ptr, .archive_bytes = archive.len, .entry = entry, .output = window.ptr, .output_bytes = window.len, .work = &work.data, .work_len = work_bytes }, &out);
++        return out;
++    }
++    pub fn streamStep(self: Context, work: *Work, budget: u32) Error!Progress {
++        var out = Progress{};
++        try self.invoke(op_step_stream, &.{ .work = &work.data, .work_len = work_bytes, .step_bytes = budget }, &out);
++        return out;
++    }
+ };
+ 
+ test "ZIP protocol status values cannot collide with generic role failure" {
+diff --git a/Platform/SDK/r4os/storage_tools/byte_source.zig b/Platform/SDK/r4os/storage_tools/byte_source.zig
+new file mode 100644
+--- /dev/null
++++ b/Platform/SDK/r4os/storage_tools/byte_source.zig
+@@ -0,0 +1,36 @@
++//! Bounded immutable byte reader. The owner retains its backing storage.
++const std = @import("std");
++pub const Source = struct {
++    context: *const anyopaque,
++    length: usize,
++    offset: usize = 0,
++    read_fn: *const fn (*const anyopaque, usize, []u8) anyerror!void,
++
++    pub fn read(self: Source, at: usize, out: []u8) !void {
++        if (at > self.length or out.len > self.length - at) return error.SourceBounds;
++        try self.read_fn(self.context, self.offset + at, out);
++    }
++    pub fn range(self: Source, at: usize, len: usize) !Source {
++        if (at > self.length or len > self.length - at) return error.SourceBounds;
++        var result = self;
++        result.offset += at;
++        result.length = len;
++        return result;
++    }
++    pub fn slice(bytes: []const u8) Source {
++        return .{ .context = bytes.ptr, .length = bytes.len, .read_fn = readSlice };
++    }
++    fn readSlice(context: *const anyopaque, at: usize, out: []u8) !void {
++        const bytes: [*]const u8 = @ptrCast(context);
++        @memcpy(out, bytes[at..][0..out.len]);
++    }
++};
++
++test "byte source nested ranges enforce local bounds" {
++    const source = try (try Source.slice("abcdefgh").range(2, 5)).range(1, 3);
++    var out: [3]u8 = undefined;
++    try source.read(0, &out);
++    try std.testing.expectEqualStrings("def", &out);
++    try std.testing.expectError(error.SourceBounds, source.read(1, &out));
++    try std.testing.expectError(error.SourceBounds, source.range(std.math.maxInt(usize), 1));
++}
+diff --git a/Platform/SDK/r4os/storage_tools/sparse_image.zig b/Platform/SDK/r4os/storage_tools/sparse_image.zig
+new file mode 100644
+--- /dev/null
++++ b/Platform/SDK/r4os/storage_tools/sparse_image.zig
+@@ -0,0 +1,105 @@
++//! Sequential image ingestion retains only nonzero 64-KB blocks. All blocks
++//! are owned before publication; later reads allocate nothing and need no I/O.
++const std = @import("std");
++const Source = @import("byte_source.zig").Source;
++pub const block_bytes = 64 * 1024;
++pub const Image = struct {
++    allocator: std.mem.Allocator,
++    length: usize,
++    blocks: []?[]const u8,
++    written: usize = 0,
++    stored_bytes: usize = 0,
++    pending: [block_bytes]u8 = undefined,
++    pending_bytes: usize = 0,
++    complete: bool = false,
++
++    pub fn init(allocator: std.mem.Allocator, length: usize) !*Image {
++        if (length > 4 * 1024 * 1024 * 1024) return error.ImageLimit;
++        const self = try allocator.create(Image);
++        errdefer allocator.destroy(self);
++        const blocks = try allocator.alloc(?[]const u8, std.math.divCeil(usize, length, block_bytes) catch return error.ImageLimit);
++        @memset(blocks, null);
++        self.* = .{ .allocator = allocator, .length = length, .blocks = blocks };
++        return self;
++    }
++    pub fn deinit(self: *Image) void {
++        for (self.blocks) |bytes| if (bytes) |owned| self.allocator.free(owned);
++        self.allocator.free(self.blocks);
++        self.allocator.destroy(self);
++    }
++    pub fn append(self: *Image, bytes: []const u8) !void {
++        if (self.complete or bytes.len > self.length - self.written) return error.SourceBounds;
++        var at: usize = 0;
++        while (at < bytes.len) {
++            const count = @min(block_bytes - self.pending_bytes, bytes.len - at);
++            @memcpy(self.pending[self.pending_bytes..][0..count], bytes[at..][0..count]);
++            self.pending_bytes += count;
++            self.written += count;
++            at += count;
++            if (self.pending_bytes == block_bytes) try self.storePending();
++        }
++    }
++    fn storePending(self: *Image) !void {
++        if (self.pending_bytes == 0) return;
++        const bytes = self.pending[0..self.pending_bytes];
++        const index = (self.written - self.pending_bytes) / block_bytes;
++        if (!std.mem.allEqual(u8, bytes, 0)) {
++            self.blocks[index] = try self.allocator.dupe(u8, bytes);
++            self.stored_bytes += bytes.len;
++        }
++        self.pending_bytes = 0;
++    }
++    pub fn finish(self: *Image) !void {
++        if (self.complete or self.written != self.length) return error.SourceBounds;
++        try self.storePending();
++        self.complete = true;
++    }
++    pub fn source(self: *const Image) Source {
++        return .{ .context = self, .length = self.length, .read_fn = read };
++    }
++    fn read(raw: *const anyopaque, at: usize, out: []u8) !void {
++        const self: *const Image = @ptrCast(@alignCast(raw));
++        if (!self.complete) return error.SourceIncomplete;
++        var done: usize = 0;
++        while (done < out.len) {
++            const offset = at + done;
++            const within = offset % block_bytes;
++            const count = @min(block_bytes - within, out.len - done);
++            if (self.blocks[offset / block_bytes]) |bytes|
++                @memcpy(out[done..][0..count], bytes[within..][0..count])
++            else
++                @memset(out[done..][0..count], 0);
++            done += count;
++        }
++    }
++};
++
++test "sparse ingestion omits zero blocks and reads cross-block tails exactly" {
++    const t = std.testing;
++    const input = try t.allocator.alloc(u8, 3 * block_bytes + 17);
++    defer t.allocator.free(input);
++    @memset(input, 0);
++    input[block_bytes + 9] = 42;
++    input[input.len - 1] = 89;
++    const image = try Image.init(t.allocator, input.len);
++    defer image.deinit();
++    var readback: [8192]u8 = undefined;
++    try t.expectError(error.SourceIncomplete, image.source().read(0, &readback));
++    var at: usize = 0;
++    while (at < input.len) {
++        const count = @min(777, input.len - at);
++        try image.append(input[at..][0..count]);
++        at += count;
++    }
++    try image.finish();
++    try t.expectEqual(block_bytes + 17, image.stored_bytes);
++    at = 0;
++    while (at < input.len) {
++        const count = @min(readback.len, input.len - at);
++        try image.source().read(at, readback[0..count]);
++        try t.expectEqualSlices(u8, input[at..][0..count], readback[0..count]);
++        at += count;
++    }
++    try t.expectError(error.SourceBounds, image.append("x"));
++    try t.expectError(error.SourceBounds, image.source().read(input.len, readback[0..1]));
++}

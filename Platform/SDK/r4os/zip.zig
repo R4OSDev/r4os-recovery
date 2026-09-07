@@ -13,6 +13,10 @@ pub const min_step_bytes: u32 = 258; // One complete maximum Deflate match.
 pub const op_inspect: u32 = 1;
 pub const op_begin: u32 = 2;
 pub const op_step: u32 = 3;
+pub const op_begin_stream: u32 = 4;
+pub const op_step_stream: u32 = 5;
+pub const stream_history_bytes: usize = 32768;
+pub const stream_buffer_bytes: usize = stream_history_bytes + 128 * 1024;
 
 pub const Error = error{ Unavailable, BadRequest, InvalidArchive, Unsupported, Bounds, Checksum, OutputTooSmall, DuplicatePath, UnsafePath, Limit, Inflate, Stale };
 pub fn status(err: Error) i32 {
@@ -78,6 +82,7 @@ pub const Entry = extern struct {
 pub const Progress = extern struct {
     written: u64 = 0,
     done: u32 = 0,
+    // Stream ops: new bytes in output[stream_history_bytes..]. Normal ops: 0.
     reserved: u32 = 0,
 };
 pub const Request = extern struct {
@@ -123,6 +128,19 @@ pub const Context = struct {
     pub fn step(self: Context, work: *Work, budget: u32) Error!Progress {
         var out = Progress{};
         try self.invoke(op_step, &.{ .work = &work.data, .work_len = work_bytes, .step_bytes = budget }, &out);
+        return out;
+    }
+    /// Caller keeps archive, work and window stable through the final step.
+    /// Each streamStep publishes only its new bytes at the fixed history
+    /// offset. Consume them before the next call. Final CRC covers all bytes.
+    pub fn beginStream(self: Context, archive: []const u8, entry: *const Entry, window: []u8, work: *Work) Error!Progress {
+        var out = Progress{};
+        try self.invoke(op_begin_stream, &.{ .archive = archive.ptr, .archive_bytes = archive.len, .entry = entry, .output = window.ptr, .output_bytes = window.len, .work = &work.data, .work_len = work_bytes }, &out);
+        return out;
+    }
+    pub fn streamStep(self: Context, work: *Work, budget: u32) Error!Progress {
+        var out = Progress{};
+        try self.invoke(op_step_stream, &.{ .work = &work.data, .work_len = work_bytes, .step_bytes = budget }, &out);
         return out;
     }
 };

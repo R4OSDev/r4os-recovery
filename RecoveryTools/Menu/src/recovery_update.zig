@@ -40,7 +40,8 @@ pub const Updater = struct {
             const boot = if (size > 0 and size <= facts.len) state.Boot.parse(facts[0..@intCast(size)]) catch null else null;
             running_previous = if (boot) |b| b.previous or !state.guid.eql(b.disk, disk.info.disk_guid) or !state.guid.eql(b.partition, target.target.partition_guid) else true;
         }
-        const original = try a.alloc(u8, @intCast(target.target.sector_count * 512));
+        const original = try session.pool.allocator().alloc(u8, @intCast(target.target.sector_count * 512));
+        defer session.pool.allocator().free(original);
         const reader = target.device(null);
         var done: usize = 0;
         while (done < original.len) {
@@ -50,7 +51,7 @@ pub const Updater = struct {
             try session.pool.pump.run("Reading RECOVERY and preserving INSTALL", done, original.len);
         }
         var result = Updater{ .session = session, .target = target, .disk = .{ .storage = storage, .target = r4os.storage.Context.wholeDevice(disk.info) },
-            .table = try a.create(tools.partition.Plan), .plan = try slots.Plan.prepare(a, original, target.target.first_lba, installed.manifest.installation_id, session.prepared.?, running_previous, session.pool.pump),
+            .table = try a.create(tools.partition.Plan), .plan = try slots.Plan.prepareDelta(a, original, target.target.first_lba, installed.manifest.installation_id, session.prepared.?, running_previous, session.pool.pump),
             .work = try a.alloc(u8, tools.io.scratch_bytes), .own_source = own_source };
         result.table.* = try tools.partition.Plan.read(result.disk.device(null), result.work);
         try catalog.revalidate(session.sys, selected);

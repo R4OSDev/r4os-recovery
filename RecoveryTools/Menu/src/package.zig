@@ -37,14 +37,37 @@ pub const SystemManifest = struct {
 pub const Archive = struct {
     original: []const u8,
     entries: []zip.Entry,
-    payload: []u8,
-    offsets: []usize,
+    contents: [][]u8,
+    disk: ?*r4os.storage_tools.sparse_image.Image = null,
+    disk_sha256: [32]u8 = undefined,
     manifest: []const u8,
     pub fn get(self: Archive, name: []const u8) ?[]const u8 {
         for (self.entries, 0..) |entry, i| if (std.mem.eql(u8, entry.name(self.original) catch return null, name)) {
-            return self.payload[self.offsets[i]..][0..@intCast(entry.bytes)];
+            if (self.disk != null and std.mem.eql(u8, name, "disk.img")) return null;
+            return self.contents[i];
         };
         return null;
+    }
+    pub fn image(self: Archive) !r4os.storage_tools.byte_source.Source {
+        return (self.disk orelse return error.SourceImageMissing).source();
+    }
+    pub fn digest(self: Archive, pump: Pump) ![32]u8 {
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        var buffer: [128 * 1024]u8 = undefined;
+        for (self.entries, 0..) |entry, i| {
+            const disk = self.disk != null and std.mem.eql(u8, try entry.name(self.original), "disk.img");
+            var at: usize = 0;
+            while (at < entry.bytes) {
+                const count = @min(buffer.len, entry.bytes - at);
+                if (disk) {
+                    try self.disk.?.source().read(at, buffer[0..count]);
+                    hash.update(buffer[0..count]);
+                } else hash.update(self.contents[i][at..][0..count]);
+                at += count;
+                try pump.run("Checking retained contents", at, entry.bytes);
+            }
+        }
+        return hash.finalResult();
     }
 };
 pub const Prepared = struct {
@@ -168,30 +191,50 @@ test "full release host supplements stay separate from managed boot files" {
     files[5].path = "foreign.bin";
     try std.testing.expectError(error.UnexpectedFile, validateSystem(manifest));
 }
-fn extract(allocator: std.mem.Allocator, codec: anytype, input: []const u8, pump: Pump) !Archive {
+fn extract(allocator: std.mem.Allocator, image_allocator: std.mem.Allocator, codec: anytype, input: []const u8, kind: Kind, pump: Pump) !Archive {
     if (input.len < 22 or input.len > max_archive_bytes) return error.ArchiveSize;
     const entries = try allocator.alloc(zip.Entry, zip.max_entries);
     const info = try codec.inspect(input, entries);
     if (info.entries == 0 or info.total_bytes > max_payload_bytes) return error.PayloadSize;
-    const payload = try allocator.alloc(u8, @intCast(info.total_bytes));
-    const offsets = try allocator.alloc(usize, info.entries);
+    const contents = try allocator.alloc([]u8, info.entries);
+    @memset(contents, &.{});
     const work = try allocator.create(zip.Work);
-    var offset: usize = 0;
-    for (entries[0..info.entries], 0..) |entry, i| {
-        offsets[i] = offset;
-        const output = payload[offset..][0..@intCast(entry.bytes)];
-        var progress = try codec.begin(input, &entry, output, work);
-        while (progress.done == 0) {
-            try pump.run("Unpacking ZIP", offset + progress.written, payload.len);
-            progress = try codec.step(work, 128 * 1024);
+    defer allocator.destroy(work);
+    var result = Archive{ .original = input, .entries = entries[0..info.entries], .contents = contents, .manifest = undefined };
+    var offset: u64 = 0;
+    for (result.entries, 0..) |entry, i| {
+        if (kind == .r4os and std.mem.eql(u8, try entry.name(input), "disk.img")) {
+            if (entry.bytes != 2048 * 1024 * 1024 or entry.directory != 0) return error.SourceImageSize;
+            const image = try r4os.storage_tools.sparse_image.Image.init(image_allocator, @intCast(entry.bytes));
+            result.disk = image;
+            const window = try allocator.alloc(u8, zip.stream_buffer_bytes);
+            defer allocator.free(window);
+            var hash = std.crypto.hash.sha2.Sha256.init(.{});
+            var progress = try codec.beginStream(input, &entry, window, work);
+            while (progress.done == 0) {
+                progress = try codec.streamStep(work, 128 * 1024);
+                const data = window[zip.stream_history_bytes..][0..progress.reserved];
+                hash.update(data);
+                try image.append(data);
+                try pump.run("Unpacking image blocks", offset + progress.written, info.total_bytes);
+            }
+            try image.finish();
+            result.disk_sha256 = hash.finalResult();
+        } else {
+            const output = try allocator.alloc(u8, @intCast(entry.bytes));
+            contents[i] = output;
+            var progress = try codec.begin(input, &entry, output, work);
+            while (progress.done == 0) {
+                try pump.run("Unpacking ZIP", offset + progress.written, info.total_bytes);
+                progress = try codec.step(work, 128 * 1024);
+            }
         }
-        offset += output.len;
+        offset += entry.bytes;
     }
-    const result = Archive{ .original = input, .entries = entries[0..info.entries], .payload = payload, .offsets = offsets, .manifest = undefined };
-    var out = result;
-    out.manifest = result.get("manifest.json") orelse return error.PackageFormat;
-    return out;
+    result.manifest = result.get("manifest.json") orelse return error.PackageFormat;
+    return result;
 }
+
 fn verifyFiles(archive: Archive, files: []const File, pump: Pump) !void {
     if (files.len == 0 or files.len >= zip.max_entries) return error.ManifestValue;
     var count: usize = 0;
@@ -202,6 +245,12 @@ fn verifyFiles(archive: Archive, files: []const File, pump: Pump) !void {
     for (files, 0..) |file, i| {
         if (!portablePath(file.path) or std.ascii.eqlIgnoreCase(file.path, "manifest.json") or !lowerHex(file.sha256, 64)) return error.ManifestValue;
         for (files[0..i]) |prior| if (std.ascii.eqlIgnoreCase(file.path, prior.path)) return error.DuplicatePath;
+        if (archive.disk) |disk| if (std.mem.eql(u8, file.path, "disk.img")) {
+            if (file.bytes != disk.length) return error.FileSizeMismatch;
+            const actual = std.fmt.bytesToHex(archive.disk_sha256, .lower);
+            if (!std.mem.eql(u8, &actual, file.sha256)) return error.HashMismatch;
+            continue;
+        };
         const bytes = archive.get(file.path) orelse return error.MissingFile;
         if (bytes.len != file.bytes) return error.FileSizeMismatch;
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
@@ -229,8 +278,11 @@ fn runtimeFat(bytes: []const u8) bool {
         std.mem.readInt(u32, bytes[44..48], .little) == 2;
 }
 pub fn prepare(allocator: std.mem.Allocator, codec: anytype, input: []const u8, kind: Kind, pump: Pump) anyerror!Prepared {
+    return prepareWithImageAllocator(allocator, allocator, codec, input, kind, pump);
+}
+pub fn prepareWithImageAllocator(allocator: std.mem.Allocator, image_allocator: std.mem.Allocator, codec: anytype, input: []const u8, kind: Kind, pump: Pump) anyerror!Prepared {
     _ = try peek(allocator, codec, input, kind, pump);
-    const archive = try extract(allocator, codec, input, pump);
+    const archive = try extract(allocator, image_allocator, codec, input, kind, pump);
     if (kind == .recovery) {
         const manifest = try parse(RecoveryManifest, allocator, archive.manifest);
         try validateRecovery(manifest);

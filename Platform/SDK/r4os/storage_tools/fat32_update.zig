@@ -8,7 +8,7 @@ const view = @import("fat32_view.zig");
 /// Null removes the named file or complete directory tree. Changes are
 /// applied in caller order to the private image, before any device writes.
 pub const Change = struct { path: []const u8, bytes: ?[]const u8 };
-const Write = struct { first: u32, count: u32, order: u8 };
+const Write = struct { first: u32, count: u32, order: u8, data_offset: usize = 0 };
 const maximum_depth = 24;
 const final_order = 27;
 
@@ -44,6 +44,15 @@ pub const Prepared = struct {
     writes: []Write,
     source_sha256: [32]u8,
     changed_files: usize,
+    volume_bytes: usize = 0,
+    compact: bool = false,
+
+    fn volumeLength(self: Prepared) usize {
+        return if (self.compact) self.volume_bytes else self.bytes.len;
+    }
+    fn writeOffset(self: Prepared, write: Write) usize {
+        return if (self.compact) write.data_offset else @as(usize, write.first) * 512;
+    }
 
     pub fn deinit(self: *Prepared) void {
         self.allocator.free(self.writes);
@@ -53,11 +62,11 @@ pub const Prepared = struct {
     }
     pub fn checkSource(self: Prepared, device: block.Device, work: []u8) !void {
         try device.requireExclusive();
-        if (device.sectors * 512 != self.bytes.len or work.len < 512 or work.len % 512 != 0) return error.Geometry;
+        if (device.sectors * 512 != self.volumeLength() or work.len < 512 or work.len % 512 != 0) return error.Geometry;
         var digest = std.crypto.hash.sha2.Sha256.init(.{});
         var offset: usize = 0;
-        while (offset < self.bytes.len) {
-            const amount = @min(self.bytes.len - offset, work.len);
+        while (offset < self.volumeLength()) {
+            const amount = @min(self.volumeLength() - offset, work.len);
             try device.read(offset / 512, work[0..amount]);
             digest.update(work[0..amount]);
             offset += amount;
@@ -74,14 +83,14 @@ pub const Prepared = struct {
             for (self.writes) |write| {
                 if (write.order != order) continue;
                 changed = true;
-                const offset = @as(usize, write.first) * 512;
+                const offset = self.writeOffset(write);
                 try device.write(write.first, self.bytes[offset..][0 .. @as(usize, write.count) * 512]);
             }
             if (!changed) continue;
             try device.flush();
             for (self.writes) |write| {
                 if (write.order != order) continue;
-                const offset = @as(usize, write.first) * 512;
+                const offset = self.writeOffset(write);
                 try device.verify(write.first, self.bytes[offset..][0 .. @as(usize, write.count) * 512], work);
             }
         }
@@ -99,22 +108,9 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64, 
     }
     const bytes = try allocator.dupe(u8, original);
     errdefer allocator.free(bytes);
-    const owners = try allocator.alloc(u8, checked.geometry.clusters + 2);
-    defer allocator.free(owners);
-    @memset(owners, 0);
-    const depth = try allocator.alloc(u8, owners.len);
-    defer allocator.free(depth);
-    @memset(depth, 0);
-    var fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = depth };
-    try fat.audit(allocator, owners);
-    const original_directories = try allocator.dupe(u8, depth);
-    defer allocator.free(original_directories);
-    fat.original_directories = original_directories;
-    var changed_files: usize = 0;
-    for (changes) |change| if (try fat.replace(change)) {
-        changed_files += 1;
-    };
-    if (changed_files != 0) fat.updateInfo();
+    const applied = try applyChanges(allocator, bytes, checked.geometry, changes, null);
+    defer allocator.free(applied.depth);
+    const fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = applied.depth };
     var writes: std.ArrayList(Write) = .empty;
     defer writes.deinit(allocator);
     for (0..checked.geometry.sectors) |sector| {
@@ -132,7 +128,82 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64, 
     }
     var sha: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(original, &sha, .{});
-    return .{ .allocator = allocator, .bytes = bytes, .writes = try writes.toOwnedSlice(allocator), .source_sha256 = sha, .changed_files = changed_files };
+    return .{ .allocator = allocator, .bytes = bytes, .writes = try writes.toOwnedSlice(allocator), .source_sha256 = sha, .changed_files = applied.changed_files };
+}
+
+const Applied = struct { depth: []u8, changed_files: usize };
+fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geometry, changes: []const Change, dirty: ?[]bool) !Applied {
+    const owners = try allocator.alloc(u8, geometry.clusters + 2);
+    defer allocator.free(owners);
+    @memset(owners, 0);
+    const depth = try allocator.alloc(u8, owners.len);
+    errdefer allocator.free(depth);
+    @memset(depth, 0);
+    var fat = Fat{ .bytes = bytes, .geo = geometry, .directory_depth = depth, .dirty = dirty };
+    try fat.audit(allocator, owners);
+    const original_directories = try allocator.dupe(u8, depth);
+    defer allocator.free(original_directories);
+    fat.original_directories = original_directories;
+    var changed_files: usize = 0;
+    for (changes) |change| if (try fat.replace(change)) {
+        changed_files += 1;
+    };
+    if (changed_files != 0) fat.updateInfo();
+    return .{ .depth = depth, .changed_files = changed_files };
+}
+
+/// Consume the caller's private mutable volume as preparation scratch. The
+/// returned plan owns only sectors touched by changes. It never borrows this
+/// volume, so a second plan may mutate the same buffer before either executes.
+/// On error discard the scratch volume; no device writes have taken place.
+pub fn prepareDelta(allocator: std.mem.Allocator, bytes: []u8, hidden: u64, changes: []const Change) !Prepared {
+    if (bytes.len > 1024 * 1024 * 1024 or changes.len > 4096) return error.VolumeLimit;
+    const checked = try view.View.init(bytes, hidden);
+    for (changes, 0..) |change, i| {
+        try validPath(change.path);
+        if (change.bytes) |data| {
+            if (data.len > std.math.maxInt(u32)) return error.FileLimit;
+            // Mutation may recycle any old file cluster. Sources must be
+            // independently owned, not slices of this consumable volume.
+            const base = @intFromPtr(bytes.ptr);
+            const source = @intFromPtr(data.ptr);
+            if (data.len != 0 and source < base + bytes.len and base < source + data.len) return error.SourceAlias;
+        }
+        for (changes[0..i]) |other| if (std.ascii.eqlIgnoreCase(change.path, other.path)) return error.DuplicateChange;
+    }
+    var sha: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(bytes, &sha, .{});
+    if (changes.len == 0) return .{ .allocator = allocator, .bytes = &.{}, .writes = &.{}, .source_sha256 = sha, .changed_files = 0, .volume_bytes = bytes.len, .compact = true };
+    const dirty = try allocator.alloc(bool, checked.geometry.sectors);
+    defer allocator.free(dirty);
+    @memset(dirty, false);
+    const applied = try applyChanges(allocator, bytes, checked.geometry, changes, dirty);
+    defer allocator.free(applied.depth);
+    const fat = Fat{ .bytes = bytes, .geo = checked.geometry, .directory_depth = applied.depth };
+    var count: usize = 0;
+    for (dirty) |changed| if (changed) {
+        count += 1;
+    };
+    const compact = try allocator.alloc(u8, count * 512);
+    errdefer allocator.free(compact);
+    var writes: std.ArrayList(Write) = .empty;
+    defer writes.deinit(allocator);
+    var offset: usize = 0;
+    for (dirty, 0..) |changed, sector| {
+        if (!changed) continue;
+        const order = try fat.order(@intCast(sector));
+        @memcpy(compact[offset..][0..512], bytes[sector * 512 ..][0..512]);
+        defer offset += 512;
+        if (writes.items.len != 0) {
+            const previous = &writes.items[writes.items.len - 1];
+            if (previous.order == order and previous.first + previous.count == sector and previous.count < 256) {
+                previous.count += 1;
+                continue;
+            }
+        }
+        try writes.append(allocator, .{ .first = @intCast(sector), .count = 1, .order = order, .data_offset = offset });
+    }
+    return .{ .allocator = allocator, .bytes = compact, .writes = try writes.toOwnedSlice(allocator), .source_sha256 = sha, .changed_files = applied.changed_files, .volume_bytes = bytes.len, .compact = true };
 }
 
 fn validPath(path: []const u8) !void {
@@ -305,6 +376,12 @@ const Fat = struct {
     directory_depth: []u8,
     original_directories: []const u8 = &.{},
     free_hint: u32 = 2,
+    dirty: ?[]bool = null,
+
+    fn mutable(self: *Fat, offset: usize, count: usize) []u8 {
+        if (self.dirty) |dirty| if (count != 0) @memset(dirty[offset / 512 .. (offset + count - 1) / 512 + 1], true);
+        return self.bytes[offset..][0..count];
+    }
 
     fn verifyChildren(self: *Fat, parent: u32, depth: u8, path: []u8, length: usize, expected: []const []const u8, found: []bool, entries: *usize) !void {
         if (depth >= maximum_depth) return error.Path;
@@ -349,7 +426,7 @@ const Fat = struct {
     fn set(self: *Fat, cluster: u32, value_: u32) void {
         for (0..2) |copy| {
             const offset = (32 + copy * self.geo.sectors_per_fat) * 512 + @as(usize, cluster) * 4;
-            put32(self.bytes, offset, (u32at(self.bytes, offset) & 0xf000_0000) | (value_ & 0x0fff_ffff));
+            put32(self.mutable(offset, 4), 0, (u32at(self.bytes, offset) & 0xf000_0000) | (value_ & 0x0fff_ffff));
         }
     }
     fn next(self: Fat, cluster: u32) !?u32 {
@@ -424,7 +501,7 @@ const Fat = struct {
                 self.set(cluster, 0x0fff_ffff);
                 self.directory_depth[cluster] = depth;
                 const offset = try self.clusterOffset(cluster);
-                @memset(self.bytes[offset..][0..self.clusterSize()], 0);
+                @memset(self.mutable(offset, self.clusterSize()), 0);
                 self.free_hint = cluster + 1;
                 return cluster;
             }
@@ -470,8 +547,8 @@ const Fat = struct {
                 if (depth > maximum_depth) return error.Path;
                 const cluster = try self.allocate(depth);
                 const offset = try self.clusterOffset(cluster);
-                shortEntry(self.bytes[offset..][0..32], ".          ".*, true, cluster, 0);
-                shortEntry(self.bytes[offset + 32 ..][0..32], "..         ".*, true, if (parent == 2) 0 else parent, 0);
+                shortEntry(self.mutable(offset, 32)[0..32], ".          ".*, true, cluster, 0);
+                shortEntry(self.mutable(offset + 32, 32)[0..32], "..         ".*, true, if (parent == 2) 0 else parent, 0);
                 _ = try self.create(parent, name, true, cluster);
                 parent = cluster;
             }
@@ -501,10 +578,10 @@ const Fat = struct {
             last = cluster;
             const amount = @min(self.clusterSize(), bytes.len - done);
             const offset = try self.clusterOffset(cluster);
-            @memcpy(self.bytes[offset..][0..amount], bytes[done..][0..amount]);
+            @memcpy(self.mutable(offset, amount), bytes[done..][0..amount]);
             done += amount;
         }
-        const raw = self.bytes[entry_offset..][0..32];
+        const raw = self.mutable(entry_offset, 32);
         put16(raw, 20, @truncate(first >> 16));
         put16(raw, 26, @truncate(first));
         put32(raw, 28, @intCast(bytes.len));
@@ -517,7 +594,7 @@ const Fat = struct {
             while (try iterator.next()) |child_entry| try self.removeTree(child_entry, depth + 1);
         }
         try self.free(entry.cluster());
-        for (entry.slots[0..entry.slot_count]) |offset| self.bytes[offset] = 0xe5;
+        for (entry.slots[0..entry.slot_count]) |offset| self.mutable(offset, 1)[0] = 0xe5;
     }
     fn create(self: *Fat, parent: u32, name: []const u8, directory: bool, cluster: u32) !usize {
         var short = "R4UP0000BIN".*;
@@ -563,13 +640,13 @@ const Fat = struct {
         // Consuming an end marker must not expose stale bytes after it.
         if (past_end) {
             if (at < self.clusterSize()) {
-                self.bytes[(try self.clusterOffset(current)) + at] = 0;
-            } else if (try self.next(current)) |following| self.bytes[try self.clusterOffset(following)] = 0;
+                self.mutable((try self.clusterOffset(current)) + at, 1)[0] = 0;
+            } else if (try self.next(current)) |following| self.mutable(try self.clusterOffset(following), 1)[0] = 0;
         }
         const sum = checksum(&short);
         for (0..lfn_count) |i| {
             const ordinal = lfn_count - i;
-            const raw = self.bytes[slots[i]..][0..32];
+            const raw = self.mutable(slots[i], 32);
             @memset(raw, 0);
             raw[0] = @as(u8, @intCast(ordinal)) | (if (i == 0) @as(u8, 64) else 0);
             raw[11] = 15;
@@ -580,7 +657,7 @@ const Fat = struct {
             }
         }
         const offset = slots[lfn_count];
-        shortEntry(self.bytes[offset..][0..32], short, directory, cluster, 0);
+        shortEntry(self.mutable(offset, 32)[0..32], short, directory, cluster, 0);
         return offset;
     }
     fn updateInfo(self: *Fat) void {
@@ -591,8 +668,8 @@ const Fat = struct {
             if (next_free == 0xffff_ffff) next_free = @intCast(i);
         };
         for ([_]usize{ 1, 7 }) |sector| {
-            put32(self.bytes, sector * 512 + 488, free_count);
-            put32(self.bytes, sector * 512 + 492, next_free);
+            put32(self.mutable(sector * 512 + 488, 4), 0, free_count);
+            put32(self.mutable(sector * 512 + 492, 4), 0, next_free);
         }
     }
     fn order(self: Fat, sector: u32) !u8 {

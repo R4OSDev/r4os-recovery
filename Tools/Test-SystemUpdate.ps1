@@ -1,5 +1,5 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[Parameter(Mandatory)][string]$BaseImage,
-      [switch]$ReuseFixture,[string[]]$Cases=@(),[string]$Zig='', [string]$Qemu='',
+      [switch]$ReuseFixture,[switch]$SkipResultBoots,[string[]]$Cases=@(),[string]$Zig='', [string]$Qemu='',
       [ValidateRange(60,600)][int]$TimeoutSeconds=300,
       [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
@@ -191,7 +191,7 @@ try {
   Write-RecoveryJson (Join-Path $output 'update-results.json') @{schema=1;inputs=$inputs;runs=$runs;updated=$updated}
   Write-Host "PASS $name"
  }
- foreach($result in $updated){
+ foreach($result in @($updated | Where-Object { -not $SkipResultBoots })){
   $name='UpdatedNormalBoot';$before=Get-RecoveryHash $result.image;$watch=[Diagnostics.Stopwatch]::StartNew()
   try{
    Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=UPDATED,bootindex=1')

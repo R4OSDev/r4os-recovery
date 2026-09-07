@@ -239,9 +239,13 @@ The successfully updated normal system must boot and respond to Terminal.
 
 ## Qualified requirements and integration
 
-Recovery/Kernel 0.1.20 and RECOVERY.R4X 0.1.12 use a complete 64-MB RAM image.
-Since Recovery 0.1.20, install/update packages require 5 GB of OS-usable RAM, counted from
-the boot memory map without MMIO holes; machines with 6 GB are qualified.
+The prepared Recovery/Kernel 0.1.23 and RECOVERY.R4X 0.1.14 retain the
+64-MB runtime. ZIP image import uses a 160-KB decoder window and nonzero
+64-KB blocks, then releases the image after resolving and verifying SYSTEM.
+Fresh FAT plans borrow payloads; update plans retain only touched sectors.
+The largest observed total in three SMP4/6-GB workflows is 1,466,601,472
+bytes. Adding 512 MB reserve and rounding up gives a new package minimum
+of 2 GB OS-usable RAM. Final asset qualification is planned for 0.78.14.
 The complete source and write plans must fit in physically reserved RAM
 before any target write. The shared minimum disk is 1,763,722,240 bytes;
 BOOT/SYSTEM/RECOVERY retain 128/1024/512 MB and DATA uses the remaining space.
@@ -257,8 +261,8 @@ change is needed. Historical single failures remain documented separately.
 
 After publication, `Tools/Test-PublishedRelease.ps1` downloads the entire
 actual public Recovery or R4OS asset through the production keyboard menu,
-verifies its cached bytes and preserves unrelated partitions. The only user
-hardware acceptance remains the final Lenovo USB boot and local installation.
+verifies its cached bytes and preserves unrelated partitions. Historical
+hardware observations are recorded with their exact release below.
 
 
 Recovery [0.1.20](https://github.com/R4OSDev/r4os-recovery/releases/tag/v0.1.20)

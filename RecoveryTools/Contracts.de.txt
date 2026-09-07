@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: technische Vertraege, Format 1
 ===========================================
 
-Stand 0.76.23. Formatvertrag der implementierten Recovery-Abläufe;
+Stand 0.78.12. Formatvertrag der implementierten Recovery-Abläufe;
 konkrete Abnahmen und Hardwaregrenzen stehen in DOCUMENTATION.de.txt.
 1 MB = 1048576 Bytes. Alle Sektoradressen sind logische 512-Byte-Sektoren.
 
@@ -124,12 +124,14 @@ Installation vor dem ersten Zielschreibzugriff. Integritaet ersetzt keine
 Authentifizierung: GitHub-Downloads verwenden den geprueften HTTPS-Pfad.
 Die fuer einen konkreten Install-/Updateauftrag benoetigte RAM-Spitze wird
 zusaetzlich vollstaendig physisch reserviert; minimumRamBytes deckt keinen
-beliebig grossen Auftrag ab. Der Paketstandard verlangt 5 GB OS-RAM aus
-usable, bootloader_reclaimable und kernel_and_modules; reservierte Bereiche,
-MMIO, Framebuffer und Adressluecken werden nicht mitgezaehlt. Die vollstaendigen
-Ablaeufe werden mit 6 GB installiertem RAM qualifiziert. Der Abstand laesst
-Firmware-/Geraetereservierungen zu, ersetzt aber nicht die physische Vorab-
-reservierung jedes Auftrags. Ein reiner Menue-/Reparaturboot kann mit weniger RAM gelingen,
+beliebig grossen Auftrag ab. Ab Recovery 0.1.23 verlangt der Paketstandard
+2 GB OS-RAM aus usable, bootloader_reclaimable und kernel_and_modules;
+reservierte Bereiche, MMIO, Framebuffer und Adressluecken zaehlen nicht mit.
+Die drei gezielten SMP4-Ablaeufe mit 6 GB installiertem RAM messen maximal
+1466601472 Bytes Gesamtverbrauch. Zusaetzlich 512 MB Reserve und Aufrundung
+auf volle GB ergeben 2147483648 Bytes Mindestumfang. Dies ersetzt nicht die
+physische Vorabreservierung jedes Auftrags; die abschliessende Pruefung der
+konkreten Release-Dateien steht in Roadmap 0.78.14. Ein reiner Menue-/Reparaturboot kann mit weniger RAM gelingen,
 er verspricht damit keine erfolgreiche Paketvorbereitung.
 Seit 0.76.15 prueft Recovery diesen Paketvertrag ueber
 das eingefrorene R4ZIP.R4P; die Veroeffentlichung folgt separat.
@@ -159,13 +161,18 @@ Diskimage ist das vereinbarte einzelne 2048-MB-GPT-Image mit fuenf Rollen.
 Es gibt kein DATA-Ersatzimage. Alte ZIP-Formate und GitHub-Source-ZIPs ohne
 diesen Vertrag gelten nicht als Installationspaket.
 
-Die Paketvorbereitung haelt Original-ZIP, entpackte Nutzdaten, Recovery-
-Bestand, SYSTEM-Dateibaum und vorbereitete Zielmetadaten gemeinsam im RAM.
-Das SYSTEM wird mit dem gemeinsamen NTFS-Leser gelesen und fuer die echte
-Zielgroesse mit dem gemeinsamen Builder vorbereitet. Dessen Plan borgt
-Dateidaten und Indexpuffer; Vorbereitungssitzung und Builder muessen bis
-zum letzten Schreib-/Flush-Aufruf leben. In 0.76.15 wird der Plan noch
-nicht auf einen physischen Zieldatentraeger ausgefuehrt.
+Das Original-ZIP bleibt fuer die spaetere INSTALL-Ablage unveraenderlich
+erhalten. R4ZIP 0.1.2 entpackt disk.img ueber ein 160-KB-Fenster; der Import
+haelt nur nichtleere 64-KB-Bloecke. CRC32, Gesamtgroesse und SHA256 betreffen
+weiterhin alle logischen Imagebytes, einschliesslich ausgelassener Nullbloecke.
+Die uebrigen Archiveintraege haben getrennte Ausgaben, keinen gemeinsamen
+Block von ueber 2 GB. Der gemeinsame NTFS-Leser loest daraus unabhaengige
+SYSTEM-Dateien auf. Nach dem vollstaendigen inneren BOOT-/Recovery-/Versions-
+abgleich wird die temporaere Imagearena vor der Zielplanung freigegeben.
+BOOT und neue RECOVERY-Volumes besitzen nur Metadaten und geborgte Nutzdaten;
+es entstehen keine vollen 128-/512-MB-Zielbilder. SYSTEM/DATA werden fuer die
+echte Zielgeometrie vorbereitet. Alle Quelldateien, Metadaten und Arbeits-
+puffer bleiben bis zum letzten Schreib-/Flush-Aufruf physisch gebunden.
 
 Ein Archiv ist auf 2 GB komprimiert, 4 GB Gesamtausgabe, 4096 Eintraege und
 255 ASCII-Bytes pro ZIP-Pfad begrenzt. Ein Manifest darf hoechstens 1 MB
@@ -275,9 +282,14 @@ Diese Sektion bindet das neue Paket schon vor dem Schreiben an genau das
 vom Kernel erwartete RAM-Abbild. Bestehende aeltere Slots ohne diese Sektion
 koennen nach vollstaendiger Versions-/Inhaltspruefung erhalten bleiben.
 
-Die Anwendung bereitet zwei getrennte FAT-Aenderungsplaene im RAM vor.
-Nur nach vollstaendigem Flush und Readback des PREVIOUS-Plans beginnt der
-CURRENT-Plan. Der gemeinsame SDK-Mechanismus prueft die gesamte Belegung,
+Die Anwendung liest genau ein privates RECOVERY-Volume als temporaeren
+Arbeitsbereich. Der gemeinsame prepareDelta-Pfad mutiert diesen zweimal und
+kopiert jeweils nur beruehrte Sektoren in einen unabhaengigen Schreibplan.
+Der Arbeitsbereich wird vor dem exklusiven Claim freigegeben. Jeder Plan
+bindet sich an den SHA256 seines vollstaendigen Ausgangszustands; CURRENT
+erwartet dabei genau das Resultat des PREVIOUS-Plans. Ein unveraenderter
+CURRENT erzeugt keine Plan-Nutzdaten. Nur nach vollstaendigem Flush und
+Readback des PREVIOUS-Plans beginnt der CURRENT-Plan. Der gemeinsame SDK-Mechanismus prueft die gesamte Belegung,
 entfernt ersetzte Slotbaeume inklusive weggefallener Dateien und schreibt
 nur geaenderte Sektoren. INSTALL und andere Verzeichnisse bleiben erhalten.
 Alte Verzeichniscluster werden dabei nicht als fruehe Dateinutzdaten

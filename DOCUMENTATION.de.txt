@@ -1268,3 +1268,44 @@ keine Gast-/Paketbytes geaendert. Der Erstbefund bleibt unter
 Temp/RecoveryImplementation/public-r4os-07626-ssh-timeout erhalten;
 public-r4os-observation.json im Qualifikationsverzeichnis ordnet ihn ein.
 Der Abschlussbericht steht unter Artifacts/Qualification/0.76.26/report.json.
+
+
+Speicherbegrenzung 0.78.12 / Recovery 0.1.23
+------------------------------------------
+
+RECOVERY.R4X 0.1.14 verwendet R4ZIP 0.1.2 mit 160-KB-Ausgabefenster,
+nichtleere 64-KB-Imagebloecke und einen unabhaengigen SYSTEM-Dateibaum.
+Der temporaere Imagebestand wird nach dem inneren Paketabgleich freigegeben.
+Neue BOOT-/RECOVERY-Volumes bestehen als Schreibplan aus Metadaten und
+geborgten Dateiinhalten. Bestehende Volumes werden einmal als privater
+Arbeitsbereich gelesen; PREVIOUS/CURRENT behalten nur ihre beruehrten
+Sektoren. Beide Plaene sind vor Schreibbeginn komplett vorbereitet und
+binden die aufeinanderfolgenden Ausgangszustaende jeweils per SHA256.
+
+Gezielte SMP4/KVM-Abnahmen mit 6144 MB RAM:
+  Installation: 573427712 B gebunden, 724598784 B beobachteter Gesamtbedarf.
+  SYSTEM-Update: 573427712 B gebunden, 724602880 B Gesamtbedarf.
+  Selbstupdate: 1314234368 B gebunden, 1466601472 B Gesamtbedarf.
+Die Originaldateien, Slotinhalte, INSTALL-Caches und jeweils unbeteiligten
+Partitionen wurden unabhaengig abgeglichen. Hostmodelle bestaetigen sechs
+Write-/Flush-/Readbackfehler, drei PREVIOUS-Erhaltungsfaelle, unveraenderten
+Slot ohne Plan-Nutzdaten und gezielten Speichermangel vor Zielschreibzugriff.
+Die historische gebundene Spitze lag bei 3668520960 B fuer Install/SYSTEM
+und 3934724096 B fuer Selbstupdate; die Paketstaende sind verschieden.
+
+1466601472 B maximaler Gesamtbedarf plus 512 MB Reserve, auf volle GB
+aufgerundet, ergeben den neuen Paketstandard von 2147483648 B nutzbarem
+OS-RAM. Alte Quellpakete behalten ihren eigenen Mindestwert. Die Messungen
+verwenden Full 0.78.6 und den 0.1.23-Kandidaten mit noch 5 GB Manifestminimum;
+nur der nachgelagerte Paketstandard wird abgesenkt, die gemessenen Kernel-/
+Runtimebytes bleiben gleich. Die finalen Release-Dateien samt kleinerem
+Gast-RAM werden in 0.78.14 geprueft und veroeffentlicht.
+
+Belege: Temp/roadmap-078-next/07812/evidence.json im Workspace; explizite
+Besitzerherkunft in Provenance/owner-update-0.78.12.json. Zwei vorhandene
+FAT-Gruppen, ein kompakter FAT-Planfall, sieben ZIP-Gruppen und zwei
+Sparse-/ByteSource-Faelle wurden gezielt geprueft. Der lange Debug-FAT-
+Fehlerlauf wurde begrenzt und seine zweite Gruppe in ReleaseSafe beendet.
+Install-/SYSTEM-Runner erlauben -SkipResultBoots; der Selbstupdate-Runner
+erlaubt -SkipHostFaults fuer bereits passende vorhandene Hostnachweise.
+Die jeweiligen Standardablaeufe bleiben vollstaendig.

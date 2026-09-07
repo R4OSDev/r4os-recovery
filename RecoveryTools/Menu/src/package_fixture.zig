@@ -15,6 +15,12 @@ const Codec = struct {
     pub fn begin(_: Codec, bytes: []const u8, entry: *const r4os.zip.Entry, output: []u8, work: *r4os.zip.Work) !r4os.zip.Progress {
         return core.begin(bytes, entry.*, output, &work.data);
     }
+    pub fn beginStream(_: Codec, bytes: []const u8, entry: *const r4os.zip.Entry, output: []u8, work: *r4os.zip.Work) !r4os.zip.Progress {
+        return core.beginStream(bytes, entry.*, output, &work.data);
+    }
+    pub fn streamStep(_: Codec, work: *r4os.zip.Work, budget: u32) !r4os.zip.Progress {
+        return core.streamStep(&work.data, budget);
+    }
     pub fn step(_: Codec, work: *r4os.zip.Work, budget: u32) !r4os.zip.Progress {
         return core.step(&work.data, budget);
     }
@@ -70,7 +76,7 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 4 and std.mem.eql(u8, args[1], "--updated-system")) {
         const zip = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(package.max_archive_bytes));
         const prepared = try package.prepare(a, Codec{}, zip, .r4os, .{});
-        const tree = try source.Tree.read(a, prepared.archive.get("disk.img").?, prepared.version(), .{});
+        const tree = try source.Tree.read(a, try prepared.archive.image(), prepared.version(), .{});
         const image = try std.Io.Dir.cwd().readFileAlloc(init.io, args[3], a, .limited(32 * 1024 * 1024 * 1024));
         var disk = Memory{ .bytes = image };
         const work = try a.alloc(u8, r4os.storage_tools.io.scratch_bytes);
@@ -119,7 +125,7 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 3 and std.mem.eql(u8, args[1], "--installation")) {
         const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(package.max_archive_bytes));
         const prepared = try package.prepare(a, Codec{}, bytes, .r4os, .{});
-        const tree = try source.Tree.read(a, prepared.archive.get("disk.img").?, prepared.version(), .{});
+        const tree = try source.Tree.read(a, try prepared.archive.image(), prepared.version(), .{});
         try source.verifyInstallation(a, prepared, tree, .{});
         var mismatch = prepared;
         mismatch.system.?.kernelVersion = "99.99.99";
@@ -145,7 +151,7 @@ pub fn main(init: std.process.Init) !void {
     var fail = std.heap.FixedBufferAllocator.init(&no_ram);
     try std.testing.expectError(error.OutOfMemory, package.prepare(fail.allocator(), Codec{}, recovery_zip, .recovery, .{}));
     const system = try package.prepare(a, Codec{}, system_zip, .r4os, .{});
-    const tree = try source.Tree.read(a, system.archive.get("disk.img").?, system.version(), .{});
+    const tree = try source.Tree.read(a, try system.archive.image(), system.version(), .{});
     if (tree.prepareTarget(a, 266240, 8 * 2048, 55, .{})) |_| return error.SmallTargetAccepted else |_| {}
     var target = try tree.prepareTarget(a, 266240, 32 * 2048, 55, .{});
     defer target.deinit();

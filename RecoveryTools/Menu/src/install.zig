@@ -14,8 +14,8 @@ pub const Installer = struct {
     session: *packages.Session,
     target: r4os.storage_tools_guest.Target,
     layout: setup.Layout,
-    boot: tools.fat32_image.Prepared,
-    recovery: tools.fat32_image.Prepared,
+    boot: tools.fat32_image.Streamed,
+    recovery: tools.fat32_image.Streamed,
     data: packages.source.Target,
     work: []u8,
     before: []u8,
@@ -34,6 +34,7 @@ pub const Installer = struct {
         const a = session.arena.allocator();
         const prepared = session.prepared orelse return error.PackageMissing;
         try packages.source.verifyInstallation(a, prepared, session.tree.?, session.pool.pump);
+        session.releaseImage();
         var entropy: [7][16]u8 = undefined;
         if (!r4os.web_crypto.fillSecureRandom(std.mem.asBytes(&entropy))) return error.EntropyUnavailable;
         const ids = try setup.Identifiers.fromEntropy(entropy);
@@ -51,7 +52,7 @@ pub const Installer = struct {
         try session.pool.pump.run("Preparing BOOT file tree", 0, 0);
         // Retain the Distribution label: older valid release kernels do not
         // distinguish a BOOT volume label from the boot directory on lookup.
-        const boot = try tools.fat32_image.prepare(a, boot_range.count, boot_range.first, "R4OS BOOT", serial32(ids.partitions[1]), boot_files.items);
+        const boot = try tools.fat32_image.prepareStreamed(a, boot_range.count, boot_range.first, 0, "R4OS BOOT", serial32(ids.partitions[1]), boot_files.items);
         var recovery_files: std.ArrayList(tools.fat32_image.File) = .empty;
         for ([_][]const u8{ "CURRENT", "PREVIOUS" }) |slot| {
             try recovery_files.append(a, .{ .path = try std.fmt.allocPrint(a, "{s}/manifest.json", .{slot}), .bytes = prepared.recovery_archive.manifest });
@@ -63,7 +64,7 @@ pub const Installer = struct {
         try recovery_files.append(a, .{ .path = "INSTALL/RELEASE.ZIP", .bytes = prepared.archive.original });
         const recovery_range = layout.part(.RECOVERY);
         try session.pool.pump.run("Preparing Recovery slots and original ZIP", 0, 0);
-        const recovery = try tools.fat32_image.prepare(a, recovery_range.count, recovery_range.first, "RECOVERY", serial32(ids.partitions[3]), recovery_files.items);
+        const recovery = try tools.fat32_image.prepareStreamed(a, recovery_range.count, recovery_range.first, 0, "RECOVERY", serial32(ids.partitions[3]), recovery_files.items);
         try @import("capacity.zig").requireCacheHeadroom((recovery.stats.geometry.sectors - recovery.stats.used_sectors) * @as(u64, 512), prepared.archive.original.len, prepared.recovery_archive.original.len, recovery.stats.geometry.sectors_per_cluster * @as(u64, 512));
         const system_range = layout.part(.SYSTEM);
         try session.targetSystem(system_range.first, system_range.count, serial64(ids.partitions[2]));

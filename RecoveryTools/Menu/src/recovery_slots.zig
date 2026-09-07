@@ -61,8 +61,16 @@ pub const Plan = struct {
     previous: ?tools.fat32_update.Prepared,
     current: tools.fat32_update.Prepared,
     unchanged: bool,
-    pub fn prepare(a: std.mem.Allocator, original: []const u8, hidden: u64, installation: state.guid.Guid,
-        prepared: package.Prepared, running_previous: bool, pump: Pump) !Plan {
+    pub fn prepare(a: std.mem.Allocator, original: []const u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump) !Plan {
+        return prepareMode(a, @constCast(original), hidden, installation, prepared, running_previous, pump, false);
+    }
+    pub fn prepareDelta(a: std.mem.Allocator, original: []u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump) !Plan {
+        return prepareMode(a, original, hidden, installation, prepared, running_previous, pump, true);
+    }
+    fn update(a: std.mem.Allocator, original: []u8, hidden: u64, changes: []const tools.fat32_update.Change, compact: bool) !tools.fat32_update.Prepared {
+        return if (compact) tools.fat32_update.prepareDelta(a, original, hidden, changes) else tools.fat32_update.prepare(a, original, hidden, changes);
+    }
+    fn prepareMode(a: std.mem.Allocator, original: []u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump, compact: bool) !Plan {
         if (prepared.kind != .recovery or original.len > 1024 * 1024 * 1024) return error.InvalidTarget;
         try package.validateRecovery(prepared.recovery);
         const payloads = try a.alloc(Payload, prepared.recovery.files.len + 1);
@@ -75,7 +83,7 @@ pub const Plan = struct {
             else => null,
         };
         if (current) |old| if (std.mem.eql(u8, old.manifest_bytes, next.manifest_bytes)) {
-            return .{ .previous = null, .current = try tools.fat32_update.prepare(a, original, hidden, &.{}), .unchanged = true };
+            return .{ .previous = null, .current = try update(a, original, hidden, &.{}, compact), .unchanged = true };
         };
         const view = try tools.fat32_view.View.init(original, hidden);
         const record = view.readFile(a, "state.r4s", state.maximum) catch |err| switch (err) {
@@ -88,7 +96,7 @@ pub const Plan = struct {
         if (rotate) {
             try current.?.changes(a, "PREVIOUS", &changes);
             try pump.run("Preparing confirmed CURRENT to PREVIOUS", 0, 0);
-            previous = try tools.fat32_update.prepare(a, original, hidden, changes.items);
+            previous = try update(a, original, hidden, changes.items, compact);
         } else {
             // Preserve the existing fallback. Refuse an update that cannot
             // offer the verified previous package promised by this action.
@@ -103,6 +111,6 @@ pub const Plan = struct {
         const unconfirmed = try state.encode(&record_buffer, installation, next.manifest.recoveryVersion, next.manifest_bytes, false);
         try changes.append(a, .{ .path = "state.r4s", .bytes = unconfirmed });
         try pump.run("Preparing new CURRENT and unconfirmed state", 0, 0);
-        return .{ .previous = previous, .current = try tools.fat32_update.prepare(a, if (previous) |p| p.bytes else original, hidden, changes.items), .unchanged = false };
+        return .{ .previous = previous, .current = try update(a, if (compact) original else if (previous) |p| p.bytes else original, hidden, changes.items, compact), .unchanged = false };
     }
 };

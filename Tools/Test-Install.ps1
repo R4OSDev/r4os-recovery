@@ -1,4 +1,4 @@
-param([Parameter(Mandatory)][string]$SourcePackage,[switch]$ReuseFixture,[switch]$VerifyInstalled,[string[]]$Cases=@(),
+param([Parameter(Mandatory)][string]$SourcePackage,[switch]$ReuseFixture,[switch]$VerifyInstalled,[switch]$SkipResultBoots,[string[]]$Cases=@(),
       [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300,
       [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
@@ -165,7 +165,7 @@ try {
   Write-RecoveryJson (Join-Path $output 'install-results.json') @{schema=1;inputs=$inputs;runs=$runs;installed=$installed}
   Write-Host "PASS $name ($([Math]::Round($watch.Elapsed.TotalSeconds,2)) s)"
  }
- foreach($result in $installed){
+ foreach($result in @($installed | Where-Object { -not $SkipResultBoots })){
   $resultRamMB=if($result.ContainsKey('ramMB')){[int]$result.ramMB}else{8192}
   foreach($entry in @('Normal','Recovery')){
    $mode=if(($result.name -eq 'UsbInstall') -eq ($entry -eq 'Normal')){'Bios'}else{'Uefi'}

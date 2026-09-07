@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "reason": "0.78.12: explicit owner imports for bounded ZIP decoding, sparse package images, streamed fresh FAT images and compact FAT update plans. Other frozen SDK inputs are retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "a5df4056ef6511f181a21d7c94f7add71f32dddb",
+      "sourceCommit": "ff66ff4d8471bd5e6151aa88b902c1a800c70a28",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.12.patch",
+      "patchSha256": "1c5eb30fc251e200938d26e6a720f78998878993ab3a195eb0767489ebc3cbaa",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/zip.zig",
+          "sha256": "a58fcffd6c692da571d4ca8a9d3cb85e3a01ea4d0b21e8159b8e295eca639cbf"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools.zig",
+          "sha256": "319fff1e901b15ee50be38eaec674851bad43f3d20af5a4003149f783b0a02c5"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/byte_source.zig",
+          "sha256": "08fbd26bac93a18f8dbef7461f3291374aa9e52a001c4896240abfa63a882a85"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/sparse_image.zig",
+          "sha256": "867a49b1b7373a98bcb8913e880003db42ff68e69c7260c3a1f43fda6263fea1"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_view.zig",
+          "sha256": "6c3642ab38c0073341c567e8c7ca6c564b83240b9f1a456531a58f25fa715d5c"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "sha256": "875bb1ca96f657d12ca3a1832097c88be7092a6a74c0ec2dcd7b3af1cf71d812"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_image.zig",
+          "sha256": "d72ce924f4b1ca77bb5a385ba89e5b766547f6e61829ec21889cf52a1aba34a2"
+        }
+      ]
+    },
+    {
+      "sourceCommit": "055184a62f51990e7f505828f226059f12f3c34c",
+      "archiveSha256": "0be624f5e4390381b1d8a0205fe1b3d1cce218ad1ecefb4a42b9b708420d18c7",
+      "files": [
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/R4ZIP.R4P",
+          "sha256": "045d4ac5e539fbe630ecc3c69d4fb8647c49b1ae05a1ccddbe6e3d2b5471ff5e"
+        },
+        {
+          "path": "Legal/Manifests/R4ZIP/module.R4MF",
+          "sha256": "ffc6181e7ca4037492dde5d2e391755e77abf2176e68a03fbf7bb78f7b9a6953"
+        },
+        {
+          "path": "Legal/Sources/Protocols-R4Zip.zip",
+          "sha256": "0be624f5e4390381b1d8a0205fe1b3d1cce218ad1ecefb4a42b9b708420d18c7"
+        }
+      ],
+      "owner": "Protocols-R4Zip",
+      "archive": "Legal/Sources/Protocols-R4Zip.zip",
+      "baseCommit": "279434d24b94f76d3edb8ed9d53f6f8eb6b7ebe0",
+      "pendingOwnerCommit": false,
+      "buildSourcePins": {
+        "Contract": "cf72d67e4d76d105d30faf5fac2d1ebfbbfac83f",
+        "SDK": "ff66ff4d8471bd5e6151aa88b902c1a800c70a28"
+      }
+    }
+  ],
+  "verification": {
+    "guestCpuCount": 4,
+    "guestRamMB": 6144,
+    "cases": {
+      "install": {
+        "case": "UsbInstall",
+        "baselineUsed": 150253568,
+        "observedUsedPeak": 724598784,
+        "pinnedPeak": 573427712,
+        "seconds": 118.244,
+        "result": "PASS"
+      },
+      "systemUpdate": {
+        "case": "System768",
+        "baselineUsed": 150257664,
+        "observedUsedPeak": 724602880,
+        "pinnedPeak": 573427712,
+        "seconds": 124.697,
+        "result": "PASS"
+      },
+      "selfUpdate": {
+        "case": "UsbSelfUpdate",
+        "baselineUsed": 149803008,
+        "observedUsedPeak": 1466601472,
+        "pinnedPeak": 1314234368,
+        "seconds": 121.471,
+        "result": "PASS"
+      }
+    },
+    "host": {
+      "zipGroups": 7,
+      "sparseAndSource": 2,
+      "existingFatGroups": 2,
+      "delta": 1,
+      "slotPayloadFaults": 6,
+      "slotPreservationCases": 3,
+      "slotNoOp": true,
+      "fullPackage": "0.78.6 full: 340 tree nodes, inner coherence and mismatches checked"
+    },
+    "sources": {
+      "kernel": {
+        "path": "Repositories/Recovery/Artifacts/Kernel/bin/recovery.elf",
+        "sha256": "e7ee453b3add165e64b32c869333fe143b8891ccc4887d32330d71ee752fbeb7",
+        "bytes": 24422560
+      },
+      "uiKernel": {
+        "path": "Repositories/Recovery/Artifacts/BootProbe/ui/bin/recovery.elf",
+        "sha256": "d5869f4a5f4fdb40470f2b7cdada7dbae90810b0090976cb57d3c1c58e2a9abd",
+        "bytes": 24422544
+      },
+      "runtime": {
+        "path": "Repositories/Recovery/Artifacts/Runtime/runtime.img",
+        "sha256": "85f6ea048b2caa0cf8966a08c82029e69c3646322e12c52b3195883de1722be8",
+        "bytes": 67108864
+      },
+      "menu": {
+        "path": "Repositories/Recovery/Artifacts/RecoveryTools/Menu/RECOVERY.R4X",
+        "sha256": "3f60ef073196462ca3820de69ce546acb176132c9b03ffeb42e63ebec97b332a",
+        "bytes": 1103466
+      },
+      "candidateZip": {
+        "path": "Temp/roadmap-078-next/07812/R4OS-Recovery-0.1.23-x86_64.zip",
+        "sha256": "e4df4d17a0ab65071a7e14b19ac61b4666fc9bd0421a31e23564dfc8109cd1ac",
+        "bytes": 24722106
+      },
+      "systemZip": {
+        "path": "Artifacts/Distribution/Releases/0.78.6/R4OS-0.78.6-full-x86_64.zip",
+        "sha256": "6b073bf0afc1c8e36fc676b4b5562a67c6db6644944e07a80dd58607e882b215",
+        "bytes": 92016943
+      }
+    },
+    "ramPolicy": {
+      "observedMaximum": 1466601472,
+      "addedReserve": 536870912,
+      "minimumOsRamBytes": 2147483648,
+      "derivedFrom": "Three SMP4 6144-MB guests; round observed total plus reserve up to whole GB. Actual source bytes must still fit complete resident preparation. Final release qualification at 0.78.14."
+    },
+    "evidence": "Temp/roadmap-078-next/07812/evidence.json"
+  }
+}

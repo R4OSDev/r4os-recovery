@@ -3,18 +3,35 @@
 //! or copies a source partition's geometry onto a physical target.
 const std = @import("std");
 const format = @import("fat32.zig");
+const Source = @import("byte_source.zig").Source;
 pub const View = struct {
-    bytes: []const u8,
+    source: Source,
     geometry: format.Geometry,
 
     pub fn init(bytes: []const u8, hidden: u64) !View {
-        if (bytes.len < 512 or bytes.len % 512 != 0) return error.SourceFat;
-        const geo = try format.Geometry.init(bytes.len / 512, hidden, bytes[13]);
-        const boot = geo.boot(bytes[71..82].*, u32at(bytes, 67));
-        if (!std.mem.eql(u8, bytes[0..512], &boot) or !std.mem.eql(u8, bytes[6 * 512 ..][0..512], &boot)) return error.SourceFat;
+        return initSource(Source.slice(bytes), hidden);
+    }
+    pub fn initSource(source: Source, hidden: u64) !View {
+        if (source.length < 512 or source.length % 512 != 0) return error.SourceFat;
+        var bytes: [512]u8 = undefined;
+        try source.read(0, &bytes);
+        const geo = try format.Geometry.init(source.length / 512, hidden, bytes[13]);
+        const boot = geo.boot(bytes[71..82].*, u32at(&bytes, 67));
+        if (!std.mem.eql(u8, &bytes, &boot)) return error.SourceFat;
+        try source.read(6 * 512, &bytes);
+        if (!std.mem.eql(u8, &bytes, &boot)) return error.SourceFat;
         const fat_size = @as(usize, geo.sectors_per_fat) * 512;
-        if (!std.mem.eql(u8, bytes[32 * 512 ..][0..fat_size], bytes[32 * 512 + fat_size ..][0..fat_size])) return error.SourceFat;
-        return .{ .bytes = bytes, .geometry = geo };
+        var first: [4096]u8 = undefined;
+        var second: [4096]u8 = undefined;
+        var at: usize = 0;
+        while (at < fat_size) {
+            const count = @min(first.len, fat_size - at);
+            try source.read(32 * 512 + at, first[0..count]);
+            try source.read(32 * 512 + fat_size + at, second[0..count]);
+            if (!std.mem.eql(u8, first[0..count], second[0..count])) return error.SourceFat;
+            at += count;
+        }
+        return .{ .source = source, .geometry = geo };
     }
 
     pub fn readFile(self: View, allocator: std.mem.Allocator, path: []const u8, limit: usize) ![]u8 {
@@ -38,10 +55,11 @@ pub const View = struct {
             if (entry.cluster != 0) return error.SourceFat;
             return;
         }
+        var buffer: [64 * 1024]u8 = undefined;
         var cluster = entry.cluster;
         var offset: usize = 0;
         while (offset < entry.size) {
-            const data = try self.clusterBytes(cluster);
+            const data = try self.clusterBytes(cluster, &buffer);
             const amount = @min(data.len, entry.size - offset);
             if (out) |target| @memcpy(target[offset..][0..amount], data[0..amount]);
             if (expected) |wanted| if (!std.mem.eql(u8, wanted[offset..][0..amount], data[0..amount])) return error.SourceContentMismatch;
@@ -67,6 +85,7 @@ pub const View = struct {
     }
 
     fn child(self: View, start: u32, wanted: []const u8) !Entry {
+        var buffer: [64 * 1024]u8 = undefined;
         var cluster = start;
         var traversed: u32 = 0;
         var entries: usize = 0;
@@ -78,7 +97,7 @@ pub const View = struct {
         while (true) {
             traversed += 1;
             if (traversed > self.geometry.clusters) return error.SourceFat;
-            const data = try self.clusterBytes(cluster);
+            const data = try self.clusterBytes(cluster, &buffer);
             var at: usize = 0;
             while (at < data.len) : (at += 32) {
                 entries += 1;
@@ -162,14 +181,19 @@ pub const View = struct {
         }
     }
 
-    fn clusterBytes(self: View, cluster: u32) ![]const u8 {
+    fn clusterBytes(self: View, cluster: u32, buffer: []u8) ![]const u8 {
         if (cluster < 2 or cluster >= self.geometry.clusters + 2) return error.SourceFat;
         const sector = @as(usize, self.geometry.data_start) + @as(usize, cluster - 2) * self.geometry.sectors_per_cluster;
-        return self.bytes[sector * 512 ..][0 .. @as(usize, self.geometry.sectors_per_cluster) * 512];
+        const count = @as(usize, self.geometry.sectors_per_cluster) * 512;
+        if (count > buffer.len) return error.SourceFat;
+        try self.source.read(sector * 512, buffer[0..count]);
+        return buffer[0..count];
     }
     fn next(self: View, cluster: u32) !?u32 {
-        _ = try self.clusterBytes(cluster);
-        const value = u32at(self.bytes, 32 * 512 + @as(usize, cluster) * 4) & 0x0fff_ffff;
+        if (cluster < 2 or cluster >= self.geometry.clusters + 2) return error.SourceFat;
+        var bytes: [4]u8 = undefined;
+        try self.source.read(32 * 512 + @as(usize, cluster) * 4, &bytes);
+        const value = u32at(&bytes, 0) & 0x0fff_ffff;
         if (value >= 0x0fff_fff8) return null;
         if (value < 2 or value >= self.geometry.clusters + 2) return error.SourceFat;
         return value;

@@ -88,8 +88,8 @@ fn witness(sys: *const r4os.r4sys.Context, dev: *const r4os.r4dev.Context, args:
             _ = sys.fileDelete(ready);
             _ = sys.fileDelete(release);
         }
-        const payload_hash = try session.digest(session.prepared.?.archive.payload);
-        const recovery_hash = try session.digest(session.prepared.?.recovery_archive.payload);
+        const payload_hash = try session.prepared.?.archive.digest(session.pool.pump);
+        const recovery_hash = try session.prepared.?.recovery_archive.digest(session.pool.pump);
         try check(sys.fileWrite(ready, "READY") == 5);
         sys.write("[PACKAGESMOKE] source-detach=READY\r\n");
         const deadline = sys.ticks() + sys.ticksFromMilliseconds(30000);
@@ -98,8 +98,8 @@ fn witness(sys: *const r4os.r4sys.Context, dev: *const r4os.r4dev.Context, args:
             sys.sleepTicks(sys.ticksFromMilliseconds(20));
         }
         const original_after = try session.digest(session.prepared.?.archive.original);
-        const payload_after = try session.digest(session.prepared.?.archive.payload);
-        const recovery_after = try session.digest(session.prepared.?.recovery_archive.payload);
+        const payload_after = try session.prepared.?.archive.digest(session.pool.pump);
+        const recovery_after = try session.prepared.?.recovery_archive.digest(session.pool.pump);
         try check(std.mem.eql(u8, &session.original_digest, &original_after));
         try check(std.mem.eql(u8, &payload_hash, &payload_after));
         try check(std.mem.eql(u8, &recovery_hash, &recovery_after));

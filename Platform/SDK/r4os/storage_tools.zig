@@ -1,5 +1,7 @@
 //! Shared userland/host partitioning and filesystem maintenance tools.
 pub const io = @import("storage_tools/io.zig");
+pub const byte_source = @import("storage_tools/byte_source.zig");
+pub const sparse_image = @import("storage_tools/sparse_image.zig");
 pub const host_file = @import("storage_tools/host_file.zig");
 pub const partition = @import("storage_tools/partition.zig");
 pub const fat32 = @import("storage_tools/fat32.zig");

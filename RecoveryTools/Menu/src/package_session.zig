@@ -15,18 +15,22 @@ pub const Session = struct {
     pool: resident.Pool,
     arena: std.heap.ArenaAllocator,
     arena_live: bool = false,
+    image_arena: std.heap.ArenaAllocator,
+    image_arena_live: bool = false,
     original_digest: [32]u8 = .{0} ** 32,
     prepared: ?package.Prepared = null,
     tree: ?source.Tree = null,
     target: ?source.Target = null,
 
     pub fn init(self: *Session, sys: *const r4os.r4sys.Context, dev: *const r4os.r4dev.Context, pump: resident.Pump) void {
-        self.* = .{ .sys = sys, .dev = dev, .pool = .{ .sys = sys, .dev = dev, .pump = pump }, .arena = undefined };
+        self.* = .{ .sys = sys, .dev = dev, .pool = .{ .sys = sys, .dev = dev, .pump = pump }, .arena = undefined, .image_arena = undefined };
         self.pool.ram_bytes = @import("memory_budget.zig").capacity(dev) catch 0;
         self.pool.observe();
         self.pool.baseline_used = self.pool.observed_peak;
         self.arena = std.heap.ArenaAllocator.init(self.pool.allocator());
         self.arena_live = true;
+        self.image_arena = std.heap.ArenaAllocator.init(self.pool.allocator());
+        self.image_arena_live = true;
     }
     pub fn deinit(self: *Session) bool {
         self.pool.observe();
@@ -38,7 +42,17 @@ pub const Session = struct {
             self.arena_live = false;
             self.arena.deinit();
         }
+        self.releaseImage();
         return self.pool.deinit();
+    }
+    // Call only after the source image and its inner package coherence have
+    // been verified. Write plans borrow the independent tree/package data.
+    pub fn releaseImage(self: *Session) void {
+        if (self.prepared) |*prepared| prepared.archive.disk = null;
+        if (self.image_arena_live) {
+            self.image_arena_live = false;
+            self.image_arena.deinit();
+        }
     }
     pub fn read(self: *Session, path: [*:0]const u8) ![]const u8 {
         const info = self.sys.fileInfo(path) orelse return error.PackageMissing;
@@ -77,9 +91,9 @@ pub const Session = struct {
         const bytes = try self.read(path);
         self.original_digest = try self.digest(bytes);
         if (expected) |wanted| if (!std.mem.eql(u8, &wanted, &self.original_digest)) return error.SourceChanged;
-        self.prepared = try package.prepare(self.arena.allocator(), r4os.zip.Context{ .dev = self.dev }, bytes, kind, self.pool.pump);
+        self.prepared = try package.prepareWithImageAllocator(self.arena.allocator(), self.image_arena.allocator(), r4os.zip.Context{ .dev = self.dev }, bytes, kind, self.pool.pump);
         try @import("memory_budget.zig").require(self.pool.ram_bytes, self.prepared.?.recovery.minimumRamBytes);
-        if (self.prepared.?.system) |system| self.tree = try source.Tree.read(self.arena.allocator(), self.prepared.?.archive.get("disk.img").?, system.releaseVersion, self.pool.pump);
+        if (self.prepared.?.system) |system| self.tree = try source.Tree.read(self.arena.allocator(), try self.prepared.?.archive.image(), system.releaseVersion, self.pool.pump);
     }
     pub fn targetSystem(self: *Session, first: u64, sectors: u64, serial: u64) !void {
         self.target = try self.tree.?.prepareTarget(self.arena.allocator(), first, sectors, serial, self.pool.pump);

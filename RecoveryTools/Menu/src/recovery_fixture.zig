@@ -14,6 +14,12 @@ const Codec = struct {
     pub fn begin(_: Codec, bytes: []const u8, entry: *const r4os.zip.Entry, output: []u8, work: *r4os.zip.Work) !r4os.zip.Progress {
         return core.begin(bytes, entry.*, output, &work.data);
     }
+    pub fn beginStream(_: Codec, bytes: []const u8, entry: *const r4os.zip.Entry, output: []u8, work: *r4os.zip.Work) !r4os.zip.Progress {
+        return core.beginStream(bytes, entry.*, output, &work.data);
+    }
+    pub fn streamStep(_: Codec, work: *r4os.zip.Work, budget: u32) !r4os.zip.Progress {
+        return core.streamStep(&work.data, budget);
+    }
     pub fn step(_: Codec, work: *r4os.zip.Work, budget: u32) !r4os.zip.Progress {
         return core.step(&work.data, budget);
     }
@@ -93,7 +99,7 @@ pub fn main(init: std.process.Init) !void {
         const manifest_bytes = try boot.readFile(a, "boot/r4os-installation.json", 16384);
         const Identity = struct { installationId: []const u8 };
         const identity = try std.json.parseFromSlice(Identity, a, r4os.version_info.stripBom(manifest_bytes), .{ .ignore_unknown_fields = true });
-        const plan = try slots.Plan.prepare(a, image[2363392 * 512 ..][0 .. 512 * 1024 * 1024], 2363392, state.guid.parse(identity.value.installationId) orelse return error.InvalidTarget, source, false, .{});
+        const plan = try slots.Plan.prepareDelta(a, image[2363392 * 512 ..][0 .. 512 * 1024 * 1024], 2363392, state.guid.parse(identity.value.installationId) orelse return error.InvalidTarget, source, false, .{});
         try expect(plan.previous != null);
         var result: std.Io.Writer.Allocating = .init(a);
         try result.writer.writeAll("{\"rotate\":true,\"currentPayloadWrites\":[");
@@ -125,23 +131,30 @@ pub fn main(init: std.process.Init) !void {
     try files.append(a, .{ .path = "INSTALL/RELEASE.ZIP", .bytes = "original R4OS ZIP witness" });
     try files.append(a, .{ .path = "INSTALL/RECOVERY.ZIP", .bytes = next.archive.original });
     const original = try tools.fat32_image.prepare(a, 256 * 2048, 2048, "RECOVERY", 20, files.items);
-    const plan = try slots.Plan.prepare(a, original.bytes, 2048, id, next, false, .{});
+    const scratch = try a.dupe(u8, original.bytes);
+    const plan = try slots.Plan.prepareDelta(a, scratch, 2048, id, next, false, .{});
+    const work = try a.alloc(u8, tools.io.scratch_bytes);
+    const previous_image = try a.dupe(u8, original.bytes);
+    var previous_memory = Memory{ .bytes = previous_image };
+    var previous_progress = tools.io.Progress{};
+    try plan.previous.?.execute(previous_memory.device(&previous_progress), work);
+    const current_image = scratch;
+    std.debug.print("[RECOVERYSLOTHOST] delta_bytes={d}+{d} volume_bytes={d}\n", .{ plan.previous.?.bytes.len, plan.current.bytes.len, original.bytes.len });
     try expect(plan.previous != null and !plan.unchanged);
-    try matches(a, plan.previous.?.bytes, "CURRENT", old);
-    try matches(a, plan.previous.?.bytes, "PREVIOUS", old);
-    try matches(a, plan.current.bytes, "CURRENT", next);
-    try matches(a, plan.current.bytes, "PREVIOUS", old);
-    var view = try tools.fat32_view.View.init(plan.current.bytes, 2048);
+    try matches(a, previous_image, "CURRENT", old);
+    try matches(a, previous_image, "PREVIOUS", old);
+    try matches(a, current_image, "CURRENT", next);
+    try matches(a, current_image, "PREVIOUS", old);
+    var view = try tools.fat32_view.View.init(current_image, 2048);
     try view.matches("INSTALL/RELEASE.ZIP", "original R4OS ZIP witness");
     try view.matches("INSTALL/RECOVERY.ZIP", next.archive.original);
     const record = try view.readFile(a, "state.r4s", state.maximum);
     try expect(!state.confirmed(record, id, next.recovery.recoveryVersion, next.recovery_archive.manifest));
     const memory_bytes = try a.dupe(u8, original.bytes);
-    const work = try a.alloc(u8, tools.io.scratch_bytes);
     var cases: usize = 0;
     for ([_]bool{ false, true }) |current_phase| {
         for ([_]Fault{ .second_write, .first_flush, .readback }) |fault| {
-            @memcpy(memory_bytes, if (current_phase) plan.previous.?.bytes else original.bytes);
+            @memcpy(memory_bytes, if (current_phase) previous_image else original.bytes);
             var memory = Memory{ .bytes = memory_bytes, .fault = fault };
             var progress = tools.io.Progress{};
             const phase = if (current_phase) plan.current else plan.previous.?;
@@ -175,7 +188,7 @@ pub fn main(init: std.process.Init) !void {
     try plan.previous.?.execute(memory.device(&progress), work);
     progress.verified = false;
     try plan.current.execute(memory.device(&progress), work);
-    try expect(progress.verified and std.mem.eql(u8, memory_bytes, plan.current.bytes));
+    try expect(progress.verified and std.mem.eql(u8, memory_bytes, current_image));
     // PREVIOUS boot and stale/invalid confirmation must preserve the old
     // fallback, even when CURRENT itself is a valid complete package.
     for (0..3) |condition| {
@@ -188,10 +201,16 @@ pub fn main(init: std.process.Init) !void {
         } else original.bytes;
         var other_id = id;
         if (condition == 1) other_id[0] ^= 1;
-        const preserved = try slots.Plan.prepare(alloc, bytes, 2048, other_id, next, condition == 0, .{});
+        const preserved = try slots.Plan.prepareDelta(alloc, try alloc.dupe(u8, bytes), 2048, other_id, next, condition == 0, .{});
         try expect(preserved.previous == null);
-        try matches(alloc, preserved.current.bytes, "PREVIOUS", fallback);
+        const final_bytes = try alloc.dupe(u8, bytes);
+        var preserved_memory = Memory{ .bytes = final_bytes };
+        var preserved_progress = tools.io.Progress{};
+        try preserved.current.execute(preserved_memory.device(&preserved_progress), work);
+        try matches(alloc, final_bytes, "PREVIOUS", fallback);
     }
+    const no_op = try slots.Plan.prepareDelta(a, current_image, 2048, id, next, false, .{});
+    try expect(no_op.unchanged and no_op.previous == null and no_op.current.bytes.len == 0 and no_op.current.writes.len == 0);
     const result = try std.fmt.allocPrint(a, "{{\"result\":\"PASS\",\"payloadFaultCases\":{d},\"preservationCases\":3,\"completeRotation\":true,\"currentVersion\":\"{s}\",\"nextVersion\":\"{s}\"}}\n", .{ cases, old.recovery.recoveryVersion, next.recovery.recoveryVersion });
     try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = args[4], .data = result });
     std.debug.print("[RECOVERYSLOTHOST] rotation=VERIFIED state=UNCONFIRMED cache=PRESERVED result=OK\n", .{});
