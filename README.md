@@ -69,7 +69,11 @@ normal R4OS packages include an explicitly selected complete Recovery release.
 
 `./Release.sh Prepare` (Windows: `Release.bat Prepare`) creates the independent
 ZIP, input/owner provenance and SHA256SUMS from the clean, pushed Recovery
-source. `Publish` uploads through the shared workspace GitHub transport;
+source. After qualification, `Publish -Prepared` uploads those exact assets
+through the shared workspace GitHub transport without regenerating the ZIP,
+source manifest, checksums or custom release notes. It verifies the clean
+source commit, input lock, owner receipts and current kernel/runtime/legal
+file identities against the prepared source manifest and checksums;
 it does not build normal R4OS. The production kernel's named pair section must
 match the exact runtime and both versions. Use `Prepare -Technical` only for
 explicit local acceptance candidates; `Publish` refuses technical mode.
