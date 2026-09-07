@@ -43,9 +43,9 @@
     },
     {
       "id": "Drivers-AHCI",
-      "archiveSha256": "6dc9306a91bc7bf26473699b5895f869e04c92b2288fc836e10b40a0f235c660",
+      "archiveSha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
       "archive": "Legal/Sources/Drivers-AHCI.zip",
-      "commit": "d1a7d549dcf43dbf39a5b79bc8e33a9c11fbc57a",
+      "commit": "8a3573351aff968c438686f4ef8db8be0da62e77",
       "remote": "https://github.com/R4OSDev/r4os-driver-ahci.git"
     },
     {
@@ -318,12 +318,12 @@
   "modules": [
     {
       "name": "AHCI",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "Drivers-AHCI",
       "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
       "manifest": "Legal/Manifests/AHCI/module.R4MF",
       "kind": 3,
-      "bytes": 378931,
+      "bytes": 378995,
       "imports": [
         "R4DEV:Query:1"
       ],
@@ -2661,8 +2661,8 @@
     },
     {
       "path": "Kernel/kernel/service_ipc.zig",
-      "bytes": 36716,
-      "sha256": "1a0824fd92f23d7c345f70738127ffc4267cebeab5ae7e8bcde508aeca697530",
+      "bytes": 38210,
+      "sha256": "6d6a805897f511966360b1734dcf08b807bcd381a036b58492210bf6d7da1250",
       "originalSha256": "1a0824fd92f23d7c345f70738127ffc4267cebeab5ae7e8bcde508aeca697530",
       "origin": {
         "path": "kernel/service_ipc.zig",
@@ -3431,8 +3431,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 808665,
-      "sha256": "0f331dde0c11008cc337595dcf34d76d3141cf7d1f530cfc0cd81a5add762409",
+      "bytes": 813659,
+      "sha256": "a2241ec2377931382d7a66a661487672f80fe4ddf0ed7f6288127b13c57f2583",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3538,8 +3538,8 @@
     },
     {
       "path": "Kernel/sched/task.zig",
-      "bytes": 106790,
-      "sha256": "06df199631005b9acd0837b9d244d30a5d0cabad89fb278326d83d09a76abec5",
+      "bytes": 106895,
+      "sha256": "ba4e7b57e71c9b6ad9edae13b0bc5485b4460007bb16c2abc22ddc46f6e13417",
       "originalSha256": "06df199631005b9acd0837b9d244d30a5d0cabad89fb278326d83d09a76abec5",
       "origin": {
         "path": "sched/task.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "ac2f145176a7d7233dbe7046f76464e6f69ddec9b2250146b6719c0adadb4e69",
+      "sha256": "d1e43b2855769e8683f7651fe89ad7ac8832c0837e05e64497f4053a151faf2e",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3927,6 +3927,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.78.9.patch",
+      "bytes": 30829,
+      "sha256": "65987ba950d4b01a11637585af1c251b01264522024eed594823362eeae1ced0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/SDK-0.76.10.patch",
       "bytes": 6303,
       "sha256": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22",
@@ -4055,8 +4062,8 @@
     {
       "path": "Legal/Manifests/AHCI/module.R4MF",
       "bytes": 289,
-      "sha256": "22876ec1a25a8d1f08a7a81a1f4a7cff92ca0bfdf086263c38be91a43c6f0381",
-      "originalSha256": "22876ec1a25a8d1f08a7a81a1f4a7cff92ca0bfdf086263c38be91a43c6f0381",
+      "sha256": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354",
+      "originalSha256": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-AHCI"
@@ -5455,9 +5462,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-AHCI.zip",
-      "bytes": 31744,
-      "sha256": "6dc9306a91bc7bf26473699b5895f869e04c92b2288fc836e10b40a0f235c660",
-      "originalSha256": "6dc9306a91bc7bf26473699b5895f869e04c92b2288fc836e10b40a0f235c660",
+      "bytes": 33096,
+      "sha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
+      "originalSha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
       "origin": null
     },
     {
@@ -9467,7 +9474,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "28b403124b7209753ed86e0cdaa88b6acf5fb371c685767a36325d1c59fad060",
+      "sha256": "12de1f36f279ec076bd142bdcf4277c48221ed7e05a2b92760e3bbcb5402bf57",
       "originalSha256": null,
       "origin": null
     },
@@ -9491,15 +9498,15 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "472d8abd19db4002b07712913133bc146ef7fabe7dcb2b426ea5b4de9508e2bc",
+      "sha256": "11747f5c53ad94f2556faeff565d0119d59edbb8a9d7944d420b3845eeafd415",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
-      "bytes": 378931,
-      "sha256": "0a107e7da9d264cca621f626b7d78546b760854a40fd8b4c0e2ceb5a80b5ac96",
-      "originalSha256": "0a107e7da9d264cca621f626b7d78546b760854a40fd8b4c0e2ceb5a80b5ac96",
+      "bytes": 378995,
+      "sha256": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae",
+      "originalSha256": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae",
       "origin": {
         "path": "Artifacts/Modules/AHCI/AHCI.R4D",
         "source": "Drivers-AHCI"
@@ -13095,6 +13102,81 @@
           "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
         }
       ]
+    },
+    {
+      "changes": [
+        {
+          "before": "1a0824fd92f23d7c345f70738127ffc4267cebeab5ae7e8bcde508aeca697530",
+          "after": "6d6a805897f511966360b1734dcf08b807bcd381a036b58492210bf6d7da1250",
+          "path": "Kernel/kernel/service_ipc.zig"
+        },
+        {
+          "before": "0f331dde0c11008cc337595dcf34d76d3141cf7d1f530cfc0cd81a5add762409",
+          "after": "bca2a369a027e3bc79320c570ebf104c84cc990aa5ccbe2a9affcf9860ed9867",
+          "path": "Kernel/program/r4x.zig"
+        },
+        {
+          "before": "06df199631005b9acd0837b9d244d30a5d0cabad89fb278326d83d09a76abec5",
+          "after": "ba4e7b57e71c9b6ad9edae13b0bc5485b4460007bb16c2abc22ddc46f6e13417",
+          "path": "Kernel/sched/task.zig"
+        },
+        {
+          "before": "ac2f145176a7d7233dbe7046f76464e6f69ddec9b2250146b6719c0adadb4e69",
+          "after": "d1e43b2855769e8683f7651fe89ad7ac8832c0837e05e64497f4053a151faf2e",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "before": null,
+          "after": "6d95094ed4d8006903e3d6f3c1fbb0de1b3f1906c28e43934a627a4b08f4bacb",
+          "path": "Legal/Changes/Kernel-0.78.9.patch"
+        }
+      ],
+      "reason": "0.78.9: targeted frozen Kernel I/O worker update, exact owner delta in owner-update-0.78.9.json"
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/program/r4x.zig",
+          "after": "a2241ec2377931382d7a66a661487672f80fe4ddf0ed7f6288127b13c57f2583",
+          "before": "bca2a369a027e3bc79320c570ebf104c84cc990aa5ccbe2a9affcf9860ed9867"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.9.patch",
+          "after": "65987ba950d4b01a11637585af1c251b01264522024eed594823362eeae1ced0",
+          "before": "6d95094ed4d8006903e3d6f3c1fbb0de1b3f1906c28e43934a627a4b08f4bacb"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "after": "12de1f36f279ec076bd142bdcf4277c48221ed7e05a2b92760e3bbcb5402bf57",
+          "before": "28b403124b7209753ed86e0cdaa88b6acf5fb371c685767a36325d1c59fad060"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "11747f5c53ad94f2556faeff565d0119d59edbb8a9d7944d420b3845eeafd415",
+          "before": "472d8abd19db4002b07712913133bc146ef7fabe7dcb2b426ea5b4de9508e2bc"
+        }
+      ],
+      "reason": "0.78.9: cancel all queued owner requests before worker replacement; align Recovery runtime identity at 0.1.22"
+    },
+    {
+      "changes": [
+        {
+          "after": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae",
+          "before": "0a107e7da9d264cca621f626b7d78546b760854a40fd8b4c0e2ceb5a80b5ac96",
+          "path": "Runtime/R4OS/DRIVERS/AHCI.R4D"
+        },
+        {
+          "after": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354",
+          "before": "22876ec1a25a8d1f08a7a81a1f4a7cff92ca0bfdf086263c38be91a43c6f0381",
+          "path": "Legal/Manifests/AHCI/module.R4MF"
+        },
+        {
+          "after": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
+          "before": "6dc9306a91bc7bf26473699b5895f869e04c92b2288fc836e10b40a0f235c660",
+          "path": "Legal/Sources/Drivers-AHCI.zip"
+        }
+      ],
+      "reason": "0.78.9: exact AHCI 0.2.2 owner build/import from 8a3573351aff968c438686f4ef8db8be0da62e77"
     }
   ]
 }

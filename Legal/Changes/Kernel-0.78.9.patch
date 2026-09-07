@@ -1,0 +1,663 @@
+diff --git a/kernel/service_ipc.zig b/kernel/service_ipc.zig
+index 922827f..ac28863 100644
+--- a/kernel/service_ipc.zig
++++ b/kernel/service_ipc.zig
+@@ -87,6 +87,7 @@ const Channel = struct {
+     drops: u64 = 0,
+     service_name: []const u8 = "",
+     handler: ?ServiceHandler = null,
++    handler_owner: u32 = 0,
+     queue: [QUEUE_DEPTH]Message = .{Message{}} ** QUEUE_DEPTH,
+     lifetime: Lifetime = .{},
+ };
+@@ -197,12 +198,18 @@ const WorkerTarget = struct {
+ var initialized = false;
+ var worker_started = false;
+ var worker_task_id: u32 = 0;
+-var worker_cursor: usize = 0;
+-var worker_event = sync.EventV2.initMode(false, .auto_reset);
+-// Genau ein ipc-worker bearbeitet Handlerziele. Sein Antwortpuffer bleibt
+-// deshalb worker-eigen, muss aber nicht bei jeder tiefen Netzantwort 4 KB des
+-// begrenzten Kernel-Task-Stacks belegen.
+-var worker_response: [MAX_MESSAGE_SIZE]u8 = undefined;
++// Echo, DHCP, DNS, TCP and UDP each have an independent BSP worker. Further
++// channels share these five bounded lanes; each channel still has exactly
++// one serial handler owner. A waiting network operation cannot consume the
++// worker of a different network channel.
++const WORKER_COUNT = 5;
++const Worker = struct {
++    task_id: u32 = 0,
++    cursor: usize = 0,
++    event: sync.EventV2 = sync.EventV2.initMode(false, .auto_reset),
++    response: [MAX_MESSAGE_SIZE]u8 = undefined,
++};
++var workers: [WORKER_COUNT]Worker = .{Worker{}} ** WORKER_COUNT;
+ var channels: [MAX_CHANNELS]Channel = .{Channel{}} ** MAX_CHANNELS;
+ var total_sends: u64 = 0;
+ var total_receives: u64 = 0;
+@@ -221,8 +228,13 @@ pub fn init() void {
+ 
+ pub fn startRuntimeWorker() bool {
+     if (worker_started) return true;
+-    const worker = sched_task.createKernelThreadWithRole("ipc-worker", workerMain, .short_completion) orelse return false;
+-    worker_task_id = worker.id;
++    for (&workers) |*lane| {
++        if (lane.task_id != 0) continue;
++        const worker = sched_task.createKernelWorkerBlockedWithRole("ipc-worker", workerMain, .short_completion) orelse return false;
++        lane.task_id = worker.id;
++        sched_task.markReady(worker, timer.tickCount());
++    }
++    worker_task_id = workers[0].task_id;
+     worker_started = true;
+     return true;
+ }
+@@ -533,7 +545,7 @@ fn submitHandler(
+     defer {
+         if (admission.unwind.active) _ = task_context.leaveUnwind(admission.unwind);
+     }
+-    worker_event.signal();
++    workers[admission.target.channel_index % WORKER_COUNT].event.signal();
+ 
+     const wait_ticks = remainingTicks(admission.target.deadline, admission.target.forever);
+     const wait_result = admission.target.completion.wait(wait_ticks);
+@@ -771,6 +783,15 @@ fn invokeHandlerDirect(channel_id: u32, payload: []const u8, response: []u8, cou
+         unlockChannel(&guard);
+         return fail();
+     };
++    const caller = scheduler.currentId() orelse 0;
++    const previous_owner = ch.handler_owner;
++    // Nested calls retain the old direct path, but must never reenter a
++    // singleton handler currently suspended on another worker.
++    if (previous_owner != 0 and previous_owner != caller) {
++        unlockChannel(&guard);
++        return fail();
++    }
++    ch.handler_owner = caller;
+     const generation = ch.generation;
+     ch.lifetime.handler_direct +%= 1;
+     ch.lifetime.handler_started +%= 1;
+@@ -784,6 +805,7 @@ fn invokeHandlerDirect(channel_id: u32, payload: []const u8, response: []u8, cou
+ 
+     guard = lockChannel(&channels[idx]) orelse return fail();
+     const result_ch = guard.channel;
++    result_ch.handler_owner = previous_owner;
+     result_ch.lifetime.handler_completed +%= 1;
+     noteDuration(&result_ch.lifetime, started, completed, .run);
+     noteDuration(&result_ch.lifetime, started, completed, .e2e);
+@@ -794,27 +816,35 @@ fn invokeHandlerDirect(channel_id: u32, payload: []const u8, response: []u8, cou
+         result_ch.lifetime.handler_failures +%= 1;
+     }
+     unlockChannel(&guard);
++    if (previous_owner == 0) workers[idx % WORKER_COUNT].event.signal();
+     return if (valid) produced else fail();
+ }
+ 
+ fn workerMain() callconv(.c) void {
++    const worker = currentWorker() orelse return;
+     while (true) {
+-        if (takeNextWorkerTarget()) |target| {
+-            runWorkerTarget(target);
++        if (takeNextWorkerTarget(worker)) |target| {
++            runWorkerTarget(worker, target);
+             continue;
+         }
+         atomicAdd(&worker_idle_waits, 1);
+-        const result = worker_event.waitResult(WAIT_FOREVER);
++        const result = worker.event.waitResult(WAIT_FOREVER);
+         if (result == .signaled) atomicAdd(&worker_wakes, 1);
+     }
+ }
+ 
+-fn takeNextWorkerTarget() ?WorkerTarget {
++fn takeNextWorkerTarget(worker: *Worker) ?WorkerTarget {
++    const lane = (@intFromPtr(worker) - @intFromPtr(&workers[0])) / @sizeOf(Worker);
+     var offset: usize = 0;
+     while (offset < channels.len) : (offset += 1) {
+-        const idx = (worker_cursor + offset) % channels.len;
++        const idx = (worker.cursor + offset) % channels.len;
++        if (idx % WORKER_COUNT != lane) continue;
+         var guard = lockChannel(&channels[idx]) orelse continue;
+         const ch = guard.channel;
++        if (ch.handler_owner != 0) {
++            unlockChannel(&guard);
++            continue;
++        }
+         const selection = queue_model.oldestQueued(&ch.queue) orelse {
+             unlockChannel(&guard);
+             continue;
+@@ -832,7 +862,8 @@ fn takeNextWorkerTarget() ?WorkerTarget {
+         slot.started_at = monotonic.capture();
+         ch.lifetime.handler_started +%= 1;
+         noteDuration(&ch.lifetime, slot.submitted_at, slot.started_at, .queue);
+-        worker_cursor = (idx + 1) % channels.len;
++        worker.cursor = (idx + 1) % channels.len;
++        ch.handler_owner = worker.task_id;
+         const target = WorkerTarget{
+             .channel_index = idx,
+             .channel_generation = slot.channel_generation,
+@@ -846,18 +877,19 @@ fn takeNextWorkerTarget() ?WorkerTarget {
+     return null;
+ }
+ 
+-fn runWorkerTarget(target: WorkerTarget) void {
++fn runWorkerTarget(worker: *Worker, target: WorkerTarget) void {
+     const message = &channels[target.channel_index].queue[target.slot_index];
+     const request_len: usize = @intCast(message.meta.len);
+     const produced = target.handler(
+         channels[target.channel_index].id,
+         message.data[0..request_len],
+-        worker_response[0..],
++        worker.response[0..],
+     );
+     const completed_at = monotonic.capture();
+ 
+     var guard = lockChannel(&channels[target.channel_index]) orelse return;
+     const ch = guard.channel;
++    ch.handler_owner = 0;
+     const slot = &ch.queue[target.slot_index];
+     if (!queue_model.matches(slot.meta, target.slot_generation, .handler_running)) {
+         ch.lifetime.stale_drops +%= 1;
+@@ -874,7 +906,7 @@ fn runWorkerTarget(target: WorkerTarget) void {
+     if (valid) {
+         const len: usize = @intCast(produced);
+         if (len != 0) {
+-            @memcpy(slot.data[0..len], worker_response[0..len]);
++            @memcpy(slot.data[0..len], worker.response[0..len]);
+             ch.lifetime.payload_copy_bytes +%= len;
+         }
+         slot.meta.len = @intCast(len);
+@@ -1004,8 +1036,15 @@ fn remainingTicks(deadline: u64, forever: bool) u64 {
+ }
+ 
+ fn currentIsWorker() bool {
+-    const current = scheduler.current() orelse return false;
+-    return worker_started and current.id == worker_task_id;
++    return currentWorker() != null;
++}
++
++fn currentWorker() ?*Worker {
++    const current = scheduler.current() orelse return null;
++    for (&workers) |*worker| {
++        if (worker.task_id == current.id) return worker;
++    }
++    return null;
+ }
+ 
+ fn denyIrq() bool {
+diff --git a/program/r4x.zig b/program/r4x.zig
+index 5428de0..119df92 100644
+--- a/program/r4x.zig
++++ b/program/r4x.zig
+@@ -689,12 +689,13 @@ const AsyncIoRequest = struct {
+     // so this stable address is safe for lock-free fault-context attribution.
+     owner_instance: ?*ProgramInstance = null,
+     // Stable identity of the ProgramThread that submitted this request. The
+-    // short-lived kernel worker below must not collapse independent callers
++    // reusable kernel worker below must not collapse independent callers
+     // from one process into a shared R4SYS stream owner.
+     caller_task_id: u32 = 0,
+     caller_task_generation: u64 = 0,
+     task_id: u32 = 0,
+     task_generation: u64 = 0,
++    last_worker_id: u32 = 0,
+     kind: AsyncIoKind = .none,
+     state: AsyncIoState = .unused,
+     cancel_requested: bool = false,
+@@ -728,6 +729,19 @@ const AsyncIoRequest = struct {
+ 
+ const MAX_FILE_RANGE_LOCKS: usize = 64;
+ 
++// Eight resident stacks serve the existing 64 request slots. Four file
++// workers remain available even while all four service workers await a
++// reply. All workers retain the original BSP placement and caller identity.
++const ASYNC_IO_WORKER_COUNT: usize = 8;
++const AsyncIoWorker = struct {
++    task_id: u32 = 0,
++    task_generation: u64 = 0,
++    request: ?*AsyncIoRequest = null,
++    retiring: bool = false,
++    service: bool = false,
++    event: sync.EventV2 = sync.EventV2.initMode(false, .auto_reset),
++};
++
+ const FileRangeLock = struct {
+     used: bool = false,
+     owner_instance_id: u32 = 0,
+@@ -6041,6 +6055,10 @@ var program_stack_telemetry_by_profile: [MEMORY_PROFILE_COUNT]ProgramStackTeleme
+ var next_thread_generation: u64 = 1;
+ var next_inventory_snapshot_generation: u64 = 1;
+ var async_io_requests: [MAX_ASYNC_IO_REQUESTS]AsyncIoRequest = .{AsyncIoRequest{}} ** MAX_ASYNC_IO_REQUESTS;
++var async_io_workers: [ASYNC_IO_WORKER_COUNT]AsyncIoWorker = .{AsyncIoWorker{}} ** ASYNC_IO_WORKER_COUNT;
++var async_io_worker_cursor: [2]usize = .{ 0, 0 };
++var async_io_worker_creations: u64 = 0;
++var async_io_worker_requests: u64 = 0;
+ var file_range_locks: [MAX_FILE_RANGE_LOCKS]FileRangeLock = .{FileRangeLock{}} ** MAX_FILE_RANGE_LOCKS;
+ var async_io_retire_retry_test_armed = false;
+ var async_io_retire_retry_test_consumed = false;
+@@ -8033,17 +8051,11 @@ fn reportBootFilesystemWait(enabled: bool, drive_letter: u8) void {
+             }
+         },
+         .async_io => {
+-            if (execution_owner.context) |context| {
+-                const request: *AsyncIoRequest = @ptrCast(@alignCast(context));
+-                if (request.used and
+-                    request.task_id == snapshot.owner_task_id and
+-                    request.task_generation == snapshot.owner_task_generation)
+-                {
+-                    if (programModuleBaseName(request.owner_instance)) |name| owner_name = name;
+-                    if (request.path_len != 0 and request.path_len <= request.path.len) {
+-                        const file_name = baseName(request.path[0..request.path_len]);
+-                        if (file_name.len != 0) activity = file_name;
+-                    }
++            if (asyncIoWorkerRequest(owner_task)) |request| {
++                if (programModuleBaseName(request.owner_instance)) |name| owner_name = name;
++                if (request.path_len != 0 and request.path_len <= request.path.len) {
++                    const file_name = baseName(request.path[0..request.path_len]);
++                    if (file_name.len != 0) activity = file_name;
+                 }
+             }
+         },
+@@ -10465,26 +10477,13 @@ fn apiIoServiceCall(handle: u32, op: u16, request_ptr: [*]const u8, request_len:
+         .service_response_capacity = response_capacity,
+         .service_timeout_ticks = timeout_ticks,
+     };
+-    const worker = task.createKernelWorkerBlockedWithRole("r4x-async-io", asyncIoTaskMain, .short_completion) orelse {
+-        req.* = .{};
+-        unlockAsyncIoRequests();
+-        return IO_ERROR_SPAWN_FAILED;
+-    };
+-    if (!task.bindExecutionOwner(worker, .async_io, @ptrCast(req))) {
+-        const worker_id = worker.id;
+-        const worker_generation = worker.generation;
++    if (!ensureAsyncIoWorkersLocked(req.kind == .service_call)) {
+         req.* = .{};
+         unlockAsyncIoRequests();
+-        _ = task.retireIdentity(worker_id, worker_generation);
+         return IO_ERROR_SPAWN_FAILED;
+     }
+-    req.task_id = worker.id;
+-    req.task_generation = worker.generation;
+     out_request_id.* = req.id;
+-    // The request mutex is also the publication boundary for owner cancel.
+-    // Make the worker runnable before releasing it so cancellation can never
+-    // retire the exact Task between unlock and this raw-pointer access.
+-    task.markReady(worker, timer.tickCount());
++    wakeAsyncIoWorkersLocked(req.kind == .service_call);
+     unlockAsyncIoRequests();
+     return IO_OK;
+ }
+@@ -10585,7 +10584,7 @@ fn closeAsyncIoRequest(request_id: u32, defer_on_busy: bool) i32 {
+         }
+         return IO_ERROR_BUSY;
+     }
+-    if (!retireAsyncIoTask(claim.task_id, claim.task_generation)) {
++    if (!retireAsyncIoTask(claim)) {
+         if (!defer_on_busy) return IO_ERROR_BUSY;
+         return switch (deferAsyncIoCloseClaim(claim)) {
+             .busy => IO_ERROR_BUSY,
+@@ -10677,25 +10676,13 @@ fn submitAsyncFileRequest(kind: AsyncIoKind, path: [*:0]const u8, offset: u64, d
+         unlockAsyncIoRequests();
+         return IO_ERROR_INVALID;
+     }
+-    const worker = task.createKernelWorkerBlockedWithRole("r4x-async-io", asyncIoTaskMain, .batch) orelse {
++    if (!ensureAsyncIoWorkersLocked(req.kind == .service_call)) {
+         req.* = .{};
+         unlockAsyncIoRequests();
+         return IO_ERROR_SPAWN_FAILED;
+-    };
+-    if (!task.bindExecutionOwner(worker, .async_io, @ptrCast(req))) {
+-        const worker_id = worker.id;
+-        const worker_generation = worker.generation;
+-        req.* = .{};
+-        unlockAsyncIoRequests();
+-        _ = task.retireIdentity(worker_id, worker_generation);
+-        return IO_ERROR_SPAWN_FAILED;
+     }
+-    req.task_id = worker.id;
+-    req.task_generation = worker.generation;
+     out_request_id.* = req.id;
+-    // Publish readiness while cancellation is still excluded; after unlock
+-    // no raw worker pointer is needed by the submitter.
+-    task.markReady(worker, timer.tickCount());
++    wakeAsyncIoWorkersLocked(req.kind == .service_call);
+     unlockAsyncIoRequests();
+     return IO_OK;
+ }
+@@ -10787,37 +10774,118 @@ fn markAsyncIoClosePendingForCaller(request_id: u32) bool {
+     return true;
+ }
+ 
++fn ensureAsyncIoWorkersLocked(service: bool) bool {
++    var available = false;
++    for (&async_io_workers, 0..) |*worker, index| {
++        if ((index >= ASYNC_IO_WORKER_COUNT / 2) != service) continue;
++        if (worker.retiring) continue;
++        if (worker.task_id == 0) {
++            const new_task = task.createKernelWorkerBlockedWithRole(
++                "r4x-async-io",
++                asyncIoTaskMain,
++                if (service) .short_completion else .batch,
++            ) orelse continue;
++            // A permanent pool object is the immutable execution owner.
++            // Only its current request changes, under async_io_lock.
++            if (!task.bindExecutionOwner(new_task, .async_io, @ptrCast(worker))) {
++                // A fresh blocked task cannot already have an owner.
++                @panic("async worker owner binding");
++            }
++            worker.task_id = new_task.id;
++            worker.task_generation = new_task.generation;
++            worker.service = service;
++            async_io_worker_creations +%= 1;
++            task.markReady(new_task, timer.tickCount());
++        }
++        available = true;
++    }
++    return available;
++}
++
++fn wakeAsyncIoWorkersLocked(service: bool) void {
++    for (&async_io_workers) |*worker| {
++        if (worker.task_id != 0 and !worker.retiring and worker.service == service) worker.event.signal();
++    }
++}
++
++fn asyncIoWorkerRequest(owner_task: *const task.Task) ?*AsyncIoRequest {
++    const owner = task.executionOwner(owner_task);
++    if (owner.kind != .async_io) return null;
++    const worker: *AsyncIoWorker = @ptrCast(@alignCast(owner.context orelse return null));
++    if (worker.task_id != owner_task.id or worker.task_generation != owner_task.generation) return null;
++    const req = @atomicLoad(?*AsyncIoRequest, &worker.request, .acquire) orelse return null;
++    if (!req.used or req.task_id != owner_task.id or req.task_generation != owner_task.generation) return null;
++    return req;
++}
++
++fn takeAsyncIoRequestLocked(worker: *AsyncIoWorker) ?*AsyncIoRequest {
++    const lane: usize = if (worker.service) 1 else 0;
++    const start = async_io_worker_cursor[lane];
++    for (0..async_io_requests.len) |offset| {
++        const index = (start + offset) % async_io_requests.len;
++        const req = &async_io_requests[index];
++        if (!req.used or req.state != .pending or req.cancel_requested or
++            (req.kind == .service_call) != worker.service) continue;
++        req.task_id = worker.task_id;
++        req.task_generation = worker.task_generation;
++        req.last_worker_id = worker.task_id;
++        req.state = .running;
++        @atomicStore(?*AsyncIoRequest, &worker.request, req, .release);
++        async_io_worker_cursor[lane] = (index + 1) % async_io_requests.len;
++        async_io_worker_requests +%= 1;
++        return req;
++    }
++    return null;
++}
++
+ fn asyncIoTaskMain() callconv(.c) void {
+-    if (!lockAsyncIoRequests()) scheduler.exitCurrentAndRetire();
+-    const req = currentAsyncIoRequest() orelse {
++    const current_task = scheduler.current() orelse return;
++    const owner = task.executionOwner(current_task);
++    const worker: *AsyncIoWorker = @ptrCast(@alignCast(owner.context orelse return));
++    while (true) {
++        if (!lockAsyncIoRequests()) scheduler.exitCurrentAndRetire();
++        if (worker.retiring) {
++            unlockAsyncIoRequests();
++            scheduler.exitCurrentAndRetire();
++        }
++        const req = takeAsyncIoRequestLocked(worker) orelse {
++            unlockAsyncIoRequests();
++            _ = worker.event.waitResult(sync.WAIT_FOREVER);
++            continue;
++        };
+         unlockAsyncIoRequests();
+-        scheduler.exitCurrentAndRetire();
+-    };
+-    req.state = .running;
+-    unlockAsyncIoRequests();
+ 
+-    const result = performAsyncIo(req);
+-    if (!lockAsyncIoRequests()) scheduler.exitCurrentAndRetire();
+-    const current_task = scheduler.current();
+-    if (!req.used or current_task == null or req.task_id != current_task.?.id or req.task_generation != current_task.?.generation) {
++        const result = performAsyncIo(req);
++        if (!lockAsyncIoRequests()) scheduler.exitCurrentAndRetire();
++        if (worker.retiring) {
++            // Keep the exact request/Task claim intact until the cancelling
++            // owner confirms retirement. Otherwise a pending retirement
++            // retry could lose its anchor after completion detached it.
++            unlockAsyncIoRequests();
++            scheduler.exitCurrentAndRetire();
++        }
++        if (req.cancel_requested) {
++            req.result = IO_ERROR_CANCELLED;
++            req.status = IO_ERROR_CANCELLED;
++            req.processed_bytes = 0;
++            req.state = .failed;
++        } else {
++            req.result = result;
++            req.status = IO_OK;
++            req.processed_bytes = if (result > 0) @intCast(result) else 0;
++            req.state = .completed;
++        }
++        // Detach before publishing completion: Close may immediately recycle
++        // the request and its caller may retire. No later worker operation
++        // may still attribute faults, cwd or stream ownership to that caller.
++        @atomicStore(?*AsyncIoRequest, &worker.request, null, .release);
++        req.task_id = 0;
++        req.task_generation = 0;
++        req.completed_tick = timer.tickCount();
++        req.completion.completeAll();
+         unlockAsyncIoRequests();
+-        scheduler.exitCurrentAndRetire();
+-    }
+-    if (req.cancel_requested) {
+-        req.result = IO_ERROR_CANCELLED;
+-        req.status = IO_ERROR_CANCELLED;
+-        req.processed_bytes = 0;
+-        req.state = .failed;
+-    } else {
+-        req.result = result;
+-        req.status = IO_OK;
+-        req.processed_bytes = if (result > 0) @intCast(result) else 0;
+-        req.state = .completed;
++        _ = scheduler.safeReschedulePoint();
+     }
+-    req.completed_tick = timer.tickCount();
+-    req.completion.completeAll();
+-    unlockAsyncIoRequests();
+-    scheduler.exitCurrentAndRetire();
+ }
+ 
+ fn performAsyncIo(req: *AsyncIoRequest) i32 {
+@@ -10949,7 +11017,9 @@ fn performAsyncServiceCall(req: *AsyncIoRequest) i32 {
+     const request_ptr: [*]const u8 = if (req.service_request_len == 0) @ptrCast(empty_request[0..].ptr) else @ptrFromInt(req.service_request_ptr);
+     const response_ptr: [*]u8 = if (req.service_response_capacity == 0) @ptrCast(empty_response[0..].ptr) else @ptrFromInt(req.service_response_ptr);
+     const response_header: *ServiceMessageHeader = @ptrFromInt(req.service_response_header_ptr);
+-    const result = serviceCallCore(req, req.service_handle, req.service_op, request_ptr, req.service_request_len, response_header, response_ptr, req.service_response_capacity, req.service_timeout_ticks);
++    const timeout = if (req.service_timeout_ticks == sync.WAIT_FOREVER) sync.WAIT_FOREVER else timer.deadlineAfter(req.submitted_tick, req.service_timeout_ticks) -| timer.tickCount();
++    if (req.service_timeout_ticks != 0 and timeout == 0) return services.API_ERR_TIMEOUT;
++    const result = serviceCallCore(req, req.service_handle, req.service_op, request_ptr, req.service_request_len, response_header, response_ptr, req.service_response_capacity, timeout);
+     if (result > 0) req.processed_bytes = @intCast(result);
+     return result;
+ }
+@@ -10989,12 +11059,7 @@ fn unlockAsyncIoRequests() void {
+ }
+ 
+ fn currentAsyncIoRequest() ?*AsyncIoRequest {
+-    const current_task = scheduler.current() orelse return null;
+-    const owner = task.executionOwner(current_task);
+-    if (owner.kind != .async_io) return null;
+-    const req: *AsyncIoRequest = @ptrCast(@alignCast(owner.context orelse return null));
+-    if (!req.used or req.task_id != current_task.id or req.task_generation != current_task.generation) return null;
+-    return req;
++    return asyncIoWorkerRequest(scheduler.current() orelse return null);
+ }
+ 
+ fn asyncIoRequestForCaller(request_id: u32) ?*AsyncIoRequest {
+@@ -11041,11 +11106,21 @@ fn asyncIoInfo(req: *const AsyncIoRequest) ProgramIoInfo {
+         .submitted_tick = req.submitted_tick,
+         .completed_tick = req.completed_tick,
+         .owner_instance = req.owner_instance_id,
+-        .task_id = req.task_id,
++        .task_id = req.last_worker_id,
+         .reserved0 = 0,
+     };
+ }
+ 
++fn cancelQueuedAsyncIoRequestLocked(req: *AsyncIoRequest) void {
++    req.cancel_requested = true;
++    if (req.state != .pending) return;
++    req.status = IO_ERROR_CANCELLED;
++    req.result = IO_ERROR_CANCELLED;
++    req.state = .failed;
++    req.completed_tick = timer.tickCount();
++    req.completion.completeAll();
++}
++
+ fn cancelAsyncIoRequestsForInstance(instance_id: u32) bool {
+     const handle = programHandleForId(instance_id) orelse return true;
+     return cancelAsyncIoRequestsForHandle(handle);
+@@ -11054,12 +11129,18 @@ fn cancelAsyncIoRequestsForInstance(instance_id: u32) bool {
+ fn cancelAsyncIoRequestsForHandle(handle: ProgramProcessHandle) bool {
+     while (true) {
+         if (!lockAsyncIoRequests()) return false;
++        // Close admission for the entire owner before retiring any worker;
++        // its replacement must not begin another queued request of this owner.
++        for (&async_io_requests) |*req| {
++            if (asyncIoRequestOwnedByHandle(req, handle)) cancelQueuedAsyncIoRequestLocked(req);
++        }
+         var claim: ?AsyncIoRetireClaim = null;
+         var i: usize = 0;
+         while (i < async_io_requests.len) : (i += 1) {
+             const req = &async_io_requests[i];
+-            if (!asyncIoRequestOwnedByHandle(req, handle) or req.task_id == 0) continue;
+-            req.cancel_requested = true;
++            if (!asyncIoRequestOwnedByHandle(req, handle)) continue;
++            cancelQueuedAsyncIoRequestLocked(req);
++            if (req.task_id == 0) continue;
+             claim = asyncIoRetireClaim(i, req);
+             // Prevent a second cancellation attempt from targeting a request
+             // ID that the worker may already have completed and recycled.
+@@ -11072,7 +11153,7 @@ fn cancelAsyncIoRequestsForHandle(handle: ProgramProcessHandle) bool {
+         if (pending.service_request_id != 0) {
+             _ = services.cancelRequest(pending.service_handle, pending.service_request_id);
+         }
+-        if (!retireAsyncIoTask(pending.task_id, pending.task_generation)) return false;
++        if (!retireAsyncIoTask(pending)) return false;
+ 
+         if (!lockAsyncIoRequests()) return false;
+         if (asyncIoRequestForRetireClaimLocked(pending)) |req| {
+@@ -11110,7 +11191,7 @@ fn purgeCancelledAsyncIoRequestsForHandle(handle: ProgramProcessHandle) bool {
+         unlockAsyncIoRequests();
+ 
+         const pending = claim orelse return true;
+-        if (!retireAsyncIoTask(pending.task_id, pending.task_generation)) return false;
++        if (!retireAsyncIoTask(pending)) return false;
+ 
+         if (!lockAsyncIoRequests()) return false;
+         if (asyncIoRequestForRetireClaimLocked(pending)) |req| {
+@@ -11153,12 +11234,15 @@ fn cancelAsyncIoRequestsForCaller(
+ ) bool {
+     while (true) {
+         if (!lockAsyncIoRequests()) return false;
++        for (&async_io_requests) |*req| {
++            if (asyncIoRequestOwnedByCaller(req, handle, caller_task_id, caller_task_generation)) cancelQueuedAsyncIoRequestLocked(req);
++        }
+         var claim: ?AsyncIoRetireClaim = null;
+         var i: usize = 0;
+         while (i < async_io_requests.len) : (i += 1) {
+             const req = &async_io_requests[i];
+             if (!asyncIoRequestOwnedByCaller(req, handle, caller_task_id, caller_task_generation)) continue;
+-            req.cancel_requested = true;
++            cancelQueuedAsyncIoRequestLocked(req);
+             if (req.task_id == 0) continue;
+             claim = asyncIoRetireClaim(i, req);
+             // Service requests need their endpoint-side waiter cancelled
+@@ -11174,7 +11258,7 @@ fn cancelAsyncIoRequestsForCaller(
+         if (pending.service_request_id != 0) {
+             _ = services.cancelRequest(pending.service_handle, pending.service_request_id);
+         }
+-        if (!retireAsyncIoTask(pending.task_id, pending.task_generation)) return false;
++        if (!retireAsyncIoTask(pending)) return false;
+ 
+         if (!lockAsyncIoRequests()) return false;
+         if (asyncIoRequestForRetireClaimLocked(pending)) |req| {
+@@ -11252,11 +11336,43 @@ fn asyncIoRequestForRetireClaimLocked(claim: AsyncIoRetireClaim) ?*AsyncIoReques
+     return req;
+ }
+ 
+-fn retireAsyncIoTask(task_id: u32, task_generation: u64) bool {
++fn retireAsyncIoTask(claim: AsyncIoRetireClaim) bool {
++    if (claim.task_id == 0) return true;
++    if (!lockAsyncIoRequests()) return false;
++    const req = asyncIoRequestForRetireClaimLocked(claim) orelse {
++        unlockAsyncIoRequests();
++        return true;
++    };
++    var target: ?*AsyncIoWorker = null;
++    for (&async_io_workers) |*worker| {
++        if (worker.task_id != claim.task_id or worker.task_generation != claim.task_generation) continue;
++        // Mark before dropping the mutex: even if this request completes
++        // during retirement, this worker must never take a different caller.
++        if (!req.cancel_requested) {
++            unlockAsyncIoRequests();
++            return false;
++        }
++        worker.retiring = true;
++        target = worker;
++        break;
++    }
++    unlockAsyncIoRequests();
++    const worker = target orelse return true;
+     const current_task = scheduler.current();
+-    const current_task_id = if (current_task) |value| value.id else 0;
+-    const current_task_generation = if (current_task) |value| value.generation else 0;
+-    return releaseProgramTaskGeneration(task_id, task_generation, current_task_id, current_task_generation);
++    if (!releaseProgramTaskGeneration(claim.task_id, claim.task_generation, if (current_task) |value| value.id else 0, if (current_task) |value| value.generation else 0)) return false;
++    if (!lockAsyncIoRequests()) return false;
++    defer unlockAsyncIoRequests();
++    if (worker.task_id == claim.task_id and worker.task_generation == claim.task_generation) {
++        @atomicStore(?*AsyncIoRequest, &worker.request, null, .release);
++        worker.task_id = 0;
++        worker.task_generation = 0;
++        worker.retiring = false;
++        // Exceptional hard cancellation replaces only this retired worker.
++        // Normal completion/Close performs no Task or stack retirement.
++        if (!ensureAsyncIoWorkersLocked(worker.service)) return false;
++        wakeAsyncIoWorkersLocked(worker.service);
++    }
++    return true;
+ }
+ 
+ const AsyncIoPendingCloseResult = enum {
+@@ -11279,7 +11395,7 @@ fn reapOnePendingAsyncIoClose() AsyncIoPendingCloseResult {
+     unlockAsyncIoRequests();
+ 
+     const pending = claim orelse return .idle;
+-    if (!retireAsyncIoTask(pending.task_id, pending.task_generation)) return .deferred;
++    if (!retireAsyncIoTask(pending)) return .deferred;
+     if (!lockAsyncIoRequests()) return .deferred;
+     var reclaimed = false;
+     if (asyncIoRequestForRetireClaimLocked(pending)) |req| {
+@@ -17846,7 +17962,7 @@ fn resolveStorageOwner() ?@import("../storage/access_runtime.zig").Owner {
+ }
+ 
+ fn resolveR4SysStreamOwner() ?r4api.r4sys.StreamOwner {
+-    // Most file-stream calls run in short-lived async-I/O workers, but
++    // Most file-stream calls run in reusable async-I/O workers, but
+     // fileReplaceAtomic is an existing direct R4SYS slot and therefore runs
+     // in the caller's ProgramThread. Both execution forms must resolve to the
+     // same stable process handle or a finished stage can never be published.
+diff --git a/sched/task.zig b/sched/task.zig
+index 78a0c81..5d2b604 100644
+--- a/sched/task.zig
++++ b/sched/task.zig
+@@ -1950,7 +1950,8 @@ pub fn removeDispatchDonation(t: *Task, rank: u8) bool {
+ 
+ // Binding is only accepted before a task can execute. The owner object must
+ // outlive the task; R4X retirement already releases the Task before freeing
+-// ProgramThread or AsyncIoRequest storage.
++// ProgramThread storage. Async I/O instead binds a permanent pool worker;
++// that worker detaches its current request before publishing completion.
+ pub fn bindExecutionOwner(t: *Task, kind: ExecutionOwnerKind, context: *anyopaque) bool {
+     if (kind == .none) return false;
+     const irq_flags = interrupts.saveAndDisableRuntime();

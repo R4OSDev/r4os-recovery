@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "reason": "0.78.9: bounded reusable async-I/O workers and independent serial network-channel workers; targeted frozen Kernel owner delta.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseCommit": "74037bfe4cc07b3f99b0e40a48020f893d666a11",
+      "sourceCommit": "a7ace68ad9e1c5a46fea35e4b35455bcb4538cd2",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.9.patch",
+      "patchSha256": "65987ba950d4b01a11637585af1c251b01264522024eed594823362eeae1ced0",
+      "files": [
+        {
+          "path": "Kernel/kernel/service_ipc.zig",
+          "sha256": "6d6a805897f511966360b1734dcf08b807bcd381a036b58492210bf6d7da1250"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "a2241ec2377931382d7a66a661487672f80fe4ddf0ed7f6288127b13c57f2583"
+        },
+        {
+          "path": "Kernel/sched/task.zig",
+          "sha256": "ba4e7b57e71c9b6ad9edae13b0bc5485b4460007bb16c2abc22ddc46f6e13417"
+        }
+      ]
+    },
+    {
+      "archiveSha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
+      "owner": "Drivers-AHCI",
+      "archive": "Legal/Sources/Drivers-AHCI.zip",
+      "sourceCommit": "8a3573351aff968c438686f4ef8db8be0da62e77",
+      "baseCommit": "d1a7d549dcf43dbf39a5b79bc8e33a9c11fbc57a",
+      "buildSourcePins": {
+        "Contract": "cf72d67e4d76d105d30faf5fac2d1ebfbbfac83f",
+        "SDK": "a0f5cdee101b13a7f0753d5bafe236e319202b67"
+      },
+      "pendingOwnerCommit": false,
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
+          "sha256": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae"
+        },
+        {
+          "path": "Legal/Manifests/AHCI/module.R4MF",
+          "sha256": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354"
+        },
+        {
+          "path": "Legal/Sources/Drivers-AHCI.zip",
+          "sha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9"
+        }
+      ]
+    }
+  ]
+}
