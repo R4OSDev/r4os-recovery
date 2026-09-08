@@ -2555,8 +2555,8 @@
     },
     {
       "path": "Kernel/kernel/protocol_api.zig",
-      "bytes": 3292,
-      "sha256": "2c806bb863392bdec5d753f473d524589f86dc93ece4c7dbc9e0a022bd331731",
+      "bytes": 3407,
+      "sha256": "47814ff3b17f921ce200097b7af2aa4937033b6a39cbc198bde9076c29e55f2f",
       "originalSha256": "2c806bb863392bdec5d753f473d524589f86dc93ece4c7dbc9e0a022bd331731",
       "origin": {
         "path": "kernel/protocol_api.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "56bfa85cd2683a5d5829ddfa009685eaaa1968f8e6306dbceee487aae24f07f3",
+      "sha256": "7b8962af823327dd33a4617979643d7d561c657389e692dee47a44ef77610cf6",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "1dedf4d09efc096f555290edd1f4295f39b63fab26a4112b6e7e3dad1eb729da",
+      "sha256": "7488170e3d58ad52c99637f6e4220d2684f67aa094845637fd1cf6ab87a6d6bd",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "1eff7ef8e099448b4d72e5d07c4a637fb30ae62fe4b489f0ba44dc36d44c8382",
+      "sha256": "1167b6f3cc46a8803d087b630c8399f24ab20db76beff290facd68ad1122a923",
       "originalSha256": null,
       "origin": null
     },
@@ -10066,6 +10066,13 @@
       "origin": null,
       "sha256": "c40f7272057bffc3845ba2abb571e3e84b7108550451c162112adf6badfd43d0",
       "bytes": 54845
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.33.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "e7cb305b4db3b234c80f0964a1a2be60b7ab7d2e6cfe2a1409ff56464cf112a6",
+      "bytes": 589
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14192,6 +14199,36 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "14cef8ecf0f19b6b8c273c4922426d51c7d0e0aaad8059e6206ea42beaed851a",
           "after": "1dedf4d09efc096f555290edd1f4295f39b63fab26a4112b6e7e3dad1eb729da"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.33: ProtocolApi free returns original pointers and byte lengths to Kernel heap; Recovery 0.1.34, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/protocol_api.zig",
+          "before": "2c806bb863392bdec5d753f473d524589f86dc93ece4c7dbc9e0a022bd331731",
+          "after": "47814ff3b17f921ce200097b7af2aa4937033b6a39cbc198bde9076c29e55f2f"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.33.patch",
+          "before": null,
+          "after": "e7cb305b4db3b234c80f0964a1a2be60b7ab7d2e6cfe2a1409ff56464cf112a6"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "56bfa85cd2683a5d5829ddfa009685eaaa1968f8e6306dbceee487aae24f07f3",
+          "after": "7b8962af823327dd33a4617979643d7d561c657389e692dee47a44ef77610cf6"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "1eff7ef8e099448b4d72e5d07c4a637fb30ae62fe4b489f0ba44dc36d44c8382",
+          "after": "1167b6f3cc46a8803d087b630c8399f24ab20db76beff290facd68ad1122a923"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "1dedf4d09efc096f555290edd1f4295f39b63fab26a4112b6e7e3dad1eb729da",
+          "after": "7488170e3d58ad52c99637f6e4220d2684f67aa094845637fd1cf6ab87a6d6bd"
         }
       ]
     }

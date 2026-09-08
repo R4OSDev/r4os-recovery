@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "reason": "Exact ProtocolApi allocator provider from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "3ce3196a30bbf98ce2dcf08a22585cf29c79db88",
+      "sourceCommit": "33c95ba7361a97689966894d63af9c1acfeb0409",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.33.patch",
+      "patchSha256": "e7cb305b4db3b234c80f0964a1a2be60b7ab7d2e6cfe2a1409ff56464cf112a6",
+      "importMode": "Exact ProtocolApi allocator provider; unrelated frozen sources retained",
+      "files": [
+        {
+          "path": "Kernel/kernel/protocol_api.zig",
+          "sha256": "47814ff3b17f921ce200097b7af2aa4937033b6a39cbc198bde9076c29e55f2f",
+          "sourcePath": "kernel/protocol_api.zig",
+          "sourceSha256": "47814ff3b17f921ce200097b7af2aa4937033b6a39cbc198bde9076c29e55f2f",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
