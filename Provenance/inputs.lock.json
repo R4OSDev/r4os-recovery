@@ -1845,8 +1845,8 @@
     },
     {
       "path": "Kernel/driver/usb/msc.zig",
-      "bytes": 49143,
-      "sha256": "2ddc5a7b5896b23152dd30bcf859ab8e8df165f50577a8e26f8c57535420cd17",
+      "bytes": 54279,
+      "sha256": "5db6d5577beb6ef77dc4ff4c206b73797b0a73819bf7b417ef7a79539f2499f6",
       "originalSha256": "b6d82a88e73e2d51bb151a4be9ae2ebffc8f7fc70ece028e0f7d8a432b4bc7b6",
       "origin": {
         "path": "driver/usb/msc.zig",
@@ -1865,8 +1865,8 @@
     },
     {
       "path": "Kernel/driver/usb/usb_boot_wait.zig",
-      "bytes": 15518,
-      "sha256": "a22af16d891d03239d07a5ec75dfefeacf6562c51841736e7c0df49d93560e9d",
+      "bytes": 16805,
+      "sha256": "7d123e5d4a6fa0cbdbd3441043115538a3dcb870759b338eb0e1c7f38d4f8765",
       "originalSha256": "a22af16d891d03239d07a5ec75dfefeacf6562c51841736e7c0df49d93560e9d",
       "origin": {
         "path": "driver/usb/usb_boot_wait.zig",
@@ -1955,8 +1955,8 @@
     },
     {
       "path": "Kernel/driver/usb/xhci.zig",
-      "bytes": 217737,
-      "sha256": "7d6923bdf1f6daaec22ab4b698119c9500a8d3cf78804412e9f3dd3adeb0896a",
+      "bytes": 226550,
+      "sha256": "0783689e8599281d8331608649bff7b7a5c3978e06b7296c4470d33afee254fb",
       "originalSha256": "79ced8d7ed2709d92f4e3ec529e7a15cab7eabc179c73e2e2cd97061670daff9",
       "origin": {
         "path": "driver/usb/xhci.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "4913463692b3c7742a365183ae5c074691373bc224eb90cbf4dfa7bd998e9e8f",
+      "sha256": "009d17e61de1b109782fbd6145caf2a32dd9adf3103547232e98474b06d5d0e3",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "5e5d92539e730b80246c9c2ed93be5362339734a5c8a048ceb10fe6dc393ceab",
+      "sha256": "b19969d1eb81cfd6bf0888391d63d014bfd8e72a73d4fde5cae6756acef38f45",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "0938c2150d66155446c28dafbd9e0917ef11344e4b39ea380a2cc5516e164812",
+      "sha256": "e94d9cdc9d1305d032a2bd44e6b27a635e12b732688f160415714b06651161ea",
       "originalSha256": null,
       "origin": null
     },
@@ -9989,6 +9989,13 @@
       "origin": null,
       "sha256": "00b5068ce82b1a076eadd23ab8682cfba0a1acbd0ad898a768f3a99db5fc8be6",
       "bytes": 17520
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.24.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "c6ab22ff38190629a74704f141035f2a6dae460c37ce31d9a2a4f110b5cfd46e",
+      "bytes": 78780
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -13655,6 +13662,46 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "8408b3b686254f99243739ae6f6fe2ae45b0861e2016cea77f679c32f82a0265",
           "after": "5e5d92539e730b80246c9c2ed93be5362339734a5c8a048ceb10fe6dc393ceab"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.24: device-owned USB BOT transactions, cooperative xHCI waits and deferred teardown; Recovery 0.1.28.",
+      "changes": [
+        {
+          "path": "Kernel/driver/usb/msc.zig",
+          "before": "2ddc5a7b5896b23152dd30bcf859ab8e8df165f50577a8e26f8c57535420cd17",
+          "after": "5db6d5577beb6ef77dc4ff4c206b73797b0a73819bf7b417ef7a79539f2499f6"
+        },
+        {
+          "path": "Kernel/driver/usb/xhci.zig",
+          "before": "7d6923bdf1f6daaec22ab4b698119c9500a8d3cf78804412e9f3dd3adeb0896a",
+          "after": "0783689e8599281d8331608649bff7b7a5c3978e06b7296c4470d33afee254fb"
+        },
+        {
+          "path": "Kernel/driver/usb/usb_boot_wait.zig",
+          "before": "a22af16d891d03239d07a5ec75dfefeacf6562c51841736e7c0df49d93560e9d",
+          "after": "7d123e5d4a6fa0cbdbd3441043115538a3dcb870759b338eb0e1c7f38d4f8765"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.24.patch",
+          "before": null,
+          "after": "c6ab22ff38190629a74704f141035f2a6dae460c37ce31d9a2a4f110b5cfd46e"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "4913463692b3c7742a365183ae5c074691373bc224eb90cbf4dfa7bd998e9e8f",
+          "after": "009d17e61de1b109782fbd6145caf2a32dd9adf3103547232e98474b06d5d0e3"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "0938c2150d66155446c28dafbd9e0917ef11344e4b39ea380a2cc5516e164812",
+          "after": "e94d9cdc9d1305d032a2bd44e6b27a635e12b732688f160415714b06651161ea"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "5e5d92539e730b80246c9c2ed93be5362339734a5c8a048ceb10fe6dc393ceab",
+          "after": "b19969d1eb81cfd6bf0888391d63d014bfd8e72a73d4fde5cae6756acef38f45"
         }
       ]
     }

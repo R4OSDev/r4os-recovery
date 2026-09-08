@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "reason": "0.78.24: targeted USB storage ownership and wait handoff from the exact Kernel commit. Frozen module artifacts remain unchanged.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "01afa9691f18d6d65be7ff939ceec63f1a824b3c",
+      "sourceCommit": "dab123b55f743ca75ef10dce5fdd0393f09643f6",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.24.patch",
+      "patchSha256": "c6ab22ff38190629a74704f141035f2a6dae460c37ce31d9a2a4f110b5cfd46e",
+      "files": [
+        {
+          "path": "Kernel/driver/usb/msc.zig",
+          "sha256": "5db6d5577beb6ef77dc4ff4c206b73797b0a73819bf7b417ef7a79539f2499f6"
+        },
+        {
+          "path": "Kernel/driver/usb/xhci.zig",
+          "sha256": "0783689e8599281d8331608649bff7b7a5c3978e06b7296c4470d33afee254fb"
+        },
+        {
+          "path": "Kernel/driver/usb/usb_boot_wait.zig",
+          "sha256": "7d123e5d4a6fa0cbdbd3441043115538a3dcb870759b338eb0e1c7f38d4f8765"
+        }
+      ]
+    }
+  ]
+}
