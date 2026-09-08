@@ -1995,8 +1995,8 @@
     },
     {
       "path": "Kernel/fs/ntfs/ntfs.zig",
-      "bytes": 39053,
-      "sha256": "d071ac568c71d09023cd4d7e51c6efda301facb52c81957af801306a28dd0580",
+      "bytes": 39141,
+      "sha256": "edac7e9c0e28848e8b3eb5ad06b1582885dfd895dbaa83b6336cea00019abe56",
       "originalSha256": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
       "origin": {
         "path": "fs/ntfs/ntfs.zig",
@@ -3681,8 +3681,8 @@
     },
     {
       "path": "Kernel/Support/ntfs_format.zig",
-      "bytes": 37881,
-      "sha256": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
+      "bytes": 38013,
+      "sha256": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab",
       "originalSha256": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
       "origin": {
         "path": "Support/ntfs_format.zig",
@@ -3691,8 +3691,8 @@
     },
     {
       "path": "Kernel/Support/ntfs_volume.zig",
-      "bytes": 311619,
-      "sha256": "187d384974bc407c207e576f6a89ca7a964a8ea70eee899b4b03c7f5fd2ff7fb",
+      "bytes": 313327,
+      "sha256": "ed1d58c5abea89516ab96ccc8ffc922c42b2018b2a64dd1f2589cebb92431cfd",
       "originalSha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
       "origin": {
         "path": "Support/ntfs_volume.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "b3728e3bab09780f7ccd3463ceb466daf107c2f64d747432247d939caa799e2e",
+      "sha256": "67e98eafd543a5ad55f84086aaf152a3e65f2a73b763afa1f5e40b7477423541",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -6728,8 +6728,8 @@
     },
     {
       "path": "Platform/SDK/r4os/ntfs_format.zig",
-      "bytes": 37881,
-      "sha256": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
+      "bytes": 38013,
+      "sha256": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab",
       "originalSha256": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
       "origin": {
         "path": "r4os/ntfs_format.zig",
@@ -6745,8 +6745,8 @@
     },
     {
       "path": "Platform/SDK/r4os/ntfs_volume.zig",
-      "bytes": 311889,
-      "sha256": "69f704660f9af89ac660ca2bcf54a6c7b52f7f4612e8af44362cd5fed203d4c9",
+      "bytes": 313597,
+      "sha256": "a8293b6c505efd4848e066239c3e3c2e671ec21e1cb3fc9b0d95d3e3986e4924",
       "originalSha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
       "origin": {
         "path": "r4os/ntfs_volume.zig",
@@ -9166,7 +9166,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "67bd1b22d24567ab53aef4ecc978004f6b5fe6c2069c14c5e091a5a3117920b4",
+      "sha256": "002b56b64fcdaab0d08956784d687d15b7f14893916ca05234cc55f467a2d323",
       "originalSha256": null,
       "origin": null
     },
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "0346b6b2ec37f4cec3cbf226d7b3a6a920b1b218fb4205d43c4f75790f5b2e22",
+      "sha256": "c11e5c4057f87904d6038ee947778fd7c8f40dfd42aaf84195d80aad441c4425",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "aca4babeacdcbd2eed18514daec53334bdf119a5a7844d740aa289319d67d602",
+      "sha256": "e085e625c943a436db9185d12872c2058c285607c2956cf4ba0df2800b1dec9f",
       "originalSha256": null,
       "origin": null
     },
@@ -10031,6 +10031,20 @@
       "origin": null,
       "sha256": "03f22cb2cef55f5fbcff79eeaa80efb7de4e536f18444bc5bc9a755dfcdc3b91",
       "bytes": 32825
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.30.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "a9734ef1a9c8f4f57fd91fce188d0d341cba3d0b3768d4feb350a4971c552432",
+      "bytes": 9459
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.30.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "552847453bf10d9335e0fad91a23c33014b8f2b7738e3048c742b0e05286f24d",
+      "bytes": 9996
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -13997,6 +14011,66 @@
           "path": "RecoveryTools/Menu/module.R4MF",
           "before": "7cf4c901cfbce8a513e43501337a8fcfa170bcfe055d1136599386ebb2f8a855",
           "after": "67bd1b22d24567ab53aef4ecc978004f6b5fe6c2069c14c5e091a5a3117920b4"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.30: exact NTFS fixup coverage and read-only mirror bootstrap; Recovery 0.1.31, Menu 0.1.17.",
+      "changes": [
+        {
+          "path": "Platform/SDK/r4os/ntfs_format.zig",
+          "before": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
+          "after": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "before": "69f704660f9af89ac660ca2bcf54a6c7b52f7f4612e8af44362cd5fed203d4c9",
+          "after": "a8293b6c505efd4848e066239c3e3c2e671ec21e1cb3fc9b0d95d3e3986e4924"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.30.patch",
+          "before": null,
+          "after": "a9734ef1a9c8f4f57fd91fce188d0d341cba3d0b3768d4feb350a4971c552432"
+        },
+        {
+          "path": "Kernel/Support/ntfs_format.zig",
+          "before": "eabc88b10d5c20cc64072b24ed9935a94acba363623c12f2af8faaf2b9f64a7d",
+          "after": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab"
+        },
+        {
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "before": "187d384974bc407c207e576f6a89ca7a964a8ea70eee899b4b03c7f5fd2ff7fb",
+          "after": "ed1d58c5abea89516ab96ccc8ffc922c42b2018b2a64dd1f2589cebb92431cfd"
+        },
+        {
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "before": "d071ac568c71d09023cd4d7e51c6efda301facb52c81957af801306a28dd0580",
+          "after": "edac7e9c0e28848e8b3eb5ad06b1582885dfd895dbaa83b6336cea00019abe56"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.30.patch",
+          "before": null,
+          "after": "552847453bf10d9335e0fad91a23c33014b8f2b7738e3048c742b0e05286f24d"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "b3728e3bab09780f7ccd3463ceb466daf107c2f64d747432247d939caa799e2e",
+          "after": "67e98eafd543a5ad55f84086aaf152a3e65f2a73b763afa1f5e40b7477423541"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "aca4babeacdcbd2eed18514daec53334bdf119a5a7844d740aa289319d67d602",
+          "after": "e085e625c943a436db9185d12872c2058c285607c2956cf4ba0df2800b1dec9f"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "0346b6b2ec37f4cec3cbf226d7b3a6a920b1b218fb4205d43c4f75790f5b2e22",
+          "after": "c11e5c4057f87904d6038ee947778fd7c8f40dfd42aaf84195d80aad441c4425"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "67bd1b22d24567ab53aef4ecc978004f6b5fe6c2069c14c5e091a5a3117920b4",
+          "after": "002b56b64fcdaab0d08956784d687d15b7f14893916ca05234cc55f467a2d323"
         }
       ]
     }

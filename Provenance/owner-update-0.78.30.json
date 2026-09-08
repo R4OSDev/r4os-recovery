@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "reason": "Targeted NTFS read-only bootstrap deltas from exact Kernel/SDK commits. Both frozen cores match all 9 changed/new functions each; codecs are byte-identical to owners; the Kernel adapter is byte-identical.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "83cad021c7c18367771741d381a2e14bf78e9889",
+      "sourceCommit": "c48a51c15bd954a05d8fc7c499e7e96bd0ade474",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.30.patch",
+      "patchSha256": "a9734ef1a9c8f4f57fd91fce188d0d341cba3d0b3768d4feb350a4971c552432",
+      "importMode": "Targeted NTFS fixup, bootstrap and read-only functions; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/ntfs_format.zig",
+          "sha256": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab",
+          "sourcePath": "r4os/ntfs_format.zig",
+          "sourceSha256": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "sha256": "a8293b6c505efd4848e066239c3e3c2e671ec21e1cb3fc9b0d95d3e3986e4924",
+          "sourcePath": "r4os/ntfs_volume.zig",
+          "sourceSha256": "9a0c534bb793987f7eb184527c3c977fa8468c826c2bf6deff9d97884bf3e7d8",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "83cad021c7c18367771741d381a2e14bf78e9889",
+      "sourceCommit": "d516d9b812f026eb6f13156cde78d363a0a2d64f",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.30.patch",
+      "patchSha256": "552847453bf10d9335e0fad91a23c33014b8f2b7738e3048c742b0e05286f24d",
+      "importMode": "Targeted NTFS fixup, bootstrap and read-only functions; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Kernel/Support/ntfs_format.zig",
+          "sha256": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab",
+          "sourcePath": "Support/ntfs_format.zig",
+          "sourceSha256": "2dccf0b043b594c667271f244e57b2a012a6a70a6148b63ea97ed1165d6704ab",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "sha256": "ed1d58c5abea89516ab96ccc8ffc922c42b2018b2a64dd1f2589cebb92431cfd",
+          "sourcePath": "Support/ntfs_volume.zig",
+          "sourceSha256": "9a0c534bb793987f7eb184527c3c977fa8468c826c2bf6deff9d97884bf3e7d8",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "sha256": "edac7e9c0e28848e8b3eb5ad06b1582885dfd895dbaa83b6336cea00019abe56",
+          "sourcePath": "fs/ntfs/ntfs.zig",
+          "sourceSha256": "edac7e9c0e28848e8b3eb5ad06b1582885dfd895dbaa83b6336cea00019abe56",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
