@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "reason": "Targeted NTFS write deltas from exact Kernel/SDK commits. Both frozen cores match all 19 changed/new functions each; the Kernel adapter is byte-identical.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "ae55f9d0f405cca6792f62d3c29db3aa6b11bd1b",
+      "sourceCommit": "ad00bf8b236693d9e5b1b0a15bc29c0189ff50be",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.29.patch",
+      "patchSha256": "5abe8094b0bec6a5a9388b74123b97ff8d58622f9b1a7ce2763f0b872dd190ae",
+      "importMode": "Targeted NTFS write and progress functions; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "sha256": "69f704660f9af89ac660ca2bcf54a6c7b52f7f4612e8af44362cd5fed203d4c9",
+          "sourcePath": "r4os/ntfs_volume.zig",
+          "sourceSha256": "69d3ba2a685622cb75f29a7a0a5491a10d53fab2f342e96f0ccfb4dae634954d",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "ae55f9d0f405cca6792f62d3c29db3aa6b11bd1b",
+      "sourceCommit": "ac84ec93d50bd9481dbbd0b5fd72c75ddc10c1b0",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.29.patch",
+      "patchSha256": "03f22cb2cef55f5fbcff79eeaa80efb7de4e536f18444bc5bc9a755dfcdc3b91",
+      "importMode": "Targeted NTFS write and progress functions; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "sha256": "187d384974bc407c207e576f6a89ca7a964a8ea70eee899b4b03c7f5fd2ff7fb",
+          "sourcePath": "Support/ntfs_volume.zig",
+          "sourceSha256": "69d3ba2a685622cb75f29a7a0a5491a10d53fab2f342e96f0ccfb4dae634954d",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "sha256": "d071ac568c71d09023cd4d7e51c6efda301facb52c81957af801306a28dd0580",
+          "sourcePath": "fs/ntfs/ntfs.zig",
+          "sourceSha256": "d071ac568c71d09023cd4d7e51c6efda301facb52c81957af801306a28dd0580",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
