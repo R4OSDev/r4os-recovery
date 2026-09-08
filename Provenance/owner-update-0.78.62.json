@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "reason": "Import committed R4TLS0.2.7; R4AUTH and RDPSVC are not Recovery modules.",
+  "owners": [
+    {
+      "owner": "Protocols/R4Tls",
+      "baseCommit": "87353fd888898ddb20e1350bf3b236494dabff9e",
+      "sourceCommit": "1a553210121ec28987f5b49538bc79c5765ca686",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Protocols-R4Tls.zip",
+      "archiveSha256": "71077cb633acf52f228584178dd4b9c377d1cd83cdede38adabf2b7125264250",
+      "buildSourcePins": {
+        "SDK": "bb58f5add34504100790f29a68d2379e868de377",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
+          "sha256": "d89f879664214968ac71c682161977562ed7a8b0495390ed635de45945f84cf0"
+        },
+        {
+          "path": "Legal/Manifests/R4TLS/module.R4MF",
+          "sha256": "fea067158022065dc418494d78546f8367862e79bd90aeac8522c43a9da1eb90"
+        },
+        {
+          "path": "Legal/Sources/Protocols-R4Tls.zip",
+          "sha256": "71077cb633acf52f228584178dd4b9c377d1cd83cdede38adabf2b7125264250"
+        }
+      ]
+    }
+  ]
+}
