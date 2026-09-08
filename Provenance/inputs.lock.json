@@ -3071,8 +3071,8 @@
     },
     {
       "path": "Kernel/net/ipc_services.zig",
-      "bytes": 118898,
-      "sha256": "7a0cfea92f2e9cb86ab92e776edec6fdcfc5f50a58602ad167cde7874ec0fd30",
+      "bytes": 119522,
+      "sha256": "63d2515002f2a6c30a9dbf31500a472e96fe38033ca1feb501f0cac1f0ae4bac",
       "originalSha256": "7a0cfea92f2e9cb86ab92e776edec6fdcfc5f50a58602ad167cde7874ec0fd30",
       "origin": {
         "path": "net/ipc_services.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "11d2b8b8027cf6b0d0a5154f7fbeafbfb492f59f36952ca8c2b76eafe14d1117",
+      "sha256": "3632f553f7d18597b7ae7b355ac1a183ad2ff438c43731c7ab83293037d1f602",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "db275798ece2a413d1cc7bf0dcbb4bc05af15ad1fa007c219a5ae6a52bfc0e51",
+      "sha256": "9ca17c53a935b0808d08d5a8b5bb5826b9367bc7534261d779f6d981476f4bd1",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "9fb39608fb5e06456ffbbac9250b5d123c6da6b87b4338ef5efeb855b4576123",
+      "sha256": "8adda23a7fe9efd860bdb7d8e558e18bebbdb1dd5c0a7fd01fc689ee9f0e167a",
       "originalSha256": null,
       "origin": null
     },
@@ -10171,6 +10171,13 @@
       "origin": null,
       "sha256": "df2936deb7b0642d2457d0f86e68f406dd9467856cf6dd66cfc289f3dd96d28c",
       "bytes": 31087
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.59.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "fb21e56c6310673997ffe7e44cb7c239861b91a80bf9ca7d7f92c1cfd2e8fbf3",
+      "bytes": 4695
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14972,6 +14979,36 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "e52fe0ef69ce888f16ced9dc3613337a6f4a0beceba03ff28b8e7bc945164798",
           "after": "db275798ece2a413d1cc7bf0dcbb4bc05af15ad1fa007c219a5ae6a52bfc0e51"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.59: bound legacy TCP text scratch to the IPC response capacity; Recovery 0.1.47, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/net/ipc_services.zig",
+          "before": "7a0cfea92f2e9cb86ab92e776edec6fdcfc5f50a58602ad167cde7874ec0fd30",
+          "after": "63d2515002f2a6c30a9dbf31500a472e96fe38033ca1feb501f0cac1f0ae4bac"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.59.patch",
+          "before": null,
+          "after": "fb21e56c6310673997ffe7e44cb7c239861b91a80bf9ca7d7f92c1cfd2e8fbf3"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "11d2b8b8027cf6b0d0a5154f7fbeafbfb492f59f36952ca8c2b76eafe14d1117",
+          "after": "3632f553f7d18597b7ae7b355ac1a183ad2ff438c43731c7ab83293037d1f602"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "9fb39608fb5e06456ffbbac9250b5d123c6da6b87b4338ef5efeb855b4576123",
+          "after": "8adda23a7fe9efd860bdb7d8e558e18bebbdb1dd5c0a7fd01fc689ee9f0e167a"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "db275798ece2a413d1cc7bf0dcbb4bc05af15ad1fa007c219a5ae6a52bfc0e51",
+          "after": "9ca17c53a935b0808d08d5a8b5bb5826b9367bc7534261d779f6d981476f4bd1"
         }
       ]
     }

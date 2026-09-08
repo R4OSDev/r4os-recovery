@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "reason": "Legacy TCP text read correction from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "9e1a419db467e26a8973aa7b783ff2cf95431593",
+      "sourceCommit": "0a5875f375dd8976028b673b21d4cca0d2ccc612",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.59.patch",
+      "patchSha256": "fb21e56c6310673997ffe7e44cb7c239861b91a80bf9ca7d7f92c1cfd2e8fbf3",
+      "importMode": "Exact bounded legacy TCP text handlers",
+      "files": [
+        {
+          "path": "Kernel/net/ipc_services.zig",
+          "sha256": "63d2515002f2a6c30a9dbf31500a472e96fe38033ca1feb501f0cac1f0ae4bac",
+          "sourcePath": "net/ipc_services.zig",
+          "sourceSha256": "63d2515002f2a6c30a9dbf31500a472e96fe38033ca1feb501f0cac1f0ae4bac",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
