@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "reason": "Exact VM, heap and SDK allocator sources plus targeted lifecycle delta from committed owners; unrelated frozen platform functions retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "592f6b131b8ccdff9fcd2b79f8cde6e0bdb16d42",
+      "sourceCommit": "d7ab044b26d1d8779c2f932aa6876d288a5c084b",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.31.patch",
+      "patchSha256": "99a772045a817bd6758c68f0559be33814444581a273df6ecfe17571108e8380",
+      "importMode": "Targeted VM/heap/SDK allocator and lifecycle functions; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Kernel/memory/heap.zig",
+          "sha256": "65483c9dc0c8a27ec9d679cdccb5be4990ffc52a274db193449904d25c9c1f0e",
+          "sourcePath": "memory/heap.zig",
+          "sourceSha256": "65483c9dc0c8a27ec9d679cdccb5be4990ffc52a274db193449904d25c9c1f0e",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/memory/virt.zig",
+          "sha256": "6d8df6036bdc763b68cba5c7d652bd69700541d16e5d45f6534751b107f31f0e",
+          "sourcePath": "memory/virt.zig",
+          "sourceSha256": "6d8df6036bdc763b68cba5c7d652bd69700541d16e5d45f6534751b107f31f0e",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "83de78b11e1bb37f01ac44b896cae278d218bd6fe9aba655f18920394be39461",
+          "sourcePath": "program/r4x.zig",
+          "sourceSha256": "d2cc22cb18dc6deab1090f15f76183fe505b286e4cd0922c7e80b59951bc2ed8",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "592f6b131b8ccdff9fcd2b79f8cde6e0bdb16d42",
+      "sourceCommit": "701fc380d64753a0851604723413dcb4853c8036",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.31.patch",
+      "patchSha256": "e942566ffc300ba38639c0ebcc4c324e5b7eefae06865abcb230be6cefadc712",
+      "importMode": "Targeted VM/heap/SDK allocator and lifecycle functions; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/vm_allocator.zig",
+          "sha256": "462bf2ca34d34345ce66974af9716a14a64c50f9b945fc027ee1f6365ab5b063",
+          "sourcePath": "r4os/vm_allocator.zig",
+          "sourceSha256": "462bf2ca34d34345ce66974af9716a14a64c50f9b945fc027ee1f6365ab5b063",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

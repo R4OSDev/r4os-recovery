@@ -65,6 +65,8 @@ const SmallRegion = struct {
     reserve_size: usize = 0,
     committed_size: usize = 0,
     next_commit_size: usize = small_region_initial_commit,
+    pending_decommit_offset: usize = 0,
+    pending_decommit_len: usize = 0,
     active_allocations: u32 = 0,
     allocations: u64 = 0,
     frees: u64 = 0,
@@ -80,6 +82,7 @@ const DirectCacheEntry = struct {
     base: usize = 0,
     reserve_size: usize = 0,
     alignment: usize = 0,
+    retiring: bool = false,
 };
 
 const State = struct {
@@ -481,7 +484,7 @@ fn takeCachedDirect(reserve_size: usize, alignment: usize, len: usize) ?DirectAc
     var class_index = first_class;
     while (class_index < direct_cache_class_count) : (class_index += 1) {
         const entry = state.direct_cache[class_index];
-        if (!entry.used or entry.reserve_size < reserve_size or entry.alignment < alignment or (entry.base & (alignment - 1)) != 0) continue;
+        if (!entry.used or entry.retiring or entry.reserve_size < reserve_size or entry.alignment < alignment or (entry.base & (alignment - 1)) != 0) continue;
         const layout = layoutInBlock(entry.base, entry.reserve_size, len, alignment) orelse {
             recordCorruption();
             continue;
@@ -563,7 +566,9 @@ fn growSmallRegion(api: *const abi.R4XStartR4Sys, region_index: usize, needed: u
 
 fn growSmallRegionAttempt(api: *const abi.R4XStartR4Sys, region_index: usize, needed: usize, allow_reclaim: bool) bool {
     const region = &state.small_regions[region_index];
-    if (!region.used or region.committed_size >= region.reserve_size) return false;
+    if (!region.used) return false;
+    _ = finishPendingDecommit(api, region);
+    if (region.pending_decommit_len != 0 or region.committed_size >= region.reserve_size) return false;
     const wanted = @max(needed, region.next_commit_size);
     var add = alignForward(wanted, page_size) orelse return false;
     const available = region.reserve_size - region.committed_size;
@@ -751,6 +756,8 @@ fn accountResize(region: *SmallRegion, old_len: usize, new_len: usize) void {
 
 fn decommitTopFree(api: *const abi.R4XStartR4Sys, region_index: usize, pressure: bool) usize {
     const region = &state.small_regions[region_index];
+    const completed = finishPendingDecommit(api, region);
+    if (region.pending_decommit_len != 0 or completed != 0) return completed;
     if (region.committed_size <= page_size) return 0;
     const last = lastBlock(region.*) orelse return 0;
     if (isUsed(last.header)) return 0;
@@ -763,16 +770,25 @@ fn decommitTopFree(api: *const abi.R4XStartR4Sys, region_index: usize, pressure:
     const len = committed_end - keep_until;
     if (!pressure and len < small_region_decommit_threshold) return 0;
     if (!removeFree(region, last.header)) return 0;
-    if (vmDecommit(api, region.region_id, keep_until - region.base, len) != abi.vm_ok) {
-        _ = insertFree(region, last.header);
-        return 0;
-    }
+    // Keep valid boundary tags entirely below the retired tail. The exact
+    // VM request remains outside that memory and must finish before growth.
     region.committed_size = keep_until - region.base;
     last.header.block_size = keep_until - last.addr;
     writeFooter(last.header);
-    if (!insertFree(region, last.header)) return 0;
-    region.decommits +%= 1;
+    region.pending_decommit_offset = keep_until - region.base;
+    region.pending_decommit_len = len;
     if (pressure) region.next_commit_size = small_region_initial_commit;
+    if (!insertFree(region, last.header)) return 0;
+    return finishPendingDecommit(api, region);
+}
+
+fn finishPendingDecommit(api: *const abi.R4XStartR4Sys, region: *SmallRegion) usize {
+    const len = region.pending_decommit_len;
+    if (len == 0) return 0;
+    if (vmDecommit(api, region.region_id, region.pending_decommit_offset, len) != abi.vm_ok) return 0;
+    region.pending_decommit_offset = 0;
+    region.pending_decommit_len = 0;
+    region.decommits +%= 1;
     return len;
 }
 
@@ -801,6 +817,9 @@ fn releaseDirectCachesLocked(api: *const abi.R4XStartR4Sys) usize {
     var reclaimed: usize = 0;
     for (&state.direct_cache) |*entry| {
         if (!entry.used) continue;
+        // A failed release may already have removed some pages. The stored
+        // identity remains retryable, but its memory must never be reused.
+        entry.retiring = true;
         if (vmRelease(api, entry.region_id) != abi.vm_ok) continue;
         reclaimed +|= entry.reserve_size;
         if (state.direct_reserved_bytes >= entry.reserve_size) state.direct_reserved_bytes -= entry.reserve_size;
@@ -1461,7 +1480,8 @@ test "VM allocator rolls back VM failures and preserves direct ownership" {
     const committed_before_decommit = state.small_regions[0].committed_size;
     test_vm_fail_decommit = true;
     allocatorFree(@ptrCast(&test_vm_table), large_small[0..large_small_len], .fromByteUnits(64), 0);
-    try std.testing.expectEqual(committed_before_decommit, state.small_regions[0].committed_size);
+    try std.testing.expect(state.small_regions[0].committed_size < committed_before_decommit);
+    try std.testing.expectEqual(committed_before_decommit - state.small_regions[0].committed_size, state.small_regions[0].pending_decommit_len);
     try std.testing.expectEqual(@as(u64, 1), test_vm_decommit_calls);
     try std.testing.expectEqual(@as(u64, 1), stats().active_allocations);
     try expectTestRegionIntegrity(0);

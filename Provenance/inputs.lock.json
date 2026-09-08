@@ -2861,8 +2861,8 @@
     },
     {
       "path": "Kernel/memory/heap.zig",
-      "bytes": 42376,
-      "sha256": "0b9d09d80aa3a988f930c0870f44aa0f96a4042f1d5c140a92078ad328ddc306",
+      "bytes": 43353,
+      "sha256": "65483c9dc0c8a27ec9d679cdccb5be4990ffc52a274db193449904d25c9c1f0e",
       "originalSha256": "0b9d09d80aa3a988f930c0870f44aa0f96a4042f1d5c140a92078ad328ddc306",
       "origin": {
         "path": "memory/heap.zig",
@@ -2961,8 +2961,8 @@
     },
     {
       "path": "Kernel/memory/virt.zig",
-      "bytes": 134545,
-      "sha256": "88f81d3a4be64a5440744e5b969d2a7ec4290d3178a3f44861ea0e1d4ea922ae",
+      "bytes": 135157,
+      "sha256": "6d8df6036bdc763b68cba5c7d652bd69700541d16e5d45f6534751b107f31f0e",
       "originalSha256": "5886ef809b23129837e2c0b85eb29d3c557daa4dee3920f3723290141520f113",
       "origin": {
         "path": "memory/virt.zig",
@@ -3431,8 +3431,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 813720,
-      "sha256": "13536e21923ec3ad461cfa6731c865ed4ca0dfd3e1ff31d6307b84501a064bc1",
+      "bytes": 815651,
+      "sha256": "83de78b11e1bb37f01ac44b896cae278d218bd6fe9aba655f18920394be39461",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "67e98eafd543a5ad55f84086aaf152a3e65f2a73b763afa1f5e40b7477423541",
+      "sha256": "6b1d92e49cf11394656682ad1909ed168dd3f11ee39b29f3e1d1d17cc02ad6f8",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -7406,8 +7406,8 @@
     },
     {
       "path": "Platform/SDK/r4os/vm_allocator.zig",
-      "bytes": 72652,
-      "sha256": "36cd01fd33f220c07e6544d9fe3532363da93411bbe31233c803af3081b49570",
+      "bytes": 73820,
+      "sha256": "462bf2ca34d34345ce66974af9716a14a64c50f9b945fc027ee1f6365ab5b063",
       "originalSha256": "36cd01fd33f220c07e6544d9fe3532363da93411bbe31233c803af3081b49570",
       "origin": {
         "path": "r4os/vm_allocator.zig",
@@ -9166,7 +9166,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "002b56b64fcdaab0d08956784d687d15b7f14893916ca05234cc55f467a2d323",
+      "sha256": "b4abdc4d76a72d8cfca668960e597baa46acb5cf4b7fdf36e1dfdfd70063af2e",
       "originalSha256": null,
       "origin": null
     },
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "c11e5c4057f87904d6038ee947778fd7c8f40dfd42aaf84195d80aad441c4425",
+      "sha256": "14cef8ecf0f19b6b8c273c4922426d51c7d0e0aaad8059e6206ea42beaed851a",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "e085e625c943a436db9185d12872c2058c285607c2956cf4ba0df2800b1dec9f",
+      "sha256": "8e6292dd71b03b5743bea38ab32b8bfcc946746735356f5e7fd742d8eac3692a",
       "originalSha256": null,
       "origin": null
     },
@@ -10045,6 +10045,20 @@
       "origin": null,
       "sha256": "552847453bf10d9335e0fad91a23c33014b8f2b7738e3048c742b0e05286f24d",
       "bytes": 9996
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.31.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "99a772045a817bd6758c68f0559be33814444581a273df6ecfe17571108e8380",
+      "bytes": 18946
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.31.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "e942566ffc300ba38639c0ebcc4c324e5b7eefae06865abcb230be6cefadc712",
+      "bytes": 5661
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14071,6 +14085,61 @@
           "path": "RecoveryTools/Menu/module.R4MF",
           "before": "67bd1b22d24567ab53aef4ecc978004f6b5fe6c2069c14c5e091a5a3117920b4",
           "after": "002b56b64fcdaab0d08956784d687d15b7f14893916ca05234cc55f467a2d323"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.31: sparse VM release and partial teardown with persistent retirement ownership; Recovery 0.1.32, Menu 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/memory/heap.zig",
+          "before": "0b9d09d80aa3a988f930c0870f44aa0f96a4042f1d5c140a92078ad328ddc306",
+          "after": "65483c9dc0c8a27ec9d679cdccb5be4990ffc52a274db193449904d25c9c1f0e"
+        },
+        {
+          "path": "Kernel/memory/virt.zig",
+          "before": "88f81d3a4be64a5440744e5b969d2a7ec4290d3178a3f44861ea0e1d4ea922ae",
+          "after": "6d8df6036bdc763b68cba5c7d652bd69700541d16e5d45f6534751b107f31f0e"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "before": "13536e21923ec3ad461cfa6731c865ed4ca0dfd3e1ff31d6307b84501a064bc1",
+          "after": "83de78b11e1bb37f01ac44b896cae278d218bd6fe9aba655f18920394be39461"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.31.patch",
+          "before": null,
+          "after": "99a772045a817bd6758c68f0559be33814444581a273df6ecfe17571108e8380"
+        },
+        {
+          "path": "Platform/SDK/r4os/vm_allocator.zig",
+          "before": "36cd01fd33f220c07e6544d9fe3532363da93411bbe31233c803af3081b49570",
+          "after": "462bf2ca34d34345ce66974af9716a14a64c50f9b945fc027ee1f6365ab5b063"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.31.patch",
+          "before": null,
+          "after": "e942566ffc300ba38639c0ebcc4c324e5b7eefae06865abcb230be6cefadc712"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "67e98eafd543a5ad55f84086aaf152a3e65f2a73b763afa1f5e40b7477423541",
+          "after": "6b1d92e49cf11394656682ad1909ed168dd3f11ee39b29f3e1d1d17cc02ad6f8"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "e085e625c943a436db9185d12872c2058c285607c2956cf4ba0df2800b1dec9f",
+          "after": "8e6292dd71b03b5743bea38ab32b8bfcc946746735356f5e7fd742d8eac3692a"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "c11e5c4057f87904d6038ee947778fd7c8f40dfd42aaf84195d80aad441c4425",
+          "after": "14cef8ecf0f19b6b8c273c4922426d51c7d0e0aaad8059e6206ea42beaed851a"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "002b56b64fcdaab0d08956784d687d15b7f14893916ca05234cc55f467a2d323",
+          "after": "b4abdc4d76a72d8cfca668960e597baa46acb5cf4b7fdf36e1dfdfd70063af2e"
         }
       ]
     }
