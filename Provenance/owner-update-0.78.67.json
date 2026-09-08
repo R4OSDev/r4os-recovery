@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "reason": "Canonical CWD from committed Kernel and Terminal owners; existing frozen facade retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "090084d8d1a652e3a92c4884a7ab605fbe17b488",
+      "sourceCommit": "79af00c840b03178a8d4e01aa4f06e38d1689c90",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.67.patch",
+      "patchSha256": "f370a98ac31d5a8134dfa65b571b11d6c63fbe8fb8db114f71d7ae9db2f0a9c9",
+      "importMode": "Canonical process CWD and inheritance; frozen Recovery facade retained",
+      "files": [
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "18371d995d6897c5786724f032f4f5dc1a9172329942e27d559cc91a26b2da06",
+          "sourcePath": "program/r4x.zig",
+          "sourceSha256": "24e1aec4ec291b472074033141e1dd05310f1041fda9be596d64b8a5d501b6f3",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "Apps/Terminal",
+      "baseCommit": "62b8656719a8cf2e3e514dfa311e1e999ac88be5",
+      "sourceCommit": "e0e25bd5159b20813db8d0ee461da7c5b8555284",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Apps-Terminal.zip",
+      "archiveSha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd",
+      "buildSourcePins": {
+        "SDK": "aac238f855cc03610cb36fde9d11f4f26319bda1",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
+          "sha256": "88f27b812331f65b3ef0ddcd62767aebfecd227e2f81797e5945893818453571"
+        },
+        {
+          "path": "Legal/Manifests/TERMINAL/module.R4MF",
+          "sha256": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5"
+        },
+        {
+          "path": "Legal/Sources/Apps-Terminal.zip",
+          "sha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd"
+        }
+      ]
+    }
+  ]
+}

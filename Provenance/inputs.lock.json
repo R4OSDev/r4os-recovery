@@ -246,9 +246,9 @@
     },
     {
       "id": "Apps-Terminal",
-      "archiveSha256": "fc5951b510da73dca31a3ca165d45d728a1b2e50d8fb01af6266d347629ef08e",
+      "archiveSha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd",
       "archive": "Legal/Sources/Apps-Terminal.zip",
-      "commit": "62b8656719a8cf2e3e514dfa311e1e999ac88be5",
+      "commit": "e0e25bd5159b20813db8d0ee461da7c5b8555284",
       "remote": "https://github.com/R4OSDev/r4os-app-terminal.git"
     },
     {
@@ -964,7 +964,7 @@
     },
     {
       "name": "TERMINAL",
-      "version": "0.1.11",
+      "version": "0.1.12",
       "source": "Apps-Terminal",
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
       "manifest": "Legal/Manifests/TERMINAL/module.R4MF",
@@ -3431,8 +3431,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 816516,
-      "sha256": "dca661560f05dd4e057d652be5da8510c7ccf88e545b61d9f069841d6c2f8a81",
+      "bytes": 819273,
+      "sha256": "18371d995d6897c5786724f032f4f5dc1a9172329942e27d559cc91a26b2da06",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "31d8b776105b142b6025d84f3e1b3d98b24792ce75c85d245efc32b87b11cdd3",
+      "sha256": "c0d171bc7b1478546afa4f634f946b1602164fef83bba8194f47a56aea06f691",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4379,8 +4379,8 @@
     {
       "path": "Legal/Manifests/TERMINAL/module.R4MF",
       "bytes": 412,
-      "sha256": "8f928f7ad713887dd4ba0cd69c6d1ad991fe364973af98407f78de446c8e2086",
-      "originalSha256": "8f928f7ad713887dd4ba0cd69c6d1ad991fe364973af98407f78de446c8e2086",
+      "sha256": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5",
+      "originalSha256": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5",
       "origin": {
         "path": "module.R4MF",
         "source": "Apps-Terminal"
@@ -5448,9 +5448,9 @@
     },
     {
       "path": "Legal/Sources/Apps-Terminal.zip",
-      "bytes": 32399,
-      "sha256": "fc5951b510da73dca31a3ca165d45d728a1b2e50d8fb01af6266d347629ef08e",
-      "originalSha256": "fc5951b510da73dca31a3ca165d45d728a1b2e50d8fb01af6266d347629ef08e",
+      "bytes": 33892,
+      "sha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd",
+      "originalSha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd",
       "origin": null
     },
     {
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "5213500d2449af084c0609649fa2e5cf1a3d93d0c0824fb1e299fea2ac3d2c28",
+      "sha256": "48c23fc995a7f643b5bce5e34df39ba2ff8969422f9450063bc460725cf47ce7",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "da3950c773e69bd351e4b3cb2d13b232a4926cadde7d066866b7c6ddb0b06c85",
+      "sha256": "6d04bc91b612be0fbe174f9315752bbaf14cf20f3db2eed43ce65ea0245da290",
       "originalSha256": null,
       "origin": null
     },
@@ -9927,8 +9927,8 @@
     {
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
       "bytes": 86581,
-      "sha256": "1a1d41960e5bf674fa7b614b0b62b9d3c4c4a6cba4c55e9a4532eb725a46eecf",
-      "originalSha256": "1a1d41960e5bf674fa7b614b0b62b9d3c4c4a6cba4c55e9a4532eb725a46eecf",
+      "sha256": "88f27b812331f65b3ef0ddcd62767aebfecd227e2f81797e5945893818453571",
+      "originalSha256": "88f27b812331f65b3ef0ddcd62767aebfecd227e2f81797e5945893818453571",
       "origin": {
         "path": "Artifacts/Modules/Terminal/TERMINAL.R4X",
         "source": "Apps-Terminal"
@@ -10220,6 +10220,13 @@
       "origin": null,
       "sha256": "5b0f8ed1df942978c5988da11109069e55b5d48bb05c7ab80a77c9f6e872f8c1",
       "bytes": 4736
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.67.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "f370a98ac31d5a8134dfa65b571b11d6c63fbe8fb8db114f71d7ae9db2f0a9c9",
+      "bytes": 6426
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -15266,6 +15273,51 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "cd37f846b12117d97fea17858fb37fba63683b7f9fbbc003f39a1fa2083ef831",
           "after": "5213500d2449af084c0609649fa2e5cf1a3d93d0c0824fb1e299fea2ac3d2c28"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.67: confirm process CWD and inherit it in Terminal and child programs; Recovery 0.1.53, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/program/r4x.zig",
+          "before": "dca661560f05dd4e057d652be5da8510c7ccf88e545b61d9f069841d6c2f8a81",
+          "after": "18371d995d6897c5786724f032f4f5dc1a9172329942e27d559cc91a26b2da06"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.67.patch",
+          "before": null,
+          "after": "f370a98ac31d5a8134dfa65b571b11d6c63fbe8fb8db114f71d7ae9db2f0a9c9"
+        },
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
+          "before": "1a1d41960e5bf674fa7b614b0b62b9d3c4c4a6cba4c55e9a4532eb725a46eecf",
+          "after": "88f27b812331f65b3ef0ddcd62767aebfecd227e2f81797e5945893818453571"
+        },
+        {
+          "path": "Legal/Manifests/TERMINAL/module.R4MF",
+          "before": "8f928f7ad713887dd4ba0cd69c6d1ad991fe364973af98407f78de446c8e2086",
+          "after": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5"
+        },
+        {
+          "path": "Legal/Sources/Apps-Terminal.zip",
+          "before": "fc5951b510da73dca31a3ca165d45d728a1b2e50d8fb01af6266d347629ef08e",
+          "after": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "31d8b776105b142b6025d84f3e1b3d98b24792ce75c85d245efc32b87b11cdd3",
+          "after": "c0d171bc7b1478546afa4f634f946b1602164fef83bba8194f47a56aea06f691"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "da3950c773e69bd351e4b3cb2d13b232a4926cadde7d066866b7c6ddb0b06c85",
+          "after": "6d04bc91b612be0fbe174f9315752bbaf14cf20f3db2eed43ce65ea0245da290"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "5213500d2449af084c0609649fa2e5cf1a3d93d0c0824fb1e299fea2ac3d2c28",
+          "after": "48c23fc995a7f643b5bce5e34df39ba2ff8969422f9450063bc460725cf47ce7"
         }
       ]
     }
