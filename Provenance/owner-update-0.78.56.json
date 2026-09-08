@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "reason": "Network ownership and stable adapter registration from committed Kernel, Contract and driver owners; frozen Recovery facade retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "e24f659e9b9cd7c18244b1c9e0ca4366eb778881",
+      "sourceCommit": "f3b18a1c167cb854155974833f2e7c43afb75403",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.56.patch",
+      "patchSha256": "e412c331454f08d7fe7118555f8c839a331c0e5dbffa81f1abaf1a6c53dfc627",
+      "importMode": "Stable network registration and bridge admission; frozen unrelated facade retained",
+      "files": [
+        {
+          "path": "Kernel/kernel/driver_api.zig",
+          "sha256": "59323031141f0182a973fc78612a91a7a153ab9661d1aa197e1e0759fa2e68c0",
+          "sourcePath": "kernel/driver_api.zig",
+          "sourceSha256": "7c5da0f17341d389ba336914a8879acfcf75831b399f8c6eab7295c02eecd1d3",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/net/core.zig",
+          "sha256": "6945e9faed11a0cc6ea78a575e2877c71af3a6c4c53b15dc0275c25b1f2b7f68",
+          "sourcePath": "net/core.zig",
+          "sourceSha256": "6945e9faed11a0cc6ea78a575e2877c71af3a6c4c53b15dc0275c25b1f2b7f68",
+          "byteIdentical": true
+        }
+      ]
+    },
+    {
+      "owner": "Contract",
+      "baseRecoveryCommit": "e24f659e9b9cd7c18244b1c9e0ca4366eb778881",
+      "sourceCommit": "b29134e44652d708133509ffaccfbee7b6115ab1",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Contract-0.78.56.patch",
+      "patchSha256": "1e43293718df3e7c40c079d6c4c1e8b1764983bd52f8d4b004b17a94dfa4a07e",
+      "importMode": "Stable network registration and bridge admission; frozen unrelated facade retained",
+      "files": [
+        {
+          "path": "Platform/Contract/ABI/R4DDriver.txt",
+          "sha256": "0fabc2d1e01fa158b2645301de6f29f4823faa8142e450162c0fa9314ebe899c",
+          "sourcePath": "ABI/R4DDriver.txt",
+          "sourceSha256": "d01b6d4d821fb0238cc3938cc49f13b31ab26bdf7839c02bb47e5b26c32fad08",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "Drivers/VirtioNet",
+      "baseCommit": "dc90186eae719219da1fbeebeb9abe30b0f26e60",
+      "sourceCommit": "744a5c3855b3dcfe4f369b62daab0618009c5ca8",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Drivers-VirtioNet.zip",
+      "archiveSha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
+          "sha256": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee"
+        },
+        {
+          "path": "Legal/Manifests/VIRTNET/module.R4MF",
+          "sha256": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895"
+        },
+        {
+          "path": "Legal/Sources/Drivers-VirtioNet.zip",
+          "sha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96"
+        }
+      ]
+    },
+    {
+      "owner": "Drivers/RTL8139",
+      "baseCommit": "84d1b46340a06dca2e279148fae2cafbd839a6b1",
+      "sourceCommit": "28dbddc7a98b92e419716521c8e29990a11c8646",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Drivers-RTL8139.zip",
+      "archiveSha256": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/RTL8139.R4D",
+          "sha256": "2b05031a23e6df28d2b214247ed748f210ab1c3f82e7c013d4b9056119916770"
+        },
+        {
+          "path": "Legal/Manifests/RTL8139/module.R4MF",
+          "sha256": "43f9d82633765a1da60419f7e8b389f641bd260137c511b27d0f38d958e8df35"
+        },
+        {
+          "path": "Legal/Sources/Drivers-RTL8139.zip",
+          "sha256": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e"
+        }
+      ]
+    },
+    {
+      "owner": "Drivers/ATAPIO",
+      "baseCommit": "b772b745f3c5baa8cf851b70cbc7dbfb61aa44f5",
+      "sourceCommit": "ecd162002164568b915352c34b76c8aea0ce5dab",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Drivers-ATAPIO.zip",
+      "archiveSha256": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
+          "sha256": "cc9269fdc7b83df73bc30e5d74225129f2de77d7eb2611528749d1270a5fecf4"
+        },
+        {
+          "path": "Legal/Manifests/ATAPIO/module.R4MF",
+          "sha256": "fd9487af10c85cc0044964723e50795ac2363186d145dbc00469c5bc2cb00a65"
+        },
+        {
+          "path": "Legal/Sources/Drivers-ATAPIO.zip",
+          "sha256": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1"
+        }
+      ]
+    }
+  ]
+}

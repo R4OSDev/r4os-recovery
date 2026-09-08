@@ -50,9 +50,9 @@
     },
     {
       "id": "Drivers-ATAPIO",
-      "archiveSha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
+      "archiveSha256": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1",
       "archive": "Legal/Sources/Drivers-ATAPIO.zip",
-      "commit": "b772b745f3c5baa8cf851b70cbc7dbfb61aa44f5",
+      "commit": "ecd162002164568b915352c34b76c8aea0ce5dab",
       "remote": "https://github.com/R4OSDev/r4os-driver-atapio.git"
     },
     {
@@ -78,9 +78,9 @@
     },
     {
       "id": "Drivers-RTL8139",
-      "archiveSha256": "1368e58aa2f2afe266ae06827fe1b04f52661c60d18a7c08d409a04bc92cd032",
+      "archiveSha256": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e",
       "archive": "Legal/Sources/Drivers-RTL8139.zip",
-      "commit": "84d1b46340a06dca2e279148fae2cafbd839a6b1",
+      "commit": "28dbddc7a98b92e419716521c8e29990a11c8646",
       "remote": "https://github.com/R4OSDev/r4os-driver-rtl8139.git"
     },
     {
@@ -92,9 +92,9 @@
     },
     {
       "id": "Drivers-VirtioNet",
-      "archiveSha256": "fdd7ef84ca0e39d62666eae94c326df9da50396dde40d864d31c6ab62b9b38ff",
+      "archiveSha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96",
       "archive": "Legal/Sources/Drivers-VirtioNet.zip",
-      "commit": "dc90186eae719219da1fbeebeb9abe30b0f26e60",
+      "commit": "744a5c3855b3dcfe4f369b62daab0618009c5ca8",
       "remote": "https://github.com/R4OSDev/r4os-driver-virtionet.git"
     },
     {
@@ -337,7 +337,7 @@
     },
     {
       "name": "ATAPIO",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "source": "Drivers-ATAPIO",
       "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
       "manifest": "Legal/Manifests/ATAPIO/module.R4MF",
@@ -413,12 +413,12 @@
     },
     {
       "name": "RTL8139",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "source": "Drivers-RTL8139",
       "path": "Runtime/R4OS/DRIVERS/RTL8139.R4D",
       "manifest": "Legal/Manifests/RTL8139/module.R4MF",
       "kind": 3,
-      "bytes": 22573,
+      "bytes": 22581,
       "imports": [
         "R4DEV:Query:1"
       ],
@@ -451,7 +451,7 @@
     },
     {
       "name": "VIRTNET",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "source": "Drivers-VirtioNet",
       "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
       "manifest": "Legal/Manifests/VIRTNET/module.R4MF",
@@ -2265,8 +2265,8 @@
     },
     {
       "path": "Kernel/kernel/driver_api.zig",
-      "bytes": 113632,
-      "sha256": "82048bbe14afbd8e30bd1cc575b8fb7ddac8ec2f8548d51f24b5182db5c2ec12",
+      "bytes": 114310,
+      "sha256": "59323031141f0182a973fc78612a91a7a153ab9661d1aa197e1e0759fa2e68c0",
       "originalSha256": "82048bbe14afbd8e30bd1cc575b8fb7ddac8ec2f8548d51f24b5182db5c2ec12",
       "origin": {
         "path": "kernel/driver_api.zig",
@@ -3011,8 +3011,8 @@
     },
     {
       "path": "Kernel/net/core.zig",
-      "bytes": 272756,
-      "sha256": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
+      "bytes": 273455,
+      "sha256": "6945e9faed11a0cc6ea78a575e2877c71af3a6c4c53b15dc0275c25b1f2b7f68",
       "originalSha256": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
       "origin": {
         "path": "net/core.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "b2060866506163209991dbc248ebac5ac325fe015607dc80564feb15c8f137ea",
+      "sha256": "9c20ad88cb429f5c3efdee4e0a5dff40a4f57ae71af0be40855620ad9524bab8",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4079,8 +4079,8 @@
     {
       "path": "Legal/Manifests/ATAPIO/module.R4MF",
       "bytes": 308,
-      "sha256": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758",
-      "originalSha256": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758",
+      "sha256": "fd9487af10c85cc0044964723e50795ac2363186d145dbc00469c5bc2cb00a65",
+      "originalSha256": "fd9487af10c85cc0044964723e50795ac2363186d145dbc00469c5bc2cb00a65",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-ATAPIO"
@@ -4319,8 +4319,8 @@
     {
       "path": "Legal/Manifests/RTL8139/module.R4MF",
       "bytes": 272,
-      "sha256": "c22613479289fcbafc24c3c2b812408068133be841bdbe4deb6617e6085b9388",
-      "originalSha256": "c22613479289fcbafc24c3c2b812408068133be841bdbe4deb6617e6085b9388",
+      "sha256": "43f9d82633765a1da60419f7e8b389f641bd260137c511b27d0f38d958e8df35",
+      "originalSha256": "43f9d82633765a1da60419f7e8b389f641bd260137c511b27d0f38d958e8df35",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-RTL8139"
@@ -4439,8 +4439,8 @@
     {
       "path": "Legal/Manifests/VIRTNET/module.R4MF",
       "bytes": 272,
-      "sha256": "8627ddd109f139fcdb86dd507071e7d6b1fdabfb84bd1766fec7290436206aec",
-      "originalSha256": "8627ddd109f139fcdb86dd507071e7d6b1fdabfb84bd1766fec7290436206aec",
+      "sha256": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895",
+      "originalSha256": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-VirtioNet"
@@ -5476,9 +5476,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-ATAPIO.zip",
-      "bytes": 13089,
-      "sha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
-      "originalSha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
+      "bytes": 13275,
+      "sha256": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1",
+      "originalSha256": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1",
       "origin": null
     },
     {
@@ -5490,9 +5490,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-RTL8139.zip",
-      "bytes": 20794,
-      "sha256": "1368e58aa2f2afe266ae06827fe1b04f52661c60d18a7c08d409a04bc92cd032",
-      "originalSha256": "1368e58aa2f2afe266ae06827fe1b04f52661c60d18a7c08d409a04bc92cd032",
+      "bytes": 20772,
+      "sha256": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e",
+      "originalSha256": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e",
       "origin": null
     },
     {
@@ -5511,9 +5511,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-VirtioNet.zip",
-      "bytes": 23993,
-      "sha256": "fdd7ef84ca0e39d62666eae94c326df9da50396dde40d864d31c6ab62b9b38ff",
-      "originalSha256": "fdd7ef84ca0e39d62666eae94c326df9da50396dde40d864d31c6ab62b9b38ff",
+      "bytes": 24404,
+      "sha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96",
+      "originalSha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96",
       "origin": null
     },
     {
@@ -5723,8 +5723,8 @@
     },
     {
       "path": "Platform/Contract/ABI/R4DDriver.txt",
-      "bytes": 16897,
-      "sha256": "97b9a8af8da29417d062559532762296f55cdf831bed27452e167200957071f5",
+      "bytes": 17606,
+      "sha256": "0fabc2d1e01fa158b2645301de6f29f4823faa8142e450162c0fa9314ebe899c",
       "originalSha256": "97b9a8af8da29417d062559532762296f55cdf831bed27452e167200957071f5",
       "origin": {
         "path": "ABI/R4DDriver.txt",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "4c18e2838d6d840f421c0c9887522ef24249e753017fbef053e892ce2713dc07",
+      "sha256": "c65625ce687f9d9fa373d324a317c13faf9ca32985c4b67e5def8cf9b5d50bef",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "31c9e69919ff09185160c21856931262131a131050cef7f0024159be68c980d7",
+      "sha256": "d6a9814222780644ca44f4d14bf6d63acb85cc85c208acda3c503ef7d4643408",
       "originalSha256": null,
       "origin": null
     },
@@ -9536,8 +9536,8 @@
     {
       "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
       "bytes": 12791,
-      "sha256": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb",
-      "originalSha256": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb",
+      "sha256": "cc9269fdc7b83df73bc30e5d74225129f2de77d7eb2611528749d1270a5fecf4",
+      "originalSha256": "cc9269fdc7b83df73bc30e5d74225129f2de77d7eb2611528749d1270a5fecf4",
       "origin": {
         "path": "Artifacts/Modules/ATAPIO/ATAPIO.R4D",
         "source": "Drivers-ATAPIO"
@@ -9555,9 +9555,9 @@
     },
     {
       "path": "Runtime/R4OS/DRIVERS/RTL8139.R4D",
-      "bytes": 22573,
-      "sha256": "278f1cc1d266345588092832e740a2b6b95943721b9e2ab9e7df9a806308d038",
-      "originalSha256": "278f1cc1d266345588092832e740a2b6b95943721b9e2ab9e7df9a806308d038",
+      "bytes": 22581,
+      "sha256": "2b05031a23e6df28d2b214247ed748f210ab1c3f82e7c013d4b9056119916770",
+      "originalSha256": "2b05031a23e6df28d2b214247ed748f210ab1c3f82e7c013d4b9056119916770",
       "origin": {
         "path": "Artifacts/Modules/RTL8139/RTL8139.R4D",
         "source": "Drivers-RTL8139"
@@ -9586,8 +9586,8 @@
     {
       "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
       "bytes": 21245,
-      "sha256": "eb82b25ef21758301bcccbaad08e15c2484bfa1ebd8e850be3a4b392346648ae",
-      "originalSha256": "eb82b25ef21758301bcccbaad08e15c2484bfa1ebd8e850be3a4b392346648ae",
+      "sha256": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee",
+      "originalSha256": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee",
       "origin": {
         "path": "Artifacts/Modules/VirtioNet/VIRTNET.R4D",
         "source": "Drivers-VirtioNet"
@@ -10143,6 +10143,20 @@
       "origin": null,
       "sha256": "9e9141dab7394977b9eb4ce45efbac3bae30bb1ef47961fac99781016599a8a4",
       "bytes": 2930
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.56.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "e412c331454f08d7fe7118555f8c839a331c0e5dbffa81f1abaf1a6c53dfc627",
+      "bytes": 8705
+    },
+    {
+      "path": "Legal/Changes/Contract-0.78.56.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "1e43293718df3e7c40c079d6c4c1e8b1764983bd52f8d4b004b17a94dfa4a07e",
+      "bytes": 1260
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14734,6 +14748,101 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "24e307f89b32b1b46d4b2d79ff070b16af96c7050fc7001e626fcf77b41b7687",
           "after": "4c18e2838d6d840f421c0c9887522ef24249e753017fbef053e892ce2713dc07"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.56: retain network DMA until confirmed release and preserve adapter registration identity; Recovery 0.1.44, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/driver_api.zig",
+          "before": "82048bbe14afbd8e30bd1cc575b8fb7ddac8ec2f8548d51f24b5182db5c2ec12",
+          "after": "59323031141f0182a973fc78612a91a7a153ab9661d1aa197e1e0759fa2e68c0"
+        },
+        {
+          "path": "Kernel/net/core.zig",
+          "before": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
+          "after": "6945e9faed11a0cc6ea78a575e2877c71af3a6c4c53b15dc0275c25b1f2b7f68"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.56.patch",
+          "before": null,
+          "after": "e412c331454f08d7fe7118555f8c839a331c0e5dbffa81f1abaf1a6c53dfc627"
+        },
+        {
+          "path": "Platform/Contract/ABI/R4DDriver.txt",
+          "before": "97b9a8af8da29417d062559532762296f55cdf831bed27452e167200957071f5",
+          "after": "0fabc2d1e01fa158b2645301de6f29f4823faa8142e450162c0fa9314ebe899c"
+        },
+        {
+          "path": "Legal/Changes/Contract-0.78.56.patch",
+          "before": null,
+          "after": "1e43293718df3e7c40c079d6c4c1e8b1764983bd52f8d4b004b17a94dfa4a07e"
+        },
+        {
+          "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
+          "before": "eb82b25ef21758301bcccbaad08e15c2484bfa1ebd8e850be3a4b392346648ae",
+          "after": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee"
+        },
+        {
+          "path": "Legal/Manifests/VIRTNET/module.R4MF",
+          "before": "8627ddd109f139fcdb86dd507071e7d6b1fdabfb84bd1766fec7290436206aec",
+          "after": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895"
+        },
+        {
+          "path": "Legal/Sources/Drivers-VirtioNet.zip",
+          "before": "fdd7ef84ca0e39d62666eae94c326df9da50396dde40d864d31c6ab62b9b38ff",
+          "after": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96"
+        },
+        {
+          "path": "Runtime/R4OS/DRIVERS/RTL8139.R4D",
+          "before": "278f1cc1d266345588092832e740a2b6b95943721b9e2ab9e7df9a806308d038",
+          "after": "2b05031a23e6df28d2b214247ed748f210ab1c3f82e7c013d4b9056119916770"
+        },
+        {
+          "path": "Legal/Manifests/RTL8139/module.R4MF",
+          "before": "c22613479289fcbafc24c3c2b812408068133be841bdbe4deb6617e6085b9388",
+          "after": "43f9d82633765a1da60419f7e8b389f641bd260137c511b27d0f38d958e8df35"
+        },
+        {
+          "path": "Legal/Sources/Drivers-RTL8139.zip",
+          "before": "1368e58aa2f2afe266ae06827fe1b04f52661c60d18a7c08d409a04bc92cd032",
+          "after": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "b2060866506163209991dbc248ebac5ac325fe015607dc80564feb15c8f137ea",
+          "after": "9c20ad88cb429f5c3efdee4e0a5dff40a4f57ae71af0be40855620ad9524bab8"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "31c9e69919ff09185160c21856931262131a131050cef7f0024159be68c980d7",
+          "after": "d6a9814222780644ca44f4d14bf6d63acb85cc85c208acda3c503ef7d4643408"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "4c18e2838d6d840f421c0c9887522ef24249e753017fbef053e892ce2713dc07",
+          "after": "c65625ce687f9d9fa373d324a317c13faf9ca32985c4b67e5def8cf9b5d50bef"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.56 follow-up: avoid long ATA waits on absent 00h/FFh legacy device; Recovery version unchanged 0.1.44.",
+      "changes": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
+          "before": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb",
+          "after": "cc9269fdc7b83df73bc30e5d74225129f2de77d7eb2611528749d1270a5fecf4"
+        },
+        {
+          "path": "Legal/Manifests/ATAPIO/module.R4MF",
+          "before": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758",
+          "after": "fd9487af10c85cc0044964723e50795ac2363186d145dbc00469c5bc2cb00a65"
+        },
+        {
+          "path": "Legal/Sources/Drivers-ATAPIO.zip",
+          "before": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
+          "after": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1"
         }
       ]
     }

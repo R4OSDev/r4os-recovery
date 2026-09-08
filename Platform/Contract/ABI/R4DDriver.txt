@@ -151,6 +151,16 @@ can be released.
 Bounded network receive handoff
 -------------------------------
 
+Since 0.78.56, the nonnegative result of register_net_backend is an opaque
+registration reference, not an enumeration index. Drivers preserve it unchanged
+for net_receive_frame, net_schedule_rx, net_backend_query and net_receive_packet.
+The reference is positive, remains stable when another adapter is removed, and
+is never reused during the boot. Exhaustion rejects registration instead of
+wrapping. Netcore enumeration indices remain compact and separate. The bridge
+resolves a reference while holding callback admission; adapter mutation drains
+these lookups together with normal callbacks. A stale reference returns -1,
+closed admission -3. Existing descriptor and function-table layouts are unchanged.
+
 DriverApi version 23 appends `net_schedule_rx(adapter_index)`. This is the
 only network operation intended for external IRQ context. A handler reads and
 acknowledges a bounded device-specific cause, records any recovery state, and
