@@ -29,9 +29,9 @@
     },
     {
       "id": "Libraries",
-      "archiveSha256": "07077d6d2d1c2e6ddd5995be85b4fa29ccb717445d1e34e72e8b9bb297661b84",
+      "archiveSha256": "a9cfa1ff990562ce6ee9339e53f8397cd1cf34b4b7c6a6e83d138dbf71237f4f",
       "archive": "Legal/Sources/Libraries.zip",
-      "commit": "5d376bc702775a93b7b21504fffe5d9930ab88dd",
+      "commit": "1365e096dfb3f58aca3ef915db6566cef5b50b1f",
       "remote": "https://github.com/R4OSDev/r4os-libraries.git"
     },
     {
@@ -1100,7 +1100,7 @@
     },
     {
       "name": "R4STD",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "Libraries",
       "path": "Runtime/R4OS/LIBS/R4STD.R4L",
       "manifest": "Legal/Manifests/R4STD/module.R4MF",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "7a46715819bf3098f6c3aec2f04505dd61230e2537c70118bcb62780f764c038",
+      "sha256": "27505e0db5c08d5e3c40a359e14c27e9da67d5ddb56bedf039254594b1cdc21d",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4289,8 +4289,8 @@
     {
       "path": "Legal/Manifests/R4STD/module.R4MF",
       "bytes": 1149,
-      "sha256": "887a475f1ad09c94dc4b9ffa48d076093a947617631fda3814abf14cc063f38b",
-      "originalSha256": "887a475f1ad09c94dc4b9ffa48d076093a947617631fda3814abf14cc063f38b",
+      "sha256": "c90d0150b2b46cf62e1bf0b156fe3012bb81daa22bf6ba9ef9fe26c6d6a6dac7",
+      "originalSha256": "c90d0150b2b46cf62e1bf0b156fe3012bb81daa22bf6ba9ef9fe26c6d6a6dac7",
       "origin": {
         "path": "R4STD/module.R4MF",
         "source": "Libraries"
@@ -5532,9 +5532,9 @@
     },
     {
       "path": "Legal/Sources/Libraries.zip",
-      "bytes": 2244671,
-      "sha256": "07077d6d2d1c2e6ddd5995be85b4fa29ccb717445d1e34e72e8b9bb297661b84",
-      "originalSha256": "07077d6d2d1c2e6ddd5995be85b4fa29ccb717445d1e34e72e8b9bb297661b84",
+      "bytes": 2246621,
+      "sha256": "a9cfa1ff990562ce6ee9339e53f8397cd1cf34b4b7c6a6e83d138dbf71237f4f",
+      "originalSha256": "a9cfa1ff990562ce6ee9339e53f8397cd1cf34b4b7c6a6e83d138dbf71237f4f",
       "origin": null
     },
     {
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "987ab7b997b4f9d90673be8de654e5c6c4898b8ce108cec267f42e15699aaf0e",
+      "sha256": "dc3b24ed0b872524d32e84ff892118ccec0ad6d9fa3b7e591c9322e100d78abd",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "a39536d9207a87df8118097a7972b270aa22b2439fef29ea8cd32c9f6de557b4",
+      "sha256": "cbe36f18a4eb18b0463c08c6f212c7812441920e84a7a38a50530d9e32603727",
       "originalSha256": null,
       "origin": null
     },
@@ -9620,8 +9620,8 @@
     {
       "path": "Runtime/R4OS/LIBS/R4STD.R4L",
       "bytes": 50200,
-      "sha256": "461213fd536bac193762bf9719f59e8f220209f038ce468aeba0e3e523eacabd",
-      "originalSha256": "461213fd536bac193762bf9719f59e8f220209f038ce468aeba0e3e523eacabd",
+      "sha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b",
+      "originalSha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b",
       "origin": {
         "path": "Repositories/Libraries/R4STD/zig-out/R4STD.R4L",
         "source": "Libraries"
@@ -15128,6 +15128,41 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "78b91240b97ddd693377d5289145e7e890c8e6d45494bcae66a9f270a8fb9638",
           "after": "987ab7b997b4f9d90673be8de654e5c6c4898b8ce108cec267f42e15699aaf0e"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.63: preserve configuration on read and recovery failures; Recovery 0.1.50, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Runtime/R4OS/LIBS/R4STD.R4L",
+          "before": "461213fd536bac193762bf9719f59e8f220209f038ce468aeba0e3e523eacabd",
+          "after": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b"
+        },
+        {
+          "path": "Legal/Manifests/R4STD/module.R4MF",
+          "before": "887a475f1ad09c94dc4b9ffa48d076093a947617631fda3814abf14cc063f38b",
+          "after": "c90d0150b2b46cf62e1bf0b156fe3012bb81daa22bf6ba9ef9fe26c6d6a6dac7"
+        },
+        {
+          "path": "Legal/Sources/Libraries.zip",
+          "before": "07077d6d2d1c2e6ddd5995be85b4fa29ccb717445d1e34e72e8b9bb297661b84",
+          "after": "a9cfa1ff990562ce6ee9339e53f8397cd1cf34b4b7c6a6e83d138dbf71237f4f"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "7a46715819bf3098f6c3aec2f04505dd61230e2537c70118bcb62780f764c038",
+          "after": "27505e0db5c08d5e3c40a359e14c27e9da67d5ddb56bedf039254594b1cdc21d"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "a39536d9207a87df8118097a7972b270aa22b2439fef29ea8cd32c9f6de557b4",
+          "after": "cbe36f18a4eb18b0463c08c6f212c7812441920e84a7a38a50530d9e32603727"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "987ab7b997b4f9d90673be8de654e5c6c4898b8ce108cec267f42e15699aaf0e",
+          "after": "dc3b24ed0b872524d32e84ff892118ccec0ad6d9fa3b7e591c9322e100d78abd"
         }
       ]
     }

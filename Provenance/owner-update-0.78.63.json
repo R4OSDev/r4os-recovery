@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "reason": "Import committed R4STD0.2.2; changed Desktop/REG applications are not Recovery modules.",
+  "owners": [
+    {
+      "owner": "Libraries",
+      "baseCommit": "5d376bc702775a93b7b21504fffe5d9930ab88dd",
+      "sourceCommit": "1365e096dfb3f58aca3ef915db6566cef5b50b1f",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Libraries.zip",
+      "archiveSha256": "a9cfa1ff990562ce6ee9339e53f8397cd1cf34b4b7c6a6e83d138dbf71237f4f",
+      "buildSourcePins": {
+        "SDK": "bb58f5add34504100790f29a68d2379e868de377",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/LIBS/R4STD.R4L",
+          "sha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b"
+        },
+        {
+          "path": "Legal/Manifests/R4STD/module.R4MF",
+          "sha256": "c90d0150b2b46cf62e1bf0b156fe3012bb81daa22bf6ba9ef9fe26c6d6a6dac7"
+        },
+        {
+          "path": "Legal/Sources/Libraries.zip",
+          "sha256": "a9cfa1ff990562ce6ee9339e53f8397cd1cf34b4b7c6a6e83d138dbf71237f4f"
+        }
+      ]
+    }
+  ]
+}
