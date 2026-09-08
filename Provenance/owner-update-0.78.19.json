@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "reason": "0.78.19: targeted Kernel/SDK owner deltas and five affected frozen service modules; no other frozen owner inputs replaced.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "49659f55cd7ddb6f863a58454f7185a496664ade",
+      "sourceCommit": "0ed0e9cfb2f2966e06cf9a6d983da91f161dc641",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.19.patch",
+      "patchSha256": "ae3c85cb395974fb6b8a848cead1cb93080a07e552789467cd8d3480b5d46aec",
+      "files": [
+        {
+          "path": "Kernel/kernel/services.zig",
+          "sha256": "737d1c8d8883d1528c4954e3265f95a06cf74e4f447d1dc71ca7a72e3e74672f"
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "49659f55cd7ddb6f863a58454f7185a496664ade",
+      "sourceCommit": "6912fc020aa8f3251a15a30c806a991574669c21",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.19.patch",
+      "patchSha256": "559fc87187f21477c150afdd380fc074a0672aa05885a95d1c1aae888bf2bd75",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/app_services.zig",
+          "sha256": "9922f5bc4d35b03df8f58d7312fb65af31e153b51c9dfa83ec3ba3519dd69eaf"
+        }
+      ]
+    },
+    {
+      "owner": "Services-DhcpService",
+      "baseCommit": "e37752de323f6c33b4a5cddf90ce354bf8258d0a",
+      "sourceCommit": "1c7c4cb30b4a32d27c3a1a0d075b62c877a7dc3f",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-DhcpService.zip",
+      "archiveSha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
+      "buildSourcePins": {
+        "SDK": "6912fc020aa8f3251a15a30c806a991574669c21",
+        "Contract": "7a7d8cdb70a8ffe8e2885c63d38663783e1004b0"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
+          "sha256": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0"
+        },
+        {
+          "path": "Legal/Manifests/DHCPSVC/module.R4MF",
+          "sha256": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6"
+        },
+        {
+          "path": "Legal/Sources/Services-DhcpService.zip",
+          "sha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53"
+        }
+      ]
+    },
+    {
+      "owner": "Services-DnsService",
+      "baseCommit": "e1c68a122c51d3c31d7a956290c855d9dcb425f0",
+      "sourceCommit": "2bd1647c418ee5cb7f568fbb65f936be7fe19220",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-DnsService.zip",
+      "archiveSha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
+      "buildSourcePins": {
+        "SDK": "6912fc020aa8f3251a15a30c806a991574669c21",
+        "Contract": "7a7d8cdb70a8ffe8e2885c63d38663783e1004b0"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
+          "sha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f"
+        },
+        {
+          "path": "Legal/Manifests/DNSSVC/module.R4MF",
+          "sha256": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca"
+        },
+        {
+          "path": "Legal/Sources/Services-DnsService.zip",
+          "sha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a"
+        }
+      ]
+    },
+    {
+      "owner": "Services-UdpService",
+      "baseCommit": "b3816050d2be67b388a36d35812f2c8c75326772",
+      "sourceCommit": "3039fe833c560803bc2388a2c3b2d9bdfe9f67c2",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-UdpService.zip",
+      "archiveSha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce",
+      "buildSourcePins": {
+        "SDK": "6912fc020aa8f3251a15a30c806a991574669c21",
+        "Contract": "7a7d8cdb70a8ffe8e2885c63d38663783e1004b0"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
+          "sha256": "b2e2566e7ac6dc580bb468f905ca0eddcd5bc16c3c7f8f5310daba0e254c2096"
+        },
+        {
+          "path": "Legal/Manifests/UDPSVC/module.R4MF",
+          "sha256": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a"
+        },
+        {
+          "path": "Legal/Sources/Services-UdpService.zip",
+          "sha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce"
+        }
+      ]
+    },
+    {
+      "owner": "Services-SshService",
+      "baseCommit": "b0e34927b46a22ba90bd5a32843830f8f40aa3c8",
+      "sourceCommit": "657954b52cf46f0213289fdbd390c8e2ed2aea5b",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-SshService.zip",
+      "archiveSha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
+      "buildSourcePins": {
+        "SDK": "6912fc020aa8f3251a15a30c806a991574669c21",
+        "Contract": "7a7d8cdb70a8ffe8e2885c63d38663783e1004b0"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+          "sha256": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c"
+        },
+        {
+          "path": "Legal/Manifests/SSHD/module.R4MF",
+          "sha256": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3"
+        },
+        {
+          "path": "Legal/Sources/Services-SshService.zip",
+          "sha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787"
+        }
+      ]
+    },
+    {
+      "owner": "Services-FtpService",
+      "baseCommit": "8b29281067c46d925a7839e3cc6f1840e1aa6a7d",
+      "sourceCommit": "eb3f14c8abcf0e487503d6f1b80aa68d0cd5275d",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-FtpService.zip",
+      "archiveSha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
+      "buildSourcePins": {
+        "SDK": "6912fc020aa8f3251a15a30c806a991574669c21",
+        "Contract": "7a7d8cdb70a8ffe8e2885c63d38663783e1004b0"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
+          "sha256": "7164483e247d08b9e633adbde697db8eb130f39feac34ed84b5944040222d4e2"
+        },
+        {
+          "path": "Legal/Manifests/FTPSVC/module.R4MF",
+          "sha256": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846"
+        },
+        {
+          "path": "Legal/Sources/Services-FtpService.zip",
+          "sha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723"
+        }
+      ]
+    }
+  ]
+}

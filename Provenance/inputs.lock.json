@@ -204,16 +204,16 @@
     },
     {
       "id": "Services-DhcpService",
-      "archiveSha256": "f693294c37df023821f5483088b168cf927c12e6142377c6193a435b97226dbd",
+      "archiveSha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
       "archive": "Legal/Sources/Services-DhcpService.zip",
-      "commit": "e37752de323f6c33b4a5cddf90ce354bf8258d0a",
+      "commit": "1c7c4cb30b4a32d27c3a1a0d075b62c877a7dc3f",
       "remote": "https://github.com/R4OSDev/r4os-service-dhcpservice.git"
     },
     {
       "id": "Services-DnsService",
-      "archiveSha256": "1a25f52f7058edb0aad42894f51b9dc4f2b9aa6660b1c935c134e41ea7ebdc84",
+      "archiveSha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
       "archive": "Legal/Sources/Services-DnsService.zip",
-      "commit": "e1c68a122c51d3c31d7a956290c855d9dcb425f0",
+      "commit": "2bd1647c418ee5cb7f568fbb65f936be7fe19220",
       "remote": "https://github.com/R4OSDev/r4os-service-dnsservice.git"
     },
     {
@@ -225,23 +225,23 @@
     },
     {
       "id": "Services-UdpService",
-      "archiveSha256": "7b818e5c923e17d7d97f81cd43455af129c097ec04c78b42cff7de7c93540539",
+      "archiveSha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce",
       "archive": "Legal/Sources/Services-UdpService.zip",
-      "commit": "b3816050d2be67b388a36d35812f2c8c75326772",
+      "commit": "3039fe833c560803bc2388a2c3b2d9bdfe9f67c2",
       "remote": "https://github.com/R4OSDev/r4os-service-udpservice.git"
     },
     {
       "id": "Services-SshService",
-      "archiveSha256": "7b165fa9b9f5e14185664963e42778b90d8dbb62e5c5b3bb1ee3241b595039a5",
+      "archiveSha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
       "archive": "Legal/Sources/Services-SshService.zip",
-      "commit": "b0e34927b46a22ba90bd5a32843830f8f40aa3c8",
+      "commit": "657954b52cf46f0213289fdbd390c8e2ed2aea5b",
       "remote": "https://github.com/R4OSDev/r4os-service-sshservice.git"
     },
     {
       "id": "Services-FtpService",
-      "archiveSha256": "ae4c3b037b9fb17e510a9b89374f2ec58701b7b6cc9135c3513391e86cecdef2",
+      "archiveSha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
       "archive": "Legal/Sources/Services-FtpService.zip",
-      "commit": "8b29281067c46d925a7839e3cc6f1840e1aa6a7d",
+      "commit": "eb3f14c8abcf0e487503d6f1b80aa68d0cd5275d",
       "remote": "https://github.com/R4OSDev/r4os-service-ftpservice.git"
     },
     {
@@ -849,7 +849,7 @@
     },
     {
       "name": "DHCPSVC",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "source": "Services-DhcpService",
       "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
       "manifest": "Legal/Manifests/DHCPSVC/module.R4MF",
@@ -868,7 +868,7 @@
     },
     {
       "name": "DNSSVC",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "source": "Services-DnsService",
       "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
       "manifest": "Legal/Manifests/DNSSVC/module.R4MF",
@@ -906,7 +906,7 @@
     },
     {
       "name": "UDPSVC",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "source": "Services-UdpService",
       "path": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
       "manifest": "Legal/Manifests/UDPSVC/module.R4MF",
@@ -925,7 +925,7 @@
     },
     {
       "name": "SSHD",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "source": "Services-SshService",
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "manifest": "Legal/Manifests/SSHD/module.R4MF",
@@ -945,7 +945,7 @@
     },
     {
       "name": "FTPSVC",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "source": "Services-FtpService",
       "path": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
       "manifest": "Legal/Manifests/FTPSVC/module.R4MF",
@@ -2671,8 +2671,8 @@
     },
     {
       "path": "Kernel/kernel/services.zig",
-      "bytes": 84073,
-      "sha256": "956d6aa90a1d0cdbe6f419bb2d8627a8c596de7a92ce5dce23cda1fd3837a89f",
+      "bytes": 84689,
+      "sha256": "737d1c8d8883d1528c4954e3265f95a06cf74e4f447d1dc71ca7a72e3e74672f",
       "originalSha256": "956d6aa90a1d0cdbe6f419bb2d8627a8c596de7a92ce5dce23cda1fd3837a89f",
       "origin": {
         "path": "kernel/services.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "d6478c3e26fd37187658a2abd0d7acdcb3bdf34ad5164062ff1eadd48111a05a",
+      "sha256": "7a3b0e2f8d07e211a5fa5c1665dc07e1cfaecd445caf6416d96f0ae1f0cdb837",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4089,8 +4089,8 @@
     {
       "path": "Legal/Manifests/DHCPSVC/module.R4MF",
       "bytes": 371,
-      "sha256": "aaae8d17e0f5e670dff762bef81f23c05b4e4aaa26c3d747029b2756ea96a829",
-      "originalSha256": "aaae8d17e0f5e670dff762bef81f23c05b4e4aaa26c3d747029b2756ea96a829",
+      "sha256": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6",
+      "originalSha256": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-DhcpService"
@@ -4099,8 +4099,8 @@
     {
       "path": "Legal/Manifests/DNSSVC/module.R4MF",
       "bytes": 368,
-      "sha256": "53d1fd468a4bd02c8f6d035bd1cf6b9ed55323543241a581bfcd69b87b6f0110",
-      "originalSha256": "53d1fd468a4bd02c8f6d035bd1cf6b9ed55323543241a581bfcd69b87b6f0110",
+      "sha256": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca",
+      "originalSha256": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-DnsService"
@@ -4109,8 +4109,8 @@
     {
       "path": "Legal/Manifests/FTPSVC/module.R4MF",
       "bytes": 416,
-      "sha256": "9717372750cfe05fd0ee3e7d56a3c49ca061db40a5b798d66aae0d197e4f2119",
-      "originalSha256": "306adcc768da6178c395564627c267848d5caf079862e2f6ea1f0edd79b6ff7f",
+      "sha256": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846",
+      "originalSha256": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-FtpService"
@@ -4349,8 +4349,8 @@
     {
       "path": "Legal/Manifests/SSHD/module.R4MF",
       "bytes": 479,
-      "sha256": "7aa5ebc8a5d365492fadd0626a3886e26d441e8c5afd7dd0bc011c99a21e79c8",
-      "originalSha256": "2fb151df662cb4e91b0bcd9387dc90cdb22eaa8c2ba12ee21c9188844c027f7a",
+      "sha256": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3",
+      "originalSha256": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-SshService"
@@ -4389,8 +4389,8 @@
     {
       "path": "Legal/Manifests/UDPSVC/module.R4MF",
       "bytes": 368,
-      "sha256": "91729e117a9f097fdf4ff1c1fd90fb7dcded8a6555a84189a4855522b7726eb0",
-      "originalSha256": "91729e117a9f097fdf4ff1c1fd90fb7dcded8a6555a84189a4855522b7726eb0",
+      "sha256": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a",
+      "originalSha256": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-UdpService"
@@ -5661,30 +5661,30 @@
     },
     {
       "path": "Legal/Sources/Services-DhcpService.zip",
-      "bytes": 16299,
-      "sha256": "f693294c37df023821f5483088b168cf927c12e6142377c6193a435b97226dbd",
-      "originalSha256": "f693294c37df023821f5483088b168cf927c12e6142377c6193a435b97226dbd",
+      "bytes": 16315,
+      "sha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
+      "originalSha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
       "origin": null
     },
     {
       "path": "Legal/Sources/Services-DnsService.zip",
-      "bytes": 18297,
-      "sha256": "1a25f52f7058edb0aad42894f51b9dc4f2b9aa6660b1c935c134e41ea7ebdc84",
-      "originalSha256": "1a25f52f7058edb0aad42894f51b9dc4f2b9aa6660b1c935c134e41ea7ebdc84",
+      "bytes": 18313,
+      "sha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
+      "originalSha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
       "origin": null
     },
     {
       "path": "Legal/Sources/Services-FtpService.zip",
-      "bytes": 28768,
-      "sha256": "ae4c3b037b9fb17e510a9b89374f2ec58701b7b6cc9135c3513391e86cecdef2",
-      "originalSha256": "ae4c3b037b9fb17e510a9b89374f2ec58701b7b6cc9135c3513391e86cecdef2",
+      "bytes": 29666,
+      "sha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
+      "originalSha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
       "origin": null
     },
     {
       "path": "Legal/Sources/Services-SshService.zip",
-      "bytes": 78294,
-      "sha256": "7b165fa9b9f5e14185664963e42778b90d8dbb62e5c5b3bb1ee3241b595039a5",
-      "originalSha256": "7b165fa9b9f5e14185664963e42778b90d8dbb62e5c5b3bb1ee3241b595039a5",
+      "bytes": 80053,
+      "sha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
+      "originalSha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
       "origin": null
     },
     {
@@ -5696,9 +5696,9 @@
     },
     {
       "path": "Legal/Sources/Services-UdpService.zip",
-      "bytes": 18475,
-      "sha256": "7b818e5c923e17d7d97f81cd43455af129c097ec04c78b42cff7de7c93540539",
-      "originalSha256": "7b818e5c923e17d7d97f81cd43455af129c097ec04c78b42cff7de7c93540539",
+      "bytes": 18487,
+      "sha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce",
+      "originalSha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce",
       "origin": null
     },
     {
@@ -6464,8 +6464,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_services.zig",
-      "bytes": 18089,
-      "sha256": "a73be3067011e4096275348d6de81b74011a86e1feff1e915f73814869f8f8ab",
+      "bytes": 19238,
+      "sha256": "9922f5bc4d35b03df8f58d7312fb65af31e153b51c9dfa83ec3ba3519dd69eaf",
       "originalSha256": "a73be3067011e4096275348d6de81b74011a86e1feff1e915f73814869f8f8ab",
       "origin": {
         "path": "r4os/app_services.zig",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "25a50ac99a0ee45df544b5d4e78c212e41270b253a7b575ad8aa461444a58c3c",
+      "sha256": "4816d6bd506ee07499d6dc027f34201800a5855b45920df6409d3ec93c7b9d8f",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "4d2043a13379c53701408ab3ebd7612dddff39ff76739f3b13447bd24e9a758c",
+      "sha256": "fc545ddf2531592fbe590a42980d5238894bf76ce64e8e3107d6a29eec36e779",
       "originalSha256": null,
       "origin": null
     },
@@ -9797,8 +9797,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
       "bytes": 33157,
-      "sha256": "b6089daac69d03acd6abc12895f2b19835034c142c51d62e1ce2917888050e20",
-      "originalSha256": "b6089daac69d03acd6abc12895f2b19835034c142c51d62e1ce2917888050e20",
+      "sha256": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0",
+      "originalSha256": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0",
       "origin": {
         "path": "Artifacts/Modules/DhcpService/DHCPSVC.R4X",
         "source": "Services-DhcpService"
@@ -9807,8 +9807,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
       "bytes": 41346,
-      "sha256": "ee6af6fce10171dccbf13490b899876b759bb1fa2a8db340bd2d0e7bb202c7e1",
-      "originalSha256": "ee6af6fce10171dccbf13490b899876b759bb1fa2a8db340bd2d0e7bb202c7e1",
+      "sha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f",
+      "originalSha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f",
       "origin": {
         "path": "Artifacts/Modules/DnsService/DNSSVC.R4X",
         "source": "Services-DnsService"
@@ -9817,8 +9817,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
       "bytes": 98709,
-      "sha256": "218eb3094ae1eca3c5f8754c8214ea85c3828a4bad2e020cecfb14fefec72b36",
-      "originalSha256": "d0175b4abe5065d8637dae1668592bd5ac1923d0458e4a26594e4189e3f8c3b8",
+      "sha256": "7164483e247d08b9e633adbde697db8eb130f39feac34ed84b5944040222d4e2",
+      "originalSha256": "7164483e247d08b9e633adbde697db8eb130f39feac34ed84b5944040222d4e2",
       "origin": {
         "path": "Artifacts/Modules/FtpService/FTPSVC.R4X",
         "source": "Services-FtpService"
@@ -9827,8 +9827,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "bytes": 406122,
-      "sha256": "fbf0f5fac3637e7a84ec9dd3cee4b07047ba2064e677d7abcc9063514ffa511a",
-      "originalSha256": "bc9d8cc561009cfe157b7b895550e842f6a9087dd337acbcf55c5adc6eca167f",
+      "sha256": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c",
+      "originalSha256": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c",
       "origin": {
         "path": "Artifacts/Modules/SshService/SSHD.R4X",
         "source": "Services-SshService"
@@ -9847,8 +9847,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
       "bytes": 54026,
-      "sha256": "7b7ff2cc1f761a90c2967a5868b109a84f045e5a8c8696327f8f4a3db62969db",
-      "originalSha256": "7b7ff2cc1f761a90c2967a5868b109a84f045e5a8c8696327f8f4a3db62969db",
+      "sha256": "b2e2566e7ac6dc580bb468f905ca0eddcd5bc16c3c7f8f5310daba0e254c2096",
+      "originalSha256": "b2e2566e7ac6dc580bb468f905ca0eddcd5bc16c3c7f8f5310daba0e254c2096",
       "origin": {
         "path": "Artifacts/Modules/UdpService/UDPSVC.R4X",
         "source": "Services-UdpService"
@@ -9940,6 +9940,20 @@
       "sha256": "0b2d1bc4949c34ae923aa9958e2510e4b59125945ddef35542a247c9b7f81db5",
       "originalSha256": null,
       "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.19.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "ae3c85cb395974fb6b8a848cead1cb93080a07e552789467cd8d3480b5d46aec",
+      "bytes": 3532
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.19.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "559fc87187f21477c150afdd380fc074a0672aa05885a95d1c1aae888bf2bd75",
+      "bytes": 1833
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -13341,6 +13355,126 @@
           "after": "5ce61917d3c86b2c7a263f7d570a2b67413942894e10304e65233b5b1eb7424e",
           "path": "RecoveryTools/Contracts.de.txt",
           "before": "2fbc60d5865c1672d7b0919e9398d0b1429cbb73f9935d949404409c25bf3b01"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.19: FIFO endpoint admission, cancelled-reply completion and exact DHCP/DNS/UDP owner imports; Recovery 0.1.24.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/services.zig",
+          "before": "956d6aa90a1d0cdbe6f419bb2d8627a8c596de7a92ce5dce23cda1fd3837a89f",
+          "after": "737d1c8d8883d1528c4954e3265f95a06cf74e4f447d1dc71ca7a72e3e74672f"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.19.patch",
+          "before": null,
+          "after": "ae3c85cb395974fb6b8a848cead1cb93080a07e552789467cd8d3480b5d46aec"
+        },
+        {
+          "path": "Platform/SDK/r4os/app_services.zig",
+          "before": "a73be3067011e4096275348d6de81b74011a86e1feff1e915f73814869f8f8ab",
+          "after": "9922f5bc4d35b03df8f58d7312fb65af31e153b51c9dfa83ec3ba3519dd69eaf"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.19.patch",
+          "before": null,
+          "after": "559fc87187f21477c150afdd380fc074a0672aa05885a95d1c1aae888bf2bd75"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
+          "before": "b6089daac69d03acd6abc12895f2b19835034c142c51d62e1ce2917888050e20",
+          "after": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0"
+        },
+        {
+          "path": "Legal/Manifests/DHCPSVC/module.R4MF",
+          "before": "aaae8d17e0f5e670dff762bef81f23c05b4e4aaa26c3d747029b2756ea96a829",
+          "after": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6"
+        },
+        {
+          "path": "Legal/Sources/Services-DhcpService.zip",
+          "before": "f693294c37df023821f5483088b168cf927c12e6142377c6193a435b97226dbd",
+          "after": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
+          "before": "ee6af6fce10171dccbf13490b899876b759bb1fa2a8db340bd2d0e7bb202c7e1",
+          "after": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f"
+        },
+        {
+          "path": "Legal/Manifests/DNSSVC/module.R4MF",
+          "before": "53d1fd468a4bd02c8f6d035bd1cf6b9ed55323543241a581bfcd69b87b6f0110",
+          "after": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca"
+        },
+        {
+          "path": "Legal/Sources/Services-DnsService.zip",
+          "before": "1a25f52f7058edb0aad42894f51b9dc4f2b9aa6660b1c935c134e41ea7ebdc84",
+          "after": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
+          "before": "7b7ff2cc1f761a90c2967a5868b109a84f045e5a8c8696327f8f4a3db62969db",
+          "after": "b2e2566e7ac6dc580bb468f905ca0eddcd5bc16c3c7f8f5310daba0e254c2096"
+        },
+        {
+          "path": "Legal/Manifests/UDPSVC/module.R4MF",
+          "before": "91729e117a9f097fdf4ff1c1fd90fb7dcded8a6555a84189a4855522b7726eb0",
+          "after": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a"
+        },
+        {
+          "path": "Legal/Sources/Services-UdpService.zip",
+          "before": "7b818e5c923e17d7d97f81cd43455af129c097ec04c78b42cff7de7c93540539",
+          "after": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "d6478c3e26fd37187658a2abd0d7acdcb3bdf34ad5164062ff1eadd48111a05a",
+          "after": "7a3b0e2f8d07e211a5fa5c1665dc07e1cfaecd445caf6416d96f0ae1f0cdb837"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "4d2043a13379c53701408ab3ebd7612dddff39ff76739f3b13447bd24e9a758c",
+          "after": "fc545ddf2531592fbe590a42980d5238894bf76ce64e8e3107d6a29eec36e779"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "25a50ac99a0ee45df544b5d4e78c212e41270b253a7b575ad8aa461444a58c3c",
+          "after": "4816d6bd506ee07499d6dc027f34201800a5855b45920df6409d3ec93c7b9d8f"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.19: related SSHD/FTPSVC cancelled-reply correction from exact owner commits.",
+      "changes": [
+        {
+          "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+          "before": "fbf0f5fac3637e7a84ec9dd3cee4b07047ba2064e677d7abcc9063514ffa511a",
+          "after": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c"
+        },
+        {
+          "path": "Legal/Manifests/SSHD/module.R4MF",
+          "before": "7aa5ebc8a5d365492fadd0626a3886e26d441e8c5afd7dd0bc011c99a21e79c8",
+          "after": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3"
+        },
+        {
+          "path": "Legal/Sources/Services-SshService.zip",
+          "before": "7b165fa9b9f5e14185664963e42778b90d8dbb62e5c5b3bb1ee3241b595039a5",
+          "after": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
+          "before": "218eb3094ae1eca3c5f8754c8214ea85c3828a4bad2e020cecfb14fefec72b36",
+          "after": "7164483e247d08b9e633adbde697db8eb130f39feac34ed84b5944040222d4e2"
+        },
+        {
+          "path": "Legal/Manifests/FTPSVC/module.R4MF",
+          "before": "9717372750cfe05fd0ee3e7d56a3c49ca061db40a5b798d66aae0d197e4f2119",
+          "after": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846"
+        },
+        {
+          "path": "Legal/Sources/Services-FtpService.zip",
+          "before": "ae4c3b037b9fb17e510a9b89374f2ec58701b7b6cc9135c3513391e86cecdef2",
+          "after": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723"
         }
       ]
     }

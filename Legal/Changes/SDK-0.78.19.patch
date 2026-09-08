@@ -1,0 +1,39 @@
+diff --git a/Platform/SDK/r4os/app_services.zig b/Platform/SDK/r4os/app_services.zig
+index 04142f9..b71daa3 100644
+--- a/Platform/SDK/r4os/app_services.zig
++++ b/Platform/SDK/r4os/app_services.zig
+@@ -385,6 +385,18 @@ pub fn TypedEndpointReceive(comptime T: type) type {
+     };
+ }
+ 
++/// Finish one received request even if its caller cancelled while the handler
++/// was running. Only a missing request at the reply boundary is nonfatal;
++/// endpoint failures and arbitrary handler/provider results remain unchanged.
++/// Success here means the handler may continue, not that a reply was delivered.
++pub fn replyIfPending(sys: r4sys.Context, handle: u32, request_id: u32, status: i32, payload: []const u8) i32 {
++    return completedReplyResult(sys.serviceEndpointReply(handle, request_id, status, payload));
++}
++
++fn completedReplyResult(raw: i32) i32 {
++    return if (raw == abi.service_api_result_not_found) abi.service_api_result_ok else raw;
++}
++
+ pub const ServiceEndpoint = struct {
+     sys: r4sys.Context,
+     raw: u32 = 0,
+@@ -440,6 +452,15 @@ pub const ServiceEndpoint = struct {
+         return self.reply(request_id, status, std.mem.asBytes(payload));
+     }
+ 
++    /// Like app_services.replyIfPending, preserving this endpoint's lifecycle.
++    pub fn replyIfPending(self: *ServiceEndpoint, request_id: u32, status: i32, payload: []const u8) i32 {
++        return completedReplyResult(self.reply(request_id, status, payload));
++    }
++
++    pub fn replyTypedIfPending(self: *ServiceEndpoint, comptime T: type, request_id: u32, status: i32, payload: *const T) i32 {
++        return self.replyIfPending(request_id, status, std.mem.asBytes(payload));
++    }
++
+     pub fn unregister(self: *ServiceEndpoint) i32 {
+         if (!self.valid()) return abi.err_closed;
+         if (!self.owned) return abi.err_not_owned;
