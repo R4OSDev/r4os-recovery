@@ -54,6 +54,13 @@ typedef struct R4Sys {
 #define R4SYS_FILE_STREAM_OPEN_LEASE R4OS_FILE_STREAM_OPEN_LEASE
 #define R4SYS_FILE_STREAM_FINISH_KEEP_OWNERSHIP (1u << 0)
 
+static inline int32_t r4sys_file_copy_buffered(R4Sys *sys, const char *source, const char *target, uint8_t *buffer, uint32_t capacity, R4FileCopyProgress *progress) {
+    if (source == 0 || target == 0 || buffer == 0 || capacity == 0 || progress == 0) return R4OS_FILE_STREAM_ERROR_INVALID;
+    if (sys == 0 || sys->table == 0) return R4OS_ERR_NO_GROUP;
+    if (sys->table->size < offsetof(R4XStartR4Sys, file_copy_buffered) + sizeof(uintptr_t) || sys->table->file_copy_buffered == 0) return R4OS_ERR_NO_FN;
+    return ((R4SysFileCopyBufferedFn)(uintptr_t)sys->table->file_copy_buffered)((const uint8_t *)source, (const uint8_t *)target, buffer, capacity, progress);
+}
+
 static inline const R4XStartImport *r4xstart_find_import(const R4XStartContext *ctx, uint32_t group_id) {
     uint32_t count = r4xstart_import_count(ctx);
     for (uint32_t i = 0; i < count; i += 1) {

@@ -4,9 +4,9 @@
   "source_schema_version": 11,
   "source_baseline_id": "standalone-contract-0.64.11",
   "summary": {
-    "group_function_signatures": 339,
+    "group_function_signatures": 344,
     "sdk_operation_contracts": 0,
-    "parity_entries": 339,
+    "parity_entries": 344,
     "cross_language_fixtures": 1
   },
   "signature_parity": [
@@ -1250,6 +1250,33 @@
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4SysFns.storage_use_end",
       "c_contract": "R4SysStorageUseEndFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.directory_change_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.directory_change_begin",
+      "c_contract": "R4SysDirectoryChangeBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.directory_change_poll",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.directory_change_poll",
+      "c_contract": "R4SysDirectoryChangePollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_copy_buffered",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_copy_buffered",
+      "c_contract": "R4SysFileCopyBufferedFn",
       "coverage": "generated_signature"
     },
     {
@@ -2699,6 +2726,24 @@
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4AudioFns.opl3_stop",
       "c_contract": "R4AudioOpl3StopFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_output_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_output_info",
+      "c_contract": "R4AudioAudioOutputInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_select_output",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_select_output",
+      "c_contract": "R4AudioAudioSelectOutputFn",
       "coverage": "generated_signature"
     },
     {

@@ -1,0 +1,148 @@
+diff --git a/Platform/SDK/Shared/C/include/r4os/app_storage.h b/Platform/SDK/Shared/C/include/r4os/app_storage.h
+index 4490bee..6fd85da 100644
+--- a/Platform/SDK/Shared/C/include/r4os/app_storage.h
++++ b/Platform/SDK/Shared/C/include/r4os/app_storage.h
+@@ -7,6 +7,12 @@ typedef struct R4Console { R4Sys *system; } R4Console;
+ typedef struct R4Files { R4Sys *system; } R4Files;
+ typedef struct R4Registry { R4Sys *system; } R4Registry;
+ 
++typedef struct R4FileCopyResult {
++    R4FileCopyProgress progress;
++    int32_t raw_code;
++    uint8_t ok;
++} R4FileCopyResult;
++
+ typedef enum R4TransferState {
+     R4_TRANSFER_BYTES = 0,
+     R4_TRANSFER_END = 1,
+@@ -192,6 +198,15 @@ static inline R4Operation r4_files_delete(R4Files *files, const R4FilePath *path
+     return r4_operation_presence(((R4SysFileDeleteFn)(uintptr_t)files->system->table->file_delete)(path->bytes));
+ }
+ 
++static inline R4FileCopyResult r4_files_copy(R4Files *files, const R4FilePath *source, const R4FilePath *target, uint8_t *buffer, uint32_t capacity) {
++    R4FileCopyResult result = {0};
++    result.progress.version = 1u;
++    result.progress.size = sizeof(R4FileCopyProgress);
++    result.raw_code = r4sys_file_copy_buffered(files == 0 ? 0 : files->system, source == 0 ? 0 : source->bytes, target == 0 ? 0 : target->bytes, buffer, capacity, &result.progress);
++    result.ok = result.raw_code == R4OS_FILE_STREAM_RESULT_OK;
++    return result;
++}
++
+ static inline R4Operation r4_files_create_directory(R4Files *files, const R4FilePath *path) {
+     if (files == 0 || path == 0 || files->system == 0 || files->system->table == 0 || files->system->table->dir_create == 0) return r4_operation_status(R4OS_ERR_NO_FN);
+     return r4_operation_presence(((R4SysDirCreateFn)(uintptr_t)files->system->table->dir_create)(path->bytes));
+diff --git a/Platform/SDK/Shared/C/include/r4os/r4sys.h b/Platform/SDK/Shared/C/include/r4os/r4sys.h
+index 9824f07..ba08055 100644
+--- a/Platform/SDK/Shared/C/include/r4os/r4sys.h
++++ b/Platform/SDK/Shared/C/include/r4os/r4sys.h
+@@ -54,6 +54,13 @@ typedef struct R4Sys {
+ #define R4SYS_FILE_STREAM_OPEN_LEASE R4OS_FILE_STREAM_OPEN_LEASE
+ #define R4SYS_FILE_STREAM_FINISH_KEEP_OWNERSHIP (1u << 0)
+ 
++static inline int32_t r4sys_file_copy_buffered(R4Sys *sys, const char *source, const char *target, uint8_t *buffer, uint32_t capacity, R4FileCopyProgress *progress) {
++    if (source == 0 || target == 0 || buffer == 0 || capacity == 0 || progress == 0) return R4OS_FILE_STREAM_ERROR_INVALID;
++    if (sys == 0 || sys->table == 0) return R4OS_ERR_NO_GROUP;
++    if (sys->table->size < offsetof(R4XStartR4Sys, file_copy_buffered) + sizeof(uintptr_t) || sys->table->file_copy_buffered == 0) return R4OS_ERR_NO_FN;
++    return ((R4SysFileCopyBufferedFn)(uintptr_t)sys->table->file_copy_buffered)((const uint8_t *)source, (const uint8_t *)target, buffer, capacity, progress);
++}
++
+ static inline const R4XStartImport *r4xstart_find_import(const R4XStartContext *ctx, uint32_t group_id) {
+     uint32_t count = r4xstart_import_count(ctx);
+     for (uint32_t i = 0; i < count; i += 1) {
+diff --git a/Platform/SDK/r4os/file_stream.zig b/Platform/SDK/r4os/file_stream.zig
+index 01ecac8..ba769f0 100644
+--- a/Platform/SDK/r4os/file_stream.zig
++++ b/Platform/SDK/r4os/file_stream.zig
+@@ -63,48 +63,19 @@ pub fn abort(sys: anytype, state: *WriterState) i32 {
+     return rc;
+ }
+ 
++/// Keep identity lookup and every copy chunk in one provider request. A
++/// provider without this optional operation returns unavailable; a sequence
++/// of separately gated truncate/read calls cannot safely emulate it.
+ pub fn copy(sys: anytype, src_path: [*:0]const u8, dst_path: [*:0]const u8, buffer: []u8) CopyResult {
+-    if (buffer.len == 0) return .{ .error_code = abi.file_stream_error_invalid };
+-
+-    const info = sys.fileInfo(src_path) orelse return .{ .error_code = abi.file_stream_error_not_found };
+-    if (info.is_dir != 0) return .{ .error_code = abi.file_stream_error_invalid };
+-    if (info.size > 0xFFFF_FFFF) return .{ .source_size = info.size, .error_code = abi.file_stream_error_too_large };
+-
+-    var writer: WriterState = undefined;
+-    if (!begin(sys, &writer, dst_path, abi.file_stream_open_replace)) {
+-        return .{ .source_size = info.size, .error_code = writer.error_code };
+-    }
+-
+-    while (writer.offset < info.size) {
+-        const remaining: usize = @intCast(info.size - writer.offset);
+-        const want = @min(buffer.len, remaining);
+-        const read = sys.fileReadAt(src_path, @intCast(writer.offset), buffer[0..want]);
+-        if (read < 0) {
+-            _ = abort(sys, &writer);
+-            return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = read };
+-        }
+-        if (read == 0) {
+-            _ = abort(sys, &writer);
+-            return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = abi.file_stream_error_size_mismatch };
+-        }
+-        const got: usize = @intCast(read);
+-        if (!write(sys, &writer, buffer[0..got])) {
+-            const error_code = writer.error_code;
+-            _ = abort(sys, &writer);
+-            return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = error_code };
+-        }
+-    }
+-
+-    if (!finish(sys, &writer)) {
+-        return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = writer.error_code };
+-    }
+-
++    if (buffer.len == 0 or buffer.len > 0xFFFF_FFFF) return .{ .error_code = abi.file_stream_error_invalid };
++    var progress: abi.FileCopyProgress = .{};
++    const result = sys.fileCopyBuffered(src_path, dst_path, buffer, &progress);
+     return .{
+-        .ok = true,
+-        .bytes = writer.offset,
+-        .chunks = writer.chunks,
+-        .max_chunk = writer.max_chunk,
+-        .source_size = info.size,
+-        .error_code = abi.file_stream_result_ok,
++        .ok = result == abi.file_stream_result_ok,
++        .bytes = progress.bytes,
++        .chunks = progress.chunks,
++        .max_chunk = progress.max_chunk,
++        .source_size = progress.source_size,
++        .error_code = result,
+     };
+ }
+diff --git a/Platform/SDK/r4os/program.zig b/Platform/SDK/r4os/program.zig
+index 3576de2..e079b1e 100644
+--- a/Platform/SDK/r4os/program.zig
++++ b/Platform/SDK/r4os/program.zig
+@@ -2014,6 +2014,12 @@ pub const Context = struct {
+         return table_fn(src_path, dst_path);
+     }
+ 
++    pub fn fileCopyBuffered(self: *const Context, source: [*:0]const u8, target: [*:0]const u8, buffer: []u8, progress: *abi.FileCopyProgress) i32 {
++        if (buffer.len == 0 or buffer.len > 0xFFFF_FFFF) return abi.file_stream_error_invalid;
++        const table_fn = self.sysFn("file_copy_buffered") orelse return self.unavailable("sys");
++        return table_fn(source, target, buffer.ptr, @intCast(buffer.len), progress);
++    }
++
+     pub fn fileMove(self: *const Context, src_path: [*:0]const u8, dst_path: [*:0]const u8) i32 {
+         const table_fn = self.sysFn("file_move") orelse return self.unavailable("sys");
+         return table_fn(src_path, dst_path);
+diff --git a/Platform/SDK/r4os/r4sys.zig b/Platform/SDK/r4os/r4sys.zig
+index c159949..63aa22d 100644
+--- a/Platform/SDK/r4os/r4sys.zig
++++ b/Platform/SDK/r4os/r4sys.zig
+@@ -1358,6 +1358,10 @@ pub const Context = struct {
+         return self.base.fileCopy(src_path, dst_path);
+     }
+ 
++    pub fn fileCopyBuffered(self: *const Context, source: [*:0]const u8, target: [*:0]const u8, buffer: []u8, progress: *abi.FileCopyProgress) i32 {
++        return self.base.fileCopyBuffered(source, target, buffer, progress);
++    }
++
+     pub fn fileMove(self: *const Context, src_path: [*:0]const u8, dst_path: [*:0]const u8) i32 {
+         return self.base.fileMove(src_path, dst_path);
+     }

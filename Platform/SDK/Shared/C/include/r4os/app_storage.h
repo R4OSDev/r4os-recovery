@@ -7,6 +7,12 @@ typedef struct R4Console { R4Sys *system; } R4Console;
 typedef struct R4Files { R4Sys *system; } R4Files;
 typedef struct R4Registry { R4Sys *system; } R4Registry;
 
+typedef struct R4FileCopyResult {
+    R4FileCopyProgress progress;
+    int32_t raw_code;
+    uint8_t ok;
+} R4FileCopyResult;
+
 typedef enum R4TransferState {
     R4_TRANSFER_BYTES = 0,
     R4_TRANSFER_END = 1,
@@ -190,6 +196,15 @@ static inline R4FileInfoRead r4_files_info(R4Files *files, const R4FilePath *pat
 static inline R4Operation r4_files_delete(R4Files *files, const R4FilePath *path) {
     if (files == 0 || path == 0 || files->system == 0 || files->system->table == 0 || files->system->table->file_delete == 0) return r4_operation_status(R4OS_ERR_NO_FN);
     return r4_operation_presence(((R4SysFileDeleteFn)(uintptr_t)files->system->table->file_delete)(path->bytes));
+}
+
+static inline R4FileCopyResult r4_files_copy(R4Files *files, const R4FilePath *source, const R4FilePath *target, uint8_t *buffer, uint32_t capacity) {
+    R4FileCopyResult result = {0};
+    result.progress.version = 1u;
+    result.progress.size = sizeof(R4FileCopyProgress);
+    result.raw_code = r4sys_file_copy_buffered(files == 0 ? 0 : files->system, source == 0 ? 0 : source->bytes, target == 0 ? 0 : target->bytes, buffer, capacity, &result.progress);
+    result.ok = result.raw_code == R4OS_FILE_STREAM_RESULT_OK;
+    return result;
 }
 
 static inline R4Operation r4_files_create_directory(R4Files *files, const R4FilePath *path) {

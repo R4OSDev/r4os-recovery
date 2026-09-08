@@ -3,7 +3,7 @@
 <!-- R4OS-APIREF:BEGIN R4AUDIO (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4AUDIO (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Audio` v1, 184 Bytes, 19 Funktionsfelder und 21 Slots insgesamt.
+Kernel-Gruppentabelle `R4XStartR4Audio` v2, 200 Bytes, 21 Funktionsfelder und 23 Slots insgesamt.
 Signatur-Wahrheit: `abi.R4AudioFns` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
@@ -30,4 +30,6 @@ Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 | 18 | 160 | function | `opl3_stop` | `*const fn () callconv(.c) i32` |
 | 19 | 168 | reserved | `reserved0` | - |
 | 20 | 176 | reserved | `reserved1` | - |
+| 21 | 184 | function | `audio_output_info` | `*const fn (u32, *AudioOutputInfo) callconv(.c) i32` |
+| 22 | 192 | function | `audio_select_output` | `*const fn (*const [64]u8) callconv(.c) i32` |
 <!-- R4OS-APIREF:END R4AUDIO -->

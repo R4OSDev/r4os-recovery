@@ -1,0 +1,261 @@
+{
+  "schema": 1,
+  "reason": "Targeted copy deltas from exact Kernel/SDK commits, compatible Contract snapshot and Terminal artifact. No unrelated Kernel/SDK implementation refresh. The canonical generator now emits zero for absent optional callbacks; Recovery Menu 0.1.15 is rebuilt against this Contract.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "7659f68f4c3933a6ff205bfd6393090a6c6fadf8",
+      "sourceCommit": "95156307fa1136c87ea576c18082fba9ae3bd1a6",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.28.patch",
+      "patchSha256": "987068829bd43c8be699c1af448174594e1530ae575759ebfc41cd1cb16ab7fa",
+      "files": [
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "sha256": "46514193885031079a50b69355e51b75b662caf4f79c3dada3be75d53fc2db7b",
+          "sourcePath": "fs/fat/fat32.zig",
+          "sourceSha256": "46514193885031079a50b69355e51b75b662caf4f79c3dada3be75d53fc2db7b",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/fs/vfs.zig",
+          "sha256": "4992fdc5a5c9f1d43ce044631f0e6dd41ad807495b64bc6abe9e6d735624b7bf",
+          "sourcePath": "fs/vfs.zig",
+          "sourceSha256": "18fc04e8774e6da53ce20300b050bc80068d367b1e1a21299a60c3eef1997bb9",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/program/r4sys.zig",
+          "sha256": "33091951b8363c4a9f894c124209e50ec632768d7ce71d4751b002cf70890716",
+          "sourcePath": "program/r4sys.zig",
+          "sourceSha256": "3f8bfbc25b02fc99571094c5007aa5c565f1c6a22b1f4083525af84ff4e60986",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/program/r4x_api.zig",
+          "sha256": "0e683cf52e9e952d9a3d696e6246709d7d103e4133ccfda1d6000af6771ce2f1",
+          "sourcePath": "program/r4x_api.zig",
+          "sourceSha256": "9b7cc153f8343bfe518ab6defefe7a8971fe1b0e41cd3ec34955131326e06da9",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "13536e21923ec3ad461cfa6731c865ed4ca0dfd3e1ff31d6307b84501a064bc1",
+          "sourcePath": "program/r4x.zig",
+          "sourceSha256": "deb9b66bdc6173be221b9ed26dcc6d342f0dcfb1c54f0b6fff0bfd03848efea9",
+          "byteIdentical": false
+        }
+      ],
+      "importMode": "Targeted copy functions/fields from exact owner; unrelated frozen implementation retained"
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "7659f68f4c3933a6ff205bfd6393090a6c6fadf8",
+      "sourceCommit": "c7dcd96e24be3b639c91459c6421c4372add9d4d",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.28.patch",
+      "patchSha256": "bc5292d47302ac9793a434f7c191367e0d7892df55136a6559462a0cd1818a09",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/program.zig",
+          "sha256": "ba31a5d7692af47755a2fbf63f60497f552d824338163df5d703c1c50f34ea82",
+          "sourcePath": "r4os/program.zig",
+          "sourceSha256": "ae658cb4c936006ec92632f2e6e9940613de4aedb705864a3b8a5f7d038e5a82",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/r4sys.zig",
+          "sha256": "e6317868f6ad39764ea395d421fc48a04dedaf223e54c8331ce760321ddbf31f",
+          "sourcePath": "r4os/r4sys.zig",
+          "sourceSha256": "d584c3425907d6fc3e65bab7ae4559f3ad93c0198ff0705019b1536ad8579f66",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/file_stream.zig",
+          "sha256": "5e31c72d3b15bbb0c7ecee9588eee66e82e677d1ecea91460f34e18ed353d101",
+          "sourcePath": "r4os/file_stream.zig",
+          "sourceSha256": "5e31c72d3b15bbb0c7ecee9588eee66e82e677d1ecea91460f34e18ed353d101",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/Shared/C/include/r4os/r4sys.h",
+          "sha256": "58e1fbe415d893acd7185ac0e9b1e4c036c372e18cc6b6135a2a5bf57f2f0b94",
+          "sourcePath": "Shared/C/include/r4os/r4sys.h",
+          "sourceSha256": "58e1fbe415d893acd7185ac0e9b1e4c036c372e18cc6b6135a2a5bf57f2f0b94",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/Shared/C/include/r4os/app_storage.h",
+          "sha256": "0d365bdfdbac64127e23e4fcd5f8df2774c026dfcd960762b1f650197961d929",
+          "sourcePath": "Shared/C/include/r4os/app_storage.h",
+          "sourceSha256": "0d365bdfdbac64127e23e4fcd5f8df2774c026dfcd960762b1f650197961d929",
+          "byteIdentical": true
+        }
+      ],
+      "importMode": "Targeted copy functions/fields from exact owner; unrelated frozen implementation retained"
+    },
+    {
+      "owner": "Contract",
+      "baseRecoveryCommit": "7659f68f4c3933a6ff205bfd6393090a6c6fadf8",
+      "sourceCommit": "c401ce721b8e3a41164fd3d88cd5c7a2d1290979",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Contract-0.78.28.patch",
+      "patchSha256": "00c62ff238c2068f8f0db392509ad1f001ddad25410b5a0691f61ff37d7d78c8",
+      "files": [
+        {
+          "path": "Platform/Contract/API/ApiContract.baseline.json",
+          "sha256": "5abc03d563a8efeee04f319c73860aa81e123a1daeacec1a8f744ca1a7c9f9b8",
+          "sourcePath": "API/ApiContract.baseline.json",
+          "sourceSha256": "5abc03d563a8efeee04f319c73860aa81e123a1daeacec1a8f744ca1a7c9f9b8",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/API/ApiContract.json",
+          "sha256": "9e853f64b0f32c97fc869d10f0bdf1a22834f6d0aa03a58d7d924a0f5ccf45d0",
+          "sourcePath": "API/ApiContract.json",
+          "sourceSha256": "9e853f64b0f32c97fc869d10f0bdf1a22834f6d0aa03a58d7d924a0f5ccf45d0",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Conformance/C/ApiContractConformanceGenerated.c",
+          "sha256": "158197efbc86659ddda97515b773e504c63a99c15b295d01a4e436c7a14ec872",
+          "sourcePath": "Generated/Conformance/C/ApiContractConformanceGenerated.c",
+          "sourceSha256": "158197efbc86659ddda97515b773e504c63a99c15b295d01a4e436c7a14ec872",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
+          "sha256": "fb2466b8c32a1af366289759fdb027ffc5d8908f4688f652117aab522618ddb1",
+          "sourcePath": "Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
+          "sourceSha256": "fb2466b8c32a1af366289759fdb027ffc5d8908f4688f652117aab522618ddb1",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/API/R4AUDIO.md",
+          "sha256": "e529df725879b4760e0594f20c2b80f1a4817c2823e6432166b1aaf26ae406da",
+          "sourcePath": "Generated/Docs/API/R4AUDIO.md",
+          "sourceSha256": "e529df725879b4760e0594f20c2b80f1a4817c2823e6432166b1aaf26ae406da",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/API/R4SYS.md",
+          "sha256": "830179b99230dde2cbf58e34a83604eee759dda0452fcbb6b6b5e0b41ae7e62f",
+          "sourcePath": "Generated/Docs/API/R4SYS.md",
+          "sourceSha256": "830179b99230dde2cbf58e34a83604eee759dda0452fcbb6b6b5e0b41ae7e62f",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/OperationContracts.md",
+          "sha256": "09c237c34f380a31a726229ff8660fc06e31d152502c93a08694f4866b5ea088",
+          "sourcePath": "Generated/Docs/OperationContracts.md",
+          "sourceSha256": "09c237c34f380a31a726229ff8660fc06e31d152502c93a08694f4866b5ea088",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
+          "sha256": "7b7bd5c4ded809e35f7035a9407021c020c0fe89762cbc8301b2913946a47835",
+          "sourcePath": "Generated/Docs/PayloadTypes.md",
+          "sourceSha256": "7b7bd5c4ded809e35f7035a9407021c020c0fe89762cbc8301b2913946a47835",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Docs/ZigCParity.json",
+          "sha256": "6a7a4d87e1a6df1d635fcb8d0e39e5d3e72956ec840738717137201f415962e7",
+          "sourcePath": "Generated/Docs/ZigCParity.json",
+          "sourceSha256": "6a7a4d87e1a6df1d635fcb8d0e39e5d3e72956ec840738717137201f415962e7",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Inventory/API.json",
+          "sha256": "16c06d91cc1fcee905d9b21a9ce08e9332197397e32ede40d49792cd663e74f6",
+          "sourcePath": "Generated/Inventory/API.json",
+          "sourceSha256": "16c06d91cc1fcee905d9b21a9ce08e9332197397e32ede40d49792cd663e74f6",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
+          "sha256": "6d0661d535e6892254d52badb6f9c5e966607b6c90e5fea09781d1d538d7dc8b",
+          "sourcePath": "Generated/Kernel/Zig/r4x_api_exports.zig",
+          "sourceSha256": "6d0661d535e6892254d52badb6f9c5e966607b6c90e5fea09781d1d538d7dc8b",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
+          "sha256": "72fa47505a0a33445b973381600b277653c2dafbcd900891432a85b1f49b3db4",
+          "sourcePath": "Generated/Kernel/Zig/r4x_api_generated.zig",
+          "sourceSha256": "72fa47505a0a33445b973381600b277653c2dafbcd900891432a85b1f49b3db4",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
+          "sha256": "dc694da409eea8bea334b22d54d9aac2901b2015b8ee560c2c2d7be70803f99e",
+          "sourcePath": "Generated/SDK/C/include/r4os/abi_generated.h",
+          "sourceSha256": "dc694da409eea8bea334b22d54d9aac2901b2015b8ee560c2c2d7be70803f99e",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
+          "sha256": "19d3a08cc97f64da29068558ee5ef68112bcd938973be191e5e0359c1cf7e19b",
+          "sourcePath": "Generated/SDK/Zig/abi.zig",
+          "sourceSha256": "19d3a08cc97f64da29068558ee5ef68112bcd938973be191e5e0359c1cf7e19b",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
+          "sha256": "5cff7ea1fab859ac45cd31cbe762b3776ef0e6388a7d8ca330f95b6956c67e2a",
+          "sourcePath": "Generated/SDK/Zig/abi_exports.zig",
+          "sourceSha256": "5cff7ea1fab859ac45cd31cbe762b3776ef0e6388a7d8ca330f95b6956c67e2a",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
+          "sha256": "1723f1996b04a178829e3d009be5eb1be36cef4a7661fce51620ed65854baff8",
+          "sourcePath": "Generated/SDK/Zig/abi_generated.zig",
+          "sourceSha256": "1723f1996b04a178829e3d009be5eb1be36cef4a7661fce51620ed65854baff8",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/ABI/R4XStart.txt",
+          "sha256": "03664c3b866e722b9175463d6f57cef49a5324f02598cb9043d750a9e585fbe8",
+          "sourcePath": "ABI/R4XStart.txt",
+          "sourceSha256": "03664c3b866e722b9175463d6f57cef49a5324f02598cb9043d750a9e585fbe8",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/Contract/Tools/ApiContractGen/src/main.zig",
+          "sha256": "a14725df57876163484c0ea893c416f922314b2d8d551ee961fe41d4fec22414",
+          "sourcePath": "Tools/ApiContractGen/src/main.zig",
+          "sourceSha256": "a14725df57876163484c0ea893c416f922314b2d8d551ee961fe41d4fec22414",
+          "byteIdentical": true
+        }
+      ],
+      "importMode": "Current compatible Contract snapshot"
+    },
+    {
+      "owner": "Apps-Terminal",
+      "baseCommit": "fb64937dad93c86fd1813855f7e1e8b45f126621",
+      "sourceCommit": "62b8656719a8cf2e3e514dfa311e1e999ac88be5",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Apps-Terminal.zip",
+      "archiveSha256": "fc5951b510da73dca31a3ca165d45d728a1b2e50d8fb01af6266d347629ef08e",
+      "buildSourcePins": {
+        "SDK": "c7dcd96e24be3b639c91459c6421c4372add9d4d",
+        "Contract": "c401ce721b8e3a41164fd3d88cd5c7a2d1290979"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
+          "sha256": "1a1d41960e5bf674fa7b614b0b62b9d3c4c4a6cba4c55e9a4532eb725a46eecf"
+        },
+        {
+          "path": "Legal/Manifests/TERMINAL/module.R4MF",
+          "sha256": "8f928f7ad713887dd4ba0cd69c6d1ad991fe364973af98407f78de446c8e2086"
+        },
+        {
+          "path": "Legal/Sources/Apps-Terminal.zip",
+          "sha256": "fc5951b510da73dca31a3ca165d45d728a1b2e50d8fb01af6266d347629ef08e"
+        }
+      ]
+    }
+  ]
+}

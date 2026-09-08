@@ -1358,6 +1358,10 @@ pub const Context = struct {
         return self.base.fileCopy(src_path, dst_path);
     }
 
+    pub fn fileCopyBuffered(self: *const Context, source: [*:0]const u8, target: [*:0]const u8, buffer: []u8, progress: *abi.FileCopyProgress) i32 {
+        return self.base.fileCopyBuffered(source, target, buffer, progress);
+    }
+
     pub fn fileMove(self: *const Context, src_path: [*:0]const u8, dst_path: [*:0]const u8) i32 {
         return self.base.fileMove(src_path, dst_path);
     }

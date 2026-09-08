@@ -2014,6 +2014,12 @@ pub const Context = struct {
         return table_fn(src_path, dst_path);
     }
 
+    pub fn fileCopyBuffered(self: *const Context, source: [*:0]const u8, target: [*:0]const u8, buffer: []u8, progress: *abi.FileCopyProgress) i32 {
+        if (buffer.len == 0 or buffer.len > 0xFFFF_FFFF) return abi.file_stream_error_invalid;
+        const table_fn = self.sysFn("file_copy_buffered") orelse return self.unavailable("sys");
+        return table_fn(source, target, buffer.ptr, @intCast(buffer.len), progress);
+    }
+
     pub fn fileMove(self: *const Context, src_path: [*:0]const u8, dst_path: [*:0]const u8) i32 {
         const table_fn = self.sysFn("file_move") orelse return self.unavailable("sys");
         return table_fn(src_path, dst_path);

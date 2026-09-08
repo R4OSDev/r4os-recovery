@@ -63,48 +63,19 @@ pub fn abort(sys: anytype, state: *WriterState) i32 {
     return rc;
 }
 
+/// Keep identity lookup and every copy chunk in one provider request. A
+/// provider without this optional operation returns unavailable; a sequence
+/// of separately gated truncate/read calls cannot safely emulate it.
 pub fn copy(sys: anytype, src_path: [*:0]const u8, dst_path: [*:0]const u8, buffer: []u8) CopyResult {
-    if (buffer.len == 0) return .{ .error_code = abi.file_stream_error_invalid };
-
-    const info = sys.fileInfo(src_path) orelse return .{ .error_code = abi.file_stream_error_not_found };
-    if (info.is_dir != 0) return .{ .error_code = abi.file_stream_error_invalid };
-    if (info.size > 0xFFFF_FFFF) return .{ .source_size = info.size, .error_code = abi.file_stream_error_too_large };
-
-    var writer: WriterState = undefined;
-    if (!begin(sys, &writer, dst_path, abi.file_stream_open_replace)) {
-        return .{ .source_size = info.size, .error_code = writer.error_code };
-    }
-
-    while (writer.offset < info.size) {
-        const remaining: usize = @intCast(info.size - writer.offset);
-        const want = @min(buffer.len, remaining);
-        const read = sys.fileReadAt(src_path, @intCast(writer.offset), buffer[0..want]);
-        if (read < 0) {
-            _ = abort(sys, &writer);
-            return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = read };
-        }
-        if (read == 0) {
-            _ = abort(sys, &writer);
-            return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = abi.file_stream_error_size_mismatch };
-        }
-        const got: usize = @intCast(read);
-        if (!write(sys, &writer, buffer[0..got])) {
-            const error_code = writer.error_code;
-            _ = abort(sys, &writer);
-            return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = error_code };
-        }
-    }
-
-    if (!finish(sys, &writer)) {
-        return .{ .bytes = writer.offset, .chunks = writer.chunks, .max_chunk = writer.max_chunk, .source_size = info.size, .error_code = writer.error_code };
-    }
-
+    if (buffer.len == 0 or buffer.len > 0xFFFF_FFFF) return .{ .error_code = abi.file_stream_error_invalid };
+    var progress: abi.FileCopyProgress = .{};
+    const result = sys.fileCopyBuffered(src_path, dst_path, buffer, &progress);
     return .{
-        .ok = true,
-        .bytes = writer.offset,
-        .chunks = writer.chunks,
-        .max_chunk = writer.max_chunk,
-        .source_size = info.size,
-        .error_code = abi.file_stream_result_ok,
+        .ok = result == abi.file_stream_result_ok,
+        .bytes = progress.bytes,
+        .chunks = progress.chunks,
+        .max_chunk = progress.max_chunk,
+        .source_size = progress.source_size,
+        .error_code = result,
     };
 }

@@ -597,10 +597,10 @@
       "fn_namespace": "R4SysFns",
       "required": true,
       "magic": 827937618,
-      "abi_version": 16,
+      "abi_version": 18,
       "header_size": 16,
       "pointer_size": 8,
-      "size": 1144,
+      "size": 1168,
       "slots": [
         {
           "number": 0,
@@ -11375,6 +11375,261 @@
             "buffer_too_small": "fixed_capacity",
             "language_parity": "zig_and_c_required"
           }
+        },
+        {
+          "number": 141,
+          "offset": 1144,
+          "name": "directory_change_begin",
+          "state": "function",
+          "required": false,
+          "description": "Capture a directory identity and current change sequence under the filesystem request gate. Returns 0 on success, -1 for invalid cursor/path, -3 for missing mount/directory, -9 for an I/O failure. Register before the initial enumeration.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "arg0",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "sentinel",
+                  "is_const": true,
+                  "sentinel": 0,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "nul_terminator",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "cursor",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "DirectoryChangeCursor"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "filesystem",
+            "ownership": "borrowed",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "path_based_no_handle",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "caller_capacity_without_required_size",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 142,
+          "offset": 1152,
+          "name": "directory_change_poll",
+          "state": "function",
+          "required": false,
+          "description": "Consume RAM-only changes for the captured directory. Returns 1 if a reload is needed (also on bounded history overflow), 0 if unchanged, -1 for invalid cursor, -3 for a retired mount. Mutations wake desktop_activity_wait. No persistent allocation and no close.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "cursor",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "DirectoryChangeCursor"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "filesystem",
+            "ownership": "borrowed",
+            "buffer_lifetime": "call",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "path_based_no_handle",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "caller_capacity_without_required_size",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 143,
+          "offset": 1160,
+          "name": "file_copy_buffered",
+          "state": "function",
+          "required": false,
+          "description": "Copies under one paired filesystem request, rejecting source aliases before destination mutation. Caller exclusively owns the supplied nonempty buffer until return. File-stream result codes: 0 success, invalid for identical files, too_large above 4 GB, I/O on failure. Progress reports completed appends; failure may leave a partial target. No automatic retry or rollback.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "source",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "sentinel",
+                  "is_const": true,
+                  "sentinel": 0,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "nul_terminator",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "target",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "sentinel",
+                  "is_const": true,
+                  "sentinel": 0,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "nul_terminator",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "buffer",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "many",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "length",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "length",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "progress",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "FileCopyProgress"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "filesystem",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "path_based_no_handle",
+            "outputs": "progress_reported",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "caller_capacity_without_required_size",
+            "language_parity": "zig_and_c_required"
+          }
         }
       ]
     },
@@ -20887,10 +21142,10 @@
       "fn_namespace": "R4AudioFns",
       "required": false,
       "magic": 827670866,
-      "abi_version": 1,
+      "abi_version": 2,
       "header_size": 16,
       "pointer_size": 8,
-      "size": 184,
+      "size": 200,
       "slots": [
         {
           "number": 0,
@@ -22029,6 +22284,135 @@
             "retry": "never_automatic",
             "buffer_too_small": "none",
             "language_parity": "internal_only"
+          }
+        },
+        {
+          "number": 21,
+          "offset": 184,
+          "name": "audio_output_info",
+          "state": "function",
+          "required": false,
+          "description": "Enumerates a stable hardware output, including unavailable connectors. Returns 1 for a record, 0 for the end, negative on error.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "index",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "out",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "AudioOutputInfo"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4AUDIO"
+            ],
+            "optional_capability": true,
+            "error_domain": "audio",
+            "ownership": "none",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "serialized",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "idempotent",
+            "buffer_too_small": "none",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 22,
+          "offset": 192,
+          "name": "audio_select_output",
+          "state": "function",
+          "required": false,
+          "description": "Selects a NUL-terminated physical output identity in a 64-byte buffer. AUDSVC owns normal user selection; queued application streams and master volume survive the route switch.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "id",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": true,
+                  "child": {
+                    "kind": "array",
+                    "length": 64,
+                    "child": {
+                      "kind": "scalar",
+                      "name": "u8"
+                    }
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4AUDIO"
+            ],
+            "optional_capability": true,
+            "error_domain": "audio",
+            "ownership": "none",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "serialized",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "may_have_occurred",
+            "retry": "idempotent",
+            "buffer_too_small": "none",
+            "language_parity": "zig_and_c_required"
           }
         }
       ]
@@ -73280,6 +73664,928 @@
       ],
       "values": [],
       "description": "Mounted volume snapshot. A use lease protects the physical region, including aliases such as the system boot subtree."
+    },
+    {
+      "name": "AudioOutputInfo",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 160,
+      "alignment": 4,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Payload version.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Exact payload size.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "160"
+        },
+        {
+          "name": "id",
+          "offset": 8,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Stable physical output identity, NUL-terminated; not an enumeration index.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "name",
+          "offset": 72,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Human-readable connection/sink name, NUL-terminated.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "kind",
+          "offset": 136,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "audio_output_kind value.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "availability",
+          "offset": 140,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "audio_output_availability value.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "flags",
+          "offset": 144,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "audio_output_flag bits.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "preferred_rate",
+          "offset": 148,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Preferred PCM rate in Hz.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "channels",
+          "offset": 152,
+          "type": {
+            "kind": "scalar",
+            "name": "u16"
+          },
+          "description": "Supported channel count for the preferred format.",
+          "size": 2,
+          "alignment": 2,
+          "source_type": "u16",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "format",
+          "offset": 154,
+          "type": {
+            "kind": "scalar",
+            "name": "u16"
+          },
+          "description": "Audio format; 1 is S16LE.",
+          "size": 2,
+          "alignment": 2,
+          "source_type": "u16",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 156,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Must be zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "One hardware audio output; disconnected outputs retain their identity and remain enumerable."
+    },
+    {
+      "name": "AudioOutputQueryFn",
+      "source": "API/ApiContract.json",
+      "classification": "callback",
+      "representation": "c_callback",
+      "version": 1,
+      "size": 8,
+      "alignment": 8,
+      "source_layout": "pointer",
+      "fields": [],
+      "values": [],
+      "callback": {
+        "calling_convention": "c",
+        "parameters": [
+          {
+            "name": "context",
+            "type": {
+              "kind": "scalar",
+              "name": "u64"
+            }
+          },
+          {
+            "name": "index",
+            "type": {
+              "kind": "scalar",
+              "name": "u32"
+            }
+          },
+          {
+            "name": "out",
+            "type": {
+              "kind": "pointer",
+              "pointer_kind": "single",
+              "is_const": false,
+              "child": {
+                "kind": "named",
+                "name": "AudioOutputInfo"
+              },
+              "direction": "output",
+              "nullable": false,
+              "length_by": "none",
+              "ownership": "borrowed",
+              "lifetime": "call"
+            }
+          }
+        ],
+        "returns": {
+          "kind": "scalar",
+          "name": "i32"
+        }
+      },
+      "description": "Return 1 for a record, 0 at the bounded catalog end, or a negative error. Task context; may briefly wait for codec commands."
+    },
+    {
+      "name": "AudioOutputSelectFn",
+      "source": "API/ApiContract.json",
+      "classification": "callback",
+      "representation": "c_callback",
+      "version": 1,
+      "size": 8,
+      "alignment": 8,
+      "source_layout": "pointer",
+      "fields": [],
+      "values": [],
+      "callback": {
+        "calling_convention": "c",
+        "parameters": [
+          {
+            "name": "context",
+            "type": {
+              "kind": "scalar",
+              "name": "u64"
+            }
+          },
+          {
+            "name": "index",
+            "type": {
+              "kind": "scalar",
+              "name": "u32"
+            }
+          }
+        ],
+        "returns": {
+          "kind": "scalar",
+          "name": "i32"
+        }
+      },
+      "description": "Activate a previously enumerated local output. Zero succeeds, negative fails while restoring the previous route where possible. Task context, serialized with PCM writes."
+    },
+    {
+      "name": "AudioOutputActiveFn",
+      "source": "API/ApiContract.json",
+      "classification": "callback",
+      "representation": "c_callback",
+      "version": 1,
+      "size": 8,
+      "alignment": 8,
+      "source_layout": "pointer",
+      "fields": [],
+      "values": [],
+      "callback": {
+        "calling_convention": "c",
+        "parameters": [
+          {
+            "name": "context",
+            "type": {
+              "kind": "scalar",
+              "name": "u64"
+            }
+          }
+        ],
+        "returns": {
+          "kind": "scalar",
+          "name": "i32"
+        }
+      },
+      "description": "Return the active local output index, or -1 if none is usable."
+    },
+    {
+      "name": "AudioOutputExtension",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 24,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "query",
+          "offset": 0,
+          "type": {
+            "kind": "named",
+            "name": "AudioOutputQueryFn"
+          },
+          "description": "Query a local output.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "AudioOutputQueryFn",
+          "default_kind": "none"
+        },
+        {
+          "name": "select",
+          "offset": 8,
+          "type": {
+            "kind": "named",
+            "name": "AudioOutputSelectFn"
+          },
+          "description": "Select a local output.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "AudioOutputSelectFn",
+          "default_kind": "none"
+        },
+        {
+          "name": "active",
+          "offset": 16,
+          "type": {
+            "kind": "named",
+            "name": "AudioOutputActiveFn"
+          },
+          "description": "Read the active local output index.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "AudioOutputActiveFn",
+          "default_kind": "none"
+        }
+      ],
+      "values": [],
+      "description": "Mandatory callback tail after the unchanged 72-byte AudioBackend prefix when version is 3 and size is at least 96. Callback context is the prefix context pointer represented as u64. Version-2 descriptors have no tail and remain valid."
+    },
+    {
+      "name": "AudioServiceOutputRequest",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 96,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "magic",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "R4AO output-control marker.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1329673298"
+        },
+        {
+          "name": "version",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u16"
+          },
+          "description": "Output-control payload version.",
+          "size": 2,
+          "alignment": 2,
+          "source_type": "u16",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 6,
+          "type": {
+            "kind": "scalar",
+            "name": "u16"
+          },
+          "description": "Exact payload size.",
+          "size": 2,
+          "alignment": 2,
+          "source_type": "u16",
+          "default_kind": "integer",
+          "default_value": "96"
+        },
+        {
+          "name": "service_epoch",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "AUDSVC lifetime; zero in requests accepts the current instance.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "revision",
+          "offset": 16,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Catalog/selection revision; zero in requests accepts the current snapshot.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "index",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Page offset for query; zero for selection.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 28,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Must be zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "id",
+          "offset": 32,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "NUL-terminated stable output ID; empty selects automatic policy. Queries require all zero.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        }
+      ],
+      "values": [],
+      "description": "AUDSVC output query or selection request. Stable ID selection does not depend on page order."
+    },
+    {
+      "name": "AudioServiceOutputState",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 1520,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "magic",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "R4AO output-control marker.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1329673298"
+        },
+        {
+          "name": "version",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u16"
+          },
+          "description": "Output-control payload version.",
+          "size": 2,
+          "alignment": 2,
+          "source_type": "u16",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 6,
+          "type": {
+            "kind": "scalar",
+            "name": "u16"
+          },
+          "description": "Exact payload size.",
+          "size": 2,
+          "alignment": 2,
+          "source_type": "u16",
+          "default_kind": "integer",
+          "default_value": "1520"
+        },
+        {
+          "name": "service_epoch",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "AUDSVC lifetime; zero in requests accepts the current instance.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "revision",
+          "offset": 16,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Catalog/selection revision; zero in requests accepts the current snapshot.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "count",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Number of records in this page, at most eight.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "total",
+          "offset": 28,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Complete bounded catalog count, at most 256.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "index",
+          "offset": 32,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Offset of this page.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reason",
+          "offset": 36,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "audio_output_reason value explains actual versus preferred selection.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "flags",
+          "offset": 40,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "audio_output_state_flag bits.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 44,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Must be zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "desired_id",
+          "offset": 48,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Persisted user preference; empty means automatic.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "active_id",
+          "offset": 112,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Actually usable active output, or empty.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "active_name",
+          "offset": 176,
+          "type": {
+            "kind": "array",
+            "length": 64,
+            "child": {
+              "kind": "scalar",
+              "name": "u8"
+            }
+          },
+          "description": "Current active output name, available even outside this page.",
+          "size": 64,
+          "alignment": 1,
+          "source_type": "[64]u8",
+          "default_kind": "zero_array"
+        },
+        {
+          "name": "outputs",
+          "offset": 240,
+          "type": {
+            "kind": "array",
+            "length": 8,
+            "child": {
+              "kind": "named",
+              "name": "AudioOutputInfo"
+            }
+          },
+          "description": "Physical output records; only the first count entries are valid.",
+          "size": 1280,
+          "alignment": 4,
+          "source_type": "[8]AudioOutputInfo",
+          "default_kind": "empty_array"
+        }
+      ],
+      "values": [],
+      "description": "AUDSVC-owned output selection and paged hardware catalog. An output can remain listed while disconnected; desired and actual identities are independent."
+    },
+    {
+      "name": "DirectoryChangeCursor",
+      "source": "API/ApiContract.json",
+      "classification": "extensible",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 40,
+      "alignment": 8,
+      "source_layout": "extern",
+      "size_field": "size",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Cursor contract version.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Cursor payload size.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "40"
+        },
+        {
+          "name": "sequence",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Last consumed change sequence.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "node",
+          "offset": 16,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Opaque directory identity; not a file handle.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "mount_generation",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Exact mounted-volume generation.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "mount_slot",
+          "offset": 32,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Mounted-volume slot.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 36,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Reserved; zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Caller-owned direct-directory change cursor. No resource or handle is allocated; copying or discarding the cursor needs no close. Poll reads RAM only. A bounded event history overflow conservatively requests a reload."
+    },
+    {
+      "name": "FileCopyProgress",
+      "source": "API/ApiContract.json",
+      "classification": "extensible",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 32,
+      "alignment": 8,
+      "source_layout": "extern",
+      "size_field": "size",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "version.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "size.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "32"
+        },
+        {
+          "name": "bytes",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "bytes.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "source_size",
+          "offset": 16,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "source size.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "chunks",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "chunks.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "max_chunk",
+          "offset": 28,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "max chunk.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Completed copy appends and source size. Counters remain meaningful on I/O failure but do not imply a durable or complete target. Caller initializes version and size."
     }
   ],
   "operations": [],
@@ -86254,7 +87560,7 @@
     },
     {
       "name": "r4xstart_r4audio_version",
-      "value": "1",
+      "value": "2",
       "value_type": "u32",
       "category": "version",
       "unit": "number",
@@ -90041,6 +91347,266 @@
       "scope": "vm_commit",
       "stability": "fixed_contract",
       "description": "Maximum rounded bytes in one resident vm_commit call (64 pages)."
+    },
+    {
+      "name": "audio_backend_outputs_version",
+      "value": "3",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_backend_outputs_version."
+    },
+    {
+      "name": "audio_output_kind_line_out",
+      "value": "0",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_kind_line_out."
+    },
+    {
+      "name": "audio_output_kind_speaker",
+      "value": "1",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_kind_speaker."
+    },
+    {
+      "name": "audio_output_kind_headphone",
+      "value": "2",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_kind_headphone."
+    },
+    {
+      "name": "audio_output_kind_hdmi",
+      "value": "3",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_kind_hdmi."
+    },
+    {
+      "name": "audio_output_kind_display_port",
+      "value": "4",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_kind_display_port."
+    },
+    {
+      "name": "audio_output_unavailable",
+      "value": "0",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_unavailable."
+    },
+    {
+      "name": "audio_output_available",
+      "value": "1",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_available."
+    },
+    {
+      "name": "audio_output_waiting_for_eld",
+      "value": "2",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_waiting_for_eld."
+    },
+    {
+      "name": "audio_output_invalid_eld",
+      "value": "3",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_invalid_eld."
+    },
+    {
+      "name": "audio_output_unsupported",
+      "value": "4",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_unsupported."
+    },
+    {
+      "name": "audio_output_failed",
+      "value": "5",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_failed."
+    },
+    {
+      "name": "audio_output_flag_active",
+      "value": "1",
+      "value_type": "u32",
+      "category": "version",
+      "unit": "number",
+      "scope": "audio_outputs",
+      "stability": "fixed_contract",
+      "description": "Audio output catalog contract: audio_output_flag_active."
+    },
+    {
+      "name": "audio_service_op_outputs",
+      "value": "9",
+      "value_type": "u16",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_service_op_outputs."
+    },
+    {
+      "name": "audio_service_op_select_output",
+      "value": "10",
+      "value_type": "u16",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_service_op_select_output."
+    },
+    {
+      "name": "audio_output_control_magic",
+      "value": "1329673298",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_control_magic."
+    },
+    {
+      "name": "audio_output_reason_preferred",
+      "value": "0",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_preferred."
+    },
+    {
+      "name": "audio_output_reason_auto_hdmi",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_auto_hdmi."
+    },
+    {
+      "name": "audio_output_reason_auto_analog",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_auto_analog."
+    },
+    {
+      "name": "audio_output_reason_preferred_unavailable",
+      "value": "3",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_preferred_unavailable."
+    },
+    {
+      "name": "audio_output_reason_none_available",
+      "value": "4",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_none_available."
+    },
+    {
+      "name": "audio_output_reason_activation_failed",
+      "value": "5",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_activation_failed."
+    },
+    {
+      "name": "audio_output_reason_api_unavailable",
+      "value": "6",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_api_unavailable."
+    },
+    {
+      "name": "audio_output_reason_catalog_busy",
+      "value": "7",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_reason_catalog_busy."
+    },
+    {
+      "name": "audio_output_state_flag_persist_pending",
+      "value": "1",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_state_flag_persist_pending."
+    },
+    {
+      "name": "audio_output_state_flag_config_error",
+      "value": "2",
+      "value_type": "u32",
+      "category": "identity",
+      "unit": "number",
+      "scope": "audio_service_outputs",
+      "stability": "fixed_contract",
+      "description": "AUDSVC output-control contract: audio_output_state_flag_config_error."
     }
   ],
   "limits": [
@@ -90685,7 +92251,7 @@
     },
     {
       "name": "r4xstart_r4audio_size",
-      "value": "184",
+      "value": "200",
       "value_type": "u32",
       "unit": "bytes",
       "scope": "r4xstart_r4audio",

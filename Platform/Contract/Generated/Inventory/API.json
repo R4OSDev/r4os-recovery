@@ -3,10 +3,10 @@
   "generated_from": "API/ApiContract.json",
   "contract_schema_version": 11,
   "summary": {
-    "function_count": 339,
-    "group_slot_count": 339,
+    "function_count": 344,
+    "group_slot_count": 344,
     "sdk_only_count": 0,
-    "public_count": 247,
+    "public_count": 252,
     "advanced_count": 92
   },
   "functions": [
@@ -1661,6 +1661,42 @@
       "slot": 140,
       "exposure": "public",
       "description": "Release an exact caller-owned volume use lease; stale or foreign identifiers are rejected.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.directory_change_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 141,
+      "exposure": "public",
+      "description": "Capture a directory identity and current change sequence under the filesystem request gate. Returns 0 on success, -1 for invalid cursor/path, -3 for missing mount/directory, -9 for an I/O failure. Register before the initial enumeration.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.directory_change_poll",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 142,
+      "exposure": "public",
+      "description": "Consume RAM-only changes for the captured directory. Returns 1 if a reload is needed (also on bounded history overflow), 0 if unchanged, -1 for invalid cursor, -3 for a retired mount. Mutations wake desktop_activity_wait. No persistent allocation and no close.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_copy_buffered",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 143,
+      "exposure": "public",
+      "description": "Copies under one paired filesystem request, rejecting source aliases before destination mutation. Caller exclusively owns the supplied nonempty buffer until return. File-stream result codes: 0 success, invalid for identical files, too_large above 4 GB, I/O on failure. Progress reports completed appends; failure may leave a partial target. No automatic retry or rollback.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3593,6 +3629,30 @@
       "slot": 18,
       "exposure": "public",
       "description": "Stops OPL3 playback and silences active voices.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_output_info",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 21,
+      "exposure": "public",
+      "description": "Enumerates a stable hardware output, including unavailable connectors. Returns 1 for a record, 0 for the end, negative on error.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_select_output",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 22,
+      "exposure": "public",
+      "description": "Selects a NUL-terminated physical output identity in a 64-byte buffer. AUDSVC owns normal user selection; queued application streams and master volume survive the route switch.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"

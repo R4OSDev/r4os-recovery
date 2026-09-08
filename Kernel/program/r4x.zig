@@ -7168,6 +7168,7 @@ fn configureR4XStartR4SysTable() void {
         .file_delete = &r4api.r4sys.fileDelete,
         .file_rename = &r4api.r4sys.fileRename,
         .file_copy = &r4api.r4sys.fileCopy,
+        .file_copy_buffered = &r4api.r4sys.fileCopyBuffered,
         .file_move = &r4api.r4sys.fileMove,
         .file_read = &apiFileRead,
         .file_write = &apiFileWrite,

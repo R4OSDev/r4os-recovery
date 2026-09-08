@@ -1,0 +1,341 @@
+diff --git a/Kernel/fs/fat/fat32.zig b/Kernel/fs/fat/fat32.zig
+index dc99bcc..80aafae 100644
+--- a/Kernel/fs/fat/fat32.zig
++++ b/Kernel/fs/fat/fat32.zig
+@@ -83,6 +83,10 @@ pub const Entry = struct {
+     name_len: usize = 0,
+     attr: u8 = 0,
+     first_cluster: u32 = 0,
++    // Short directory-entry location observed under the filesystem gate.
++    // Unlike cluster zero, it distinguishes empty files and their aliases.
++    directory_lba: ?u64 = null,
++    directory_offset: u16 = 0,
+     size: u32 = 0,
+     created_time: u16 = 0,
+     created_date: u16 = 0,
+@@ -1365,25 +1369,36 @@ pub fn copyFileNoReplace(src_volume: Volume, dst_volume: Volume, src_entry: Entr
+     return copyFileWithMode(src_volume, dst_volume, src_entry, dst_parent_cluster, dst_name, false);
+ }
+ 
++/// Same live source under one volume request. A shared nonempty chain is
++/// also rejected, even if two distinct directory entries refer to it.
++pub fn sameFileForCopy(left: Entry, right: Entry) bool {
++    if (left.isDir() or right.isDir()) return false;
++    if (left.directory_lba != null and left.directory_lba == right.directory_lba and
++        left.directory_offset == right.directory_offset) return true;
++    return left.first_cluster >= 2 and left.first_cluster == right.first_cluster;
++}
++
+ fn copyFileWithMode(src_volume: Volume, original_dst_volume: Volume, src_entry: Entry, dst_parent_cluster: u32, dst_name: []const u8, replace_existing: bool) bool {
+     const start_tick = beginOperation(.copy_file);
+     var ok = false;
+     defer finishOperation(.copy_file, start_tick, ok);
+-    const dst_volume = beginMutation(original_dst_volume) orelse return false;
+-
+-    invalidateAppendCache();
+     if (src_entry.isDir() or !validInputName(dst_name)) return false;
+     var existing: EntryLocation = undefined;
+-    switch (findEntryLocationStatus(dst_volume, dst_parent_cluster, dst_name, &existing)) {
++    const status = findEntryLocationStatus(original_dst_volume, dst_parent_cluster, dst_name, &existing);
++    switch (status) {
+         .found => {
+-            if (!replace_existing) return false;
+-            if (existing.entry.isDir()) return false;
+-            if (existing.entry.isReadOnly()) return false;
+-            if (!deleteAt(dst_volume, existing)) return false;
++            if (!replace_existing or existing.entry.isDir() or existing.entry.isReadOnly()) return false;
++            if (src_volume.device_index == original_dst_volume.device_index and
++                src_volume.partition_lba == original_dst_volume.partition_lba and
++                sameFileForCopy(src_entry, existing.entry)) return false;
+         },
+         .not_found => {},
+         .io => return false,
+     }
++    // The identity decision precedes even the destination mutation batch.
++    const dst_volume = beginMutation(original_dst_volume) orelse return false;
++    invalidateAppendCache();
++    if (status == .found and !deleteAt(dst_volume, existing)) return false;
+ 
+     const file_size: usize = @intCast(src_entry.size);
+     const first_cluster = if (file_size == 0) 0 else allocateChain(dst_volume, clustersForBytes(dst_volume, file_size)) orelse return false;
+@@ -2001,7 +2016,7 @@ fn findEntryInClusterStatus(volume: Volume, cluster: u32, name: []const u8, out:
+                 if (!lfn_state.completeFor(entry)) return .io;
+                 break :blk lfn_state.len;
+             } else 0;
+-            const found = makeEntry(entry, &lfn_state.units, lfn_len);
++            const found = makeEntry(entry, &lfn_state.units, lfn_len, lba, @intCast(off));
+             if (!entryClusterValid(volume, found)) return .io;
+             lfn_state.reset();
+             if (entryNameEquals(found, name) or shortNameEquals(entry[0..11], name)) {
+@@ -2074,7 +2089,7 @@ fn findEntryLocationStatus(volume: Volume, start_cluster: u32, name: []const u8,
+                     if (!lfn_state.completeFor(raw) or lfn_slot_count != @as(usize, lfn_state.total)) return .io;
+                     break :blk lfn_state.len;
+                 } else 0;
+-                const found = makeEntry(raw, &lfn_state.units, lfn_len);
++                const found = makeEntry(raw, &lfn_state.units, lfn_len, lba, @intCast(off));
+                 if (!entryClusterValid(volume, found)) return .io;
+                 if (entryNameEquals(found, name) or shortNameEquals(raw[0..11], name)) {
+                     var found_lfn_slots: [MAX_LFN_ENTRIES]DirectorySlot = undefined;
+@@ -2126,7 +2141,7 @@ fn listDirectorySectorRange(volume: Volume, cluster: u32, printed: *usize, max_e
+                 continue;
+             }
+ 
+-            const parsed = makeEntry(entry, &lfn, lfn_len);
++            const parsed = makeEntry(entry, &lfn, lfn_len, lba, @intCast(off));
+             lfn_len = 0;
+             printEntry(parsed);
+             printed.* += 1;
+@@ -2166,7 +2181,7 @@ fn readDirectorySectorRange(volume: Volume, cluster: u32, out: []u8, cursor: *us
+                 continue;
+             }
+ 
+-            const parsed = makeEntry(raw, &lfn, lfn_len);
++            const parsed = makeEntry(raw, &lfn, lfn_len, lba, @intCast(off));
+             lfn_len = 0;
+             if (!appendDirectoryEntry(out, cursor, parsed)) return false;
+             copied.* += 1;
+@@ -2213,7 +2228,7 @@ fn readDirectoryEntrySectorRangeStatus(
+                 continue;
+             }
+ 
+-            const parsed = makeEntry(raw, &lfn, lfn_len);
++            const parsed = makeEntry(raw, &lfn, lfn_len, lba, @intCast(off));
+             lfn_len = 0;
+             if (seen.* == wanted) {
+                 if (!copyEntryName(out, parsed)) return .io;
+@@ -2265,9 +2280,11 @@ fn copyEntryName(out: []u8, entry: Entry) bool {
+     return true;
+ }
+ 
+-fn makeEntry(raw: []const u8, lfn: *const [NAME_UNITS_MAX]u16, lfn_len: usize) Entry {
++fn makeEntry(raw: []const u8, lfn: *const [NAME_UNITS_MAX]u16, lfn_len: usize, lba: u64, offset: u16) Entry {
+     var entry: Entry = .{
+         .attr = raw[11],
++        .directory_lba = lba,
++        .directory_offset = offset,
+         .first_cluster = firstCluster(raw),
+         .size = readLe32(raw[28..32]),
+         .created_time = readLe16(raw[14..16]),
+diff --git a/Kernel/fs/vfs.zig b/Kernel/fs/vfs.zig
+index 3d5f4bc..10e546a 100644
+--- a/Kernel/fs/vfs.zig
++++ b/Kernel/fs/vfs.zig
+@@ -17,6 +17,7 @@ const ntfs_fs = @import("ntfs/ntfs.zig");
+ const access = @import("../storage/access_runtime.zig");
+ const locks = @import("../memory/owner_locks.zig");
+ const drive = @import("drive.zig");
++const heap = @import("../memory/heap.zig");
+ 
+ /// Windows-parity component limit (0.60.19): 255 characters, UTF-8 (BMP)
+ /// worst case 765 bytes, buffered as 768.
+@@ -101,6 +102,8 @@ pub const Entry = struct {
+     // sequence here so a recycled record can never satisfy an ownership
+     // check. FAT32 has no corresponding generation and leaves it zero.
+     node_generation: u16 = 0,
++    fat_directory_lba: ?u64 = null,
++    fat_directory_offset: u16 = 0,
+     // Internal traversal/read guard; not part of any public R4SYS payload.
+     reparse: bool = false,
+     size: u64 = 0,
+@@ -340,6 +343,13 @@ pub fn sameFileIdentity(volume: Volume, left: Entry, right: Entry) bool {
+     };
+ }
+ 
++pub fn sameFileForCopy(volume: Volume, left: Entry, right: Entry) bool {
++    return switch (volume) {
++        .fat32 => fat32.sameFileForCopy(entryToFat32(left), entryToFat32(right)),
++        .ntfs => sameFileIdentity(volume, left, right),
++    };
++}
++
+ /// Recovery-only alias identity. Empty FAT files have no cluster identity, but
+ /// an ownership alias copies the complete short-entry metadata. SYSUPD holds
+ /// the namespace gate and uses generation-private stage/backup names, so this
+@@ -457,35 +467,56 @@ pub fn copyFileNoReplace(src_volume: Volume, dst_volume: Volume, src_entry: Entr
+     };
+ }
+ 
+-/// FS-neutral copy used whenever at least one side is not FAT32: chunked
+-/// read + append through the generic volume interfaces.  Module-owned
+-/// buffer (never on a kernel task stack); callers are serialized by the
+-/// fs-request gate.
+-var copy_chunk: [32768]u8 = undefined;
++pub const CopyProgress = struct {
++    bytes: u64 = 0,
++    source_size: u64 = 0,
++    chunks: u32 = 0,
++    max_chunk: u32 = 0,
++};
+ 
++/// Callers hold the paired filesystem request (including its unwind guard).
++/// Each operation owns its buffer across all I/O waits; disjoint volume
++/// requests deliberately remain independent. Allocate before changing a name.
+ fn copyFileGeneric(src_volume: Volume, dst_volume: Volume, src_entry: Entry, dst_parent: NodeRef, dst_name: []const u8, replace: bool) bool {
+-    if (src_entry.isDir()) return false;
++    const chunk = heap.allocBytes(32768) orelse return false;
++    defer _ = heap.free(chunk);
++    var progress: CopyProgress = .{};
++    return copyFileBuffered(src_volume, dst_volume, src_entry, dst_parent, dst_name, replace, chunk, &progress);
++}
++
++/// The caller exclusively owns the bounded buffer until this call returns.
++/// Progress counts completed appends; an I/O error may leave a partial target.
++pub fn copyFileBuffered(src_volume: Volume, dst_volume: Volume, src_entry: Entry, dst_parent: NodeRef, dst_name: []const u8, replace: bool, chunk: []u8, progress: *CopyProgress) bool {
++    progress.* = .{ .source_size = src_entry.size };
++    if (src_entry.isDir() or chunk.len == 0 or src_entry.size > 0xFFFF_FFFF) return false;
+     var existing: Entry = undefined;
+     switch (lookupEntryStatus(dst_volume, dst_parent, dst_name, &existing)) {
+         .found => {
+-            if (!replace) return false;
+-            if (existing.isDir()) return false;
++            if (!replace or existing.isDir() or existing.isReadOnly()) return false;
++            if (sameVolume(src_volume, dst_volume) and sameFileForCopy(src_volume, src_entry, existing)) return false;
+             if (!deleteFile(dst_volume, dst_parent, dst_name)) return false;
+         },
+         .not_found => {},
+         .io => return false,
+     }
+-    if (!writeFile(dst_volume, dst_parent, dst_name, copy_chunk[0..0])) return false;
+-
+-    var offset: u64 = 0;
+-    while (offset < src_entry.size) {
+-        const want: usize = @intCast(@min(src_entry.size - offset, copy_chunk.len));
+-        const got = readFileRange(src_volume, src_entry, @intCast(offset), copy_chunk[0..want]) orelse return false;
++    var completed = false;
++    // Match stream-copy abort: retire our incomplete destination while the
++    // namespace request still excludes another writer. Cleanup I/O can fail.
++    defer if (!completed) {
++        _ = deleteFile(dst_volume, dst_parent, dst_name);
++    };
++    if (!writeFile(dst_volume, dst_parent, dst_name, chunk[0..0])) return false;
++    while (progress.bytes < src_entry.size) {
++        const want: usize = @intCast(@min(src_entry.size - progress.bytes, chunk.len));
++        const got = readFileRange(src_volume, src_entry, @intCast(progress.bytes), chunk[0..want]) orelse return false;
+         if (got != want) return false;
+-        if (appendFileAtOffsetStatus(dst_volume, dst_parent, dst_name, offset, copy_chunk[0..want]) != .ok) return false;
+-        offset += want;
++        if (appendFileAtOffsetStatusDeferred(dst_volume, dst_parent, dst_name, progress.bytes, chunk[0..want]) != .ok) return false;
++        progress.bytes += want;
++        progress.chunks += 1;
++        progress.max_chunk = @max(progress.max_chunk, @as(u32, @intCast(want)));
+     }
+-    return true;
++    completed = flushVolume(dst_volume);
++    return completed;
+ }
+ 
+ pub fn makeDirectory(volume: Volume, parent: NodeRef, name: []const u8) bool {
+@@ -736,6 +767,8 @@ fn entryFromFat32(entry: fat32.Entry) Entry {
+         .name_len = entry.name_len,
+         .attr = entry.attr,
+         .node = entry.first_cluster,
++        .fat_directory_lba = entry.directory_lba,
++        .fat_directory_offset = entry.directory_offset,
+         .size = entry.size,
+         .created_time = entry.created_time,
+         .created_date = entry.created_date,
+@@ -752,6 +785,8 @@ fn entryToFat32(entry: Entry) fat32.Entry {
+         .name_len = entry.name_len,
+         .attr = entry.attr,
+         .first_cluster = @intCast(entry.node),
++        .directory_lba = entry.fat_directory_lba,
++        .directory_offset = entry.fat_directory_offset,
+         .size = @intCast(entry.size),
+         .created_time = entry.created_time,
+         .created_date = entry.created_date,
+diff --git a/Kernel/program/r4sys.zig b/Kernel/program/r4sys.zig
+index 81aac83..608b841 100644
+--- a/Kernel/program/r4sys.zig
++++ b/Kernel/program/r4sys.zig
+@@ -2884,6 +2884,29 @@ pub fn fileReplaceAtomic(target_ptr: [*:0]const u8, staged_ptr: [*:0]const u8, b
+ }
+ 
+ pub fn fileCopy(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8) callconv(.c) i32 {
++    return fileCopyWithProgress(src_ptr, dst_ptr, null, null);
++}
++
++pub fn fileCopyBuffered(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8, buffer: [*]u8, length: u32, out: *r4x_api.FileCopyProgress) callconv(.c) i32 {
++    if (out.version != 1 or out.size < @sizeOf(r4x_api.FileCopyProgress)) return file_stream_error_invalid;
++    out.* = .{};
++    if (length == 0) return file_stream_error_invalid;
++    var progress: vfs.CopyProgress = .{};
++    const result = fileCopyWithProgress(src_ptr, dst_ptr, buffer[0..length], &progress);
++    out.bytes = progress.bytes;
++    out.source_size = progress.source_size;
++    out.chunks = progress.chunks;
++    out.max_chunk = progress.max_chunk;
++    return switch (result) {
++        1 => file_stream_result_ok,
++        0, -5 => file_stream_error_not_found,
++        -1, -3, -4, -8 => file_stream_error_invalid,
++        -13 => file_stream_error_too_large,
++        else => file_stream_error_io,
++    };
++}
++
++fn fileCopyWithProgress(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8, buffer: ?[]u8, progress: ?*vfs.CopyProgress) i32 {
+     var src_buf: [max_api_path]u8 = undefined;
+     var dst_buf: [max_api_path]u8 = undefined;
+     const raw_src = copyZ(src_ptr, src_buf[0..]) orelse return -1;
+@@ -2912,11 +2935,16 @@ pub fn fileCopy(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8) callconv(.c) i32
+         .not_found => return 0,
+         .io => return -9,
+     }
++    if (progress) |p| p.source_size = entry.size;
+     if (entry.isDir()) return -4;
++    if (buffer != null and entry.size > 0xFFFF_FFFF) return -13;
+     var dst_parent: vfs.NodeRef = undefined;
+     if (vfs.resolvePathStatus(dst_volume, parentPath(dst_target.path), &dst_parent) != .found) return -5;
+     var dst_entry: ?vfs.Entry = null;
+     if (resolveOptionalEntryStatus(dst_volume, dst_target.path, &dst_entry) == .io) return -9;
++    if (dst_entry) |destination| {
++        if (vfs.sameVolume(src_volume, dst_volume) and vfs.sameFileForCopy(src_volume, entry, destination)) return -8;
++    }
+     if (!invalidateStreamSlotsForResolved(
+         dst_target.drive_ref.letter,
+         targetOnBootVolume(dst_target),
+@@ -2924,7 +2952,11 @@ pub fn fileCopy(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8) callconv(.c) i32
+         dst_entry,
+         baseName(dst_target.path),
+     )) return -9;
+-    if (!vfs.copyFile(src_volume, dst_volume, entry, dst_parent, baseName(dst_target.path))) return -9;
++    if (buffer) |chunk| {
++        if (!vfs.copyFileBuffered(src_volume, dst_volume, entry, dst_parent, baseName(dst_target.path), true, chunk, progress.?)) return -9;
++    } else {
++        if (!vfs.copyFile(src_volume, dst_volume, entry, dst_parent, baseName(dst_target.path))) return -9;
++    }
+     invalidateRegistryCacheIfHivePath(raw_dst);
+     ok = true;
+     return 1;
+@@ -2967,6 +2999,9 @@ pub fn fileMove(src_ptr: [*:0]const u8, dst_ptr: [*:0]const u8) callconv(.c) i32
+     if (vfs.resolvePathStatus(src_volume, parentPath(src_target.path), &src_parent) != .found) return -6;
+     var dst_entry: ?vfs.Entry = null;
+     if (resolveOptionalEntryStatus(dst_volume, dst_target.path, &dst_entry) == .io) return -9;
++    if (dst_entry) |destination| {
++        if (vfs.sameVolume(src_volume, dst_volume) and vfs.sameFileForCopy(src_volume, entry, destination)) return -8;
++    }
+     if (!invalidateStreamSlotsForResolved(
+         src_target.drive_ref.letter,
+         targetOnBootVolume(src_target),
+diff --git a/Kernel/program/r4x.zig b/Kernel/program/r4x.zig
+index c4b23f6..2eb666e 100644
+--- a/Kernel/program/r4x.zig
++++ b/Kernel/program/r4x.zig
+@@ -7168,6 +7168,7 @@ fn configureR4XStartR4SysTable() void {
+         .file_delete = &r4api.r4sys.fileDelete,
+         .file_rename = &r4api.r4sys.fileRename,
+         .file_copy = &r4api.r4sys.fileCopy,
++        .file_copy_buffered = &r4api.r4sys.fileCopyBuffered,
+         .file_move = &r4api.r4sys.fileMove,
+         .file_read = &apiFileRead,
+         .file_write = &apiFileWrite,
+diff --git a/Kernel/program/r4x_api.zig b/Kernel/program/r4x_api.zig
+index 622af60..ad5dcbd 100644
+--- a/Kernel/program/r4x_api.zig
++++ b/Kernel/program/r4x_api.zig
+@@ -2040,3 +2040,5 @@ pub const R4DevSlots = generated.R4DevSlots;
+ pub const R4DevProvider = generated.R4DevProvider;
+ pub const buildR4DevTable = generated.buildR4DevTable;
+ // R4OS-KERNEL-API-GENERATED-EXPORTS:END
++
++pub const FileCopyProgress = generated.FileCopyProgress;
