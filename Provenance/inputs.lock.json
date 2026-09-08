@@ -2485,8 +2485,8 @@
     },
     {
       "path": "Kernel/kernel/module_file.zig",
-      "bytes": 9321,
-      "sha256": "2c8cb0e345cbe4156fe14893578076534c11220a5bdfb2a5d6e726fe77df9568",
+      "bytes": 9881,
+      "sha256": "583acdbd909f12a7e1a1bdc7f000b4fe3c2c7fec09934d9cb5e77446d17b4c29",
       "originalSha256": "967547ea284e140574b4ea93fab82c7ce555f44995bf4af4127f2905f8fcd1a6",
       "origin": {
         "path": "kernel/module_file.zig",
@@ -2495,8 +2495,8 @@
     },
     {
       "path": "Kernel/kernel/module_r4m.zig",
-      "bytes": 19970,
-      "sha256": "885f1f324810e7f2dc1a699ae9bd5b9f020ee2be26c6ca867eb10b5116a6a882",
+      "bytes": 20110,
+      "sha256": "f562419d4cddf5aa074b5666982d2b85ed4abf1aed6dfc696fcc0e743847cdfd",
       "originalSha256": "885f1f324810e7f2dc1a699ae9bd5b9f020ee2be26c6ca867eb10b5116a6a882",
       "origin": {
         "path": "kernel/module_r4m.zig",
@@ -2505,8 +2505,8 @@
     },
     {
       "path": "Kernel/kernel/modules.zig",
-      "bytes": 79478,
-      "sha256": "766c53a0187c17204c5d611e0f4bbb248d55e347f10cf776ac2a9df5e00c3a54",
+      "bytes": 85114,
+      "sha256": "4efe7083bc428ccf5926dbb4f3d6d2c92ec930f0df2cfb9e0416fe0c5936cada",
       "originalSha256": "fb0b8ec6aa24c52c590eb498cd1279b7574e295eac447e07f995d5d221beb0e5",
       "origin": {
         "path": "kernel/modules.zig",
@@ -3341,8 +3341,8 @@
     },
     {
       "path": "Kernel/program/r4d.zig",
-      "bytes": 34826,
-      "sha256": "6d8f0348275711008fa67557f702e950b5d2fb6d95d4631b9c6f039a48986767",
+      "bytes": 35059,
+      "sha256": "bd75bbf9148b805212f23aa75cca73aa971d4299b5b8eec3b4a021eb7b7172c9",
       "originalSha256": "6d8f0348275711008fa67557f702e950b5d2fb6d95d4631b9c6f039a48986767",
       "origin": {
         "path": "program/r4d.zig",
@@ -3391,8 +3391,8 @@
     },
     {
       "path": "Kernel/program/r4p.zig",
-      "bytes": 32948,
-      "sha256": "9fe78c0e3507a11d22e00f122e2c15afa5597bfdb67b8acd5d230acaec1cabe0",
+      "bytes": 32981,
+      "sha256": "95f854c91b0f3c9a3b0ab91732f8f55c4f444b843259de1089ff207dceec23be",
       "originalSha256": "9fe78c0e3507a11d22e00f122e2c15afa5597bfdb67b8acd5d230acaec1cabe0",
       "origin": {
         "path": "program/r4p.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "236cbcd360832b88202edb28f269507d8d6b8861f1e97b41de5bff7c03e4ffef",
+      "sha256": "31d7fa707f4a679a6cf07b5a0e53be2a53fe1c28559faabde67bbab0b9129428",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "d79e7c69f29e676287db32dd368ab89812c339c29205286a48165922d7b8565c",
+      "sha256": "3c924e75f6efabb6046b8496afe146699ba9476edce35224c0a0b66d4dc6de98",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "4ae76fc753c3ea07d84f60aeaf5437a6288e52c742efb4f78d19a61799eb5925",
+      "sha256": "c72b0be88f110a3bbe4ce3db5d8fc394569508ff7001ab18c5c89a5cdb1f827c",
       "originalSha256": null,
       "origin": null
     },
@@ -10108,6 +10108,13 @@
       "origin": null,
       "sha256": "47b7855f64d828ae6efbef5a108598f3ab23c47242aecf611beb18cec1ca08a8",
       "bytes": 13727
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.51.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "9d36fcafc44f437a21d8b3d7b67309e7edaf512061c3bf708a30f8233eda04d5",
+      "bytes": 44140
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14454,6 +14461,56 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "40a473112d68f69577d05eeca9ed227bff2a665ebaa22536811f16c4535f0bda",
           "after": "d79e7c69f29e676287db32dd368ab89812c339c29205286a48165922d7b8565c"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.51: reserve module slots across file waits and roll back private rejected loads; Recovery 0.1.39, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/modules.zig",
+          "before": "766c53a0187c17204c5d611e0f4bbb248d55e347f10cf776ac2a9df5e00c3a54",
+          "after": "4efe7083bc428ccf5926dbb4f3d6d2c92ec930f0df2cfb9e0416fe0c5936cada"
+        },
+        {
+          "path": "Kernel/kernel/module_file.zig",
+          "before": "2c8cb0e345cbe4156fe14893578076534c11220a5bdfb2a5d6e726fe77df9568",
+          "after": "583acdbd909f12a7e1a1bdc7f000b4fe3c2c7fec09934d9cb5e77446d17b4c29"
+        },
+        {
+          "path": "Kernel/kernel/module_r4m.zig",
+          "before": "885f1f324810e7f2dc1a699ae9bd5b9f020ee2be26c6ca867eb10b5116a6a882",
+          "after": "f562419d4cddf5aa074b5666982d2b85ed4abf1aed6dfc696fcc0e743847cdfd"
+        },
+        {
+          "path": "Kernel/program/r4d.zig",
+          "before": "6d8f0348275711008fa67557f702e950b5d2fb6d95d4631b9c6f039a48986767",
+          "after": "bd75bbf9148b805212f23aa75cca73aa971d4299b5b8eec3b4a021eb7b7172c9"
+        },
+        {
+          "path": "Kernel/program/r4p.zig",
+          "before": "9fe78c0e3507a11d22e00f122e2c15afa5597bfdb67b8acd5d230acaec1cabe0",
+          "after": "95f854c91b0f3c9a3b0ab91732f8f55c4f444b843259de1089ff207dceec23be"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.51.patch",
+          "before": null,
+          "after": "9d36fcafc44f437a21d8b3d7b67309e7edaf512061c3bf708a30f8233eda04d5"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "236cbcd360832b88202edb28f269507d8d6b8861f1e97b41de5bff7c03e4ffef",
+          "after": "31d7fa707f4a679a6cf07b5a0e53be2a53fe1c28559faabde67bbab0b9129428"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "4ae76fc753c3ea07d84f60aeaf5437a6288e52c742efb4f78d19a61799eb5925",
+          "after": "c72b0be88f110a3bbe4ce3db5d8fc394569508ff7001ab18c5c89a5cdb1f827c"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "d79e7c69f29e676287db32dd368ab89812c339c29205286a48165922d7b8565c",
+          "after": "3c924e75f6efabb6046b8496afe146699ba9476edce35224c0a0b66d4dc6de98"
         }
       ]
     }

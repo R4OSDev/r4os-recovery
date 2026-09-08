@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "reason": "Transactional module publication and bounded load workspaces from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "fde8251167f3296b034c8461fec7adbcff0abe70",
+      "sourceCommit": "a400f7ec7654515d2020f49b7cdf5c1aa3d143c4",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.51.patch",
+      "patchSha256": "9d36fcafc44f437a21d8b3d7b67309e7edaf512061c3bf708a30f8233eda04d5",
+      "importMode": "Exact common module loader, bounded reader setup and R4D/R4P admission sources",
+      "files": [
+        {
+          "path": "Kernel/kernel/modules.zig",
+          "sha256": "4efe7083bc428ccf5926dbb4f3d6d2c92ec930f0df2cfb9e0416fe0c5936cada",
+          "sourcePath": "kernel/modules.zig",
+          "sourceSha256": "4efe7083bc428ccf5926dbb4f3d6d2c92ec930f0df2cfb9e0416fe0c5936cada",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/kernel/module_file.zig",
+          "sha256": "583acdbd909f12a7e1a1bdc7f000b4fe3c2c7fec09934d9cb5e77446d17b4c29",
+          "sourcePath": "kernel/module_file.zig",
+          "sourceSha256": "583acdbd909f12a7e1a1bdc7f000b4fe3c2c7fec09934d9cb5e77446d17b4c29",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/kernel/module_r4m.zig",
+          "sha256": "f562419d4cddf5aa074b5666982d2b85ed4abf1aed6dfc696fcc0e743847cdfd",
+          "sourcePath": "kernel/module_r4m.zig",
+          "sourceSha256": "f562419d4cddf5aa074b5666982d2b85ed4abf1aed6dfc696fcc0e743847cdfd",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4d.zig",
+          "sha256": "bd75bbf9148b805212f23aa75cca73aa971d4299b5b8eec3b4a021eb7b7172c9",
+          "sourcePath": "program/r4d.zig",
+          "sourceSha256": "bd75bbf9148b805212f23aa75cca73aa971d4299b5b8eec3b4a021eb7b7172c9",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4p.zig",
+          "sha256": "95f854c91b0f3c9a3b0ab91732f8f55c4f444b843259de1089ff207dceec23be",
+          "sourcePath": "program/r4p.zig",
+          "sourceSha256": "95f854c91b0f3c9a3b0ab91732f8f55c4f444b843259de1089ff207dceec23be",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
