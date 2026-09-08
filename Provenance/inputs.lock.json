@@ -176,9 +176,9 @@
     },
     {
       "id": "Protocols-NetDhcp",
-      "archiveSha256": "383baed6066b7152df35cfba55e884650bf124304080ec48f5488c6c4737e5f5",
+      "archiveSha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67",
       "archive": "Legal/Sources/Protocols-NetDhcp.zip",
-      "commit": "d5ea3ff3b102622d2f7ace636fdbbcdb42cb0841",
+      "commit": "bf56d3d59cbeccfc5460b20977efb18168ddba86",
       "remote": "https://github.com/R4OSDev/r4os-protocol-netdhcp.git"
     },
     {
@@ -204,9 +204,9 @@
     },
     {
       "id": "Services-DhcpService",
-      "archiveSha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
+      "archiveSha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08",
       "archive": "Legal/Sources/Services-DhcpService.zip",
-      "commit": "1c7c4cb30b4a32d27c3a1a0d075b62c877a7dc3f",
+      "commit": "ac170499edf69a5835ecf6148e74e683292983b8",
       "remote": "https://github.com/R4OSDev/r4os-service-dhcpservice.git"
     },
     {
@@ -750,7 +750,7 @@
     },
     {
       "name": "NETDHCP",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": "Protocols-NetDhcp",
       "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
       "manifest": "Legal/Manifests/NETDHCP/module.R4MF",
@@ -849,7 +849,7 @@
     },
     {
       "name": "DHCPSVC",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "source": "Services-DhcpService",
       "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
       "manifest": "Legal/Manifests/DHCPSVC/module.R4MF",
@@ -3011,8 +3011,8 @@
     },
     {
       "path": "Kernel/net/core.zig",
-      "bytes": 273455,
-      "sha256": "6945e9faed11a0cc6ea78a575e2877c71af3a6c4c53b15dc0275c25b1f2b7f68",
+      "bytes": 276724,
+      "sha256": "6b79817bc3c9df02aaf1602016e24cca70ac5b232caecea36e7968e0a389c8d7",
       "originalSha256": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
       "origin": {
         "path": "net/core.zig",
@@ -3031,8 +3031,8 @@
     },
     {
       "path": "Kernel/net/dhcp.zig",
-      "bytes": 1092,
-      "sha256": "1edddf3a93b04167caed0310d69653da2bc0e8f0936879e0c165f5bcbde39ef1",
+      "bytes": 1196,
+      "sha256": "8ac05314bf5ac463610d269fdf5c29429609258d89efd2804aef453df8fa7c66",
       "originalSha256": "1edddf3a93b04167caed0310d69653da2bc0e8f0936879e0c165f5bcbde39ef1",
       "origin": {
         "path": "net/dhcp.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "9c20ad88cb429f5c3efdee4e0a5dff40a4f57ae71af0be40855620ad9524bab8",
+      "sha256": "eb58c05997474fdbf55698f75db756b18405d6b68de4414b76075522d3201b14",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4089,8 +4089,8 @@
     {
       "path": "Legal/Manifests/DHCPSVC/module.R4MF",
       "bytes": 371,
-      "sha256": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6",
-      "originalSha256": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6",
+      "sha256": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1",
+      "originalSha256": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-DhcpService"
@@ -4189,8 +4189,8 @@
     {
       "path": "Legal/Manifests/NETDHCP/module.R4MF",
       "bytes": 466,
-      "sha256": "aed2cd03b7b5e98a1ba11619edb4946e072effc8b397a70cb5060f9a1ae584af",
-      "originalSha256": "aed2cd03b7b5e98a1ba11619edb4946e072effc8b397a70cb5060f9a1ae584af",
+      "sha256": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804",
+      "originalSha256": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804",
       "origin": {
         "path": "module.R4MF",
         "source": "Protocols-NetDhcp"
@@ -5553,9 +5553,9 @@
     },
     {
       "path": "Legal/Sources/Protocols-NetDhcp.zip",
-      "bytes": 12855,
-      "sha256": "383baed6066b7152df35cfba55e884650bf124304080ec48f5488c6c4737e5f5",
-      "originalSha256": "383baed6066b7152df35cfba55e884650bf124304080ec48f5488c6c4737e5f5",
+      "bytes": 13155,
+      "sha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67",
+      "originalSha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67",
       "origin": null
     },
     {
@@ -5661,9 +5661,9 @@
     },
     {
       "path": "Legal/Sources/Services-DhcpService.zip",
-      "bytes": 16315,
-      "sha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
-      "originalSha256": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
+      "bytes": 16220,
+      "sha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08",
+      "originalSha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08",
       "origin": null
     },
     {
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "c65625ce687f9d9fa373d324a317c13faf9ca32985c4b67e5def8cf9b5d50bef",
+      "sha256": "e52fe0ef69ce888f16ced9dc3613337a6f4a0beceba03ff28b8e7bc945164798",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "d6a9814222780644ca44f4d14bf6d63acb85cc85c208acda3c503ef7d4643408",
+      "sha256": "e98032dd6fd11119b3dc4ea25633b35ae75dbb1feba37fc2384cc64b5ea7112d",
       "originalSha256": null,
       "origin": null
     },
@@ -9667,8 +9667,8 @@
     {
       "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
       "bytes": 8582,
-      "sha256": "8e3dc3121d259aee3a4a8c356399728bd4a47ff2f73752c07156a1e070518604",
-      "originalSha256": "8e3dc3121d259aee3a4a8c356399728bd4a47ff2f73752c07156a1e070518604",
+      "sha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35",
+      "originalSha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35",
       "origin": {
         "path": "Artifacts/Modules/NetDhcp/NETDHCP.R4P",
         "source": "Protocols-NetDhcp"
@@ -9797,8 +9797,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
       "bytes": 33157,
-      "sha256": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0",
-      "originalSha256": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0",
+      "sha256": "f9fb5baca65814b7033bbf937972d7e7366428ee39d9f7f8d2ad6418923c78d7",
+      "originalSha256": "f9fb5baca65814b7033bbf937972d7e7366428ee39d9f7f8d2ad6418923c78d7",
       "origin": {
         "path": "Artifacts/Modules/DhcpService/DHCPSVC.R4X",
         "source": "Services-DhcpService"
@@ -10157,6 +10157,13 @@
       "origin": null,
       "sha256": "1e43293718df3e7c40c079d6c4c1e8b1764983bd52f8d4b004b17a94dfa4a07e",
       "bytes": 1260
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.57.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "c6c15fa066dd8876a706b88ea1cd1a0b9131c428bcc0a619c42e8661eef5f966",
+      "bytes": 11606
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14843,6 +14850,71 @@
           "path": "Legal/Sources/Drivers-ATAPIO.zip",
           "before": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
           "after": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.57: DHCP infinity, finite lease ordering, request states and authoritative service timing; Recovery 0.1.45, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/net/core.zig",
+          "before": "6945e9faed11a0cc6ea78a575e2877c71af3a6c4c53b15dc0275c25b1f2b7f68",
+          "after": "6b79817bc3c9df02aaf1602016e24cca70ac5b232caecea36e7968e0a389c8d7"
+        },
+        {
+          "path": "Kernel/net/dhcp.zig",
+          "before": "1edddf3a93b04167caed0310d69653da2bc0e8f0936879e0c165f5bcbde39ef1",
+          "after": "8ac05314bf5ac463610d269fdf5c29429609258d89efd2804aef453df8fa7c66"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.57.patch",
+          "before": null,
+          "after": "c6c15fa066dd8876a706b88ea1cd1a0b9131c428bcc0a619c42e8661eef5f966"
+        },
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
+          "before": "8e3dc3121d259aee3a4a8c356399728bd4a47ff2f73752c07156a1e070518604",
+          "after": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35"
+        },
+        {
+          "path": "Legal/Manifests/NETDHCP/module.R4MF",
+          "before": "aed2cd03b7b5e98a1ba11619edb4946e072effc8b397a70cb5060f9a1ae584af",
+          "after": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804"
+        },
+        {
+          "path": "Legal/Sources/Protocols-NetDhcp.zip",
+          "before": "383baed6066b7152df35cfba55e884650bf124304080ec48f5488c6c4737e5f5",
+          "after": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
+          "before": "88526a801511841c01c52c47f5400a49857a9535c6d3e6df7461e2cbccf90ed0",
+          "after": "f9fb5baca65814b7033bbf937972d7e7366428ee39d9f7f8d2ad6418923c78d7"
+        },
+        {
+          "path": "Legal/Manifests/DHCPSVC/module.R4MF",
+          "before": "4ef632b90f1422edc79e8bfce65ec68d3855a9c4c6a7f5eaa8d1ab95e31db7a6",
+          "after": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1"
+        },
+        {
+          "path": "Legal/Sources/Services-DhcpService.zip",
+          "before": "f205e8c27c1800f43c5e9f0c46eac7074475ac07d718f5e4e97968960ff03f53",
+          "after": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "9c20ad88cb429f5c3efdee4e0a5dff40a4f57ae71af0be40855620ad9524bab8",
+          "after": "eb58c05997474fdbf55698f75db756b18405d6b68de4414b76075522d3201b14"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "d6a9814222780644ca44f4d14bf6d63acb85cc85c208acda3c503ef7d4643408",
+          "after": "e98032dd6fd11119b3dc4ea25633b35ae75dbb1feba37fc2384cc64b5ea7112d"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "c65625ce687f9d9fa373d324a317c13faf9ca32985c4b67e5def8cf9b5d50bef",
+          "after": "e52fe0ef69ce888f16ced9dc3613337a6f4a0beceba03ff28b8e7bc945164798"
         }
       ]
     }

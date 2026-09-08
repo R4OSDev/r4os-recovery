@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "reason": "DHCP state from committed Kernel, NetDhcp and DhcpService owners; existing ABI layouts retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "c52b57ba7ff0d7e46833ba4ccaecb279bddd4e9f",
+      "sourceCommit": "e987daead47d196d2e8edc12101d6cfdb1a51db2",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.57.patch",
+      "patchSha256": "c6c15fa066dd8876a706b88ea1cd1a0b9131c428bcc0a619c42e8661eef5f966",
+      "importMode": "DHCP lease state and request target; frozen unrelated facade retained",
+      "files": [
+        {
+          "path": "Kernel/net/core.zig",
+          "sha256": "6b79817bc3c9df02aaf1602016e24cca70ac5b232caecea36e7968e0a389c8d7",
+          "sourcePath": "net/core.zig",
+          "sourceSha256": "6b79817bc3c9df02aaf1602016e24cca70ac5b232caecea36e7968e0a389c8d7",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/net/dhcp.zig",
+          "sha256": "8ac05314bf5ac463610d269fdf5c29429609258d89efd2804aef453df8fa7c66",
+          "sourcePath": "net/dhcp.zig",
+          "sourceSha256": "8ac05314bf5ac463610d269fdf5c29429609258d89efd2804aef453df8fa7c66",
+          "byteIdentical": true
+        }
+      ]
+    },
+    {
+      "owner": "Protocols/NetDhcp",
+      "baseCommit": "d5ea3ff3b102622d2f7ace636fdbbcdb42cb0841",
+      "sourceCommit": "bf56d3d59cbeccfc5460b20977efb18168ddba86",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Protocols-NetDhcp.zip",
+      "archiveSha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
+          "sha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35"
+        },
+        {
+          "path": "Legal/Manifests/NETDHCP/module.R4MF",
+          "sha256": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804"
+        },
+        {
+          "path": "Legal/Sources/Protocols-NetDhcp.zip",
+          "sha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67"
+        }
+      ]
+    },
+    {
+      "owner": "Services/DhcpService",
+      "baseCommit": "1c7c4cb30b4a32d27c3a1a0d075b62c877a7dc3f",
+      "sourceCommit": "ac170499edf69a5835ecf6148e74e683292983b8",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-DhcpService.zip",
+      "archiveSha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
+          "sha256": "f9fb5baca65814b7033bbf937972d7e7366428ee39d9f7f8d2ad6418923c78d7"
+        },
+        {
+          "path": "Legal/Manifests/DHCPSVC/module.R4MF",
+          "sha256": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1"
+        },
+        {
+          "path": "Legal/Sources/Services-DhcpService.zip",
+          "sha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08"
+        }
+      ]
+    }
+  ]
+}
