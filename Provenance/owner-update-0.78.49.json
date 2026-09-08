@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "reason": "Font catalogue ownership and publication from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "6d918d81520872cfd7e5c869f9faf094513ed30d",
+      "sourceCommit": "5fbee71a49614a0f7c55ffc6b99bc0ac95ce91e7",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.49.patch",
+      "patchSha256": "fbc1630ac11fed299186764f7ef3efc60fc15400eb714cbd3d1b5e781c5d446e",
+      "importMode": "Exact font catalogue/state/R4DRAW sources and host test wrapper; font test root path only in existing Recovery build configuration",
+      "files": [
+        {
+          "path": "Kernel/kernel/font.zig",
+          "sha256": "07e11bd4047e02a76942d28c38d15d9222410fd3271e185d6dc02bb753d145bd",
+          "sourcePath": "kernel/font.zig",
+          "sourceSha256": "07e11bd4047e02a76942d28c38d15d9222410fd3271e185d6dc02bb753d145bd",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/kernel/font_catalog.zig",
+          "sha256": "ee4d8099a52411f0d0fb6d52516397a61313c0080897117315592ddae4e6f408",
+          "sourcePath": "kernel/font_catalog.zig",
+          "sourceSha256": "ee4d8099a52411f0d0fb6d52516397a61313c0080897117315592ddae4e6f408",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4draw.zig",
+          "sha256": "67ec67cc15d28b5ce9025e1fbc8717c6c0c80d0a7f195e1ad827edeebc5e1d05",
+          "sourcePath": "program/r4draw.zig",
+          "sourceSha256": "67ec67cc15d28b5ce9025e1fbc8717c6c0c80d0a7f195e1ad827edeebc5e1d05",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/font_test.zig",
+          "sha256": "fcd28167b0b14e1940e54558178fb8a060c8c47de667a4db5ad37581d30adacb",
+          "sourcePath": "font_test.zig",
+          "sourceSha256": "fcd28167b0b14e1940e54558178fb8a060c8c47de667a4db5ad37581d30adacb",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/build.zig",
+          "sha256": "21d8818becb8e1dacd67f98c077683009c4d79f8cae391c1ff0bee8c2f53b7c3",
+          "sourcePath": "build.zig",
+          "sourceSha256": "5a8e093db15d3f3a299db7895cd0790955cbda9801082557290417f91c9c626f",
+          "byteIdentical": false
+        }
+      ]
+    }
+  ]
+}

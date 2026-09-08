@@ -1545,8 +1545,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 15883,
-      "sha256": "5f55dce831a446776880e8490c0346a03048853c06427501e4b8819b354cf5f1",
+      "bytes": 15881,
+      "sha256": "21d8818becb8e1dacd67f98c077683009c4d79f8cae391c1ff0bee8c2f53b7c3",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -2345,8 +2345,8 @@
     },
     {
       "path": "Kernel/kernel/font_catalog.zig",
-      "bytes": 3621,
-      "sha256": "e8a4c79ddfe1d0d247b960b19547bcedf67b8cd493549ef9922406f3531fbf2f",
+      "bytes": 4188,
+      "sha256": "ee4d8099a52411f0d0fb6d52516397a61313c0080897117315592ddae4e6f408",
       "originalSha256": "e8a4c79ddfe1d0d247b960b19547bcedf67b8cd493549ef9922406f3531fbf2f",
       "origin": {
         "path": "kernel/font_catalog.zig",
@@ -2365,8 +2365,8 @@
     },
     {
       "path": "Kernel/kernel/font.zig",
-      "bytes": 51625,
-      "sha256": "2a0214adb604619ffb639ac1ae0830205b7d5d652c2bde1d11e9630d2c618d69",
+      "bytes": 64879,
+      "sha256": "07e11bd4047e02a76942d28c38d15d9222410fd3271e185d6dc02bb753d145bd",
       "originalSha256": "2a0214adb604619ffb639ac1ae0830205b7d5d652c2bde1d11e9630d2c618d69",
       "origin": {
         "path": "kernel/font.zig",
@@ -3371,8 +3371,8 @@
     },
     {
       "path": "Kernel/program/r4draw.zig",
-      "bytes": 14528,
-      "sha256": "fe526b1ad3f5817977d44ee5125cf9e2fcc149f73569d627318993903fe85d03",
+      "bytes": 14773,
+      "sha256": "67ec67cc15d28b5ce9025e1fbc8717c6c0c80d0a7f195e1ad827edeebc5e1d05",
       "originalSha256": "fe526b1ad3f5817977d44ee5125cf9e2fcc149f73569d627318993903fe85d03",
       "origin": {
         "path": "program/r4draw.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "5943c77f872500fc839c6ab1827a0c119027e7865f3d7e1bfa0e412bad193f91",
+      "sha256": "1c7a454e8dbda74eca866c165343dca87a0d499654c417ffd3498a60b6f8a6aa",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "6bbb16aa89c09866d9ea775add0f5ec064bb71e12d0557bcd9cb83b7ce203eba",
+      "sha256": "40a473112d68f69577d05eeca9ed227bff2a665ebaa22536811f16c4535f0bda",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "ae974bedd480e388f1723996dc33397b51cce3e4bc0fe41f7bda50bec4a288f3",
+      "sha256": "0b43f98466499a97eb4cb1b1f5ba1dc72139d4c60fd665dec2ae5e4931fc245a",
       "originalSha256": null,
       "origin": null
     },
@@ -10087,6 +10087,20 @@
       "origin": null,
       "sha256": "81e390cd2f462968d0e36ab6942354015e56c198ae71c26eb9d60ec3446a9839",
       "bytes": 9336
+    },
+    {
+      "path": "Kernel/font_test.zig",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "fcd28167b0b14e1940e54558178fb8a060c8c47de667a4db5ad37581d30adacb",
+      "bytes": 69
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.49.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "fbc1630ac11fed299186764f7ef3efc60fc15400eb714cbd3d1b5e781c5d446e",
+      "bytes": 51052
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14338,6 +14352,56 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "6b768f8676ae1dfebdf3dc957bb24998c33ac647a1727260b2e168dc6120e246",
           "after": "6bbb16aa89c09866d9ea775add0f5ec064bb71e12d0557bcd9cb83b7ce203eba"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.49: publish complete font catalogue snapshots and revisions; Recovery 0.1.37, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/font.zig",
+          "before": "2a0214adb604619ffb639ac1ae0830205b7d5d652c2bde1d11e9630d2c618d69",
+          "after": "07e11bd4047e02a76942d28c38d15d9222410fd3271e185d6dc02bb753d145bd"
+        },
+        {
+          "path": "Kernel/kernel/font_catalog.zig",
+          "before": "e8a4c79ddfe1d0d247b960b19547bcedf67b8cd493549ef9922406f3531fbf2f",
+          "after": "ee4d8099a52411f0d0fb6d52516397a61313c0080897117315592ddae4e6f408"
+        },
+        {
+          "path": "Kernel/program/r4draw.zig",
+          "before": "fe526b1ad3f5817977d44ee5125cf9e2fcc149f73569d627318993903fe85d03",
+          "after": "67ec67cc15d28b5ce9025e1fbc8717c6c0c80d0a7f195e1ad827edeebc5e1d05"
+        },
+        {
+          "path": "Kernel/font_test.zig",
+          "before": null,
+          "after": "fcd28167b0b14e1940e54558178fb8a060c8c47de667a4db5ad37581d30adacb"
+        },
+        {
+          "path": "Kernel/build.zig",
+          "before": "5f55dce831a446776880e8490c0346a03048853c06427501e4b8819b354cf5f1",
+          "after": "21d8818becb8e1dacd67f98c077683009c4d79f8cae391c1ff0bee8c2f53b7c3"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.49.patch",
+          "before": null,
+          "after": "fbc1630ac11fed299186764f7ef3efc60fc15400eb714cbd3d1b5e781c5d446e"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "5943c77f872500fc839c6ab1827a0c119027e7865f3d7e1bfa0e412bad193f91",
+          "after": "1c7a454e8dbda74eca866c165343dca87a0d499654c417ffd3498a60b6f8a6aa"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "ae974bedd480e388f1723996dc33397b51cce3e4bc0fe41f7bda50bec4a288f3",
+          "after": "0b43f98466499a97eb4cb1b1f5ba1dc72139d4c60fd665dec2ae5e4931fc245a"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "6bbb16aa89c09866d9ea775add0f5ec064bb71e12d0557bcd9cb83b7ce203eba",
+          "after": "40a473112d68f69577d05eeca9ed227bff2a665ebaa22536811f16c4535f0bda"
         }
       ]
     }
