@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "reason": "R4F font input correction from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "70d1411558f3a0c269d07fadde2dea7488ca2d65",
+      "sourceCommit": "397f49f314f88eeaba9d14398db56f99859680b5",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.65.patch",
+      "patchSha256": "5b0f8ed1df942978c5988da11109069e55b5d48bb05c7ab80a77c9f6e872f8c1",
+      "importMode": "Exact checked R4F table and glyph bounds",
+      "files": [
+        {
+          "path": "Kernel/kernel/font.zig",
+          "sha256": "d1e522dda84bee108f908fddcb04ccfea13cd50325334d806724d72aab5861d0",
+          "sourcePath": "kernel/font.zig",
+          "sourceSha256": "d1e522dda84bee108f908fddcb04ccfea13cd50325334d806724d72aab5861d0",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
