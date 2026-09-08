@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "reason": "Registry restoration correction from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "f571172584b38ad0f57ffb6e259c1fbec052d087",
+      "sourceCommit": "8ca231a1810ffff4bad74879f3085e81cbed13c9",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.64.patch",
+      "patchSha256": "ff78cd5102d3a8b8f79cb99558933b30b52773b6aa82fd14d80a6bd74484255d",
+      "importMode": "Registry diagnostic ownership and external replacement cache invalidation",
+      "files": [
+        {
+          "path": "Kernel/program/r4sys.zig",
+          "sha256": "979e85b98b98ea680465c31b6306b1960c2c4b7cda0f1262d56d5b674c18aa07",
+          "sourcePath": "program/r4sys.zig",
+          "sourceSha256": "48ebcbe87a8a98b5d04d3c3ac87d360d18ad48a9d00a6603b8968a1e7288e125",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "f571172584b38ad0f57ffb6e259c1fbec052d087",
+      "sourceCommit": "aac238f855cc03610cb36fde9d11f4f26319bda1",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.64.patch",
+      "patchSha256": "9308c460645b30927d44bdd8341bd033ddbd10fd2da90dcf7c5165870f6b9666",
+      "importMode": "Registry diagnostic ownership and external replacement cache invalidation",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os.zig",
+          "sha256": "1126ca1a6235367cff58ea4ed3bde42a5248d504bca700724d7a45e670f7a04d",
+          "sourcePath": "r4os.zig",
+          "sourceSha256": "b1c6c891b130c5579a59154164afe6f76720b7e81ce76d78a2577c4183f3bb2a",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/registry_selftest.zig",
+          "sha256": "18a41559b21d5df21c39de6686b05b9231c9cad49e3b52e0a95297075f731a5c",
+          "sourcePath": "r4os/registry_selftest.zig",
+          "sourceSha256": "18a41559b21d5df21c39de6686b05b9231c9cad49e3b52e0a95297075f731a5c",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

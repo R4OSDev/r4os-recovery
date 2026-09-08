@@ -1,0 +1,77 @@
+//! Shared file ownership for REG/RegEdit diagnostics on private test images.
+//! This marker is a test-run declaration, not an access-control mechanism.
+const std = @import("std");
+const r4sys = @import("r4sys.zig");
+
+pub const marker_path = "C:\\TEMP\\REGTEST.R4S";
+pub const marker_text = "R4OS_REGISTRY_SELFTEST=PRIVATE_IMAGE";
+
+pub const Paths = struct {
+    hive: [*:0]const u8,
+    tmp: [*:0]const u8,
+    bak: [*:0]const u8,
+    original: [*:0]const u8,
+    stage: [*:0]const u8,
+    displaced: [*:0]const u8,
+};
+
+pub fn privateImage(ctx: anytype) bool {
+    var buffer: [128]u8 = undefined;
+    const read = ctx.fileRead(marker_path, &buffer);
+    if (read <= 0 or read > buffer.len) return false;
+    var bytes = buffer[0..@intCast(read)];
+    if (std.mem.startsWith(u8, bytes, "\xef\xbb\xbf")) bytes = bytes[3..];
+    return std.mem.eql(u8, std.mem.trim(u8, bytes, " \r\n\t"), marker_text);
+}
+
+/// Refuse every pre-existing recovery file. Never discard a previous run's copy.
+/// The caller must serialize the diagnostic on a declared private test image.
+pub fn backup(ctx: anytype, paths: Paths, original: []u8, check: []u8) ?bool {
+    for ([_][*:0]const u8{ paths.tmp, paths.bak, paths.original, paths.stage, paths.displaced }) |path| {
+        if (ctx.fileRead(path, check) != -3) return null;
+    }
+    const count = ctx.fileRead(paths.hive, original);
+    if (count == -3) return false;
+    if (count < 0 or count > original.len) return null;
+    if (ctx.fileCopy(paths.hive, paths.original) <= 0) return null;
+    if (!matches(ctx, paths.original, original[0..@intCast(count)], check)) return null;
+    return true;
+}
+
+/// Keep the verified original independently of the consumed publication stage.
+/// On any copy/replace/readback/cleanup failure it remains available for retry.
+pub fn restore(ctx: anytype, paths: Paths, had_original: bool, original: []u8, check: []u8) bool {
+    if (had_original) {
+        const count = ctx.fileRead(paths.original, original);
+        if (count < 0 or count > original.len) return false;
+        const expected = original[0..@intCast(count)];
+        if (ctx.fileRead(paths.stage, check) != -3 or ctx.fileRead(paths.displaced, check) != -3) return false;
+        if (ctx.fileCopy(paths.original, paths.stage) <= 0) return false;
+        if (!matches(ctx, paths.stage, expected, check)) return false;
+        // R4SYS consume_stage; paths.original is never consumed by publication.
+        if (ctx.fileReplaceAtomic(paths.hive, paths.stage, paths.displaced, r4sys.file_replace_atomic_flag_consume_stage) != 0) return false;
+        if (!matches(ctx, paths.hive, expected, check)) return false;
+    } else if (!removeOwned(ctx, paths.hive)) return false;
+
+    // All these names were absent when backup admitted the diagnostic.
+    for ([_][*:0]const u8{ paths.tmp, paths.bak, paths.stage, paths.displaced }) |path| {
+        if (!removeOwned(ctx, path)) return false;
+    }
+    if (had_original and !removeOwned(ctx, paths.original)) return false;
+    return true;
+}
+
+fn matches(ctx: anytype, path: [*:0]const u8, expected: []const u8, check: []u8) bool {
+    const count = ctx.fileRead(path, check);
+    return count >= 0 and count <= check.len and count == expected.len and
+        std.mem.eql(u8, expected, check[0..@intCast(count)]);
+}
+
+fn removeOwned(ctx: anytype, path: [*:0]const u8) bool {
+    var byte: [1]u8 = undefined;
+    const state = ctx.fileRead(path, &byte);
+    if (state == -3) return true;
+    if (state == -4) return ctx.dirDelete(path) >= 0;
+    if (state < 0 and state != -5) return false;
+    return ctx.fileDelete(path) >= 0;
+}

@@ -129,6 +129,7 @@ pub const raster = @import("r4os/raster.zig");
 pub const recent_documents = @import("r4os/recent_documents.zig");
 pub const registry = @import("r4os/registry.zig");
 pub const registry_core = @import("r4os/registry_core.zig");
+pub const registry_selftest = @import("r4os/registry_selftest.zig");
 pub const web_forms = @import("r4os/web_forms.zig");
 pub const web_navigation = @import("r4os/web_navigation.zig");
 pub const javascript = @import("r4os/javascript.zig");
