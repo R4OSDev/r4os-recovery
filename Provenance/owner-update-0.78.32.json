@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "reason": "Exact VM, backing-store and R4DEV sources plus targeted VM error mapping from the committed Kernel owner; unrelated frozen functions retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "9a75daf1cb0e93336303ccfdd810697d10993180",
+      "sourceCommit": "3eeab70cba4273bfe3e44cd9235ed8ea32a22f69",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.32.patch",
+      "patchSha256": "c40f7272057bffc3845ba2abb571e3e84b7108550451c162112adf6badfd43d0",
+      "importMode": "Exact pager/backing/R4DEV files and targeted VM error mapping; unrelated frozen functions retained",
+      "files": [
+        {
+          "path": "Kernel/memory/backing_store.zig",
+          "sha256": "5640f830de5dd7f4dbcd64537686ed50f529976e4c699a3df2f2522377f67aee",
+          "sourcePath": "memory/backing_store.zig",
+          "sourceSha256": "5640f830de5dd7f4dbcd64537686ed50f529976e4c699a3df2f2522377f67aee",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/memory/virt.zig",
+          "sha256": "a84415efc2aea2913fb667921e8a4c0164ece616927439780b03efc07fc41d4f",
+          "sourcePath": "memory/virt.zig",
+          "sourceSha256": "a84415efc2aea2913fb667921e8a4c0164ece616927439780b03efc07fc41d4f",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4dev.zig",
+          "sha256": "15aec93bc67cc457f2c73316f61de1c98f87bb0b8140108bf59e70f6616d59c8",
+          "sourcePath": "program/r4dev.zig",
+          "sourceSha256": "15aec93bc67cc457f2c73316f61de1c98f87bb0b8140108bf59e70f6616d59c8",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "7f00887ebd54c7801fd8648470ef6e8d60644b592ed21b7f0cc4a2af7d742d5f",
+          "sourcePath": "program/r4x.zig",
+          "sourceSha256": "1da7effd47fc01869dd7d9f4adcbd4caa2a8486d7cd9f168df5d7e6ef0419c97",
+          "byteIdentical": false
+        }
+      ]
+    }
+  ]
+}
