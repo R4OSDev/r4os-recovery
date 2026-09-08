@@ -15,6 +15,7 @@ pub const query_contract = "Repositories/Contract/ABI/R4LQuery.txt";
 pub const DriverApi = abi.DriverApi;
 pub const ProtocolApi = abi.ProtocolApi;
 pub const DriverContext = driver.Context;
+pub const SharedDmaBuffer = driver.SharedDmaBuffer;
 pub const ProtocolContext = protocol.Context;
 pub const r4d_shutdown_entry_offset = driver.r4d_shutdown_entry_offset;
 pub const r4p_shutdown_entry_offset = protocol.r4p_shutdown_entry_offset;

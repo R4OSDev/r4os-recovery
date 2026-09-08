@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "reason": "Synchronous DMA ownership and AHCI recovery corrections from committed SDK and driver owners; frozen Recovery facade retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "873a1beb6e08ec5aa10ba44b3494a280e721a78b",
+      "sourceCommit": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.54.patch",
+      "patchSha256": "9e9141dab7394977b9eb4ce45efbac3bae30bb1ef47961fac99781016599a8a4",
+      "importMode": "SharedDmaBuffer and its export only; frozen audio facade retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/driver.zig",
+          "sha256": "a445295036ce99a74cd68b44146eab28ccf306b17891630c50ef46997e4c1323",
+          "sourcePath": "r4os/driver.zig",
+          "sourceSha256": "c4ba13a96ef0f125e0635000f6ef3bff5bee5abbc851e026f05a4334ee810907",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/r4dev.zig",
+          "sha256": "daf5040f4e2a8c741f33eaeff0a7afa721b4e907b28183304bab5eb6e78c190c",
+          "sourcePath": "r4os/r4dev.zig",
+          "sourceSha256": "1db31f91976d1bdb64cfc52a59e26f5271e41f837f34ffb699916576d40c22ce",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "Drivers/AHCI",
+      "baseCommit": "8a3573351aff968c438686f4ef8db8be0da62e77",
+      "sourceCommit": "f13b42533c13dba34e833ef0266183809beea472",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Drivers-AHCI.zip",
+      "archiveSha256": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "c401ce721b8e3a41164fd3d88cd5c7a2d1290979"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
+          "sha256": "9807934e7f0b5ae5ad0ae8f70ed334e46e9252da629a0361c3a08f348019267f"
+        },
+        {
+          "path": "Legal/Manifests/AHCI/module.R4MF",
+          "sha256": "beea14aba1897180f3516f06f0a8e8cab7cf4c416de370a822610b78fa8fe032"
+        },
+        {
+          "path": "Legal/Sources/Drivers-AHCI.zip",
+          "sha256": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee"
+        }
+      ]
+    },
+    {
+      "owner": "Drivers/NVME",
+      "baseCommit": "19070985290ac203157d903b2512fcf10c81f62f",
+      "sourceCommit": "13428cc3755f9b614adbf5466d128dc6e083de13",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Drivers-NVME.zip",
+      "archiveSha256": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "c401ce721b8e3a41164fd3d88cd5c7a2d1290979"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/NVME.R4D",
+          "sha256": "2d967f83c564dc14e4044a71bf5a3f5a68fb40b3ceb2a8ce487e0bab79326f28"
+        },
+        {
+          "path": "Legal/Manifests/NVME/module.R4MF",
+          "sha256": "a5960a17cca3bb2ef0eedf7eb02e705781fbe8a4da3f0835c51809d67040866c"
+        },
+        {
+          "path": "Legal/Sources/Drivers-NVME.zip",
+          "sha256": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7"
+        }
+      ]
+    }
+  ]
+}

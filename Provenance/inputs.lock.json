@@ -43,9 +43,9 @@
     },
     {
       "id": "Drivers-AHCI",
-      "archiveSha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
+      "archiveSha256": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee",
       "archive": "Legal/Sources/Drivers-AHCI.zip",
-      "commit": "8a3573351aff968c438686f4ef8db8be0da62e77",
+      "commit": "f13b42533c13dba34e833ef0266183809beea472",
       "remote": "https://github.com/R4OSDev/r4os-driver-ahci.git"
     },
     {
@@ -57,9 +57,9 @@
     },
     {
       "id": "Drivers-NVME",
-      "archiveSha256": "5c464aedffbb35d6bdf327e1f82401dc647cfd12b3c110dc37054a4f6931509d",
+      "archiveSha256": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7",
       "archive": "Legal/Sources/Drivers-NVME.zip",
-      "commit": "19070985290ac203157d903b2512fcf10c81f62f",
+      "commit": "13428cc3755f9b614adbf5466d128dc6e083de13",
       "remote": "https://github.com/R4OSDev/r4os-driver-nvme.git"
     },
     {
@@ -318,12 +318,12 @@
   "modules": [
     {
       "name": "AHCI",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "source": "Drivers-AHCI",
       "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
       "manifest": "Legal/Manifests/AHCI/module.R4MF",
       "kind": 3,
-      "bytes": 378995,
+      "bytes": 380019,
       "imports": [
         "R4DEV:Query:1"
       ],
@@ -356,12 +356,12 @@
     },
     {
       "name": "NVME",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "source": "Drivers-NVME",
       "path": "Runtime/R4OS/DRIVERS/NVME.R4D",
       "manifest": "Legal/Manifests/NVME/module.R4MF",
       "kind": 3,
-      "bytes": 2711275,
+      "bytes": 2727659,
       "imports": [
         "R4DEV:Query:1"
       ],
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "69338763cb17adf0b9ea6d82707da51c2a10084cc297ea55d54c8177b83480f9",
+      "sha256": "940042c6d3fab007e3e173ffe2f389d855ab8207acaeb6cf3d3df5e25053db4f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4069,8 +4069,8 @@
     {
       "path": "Legal/Manifests/AHCI/module.R4MF",
       "bytes": 289,
-      "sha256": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354",
-      "originalSha256": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354",
+      "sha256": "beea14aba1897180f3516f06f0a8e8cab7cf4c416de370a822610b78fa8fe032",
+      "originalSha256": "beea14aba1897180f3516f06f0a8e8cab7cf4c416de370a822610b78fa8fe032",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-AHCI"
@@ -4259,8 +4259,8 @@
     {
       "path": "Legal/Manifests/NVME/module.R4MF",
       "bytes": 289,
-      "sha256": "960a8ea4c136716ceb01ead308e40c9c877a8dfb1f3017c92803bdc1a3dace5f",
-      "originalSha256": "960a8ea4c136716ceb01ead308e40c9c877a8dfb1f3017c92803bdc1a3dace5f",
+      "sha256": "a5960a17cca3bb2ef0eedf7eb02e705781fbe8a4da3f0835c51809d67040866c",
+      "originalSha256": "a5960a17cca3bb2ef0eedf7eb02e705781fbe8a4da3f0835c51809d67040866c",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-NVME"
@@ -5469,9 +5469,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-AHCI.zip",
-      "bytes": 33096,
-      "sha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
-      "originalSha256": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
+      "bytes": 33731,
+      "sha256": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee",
+      "originalSha256": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee",
       "origin": null
     },
     {
@@ -5483,9 +5483,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-NVME.zip",
-      "bytes": 38820,
-      "sha256": "5c464aedffbb35d6bdf327e1f82401dc647cfd12b3c110dc37054a4f6931509d",
-      "originalSha256": "5c464aedffbb35d6bdf327e1f82401dc647cfd12b3c110dc37054a4f6931509d",
+      "bytes": 39535,
+      "sha256": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7",
+      "originalSha256": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7",
       "origin": null
     },
     {
@@ -6554,8 +6554,8 @@
     },
     {
       "path": "Platform/SDK/r4os/driver.zig",
-      "bytes": 12375,
-      "sha256": "ffdfe180ac95c3335033097356725e3c2df3ae30a92418f955853dfd243eb0db",
+      "bytes": 14246,
+      "sha256": "a445295036ce99a74cd68b44146eab28ccf306b17891630c50ef46997e4c1323",
       "originalSha256": "ffdfe180ac95c3335033097356725e3c2df3ae30a92418f955853dfd243eb0db",
       "origin": {
         "path": "r4os/driver.zig",
@@ -6825,8 +6825,8 @@
     },
     {
       "path": "Platform/SDK/r4os/r4dev.zig",
-      "bytes": 11647,
-      "sha256": "b5c6156b3407d79b16921c8a0c0222fca7cfc828f6729fed6aa33c4a9f34e6d8",
+      "bytes": 11699,
+      "sha256": "daf5040f4e2a8c741f33eaeff0a7afa721b4e907b28183304bab5eb6e78c190c",
       "originalSha256": "b5c6156b3407d79b16921c8a0c0222fca7cfc828f6729fed6aa33c4a9f34e6d8",
       "origin": {
         "path": "r4os/r4dev.zig",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "ca773510c8d2bf57b5e1ae20eaaf97aa3d924350b5c723781abcceb84fde78a4",
+      "sha256": "24e307f89b32b1b46d4b2d79ff070b16af96c7050fc7001e626fcf77b41b7687",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,15 +9519,15 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "30eb07231c3e2aeb3a38a242037dc2ea2c2e04fae6470d0870788de50e62b705",
+      "sha256": "8122d98d2e994e67e2471b7103372ae8d039eeadc6079e0e0b6882b66eb7d5c7",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
-      "bytes": 378995,
-      "sha256": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae",
-      "originalSha256": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae",
+      "bytes": 380019,
+      "sha256": "9807934e7f0b5ae5ad0ae8f70ed334e46e9252da629a0361c3a08f348019267f",
+      "originalSha256": "9807934e7f0b5ae5ad0ae8f70ed334e46e9252da629a0361c3a08f348019267f",
       "origin": {
         "path": "Artifacts/Modules/AHCI/AHCI.R4D",
         "source": "Drivers-AHCI"
@@ -9545,9 +9545,9 @@
     },
     {
       "path": "Runtime/R4OS/DRIVERS/NVME.R4D",
-      "bytes": 2711275,
-      "sha256": "1d2b58484648d1704564a9ff80d03e429dc1b883bc0b3eb169ac99feb0cd0db3",
-      "originalSha256": "1d2b58484648d1704564a9ff80d03e429dc1b883bc0b3eb169ac99feb0cd0db3",
+      "bytes": 2727659,
+      "sha256": "2d967f83c564dc14e4044a71bf5a3f5a68fb40b3ceb2a8ce487e0bab79326f28",
+      "originalSha256": "2d967f83c564dc14e4044a71bf5a3f5a68fb40b3ceb2a8ce487e0bab79326f28",
       "origin": {
         "path": "Artifacts/Modules/NVME/NVME.R4D",
         "source": "Drivers-NVME"
@@ -10136,6 +10136,13 @@
       "origin": null,
       "sha256": "9bce6ecda22628ce6a1e66f55f332a81fec324acd0091c281cd51f36112b939d",
       "bytes": 4018
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.54.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "9e9141dab7394977b9eb4ce45efbac3bae30bb1ef47961fac99781016599a8a4",
+      "bytes": 2930
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14627,6 +14634,71 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "f470cc5a9f2f7fc436c7093da45485a5b8251e7b3edd55f6ff73b8d3bba972b1",
           "after": "ca773510c8d2bf57b5e1ae20eaaf97aa3d924350b5c723781abcceb84fde78a4"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.54: retain independent synchronous DMA storage, isolate late completions and restore AHCI reset escalation; Recovery 0.1.42, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Platform/SDK/r4os/driver.zig",
+          "before": "ffdfe180ac95c3335033097356725e3c2df3ae30a92418f955853dfd243eb0db",
+          "after": "a445295036ce99a74cd68b44146eab28ccf306b17891630c50ef46997e4c1323"
+        },
+        {
+          "path": "Platform/SDK/r4os/r4dev.zig",
+          "before": "b5c6156b3407d79b16921c8a0c0222fca7cfc828f6729fed6aa33c4a9f34e6d8",
+          "after": "daf5040f4e2a8c741f33eaeff0a7afa721b4e907b28183304bab5eb6e78c190c"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.54.patch",
+          "before": null,
+          "after": "9e9141dab7394977b9eb4ce45efbac3bae30bb1ef47961fac99781016599a8a4"
+        },
+        {
+          "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
+          "before": "c84b24e979f334228e74d9766130da8dafd6252a8f86644cbe4b1577fa0ba0ae",
+          "after": "9807934e7f0b5ae5ad0ae8f70ed334e46e9252da629a0361c3a08f348019267f"
+        },
+        {
+          "path": "Legal/Manifests/AHCI/module.R4MF",
+          "before": "cacdff9d95905ed0fcfa3096481ce825271833193eed1f32278374c13fb03354",
+          "after": "beea14aba1897180f3516f06f0a8e8cab7cf4c416de370a822610b78fa8fe032"
+        },
+        {
+          "path": "Legal/Sources/Drivers-AHCI.zip",
+          "before": "a3cea7a342031007e90be39b787c256c6feac3a7081fb51df3d2b874c39247e9",
+          "after": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee"
+        },
+        {
+          "path": "Runtime/R4OS/DRIVERS/NVME.R4D",
+          "before": "1d2b58484648d1704564a9ff80d03e429dc1b883bc0b3eb169ac99feb0cd0db3",
+          "after": "2d967f83c564dc14e4044a71bf5a3f5a68fb40b3ceb2a8ce487e0bab79326f28"
+        },
+        {
+          "path": "Legal/Manifests/NVME/module.R4MF",
+          "before": "960a8ea4c136716ceb01ead308e40c9c877a8dfb1f3017c92803bdc1a3dace5f",
+          "after": "a5960a17cca3bb2ef0eedf7eb02e705781fbe8a4da3f0835c51809d67040866c"
+        },
+        {
+          "path": "Legal/Sources/Drivers-NVME.zip",
+          "before": "5c464aedffbb35d6bdf327e1f82401dc647cfd12b3c110dc37054a4f6931509d",
+          "after": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "69338763cb17adf0b9ea6d82707da51c2a10084cc297ea55d54c8177b83480f9",
+          "after": "940042c6d3fab007e3e173ffe2f389d855ab8207acaeb6cf3d3df5e25053db4f"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "30eb07231c3e2aeb3a38a242037dc2ea2c2e04fae6470d0870788de50e62b705",
+          "after": "8122d98d2e994e67e2471b7103372ae8d039eeadc6079e0e0b6882b66eb7d5c7"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "ca773510c8d2bf57b5e1ae20eaaf97aa3d924350b5c723781abcceb84fde78a4",
+          "after": "24e307f89b32b1b46d4b2d79ff070b16af96c7050fc7001e626fcf77b41b7687"
         }
       ]
     }
