@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "reason": "AP admission and final rejection from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "8238aa2908bd27740d089b6b0297c313d6ecf588",
+      "sourceCommit": "1067024dacc25e58c2c83fb481871d54160be66b",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.50.patch",
+      "patchSha256": "47b7855f64d828ae6efbef5a108598f3ab23c47242aecf611beb18cec1ca08a8",
+      "importMode": "Exact SMP, per-CPU, stop-IPI and clock-registration sources",
+      "files": [
+        {
+          "path": "Kernel/kernel/smp.zig",
+          "sha256": "c5d122a8b03a0c9de29397ebb448f1776b6847c6fb3a4609d70e0add492d9835",
+          "sourcePath": "kernel/smp.zig",
+          "sourceSha256": "c5d122a8b03a0c9de29397ebb448f1776b6847c6fb3a4609d70e0add492d9835",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/arch/x86_64/percpu.zig",
+          "sha256": "05104ac2f49a4fc538ae8af66f9d44811a7fe5dd8a13096187c7bff591041633",
+          "sourcePath": "arch/x86_64/percpu.zig",
+          "sourceSha256": "05104ac2f49a4fc538ae8af66f9d44811a7fe5dd8a13096187c7bff591041633",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/arch/x86_64/idt.zig",
+          "sha256": "224e33d3d8ba6c1e6177f212308a2bf4f5c9f1f075ea195bfd852ef689194a75",
+          "sourcePath": "arch/x86_64/idt.zig",
+          "sourceSha256": "224e33d3d8ba6c1e6177f212308a2bf4f5c9f1f075ea195bfd852ef689194a75",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/platform/clocksource.zig",
+          "sha256": "7562f187652a0fb9e5bcc23196360395a0dfe5a23eb35c8756c9cba025420468",
+          "sourcePath": "platform/clocksource.zig",
+          "sourceSha256": "7562f187652a0fb9e5bcc23196360395a0dfe5a23eb35c8756c9cba025420468",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

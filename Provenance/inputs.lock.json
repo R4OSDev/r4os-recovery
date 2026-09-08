@@ -1238,8 +1238,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/idt.zig",
-      "bytes": 13063,
-      "sha256": "236e3fa9bf071218aefaba595ca31292c1af59f76dca48bf5c5b3cf8e4f3fe36",
+      "bytes": 13027,
+      "sha256": "224e33d3d8ba6c1e6177f212308a2bf4f5c9f1f075ea195bfd852ef689194a75",
       "originalSha256": "750e8e62768c62443ae69e4f0b76f4f3d0188b1d65c62d04bad2cd3186c6a49f",
       "origin": {
         "path": "arch/x86_64/idt.zig",
@@ -1308,8 +1308,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/percpu.zig",
-      "bytes": 5694,
-      "sha256": "b824aeee7dd98c0456c1f91c05eb8991be8eabd9a45aac95532ade07a5b030c3",
+      "bytes": 7889,
+      "sha256": "05104ac2f49a4fc538ae8af66f9d44811a7fe5dd8a13096187c7bff591041633",
       "originalSha256": "b824aeee7dd98c0456c1f91c05eb8991be8eabd9a45aac95532ade07a5b030c3",
       "origin": {
         "path": "arch/x86_64/percpu.zig",
@@ -2701,8 +2701,8 @@
     },
     {
       "path": "Kernel/kernel/smp.zig",
-      "bytes": 40451,
-      "sha256": "c74bfb66c6f277fb5a64737e8428b542a50975555ba539fbd4eecabfd00aa8e4",
+      "bytes": 41342,
+      "sha256": "c5d122a8b03a0c9de29397ebb448f1776b6847c6fb3a4609d70e0add492d9835",
       "originalSha256": "c71280ffeec15fab160665d26dcb495336d9c6c28bda2492d2e7fc6259a56049",
       "origin": {
         "path": "kernel/smp.zig",
@@ -3191,8 +3191,8 @@
     },
     {
       "path": "Kernel/platform/clocksource.zig",
-      "bytes": 19631,
-      "sha256": "6a2122fe92126bc88c66cdf43bb97cfe952a71de0c2b602d92f06bba65050d0a",
+      "bytes": 19760,
+      "sha256": "7562f187652a0fb9e5bcc23196360395a0dfe5a23eb35c8756c9cba025420468",
       "originalSha256": "5365b15f5753c75caa9531d8040ccc2e0d0507c636763575af4bb5d01a0772b0",
       "origin": {
         "path": "platform/clocksource.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "1c7a454e8dbda74eca866c165343dca87a0d499654c417ffd3498a60b6f8a6aa",
+      "sha256": "236cbcd360832b88202edb28f269507d8d6b8861f1e97b41de5bff7c03e4ffef",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "40a473112d68f69577d05eeca9ed227bff2a665ebaa22536811f16c4535f0bda",
+      "sha256": "d79e7c69f29e676287db32dd368ab89812c339c29205286a48165922d7b8565c",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "0b43f98466499a97eb4cb1b1f5ba1dc72139d4c60fd665dec2ae5e4931fc245a",
+      "sha256": "4ae76fc753c3ea07d84f60aeaf5437a6288e52c742efb4f78d19a61799eb5925",
       "originalSha256": null,
       "origin": null
     },
@@ -10101,6 +10101,13 @@
       "origin": null,
       "sha256": "fbc1630ac11fed299186764f7ef3efc60fc15400eb714cbd3d1b5e781c5d446e",
       "bytes": 51052
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.50.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "47b7855f64d828ae6efbef5a108598f3ab23c47242aecf611beb18cec1ca08a8",
+      "bytes": 13727
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14402,6 +14409,51 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "6bbb16aa89c09866d9ea775add0f5ec064bb71e12d0557bcd9cb83b7ce203eba",
           "after": "40a473112d68f69577d05eeca9ed227bff2a665ebaa22536811f16c4535f0bda"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.50: make AP rejection terminal and bind admission to BSP qualification; Recovery 0.1.38, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/smp.zig",
+          "before": "c74bfb66c6f277fb5a64737e8428b542a50975555ba539fbd4eecabfd00aa8e4",
+          "after": "c5d122a8b03a0c9de29397ebb448f1776b6847c6fb3a4609d70e0add492d9835"
+        },
+        {
+          "path": "Kernel/arch/x86_64/percpu.zig",
+          "before": "b824aeee7dd98c0456c1f91c05eb8991be8eabd9a45aac95532ade07a5b030c3",
+          "after": "05104ac2f49a4fc538ae8af66f9d44811a7fe5dd8a13096187c7bff591041633"
+        },
+        {
+          "path": "Kernel/arch/x86_64/idt.zig",
+          "before": "236e3fa9bf071218aefaba595ca31292c1af59f76dca48bf5c5b3cf8e4f3fe36",
+          "after": "224e33d3d8ba6c1e6177f212308a2bf4f5c9f1f075ea195bfd852ef689194a75"
+        },
+        {
+          "path": "Kernel/platform/clocksource.zig",
+          "before": "6a2122fe92126bc88c66cdf43bb97cfe952a71de0c2b602d92f06bba65050d0a",
+          "after": "7562f187652a0fb9e5bcc23196360395a0dfe5a23eb35c8756c9cba025420468"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.50.patch",
+          "before": null,
+          "after": "47b7855f64d828ae6efbef5a108598f3ab23c47242aecf611beb18cec1ca08a8"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "1c7a454e8dbda74eca866c165343dca87a0d499654c417ffd3498a60b6f8a6aa",
+          "after": "236cbcd360832b88202edb28f269507d8d6b8861f1e97b41de5bff7c03e4ffef"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "0b43f98466499a97eb4cb1b1f5ba1dc72139d4c60fd665dec2ae5e4931fc245a",
+          "after": "4ae76fc753c3ea07d84f60aeaf5437a6288e52c742efb4f78d19a61799eb5925"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "40a473112d68f69577d05eeca9ed227bff2a665ebaa22536811f16c4535f0bda",
+          "after": "d79e7c69f29e676287db32dd368ab89812c339c29205286a48165922d7b8565c"
         }
       ]
     }
