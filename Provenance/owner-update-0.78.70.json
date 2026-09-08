@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "reason": "Corrected HTTP/URL sources and R4HTTP artifact from committed owners for the Recovery download consumer.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "96c670216567f84f3ef51b64a54990dc3b0d9284",
+      "sourceCommit": "97a12ce4294a2bd97466fad1c3f66e6fb7b312d0",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.70.patch",
+      "patchSha256": "f96eb8134abe358607e513893ec47ff9c8057bead2e71f348cd8c4380a0cb9ec",
+      "importMode": "Canonical HTTP request/head parsing and shared URL resolver, including previously tested incremental decoder; other frozen sources unchanged",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/http.zig",
+          "sha256": "38fd7709d727b1cfe7694bff48509031070dea719fed228c5eebf3ea3f5d9bf7",
+          "sourcePath": "r4os/http.zig",
+          "sourceSha256": "38fd7709d727b1cfe7694bff48509031070dea719fed228c5eebf3ea3f5d9bf7",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/r4os/web_url.zig",
+          "sha256": "ed8660774453a70af095e3edf44084384071e045d051611c81cb9fff799b4543",
+          "sourcePath": "r4os/web_url.zig",
+          "sourceSha256": "ed8660774453a70af095e3edf44084384071e045d051611c81cb9fff799b4543",
+          "byteIdentical": true
+        }
+      ]
+    },
+    {
+      "owner": "Protocols/R4Http",
+      "baseCommit": "825c9a02eb40b4a5a3fbe7b8d157a0432cf8243e",
+      "sourceCommit": "d898e5c3271854b5ef7ef71475a73a6f1d558925",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Protocols-R4Http.zip",
+      "archiveSha256": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790",
+      "buildSourcePins": {
+        "SDK": "97a12ce4294a2bd97466fad1c3f66e6fb7b312d0",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/R4HTTP.R4P",
+          "sha256": "1c0eacbadced2c4f64999e0cb30ec82101ec031f7482f6a944885c2a59743630"
+        },
+        {
+          "path": "Legal/Manifests/R4HTTP/module.R4MF",
+          "sha256": "fa2b7ddf5620a6a1a39fdb0e59a0255d7c6f6a0439c8abd28e81f0fcfbcc9d21"
+        },
+        {
+          "path": "Legal/Sources/Protocols-R4Http.zip",
+          "sha256": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790"
+        }
+      ]
+    }
+  ]
+}

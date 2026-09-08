@@ -183,9 +183,9 @@
     },
     {
       "id": "Protocols-R4Http",
-      "archiveSha256": "a8f7d80f1ca7214cdc6aeb7a5361194cf15c4c09bda72d2c707395903d2de7d7",
+      "archiveSha256": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790",
       "archive": "Legal/Sources/Protocols-R4Http.zip",
-      "commit": "825c9a02eb40b4a5a3fbe7b8d157a0432cf8243e",
+      "commit": "d898e5c3271854b5ef7ef71475a73a6f1d558925",
       "remote": "https://github.com/R4OSDev/r4os-protocol-r4http.git"
     },
     {
@@ -777,12 +777,12 @@
     },
     {
       "name": "R4HTTP",
-      "version": "0.1.2",
+      "version": "0.1.4",
       "source": "Protocols-R4Http",
       "path": "Runtime/R4OS/PROTOCOLS/R4HTTP.R4P",
       "manifest": "Legal/Manifests/R4HTTP/module.R4MF",
       "kind": 4,
-      "bytes": 20981,
+      "bytes": 25077,
       "imports": [
         "R4DEV:Query:1"
       ],
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "c0d171bc7b1478546afa4f634f946b1602164fef83bba8194f47a56aea06f691",
+      "sha256": "090ae20df3e8047e62160d1371140f7d7fdfa70178ad35014632d10c1d3f4209",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4269,8 +4269,8 @@
     {
       "path": "Legal/Manifests/R4HTTP/module.R4MF",
       "bytes": 584,
-      "sha256": "688423b9c92ce25f1b900980d66fd3d17f9851b9fa97566decc3218490fc42d1",
-      "originalSha256": "688423b9c92ce25f1b900980d66fd3d17f9851b9fa97566decc3218490fc42d1",
+      "sha256": "fa2b7ddf5620a6a1a39fdb0e59a0255d7c6f6a0439c8abd28e81f0fcfbcc9d21",
+      "originalSha256": "fa2b7ddf5620a6a1a39fdb0e59a0255d7c6f6a0439c8abd28e81f0fcfbcc9d21",
       "origin": {
         "path": "module.R4MF",
         "source": "Protocols-R4Http"
@@ -5602,9 +5602,9 @@
     },
     {
       "path": "Legal/Sources/Protocols-R4Http.zip",
-      "bytes": 13169,
-      "sha256": "a8f7d80f1ca7214cdc6aeb7a5361194cf15c4c09bda72d2c707395903d2de7d7",
-      "originalSha256": "a8f7d80f1ca7214cdc6aeb7a5361194cf15c4c09bda72d2c707395903d2de7d7",
+      "bytes": 14993,
+      "sha256": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790",
+      "originalSha256": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790",
       "origin": null
     },
     {
@@ -6611,8 +6611,8 @@
     },
     {
       "path": "Platform/SDK/r4os/http.zig",
-      "bytes": 42473,
-      "sha256": "7911062e63b283ac4adec5592a3c5b214104bfc6e19320eea26929cbb0d0c092",
+      "bytes": 57044,
+      "sha256": "38fd7709d727b1cfe7694bff48509031070dea719fed228c5eebf3ea3f5d9bf7",
       "originalSha256": "7911062e63b283ac4adec5592a3c5b214104bfc6e19320eea26929cbb0d0c092",
       "origin": {
         "path": "r4os/http.zig",
@@ -7596,8 +7596,8 @@
     },
     {
       "path": "Platform/SDK/r4os/web_url.zig",
-      "bytes": 21762,
-      "sha256": "ce8bca970abc06270096ede8dde0eb5fba48339b015c3cc4108953b9484a0dbd",
+      "bytes": 26563,
+      "sha256": "ed8660774453a70af095e3edf44084384071e045d051611c81cb9fff799b4543",
       "originalSha256": "ce8bca970abc06270096ede8dde0eb5fba48339b015c3cc4108953b9484a0dbd",
       "origin": {
         "path": "r4os/web_url.zig",
@@ -9166,7 +9166,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "b4abdc4d76a72d8cfca668960e597baa46acb5cf4b7fdf36e1dfdfd70063af2e",
+      "sha256": "4d7b0bbddc4652b09f004d20be71138c9cd5a9bce408ca839c054df533ff94f7",
       "originalSha256": null,
       "origin": null
     },
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "48c23fc995a7f643b5bce5e34df39ba2ff8969422f9450063bc460725cf47ce7",
+      "sha256": "82f77f54f236ea36b7d80223e459bad5fa11af5a3f180fbcf563a2b8c7175ac6",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "6d04bc91b612be0fbe174f9315752bbaf14cf20f3db2eed43ce65ea0245da290",
+      "sha256": "c82f3b9431f855726dd9bbfd6d6529788abde1ef7219c035cc8c422b40b360aa",
       "originalSha256": null,
       "origin": null
     },
@@ -9736,9 +9736,9 @@
     },
     {
       "path": "Runtime/R4OS/PROTOCOLS/R4HTTP.R4P",
-      "bytes": 20981,
-      "sha256": "c9e75fa330e440b31f8f232c47c7ddf2d7f607efcb32fbf9f761f61f91d008eb",
-      "originalSha256": "c9e75fa330e440b31f8f232c47c7ddf2d7f607efcb32fbf9f761f61f91d008eb",
+      "bytes": 25077,
+      "sha256": "1c0eacbadced2c4f64999e0cb30ec82101ec031f7482f6a944885c2a59743630",
+      "originalSha256": "1c0eacbadced2c4f64999e0cb30ec82101ec031f7482f6a944885c2a59743630",
       "origin": {
         "path": "Artifacts/Modules/R4Http/R4HTTP.R4P",
         "source": "Protocols-R4Http"
@@ -10227,6 +10227,13 @@
       "origin": null,
       "sha256": "f370a98ac31d5a8134dfa65b571b11d6c63fbe8fb8db114f71d7ae9db2f0a9c9",
       "bytes": 6426
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.70.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "f96eb8134abe358607e513893ec47ff9c8057bead2e71f348cd8c4380a0cb9ec",
+      "bytes": 47034
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -15318,6 +15325,61 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "5213500d2449af084c0609649fa2e5cf1a3d93d0c0824fb1e299fea2ac3d2c28",
           "after": "48c23fc995a7f643b5bce5e34df39ba2ff8969422f9450063bc460725cf47ce7"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.70: corrected HTTP/URL parsing for downloads; Recovery 0.1.54, Menu 0.1.19, R4HTTP 0.1.4.",
+      "changes": [
+        {
+          "path": "Platform/SDK/r4os/http.zig",
+          "before": "7911062e63b283ac4adec5592a3c5b214104bfc6e19320eea26929cbb0d0c092",
+          "after": "38fd7709d727b1cfe7694bff48509031070dea719fed228c5eebf3ea3f5d9bf7"
+        },
+        {
+          "path": "Platform/SDK/r4os/web_url.zig",
+          "before": "ce8bca970abc06270096ede8dde0eb5fba48339b015c3cc4108953b9484a0dbd",
+          "after": "ed8660774453a70af095e3edf44084384071e045d051611c81cb9fff799b4543"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.70.patch",
+          "before": null,
+          "after": "f96eb8134abe358607e513893ec47ff9c8057bead2e71f348cd8c4380a0cb9ec"
+        },
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/R4HTTP.R4P",
+          "before": "c9e75fa330e440b31f8f232c47c7ddf2d7f607efcb32fbf9f761f61f91d008eb",
+          "after": "1c0eacbadced2c4f64999e0cb30ec82101ec031f7482f6a944885c2a59743630"
+        },
+        {
+          "path": "Legal/Manifests/R4HTTP/module.R4MF",
+          "before": "688423b9c92ce25f1b900980d66fd3d17f9851b9fa97566decc3218490fc42d1",
+          "after": "fa2b7ddf5620a6a1a39fdb0e59a0255d7c6f6a0439c8abd28e81f0fcfbcc9d21"
+        },
+        {
+          "path": "Legal/Sources/Protocols-R4Http.zip",
+          "before": "a8f7d80f1ca7214cdc6aeb7a5361194cf15c4c09bda72d2c707395903d2de7d7",
+          "after": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "c0d171bc7b1478546afa4f634f946b1602164fef83bba8194f47a56aea06f691",
+          "after": "090ae20df3e8047e62160d1371140f7d7fdfa70178ad35014632d10c1d3f4209"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "6d04bc91b612be0fbe174f9315752bbaf14cf20f3db2eed43ce65ea0245da290",
+          "after": "c82f3b9431f855726dd9bbfd6d6529788abde1ef7219c035cc8c422b40b360aa"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "48c23fc995a7f643b5bce5e34df39ba2ff8969422f9450063bc460725cf47ce7",
+          "after": "82f77f54f236ea36b7d80223e459bad5fa11af5a3f180fbcf563a2b8c7175ac6"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "b4abdc4d76a72d8cfca668960e597baa46acb5cf4b7fdf36e1dfdfd70063af2e",
+          "after": "4d7b0bbddc4652b09f004d20be71138c9cd5a9bce408ca839c054df533ff94f7"
         }
       ]
     }

@@ -1309,3 +1309,32 @@ Fehlerlauf wurde begrenzt und seine zweite Gruppe in ReleaseSafe beendet.
 Install-/SYSTEM-Runner erlauben -SkipResultBoots; der Selbstupdate-Runner
 erlaubt -SkipHostFaults fuer bereits passende vorhandene Hostnachweise.
 Die jeweiligen Standardablaeufe bleiben vollstaendig.
+
+
+HTTP-/URL-Grenzen ab 0.78.70
+---------------------------
+Pfad und Query duerfen weder rohe Steuerbytes noch Leerzeichen in die
+HTTP-Anfragezeile uebertragen. Parse und Build pruefen diesen Vertrag;
+vorhandene Prozentkodierung bleibt erhalten, UTF-8 und weitere nicht direkt
+zulaessige URI-Bytes werden beim Serialisieren kodiert. Zusaetzlich werden
+direkt erzeugte Hostfelder und Namen eigener Requestheader geprueft.
+
+Ein Fragezeichen nach dem Fragmentanfang gehoert zum Fragment. Die bereits
+gemeinsam angebundenen URL-/Location-/Origin-Verbraucher verwenden die
+korrigierte Zerlegung. Navigation und Redirects nutzen einen gemeinsamen
+Aufloeser; nur ganze Punktsegmente verschwinden, doppelte Slashes, kodierte
+Punkte sowie Query-/Fragmentinhalt bleiben erhalten. HTTP behaelt seine
+caller-eigene Ausgabekapazitaet statt das Browserlimit zu uebernehmen.
+
+Vollstaendige ungueltige Antwortkoepfe melden ihren konkreten Grund:
+Status, Version, Headerform/-zahl, Content-Length, widerspruechliche Laenge
+oder Transfer-Encoding. Ein spaeteres EOF verdeckt den Fehler nicht.
+Unvollstaendige Koepfe bleiben davon unterscheidbar. Auch eine gueltige
+Antwort ohne Headerfelder wird akzeptiert; dieser Randfall war vorher
+irrtuemlich abgewiesen beziehungsweise hatte einen ungueltigen Ausschnitt.
+
+Sechs kurze Hostfaelle fuer echte Parser/Serializer sind ausreichend.
+Kein zusaetzlicher Netzwerk-, QEMU- oder Browser-Gesamtprofiltest. R4HTTP
+0.1.4, R4JS 0.54.11, Klickifax 0.29.19, KlickifaxLive 0.2.20 und UpdateService
+0.2.19 werden mit der Korrektur gebaut. Recovery 0.1.54 / Menue 0.1.19 erhaelt
+den gleichen bestaetigten HTTP-/URL-Quellstand und das R4HTTP-Artefakt.

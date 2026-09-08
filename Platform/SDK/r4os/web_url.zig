@@ -41,8 +41,8 @@ pub fn parts(href: []const u8) Error!Parts {
     const host_colon = if (host.len > 0 and host[0] != '[') std.mem.lastIndexOfScalar(u8, host, ':') else if (std.mem.lastIndexOfScalar(u8, host, ']')) |close| if (close + 1 < host.len and host[close + 1] == ':') close + 1 else null else null;
     const hostname = if (host_colon) |index| host[0..index] else host;
     const port = if (host_colon) |index| host[index + 1 ..] else "";
-    const query_start = std.mem.indexOfScalarPos(u8, href, authority_end, '?');
     const hash_start = std.mem.indexOfScalarPos(u8, href, authority_end, '#');
+    const query_start = std.mem.indexOfScalarPos(u8, href[0 .. hash_start orelse href.len], authority_end, '?');
     const path_end = @min(query_start orelse href.len, hash_start orelse href.len);
     const search_end = hash_start orelse href.len;
     return .{
@@ -56,6 +56,91 @@ pub fn parts(href: []const u8) Error!Parts {
         .search = if (query_start) |start| href[start..search_end] else "",
         .hash = if (hash_start) |start| href[start..] else "",
     };
+}
+
+/// Resolve an HTTP-family reference using one path/query/fragment policy.
+/// The origin may alias the start of out; reference and base_suffix must not.
+/// Consumers retain their own URL character, scheme and capacity policies.
+pub fn resolveReference(origin: []const u8, base_suffix: []const u8, reference: []const u8, out: []u8) Error![]u8 {
+    var len: usize = 0;
+    const first_delimiter = std.mem.indexOfAny(u8, reference, ":/?#");
+    const absolute = if (first_delimiter) |at| at > 0 and reference[at] == ':' else false;
+    const hash = std.mem.indexOfScalar(u8, base_suffix, '#') orelse base_suffix.len;
+    const query = std.mem.indexOfScalar(u8, base_suffix[0..hash], '?') orelse hash;
+    if (absolute) {
+        try appendSlice(out, &len, reference);
+    } else if (std.mem.startsWith(u8, reference, "//")) {
+        const colon = std.mem.indexOfScalar(u8, origin, ':') orelse return error.InvalidUrl;
+        try appendSlice(out, &len, origin[0 .. colon + 1]);
+        try appendSlice(out, &len, reference);
+    } else {
+        try appendSlice(out, &len, origin);
+        if (reference.len == 0 or reference[0] == '#') {
+            try appendSlice(out, &len, base_suffix[0..hash]);
+        } else if (reference[0] == '?') {
+            try appendSlice(out, &len, base_suffix[0..query]);
+        } else if (reference[0] != '/') {
+            const directory_end = if (std.mem.lastIndexOfScalar(u8, base_suffix[0..query], '/')) |at| at + 1 else 0;
+            if (directory_end == 0) try appendSlice(out, &len, "/") else try appendSlice(out, &len, base_suffix[0..directory_end]);
+        }
+        try appendSlice(out, &len, reference);
+    }
+    const parsed = try parts(out[0..len]);
+    if (parsed.host.len == 0) return error.InvalidUrl;
+    const path_start = @intFromPtr(parsed.pathname.ptr) - @intFromPtr(out.ptr);
+    const path_end = path_start + parsed.pathname.len;
+    if (path_start == path_end) {
+        if (len == out.len) return error.TooLong;
+        std.mem.copyBackwards(u8, out[path_start + 1 .. len + 1], out[path_start..len]);
+        out[path_start] = '/';
+        return out[0 .. len + 1];
+    }
+    var normalized_end = path_start;
+    try appendNormalizedPath(out, &normalized_end, out[path_start..path_end]);
+    const suffix_len = len - path_end;
+    std.mem.copyForwards(u8, out[normalized_end..][0..suffix_len], out[path_end..len]);
+    return out[0 .. normalized_end + suffix_len];
+}
+
+/// Remove only complete dot segments. Repeated slashes and encoded dots
+/// remain distinct. Supports in-place compaction from the current end.
+pub fn appendNormalizedPath(out: []u8, len: *usize, path: []const u8) Error!void {
+    const start = len.*;
+    if (path.len == 0) return appendSlice(out, len, "/");
+    var cursor: usize = 0;
+    while (cursor < path.len) {
+        const rest = path[cursor..];
+        if (std.mem.startsWith(u8, rest, "../")) {
+            cursor += 3;
+            continue;
+        }
+        if (std.mem.startsWith(u8, rest, "./")) {
+            cursor += 2;
+            continue;
+        }
+        if (std.mem.startsWith(u8, rest, "/./")) {
+            cursor += 2;
+            continue;
+        }
+        if (std.mem.eql(u8, rest, "/.")) {
+            try appendSlice(out, len, "/");
+            break;
+        }
+        if (std.mem.startsWith(u8, rest, "/../") or std.mem.eql(u8, rest, "/..")) {
+            len.* = start + (std.mem.lastIndexOfScalar(u8, out[start..len.*], '/') orelse 0);
+            if (rest.len == 3) {
+                try appendSlice(out, len, "/");
+                break;
+            }
+            cursor += 3;
+            continue;
+        }
+        if (std.mem.eql(u8, rest, ".") or std.mem.eql(u8, rest, "..")) break;
+        const search_start: usize = if (rest[0] == '/') 1 else 0;
+        const count = std.mem.indexOfScalarPos(u8, rest, search_start, '/') orelse rest.len;
+        try appendSlice(out, len, rest[0..count]);
+        cursor += count;
+    }
 }
 
 pub const Component = enum {
@@ -159,7 +244,7 @@ fn appendUserInfo(out: []u8, len: *usize, value: []const u8) Error!void {
 
 fn appendSlice(out: []u8, len: *usize, value: []const u8) Error!void {
     if (len.* + value.len > out.len) return error.TooLong;
-    @memcpy(out[len.* .. len.* + value.len], value);
+    std.mem.copyForwards(u8, out[len.* .. len.* + value.len], value);
     len.* += value.len;
 }
 
@@ -471,6 +556,18 @@ test "URLSearchParams keeps duplicate order and optional value matching" {
 }
 
 test "URL parts and component replacement stay synchronized" {
+    for ([_][]const u8{ "https://example.test/#fragment?query", "https://example.test#fragment?query", "https://example.test/a#?", "https://example.test/a?before#after?second" }) |url| {
+        const value = try parts(url);
+        const hash = std.mem.indexOfScalar(u8, url, '#').?;
+        try std.testing.expectEqualStrings(url[hash..], value.hash);
+        try std.testing.expectEqualStrings(if (std.mem.indexOf(u8, url[0..hash], "?before") != null) "?before" else "", value.search);
+        var changed: [128]u8 = undefined;
+        const updated = try replaceComponent(url, .search, "fresh", &changed);
+        const again = try parts(updated);
+        try std.testing.expectEqualStrings("?fresh", again.search);
+        try std.testing.expectEqualStrings(url[hash..], again.hash);
+    }
+
     const href = "https://example.test:8443/a/b?q=one#top";
     const parsed = try parts(href);
     try std.testing.expectEqualStrings("https:", parsed.protocol);
