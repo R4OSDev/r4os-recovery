@@ -1448,8 +1448,8 @@
     },
     {
       "path": "Kernel/audio/core.zig",
-      "bytes": 69164,
-      "sha256": "6c1aea3a9b9b09601fa69667c6ec05f899d26994c2a644c036c773657152512a",
+      "bytes": 70237,
+      "sha256": "d8874b59fef32dd489ad9684d912524469247052324977f4f0a158e32084c6e0",
       "originalSha256": "6c1aea3a9b9b09601fa69667c6ec05f899d26994c2a644c036c773657152512a",
       "origin": {
         "path": "audio/core.zig",
@@ -1468,8 +1468,8 @@
     },
     {
       "path": "Kernel/audio/pcm.zig",
-      "bytes": 6074,
-      "sha256": "0e3da35f6324031d03d7e64348e97a3b81bf3342870b2140f7ca00cdcba4f38e",
+      "bytes": 15843,
+      "sha256": "863b5dee795a11e71d4bb13a1e0cbb8d518cad46366da32351f3ae4817b315a9",
       "originalSha256": "0e3da35f6324031d03d7e64348e97a3b81bf3342870b2140f7ca00cdcba4f38e",
       "origin": {
         "path": "audio/pcm.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "7a3b0e2f8d07e211a5fa5c1665dc07e1cfaecd445caf6416d96f0ae1f0cdb837",
+      "sha256": "de6ed75cdbb37f159daf0f13b41746f52f003a8036d4c9d36336810c0eb98b9f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -6504,8 +6504,8 @@
     },
     {
       "path": "Platform/SDK/r4os/audio_pcm.zig",
-      "bytes": 4655,
-      "sha256": "760e7cae1f83824bfd2003f882af6315fdef7b0d2bd01419ebe4daf2431521cf",
+      "bytes": 14424,
+      "sha256": "e239bf10a2e4465272a20e61615feace3402dd026e36ff8204039e9dfd6b7c02",
       "originalSha256": "760e7cae1f83824bfd2003f882af6315fdef7b0d2bd01419ebe4daf2431521cf",
       "origin": {
         "path": "r4os/audio_pcm.zig",
@@ -6765,8 +6765,8 @@
     },
     {
       "path": "Platform/SDK/r4os/program.zig",
-      "bytes": 228452,
-      "sha256": "df51028b3acbc32ea419796bcee55222ca6040acad89e58a632f88267b3d4f9c",
+      "bytes": 228974,
+      "sha256": "edc457fdb256ef99f362cde76c84e0618bf7f1d8dbe4e56f50d693ce00a759d9",
       "originalSha256": "df51028b3acbc32ea419796bcee55222ca6040acad89e58a632f88267b3d4f9c",
       "origin": {
         "path": "r4os/program.zig",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "4816d6bd506ee07499d6dc027f34201800a5855b45920df6409d3ec93c7b9d8f",
+      "sha256": "5871c01a70cc60c0919926daee83f0b02fa3faa9c6418167c29a24aa910217c0",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "fc545ddf2531592fbe590a42980d5238894bf76ce64e8e3107d6a29eec36e779",
+      "sha256": "fb8d1622eb87616f07e4d59b17326e0f939347ab9ee628929a2ab52fd422963d",
       "originalSha256": null,
       "origin": null
     },
@@ -9954,6 +9954,20 @@
       "origin": null,
       "sha256": "559fc87187f21477c150afdd380fc074a0672aa05885a95d1c1aae888bf2bd75",
       "bytes": 1833
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.20.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "2c0f3dfd42911453a05b52060ab7ae7869eef828656eb0113c67d323d915efc4",
+      "bytes": 18937
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.20.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "3d0e7b13c6b4393614b96e155ed55d1025147417d832a98aa865f8f4b8ffeae1",
+      "bytes": 16970
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -13475,6 +13489,56 @@
           "path": "Legal/Sources/Services-FtpService.zip",
           "before": "ae4c3b037b9fb17e510a9b89374f2ec58701b7b6cc9135c3513391e86cecdef2",
           "after": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.20: continuous PCM owner helpers, wide interpolation, accepted input progress and final-sample accounting; Recovery 0.1.25.",
+      "changes": [
+        {
+          "path": "Kernel/audio/pcm.zig",
+          "before": "0e3da35f6324031d03d7e64348e97a3b81bf3342870b2140f7ca00cdcba4f38e",
+          "after": "863b5dee795a11e71d4bb13a1e0cbb8d518cad46366da32351f3ae4817b315a9"
+        },
+        {
+          "path": "Kernel/audio/core.zig",
+          "before": "6c1aea3a9b9b09601fa69667c6ec05f899d26994c2a644c036c773657152512a",
+          "after": "d8874b59fef32dd489ad9684d912524469247052324977f4f0a158e32084c6e0"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.20.patch",
+          "before": null,
+          "after": "2c0f3dfd42911453a05b52060ab7ae7869eef828656eb0113c67d323d915efc4"
+        },
+        {
+          "path": "Platform/SDK/r4os/audio_pcm.zig",
+          "before": "760e7cae1f83824bfd2003f882af6315fdef7b0d2bd01419ebe4daf2431521cf",
+          "after": "e239bf10a2e4465272a20e61615feace3402dd026e36ff8204039e9dfd6b7c02"
+        },
+        {
+          "path": "Platform/SDK/r4os/program.zig",
+          "before": "df51028b3acbc32ea419796bcee55222ca6040acad89e58a632f88267b3d4f9c",
+          "after": "edc457fdb256ef99f362cde76c84e0618bf7f1d8dbe4e56f50d693ce00a759d9"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.20.patch",
+          "before": null,
+          "after": "3d0e7b13c6b4393614b96e155ed55d1025147417d832a98aa865f8f4b8ffeae1"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "7a3b0e2f8d07e211a5fa5c1665dc07e1cfaecd445caf6416d96f0ae1f0cdb837",
+          "after": "de6ed75cdbb37f159daf0f13b41746f52f003a8036d4c9d36336810c0eb98b9f"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "fc545ddf2531592fbe590a42980d5238894bf76ce64e8e3107d6a29eec36e779",
+          "after": "fb8d1622eb87616f07e4d59b17326e0f939347ab9ee628929a2ab52fd422963d"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "4816d6bd506ee07499d6dc027f34201800a5855b45920df6409d3ec93c7b9d8f",
+          "after": "5871c01a70cc60c0919926daee83f0b02fa3faa9c6418167c29a24aa910217c0"
         }
       ]
     }

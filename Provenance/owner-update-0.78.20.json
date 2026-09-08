@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "reason": "0.78.20: complete isolated PCM helpers from the tested Kernel/SDK owners, including their native copy path; only required PCM write/close deltas in frozen Core/program. No frozen service artifacts changed.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "99cc0ea3cb9c92a84acfcbba90fa7049d9c7143d",
+      "sourceCommit": "8c1168fe2a6d50cd5ccd9d0e8763bb43499905ed",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.20.patch",
+      "patchSha256": "2c0f3dfd42911453a05b52060ab7ae7869eef828656eb0113c67d323d915efc4",
+      "files": [
+        {
+          "path": "Kernel/audio/pcm.zig",
+          "sha256": "863b5dee795a11e71d4bb13a1e0cbb8d518cad46366da32351f3ae4817b315a9"
+        },
+        {
+          "path": "Kernel/audio/core.zig",
+          "sha256": "d8874b59fef32dd489ad9684d912524469247052324977f4f0a158e32084c6e0"
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "99cc0ea3cb9c92a84acfcbba90fa7049d9c7143d",
+      "sourceCommit": "f9ef8c92e029fec3e4b54f998fafd287a4ffbb95",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.20.patch",
+      "patchSha256": "3d0e7b13c6b4393614b96e155ed55d1025147417d832a98aa865f8f4b8ffeae1",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/audio_pcm.zig",
+          "sha256": "e239bf10a2e4465272a20e61615feace3402dd026e36ff8204039e9dfd6b7c02"
+        },
+        {
+          "path": "Platform/SDK/r4os/program.zig",
+          "sha256": "edc457fdb256ef99f362cde76c84e0618bf7f1d8dbe4e56f50d693ce00a759d9"
+        }
+      ]
+    }
+  ]
+}

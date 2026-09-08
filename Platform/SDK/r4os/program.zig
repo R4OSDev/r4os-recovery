@@ -2564,7 +2564,9 @@ pub const Context = struct {
         var offset: usize = 0;
         var total: i32 = 0;
         while (offset < data.len) {
-            const chunk_len = @min(max_chunk, data.len - offset);
+            // @min narrows the inferred integer; the following header addition
+            // must still represent the complete 1024-byte request.
+            const chunk_len: usize = @min(max_chunk, data.len - offset);
             var request = abi.AudioServiceStreamWriteRequest{
                 .stream_id = stream_id,
                 .byte_count = @intCast(chunk_len),
@@ -2581,10 +2583,14 @@ pub const Context = struct {
 
             var result: abi.AudioServiceStreamResult = .{};
             const rc = self.audioServiceCallResult(abi.audio_service_op_write_stream, payload[0 .. header_size + chunk_len], &result);
-            if (rc != abi.service_api_result_ok) return rc;
-            if (result.result < 0) return result.result;
+            if (rc != abi.service_api_result_ok) return if (total != 0) total else rc;
+            if (result.result < 0) return if (total != 0) total else result.result;
+            if (result.bytes > chunk_len) return if (total != 0) total else abi.service_api_result_invalid;
             total += @intCast(result.bytes);
-            offset += chunk_len;
+            offset += result.bytes;
+            // A short/empty acceptance returns its contiguous prefix. The
+            // caller retains the untouched suffix and chooses when to retry.
+            if (result.bytes < chunk_len) break;
         }
         return total;
     }
