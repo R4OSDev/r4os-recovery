@@ -1975,8 +1975,8 @@
     },
     {
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 146996,
-      "sha256": "46514193885031079a50b69355e51b75b662caf4f79c3dada3be75d53fc2db7b",
+      "bytes": 147364,
+      "sha256": "5e81dee8ecb4535a95b881bef3888a545fb5b760ac4f8becde0896c88c74543e",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "origin": {
         "path": "fs/fat/fat32.zig",
@@ -3650,8 +3650,8 @@
     },
     {
       "path": "Kernel/storage/mbr.zig",
-      "bytes": 21816,
-      "sha256": "afa67f60842c55a20ecd35a8f72150bcfb4f6ad502340f8da30b5074ffbb797f",
+      "bytes": 22407,
+      "sha256": "9c53c218906b7d69b72c183190d78a28cb7fd3d0ad998b58881cdc63ef01e684",
       "originalSha256": "67868af78f4a1b2d19691f2d9862fd88e72d91380d3a2c7128245576bc8ec022",
       "origin": {
         "path": "storage/mbr.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "a0cf2295c581cd52fd277ea156649ac160847a04c69d5fe2acb826f6e2035286",
+      "sha256": "69338763cb17adf0b9ea6d82707da51c2a10084cc297ea55d54c8177b83480f9",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "f470cc5a9f2f7fc436c7093da45485a5b8251e7b3edd55f6ff73b8d3bba972b1",
+      "sha256": "ca773510c8d2bf57b5e1ae20eaaf97aa3d924350b5c723781abcceb84fde78a4",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "3f17e0c6fc05d6f8263faef9b1a68aebd4e98218a0566d7418044ee0f63cf68e",
+      "sha256": "30eb07231c3e2aeb3a38a242037dc2ea2c2e04fae6470d0870788de50e62b705",
       "originalSha256": null,
       "origin": null
     },
@@ -10129,6 +10129,13 @@
       "origin": null,
       "sha256": "8a404e9763922b37df541173f7d9942fb1d23a530bfd66b3552f4c36dde97acd",
       "bytes": 1596
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.53.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "9bce6ecda22628ce6a1e66f55f332a81fec324acd0091c281cd51f36112b939d",
+      "bytes": 4018
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14585,6 +14592,41 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "3c924e75f6efabb6046b8496afe146699ba9476edce35224c0a0b66d4dc6de98",
           "after": "f470cc5a9f2f7fc436c7093da45485a5b8251e7b3edd55f6ff73b8d3bba972b1"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.53: bind legacy filesystem admission to the actual partition boundary; Recovery 0.1.41, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/storage/mbr.zig",
+          "before": "afa67f60842c55a20ecd35a8f72150bcfb4f6ad502340f8da30b5074ffbb797f",
+          "after": "9c53c218906b7d69b72c183190d78a28cb7fd3d0ad998b58881cdc63ef01e684"
+        },
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "46514193885031079a50b69355e51b75b662caf4f79c3dada3be75d53fc2db7b",
+          "after": "5e81dee8ecb4535a95b881bef3888a545fb5b760ac4f8becde0896c88c74543e"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.53.patch",
+          "before": null,
+          "after": "9bce6ecda22628ce6a1e66f55f332a81fec324acd0091c281cd51f36112b939d"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "a0cf2295c581cd52fd277ea156649ac160847a04c69d5fe2acb826f6e2035286",
+          "after": "69338763cb17adf0b9ea6d82707da51c2a10084cc297ea55d54c8177b83480f9"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "3f17e0c6fc05d6f8263faef9b1a68aebd4e98218a0566d7418044ee0f63cf68e",
+          "after": "30eb07231c3e2aeb3a38a242037dc2ea2c2e04fae6470d0870788de50e62b705"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "f470cc5a9f2f7fc436c7093da45485a5b8251e7b3edd55f6ff73b8d3bba972b1",
+          "after": "ca773510c8d2bf57b5e1ae20eaaf97aa3d924350b5c723781abcceb84fde78a4"
         }
       ]
     }

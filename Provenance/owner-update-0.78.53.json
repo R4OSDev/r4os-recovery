@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "reason": "Legacy partition boundary correction from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "ea756f53f2b4dea3448f03ebb73d0e8a2dd77892",
+      "sourceCommit": "740d65f1b2a9b72747ab43911c8cc7f345eb34e3",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.53.patch",
+      "patchSha256": "9bce6ecda22628ce6a1e66f55f332a81fec324acd0091c281cd51f36112b939d",
+      "importMode": "Exact legacy mount dispatcher and bounded FAT inspector",
+      "files": [
+        {
+          "path": "Kernel/storage/mbr.zig",
+          "sha256": "9c53c218906b7d69b72c183190d78a28cb7fd3d0ad998b58881cdc63ef01e684",
+          "sourcePath": "storage/mbr.zig",
+          "sourceSha256": "9c53c218906b7d69b72c183190d78a28cb7fd3d0ad998b58881cdc63ef01e684",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "sha256": "5e81dee8ecb4535a95b881bef3888a545fb5b760ac4f8becde0896c88c74543e",
+          "sourcePath": "fs/fat/fat32.zig",
+          "sourceSha256": "5e81dee8ecb4535a95b881bef3888a545fb5b760ac4f8becde0896c88c74543e",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
