@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "reason": "0.78.23: targeted physical-console source and post-heap allocation from the exact Kernel commit. Frozen module artifacts remain unchanged.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "1b0e5f756beb344c548c7079433a257e3ecb9635",
+      "sourceCommit": "4db34f5c92cf20fbc1d4b7288072219112850736",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.23.patch",
+      "patchSha256": "00b5068ce82b1a076eadd23ab8682cfba0a1acbd0ad898a768f3a99db5fc8be6",
+      "files": [
+        {
+          "path": "Kernel/display/console.zig",
+          "sha256": "0a46591be364c4e855b02046fbb5c96ca62814fe7c8fb567ec2431634291dcfa"
+        },
+        {
+          "path": "Kernel/display/console_scroll_buffer.zig",
+          "sha256": "b2044d488d1f066f1eb77333a343a16353c6f6ee91e5bc2f2bcd3d70c5cfa425"
+        },
+        {
+          "path": "Kernel/display/framebuffer.zig",
+          "sha256": "f981b9a0dabc294742bd59abf7f32c54920cf36db23f3208c30ef72db1256ee5"
+        },
+        {
+          "path": "Kernel/display/boot_display.zig",
+          "sha256": "11dbddeb72b81f2264aba45c12aa54eb9a137ca3e1f880fea2e4d01a39df3e0b"
+        },
+        {
+          "path": "Kernel/kernel/memory_boot.zig",
+          "sha256": "ac159afe91d47a16c526315bc1d90835a3eac4149bcf39311047427d4a0f2087"
+        }
+      ]
+    }
+  ]
+}

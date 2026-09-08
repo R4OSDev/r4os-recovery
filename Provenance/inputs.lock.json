@@ -1575,8 +1575,8 @@
     },
     {
       "path": "Kernel/display/boot_display.zig",
-      "bytes": 5856,
-      "sha256": "b9f47ac35703ed2e9ecac119a06f910d6865bab7de89d134cc2f3b0ecb37e32c",
+      "bytes": 6719,
+      "sha256": "11dbddeb72b81f2264aba45c12aa54eb9a137ca3e1f880fea2e4d01a39df3e0b",
       "originalSha256": "a836f7d1431a481f7a256ae81b9da8b0abc4cecc9c2661d3525ea9601c2fbb84",
       "origin": {
         "path": "display/boot_display.zig",
@@ -1585,8 +1585,8 @@
     },
     {
       "path": "Kernel/display/console_scroll_buffer.zig",
-      "bytes": 3466,
-      "sha256": "acfc02bd8aa0a5b01d44626bb37407f65046cb43f5a9e6715f11ec70c8c933bc",
+      "bytes": 4940,
+      "sha256": "b2044d488d1f066f1eb77333a343a16353c6f6ee91e5bc2f2bcd3d70c5cfa425",
       "originalSha256": "acfc02bd8aa0a5b01d44626bb37407f65046cb43f5a9e6715f11ec70c8c933bc",
       "origin": {
         "path": "display/console_scroll_buffer.zig",
@@ -1595,8 +1595,8 @@
     },
     {
       "path": "Kernel/display/console.zig",
-      "bytes": 15029,
-      "sha256": "7c020b5bf0ffc66220ff393a9d955e48620d60f1f233a58efdef02ffd683ded2",
+      "bytes": 21058,
+      "sha256": "0a46591be364c4e855b02046fbb5c96ca62814fe7c8fb567ec2431634291dcfa",
       "originalSha256": "7c020b5bf0ffc66220ff393a9d955e48620d60f1f233a58efdef02ffd683ded2",
       "origin": {
         "path": "display/console.zig",
@@ -1615,8 +1615,8 @@
     },
     {
       "path": "Kernel/display/framebuffer.zig",
-      "bytes": 10597,
-      "sha256": "745f50744a89f1c75e5c5ff0b3eeb59168b2b97ce13703ceedf8d1e31a55cda1",
+      "bytes": 11735,
+      "sha256": "f981b9a0dabc294742bd59abf7f32c54920cf36db23f3208c30ef72db1256ee5",
       "originalSha256": "745f50744a89f1c75e5c5ff0b3eeb59168b2b97ce13703ceedf8d1e31a55cda1",
       "origin": {
         "path": "display/framebuffer.zig",
@@ -2465,8 +2465,8 @@
     },
     {
       "path": "Kernel/kernel/memory_boot.zig",
-      "bytes": 6266,
-      "sha256": "f5e22bd361c3ea530c8a85bed5a1b3ceacb0ab1de2f9e2422f1ed89a96165b5b",
+      "bytes": 6662,
+      "sha256": "ac159afe91d47a16c526315bc1d90835a3eac4149bcf39311047427d4a0f2087",
       "originalSha256": "f5e22bd361c3ea530c8a85bed5a1b3ceacb0ab1de2f9e2422f1ed89a96165b5b",
       "origin": {
         "path": "kernel/memory_boot.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "0b7630fd5fca279bbfb5402df0f286d0438c6a20367b59776a13bf4584570e9a",
+      "sha256": "4913463692b3c7742a365183ae5c074691373bc224eb90cbf4dfa7bd998e9e8f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "8408b3b686254f99243739ae6f6fe2ae45b0861e2016cea77f679c32f82a0265",
+      "sha256": "5e5d92539e730b80246c9c2ed93be5362339734a5c8a048ceb10fe6dc393ceab",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "b8cf3aee44a2f50fc63d9e0997d7102f0dfb913a7c6b3855701021d415c935a0",
+      "sha256": "0938c2150d66155446c28dafbd9e0917ef11344e4b39ea380a2cc5516e164812",
       "originalSha256": null,
       "origin": null
     },
@@ -9982,6 +9982,13 @@
       "origin": null,
       "sha256": "2319e929d2ebe8c84efa7a46efef68290a7255d248b02f17699cedf811fa9993",
       "bytes": 3834
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.23.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "00b5068ce82b1a076eadd23ab8682cfba0a1acbd0ad898a768f3a99db5fc8be6",
+      "bytes": 17520
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -13598,6 +13605,56 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "5871c01a70cc60c0919926daee83f0b02fa3faa9c6418167c29a24aa910217c0",
           "after": "8408b3b686254f99243739ae6f6fe2ae45b0861e2016cea77f679c32f82a0265"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.23: bounded RAM console pixel scrolling, write-only framebuffer blits and boot allocation; Recovery 0.1.27.",
+      "changes": [
+        {
+          "path": "Kernel/display/console.zig",
+          "before": "7c020b5bf0ffc66220ff393a9d955e48620d60f1f233a58efdef02ffd683ded2",
+          "after": "0a46591be364c4e855b02046fbb5c96ca62814fe7c8fb567ec2431634291dcfa"
+        },
+        {
+          "path": "Kernel/display/console_scroll_buffer.zig",
+          "before": "acfc02bd8aa0a5b01d44626bb37407f65046cb43f5a9e6715f11ec70c8c933bc",
+          "after": "b2044d488d1f066f1eb77333a343a16353c6f6ee91e5bc2f2bcd3d70c5cfa425"
+        },
+        {
+          "path": "Kernel/display/framebuffer.zig",
+          "before": "745f50744a89f1c75e5c5ff0b3eeb59168b2b97ce13703ceedf8d1e31a55cda1",
+          "after": "f981b9a0dabc294742bd59abf7f32c54920cf36db23f3208c30ef72db1256ee5"
+        },
+        {
+          "path": "Kernel/display/boot_display.zig",
+          "before": "b9f47ac35703ed2e9ecac119a06f910d6865bab7de89d134cc2f3b0ecb37e32c",
+          "after": "11dbddeb72b81f2264aba45c12aa54eb9a137ca3e1f880fea2e4d01a39df3e0b"
+        },
+        {
+          "path": "Kernel/kernel/memory_boot.zig",
+          "before": "f5e22bd361c3ea530c8a85bed5a1b3ceacb0ab1de2f9e2422f1ed89a96165b5b",
+          "after": "ac159afe91d47a16c526315bc1d90835a3eac4149bcf39311047427d4a0f2087"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.23.patch",
+          "before": null,
+          "after": "00b5068ce82b1a076eadd23ab8682cfba0a1acbd0ad898a768f3a99db5fc8be6"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "0b7630fd5fca279bbfb5402df0f286d0438c6a20367b59776a13bf4584570e9a",
+          "after": "4913463692b3c7742a365183ae5c074691373bc224eb90cbf4dfa7bd998e9e8f"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "b8cf3aee44a2f50fc63d9e0997d7102f0dfb913a7c6b3855701021d415c935a0",
+          "after": "0938c2150d66155446c28dafbd9e0917ef11344e4b39ea380a2cc5516e164812"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "8408b3b686254f99243739ae6f6fe2ae45b0861e2016cea77f679c32f82a0265",
+          "after": "5e5d92539e730b80246c9c2ed93be5362339734a5c8a048ceb10fe6dc393ceab"
         }
       ]
     }
