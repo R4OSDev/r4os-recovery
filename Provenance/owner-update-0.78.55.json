@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "reason": "ATA PIO status correction from the committed driver owner; frozen Recovery sources retained.",
+  "owners": [
+    {
+      "owner": "Drivers/ATAPIO",
+      "baseCommit": "52e1046b879f792dec926483e4b416d35c0cd07a",
+      "sourceCommit": "b772b745f3c5baa8cf851b70cbc7dbfb61aa44f5",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Drivers-ATAPIO.zip",
+      "archiveSha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
+      "buildSourcePins": {
+        "SDK": "c4af81c8d7b491e5b1c999017e2d287b5064ce73",
+        "Contract": "c401ce721b8e3a41164fd3d88cd5c7a2d1290979"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
+          "sha256": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb"
+        },
+        {
+          "path": "Legal/Manifests/ATAPIO/module.R4MF",
+          "sha256": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758"
+        },
+        {
+          "path": "Legal/Sources/Drivers-ATAPIO.zip",
+          "sha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf"
+        }
+      ]
+    }
+  ]
+}

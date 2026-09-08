@@ -50,9 +50,9 @@
     },
     {
       "id": "Drivers-ATAPIO",
-      "archiveSha256": "9d8664976027b3cf02588e3d7fff4e75385ceb293fca0a3117d8864f49db551d",
+      "archiveSha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
       "archive": "Legal/Sources/Drivers-ATAPIO.zip",
-      "commit": "52e1046b879f792dec926483e4b416d35c0cd07a",
+      "commit": "b772b745f3c5baa8cf851b70cbc7dbfb61aa44f5",
       "remote": "https://github.com/R4OSDev/r4os-driver-atapio.git"
     },
     {
@@ -337,7 +337,7 @@
     },
     {
       "name": "ATAPIO",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": "Drivers-ATAPIO",
       "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
       "manifest": "Legal/Manifests/ATAPIO/module.R4MF",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "940042c6d3fab007e3e173ffe2f389d855ab8207acaeb6cf3d3df5e25053db4f",
+      "sha256": "b2060866506163209991dbc248ebac5ac325fe015607dc80564feb15c8f137ea",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4079,8 +4079,8 @@
     {
       "path": "Legal/Manifests/ATAPIO/module.R4MF",
       "bytes": 308,
-      "sha256": "e7cadbd09990328e4ef62f6a874bb060e1092c7c1492c6f1ce96088deff9be76",
-      "originalSha256": "e7cadbd09990328e4ef62f6a874bb060e1092c7c1492c6f1ce96088deff9be76",
+      "sha256": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758",
+      "originalSha256": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758",
       "origin": {
         "path": "module.R4MF",
         "source": "Drivers-ATAPIO"
@@ -5476,9 +5476,9 @@
     },
     {
       "path": "Legal/Sources/Drivers-ATAPIO.zip",
-      "bytes": 12919,
-      "sha256": "9d8664976027b3cf02588e3d7fff4e75385ceb293fca0a3117d8864f49db551d",
-      "originalSha256": "9d8664976027b3cf02588e3d7fff4e75385ceb293fca0a3117d8864f49db551d",
+      "bytes": 13089,
+      "sha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
+      "originalSha256": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf",
       "origin": null
     },
     {
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "24e307f89b32b1b46d4b2d79ff070b16af96c7050fc7001e626fcf77b41b7687",
+      "sha256": "4c18e2838d6d840f421c0c9887522ef24249e753017fbef053e892ce2713dc07",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "8122d98d2e994e67e2471b7103372ae8d039eeadc6079e0e0b6882b66eb7d5c7",
+      "sha256": "31c9e69919ff09185160c21856931262131a131050cef7f0024159be68c980d7",
       "originalSha256": null,
       "origin": null
     },
@@ -9536,8 +9536,8 @@
     {
       "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
       "bytes": 12791,
-      "sha256": "f2ece8e957b252fd465fe609044cf7f26d5fbfe22f33d392e0fe861c9030b02c",
-      "originalSha256": "f2ece8e957b252fd465fe609044cf7f26d5fbfe22f33d392e0fe861c9030b02c",
+      "sha256": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb",
+      "originalSha256": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb",
       "origin": {
         "path": "Artifacts/Modules/ATAPIO/ATAPIO.R4D",
         "source": "Drivers-ATAPIO"
@@ -14699,6 +14699,41 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "ca773510c8d2bf57b5e1ae20eaaf97aa3d924350b5c723781abcceb84fde78a4",
           "after": "24e307f89b32b1b46d4b2d79ff070b16af96c7050fc7001e626fcf77b41b7687"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.55: classify ATA PIO status only after BSY clears, propagate DF and wait for final data completion; Recovery 0.1.43, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
+          "before": "f2ece8e957b252fd465fe609044cf7f26d5fbfe22f33d392e0fe861c9030b02c",
+          "after": "27b824e46ceb675a363715f9bc3b7ab6f6b1cef6447697b425df4901764babbb"
+        },
+        {
+          "path": "Legal/Manifests/ATAPIO/module.R4MF",
+          "before": "e7cadbd09990328e4ef62f6a874bb060e1092c7c1492c6f1ce96088deff9be76",
+          "after": "8c19f856b128d3de1ac382dad47a4f14913179f42aa8876c63cdcb2b8ee05758"
+        },
+        {
+          "path": "Legal/Sources/Drivers-ATAPIO.zip",
+          "before": "9d8664976027b3cf02588e3d7fff4e75385ceb293fca0a3117d8864f49db551d",
+          "after": "21b858b7cf611da83fa833e5763512093a9223f201b4220abe2fdbe9c3bc1baf"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "940042c6d3fab007e3e173ffe2f389d855ab8207acaeb6cf3d3df5e25053db4f",
+          "after": "b2060866506163209991dbc248ebac5ac325fe015607dc80564feb15c8f137ea"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "8122d98d2e994e67e2471b7103372ae8d039eeadc6079e0e0b6882b66eb7d5c7",
+          "after": "31c9e69919ff09185160c21856931262131a131050cef7f0024159be68c980d7"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "24e307f89b32b1b46d4b2d79ff070b16af96c7050fc7001e626fcf77b41b7687",
+          "after": "4c18e2838d6d840f421c0c9887522ef24249e753017fbef053e892ce2713dc07"
         }
       ]
     }
