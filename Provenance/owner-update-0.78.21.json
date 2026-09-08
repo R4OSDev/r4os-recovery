@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "reason": "0.78.21: targeted Core progress and runtime startup deltas plus SDK stream validation from exact owner commits. No HDA, AC97 or AUDSVC modules are installed in Recovery; frozen module artifacts remain unchanged.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "966abe42d2a199436dbf4ed1a7025996284e7404",
+      "sourceCommit": "07fe12ef6368bde579fe16ea8686f9707624fe03",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.21.patch",
+      "patchSha256": "7de95278f5589d1e4bcaa480516f2de729ec3c608267e6a9b64098411f949bdc",
+      "files": [
+        {
+          "path": "Kernel/audio/core.zig",
+          "sha256": "74adbda529119d4d114bdda791ae5cdfaedb775aa85764d997b905cf114904a3"
+        },
+        {
+          "path": "Kernel/kernel/runtime_boot.zig",
+          "sha256": "17a11fd2f59cbafd8d73ab544f217a4af0edca47d34c593233317f9b3c81b13c"
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "966abe42d2a199436dbf4ed1a7025996284e7404",
+      "sourceCommit": "8a42a7717a78297678b65043a78046478d366f54",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.21.patch",
+      "patchSha256": "2319e929d2ebe8c84efa7a46efef68290a7255d248b02f17699cedf811fa9993",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/app_audio.zig",
+          "sha256": "4523bdd54f4c8ab815f3cedf7c502653a7e1a75c8516011f32624d816cfd2251"
+        }
+      ]
+    }
+  ]
+}

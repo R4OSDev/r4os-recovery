@@ -1448,8 +1448,8 @@
     },
     {
       "path": "Kernel/audio/core.zig",
-      "bytes": 70237,
-      "sha256": "d8874b59fef32dd489ad9684d912524469247052324977f4f0a158e32084c6e0",
+      "bytes": 73741,
+      "sha256": "74adbda529119d4d114bdda791ae5cdfaedb775aa85764d997b905cf114904a3",
       "originalSha256": "6c1aea3a9b9b09601fa69667c6ec05f899d26994c2a644c036c773657152512a",
       "origin": {
         "path": "audio/core.zig",
@@ -2621,8 +2621,8 @@
     },
     {
       "path": "Kernel/kernel/runtime_boot.zig",
-      "bytes": 4891,
-      "sha256": "78b50bafd97a15e2672908dd02e71b6efc18a7201815e496087b29999b59d26b",
+      "bytes": 4994,
+      "sha256": "17a11fd2f59cbafd8d73ab544f217a4af0edca47d34c593233317f9b3c81b13c",
       "originalSha256": "dcd1952309c5d7269c34e0626d2b246c79c25bcc28ba88c8b3d43926d34b7782",
       "origin": {
         "path": "kernel/runtime_boot.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "de6ed75cdbb37f159daf0f13b41746f52f003a8036d4c9d36336810c0eb98b9f",
+      "sha256": "0b7630fd5fca279bbfb5402df0f286d0438c6a20367b59776a13bf4584570e9a",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -6404,8 +6404,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_audio.zig",
-      "bytes": 17152,
-      "sha256": "0bfb068145fef373dbe50d931771ce9d51cf528ca3eb19ef275f2712d3b07d91",
+      "bytes": 17581,
+      "sha256": "4523bdd54f4c8ab815f3cedf7c502653a7e1a75c8516011f32624d816cfd2251",
       "originalSha256": "0bfb068145fef373dbe50d931771ce9d51cf528ca3eb19ef275f2712d3b07d91",
       "origin": {
         "path": "r4os/app_audio.zig",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "5871c01a70cc60c0919926daee83f0b02fa3faa9c6418167c29a24aa910217c0",
+      "sha256": "8408b3b686254f99243739ae6f6fe2ae45b0861e2016cea77f679c32f82a0265",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "fb8d1622eb87616f07e4d59b17326e0f939347ab9ee628929a2ab52fd422963d",
+      "sha256": "b8cf3aee44a2f50fc63d9e0997d7102f0dfb913a7c6b3855701021d415c935a0",
       "originalSha256": null,
       "origin": null
     },
@@ -9968,6 +9968,20 @@
       "origin": null,
       "sha256": "3d0e7b13c6b4393614b96e155ed55d1025147417d832a98aa865f8f4b8ffeae1",
       "bytes": 16970
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.21.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "7de95278f5589d1e4bcaa480516f2de729ec3c608267e6a9b64098411f949bdc",
+      "bytes": 7916
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.21.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "2319e929d2ebe8c84efa7a46efef68290a7255d248b02f17699cedf811fa9993",
+      "bytes": 3834
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -13539,6 +13553,51 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "4816d6bd506ee07499d6dc027f34201800a5855b45920df6409d3ec93c7b9d8f",
           "after": "5871c01a70cc60c0919926daee83f0b02fa3faa9c6418167c29a24aa910217c0"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.21: bounded mix/backend progress, runtime worker startup and validated SDK stream frames; Recovery 0.1.26.",
+      "changes": [
+        {
+          "path": "Kernel/audio/core.zig",
+          "before": "d8874b59fef32dd489ad9684d912524469247052324977f4f0a158e32084c6e0",
+          "after": "74adbda529119d4d114bdda791ae5cdfaedb775aa85764d997b905cf114904a3"
+        },
+        {
+          "path": "Kernel/kernel/runtime_boot.zig",
+          "before": "78b50bafd97a15e2672908dd02e71b6efc18a7201815e496087b29999b59d26b",
+          "after": "17a11fd2f59cbafd8d73ab544f217a4af0edca47d34c593233317f9b3c81b13c"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.21.patch",
+          "before": null,
+          "after": "7de95278f5589d1e4bcaa480516f2de729ec3c608267e6a9b64098411f949bdc"
+        },
+        {
+          "path": "Platform/SDK/r4os/app_audio.zig",
+          "before": "0bfb068145fef373dbe50d931771ce9d51cf528ca3eb19ef275f2712d3b07d91",
+          "after": "4523bdd54f4c8ab815f3cedf7c502653a7e1a75c8516011f32624d816cfd2251"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.21.patch",
+          "before": null,
+          "after": "2319e929d2ebe8c84efa7a46efef68290a7255d248b02f17699cedf811fa9993"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "de6ed75cdbb37f159daf0f13b41746f52f003a8036d4c9d36336810c0eb98b9f",
+          "after": "0b7630fd5fca279bbfb5402df0f286d0438c6a20367b59776a13bf4584570e9a"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "fb8d1622eb87616f07e4d59b17326e0f939347ab9ee628929a2ab52fd422963d",
+          "after": "b8cf3aee44a2f50fc63d9e0997d7102f0dfb913a7c6b3855701021d415c935a0"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "5871c01a70cc60c0919926daee83f0b02fa3faa9c6418167c29a24aa910217c0",
+          "after": "8408b3b686254f99243739ae6f6fe2ae45b0861e2016cea77f679c32f82a0265"
         }
       ]
     }

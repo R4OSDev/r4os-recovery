@@ -1,0 +1,61 @@
+diff --git a/Platform/SDK/r4os/app_audio.zig b/Platform/SDK/r4os/app_audio.zig
+index 5506a0e..b389c49 100644
+--- a/Platform/SDK/r4os/app_audio.zig
++++ b/Platform/SDK/r4os/app_audio.zig
+@@ -103,7 +103,7 @@ pub const Audio = struct {
+     }
+ 
+     pub fn openStream(self: *const Audio, rate: u32, channels: u16, format: PcmFormat, volume: u32, timeout: Timeout) OpenResult {
+-        if (rate == 0 or channels == 0 or format != .s16le) return .{ .failure = abi.service_api_result_invalid };
++        if (rate == 0 or rate > 192_000 or channels == 0 or channels > 2 or format != .s16le) return .{ .failure = abi.service_api_result_invalid };
+         var services = services_facade.Services{ .sys = self.sys };
+         var connection = switch (services.open("AUDSVC")) {
+             .connection => |value| value,
+@@ -122,7 +122,7 @@ pub const Audio = struct {
+                     _ = connection.close();
+                     break :blk .{ .failure = if (response.result < 0) response.result else abi.service_api_result_invalid };
+                 }
+-                break :blk .{ .stream = .{ .connection = connection, .stream_id = response.stream_id, .owned = true } };
++                break :blk .{ .stream = .{ .connection = connection, .stream_id = response.stream_id, .owned = true, .frame_bytes = @as(usize, channels) * 2 } };
+             },
+             .timed_out => blk: {
+                 _ = connection.close();
+@@ -199,6 +199,7 @@ pub const AudioStream = struct {
+     connection: services_facade.ServiceConnection,
+     stream_id: u32 = 0,
+     owned: bool = false,
++    frame_bytes: usize = 0,
+ 
+     pub fn valid(self: *const AudioStream) bool {
+         return self.owned and self.stream_id != 0 and self.connection.valid();
+@@ -206,9 +207,12 @@ pub const AudioStream = struct {
+ 
+     pub fn write(self: *AudioStream, data: []const u8, timeout: Timeout) WriteResult {
+         if (!self.valid()) return .{ .failure = .{ .raw = abi.err_closed, .written = 0 } };
++        if (self.frame_bytes == 0 or data.len % self.frame_bytes != 0)
++            return .{ .failure = .{ .raw = abi.service_api_result_invalid, .written = 0 } };
+         var offset: usize = 0;
+         while (offset < data.len) {
+-            const chunk_len = @min(max_write_payload, data.len - offset);
++            // Keep room for the header: an inferred u12 wraps 4096 to zero.
++            const chunk_len: usize = @min(max_write_payload, data.len - offset);
+             var payload: [abi.service_api_max_payload]u8 = undefined;
+             const request = abi.AudioServiceStreamWriteRequest{ .stream_id = self.stream_id, .byte_count = @intCast(chunk_len) };
+             @memcpy(payload[0..@sizeOf(abi.AudioServiceStreamWriteRequest)], std.mem.asBytes(&request));
+@@ -225,7 +229,7 @@ pub const AudioStream = struct {
+                         return .{ .failure = .{ .raw = if (response.result < 0) response.result else abi.service_api_result_invalid, .written = offset } };
+                     }
+                     const advanced: usize = @intCast(response.bytes);
+-                    if (advanced == 0 or advanced > chunk_len) return .{ .failure = .{ .raw = abi.service_api_result_invalid, .written = offset } };
++                    if (advanced == 0 or advanced > chunk_len or advanced % self.frame_bytes != 0) return .{ .failure = .{ .raw = abi.service_api_result_invalid, .written = offset } };
+                     offset += advanced;
+                 },
+                 .timed_out => return .{ .timed_out = offset },
+@@ -256,6 +260,7 @@ pub const AudioStream = struct {
+                 if (closes) {
+                     self.stream_id = 0;
+                     self.owned = false;
++                    self.frame_bytes = 0;
+                     _ = self.connection.close();
+                 }
+                 break :blk .ok;
