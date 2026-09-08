@@ -1338,3 +1338,14 @@ Kein zusaetzlicher Netzwerk-, QEMU- oder Browser-Gesamtprofiltest. R4HTTP
 0.1.4, R4JS 0.54.11, Klickifax 0.29.19, KlickifaxLive 0.2.20 und UpdateService
 0.2.19 werden mit der Korrektur gebaut. Recovery 0.1.54 / Menue 0.1.19 erhaelt
 den gleichen bestaetigten HTTP-/URL-Quellstand und das R4HTTP-Artefakt.
+
+
+Quellstand 0.78.73: Recovery 0.1.55, Menue 0.1.20, R4PART 0.1.5
+--------------------------------------------------------
+Der Formatter uebernimmt gemeinsame Pfadgrenze und passend dimensionierte
+Indexbitmap. Die bestehende Pfadgrenze in den eingefrorenen Volume-Dateien
+wird gezielt auf die gemeinsame Konstante umgestellt; weitere Volume-Logik
+wird dabei nicht importiert. ImageCreator prueft den ganzen Zielpfad vor
+Anlage von Eltern. Besitzerpins und Dateihashes stehen in
+Provenance/owner-update-0.78.73.json. Der NTFS-Verifier ist kein eingebauter
+Recovery-Verbraucher und wird dort nicht neu hinzugefuegt.

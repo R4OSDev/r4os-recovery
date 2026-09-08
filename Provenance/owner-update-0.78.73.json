@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "reason": "NTFS formatter boundaries from committed owners; frozen volume implementations receive only the common path-limit declaration.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "a9b4bd3c4da4cd3637e729ced5856e102963c12c",
+      "sourceCommit": "3b6faca49aede3a1efa0ddde1b281dab96d9335b",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.73.patch",
+      "patchSha256": "6cf87148512403e79edb32761c4fc2e3199ffc71a2ff80c458c629db4ea0b81b",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/ntfs_builder.zig",
+          "sha256": "327e7650e1b0e3cd981750ba7dac06b49c2e26bd4a833f169ec15f1fa1153fd9",
+          "sourcePath": "r4os/ntfs_builder.zig",
+          "sourceSha256": "327e7650e1b0e3cd981750ba7dac06b49c2e26bd4a833f169ec15f1fa1153fd9",
+          "byteIdentical": true,
+          "importMode": "Canonical owner file"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_format.zig",
+          "sha256": "1862a4ae3ee5af46fc2452e8f8d24b2e310b90662223f941c0f94ed1146727ee",
+          "sourcePath": "r4os/ntfs_format.zig",
+          "sourceSha256": "1862a4ae3ee5af46fc2452e8f8d24b2e310b90662223f941c0f94ed1146727ee",
+          "byteIdentical": true,
+          "importMode": "Canonical owner file"
+        },
+        {
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "sha256": "e73ccd100c5743179ba516658e5c4564a6084b835d274083bcddf39eda05e99a",
+          "sourcePath": "r4os/ntfs_volume.zig",
+          "sourceSha256": "ca021bc70b363ea483f651616e82ed774926dbea146b08c6a109134d20bc7f09",
+          "byteIdentical": false,
+          "importMode": "Only the shared path-limit declaration; retain frozen volume implementation"
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "a9b4bd3c4da4cd3637e729ced5856e102963c12c",
+      "sourceCommit": "93b02e19c248091d17ae784c2bd02fcb0b36dbac",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.73.patch",
+      "patchSha256": "aeb955504676cea4714b563942ff27388241e90c3bd570862ec92cf4c3b2908a",
+      "files": [
+        {
+          "path": "Kernel/Support/ntfs_format.zig",
+          "sha256": "1862a4ae3ee5af46fc2452e8f8d24b2e310b90662223f941c0f94ed1146727ee",
+          "sourcePath": "Support/ntfs_format.zig",
+          "sourceSha256": "1862a4ae3ee5af46fc2452e8f8d24b2e310b90662223f941c0f94ed1146727ee",
+          "byteIdentical": true,
+          "importMode": "Canonical owner file"
+        },
+        {
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "sha256": "97e26188dc9e898a880d13043f0044ecd2be0643a9767815bff2b6102ef41285",
+          "sourcePath": "Support/ntfs_volume.zig",
+          "sourceSha256": "ca021bc70b363ea483f651616e82ed774926dbea146b08c6a109134d20bc7f09",
+          "byteIdentical": false,
+          "importMode": "Only the shared path-limit declaration; retain frozen volume implementation"
+        }
+      ]
+    },
+    {
+      "owner": "Distribution",
+      "baseRecoveryCommit": "a9b4bd3c4da4cd3637e729ced5856e102963c12c",
+      "sourceCommit": "c1f0eafe558c9850e3c362b614d64f2a7a9b5631",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Distribution-0.78.73.patch",
+      "patchSha256": "319594885dfb4825e64985c4592cd48da355d1c444ebc9f6a445fb870dc4527d",
+      "files": [
+        {
+          "path": "Platform/Distribution/Tools/ImageCreator/src/ntfs_cli.zig",
+          "sha256": "2be538f67bdc6c368d40ea2a5a09a3f518caffdf6642ba183b32ff492adde4a6",
+          "sourcePath": "Tools/ImageCreator/src/ntfs_cli.zig",
+          "sourceSha256": "2be538f67bdc6c368d40ea2a5a09a3f518caffdf6642ba183b32ff492adde4a6",
+          "byteIdentical": true,
+          "importMode": "Canonical owner file"
+        }
+      ]
+    },
+    {
+      "owner": "Apps/R4Part",
+      "baseCommit": "0c6ea4d6b6d364353e054b0f043067b81a3ed565",
+      "sourceCommit": "b28ff09fee68aac733b7a2eac34b84bfdc61f2f1",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Apps-R4Part.zip",
+      "archiveSha256": "5592fd1bdbb958a33031bbc2350cd5491d1ba86973b47d86628e71a242748345",
+      "buildSourcePins": {
+        "SDK": "3b6faca49aede3a1efa0ddde1b281dab96d9335b",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+          "sha256": "59b709f50ef87f141ebb2833635d9ff23f37b3caa82a273efbe8800a2e385cd5"
+        },
+        {
+          "path": "Legal/Manifests/R4PART/module.R4MF",
+          "sha256": "8f8d49adc801aa06230bf062c95909ad35870cd78687e03e39ee16cecad0d9b0"
+        },
+        {
+          "path": "Legal/Sources/Apps-R4Part.zip",
+          "sha256": "5592fd1bdbb958a33031bbc2350cd5491d1ba86973b47d86628e71a242748345"
+        }
+      ]
+    }
+  ]
+}

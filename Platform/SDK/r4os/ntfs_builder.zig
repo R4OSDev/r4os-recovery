@@ -19,10 +19,13 @@ const prepared = @import("storage_tools/ntfs_plan.zig");
 pub fn WithFormat(comptime ntfs: type) type {
     return struct {
         pub const PreparedPlan = prepared.Plan;
+        pub const max_path_segments = ntfs.R4OS_PATH_SEGMENTS_MAX;
         const SECTOR: usize = 512;
         const CLUSTER: usize = 4096;
         const RECORD: usize = 1024;
         const INDEX_BLOCK: usize = 4096;
+        const MAX_INDEX_BLOCKS: usize = 4096;
+        const INDEX_BITMAP_BYTES: usize = (MAX_INDEX_BLOCKS + 63) / 64 * 8;
         const MFT_INITIAL_RECORDS: usize = 512;
         const MFT_BITMAP_DATA: usize = 4104;
         const LOGFILE_BYTES: usize = 2 * 1024 * 1024;
@@ -61,6 +64,7 @@ pub fn WithFormat(comptime ntfs: type) type {
             Geometry,
             MetadataInvalid,
             AlreadyPrepared,
+            PathTooDeep,
         };
 
         const NodeIndex = u32;
@@ -70,6 +74,7 @@ pub fn WithFormat(comptime ntfs: type) type {
             is_dir: bool,
             data: []const u8 = &[_]u8{},
             parent: NodeIndex = 0,
+            depth: usize = 0,
             children: std.ArrayList(NodeIndex) = .empty,
             record: u64 = 0,
             // filled during layout:
@@ -125,7 +130,7 @@ pub fn WithFormat(comptime ntfs: type) type {
             pub fn addDirectory(self: *Builder, parent: NodeIndex, name: []const u8) !NodeIndex {
                 try self.checkNewChild(parent, name);
                 const index: NodeIndex = @intCast(self.nodes.items.len);
-                try self.nodes.append(self.allocator, .{ .name = name, .is_dir = true, .parent = parent });
+                try self.nodes.append(self.allocator, .{ .name = name, .is_dir = true, .parent = parent, .depth = self.nodes.items[parent].depth + 1 });
                 try self.nodes.items[parent].children.append(self.allocator, index);
                 return index;
             }
@@ -143,13 +148,14 @@ pub fn WithFormat(comptime ntfs: type) type {
             pub fn addFile(self: *Builder, parent: NodeIndex, name: []const u8, data: []const u8) !void {
                 try self.checkNewChild(parent, name);
                 const index: NodeIndex = @intCast(self.nodes.items.len);
-                try self.nodes.append(self.allocator, .{ .name = name, .is_dir = false, .data = data, .parent = parent });
+                try self.nodes.append(self.allocator, .{ .name = name, .is_dir = false, .data = data, .parent = parent, .depth = self.nodes.items[parent].depth + 1 });
                 try self.nodes.items[parent].children.append(self.allocator, index);
             }
 
             fn checkNewChild(self: *Builder, parent: NodeIndex, name: []const u8) !void {
                 if (self.prepared_once) return Error.AlreadyPrepared;
                 if (parent >= self.nodes.items.len or !self.nodes.items[parent].is_dir or !validName(name)) return Error.NameInvalid;
+                if (self.nodes.items[parent].depth >= max_path_segments) return Error.PathTooDeep;
                 if (parent == 0) for ([_][]const u8{ "$MFT", "$MFTMirr", "$LogFile", "$Volume", "$AttrDef", "$Bitmap", "$Boot", "$BadClus", "$Secure", "$UpCase", "$Extend" }) |reserved| {
                     if (std.ascii.eqlIgnoreCase(name, reserved)) return Error.NameInvalid;
                 };
@@ -621,7 +627,7 @@ pub fn WithFormat(comptime ntfs: type) type {
                 }
 
                 const total_blocks = finished.items.len;
-                if (total_blocks > 4096) return Error.IndexOverflow;
+                if (total_blocks > MAX_INDEX_BLOCKS) return Error.IndexOverflow;
                 const blocks = try self.allocator.alloc(u8, total_blocks * INDEX_BLOCK);
                 errdefer self.allocator.free(blocks);
                 for (finished.items, 0..) |b, bi| {
@@ -641,6 +647,7 @@ pub fn WithFormat(comptime ntfs: type) type {
             /// Writes one finished INDX block; entries keep their children, the END
             /// entry carries `end_child`.  Returns the block's VCN.
             fn closeIndexBlock(self: *Builder, finished: *std.ArrayList([]u8), entries: []const PendingEntry, end_child: ?u64) !u64 {
+                if (finished.items.len >= MAX_INDEX_BLOCKS) return Error.IndexOverflow;
                 const block = try self.allocator.alloc(u8, INDEX_BLOCK);
                 errdefer self.allocator.free(block);
                 @memset(block, 0);
@@ -1078,8 +1085,9 @@ pub fn WithFormat(comptime ntfs: type) type {
                 }
                 self.residentAttr(.index_root, utf16Of("$I30"), root_value[0..offset], 0);
                 if (index.block_count > 0) {
+                    if (index.block_count > MAX_INDEX_BLOCKS) return Error.IndexOverflow;
                     self.allocationRun(utf16Of("$I30"), index.lcn, index.block_count);
-                    var bitmap_value: [64]u8 = .{0} ** 64;
+                    var bitmap_value: [INDEX_BITMAP_BYTES]u8 = .{0} ** INDEX_BITMAP_BYTES;
                     var bit: usize = 0;
                     while (bit < index.block_count) : (bit += 1) {
                         bitmap_value[bit / 8] |= @as(u8, 1) << @intCast(bit % 8);
