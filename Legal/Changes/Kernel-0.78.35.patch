@@ -1,0 +1,205 @@
+diff --git a/Kernel/arch/x86_64/idt.zig b/Kernel/arch/x86_64/idt.zig
+index 7e1358f..4ca4629 100644
+--- a/Kernel/arch/x86_64/idt.zig
++++ b/Kernel/arch/x86_64/idt.zig
+@@ -142,6 +142,7 @@ extern fn irq31() callconv(.c) void;
+ extern fn ipi_reschedule() callconv(.c) void;
+ extern fn ipi_stop() callconv(.c) void;
+ extern fn ipi_tlb() callconv(.c) void;
++extern fn lapic_spurious() callconv(.c) void;
+ 
+ var idt: [IDT_ENTRIES]IdtEntry align(16) = .{IdtEntry{}} ** IDT_ENTRIES;
+ 
+@@ -178,6 +179,7 @@ pub fn init() void {
+     idt[RESCHEDULE_VECTOR].set(@ptrCast(&ipi_reschedule), gdt.codeSelector(), INTERRUPT_GATE, 0);
+     idt[STOP_VECTOR].set(@ptrCast(&ipi_stop), gdt.codeSelector(), INTERRUPT_GATE, 0);
+     idt[TLB_VECTOR].set(@ptrCast(&ipi_tlb), gdt.codeSelector(), INTERRUPT_GATE, 0);
++    idt[lapic.SPURIOUS_VECTOR].set(@ptrCast(&lapic_spurious), gdt.codeSelector(), INTERRUPT_GATE, 0);
+ 
+     loadCurrent();
+     k.puts("  IDT loaded ");
+diff --git a/Kernel/arch/x86_64/ioapic.zig b/Kernel/arch/x86_64/ioapic.zig
+index 0baa1c2..b594554 100644
+--- a/Kernel/arch/x86_64/ioapic.zig
++++ b/Kernel/arch/x86_64/ioapic.zig
+@@ -253,19 +253,14 @@ pub fn activateLegacyRoutes() bool {
+ }
+ 
+ pub fn routeForIrq(irq: u8) IrqRoute {
++    // Only these device vectors have installed IRQ handlers (0x20..0x3F).
++    if (irq >= 32) return .{ .irq = irq };
+     return switch (irq) {
+         0 => current.route0,
+         1 => current.route1,
+         2 => current.route2,
+         12 => current.route12,
+-        else => .{
+-            .irq = irq,
+-            .gsi = irq,
+-            .vector = vectorForIrq(irq),
+-            .target_lapic = lapic.status().id,
+-            .present = current.mapped,
+-            .in_range = gsiInRange(irq),
+-        },
++        else => buildRoute(acpi.info(), irq),
+     };
+ }
+ 
+diff --git a/Kernel/arch/x86_64/isr.S b/Kernel/arch/x86_64/isr.S
+index 13d39e2..f300a17 100644
+--- a/Kernel/arch/x86_64/isr.S
++++ b/Kernel/arch/x86_64/isr.S
+@@ -111,6 +111,14 @@ IPI ipi_reschedule, 0xF0
+ IPI ipi_stop,       0xF1
+ IPI ipi_tlb,        0xF2
+ 
++# The LAPIC spurious vector has no in-service interrupt to acknowledge.
++# Keep every register and the hardware frame intact; do not send an EOI.
++.global lapic_spurious
++.type lapic_spurious, @function
++lapic_spurious:
++    iretq
++.size lapic_spurious, .-lapic_spurious
++
+ .global isr_common
+ .type isr_common, @function
+ isr_common:
+diff --git a/Kernel/arch/x86_64/lapic.zig b/Kernel/arch/x86_64/lapic.zig
+index d445fd6..06ecd5e 100644
+--- a/Kernel/arch/x86_64/lapic.zig
++++ b/Kernel/arch/x86_64/lapic.zig
+@@ -25,7 +25,7 @@ const REG_TIMER_INITIAL_COUNT: u32 = 0x380;
+ const REG_TIMER_CURRENT_COUNT: u32 = 0x390;
+ const REG_TIMER_DIVIDE: u32 = 0x3E0;
+ 
+-const SPURIOUS_VECTOR: u32 = 0xFF;
++pub const SPURIOUS_VECTOR: u8 = 0xFF;
+ const SVR_ENABLE: u32 = 1 << 8;
+ const TIMER_VECTOR: u8 = 0x20;
+ const TIMER_MASKED: u32 = 1 << 16;
+diff --git a/Kernel/memory/page_tables.zig b/Kernel/memory/page_tables.zig
+index 0ca5cf0..50c40d8 100644
+--- a/Kernel/memory/page_tables.zig
++++ b/Kernel/memory/page_tables.zig
+@@ -1,5 +1,6 @@
+ const boot_info = @import("../bootloader/boot_info.zig");
+ const acpi = @import("../platform/acpi.zig");
++const pci_scan = @import("../platform/pci_scan.zig");
+ const blocks = @import("blocks.zig");
+ const heap = @import("heap.zig");
+ const layout = @import("layout.zig");
+@@ -830,9 +831,8 @@ fn mapPlatformMmio(info: acpi.Info) bool {
+ fn mapPcieEcam(info: acpi.Info) bool {
+     if (info.mcfg_base == 0) return true;
+     if (info.mcfg_start_bus > info.mcfg_end_bus) return true;
+-    const bus_count = @as(u64, info.mcfg_end_bus) - @as(u64, info.mcfg_start_bus) + 1;
+-    const len = checkedMul(bus_count, layout.MiB) orelse return false;
+-    return mapMmioWindow("pcie-ecam", info.mcfg_base, len, DEVICE_ECAM);
++    const window = pci_scan.ecamWindow(info.mcfg_base, info.mcfg_start_bus, info.mcfg_end_bus) orelse return false;
++    return mapMmioWindow("pcie-ecam", window.base, window.bytes, DEVICE_ECAM);
+ }
+ 
+ fn mapMmioWindow(name: []const u8, phys_base: u64, len: u64, bit: u32) bool {
+diff --git a/Kernel/platform/pci_scan.zig b/Kernel/platform/pci_scan.zig
+index 84c62bf..9c71659 100644
+--- a/Kernel/platform/pci_scan.zig
++++ b/Kernel/platform/pci_scan.zig
+@@ -127,12 +127,23 @@ pub fn findByClass(result: *const Result, class_code: u8, subclass: u8, start_in
+ 
+ pub fn ecamOffset(start_bus: u8, bus: u8, device: u8, function: u8, offset: u16) ?u64 {
+     if (bus < start_bus or device >= 32 or function >= 8 or offset > 0x0FFF) return null;
+-    return ((@as(u64, bus) - @as(u64, start_bus)) << 20) |
++    // MCFG describes the base for bus zero, even for a partial bus window.
++    return (@as(u64, bus) << 20) |
+         (@as(u64, device) << 15) |
+         (@as(u64, function) << 12) |
+         @as(u64, offset & 0x0FFC);
+ }
+ 
++pub const EcamWindow = struct { base: u64, bytes: u64 };
++
++pub fn ecamWindow(base: u64, start_bus: u8, end_bus: u8) ?EcamWindow {
++    if (base == 0 or start_bus > end_bus) return null;
++    const start = @as(u64, start_bus) << 20;
++    const end = (@as(u64, end_bus) + 1) << 20;
++    if (base > ~@as(u64, 0) - end) return null;
++    return .{ .base = base + start, .bytes = end - start };
++}
++
+ const ReadPurpose = enum {
+     vendor,
+     class,
+@@ -254,11 +265,24 @@ test "scanner stops after first device beyond retained capacity" {
+     try std.testing.expectEqual(@as(u64, 194), result.metrics.config_reads);
+ }
+ 
+-test "ECAM offsets are relative to the advertised start bus" {
++test "ECAM addresses and mapped window retain the bus-zero MCFG origin" {
+     const std = @import("std");
+-    try std.testing.expectEqual(@as(?u64, 0), ecamOffset(32, 32, 0, 0, 0));
+-    try std.testing.expectEqual(@as(?u64, 0x0011_A0FC), ecamOffset(32, 33, 3, 2, 0x0FF));
++    try std.testing.expectEqual(@as(?u64, 0x0200_0000), ecamOffset(32, 32, 0, 0, 0));
++    try std.testing.expectEqual(@as(?u64, 0x0211_A0FC), ecamOffset(32, 33, 3, 2, 0x0FF));
+     try std.testing.expectEqual(@as(?u64, null), ecamOffset(32, 31, 0, 0, 0));
+     try std.testing.expectEqual(@as(?u64, null), ecamOffset(0, 0, 32, 0, 0));
+     try std.testing.expectEqual(@as(?u64, null), ecamOffset(0, 0, 0, 8, 0));
++    try std.testing.expectEqual(@as(?u64, null), ecamOffset(0, 0, 0, 0, 0x1000));
++    const partial = ecamWindow(0xE000_0000, 32, 63).?;
++    try std.testing.expectEqual(@as(u64, 0xE200_0000), partial.base);
++    try std.testing.expectEqual(@as(u64, 0x0200_0000), partial.bytes);
++    const full = ecamWindow(0xE000_0000, 0, 255).?;
++    try std.testing.expectEqual(@as(u64, 0xE000_0000), full.base);
++    try std.testing.expectEqual(@as(u64, 0x1000_0000), full.bytes);
++    const last = ecamWindow(0xE000_0000, 255, 255).?;
++    try std.testing.expectEqual(@as(u64, 0xEFF0_0000), last.base);
++    try std.testing.expectEqual(@as(u64, 0x0010_0000), last.bytes);
++    try std.testing.expect(ecamWindow(0xE000_0000, 63, 32) == null);
++    try std.testing.expect(ecamWindow(0, 0, 255) == null);
++    try std.testing.expect(ecamWindow(~@as(u64, 0) - 0x0100_0000, 32, 63) == null);
+ }
+diff --git a/Kernel/platform/pcie.zig b/Kernel/platform/pcie.zig
+index eeff888..6a06c37 100644
+--- a/Kernel/platform/pcie.zig
++++ b/Kernel/platform/pcie.zig
+@@ -56,32 +56,30 @@ var current: Status = .{};
+ var devices: [MAX_DEVICES]Device = .{Device{}} ** MAX_DEVICES;
+ 
+ pub fn configure(info: acpi.Info) void {
+-    const bus_count: u64 = if (info.mcfg_base != 0 and info.mcfg_start_bus <= info.mcfg_end_bus)
+-        @as(u64, info.mcfg_end_bus) - @as(u64, info.mcfg_start_bus) + 1
+-    else
+-        0;
++    const window = pci_scan.ecamWindow(info.mcfg_base, info.mcfg_start_bus, info.mcfg_end_bus);
+     current = .{
+-        .available = info.mcfg_base != 0 and bus_count != 0,
++        .available = window != null,
+         .mcfg_base = info.mcfg_base,
+         .segment = info.mcfg_segment,
+         .start_bus = info.mcfg_start_bus,
+         .end_bus = info.mcfg_end_bus,
+-        .aperture_bytes = bus_count << 20,
+-        .reason = if (info.mcfg_base != 0 and bus_count != 0) "MCFG configured" else "MCFG ECAM missing",
++        .aperture_bytes = if (window) |mapped| mapped.bytes else 0,
++        .reason = if (window != null) "MCFG configured" else "MCFG ECAM missing or invalid",
+     };
+     @memset(devices[0..], Device{});
+ }
+ 
+ pub fn activateMappedAperture() bool {
++    current.aperture_ready = false;
+     if (!current.available or current.aperture_bytes == 0) return false;
+-    if (current.mcfg_base > ~@as(u64, 0) - (current.aperture_bytes - 1)) {
++    const window = pci_scan.ecamWindow(current.mcfg_base, current.start_bus, current.end_bus) orelse {
+         current.invalid_accesses +%= 1;
+         current.reason = "MCFG ECAM range overflow";
+         return false;
+-    }
+-    const last = current.mcfg_base + current.aperture_bytes - 1;
++    };
++    const last = window.base + window.bytes - 1;
+     current.mapping_checks +%= 2;
+-    const first_mapped = paging.isMapped(phys.physToVirt(current.mcfg_base));
++    const first_mapped = paging.isMapped(phys.physToVirt(window.base));
+     const last_mapped = paging.isMapped(phys.physToVirt(last));
+     if (first_mapped) current.mapping_hits +%= 1 else current.mapping_misses +%= 1;
+     if (last_mapped) current.mapping_hits +%= 1 else current.mapping_misses +%= 1;

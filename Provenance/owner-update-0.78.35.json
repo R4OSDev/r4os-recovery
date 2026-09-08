@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "reason": "Exact IOAPIC, spurious interrupt and ECAM corrections from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "47f471886a3087bae370e2b97be99826934582f8",
+      "sourceCommit": "473631b6d8bcc5f06d567bb50b92252160a997b9",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.35.patch",
+      "patchSha256": "81e390cd2f462968d0e36ab6942354015e56c198ae71c26eb9d60ec3446a9839",
+      "importMode": "Exact IOAPIC, spurious interrupt and ECAM corrections; unrelated frozen sources retained",
+      "files": [
+        {
+          "path": "Kernel/arch/x86_64/ioapic.zig",
+          "sha256": "d832dc2157e419e756093bf4dee5985e4001b614a13c69b23bb493679cca3adb",
+          "sourcePath": "arch/x86_64/ioapic.zig",
+          "sourceSha256": "d832dc2157e419e756093bf4dee5985e4001b614a13c69b23bb493679cca3adb",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/arch/x86_64/idt.zig",
+          "sha256": "236e3fa9bf071218aefaba595ca31292c1af59f76dca48bf5c5b3cf8e4f3fe36",
+          "sourcePath": "arch/x86_64/idt.zig",
+          "sourceSha256": "236e3fa9bf071218aefaba595ca31292c1af59f76dca48bf5c5b3cf8e4f3fe36",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/arch/x86_64/isr.S",
+          "sha256": "59c11ffef0b13b1bab251816a3e4314a5a2ca354924aac106f18929cdac3c747",
+          "sourcePath": "arch/x86_64/isr.S",
+          "sourceSha256": "59c11ffef0b13b1bab251816a3e4314a5a2ca354924aac106f18929cdac3c747",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/arch/x86_64/lapic.zig",
+          "sha256": "93a3f256ce21735f503402fda483e195365678d5f76ece93dfd2555530045bcf",
+          "sourcePath": "arch/x86_64/lapic.zig",
+          "sourceSha256": "93a3f256ce21735f503402fda483e195365678d5f76ece93dfd2555530045bcf",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/platform/pcie.zig",
+          "sha256": "f735002cd09bdc3c001ad79cdfb560985352cb05652b646b3fefa054e2edbc7c",
+          "sourcePath": "platform/pcie.zig",
+          "sourceSha256": "f735002cd09bdc3c001ad79cdfb560985352cb05652b646b3fefa054e2edbc7c",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/platform/pci_scan.zig",
+          "sha256": "a20d71912e69b1c00fbddeb713db846e9a1e5255cf9bcf03f661947d28c5957b",
+          "sourcePath": "platform/pci_scan.zig",
+          "sourceSha256": "a20d71912e69b1c00fbddeb713db846e9a1e5255cf9bcf03f661947d28c5957b",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/memory/page_tables.zig",
+          "sha256": "2e7a85c8ddd21a3a905a0ddc50bf72a5b64644e9e836d810a27813fe1b32e852",
+          "sourcePath": "memory/page_tables.zig",
+          "sourceSha256": "2e7a85c8ddd21a3a905a0ddc50bf72a5b64644e9e836d810a27813fe1b32e852",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

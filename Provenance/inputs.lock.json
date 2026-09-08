@@ -1238,8 +1238,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/idt.zig",
-      "bytes": 12915,
-      "sha256": "750e8e62768c62443ae69e4f0b76f4f3d0188b1d65c62d04bad2cd3186c6a49f",
+      "bytes": 13063,
+      "sha256": "236e3fa9bf071218aefaba595ca31292c1af59f76dca48bf5c5b3cf8e4f3fe36",
       "originalSha256": "750e8e62768c62443ae69e4f0b76f4f3d0188b1d65c62d04bad2cd3186c6a49f",
       "origin": {
         "path": "arch/x86_64/idt.zig",
@@ -1268,8 +1268,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/ioapic.zig",
-      "bytes": 14713,
-      "sha256": "1ac56df1c878317e7bad1bfdd71dbbadcef14c530a8a762267218051b5b2e979",
+      "bytes": 14631,
+      "sha256": "d832dc2157e419e756093bf4dee5985e4001b614a13c69b23bb493679cca3adb",
       "originalSha256": "1ac56df1c878317e7bad1bfdd71dbbadcef14c530a8a762267218051b5b2e979",
       "origin": {
         "path": "arch/x86_64/ioapic.zig",
@@ -1278,8 +1278,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/isr.S",
-      "bytes": 3437,
-      "sha256": "6eda7923341e63a3552226dccee48118008262435021861bd179c2de8254d672",
+      "bytes": 3703,
+      "sha256": "59c11ffef0b13b1bab251816a3e4314a5a2ca354924aac106f18929cdac3c747",
       "originalSha256": "6eda7923341e63a3552226dccee48118008262435021861bd179c2de8254d672",
       "origin": {
         "path": "arch/x86_64/isr.S",
@@ -1288,8 +1288,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/lapic.zig",
-      "bytes": 20707,
-      "sha256": "db19bfab230c78adac17177a74ab58c802f469145c6ab4f868a8822020eda6af",
+      "bytes": 20710,
+      "sha256": "93a3f256ce21735f503402fda483e195365678d5f76ece93dfd2555530045bcf",
       "originalSha256": "db19bfab230c78adac17177a74ab58c802f469145c6ab4f868a8822020eda6af",
       "origin": {
         "path": "arch/x86_64/lapic.zig",
@@ -2921,8 +2921,8 @@
     },
     {
       "path": "Kernel/memory/page_tables.zig",
-      "bytes": 57937,
-      "sha256": "a4dacf41ad178aed36f5b04ce6142785aa087e84707e8bb7794fe2e5bf9cb273",
+      "bytes": 57955,
+      "sha256": "2e7a85c8ddd21a3a905a0ddc50bf72a5b64644e9e836d810a27813fe1b32e852",
       "originalSha256": "a4dacf41ad178aed36f5b04ce6142785aa087e84707e8bb7794fe2e5bf9cb273",
       "origin": {
         "path": "memory/page_tables.zig",
@@ -3261,8 +3261,8 @@
     },
     {
       "path": "Kernel/platform/pci_scan.zig",
-      "bytes": 10075,
-      "sha256": "87ea1c8227d1d5e848ba563532412a50d2226796c63478e68718964b748afd84",
+      "bytes": 11401,
+      "sha256": "a20d71912e69b1c00fbddeb713db846e9a1e5255cf9bcf03f661947d28c5957b",
       "originalSha256": "87ea1c8227d1d5e848ba563532412a50d2226796c63478e68718964b748afd84",
       "origin": {
         "path": "platform/pci_scan.zig",
@@ -3281,8 +3281,8 @@
     },
     {
       "path": "Kernel/platform/pcie.zig",
-      "bytes": 12044,
-      "sha256": "113ace818734462ce55397e957cd8d203a6681972130af82288aa67c17681ec2",
+      "bytes": 11982,
+      "sha256": "f735002cd09bdc3c001ad79cdfb560985352cb05652b646b3fefa054e2edbc7c",
       "originalSha256": "113ace818734462ce55397e957cd8d203a6681972130af82288aa67c17681ec2",
       "origin": {
         "path": "platform/pcie.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "c525ec3198a85f999212be23329a807cbb27baaa4ed72d4de322b308f05de63a",
+      "sha256": "5943c77f872500fc839c6ab1827a0c119027e7865f3d7e1bfa0e412bad193f91",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "6b768f8676ae1dfebdf3dc957bb24998c33ac647a1727260b2e168dc6120e246",
+      "sha256": "6bbb16aa89c09866d9ea775add0f5ec064bb71e12d0557bcd9cb83b7ce203eba",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "bb00cc27c92d41887d04f6bdb1fe541b48523d38ad644229aae2b88ff0c6bc47",
+      "sha256": "ae974bedd480e388f1723996dc33397b51cce3e4bc0fe41f7bda50bec4a288f3",
       "originalSha256": null,
       "origin": null
     },
@@ -10080,6 +10080,13 @@
       "origin": null,
       "sha256": "7b471c798e8d51b732c15c28ece08f4993b810dc338c5c3068884a3753f13c84",
       "bytes": 7499
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.35.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "81e390cd2f462968d0e36ab6942354015e56c198ae71c26eb9d60ec3446a9839",
+      "bytes": 9336
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14271,6 +14278,66 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "7488170e3d58ad52c99637f6e4220d2684f67aa094845637fd1cf6ab87a6d6bd",
           "after": "6b768f8676ae1dfebdf3dc957bb24998c33ac647a1727260b2e168dc6120e246"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.35: correct IOAPIC entries, spurious IDT gate and partial ECAM windows; Recovery 0.1.36, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/arch/x86_64/ioapic.zig",
+          "before": "1ac56df1c878317e7bad1bfdd71dbbadcef14c530a8a762267218051b5b2e979",
+          "after": "d832dc2157e419e756093bf4dee5985e4001b614a13c69b23bb493679cca3adb"
+        },
+        {
+          "path": "Kernel/arch/x86_64/idt.zig",
+          "before": "750e8e62768c62443ae69e4f0b76f4f3d0188b1d65c62d04bad2cd3186c6a49f",
+          "after": "236e3fa9bf071218aefaba595ca31292c1af59f76dca48bf5c5b3cf8e4f3fe36"
+        },
+        {
+          "path": "Kernel/arch/x86_64/isr.S",
+          "before": "6eda7923341e63a3552226dccee48118008262435021861bd179c2de8254d672",
+          "after": "59c11ffef0b13b1bab251816a3e4314a5a2ca354924aac106f18929cdac3c747"
+        },
+        {
+          "path": "Kernel/arch/x86_64/lapic.zig",
+          "before": "db19bfab230c78adac17177a74ab58c802f469145c6ab4f868a8822020eda6af",
+          "after": "93a3f256ce21735f503402fda483e195365678d5f76ece93dfd2555530045bcf"
+        },
+        {
+          "path": "Kernel/platform/pcie.zig",
+          "before": "113ace818734462ce55397e957cd8d203a6681972130af82288aa67c17681ec2",
+          "after": "f735002cd09bdc3c001ad79cdfb560985352cb05652b646b3fefa054e2edbc7c"
+        },
+        {
+          "path": "Kernel/platform/pci_scan.zig",
+          "before": "87ea1c8227d1d5e848ba563532412a50d2226796c63478e68718964b748afd84",
+          "after": "a20d71912e69b1c00fbddeb713db846e9a1e5255cf9bcf03f661947d28c5957b"
+        },
+        {
+          "path": "Kernel/memory/page_tables.zig",
+          "before": "a4dacf41ad178aed36f5b04ce6142785aa087e84707e8bb7794fe2e5bf9cb273",
+          "after": "2e7a85c8ddd21a3a905a0ddc50bf72a5b64644e9e836d810a27813fe1b32e852"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.35.patch",
+          "before": null,
+          "after": "81e390cd2f462968d0e36ab6942354015e56c198ae71c26eb9d60ec3446a9839"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "c525ec3198a85f999212be23329a807cbb27baaa4ed72d4de322b308f05de63a",
+          "after": "5943c77f872500fc839c6ab1827a0c119027e7865f3d7e1bfa0e412bad193f91"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "bb00cc27c92d41887d04f6bdb1fe541b48523d38ad644229aae2b88ff0c6bc47",
+          "after": "ae974bedd480e388f1723996dc33397b51cce3e4bc0fe41f7bda50bec4a288f3"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "6b768f8676ae1dfebdf3dc957bb24998c33ac647a1727260b2e168dc6120e246",
+          "after": "6bbb16aa89c09866d9ea775add0f5ec064bb71e12d0557bcd9cb83b7ce203eba"
         }
       ]
     }
