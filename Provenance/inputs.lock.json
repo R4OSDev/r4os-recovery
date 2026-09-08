@@ -190,9 +190,9 @@
     },
     {
       "id": "Protocols-R4Tls",
-      "archiveSha256": "f5d0ea041f998122f42521871cac4e0f4962008066a1081a15c5ae90b66f977b",
+      "archiveSha256": "2e2f02537bfe606f6852d991b19f209285d309e9fdc78fe1635d0ac8c46c207d",
       "archive": "Legal/Sources/Protocols-R4Tls.zip",
-      "commit": "8cba0e83ef70ed0c5c2e95f1cbb7d1504d6ad081",
+      "commit": "87353fd888898ddb20e1350bf3b236494dabff9e",
       "remote": "https://github.com/R4OSDev/r4os-protocol-r4tls.git"
     },
     {
@@ -232,9 +232,9 @@
     },
     {
       "id": "Services-SshService",
-      "archiveSha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
+      "archiveSha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba",
       "archive": "Legal/Sources/Services-SshService.zip",
-      "commit": "657954b52cf46f0213289fdbd390c8e2ed2aea5b",
+      "commit": "70ae0ad3a8606a3a058809646ab0dc4fb22ff7be",
       "remote": "https://github.com/R4OSDev/r4os-service-sshservice.git"
     },
     {
@@ -801,7 +801,7 @@
     },
     {
       "name": "R4TLS",
-      "version": "0.2.5",
+      "version": "0.2.6",
       "source": "Protocols-R4Tls",
       "path": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
       "manifest": "Legal/Manifests/R4TLS/module.R4MF",
@@ -925,12 +925,12 @@
     },
     {
       "name": "SSHD",
-      "version": "0.1.7",
+      "version": "0.1.9",
       "source": "Services-SshService",
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "manifest": "Legal/Manifests/SSHD/module.R4MF",
       "kind": 1,
-      "bytes": 406122,
+      "bytes": 410730,
       "imports": [
         "R4SYS:Query:1",
         "R4NET:Query:1",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "3632f553f7d18597b7ae7b355ac1a183ad2ff438c43731c7ab83293037d1f602",
+      "sha256": "9fb99d0551fd1b0b35ac0783336bfcf22730b5708eec87cad30ad94c96493bf3",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4299,8 +4299,8 @@
     {
       "path": "Legal/Manifests/R4TLS/module.R4MF",
       "bytes": 1019,
-      "sha256": "12cfa5662ff920bd7c79c09a5306b4e2b8cf737235ecd1046752c867bc2fecc9",
-      "originalSha256": "12cfa5662ff920bd7c79c09a5306b4e2b8cf737235ecd1046752c867bc2fecc9",
+      "sha256": "4248fb81117a9bd062a9377775c72b7571331f4ec0264901d2e8f5f22a0a7433",
+      "originalSha256": "4248fb81117a9bd062a9377775c72b7571331f4ec0264901d2e8f5f22a0a7433",
       "origin": {
         "path": "module.R4MF",
         "source": "Protocols-R4Tls"
@@ -4349,8 +4349,8 @@
     {
       "path": "Legal/Manifests/SSHD/module.R4MF",
       "bytes": 479,
-      "sha256": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3",
-      "originalSha256": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3",
+      "sha256": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2",
+      "originalSha256": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-SshService"
@@ -5609,9 +5609,9 @@
     },
     {
       "path": "Legal/Sources/Protocols-R4Tls.zip",
-      "bytes": 52106,
-      "sha256": "f5d0ea041f998122f42521871cac4e0f4962008066a1081a15c5ae90b66f977b",
-      "originalSha256": "f5d0ea041f998122f42521871cac4e0f4962008066a1081a15c5ae90b66f977b",
+      "bytes": 53219,
+      "sha256": "2e2f02537bfe606f6852d991b19f209285d309e9fdc78fe1635d0ac8c46c207d",
+      "originalSha256": "2e2f02537bfe606f6852d991b19f209285d309e9fdc78fe1635d0ac8c46c207d",
       "origin": null
     },
     {
@@ -5682,9 +5682,9 @@
     },
     {
       "path": "Legal/Sources/Services-SshService.zip",
-      "bytes": 80053,
-      "sha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
-      "originalSha256": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
+      "bytes": 81084,
+      "sha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba",
+      "originalSha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba",
       "origin": null
     },
     {
@@ -6394,8 +6394,8 @@
     },
     {
       "path": "Platform/SDK/r4os.zig",
-      "bytes": 7938,
-      "sha256": "28b3aa9e09855f762b00d363c64fa596e1c482b127bdceaf44aa56708c044de1",
+      "bytes": 7999,
+      "sha256": "f8e7c37913e2a41b37fce6d814db500097c12f92eb05ac6f7dff4a397e0dabe4",
       "originalSha256": "2ac809c94953505ad6588bca8dc37f26396317c34a68fc292fba336c51d054d7",
       "origin": {
         "path": "r4os.zig",
@@ -7436,8 +7436,8 @@
     },
     {
       "path": "Platform/SDK/r4os/web_crypto.zig",
-      "bytes": 2690,
-      "sha256": "b1e5025bdc24146824797399ef9ff43e8fcd32eaf92b951745941ea5d50b506b",
+      "bytes": 1365,
+      "sha256": "ccdf98c816b1ba6e77dbd73fc7d4178baeac0929833f70df3495ae33bdfafe16",
       "originalSha256": "b1e5025bdc24146824797399ef9ff43e8fcd32eaf92b951745941ea5d50b506b",
       "origin": {
         "path": "r4os/web_crypto.zig",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "9ca17c53a935b0808d08d5a8b5bb5826b9367bc7534261d779f6d981476f4bd1",
+      "sha256": "78b91240b97ddd693377d5289145e7e890c8e6d45494bcae66a9f270a8fb9638",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "8adda23a7fe9efd860bdb7d8e558e18bebbdb1dd5c0a7fd01fc689ee9f0e167a",
+      "sha256": "2f05fb0b77005874bc2453fc80120200a6c92f80876ebfb4247920b5beff1201",
       "originalSha256": null,
       "origin": null
     },
@@ -9747,8 +9747,8 @@
     {
       "path": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
       "bytes": 305089,
-      "sha256": "328ae23aac823ef3b6873aee69dc6032fc2e7cc11e372f3e09e113b04bfc2ecd",
-      "originalSha256": "328ae23aac823ef3b6873aee69dc6032fc2e7cc11e372f3e09e113b04bfc2ecd",
+      "sha256": "f0c5a096630f9d5b34940b166f59d4abdbad59ed3cd50ae1a65df9e5c870997c",
+      "originalSha256": "f0c5a096630f9d5b34940b166f59d4abdbad59ed3cd50ae1a65df9e5c870997c",
       "origin": {
         "path": "Artifacts/Modules/R4Tls/R4TLS.R4P",
         "source": "Protocols-R4Tls"
@@ -9826,9 +9826,9 @@
     },
     {
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
-      "bytes": 406122,
-      "sha256": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c",
-      "originalSha256": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c",
+      "bytes": 410730,
+      "sha256": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e",
+      "originalSha256": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e",
       "origin": {
         "path": "Artifacts/Modules/SshService/SSHD.R4X",
         "source": "Services-SshService"
@@ -10178,6 +10178,20 @@
       "origin": null,
       "sha256": "fb21e56c6310673997ffe7e44cb7c239861b91a80bf9ca7d7f92c1cfd2e8fbf3",
       "bytes": 4695
+    },
+    {
+      "path": "Platform/SDK/r4os/secure_random.zig",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "933d6e25e89095374e852cddeb5b2cc65412690961a4db462678e55ca41a96e0",
+      "bytes": 1717
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.61.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "fa16e733319b46ece9c52c37d6011a9f2394ad6ac28c736a184fd1bb3f5c6447",
+      "bytes": 5079
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -15009,6 +15023,76 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "db275798ece2a413d1cc7bf0dcbb4bc05af15ad1fa007c219a5ae6a52bfc0e51",
           "after": "9ca17c53a935b0808d08d5a8b5bb5826b9367bc7534261d779f6d981476f4bd1"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.61: Per-session entropy and state binding; Recovery 0.1.48, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Platform/SDK/r4os.zig",
+          "before": "28b3aa9e09855f762b00d363c64fa596e1c482b127bdceaf44aa56708c044de1",
+          "after": "f8e7c37913e2a41b37fce6d814db500097c12f92eb05ac6f7dff4a397e0dabe4"
+        },
+        {
+          "path": "Platform/SDK/r4os/web_crypto.zig",
+          "before": "b1e5025bdc24146824797399ef9ff43e8fcd32eaf92b951745941ea5d50b506b",
+          "after": "ccdf98c816b1ba6e77dbd73fc7d4178baeac0929833f70df3495ae33bdfafe16"
+        },
+        {
+          "path": "Platform/SDK/r4os/secure_random.zig",
+          "before": null,
+          "after": "933d6e25e89095374e852cddeb5b2cc65412690961a4db462678e55ca41a96e0"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.61.patch",
+          "before": null,
+          "after": "fa16e733319b46ece9c52c37d6011a9f2394ad6ac28c736a184fd1bb3f5c6447"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+          "before": "43a32e9961b6ba52b1d7c0e581fe131b4a09afbd6d72eb1941201ed3d52dfa7c",
+          "after": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e"
+        },
+        {
+          "path": "Legal/Manifests/SSHD/module.R4MF",
+          "before": "93c5740f43336797c790ce4ef053b293e338f2cdfba2b795fb2554e5f12efdf3",
+          "after": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2"
+        },
+        {
+          "path": "Legal/Sources/Services-SshService.zip",
+          "before": "41966a1ff37f447236318ece8bf33b7664500abfa069daf0c0e1ba6994341787",
+          "after": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba"
+        },
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
+          "before": "328ae23aac823ef3b6873aee69dc6032fc2e7cc11e372f3e09e113b04bfc2ecd",
+          "after": "f0c5a096630f9d5b34940b166f59d4abdbad59ed3cd50ae1a65df9e5c870997c"
+        },
+        {
+          "path": "Legal/Manifests/R4TLS/module.R4MF",
+          "before": "12cfa5662ff920bd7c79c09a5306b4e2b8cf737235ecd1046752c867bc2fecc9",
+          "after": "4248fb81117a9bd062a9377775c72b7571331f4ec0264901d2e8f5f22a0a7433"
+        },
+        {
+          "path": "Legal/Sources/Protocols-R4Tls.zip",
+          "before": "f5d0ea041f998122f42521871cac4e0f4962008066a1081a15c5ae90b66f977b",
+          "after": "2e2f02537bfe606f6852d991b19f209285d309e9fdc78fe1635d0ac8c46c207d"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "3632f553f7d18597b7ae7b355ac1a183ad2ff438c43731c7ab83293037d1f602",
+          "after": "9fb99d0551fd1b0b35ac0783336bfcf22730b5708eec87cad30ad94c96493bf3"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "8adda23a7fe9efd860bdb7d8e558e18bebbdb1dd5c0a7fd01fc689ee9f0e167a",
+          "after": "2f05fb0b77005874bc2453fc80120200a6c92f80876ebfb4247920b5beff1201"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "9ca17c53a935b0808d08d5a8b5bb5826b9367bc7534261d779f6d981476f4bd1",
+          "after": "78b91240b97ddd693377d5289145e7e890c8e6d45494bcae66a9f270a8fb9638"
         }
       ]
     }

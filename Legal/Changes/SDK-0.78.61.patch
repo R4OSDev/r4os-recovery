@@ -1,0 +1,157 @@
+diff --git a/Platform/SDK/r4os.zig b/Platform/SDK/r4os.zig
+index 58f03f4..21138a1 100644
+--- a/Platform/SDK/r4os.zig
++++ b/Platform/SDK/r4os.zig
+@@ -136,6 +136,7 @@ pub const web_security = @import("r4os/web_security.zig");
+ pub const web_runtime = @import("r4os/web_runtime.zig");
+ pub const web_resources = @import("r4os/web_resources.zig");
+ pub const web_documents = @import("r4os/web_documents.zig");
++pub const secure_random = @import("r4os/secure_random.zig");
+ pub const web_crypto = @import("r4os/web_crypto.zig");
+ pub const web_canvas = @import("r4os/web_canvas.zig");
+ pub const web_url = @import("r4os/web_url.zig");
+diff --git a/Platform/SDK/r4os/secure_random.zig b/Platform/SDK/r4os/secure_random.zig
+new file mode 100644
+index 0000000..d22b400
+--- /dev/null
++++ b/Platform/SDK/r4os/secure_random.zig
+@@ -0,0 +1,62 @@
++// Shared x86_64 hardware entropy source. CPUID admission and the carry flag
++// are required for every result; ten failed instructions end the request.
++// Failure clears all output and never falls back to clocks or identifiers.
++pub fn available() bool {
++    return (cpuid(1, 0).ecx & (@as(u32, 1) << 30)) != 0;
++}
++
++pub fn fill(out: []u8) bool {
++    if (!available()) {
++        @memset(out, 0);
++        return false;
++    }
++    var offset: usize = 0;
++    while (offset < out.len) {
++        var attempt: u8 = 0;
++        var value: ?u64 = null;
++        while (attempt < 10 and value == null) : (attempt += 1) value = rdrand64();
++        const word = value orelse {
++            @memset(out, 0);
++            return false;
++        };
++        const count = @min(@as(usize, 8), out.len - offset);
++        for (0..count) |index| out[offset + index] = @truncate(word >> @intCast(index * 8));
++        offset += count;
++    }
++    return true;
++}
++
++const CpuId = struct {
++    eax: u32,
++    ebx: u32,
++    ecx: u32,
++    edx: u32,
++};
++
++fn cpuid(leaf: u32, subleaf: u32) CpuId {
++    var eax: u32 = leaf;
++    var ebx: u32 = 0;
++    var ecx: u32 = subleaf;
++    var edx: u32 = 0;
++    asm volatile ("cpuid"
++        : [eax] "={eax}" (eax),
++          [ebx] "={ebx}" (ebx),
++          [ecx] "={ecx}" (ecx),
++          [edx] "={edx}" (edx),
++        : [leaf] "{eax}" (leaf),
++          [subleaf] "{ecx}" (subleaf),
++    );
++    return .{ .eax = eax, .ebx = ebx, .ecx = ecx, .edx = edx };
++}
++
++fn rdrand64() ?u64 {
++    var value: u64 = 0;
++    var success: u8 = 0;
++    asm volatile (
++        \\rdrand %[value]
++        \\setc %[success]
++        : [value] "=r" (value),
++          [success] "=r" (success),
++    );
++    return if (success != 0) value else null;
++}
+diff --git a/Platform/SDK/r4os/web_crypto.zig b/Platform/SDK/r4os/web_crypto.zig
+index 4c4442c..98e5677 100644
+--- a/Platform/SDK/r4os/web_crypto.zig
++++ b/Platform/SDK/r4os/web_crypto.zig
+@@ -8,27 +8,9 @@ pub const Error = error{
+ 
+ pub const max_random_bytes: usize = 65_536;
+ 
+-pub fn secureEntropyAvailable() bool {
+-    return (cpuid(1, 0).ecx & (@as(u32, 1) << 30)) != 0;
+-}
+-
+-pub fn fillSecureRandom(out: []u8) bool {
+-    if (!secureEntropyAvailable()) return false;
+-    var offset: usize = 0;
+-    while (offset < out.len) {
+-        var attempt: u8 = 0;
+-        var value: ?u64 = null;
+-        while (attempt < 10 and value == null) : (attempt += 1) value = rdrand64();
+-        const word = value orelse {
+-            @memset(out, 0);
+-            return false;
+-        };
+-        const count = @min(@as(usize, 8), out.len - offset);
+-        for (0..count) |index| out[offset + index] = @truncate(word >> @intCast(index * 8));
+-        offset += count;
+-    }
+-    return true;
+-}
++const secure_random = @import("secure_random.zig");
++pub const secureEntropyAvailable = secure_random.available;
++pub const fillSecureRandom = secure_random.fill;
+ 
+ pub fn digest(algorithm: []const u8, input: []const u8, output: []u8) Error![]const u8 {
+     if (!std.ascii.eqlIgnoreCase(algorithm, "SHA-256")) return error.UnsupportedAlgorithm;
+@@ -39,41 +21,6 @@ pub fn digest(algorithm: []const u8, input: []const u8, output: []u8) Error![]co
+     return output[0..result.len];
+ }
+ 
+-const CpuId = struct {
+-    eax: u32,
+-    ebx: u32,
+-    ecx: u32,
+-    edx: u32,
+-};
+-
+-fn cpuid(leaf: u32, subleaf: u32) CpuId {
+-    var eax: u32 = leaf;
+-    var ebx: u32 = 0;
+-    var ecx: u32 = subleaf;
+-    var edx: u32 = 0;
+-    asm volatile ("cpuid"
+-        : [eax] "={eax}" (eax),
+-          [ebx] "={ebx}" (ebx),
+-          [ecx] "={ecx}" (ecx),
+-          [edx] "={edx}" (edx),
+-        : [leaf] "{eax}" (leaf),
+-          [subleaf] "{ecx}" (subleaf),
+-    );
+-    return .{ .eax = eax, .ebx = ebx, .ecx = ecx, .edx = edx };
+-}
+-
+-fn rdrand64() ?u64 {
+-    var value: u64 = 0;
+-    var success: u8 = 0;
+-    asm volatile (
+-        \\rdrand %[value]
+-        \\setc %[success]
+-        : [value] "=r" (value),
+-          [success] "=r" (success),
+-    );
+-    return if (success != 0) value else null;
+-}
+-
+ test "SHA-256 digest is deterministic and validated" {
+     var output: [32]u8 = undefined;
+     const result = try digest("sha-256", "abc", output[0..]);

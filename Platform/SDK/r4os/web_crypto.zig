@@ -8,27 +8,9 @@ pub const Error = error{
 
 pub const max_random_bytes: usize = 65_536;
 
-pub fn secureEntropyAvailable() bool {
-    return (cpuid(1, 0).ecx & (@as(u32, 1) << 30)) != 0;
-}
-
-pub fn fillSecureRandom(out: []u8) bool {
-    if (!secureEntropyAvailable()) return false;
-    var offset: usize = 0;
-    while (offset < out.len) {
-        var attempt: u8 = 0;
-        var value: ?u64 = null;
-        while (attempt < 10 and value == null) : (attempt += 1) value = rdrand64();
-        const word = value orelse {
-            @memset(out, 0);
-            return false;
-        };
-        const count = @min(@as(usize, 8), out.len - offset);
-        for (0..count) |index| out[offset + index] = @truncate(word >> @intCast(index * 8));
-        offset += count;
-    }
-    return true;
-}
+const secure_random = @import("secure_random.zig");
+pub const secureEntropyAvailable = secure_random.available;
+pub const fillSecureRandom = secure_random.fill;
 
 pub fn digest(algorithm: []const u8, input: []const u8, output: []u8) Error![]const u8 {
     if (!std.ascii.eqlIgnoreCase(algorithm, "SHA-256")) return error.UnsupportedAlgorithm;
@@ -37,41 +19,6 @@ pub fn digest(algorithm: []const u8, input: []const u8, output: []u8) Error![]co
     std.crypto.hash.sha2.Sha256.hash(input, &result, .{});
     @memcpy(output[0..result.len], result[0..]);
     return output[0..result.len];
-}
-
-const CpuId = struct {
-    eax: u32,
-    ebx: u32,
-    ecx: u32,
-    edx: u32,
-};
-
-fn cpuid(leaf: u32, subleaf: u32) CpuId {
-    var eax: u32 = leaf;
-    var ebx: u32 = 0;
-    var ecx: u32 = subleaf;
-    var edx: u32 = 0;
-    asm volatile ("cpuid"
-        : [eax] "={eax}" (eax),
-          [ebx] "={ebx}" (ebx),
-          [ecx] "={ecx}" (ecx),
-          [edx] "={edx}" (edx),
-        : [leaf] "{eax}" (leaf),
-          [subleaf] "{ecx}" (subleaf),
-    );
-    return .{ .eax = eax, .ebx = ebx, .ecx = ecx, .edx = edx };
-}
-
-fn rdrand64() ?u64 {
-    var value: u64 = 0;
-    var success: u8 = 0;
-    asm volatile (
-        \\rdrand %[value]
-        \\setc %[success]
-        : [value] "=r" (value),
-          [success] "=r" (success),
-    );
-    return if (success != 0) value else null;
 }
 
 test "SHA-256 digest is deterministic and validated" {

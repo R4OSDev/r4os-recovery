@@ -136,6 +136,7 @@ pub const web_security = @import("r4os/web_security.zig");
 pub const web_runtime = @import("r4os/web_runtime.zig");
 pub const web_resources = @import("r4os/web_resources.zig");
 pub const web_documents = @import("r4os/web_documents.zig");
+pub const secure_random = @import("r4os/secure_random.zig");
 pub const web_crypto = @import("r4os/web_crypto.zig");
 pub const web_canvas = @import("r4os/web_canvas.zig");
 pub const web_url = @import("r4os/web_url.zig");

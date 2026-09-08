@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "reason": "Hardware entropy and session binding from committed SDK, SshService and R4Tls owners. R4AUTH and RDPSVC are not Recovery modules.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "ba477b14815bf041d1697f20f26e923602558680",
+      "sourceCommit": "bb58f5add34504100790f29a68d2379e868de377",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.61.patch",
+      "patchSha256": "fa16e733319b46ece9c52c37d6011a9f2394ad6ac28c736a184fd1bb3f5c6447",
+      "importMode": "Shared hardware entropy helper; frozen SDK exports retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os.zig",
+          "sha256": "f8e7c37913e2a41b37fce6d814db500097c12f92eb05ac6f7dff4a397e0dabe4",
+          "sourcePath": "r4os.zig",
+          "sourceSha256": "6a1cfc986d138fbdb59eaf1afd4066616f3881cabd492c5ecd79e21501722acb",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/web_crypto.zig",
+          "sha256": "ccdf98c816b1ba6e77dbd73fc7d4178baeac0929833f70df3495ae33bdfafe16",
+          "sourcePath": "r4os/web_crypto.zig",
+          "sourceSha256": "ccdf98c816b1ba6e77dbd73fc7d4178baeac0929833f70df3495ae33bdfafe16",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/r4os/secure_random.zig",
+          "sha256": "933d6e25e89095374e852cddeb5b2cc65412690961a4db462678e55ca41a96e0",
+          "sourcePath": "r4os/secure_random.zig",
+          "sourceSha256": "933d6e25e89095374e852cddeb5b2cc65412690961a4db462678e55ca41a96e0",
+          "byteIdentical": true
+        }
+      ]
+    },
+    {
+      "owner": "Services/SshService",
+      "baseCommit": "657954b52cf46f0213289fdbd390c8e2ed2aea5b",
+      "sourceCommit": "70ae0ad3a8606a3a058809646ab0dc4fb22ff7be",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-SshService.zip",
+      "archiveSha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba",
+      "buildSourcePins": {
+        "SDK": "bb58f5add34504100790f29a68d2379e868de377",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+          "sha256": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e"
+        },
+        {
+          "path": "Legal/Manifests/SSHD/module.R4MF",
+          "sha256": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2"
+        },
+        {
+          "path": "Legal/Sources/Services-SshService.zip",
+          "sha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba"
+        }
+      ]
+    },
+    {
+      "owner": "Protocols/R4Tls",
+      "baseCommit": "8cba0e83ef70ed0c5c2e95f1cbb7d1504d6ad081",
+      "sourceCommit": "87353fd888898ddb20e1350bf3b236494dabff9e",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Protocols-R4Tls.zip",
+      "archiveSha256": "2e2f02537bfe606f6852d991b19f209285d309e9fdc78fe1635d0ac8c46c207d",
+      "buildSourcePins": {
+        "SDK": "bb58f5add34504100790f29a68d2379e868de377",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
+          "sha256": "f0c5a096630f9d5b34940b166f59d4abdbad59ed3cd50ae1a65df9e5c870997c"
+        },
+        {
+          "path": "Legal/Manifests/R4TLS/module.R4MF",
+          "sha256": "4248fb81117a9bd062a9377775c72b7571331f4ec0264901d2e8f5f22a0a7433"
+        },
+        {
+          "path": "Legal/Sources/Protocols-R4Tls.zip",
+          "sha256": "2e2f02537bfe606f6852d991b19f209285d309e9fdc78fe1635d0ac8c46c207d"
+        }
+      ]
+    }
+  ]
+}
