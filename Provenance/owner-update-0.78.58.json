@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "reason": "TCP progress and reply validation from committed SDK and TcpService owners; existing ABI layouts retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "01547f1c81660a92bad25c098dd9537209ae851a",
+      "sourceCommit": "c97262f94e41bb7af5f15aba37cd10ad79acf508",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.58.patch",
+      "patchSha256": "df2936deb7b0642d2457d0f86e68f406dd9467856cf6dd66cfc289f3dd96d28c",
+      "importMode": "Network reply length validation; existing facade layout retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/app_network.zig",
+          "sha256": "c3d59d0d30fc8ebf816f8f6daec88dd0519cd00d401809edc73ec5061107e2fd",
+          "sourcePath": "r4os/app_network.zig",
+          "sourceSha256": "c3d59d0d30fc8ebf816f8f6daec88dd0519cd00d401809edc73ec5061107e2fd",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/Shared/C/include/r4os/app_network.h",
+          "sha256": "f9f4edcb46c9237059a55b87ea6fa1fb7099a8bfee715d3abd44eb7f8ff12a4f",
+          "sourcePath": "Shared/C/include/r4os/app_network.h",
+          "sourceSha256": "f9f4edcb46c9237059a55b87ea6fa1fb7099a8bfee715d3abd44eb7f8ff12a4f",
+          "byteIdentical": true
+        }
+      ]
+    },
+    {
+      "owner": "Services/TcpService",
+      "baseCommit": "bfc9e8d986205a12cd5896d4871ce08fc7d4d914",
+      "sourceCommit": "1fddf20447cdb67c7bf5d17de627aba5807350c6",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Services-TcpService.zip",
+      "archiveSha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682",
+      "buildSourcePins": {
+        "SDK": "c97262f94e41bb7af5f15aba37cd10ad79acf508",
+        "Contract": "b29134e44652d708133509ffaccfbee7b6115ab1"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
+          "sha256": "b3f352e613ab2270d1090a1e50692c557d0741227149a9b2be032aa0ae46d77f"
+        },
+        {
+          "path": "Legal/Manifests/TCPSVC/module.R4MF",
+          "sha256": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c"
+        },
+        {
+          "path": "Legal/Sources/Services-TcpService.zip",
+          "sha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682"
+        }
+      ]
+    }
+  ]
+}

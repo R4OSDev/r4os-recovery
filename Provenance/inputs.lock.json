@@ -218,9 +218,9 @@
     },
     {
       "id": "Services-TcpService",
-      "archiveSha256": "020b74e2f412086e6c79332dd0efe78db0e2df40e121f11f5f49261af834224d",
+      "archiveSha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682",
       "archive": "Legal/Sources/Services-TcpService.zip",
-      "commit": "bfc9e8d986205a12cd5896d4871ce08fc7d4d914",
+      "commit": "1fddf20447cdb67c7bf5d17de627aba5807350c6",
       "remote": "https://github.com/R4OSDev/r4os-service-tcpservice.git"
     },
     {
@@ -887,7 +887,7 @@
     },
     {
       "name": "TCPSVC",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "source": "Services-TcpService",
       "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
       "manifest": "Legal/Manifests/TCPSVC/module.R4MF",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "eb58c05997474fdbf55698f75db756b18405d6b68de4414b76075522d3201b14",
+      "sha256": "11d2b8b8027cf6b0d0a5154f7fbeafbfb492f59f36952ca8c2b76eafe14d1117",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4369,8 +4369,8 @@
     {
       "path": "Legal/Manifests/TCPSVC/module.R4MF",
       "bytes": 368,
-      "sha256": "dd43cf0ed2320322fb67566733c95319814117e72362313c0047265167a2b72d",
-      "originalSha256": "dd43cf0ed2320322fb67566733c95319814117e72362313c0047265167a2b72d",
+      "sha256": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c",
+      "originalSha256": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c",
       "origin": {
         "path": "module.R4MF",
         "source": "Services-TcpService"
@@ -5689,9 +5689,9 @@
     },
     {
       "path": "Legal/Sources/Services-TcpService.zip",
-      "bytes": 30888,
-      "sha256": "020b74e2f412086e6c79332dd0efe78db0e2df40e121f11f5f49261af834224d",
-      "originalSha256": "020b74e2f412086e6c79332dd0efe78db0e2df40e121f11f5f49261af834224d",
+      "bytes": 31017,
+      "sha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682",
+      "originalSha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682",
       "origin": null
     },
     {
@@ -6444,8 +6444,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_network.zig",
-      "bytes": 24816,
-      "sha256": "b94457ef3b936ece1bc32f9d3a8ca16b5a9ffdf5e194247ba3168ba2e2bc259e",
+      "bytes": 25667,
+      "sha256": "c3d59d0d30fc8ebf816f8f6daec88dd0519cd00d401809edc73ec5061107e2fd",
       "originalSha256": "b94457ef3b936ece1bc32f9d3a8ca16b5a9ffdf5e194247ba3168ba2e2bc259e",
       "origin": {
         "path": "r4os/app_network.zig",
@@ -7683,8 +7683,8 @@
     },
     {
       "path": "Platform/SDK/Shared/C/include/r4os/app_network.h",
-      "bytes": 25296,
-      "sha256": "78878dd0c848df81b3d2166b2c9a5c5b0bb082ffcdf8a46864bfeb02dd839876",
+      "bytes": 28136,
+      "sha256": "f9f4edcb46c9237059a55b87ea6fa1fb7099a8bfee715d3abd44eb7f8ff12a4f",
       "originalSha256": "78878dd0c848df81b3d2166b2c9a5c5b0bb082ffcdf8a46864bfeb02dd839876",
       "origin": {
         "path": "Shared/C/include/r4os/app_network.h",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "e52fe0ef69ce888f16ced9dc3613337a6f4a0beceba03ff28b8e7bc945164798",
+      "sha256": "db275798ece2a413d1cc7bf0dcbb4bc05af15ad1fa007c219a5ae6a52bfc0e51",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "e98032dd6fd11119b3dc4ea25633b35ae75dbb1feba37fc2384cc64b5ea7112d",
+      "sha256": "9fb39608fb5e06456ffbbac9250b5d123c6da6b87b4338ef5efeb855b4576123",
       "originalSha256": null,
       "origin": null
     },
@@ -9837,8 +9837,8 @@
     {
       "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
       "bytes": 169198,
-      "sha256": "295f435e14529ebe7cc4747b0a01efb7a422a46b7febd11bed635b2adfe93570",
-      "originalSha256": "295f435e14529ebe7cc4747b0a01efb7a422a46b7febd11bed635b2adfe93570",
+      "sha256": "b3f352e613ab2270d1090a1e50692c557d0741227149a9b2be032aa0ae46d77f",
+      "originalSha256": "b3f352e613ab2270d1090a1e50692c557d0741227149a9b2be032aa0ae46d77f",
       "origin": {
         "path": "Artifacts/Modules/TcpService/TCPSVC.R4X",
         "source": "Services-TcpService"
@@ -10164,6 +10164,13 @@
       "origin": null,
       "sha256": "c6c15fa066dd8876a706b88ea1cd1a0b9131c428bcc0a619c42e8661eef5f966",
       "bytes": 11606
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.58.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "df2936deb7b0642d2457d0f86e68f406dd9467856cf6dd66cfc289f3dd96d28c",
+      "bytes": 31087
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14915,6 +14922,56 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "c65625ce687f9d9fa373d324a317c13faf9ca32985c4b67e5def8cf9b5d50bef",
           "after": "e52fe0ef69ce888f16ced9dc3613337a6f4a0beceba03ff28b8e7bc945164798"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.58: TCP deferred write progress and network response validation; Recovery 0.1.46, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Platform/SDK/r4os/app_network.zig",
+          "before": "b94457ef3b936ece1bc32f9d3a8ca16b5a9ffdf5e194247ba3168ba2e2bc259e",
+          "after": "c3d59d0d30fc8ebf816f8f6daec88dd0519cd00d401809edc73ec5061107e2fd"
+        },
+        {
+          "path": "Platform/SDK/Shared/C/include/r4os/app_network.h",
+          "before": "78878dd0c848df81b3d2166b2c9a5c5b0bb082ffcdf8a46864bfeb02dd839876",
+          "after": "f9f4edcb46c9237059a55b87ea6fa1fb7099a8bfee715d3abd44eb7f8ff12a4f"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.58.patch",
+          "before": null,
+          "after": "df2936deb7b0642d2457d0f86e68f406dd9467856cf6dd66cfc289f3dd96d28c"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
+          "before": "295f435e14529ebe7cc4747b0a01efb7a422a46b7febd11bed635b2adfe93570",
+          "after": "b3f352e613ab2270d1090a1e50692c557d0741227149a9b2be032aa0ae46d77f"
+        },
+        {
+          "path": "Legal/Manifests/TCPSVC/module.R4MF",
+          "before": "dd43cf0ed2320322fb67566733c95319814117e72362313c0047265167a2b72d",
+          "after": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c"
+        },
+        {
+          "path": "Legal/Sources/Services-TcpService.zip",
+          "before": "020b74e2f412086e6c79332dd0efe78db0e2df40e121f11f5f49261af834224d",
+          "after": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "eb58c05997474fdbf55698f75db756b18405d6b68de4414b76075522d3201b14",
+          "after": "11d2b8b8027cf6b0d0a5154f7fbeafbfb492f59f36952ca8c2b76eafe14d1117"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "e98032dd6fd11119b3dc4ea25633b35ae75dbb1feba37fc2384cc64b5ea7112d",
+          "after": "9fb39608fb5e06456ffbbac9250b5d123c6da6b87b4338ef5efeb855b4576123"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "e52fe0ef69ce888f16ced9dc3613337a6f4a0beceba03ff28b8e7bc945164798",
+          "after": "db275798ece2a413d1cc7bf0dcbb4bc05af15ad1fa007c219a5ae6a52bfc0e51"
         }
       ]
     }

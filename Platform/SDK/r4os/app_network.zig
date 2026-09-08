@@ -162,7 +162,9 @@ pub const Network = struct {
             .failure => |raw| return .{ .failure = raw },
         };
         defer _ = connection.close();
-        return connection.call(op, request, response, timeout);
+        const call = connection.call(op, request, response, timeout);
+        if (call == .response and call.response.header.op != op) return .{ .failure = abi.service_api_result_invalid };
+        return call;
     }
 
     fn tcpServiceCall(self: *const Network, op: u16, request: []const u8, response: []u8, timeout: Timeout) services_facade.ServiceCall {
@@ -220,6 +222,7 @@ pub const TcpSocket = struct {
         var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
         const call = self.network.tcpServiceCall(abi.net_service_op_tcp_write_result, request[0 .. 4 + data.len], response[0..], timeout);
         const result = parseTcpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
+        if (result.bytes > data.len) return .{ .failure = abi.service_api_result_invalid };
         return self.finishIo(result, result.bytes);
     }
 
@@ -231,13 +234,14 @@ pub const TcpSocket = struct {
         writeU16(request[0..], 4, @intCast(capacity));
         var response: [@sizeOf(abi.NetServiceTcpResult) + abi.net_service_tcp_read_max]u8 = undefined;
         const call = self.network.tcpServiceCall(abi.net_service_op_tcp_read_result, request[0..], response[0..], timeout);
-        const result = parseTcpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
+        const received = serviceResponse(call, response[0..]) catch |raw| return mapSocketFailure(raw);
+        const result = parseTcpCall(call, received) catch |raw| return mapSocketFailure(raw);
         const outcome = self.finishIo(result, result.bytes);
         switch (outcome) {
             .bytes => if (result.bytes != 0) {
                 const len: usize = @intCast(result.bytes);
-                if (len > capacity or @sizeOf(abi.NetServiceTcpResult) + len > response.len) return .{ .failure = abi.service_api_result_invalid };
-                @memcpy(out[0..len], response[@sizeOf(abi.NetServiceTcpResult) .. @sizeOf(abi.NetServiceTcpResult) + len]);
+                if (len > capacity or @sizeOf(abi.NetServiceTcpResult) + len > received.len) return .{ .failure = abi.service_api_result_invalid };
+                @memcpy(out[0..len], received[@sizeOf(abi.NetServiceTcpResult) .. @sizeOf(abi.NetServiceTcpResult) + len]);
             },
             else => {},
         }
@@ -339,7 +343,8 @@ pub const UdpSocket = struct {
         var response: [@sizeOf(abi.NetServiceUdpResult)]u8 = undefined;
         const call = self.network.serviceCall(udp_service, abi.net_service_op_udp_sendto_result, request[0 .. 10 + data.len], response[0..], timeout);
         const result = parseUdpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
-        return self.finishIo(result, if (result.bytes != 0) result.bytes else @intCast(data.len));
+        if (result.bytes > data.len) return .{ .failure = abi.service_api_result_invalid };
+        return self.finishIo(result, result.bytes);
     }
 
     pub fn receiveFrom(self: *UdpSocket, out: []u8, timeout: Timeout) UdpReceive {
@@ -350,15 +355,16 @@ pub const UdpSocket = struct {
         writeU16(request[0..], 4, @intCast(capacity));
         var response: [@sizeOf(abi.NetServiceUdpResult) + abi.net_service_udp_read_max]u8 = undefined;
         const call = self.network.serviceCall(udp_service, abi.net_service_op_udp_recv_result, request[0..], response[0..], timeout);
-        const result = parseUdpCall(call, response[0..]) catch |raw| return mapUdpReceiveFailure(raw);
+        const received = serviceResponse(call, response[0..]) catch |raw| return mapUdpReceiveFailure(raw);
+        const result = parseUdpCall(call, received) catch |raw| return mapUdpReceiveFailure(raw);
         const state = classifyUdp(result);
         if (state != .ok) {
             if (state == .closed or state == .reset or state == .peer_closed) self.raw = 0;
             return mapUdpReceiveState(state, result.result);
         }
         const len: usize = @intCast(result.bytes);
-        if (len > capacity or @sizeOf(abi.NetServiceUdpResult) + len > response.len) return .{ .failure = abi.service_api_result_invalid };
-        if (len != 0) @memcpy(out[0..len], response[@sizeOf(abi.NetServiceUdpResult) .. @sizeOf(abi.NetServiceUdpResult) + len]);
+        if (len > capacity or @sizeOf(abi.NetServiceUdpResult) + len > received.len) return .{ .failure = abi.service_api_result_invalid };
+        if (len != 0) @memcpy(out[0..len], received[@sizeOf(abi.NetServiceUdpResult) .. @sizeOf(abi.NetServiceUdpResult) + len]);
         return .{ .datagram = .{
             .source = .{ .address = Ipv4Address.fromBytes(result.source_ip), .port = result.source_port },
             .destination = .{ .address = Ipv4Address.fromBytes(result.dest_ip), .port = result.dest_port },
@@ -428,16 +434,22 @@ fn parseUdpCall(call: services_facade.ServiceCall, response: []const u8) error{ 
     return result;
 }
 
-fn parseStructCall(comptime T: type, call: services_facade.ServiceCall, response: []const u8) error{ TimedOut, NoService, RemoteFailure, Invalid }!T {
+fn serviceResponse(call: services_facade.ServiceCall, response: []const u8) error{ TimedOut, NoService, RemoteFailure, Invalid }![]const u8 {
     const meta = switch (call) {
         .response => |value| value,
         .timed_out => return error.TimedOut,
         .remote_failure => return error.RemoteFailure,
         .failure => |raw| return if (raw == abi.service_api_result_not_found or raw == abi.service_api_result_no_endpoint or raw == abi.service_api_result_not_running) error.NoService else error.RemoteFailure,
     };
-    if (meta.bytes < @sizeOf(T) or response.len < @sizeOf(T)) return error.Invalid;
+    if (meta.bytes > response.len or meta.header.magic != abi.service_api_magic or meta.header.version != abi.service_api_version) return error.Invalid;
+    return response[0..meta.bytes];
+}
+
+fn parseStructCall(comptime T: type, call: services_facade.ServiceCall, response: []const u8) error{ TimedOut, NoService, RemoteFailure, Invalid }!T {
+    const received = try serviceResponse(call, response);
+    if (received.len < @sizeOf(T)) return error.Invalid;
     var value: T = undefined;
-    @memcpy(std.mem.asBytes(&value), response[0..@sizeOf(T)]);
+    @memcpy(std.mem.asBytes(&value), received[0..@sizeOf(T)]);
     return value;
 }
 
