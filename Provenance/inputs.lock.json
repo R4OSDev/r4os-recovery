@@ -1228,8 +1228,8 @@
     },
     {
       "path": "Kernel/arch/x86_64/hpet.zig",
-      "bytes": 15875,
-      "sha256": "f27f16938ba222ac6ac58ab336f79484e6295ef17f1f78c3817a4eefb2838e3d",
+      "bytes": 17158,
+      "sha256": "a3c8137413e340437b5bb308aa2d8645ff00f2f2863500b15b197e1729458542",
       "originalSha256": "f27f16938ba222ac6ac58ab336f79484e6295ef17f1f78c3817a4eefb2838e3d",
       "origin": {
         "path": "arch/x86_64/hpet.zig",
@@ -3191,8 +3191,8 @@
     },
     {
       "path": "Kernel/platform/clocksource.zig",
-      "bytes": 17985,
-      "sha256": "5365b15f5753c75caa9531d8040ccc2e0d0507c636763575af4bb5d01a0772b0",
+      "bytes": 19631,
+      "sha256": "6a2122fe92126bc88c66cdf43bb97cfe952a71de0c2b602d92f06bba65050d0a",
       "originalSha256": "5365b15f5753c75caa9531d8040ccc2e0d0507c636763575af4bb5d01a0772b0",
       "origin": {
         "path": "platform/clocksource.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "7b8962af823327dd33a4617979643d7d561c657389e692dee47a44ef77610cf6",
+      "sha256": "c525ec3198a85f999212be23329a807cbb27baaa4ed72d4de322b308f05de63a",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "7488170e3d58ad52c99637f6e4220d2684f67aa094845637fd1cf6ab87a6d6bd",
+      "sha256": "6b768f8676ae1dfebdf3dc957bb24998c33ac647a1727260b2e168dc6120e246",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "1167b6f3cc46a8803d087b630c8399f24ab20db76beff290facd68ad1122a923",
+      "sha256": "bb00cc27c92d41887d04f6bdb1fe541b48523d38ad644229aae2b88ff0c6bc47",
       "originalSha256": null,
       "origin": null
     },
@@ -10073,6 +10073,13 @@
       "origin": null,
       "sha256": "e7cb305b4db3b234c80f0964a1a2be60b7ab7d2e6cfe2a1409ff56464cf112a6",
       "bytes": 589
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.34.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "7b471c798e8d51b732c15c28ece08f4993b810dc338c5c3068884a3753f13c84",
+      "bytes": 7499
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14229,6 +14236,41 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "1dedf4d09efc096f555290edd1f4295f39b63fab26a4112b6e7e3dad1eb729da",
           "after": "7488170e3d58ad52c99637f6e4220d2684f67aa094845637fd1cf6ab87a6d6bd"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.34: trusted clock fallback epoch and bounded HPET qualification / TSC calibration; Recovery 0.1.35, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/platform/clocksource.zig",
+          "before": "5365b15f5753c75caa9531d8040ccc2e0d0507c636763575af4bb5d01a0772b0",
+          "after": "6a2122fe92126bc88c66cdf43bb97cfe952a71de0c2b602d92f06bba65050d0a"
+        },
+        {
+          "path": "Kernel/arch/x86_64/hpet.zig",
+          "before": "f27f16938ba222ac6ac58ab336f79484e6295ef17f1f78c3817a4eefb2838e3d",
+          "after": "a3c8137413e340437b5bb308aa2d8645ff00f2f2863500b15b197e1729458542"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.34.patch",
+          "before": null,
+          "after": "7b471c798e8d51b732c15c28ece08f4993b810dc338c5c3068884a3753f13c84"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "7b8962af823327dd33a4617979643d7d561c657389e692dee47a44ef77610cf6",
+          "after": "c525ec3198a85f999212be23329a807cbb27baaa4ed72d4de322b308f05de63a"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "1167b6f3cc46a8803d087b630c8399f24ab20db76beff290facd68ad1122a923",
+          "after": "bb00cc27c92d41887d04f6bdb1fe541b48523d38ad644229aae2b88ff0c6bc47"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "7488170e3d58ad52c99637f6e4220d2684f67aa094845637fd1cf6ab87a6d6bd",
+          "after": "6b768f8676ae1dfebdf3dc957bb24998c33ac647a1727260b2e168dc6120e246"
         }
       ]
     }

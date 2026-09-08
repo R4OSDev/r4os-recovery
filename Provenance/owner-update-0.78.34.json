@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "reason": "Exact clocksource and HPET qualification from the committed Kernel owner; unrelated frozen sources retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "9d2036ec1583f3701f9de1ec387ba3efd9a86e11",
+      "sourceCommit": "c2f9c89f279fbf82bf9cbc6c7965b410fb14f550",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.34.patch",
+      "patchSha256": "7b471c798e8d51b732c15c28ece08f4993b810dc338c5c3068884a3753f13c84",
+      "importMode": "Exact clocksource and HPET qualification; unrelated frozen sources retained",
+      "files": [
+        {
+          "path": "Kernel/platform/clocksource.zig",
+          "sha256": "6a2122fe92126bc88c66cdf43bb97cfe952a71de0c2b602d92f06bba65050d0a",
+          "sourcePath": "platform/clocksource.zig",
+          "sourceSha256": "6a2122fe92126bc88c66cdf43bb97cfe952a71de0c2b602d92f06bba65050d0a",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/arch/x86_64/hpet.zig",
+          "sha256": "a3c8137413e340437b5bb308aa2d8645ff00f2f2863500b15b197e1729458542",
+          "sourcePath": "arch/x86_64/hpet.zig",
+          "sourceSha256": "a3c8137413e340437b5bb308aa2d8645ff00f2f2863500b15b197e1729458542",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
