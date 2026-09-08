@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "reason": "Service lifecycle and complete configuration from the committed Kernel, SDK and SERVMAN owners; existing frozen facade retained.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "8db24302f7cd2c5ecafab0220417135678139334",
+      "sourceCommit": "52e6d9f5cdca71820c79e570491295a3b4756b5f",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.52.patch",
+      "patchSha256": "3230c5b0549927f7049014a07b66624860fd08483d0077c17773828412cc419d",
+      "importMode": "Targeted service lifecycle and complete enumeration owner updates; frozen Recovery facade retained",
+      "files": [
+        {
+          "path": "Kernel/kernel/services.zig",
+          "sha256": "6f771de8194250bce386cbcbc7553ddfa0ea7cd056979a44f13f70f105fa4613",
+          "sourcePath": "kernel/services.zig",
+          "sourceSha256": "6f771de8194250bce386cbcbc7553ddfa0ea7cd056979a44f13f70f105fa4613",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "dca661560f05dd4e057d652be5da8510c7ccf88e545b61d9f069841d6c2f8a81",
+          "sourcePath": "program/r4x.zig",
+          "sourceSha256": "f4793b5474632618d8d6aaeafe3018d8fe7851bd180cbfadde6df88802882b39",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "SDK",
+      "baseRecoveryCommit": "8db24302f7cd2c5ecafab0220417135678139334",
+      "sourceCommit": "4b11dd94046f211c9d15cb8a31a89e9def2d98d7",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.78.52.patch",
+      "patchSha256": "8a404e9763922b37df541173f7d9942fb1d23a530bfd66b3552f4c36dde97acd",
+      "importMode": "Targeted service lifecycle and complete enumeration owner updates; frozen Recovery facade retained",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/app_services.zig",
+          "sha256": "87dddbe17f80d0c2db4bd36b6198a1a86f821ecfbabc4e9981a3a4f36718b67e",
+          "sourcePath": "r4os/app_services.zig",
+          "sourceSha256": "87dddbe17f80d0c2db4bd36b6198a1a86f821ecfbabc4e9981a3a4f36718b67e",
+          "byteIdentical": true
+        }
+      ]
+    },
+    {
+      "owner": "Apps/ServiceManager",
+      "baseCommit": "6a09eeeaee32cad0954bd896d6688bbd19f9d724",
+      "sourceCommit": "04c907c90e2bb4d73f88b5bb7342ebcc0039f1a9",
+      "pendingOwnerCommit": false,
+      "archive": "Legal/Sources/Apps-ServiceManager.zip",
+      "archiveSha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
+      "buildSourcePins": {
+        "SDK": "4b11dd94046f211c9d15cb8a31a89e9def2d98d7",
+        "Contract": "c401ce721b8e3a41164fd3d88cd5c7a2d1290979"
+      },
+      "files": [
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
+          "sha256": "d667cac55be9cd6a188224f7a76b0d0883455d53fdc73a4a0b295a152e059ad6"
+        },
+        {
+          "path": "Legal/Manifests/SERVMAN/module.R4MF",
+          "sha256": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6"
+        },
+        {
+          "path": "Legal/Sources/Apps-ServiceManager.zip",
+          "sha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97"
+        }
+      ]
+    }
+  ]
+}

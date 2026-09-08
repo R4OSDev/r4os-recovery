@@ -5,6 +5,32 @@ const time_contract = @import("time_contract.zig");
 
 pub const Timeout = time_contract.Timeout;
 
+/// Only an explicit EOF publishes a complete inventory. The caller supplies
+/// private staging storage and must ignore its contents on failure. The current
+/// index API has no cross-call revision token; this detects aborted enumeration,
+/// not a point-in-time snapshot across concurrent successful structural edits.
+pub const DetailRead = union(enum) { complete: usize, failure: i32 };
+
+pub fn readCompleteDetails(sys: *const r4sys.Context, staging: []abi.ServiceDetail) DetailRead {
+    for (0..3) |_| {
+        var count: usize = 0;
+        while (true) {
+            var detail: abi.ServiceDetail = .{};
+            const rc = sys.serviceDetail(@intCast(count), &detail);
+            if (rc == 0) return .{ .complete = count };
+            if (rc < 0) {
+                if (rc == abi.service_api_result_busy) break;
+                return .{ .failure = rc };
+            }
+            // Also query index == capacity: a full buffer is not proof of EOF.
+            if (count == staging.len) return .{ .failure = abi.service_api_result_buffer_too_small };
+            staging[count] = detail;
+            count += 1;
+        }
+    }
+    return .{ .failure = abi.service_api_result_busy };
+}
+
 pub const Services = struct {
     sys: r4sys.Context,
 

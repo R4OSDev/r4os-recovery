@@ -1,0 +1,287 @@
+diff --git a/Kernel/kernel/services.zig b/Kernel/kernel/services.zig
+index 1269324..c063e5e 100644
+--- a/Kernel/kernel/services.zig
++++ b/Kernel/kernel/services.zig
+@@ -161,6 +161,7 @@ pub const Entry = struct {
+     state: State = .empty,
+     start_mode: StartMode = .manual,
+     instance_id: u32 = 0,
++    start_generation: u64 = 0,
+     exit_code: i32 = 0,
+     start_tick: u64 = 0,
+     restart_count: u32 = 0,
+@@ -300,6 +301,7 @@ var registry_lock_timing: [SERVICE_LOCK_FAMILY_COUNT]LockTiming = .{LockTiming{}
+ var api_index_slots: [MAX_SERVICES]u8 = .{API_INDEX_INVALID_SLOT} ** MAX_SERVICES;
+ var api_index_count: u32 = 0;
+ var registry_generation: u64 = 1;
++var next_start_generation: u64 = 0;
+ var registry_enumeration_performance: RegistryEnumerationPerformance = .{};
+ 
+ fn lockFamilyIndex(family: LockFamily) usize {
+@@ -607,6 +609,9 @@ fn unlockEndpoint(lease: *EndpointLease) void {
+ }
+ 
+ fn markEntryStarting(entry: *Entry) void {
++    next_start_generation +%= 1;
++    if (next_start_generation == 0) next_start_generation = 1;
++    entry.start_generation = next_start_generation;
+     entry.state = .starting;
+     entry.instance_id = 0;
+     entry.exit_code = 0;
+@@ -616,6 +621,7 @@ fn markEntryStarting(entry: *Entry) void {
+ fn disableEntry(entry: *Entry) void {
+     entry.start_mode = .disabled;
+     entry.state = .disabled;
++    entry.start_generation = 0;
+     entry.instance_id = 0;
+     entry.start_tick = 0;
+ }
+@@ -656,6 +662,7 @@ fn finishServiceState(name: []const u8, stateFor: *const fn (*const Entry) State
+ 
+ fn finishEntryState(entry: *Entry, stateFor: *const fn (*const Entry) State, exit_code: i32, error_text: []const u8) void {
+     entry.state = stateFor(entry);
++    entry.start_generation = 0;
+     entry.instance_id = 0;
+     entry.exit_code = exit_code;
+     entry.start_tick = 0;
+@@ -746,16 +753,26 @@ pub fn setState(name: []const u8, state: State, instance_id: u32, exit_code: i32
+     }
+ }
+ 
+-pub fn markStarting(name: []const u8) i32 {
++pub const StartReservation = struct {
++    slot: usize = 0,
++    generation: u64 = 0,
++    entry: Entry = .{},
++};
++
++pub fn beginStart(name: []const u8, out: *StartReservation) i32 {
+     while (true) {
+         var registry_guard = lockRegistry(.registry_control);
+         const slot = findByNameIn(&entries, name) orelse {
+             unlockRegistry(&registry_guard);
+-            return ERR_NOT_FOUND;
++            return API_ERR_NOT_FOUND;
+         };
+         if (entries[slot].start_mode == .disabled) {
+             unlockRegistry(&registry_guard);
+-            return ERR_INVALID;
++            return API_ERR_DISABLED;
++        }
++        if (entries[slot].state == .running or entries[slot].state == .starting or entries[slot].state == .stopping) {
++            unlockRegistry(&registry_guard);
++            return API_ERR_BUSY;
+         }
+         switch (tryLifecycleEndpointForSlot(slot)) {
+             .contended => |ep| {
+@@ -771,11 +788,53 @@ pub fn markStarting(name: []const u8) i32 {
+             },
+             .none => markEntryStarting(&entries[slot]),
+         }
++        out.* = .{ .slot = slot, .generation = entries[slot].start_generation, .entry = entries[slot] };
+         unlockRegistry(&registry_guard);
+-        return OK;
++        return API_OK;
+     }
+ }
+ 
++pub fn markStarting(name: []const u8) i32 {
++    var reservation: StartReservation = .{};
++    return if (beginStart(name, &reservation) == API_OK) OK else ERR_INVALID;
++}
++
++fn startEntryLocked(reservation: *const StartReservation) ?*Entry {
++    if (reservation.slot >= entries.len or reservation.generation == 0) return null;
++    const entry = &entries[reservation.slot];
++    if (!entry.used or entry.start_generation != reservation.generation or
++        entry.start_mode == .disabled or entry.state != .starting or entry.instance_id != 0) return null;
++    return entry;
++}
++
++pub fn completeStart(reservation: *const StartReservation, instance_id: u32, start_tick: u64) bool {
++    var guard = lockRegistry(.registry_control);
++    defer unlockRegistry(&guard);
++    const entry = startEntryLocked(reservation) orelse return false;
++    if (instance_id == 0) return false;
++    entry.state = .running;
++    entry.instance_id = instance_id;
++    entry.start_tick = start_tick;
++    entry.start_generation = 0;
++    return true;
++}
++
++pub fn failStart(reservation: *const StartReservation, exit_code: i32, error_text: []const u8) void {
++    var guard = lockRegistry(.registry_control);
++    defer unlockRegistry(&guard);
++    const entry = startEntryLocked(reservation) orelse return;
++    finishEntryState(entry, alwaysFailed, exit_code, error_text);
++}
++
++pub fn cancelStarting(name: []const u8, generation: u64) void {
++    var guard = lockRegistry(.registry_control);
++    defer unlockRegistry(&guard);
++    const slot = findByNameIn(&entries, name) orelse return;
++    const entry = &entries[slot];
++    if (generation == 0 or entry.start_generation != generation or entry.state != .starting or entry.instance_id != 0) return;
++    finishEntryState(entry, ifEntryDisabledElseStopped, 0, "");
++}
++
+ pub fn markRunning(name: []const u8, instance_id: u32, start_tick: u64) i32 {
+     var registry_guard = lockRegistry(.registry_control);
+     defer unlockRegistry(&registry_guard);
+@@ -783,6 +842,7 @@ pub fn markRunning(name: []const u8, instance_id: u32, start_tick: u64) i32 {
+     var e = &entries[slot];
+     if (e.start_mode == .disabled or instance_id == 0) return ERR_INVALID;
+     e.state = .running;
++    e.start_generation = 0;
+     e.instance_id = instance_id;
+     e.exit_code = 0;
+     e.start_tick = start_tick;
+@@ -913,6 +973,10 @@ pub fn setStartMode(name: []const u8, start_mode: StartMode) i32 {
+             unlockRegistry(&registry_guard);
+             return OK;
+         }
++        if (entries[slot].instance_id != 0) {
++            unlockRegistry(&registry_guard);
++            return ERR_INVALID;
++        }
+         switch (tryLifecycleEndpointForSlot(slot)) {
+             .contended => |ep| {
+                 unlockRegistry(&registry_guard);
+@@ -1617,6 +1681,7 @@ fn setStateIn(table: *[MAX_SERVICES]Entry, name: []const u8, state: State, insta
+     const slot = findByNameIn(table, name) orelse return ERR_NOT_FOUND;
+     var e = &table[slot];
+     e.state = state;
++    e.start_generation = 0;
+     e.instance_id = instance_id;
+     e.exit_code = exit_code;
+     e.last_error_len = copy(error_text, e.last_error[0..]);
+@@ -1628,6 +1693,7 @@ fn markRunningIn(table: *[MAX_SERVICES]Entry, name: []const u8, instance_id: u32
+     var e = &table[slot];
+     if (e.start_mode == .disabled or instance_id == 0) return ERR_INVALID;
+     e.state = .running;
++    e.start_generation = 0;
+     e.instance_id = instance_id;
+     e.exit_code = 0;
+     e.start_tick = start_tick;
+@@ -1689,6 +1755,7 @@ fn resetRegistryState() void {
+     api_index_slots = .{API_INDEX_INVALID_SLOT} ** MAX_SERVICES;
+     api_index_count = 0;
+     registry_generation = 1;
++    next_start_generation = 0;
+     registry_enumeration_performance = .{};
+     resetEndpoints();
+ }
+diff --git a/Kernel/program/r4x.zig b/Kernel/program/r4x.zig
+index 2db50f0..52111d3 100644
+--- a/Kernel/program/r4x.zig
++++ b/Kernel/program/r4x.zig
+@@ -7941,13 +7941,17 @@ pub fn activeShellInstanceId() u32 {
+ // ALLE Programm-Starts ueber die gesamte Ladezeit (MEMSUITE pagerstress
+ // sleep_under_lock, Report-Befund; Regression aus 0.55.46).
+ pub fn spawnPath(d: *drive.Drive, path: []const u8, args: []const u8, working_drive: *drive.Drive) i32 {
+-    const file = resolveProgramFile(d, path) orelse return -1;
+     var handle: ProgramProcessHandle = .{};
++    return spawnPathWithHandle(d, path, args, working_drive, &handle);
++}
++
++fn spawnPathWithHandle(d: *drive.Drive, path: []const u8, args: []const u8, working_drive: *drive.Drive, handle: *ProgramProcessHandle) i32 {
++    const file = resolveProgramFile(d, path) orelse return -1;
+     return switch (runProgramFile(file, .background, .auto, args, working_drive, .none, .{
+         .owner = true,
+         .owner_handle = ProgramProcessHandle{},
+         .legacy_id = true,
+-        .out_handle = &handle,
++        .out_handle = handle,
+     })) {
+         .ran => @intCast(handle.instance_id),
+         .not_found => -1,
+@@ -14574,6 +14578,8 @@ fn apiServiceSetStartMode(name_ptr: [*:0]const u8, start_mode_raw: u32, out: *Se
+     serviceApiRefreshName(name);
+     const entry = services.entryByName(name) orelse return services.API_ERR_NOT_FOUND;
+     const service_name = entry.name[0..entry.name_len];
++    if (start_mode == .disabled and callerDescendsFromServiceInstance(entry.instance_id))
++        return services.API_ERR_SELF_RESTART;
+     if (start_mode == .disabled and (entry.state == .running or entry.state == .starting or entry.state == .stopping)) {
+         const stop_result = serviceApiStopByName(service_name, out, 40);
+         if (stop_result < 0) return stop_result;
+@@ -14641,44 +14647,48 @@ fn serviceApiStartByName(name: []const u8, out: *ServiceInfo) i32 {
+     out.* = .{};
+     reportBootService(name);
+     serviceApiRefreshName(name);
+-    const entry = services.entryByName(name) orelse {
++    const current = services.entryByName(name) orelse return services.API_ERR_NOT_FOUND;
++    if (current.state == .running) return services.apiStatus(name, out, r4api.r4sys.ticks());
++    // Protect reservation and eventual spawn rollback across loader waits.
++    const token = task_context.enterUnwind();
++    defer _ = task_context.leaveUnwind(token);
++    var reservation: services.StartReservation = .{};
++    const reserved = services.beginStart(name, &reservation);
++    if (reserved != services.API_OK) {
++        _ = services.apiStatus(name, out, r4api.r4sys.ticks());
+         reportBootServiceError(name);
+-        return services.API_ERR_NOT_FOUND;
+-    };
+-    const service_name = entry.name[0..entry.name_len];
+-    if (entry.start_mode == .disabled or entry.state == .disabled) {
+-        _ = services.apiStatus(service_name, out, r4api.r4sys.ticks());
+-        reportBootServiceError(service_name);
+-        return services.API_ERR_DISABLED;
++        return reserved;
+     }
+-    if (entry.state == .running or entry.state == .starting or entry.state == .stopping) {
+-        const status = services.apiStatus(service_name, out, r4api.r4sys.ticks());
+-        if (status != services.API_OK) reportBootServiceError(service_name);
+-        return status;
+-    }
+-
+-    _ = services.markStarting(service_name);
++    const entry = &reservation.entry;
++    const service_name = entry.name[0..entry.name_len];
+     reportBootServiceStage(service_name, "Pfad pruefen");
+     var path_buf: [MAX_API_PATH]u8 = undefined;
+     const target = resolveServiceProgramTarget(entry.path[0..entry.path_len], &path_buf) orelse {
+-        _ = services.markFailed(service_name, -1, "path invalid or not service R4X");
++        services.failStart(&reservation, -1, "path invalid or not service R4X");
+         _ = services.apiStatus(service_name, out, r4api.r4sys.ticks());
+         reportBootServiceError(service_name);
+         return services.API_ERR_BAD_PATH;
+     };
+     reportBootServiceStage(service_name, "laden");
+-    const raw_id = spawnPath(target.drive_ref, target.path, entry.args[0..entry.args_len], target.drive_ref);
++    var handle: ProgramProcessHandle = .{};
++    const raw_id = spawnPathWithHandle(target.drive_ref, target.path, entry.args[0..entry.args_len], target.drive_ref, &handle);
+     if (raw_id <= 0) {
+-        _ = services.markFailed(service_name, raw_id, "spawn failed");
++        services.failStart(&reservation, raw_id, "spawn failed");
+         _ = services.apiStatus(service_name, out, r4api.r4sys.ticks());
+         reportBootServiceError(service_name);
+         return services.API_ERR_SPAWN_FAILED;
+     }
++    if (!services.completeStart(&reservation, handle.instance_id, r4api.r4sys.ticks())) {
++        // Use the exact published handle; the numeric ID alone can be reused.
++        // Existing lifecycle cancellation arranges exit and asynchronous reaping.
++        cancelPublishedSpawn(handle);
++        abandonProgramCompletion(handle);
++        _ = services.apiStatus(service_name, out, r4api.r4sys.ticks());
++        reportBootServiceError(service_name);
++        return services.API_ERR_BUSY;
++    }
+     reportBootServiceStage(service_name, "gestartet");
+-    _ = services.markRunning(service_name, @intCast(raw_id), r4api.r4sys.ticks());
+-    const status = services.apiStatus(service_name, out, r4api.r4sys.ticks());
+-    if (status != services.API_OK) reportBootServiceError(service_name);
+-    return status;
++    return services.apiStatus(service_name, out, r4api.r4sys.ticks());
+ }
+ 
+ fn serviceApiStopByName(name: []const u8, out: *ServiceInfo, timeout_ticks: u64) i32 {
+@@ -14686,6 +14696,8 @@ fn serviceApiStopByName(name: []const u8, out: *ServiceInfo, timeout_ticks: u64)
+     serviceApiRefreshName(name);
+     const entry = services.entryByName(name) orelse return services.API_ERR_NOT_FOUND;
+     const service_name = entry.name[0..entry.name_len];
++    if (entry.state == .starting and entry.instance_id == 0)
++        services.cancelStarting(service_name, entry.start_generation);
+     if (entry.state == .disabled or entry.state == .stopped or entry.state == .failed or entry.instance_id == 0) {
+         return services.apiStatus(service_name, out, r4api.r4sys.ticks());
+     }

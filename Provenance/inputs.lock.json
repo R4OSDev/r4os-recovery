@@ -253,9 +253,9 @@
     },
     {
       "id": "Apps-ServiceManager",
-      "archiveSha256": "5bc65ff2c493c12fdffe3fb190205cafe01a045583940bab89d040dca1833a25",
+      "archiveSha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
       "archive": "Legal/Sources/Apps-ServiceManager.zip",
-      "commit": "6a09eeeaee32cad0954bd896d6688bbd19f9d724",
+      "commit": "04c907c90e2bb4d73f88b5bb7342ebcc0039f1a9",
       "remote": "https://github.com/R4OSDev/r4os-app-servicemanager.git"
     },
     {
@@ -986,12 +986,12 @@
     },
     {
       "name": "SERVMAN",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": "Apps-ServiceManager",
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
       "manifest": "Legal/Manifests/SERVMAN/module.R4MF",
       "kind": 1,
-      "bytes": 31764,
+      "bytes": 31868,
       "imports": [
         "R4SYS:Query:1"
       ],
@@ -2671,8 +2671,8 @@
     },
     {
       "path": "Kernel/kernel/services.zig",
-      "bytes": 84689,
-      "sha256": "737d1c8d8883d1528c4954e3265f95a06cf74e4f447d1dc71ca7a72e3e74672f",
+      "bytes": 87444,
+      "sha256": "6f771de8194250bce386cbcbc7553ddfa0ea7cd056979a44f13f70f105fa4613",
       "originalSha256": "956d6aa90a1d0cdbe6f419bb2d8627a8c596de7a92ce5dce23cda1fd3837a89f",
       "origin": {
         "path": "kernel/services.zig",
@@ -3431,8 +3431,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 815694,
-      "sha256": "7f00887ebd54c7801fd8648470ef6e8d60644b592ed21b7f0cc4a2af7d742d5f",
+      "bytes": 816516,
+      "sha256": "dca661560f05dd4e057d652be5da8510c7ccf88e545b61d9f069841d6c2f8a81",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "31d7fa707f4a679a6cf07b5a0e53be2a53fe1c28559faabde67bbab0b9129428",
+      "sha256": "a0cf2295c581cd52fd277ea156649ac160847a04c69d5fe2acb826f6e2035286",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4339,8 +4339,8 @@
     {
       "path": "Legal/Manifests/SERVMAN/module.R4MF",
       "bytes": 258,
-      "sha256": "46d78c1b7a88523e450caee8d83f1645e15fc6cd2e1b0a2b18df6c3ce993ab5b",
-      "originalSha256": "46d78c1b7a88523e450caee8d83f1645e15fc6cd2e1b0a2b18df6c3ce993ab5b",
+      "sha256": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6",
+      "originalSha256": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6",
       "origin": {
         "path": "module.R4MF",
         "source": "Apps-ServiceManager"
@@ -5434,9 +5434,9 @@
     },
     {
       "path": "Legal/Sources/Apps-ServiceManager.zip",
-      "bytes": 18224,
-      "sha256": "5bc65ff2c493c12fdffe3fb190205cafe01a045583940bab89d040dca1833a25",
-      "originalSha256": "5bc65ff2c493c12fdffe3fb190205cafe01a045583940bab89d040dca1833a25",
+      "bytes": 18470,
+      "sha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
+      "originalSha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
       "origin": null
     },
     {
@@ -6464,8 +6464,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_services.zig",
-      "bytes": 19238,
-      "sha256": "9922f5bc4d35b03df8f58d7312fb65af31e153b51c9dfa83ec3ba3519dd69eaf",
+      "bytes": 20436,
+      "sha256": "87dddbe17f80d0c2db4bd36b6198a1a86f821ecfbabc4e9981a3a4f36718b67e",
       "originalSha256": "a73be3067011e4096275348d6de81b74011a86e1feff1e915f73814869f8f8ab",
       "origin": {
         "path": "r4os/app_services.zig",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "3c924e75f6efabb6046b8496afe146699ba9476edce35224c0a0b66d4dc6de98",
+      "sha256": "f470cc5a9f2f7fc436c7093da45485a5b8251e7b3edd55f6ff73b8d3bba972b1",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "c72b0be88f110a3bbe4ce3db5d8fc394569508ff7001ab18c5c89a5cdb1f827c",
+      "sha256": "3f17e0c6fc05d6f8263faef9b1a68aebd4e98218a0566d7418044ee0f63cf68e",
       "originalSha256": null,
       "origin": null
     },
@@ -9906,9 +9906,9 @@
     },
     {
       "path": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
-      "bytes": 31764,
-      "sha256": "2b3f1b107c85ce93aa4e8b9ed89ea9d19f5fd1edfbd5afd48288912bdb585282",
-      "originalSha256": "2b3f1b107c85ce93aa4e8b9ed89ea9d19f5fd1edfbd5afd48288912bdb585282",
+      "bytes": 31868,
+      "sha256": "d667cac55be9cd6a188224f7a76b0d0883455d53fdc73a4a0b295a152e059ad6",
+      "originalSha256": "d667cac55be9cd6a188224f7a76b0d0883455d53fdc73a4a0b295a152e059ad6",
       "origin": {
         "path": "Artifacts/Modules/ServiceManager/SERVMAN.R4X",
         "source": "Apps-ServiceManager"
@@ -10115,6 +10115,20 @@
       "origin": null,
       "sha256": "9d36fcafc44f437a21d8b3d7b67309e7edaf512061c3bf708a30f8233eda04d5",
       "bytes": 44140
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.52.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "3230c5b0549927f7049014a07b66624860fd08483d0077c17773828412cc419d",
+      "bytes": 13398
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.52.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "8a404e9763922b37df541173f7d9942fb1d23a530bfd66b3552f4c36dde97acd",
+      "bytes": 1596
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -14511,6 +14525,66 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "d79e7c69f29e676287db32dd368ab89812c339c29205286a48165922d7b8565c",
           "after": "3c924e75f6efabb6046b8496afe146699ba9476edce35224c0a0b66d4dc6de98"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.52: preserve complete service configuration and cancel discarded startup generations; Recovery 0.1.40, Menu unchanged 0.1.18.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/services.zig",
+          "before": "737d1c8d8883d1528c4954e3265f95a06cf74e4f447d1dc71ca7a72e3e74672f",
+          "after": "6f771de8194250bce386cbcbc7553ddfa0ea7cd056979a44f13f70f105fa4613"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "before": "7f00887ebd54c7801fd8648470ef6e8d60644b592ed21b7f0cc4a2af7d742d5f",
+          "after": "dca661560f05dd4e057d652be5da8510c7ccf88e545b61d9f069841d6c2f8a81"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.52.patch",
+          "before": null,
+          "after": "3230c5b0549927f7049014a07b66624860fd08483d0077c17773828412cc419d"
+        },
+        {
+          "path": "Platform/SDK/r4os/app_services.zig",
+          "before": "9922f5bc4d35b03df8f58d7312fb65af31e153b51c9dfa83ec3ba3519dd69eaf",
+          "after": "87dddbe17f80d0c2db4bd36b6198a1a86f821ecfbabc4e9981a3a4f36718b67e"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.78.52.patch",
+          "before": null,
+          "after": "8a404e9763922b37df541173f7d9942fb1d23a530bfd66b3552f4c36dde97acd"
+        },
+        {
+          "path": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
+          "before": "2b3f1b107c85ce93aa4e8b9ed89ea9d19f5fd1edfbd5afd48288912bdb585282",
+          "after": "d667cac55be9cd6a188224f7a76b0d0883455d53fdc73a4a0b295a152e059ad6"
+        },
+        {
+          "path": "Legal/Manifests/SERVMAN/module.R4MF",
+          "before": "46d78c1b7a88523e450caee8d83f1645e15fc6cd2e1b0a2b18df6c3ce993ab5b",
+          "after": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6"
+        },
+        {
+          "path": "Legal/Sources/Apps-ServiceManager.zip",
+          "before": "5bc65ff2c493c12fdffe3fb190205cafe01a045583940bab89d040dca1833a25",
+          "after": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "31d7fa707f4a679a6cf07b5a0e53be2a53fe1c28559faabde67bbab0b9129428",
+          "after": "a0cf2295c581cd52fd277ea156649ac160847a04c69d5fe2acb826f6e2035286"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "c72b0be88f110a3bbe4ce3db5d8fc394569508ff7001ab18c5c89a5cdb1f827c",
+          "after": "3f17e0c6fc05d6f8263faef9b1a68aebd4e98218a0566d7418044ee0f63cf68e"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "3c924e75f6efabb6046b8496afe146699ba9476edce35224c0a0b66d4dc6de98",
+          "after": "f470cc5a9f2f7fc436c7093da45485a5b8251e7b3edd55f6ff73b8d3bba972b1"
         }
       ]
     }
