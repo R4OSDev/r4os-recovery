@@ -307,3 +307,30 @@ owner exit. Raw maps require exactly one registered consumer; multiple
 consumers use the existing bounded read-copy path. The bounded input queue
 uses the same SMP state owner and counts full-queue rejection once.
 The Menu artifact remains at 0.1.20.
+
+
+Direct drawing and presentation ownership (0.78.76)
+-------------------------------------------------
+The public clear, rect, text and text_font operations now draw through
+DisplayManager and mark actual display use. Rectangles and glyphs clip signed
+coordinates; each text call holds one font-catalog view and uses the selected
+or explicit font, UTF-8 scalars, glyph advances and foreground/background.
+Hosted GUI targets and the separate boot/fatal console keep their ownership.
+
+All productive DisplayManager writes share a preemptible, nonblocking
+try-admission guard. An overlapping presentation returns unavailable without
+pixels or a success fence. Legacy void drawing requires exclusive fullscreen
+ownership and does not mark use on a collision. Completed statistics are
+copied under the short SMP program-state owner. Pixel stores, including WC
+stores, finish before published completion and before another CPU can write.
+Each successful regions call advances one generation/fence; this represents
+copy completion and does not promise VBlank synchronization or page flipping.
+
+DisplayBlit admission and the in-flight registration reference are atomic
+against cleanup. A call retains its copied descriptor, owner, generation and
+name; cleanup refuses a busy registration. The synchronous callback runs
+outside the short state owner, and its completion cannot affect a later
+registration. The existing driver-manager shutdown sequence is retained.
+
+Recovery 0.1.57 imports these canonical files from Kernel 0.1.132.
+The Menu artifact remains at 0.1.20.

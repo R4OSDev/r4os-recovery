@@ -1565,8 +1565,8 @@
     },
     {
       "path": "Kernel/display/blit_backend.zig",
-      "bytes": 5487,
-      "sha256": "e481afb8a0ebdcc5f6b6d5ab29eb42517ab911b239ba6b681a57de925097b3b7",
+      "bytes": 7085,
+      "sha256": "76b158bfde6fa8d0c9ca8caa592cf92547accf852a41d403f0ceea7cdb572a76",
       "originalSha256": "e481afb8a0ebdcc5f6b6d5ab29eb42517ab911b239ba6b681a57de925097b3b7",
       "origin": {
         "path": "display/blit_backend.zig",
@@ -1605,8 +1605,8 @@
     },
     {
       "path": "Kernel/display/display.zig",
-      "bytes": 30350,
-      "sha256": "7c6ddde56680f36c4c8d59a349a8f19bcc9caa410cad1b891252cd8d334d8538",
+      "bytes": 34855,
+      "sha256": "0e5293bd44b882e66612ca7ff3f5c3e550d51f45725fe01e01a295fdeda2cf76",
       "originalSha256": "7c6ddde56680f36c4c8d59a349a8f19bcc9caa410cad1b891252cd8d334d8538",
       "origin": {
         "path": "display/display.zig",
@@ -1635,8 +1635,8 @@
     },
     {
       "path": "Kernel/display/surface_pipeline.zig",
-      "bytes": 1567,
-      "sha256": "5e97c2788c819a0c624ce14ec9714280f101f0c0fe6bd8e54802c7739b3f4c55",
+      "bytes": 2097,
+      "sha256": "ccacbb814f3f35aec85cdf428a70ac70fc0e419a49db7d0bd88875d2b9cf46a9",
       "originalSha256": "5e97c2788c819a0c624ce14ec9714280f101f0c0fe6bd8e54802c7739b3f4c55",
       "origin": {
         "path": "display/surface_pipeline.zig",
@@ -2365,8 +2365,8 @@
     },
     {
       "path": "Kernel/kernel/font.zig",
-      "bytes": 65172,
-      "sha256": "d1e522dda84bee108f908fddcb04ccfea13cd50325334d806724d72aab5861d0",
+      "bytes": 65176,
+      "sha256": "fe3291d1f96dd411af5d9490953c3432d9480424948b1727134443d12e2bdbca",
       "originalSha256": "2a0214adb604619ffb639ac1ae0830205b7d5d652c2bde1d11e9630d2c618d69",
       "origin": {
         "path": "kernel/font.zig",
@@ -3371,8 +3371,8 @@
     },
     {
       "path": "Kernel/program/r4draw.zig",
-      "bytes": 14773,
-      "sha256": "67ec67cc15d28b5ce9025e1fbc8717c6c0c80d0a7f195e1ad827edeebc5e1d05",
+      "bytes": 15036,
+      "sha256": "a30ef687094af581e16b5376cd47110ed2bd8258ec29cd155a2080ca1dbb0f38",
       "originalSha256": "fe526b1ad3f5817977d44ee5125cf9e2fcc149f73569d627318993903fe85d03",
       "origin": {
         "path": "program/r4draw.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "23f67ea4b65ad91970043d0dc29350c012bd43a03a09471627198932623dd80e",
+      "sha256": "0059d3e7afe22c6b7f7576d33dc0d94ef4f435763a14e77fff27e0b57af3a545",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "25271b7de0057e53cecc97b712e08b5a80580a330ec1f3467434b00dbd44de97",
+      "sha256": "197c6f46db267a8f052b1d272095f026a9e84381ed1294021a30a8656bd3dbc3",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "fbef98a9da5d912dfb7988aead3b9e0c4b52a069c5625fa01fa3e46a56189b0f",
+      "sha256": "b616bbee7c6d53744aa21c47bf72921076edeb4a154bf7f8f7d8ec0f1a156a1c",
       "originalSha256": null,
       "origin": null
     },
@@ -10262,6 +10262,20 @@
       "origin": null,
       "sha256": "0403720f3c5b4456e71afe08c1bc275fff7a5799f927d679af787a1d90dacbee",
       "bytes": 23623
+    },
+    {
+      "path": "Kernel/display/ownership.zig",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "d16aeca15f2d8299ef566bfb6a6824247b9eda0b364103422dfbf6a2770e9f1c",
+      "bytes": 2309
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.76.patch",
+      "originalSha256": null,
+      "origin": null,
+      "sha256": "d72e2e6df26e3e2244b46ee8580d4f13adfaf9499f8c568eaab248e08b6e80ef",
+      "bytes": 24799
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -15523,6 +15537,61 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "d3587ec7d50b56aa037a5d1dd993a7517113862c8c08c716b86ab8d0688a3089",
           "after": "25271b7de0057e53cecc97b712e08b5a80580a330ec1f3467434b00dbd44de97"
+        }
+      ]
+    },
+    {
+      "reason": "0.78.76: direct R4DRAW output, ordered presentation and pinned blit callbacks; Recovery 0.1.57, Menu 0.1.20 unchanged.",
+      "changes": [
+        {
+          "path": "Kernel/display/ownership.zig",
+          "before": null,
+          "after": "d16aeca15f2d8299ef566bfb6a6824247b9eda0b364103422dfbf6a2770e9f1c"
+        },
+        {
+          "path": "Kernel/display/display.zig",
+          "before": "7c6ddde56680f36c4c8d59a349a8f19bcc9caa410cad1b891252cd8d334d8538",
+          "after": "0e5293bd44b882e66612ca7ff3f5c3e550d51f45725fe01e01a295fdeda2cf76"
+        },
+        {
+          "path": "Kernel/display/blit_backend.zig",
+          "before": "e481afb8a0ebdcc5f6b6d5ab29eb42517ab911b239ba6b681a57de925097b3b7",
+          "after": "76b158bfde6fa8d0c9ca8caa592cf92547accf852a41d403f0ceea7cdb572a76"
+        },
+        {
+          "path": "Kernel/display/surface_pipeline.zig",
+          "before": "5e97c2788c819a0c624ce14ec9714280f101f0c0fe6bd8e54802c7739b3f4c55",
+          "after": "ccacbb814f3f35aec85cdf428a70ac70fc0e419a49db7d0bd88875d2b9cf46a9"
+        },
+        {
+          "path": "Kernel/program/r4draw.zig",
+          "before": "67ec67cc15d28b5ce9025e1fbc8717c6c0c80d0a7f195e1ad827edeebc5e1d05",
+          "after": "a30ef687094af581e16b5376cd47110ed2bd8258ec29cd155a2080ca1dbb0f38"
+        },
+        {
+          "path": "Kernel/kernel/font.zig",
+          "before": "d1e522dda84bee108f908fddcb04ccfea13cd50325334d806724d72aab5861d0",
+          "after": "fe3291d1f96dd411af5d9490953c3432d9480424948b1727134443d12e2bdbca"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.78.76.patch",
+          "before": null,
+          "after": "d72e2e6df26e3e2244b46ee8580d4f13adfaf9499f8c568eaab248e08b6e80ef"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "23f67ea4b65ad91970043d0dc29350c012bd43a03a09471627198932623dd80e",
+          "after": "0059d3e7afe22c6b7f7576d33dc0d94ef4f435763a14e77fff27e0b57af3a545"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "fbef98a9da5d912dfb7988aead3b9e0c4b52a069c5625fa01fa3e46a56189b0f",
+          "after": "b616bbee7c6d53744aa21c47bf72921076edeb4a154bf7f8f7d8ec0f1a156a1c"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "25271b7de0057e53cecc97b712e08b5a80580a330ec1f3467434b00dbd44de97",
+          "after": "197c6f46db267a8f052b1d272095f026a9e84381ed1294021a30a8656bd3dbc3"
         }
       ]
     }

@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "reason": "Canonical direct drawing and nonblocking presentation ownership with atomic DisplayBlit admission and cleanup.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "83239f3bc21cf8fa384bd5bd19af3323d3b228ae",
+      "sourceCommit": "5aa90ea8e022e9aaacff3d630f6b3b9a9af854c3",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.76.patch",
+      "patchSha256": "d72e2e6df26e3e2244b46ee8580d4f13adfaf9499f8c568eaab248e08b6e80ef",
+      "files": [
+        {
+          "path": "Kernel/display/ownership.zig",
+          "sha256": "d16aeca15f2d8299ef566bfb6a6824247b9eda0b364103422dfbf6a2770e9f1c",
+          "sourcePath": "display/ownership.zig",
+          "sourceSha256": "d16aeca15f2d8299ef566bfb6a6824247b9eda0b364103422dfbf6a2770e9f1c",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/display/display.zig",
+          "sha256": "0e5293bd44b882e66612ca7ff3f5c3e550d51f45725fe01e01a295fdeda2cf76",
+          "sourcePath": "display/display.zig",
+          "sourceSha256": "0e5293bd44b882e66612ca7ff3f5c3e550d51f45725fe01e01a295fdeda2cf76",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/display/blit_backend.zig",
+          "sha256": "76b158bfde6fa8d0c9ca8caa592cf92547accf852a41d403f0ceea7cdb572a76",
+          "sourcePath": "display/blit_backend.zig",
+          "sourceSha256": "76b158bfde6fa8d0c9ca8caa592cf92547accf852a41d403f0ceea7cdb572a76",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/display/surface_pipeline.zig",
+          "sha256": "ccacbb814f3f35aec85cdf428a70ac70fc0e419a49db7d0bd88875d2b9cf46a9",
+          "sourcePath": "display/surface_pipeline.zig",
+          "sourceSha256": "ccacbb814f3f35aec85cdf428a70ac70fc0e419a49db7d0bd88875d2b9cf46a9",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/program/r4draw.zig",
+          "sha256": "a30ef687094af581e16b5376cd47110ed2bd8258ec29cd155a2080ca1dbb0f38",
+          "sourcePath": "program/r4draw.zig",
+          "sourceSha256": "a30ef687094af581e16b5376cd47110ed2bd8258ec29cd155a2080ca1dbb0f38",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/kernel/font.zig",
+          "sha256": "fe3291d1f96dd411af5d9490953c3432d9480424948b1727134443d12e2bdbca",
+          "sourcePath": "kernel/font.zig",
+          "sourceSha256": "fe3291d1f96dd411af5d9490953c3432d9480424948b1727134443d12e2bdbca",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
