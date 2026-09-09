@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "reason": "Canonical nonblocking R4DESK consumer epochs, deferred storage retirement, single-consumer raw maps and SMP input counts.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "8ec693ea9eb39ab70d4dc4bb6eefe20811c60bc4",
+      "sourceCommit": "3db6bb2fd1c9f149c15441a7175f764b00775f63",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.78.75.patch",
+      "patchSha256": "0403720f3c5b4456e71afe08c1bc275fff7a5799f927d679af787a1d90dacbee",
+      "files": [
+        {
+          "path": "Kernel/program/r4desk.zig",
+          "sha256": "0441f6eafdee33f8429132dbd181d1f44591b20bf888699d9ada748a3b0584f5",
+          "sourcePath": "program/r4desk.zig",
+          "sourceSha256": "0441f6eafdee33f8429132dbd181d1f44591b20bf888699d9ada748a3b0584f5",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

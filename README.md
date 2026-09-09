@@ -294,3 +294,16 @@ The complete public Full ZIP passed the production-menu download acceptance
 in 263.931 seconds (SMP4/8 GB), including independent cache verification,
 unchanged other partitions and Terminal poweroff. The final report is
 `Artifacts/Qualification/0.76.26/report.json`.
+
+
+Remote-frame ownership (0.78.75)
+-------------------------------
+Recovery 0.1.56 imports the canonical R4DESK owner from Kernel 0.1.131.
+Live copies and snapshot mutation use a nonblocking unwind-aware guard.
+A short SMP state owner orders consumer epochs and completed revisions.
+Last release invalidates the epoch immediately; any active copy retains
+its storage, discards its stale result, and performs deferred cleanup at
+owner exit. Raw maps require exactly one registered consumer; multiple
+consumers use the existing bounded read-copy path. The bounded input queue
+uses the same SMP state owner and counts full-queue rejection once.
+The Menu artifact remains at 0.1.20.
