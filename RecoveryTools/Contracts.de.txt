@@ -96,6 +96,13 @@ RELEASE_VERSION des normalen R4OS und dessen Kernelversion werden niemals
 als Recovery-Version umgedeutet. Modulversionen bleiben bei bytegleicher
 Uebernahme gleich. Build- und Versionsaenderungen stehen unter Git-Kontrolle.
 
+Ab Recovery 0.1.58 sind als Release-Quellmenue die bisherigen drei Eintraege
+und die kanonische Erweiterung um R4OS Software Graphics zulaessig. Beide
+Varianten werden mit lokalem oder USB-Standardziel bytegenau geprueft.
+Der flexible, erhaltende Menuevertrag bestehender Updateziele wird dadurch
+nicht auf die Releasequelle ausgedehnt. Aeltere Recovery-Releases muessen
+vor dem SYSTEM-Update aus einem solchen Grafik-Release aktualisiert werden.
+
 R4OS-Recovery-<Recovery-Version>-x86_64.zip enthaelt ausschliesslich einen
 vollstaendigen Satz aus recovery.elf, runtime.img, manifest.json und Legal/.
 runtime.img ist ein vollstaendiges FAT32-Volume, keine PRELOAD.R4I-Liste.

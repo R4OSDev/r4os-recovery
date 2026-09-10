@@ -1,7 +1,8 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[Parameter(Mandatory)][string]$PreviousPackage,[Parameter(Mandatory)][string]$BaseImage,
       [Parameter(Mandatory)][string]$ReleasePackage,[switch]$ReuseFixture,[switch]$SkipHostFaults,[string[]]$Cases=@(),
       [string]$Zig='', [string]$Qemu='', [ValidateRange(60,600)][int]$TimeoutSeconds=300,
-      [ValidateRange(512,32768)][int]$RamMB=8192)
+      [ValidateRange(512,32768)][int]$RamMB=8192,
+      [string]$BootPackage='', [string]$BootKernel='', [string]$BootRuntime='')
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 $root=Split-Path $PSScriptRoot -Parent;$workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
 $distribution=Join-Path $workspace 'Repositories/Distribution'
@@ -17,7 +18,12 @@ if(!$Qemu){$Qemu=Join-Path $workspace "DevKit/Emulation/QEMU/qemu-system-x86_64$
 $LimineRoot=Join-Path $workspace 'DevKit/Boot/Limine'
 $limine=Join-Path $LimineRoot $(if($IsWindows){'limine-tool-windows-x86/limine.exe'}else{'limine'})
 $output=Join-Path $root 'Artifacts/BootProbe/recovery-update';[IO.Directory]::CreateDirectory($output)|Out-Null
-$kernel=Join-Path $root 'Artifacts/BootProbe/ui/bin/recovery.elf';$runtime=Join-Path $root 'Artifacts/Runtime/runtime.img'
+# A historical UI witness must keep its actual package identity and runtime.
+# This permits a real old-to-new updater run instead of running the new code
+# under an older label. Default qualification still uses the current UI build.
+if(($BootPackage -or $BootKernel -or $BootRuntime) -and (!$BootPackage -or !$BootKernel -or !$BootRuntime)){throw 'A historical boot requires its complete package, UI kernel and runtime.'}
+if(!$BootPackage){$BootPackage=$SourcePackage;$BootKernel=Join-Path $root 'Artifacts/BootProbe/ui/bin/recovery.elf';$BootRuntime=Join-Path $root 'Artifacts/Runtime/runtime.img'}
+$kernel=$BootKernel;$runtime=$BootRuntime
 $utf8=[Text.UTF8Encoding]::new($false);$bom=[Text.UTF8Encoding]::new($true)
 $profile=Resolve-R4QemuHostProfile $Qemu
 function Checked([string]$Program,[string[]]$Arguments){& $Program @Arguments|Out-Host;if($LASTEXITCODE -ne 0){throw "Host tool failed: $Program"}}
@@ -155,14 +161,14 @@ try {
   try{$stream.CopyTo($memory);$sourceManifestBytes=$memory.ToArray();$sourceManifest=[Text.Encoding]::UTF8.GetString($sourceManifestBytes).TrimStart([char]0xfeff)|ConvertFrom-Json -AsHashtable}finally{$stream.Dispose();$memory.Dispose()}
  }finally{$zip.Dispose()}
  $uiStage=Join-Path $output 'technical-ui-package';$previousStage=Join-Path $output 'previous-package'
- $inputs=@{firmwarePolicy=Get-RecoveryHash (Join-Path $PSScriptRoot 'Guest-Qmp.ps1');package=Get-RecoveryHash $SourcePackage;previous=Get-RecoveryHash $PreviousPackage;release=Get-RecoveryHash $ReleasePackage;base=Get-RecoveryHash $BaseImage;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;host=Get-RecoveryHash $hostTool;runner=Get-RecoveryHash $PSCommandPath}
+ $inputs=@{firmwarePolicy=Get-RecoveryHash (Join-Path $PSScriptRoot 'Guest-Qmp.ps1');package=Get-RecoveryHash $SourcePackage;bootPackage=Get-RecoveryHash $BootPackage;previous=Get-RecoveryHash $PreviousPackage;release=Get-RecoveryHash $ReleasePackage;base=Get-RecoveryHash $BaseImage;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;creator=Get-RecoveryHash $imageCreator;host=Get-RecoveryHash $hostTool;runner=Get-RecoveryHash $PSCommandPath}
  $seed=Join-Path $output 'disk-20.img';$stamp=Join-Path $output 'recovery-fixture.json'
  if($ReuseFixture){
   $saved=Get-Content -Raw -LiteralPath $stamp|ConvertFrom-Json -AsHashtable
   foreach($key in $inputs.Keys){if($saved.inputs[$key] -cne $inputs[$key]){throw "Stale Recovery fixture: $key"}}
   foreach($file in $saved.images){if((Get-RecoveryHash $file.path) -cne $file.sha256){throw 'Changed fixture image.'}}
  }else{
-  Expand-Package $SourcePackage $uiStage;Expand-Package $PreviousPackage $previousStage
+  Expand-Package $BootPackage $uiStage;Expand-Package $PreviousPackage $previousStage
   Copy-Item -LiteralPath $kernel -Destination (Join-Path $uiStage 'recovery.elf') -Force
   Copy-Item -LiteralPath $runtime -Destination (Join-Path $uiStage 'runtime.img') -Force
   $manifestPath=Join-Path $uiStage 'manifest.json';$manifest=Get-Content -Raw -LiteralPath $manifestPath|ConvertFrom-Json -AsHashtable

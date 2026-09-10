@@ -1420,3 +1420,22 @@ der synchrone DISPBLIT-Treibervertrag werden damit wirksam abgesichert.
 
 Recovery importiert sechs bytegleiche Display-/R4DRAW-/Font-Dateien aus Kernel 5aa90ea8e022e9aaacff3d630f6b3b9a9af854c3.
 Recovery 0.1.57; Menue bleibt unveraendert 0.1.20.
+
+Recovery 0.1.58: Grafik-Fallback im Release-Bootmenue
+--------------------------------------------------
+
+Die Quellpruefung akzeptiert sowohl die bisherigen drei kanonischen
+Bootmenueeintraege als auch deren genaue Erweiterung um R4OS Software
+Graphics aus R4OS 0.79.X. GUID, Kernel, alle fuenf Preloadmodule samt Labels,
+Software-Cmdline, Aufloesung und Standardauswahl werden weiterhin geprueft.
+Zusaetzliche oder veraenderte Quelleintraege bleiben unzulaessig. Eigene
+Menues bestehender Zielinstallationen behalten den bisherigen getrennten
+Kompatibilitaetsvertrag und bleiben beim SYSTEM-Update bytegleich.
+
+Recovery 0.1.57 und aelter lehnen das neue Quellmenue mit SourceBootConfig
+vor dem ersten Zielschreibzugriff ab. Vor dem Update auf R4OS 0.79.8 daher
+zuerst Update Recovery ausfuehren und die neue Recovery neu starten.
+Der bestehende System-Update-Test akzeptiert historische Zielmenues und
+meldet eine abgewiesene Quellvorpruefung sofort. Recovery/Kernel 0.1.58,
+Menue 0.1.21; die eingefrorene Plattform und importierten Module bleiben
+auf ihren bisherigen Besitzerstaenden.

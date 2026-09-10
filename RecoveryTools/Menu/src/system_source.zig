@@ -170,9 +170,7 @@ pub fn verifyInstallation(allocator: std.mem.Allocator, prepared: @import("packa
     for (manifest.partitions, 0..) |part, i| ids.partitions[i] = part.partition_guid;
     const source_layout = try setup.Layout.prepare(image.length / 512, 512, ids);
     const config = try boot.readFile(allocator, "boot/limine.conf", 16384);
-    const local = try source_layout.limineConfig(allocator, .local);
-    const usb = try source_layout.limineConfig(allocator, .usb);
-    if (!std.mem.eql(u8, config, local) and !std.mem.eql(u8, config, usb)) return error.SourceBootConfig;
+    try @import("boot_config.zig").verifySource(allocator, config, source_layout);
     for (setup.boot_paths) |path| {
         for (system.bootFiles) |actual| {
             if (std.mem.eql(u8, path, actual)) break;

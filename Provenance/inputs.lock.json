@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "0059d3e7afe22c6b7f7576d33dc0d94ef4f435763a14e77fff27e0b57af3a545",
+      "sha256": "3b733e9d2016990e0f2e00df4447dc4268ea854416c44c0117ed3024b4c07f93",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9144,8 +9144,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 21633,
-      "sha256": "5ce61917d3c86b2c7a263f7d570a2b67413942894e10304e65233b5b1eb7424e",
+      "bytes": 22081,
+      "sha256": "a74fa69ac2e8d93fc236267c3897f0ab9028aeca1a5077258d837fac2bd48aaf",
       "originalSha256": null,
       "origin": null
     },
@@ -9166,14 +9166,14 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "2ad04d7c8c32e50271c40a24161d702c048dc47373776e65bf284320610de17a",
+      "sha256": "46249b7647be5e64a517d19319611e706372a54869738d9828aa41994dd1a318",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/boot_config.zig",
-      "bytes": 4247,
-      "sha256": "9d6e2a2db6b683ab9cdbc1c4740bc047213c8ca3a2fdc2c68d2f5a727f01fa69",
+      "bytes": 8226,
+      "sha256": "4385eecc50e88ac54315214ca0c345a32cd602191fcf5b7c4cc4fb9bb15b86c3",
       "originalSha256": null,
       "origin": null
     },
@@ -9361,8 +9361,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/system_source.zig",
-      "bytes": 15099,
-      "sha256": "e208479dfe2fbbe1e7244815a73088ef1d7cace425e3b5b8e6c9a45bc3eade39",
+      "bytes": 14942,
+      "sha256": "108a56c5916c43f0a04c6b4627d074794415516df35cf8a1edfa34dc3ae99f19",
       "originalSha256": null,
       "origin": null
     },
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "197c6f46db267a8f052b1d272095f026a9e84381ed1294021a30a8656bd3dbc3",
+      "sha256": "1eef53a40be598ce7826e6d3b7ef652a93f317dc44cf2ae7a18a1460e83bf106",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "b616bbee7c6d53744aa21c47bf72921076edeb4a154bf7f8f7d8ec0f1a156a1c",
+      "sha256": "6824fe219de1d394b7706dc8bf37defd74255b136c2650530065703f7fb24df6",
       "originalSha256": null,
       "origin": null
     },
@@ -15592,6 +15592,46 @@
           "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
           "before": "25271b7de0057e53cecc97b712e08b5a80580a330ec1f3467434b00dbd44de97",
           "after": "197c6f46db267a8f052b1d272095f026a9e84381ed1294021a30a8656bd3dbc3"
+        }
+      ]
+    },
+    {
+      "reason": "Recovery 0.1.58: canonically validate the R4OS 0.79 software graphics source menu while preserving legacy update targets",
+      "changes": [
+        {
+          "after": "3b733e9d2016990e0f2e00df4447dc4268ea854416c44c0117ed3024b4c07f93",
+          "before": "0059d3e7afe22c6b7f7576d33dc0d94ef4f435763a14e77fff27e0b57af3a545",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "after": "a74fa69ac2e8d93fc236267c3897f0ab9028aeca1a5077258d837fac2bd48aaf",
+          "before": "5ce61917d3c86b2c7a263f7d570a2b67413942894e10304e65233b5b1eb7424e",
+          "path": "RecoveryTools/Contracts.de.txt"
+        },
+        {
+          "after": "46249b7647be5e64a517d19319611e706372a54869738d9828aa41994dd1a318",
+          "before": "2ad04d7c8c32e50271c40a24161d702c048dc47373776e65bf284320610de17a",
+          "path": "RecoveryTools/Menu/module.R4MF"
+        },
+        {
+          "after": "4385eecc50e88ac54315214ca0c345a32cd602191fcf5b7c4cc4fb9bb15b86c3",
+          "before": "9d6e2a2db6b683ab9cdbc1c4740bc047213c8ca3a2fdc2c68d2f5a727f01fa69",
+          "path": "RecoveryTools/Menu/src/boot_config.zig"
+        },
+        {
+          "after": "108a56c5916c43f0a04c6b4627d074794415516df35cf8a1edfa34dc3ae99f19",
+          "before": "e208479dfe2fbbe1e7244815a73088ef1d7cace425e3b5b8e6c9a45bc3eade39",
+          "path": "RecoveryTools/Menu/src/system_source.zig"
+        },
+        {
+          "after": "1eef53a40be598ce7826e6d3b7ef652a93f317dc44cf2ae7a18a1460e83bf106",
+          "before": "197c6f46db267a8f052b1d272095f026a9e84381ed1294021a30a8656bd3dbc3",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "after": "6824fe219de1d394b7706dc8bf37defd74255b136c2650530065703f7fb24df6",
+          "before": "b616bbee7c6d53744aa21c47bf72921076edeb4a154bf7f8f7d8ec0f1a156a1c",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
         }
       ]
     }

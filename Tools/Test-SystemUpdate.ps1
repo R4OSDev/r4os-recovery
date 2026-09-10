@@ -31,6 +31,7 @@ function Wait-Guest([string]$Pattern){
  while($true){
   [string]$text=if(Test-Path $serialLog){Get-Content -Raw -LiteralPath $serialLog}else{''}
   if($text -match '\[CRASH\]|panic-ret=|result=FAILED'){throw "Guest failure: $serialLog"}
+  if($Pattern -ceq '\[RECOVERYSYSUPDATE\] result=OK' -and $text -match '\[RECOVERYSYSUPDATE\] preflight='){throw "System update preflight refused the release: $serialLog"}
   if($text -match $Pattern){return $text}
   if($process.HasExited -or [DateTime]::UtcNow -ge $deadline){throw "Missing marker $Pattern ($serialLog)"}
   Start-Sleep -Milliseconds 100
@@ -126,7 +127,10 @@ function New-Target([int]$Size){
 }
 try {
  Test-RecoveryInventory $root|Out-Null
- $null=Test-R4OSInstallationImage -Image $BaseImage
+ # Existing installations retain their boot menu during an update. Older
+ # releases need not have the entries required for today's fresh images;
+ # still verify their GPT, referenced files, identities and artifact versions.
+ $null=Test-R4OSInstallationImage -Image $BaseImage -PreservedMenu
  $imageCreator=Get-RecoveryImageCreator $root $Zig
  $zipSource=Join-Path $output 'host-zip-source'
  if(Test-Path $zipSource){Remove-Item -LiteralPath $zipSource -Recurse -Force}
