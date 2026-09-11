@@ -1,32 +1,455 @@
+diff --git a/Platform/SDK/r4os/storage_tools/fat32_update.zig b/Platform/SDK/r4os/storage_tools/fat32_update.zig
+index f3a6b2c..a482d4a 100644
+--- a/Platform/SDK/r4os/storage_tools/fat32_update.zig
++++ b/Platform/SDK/r4os/storage_tools/fat32_update.zig
+@@ -5,6 +5,7 @@ const std = @import("std");
+ const block = @import("io.zig");
+ const format = @import("fat32.zig");
+ const view = @import("fat32_view.zig");
++const Source = @import("byte_source.zig").Source;
+ /// Null removes the named file or complete directory tree. Changes are
+ /// applied in caller order to the private image, before any device writes.
+ pub const Change = struct { path: []const u8, bytes: ?[]const u8 };
+@@ -12,18 +13,186 @@ const Write = struct { first: u32, count: u32, order: u8, data_offset: usize = 0
+ const maximum_depth = 24;
+ const final_order = 27;
+ 
++/// Private, lazy preparation storage. Keep both FATs and the boot metadata;
++/// cache a data cluster only when the mutation engine actually needs it.
++/// File reads and full-volume fingerprints stream untouched data directly.
++/// The source remains borrowed until preparation finishes. Returned plans
++/// own all their writes and do not retain this backing or the device.
++pub const Backing = struct {
++    allocator: std.mem.Allocator,
++    original: Source,
++    geometry: format.Geometry,
++    metadata: []u8,
++    clusters: []?[*]u8,
++    cached: std.ArrayList([]u8) = .empty,
++    pub const maximum_bytes: usize = 8 * 1024 * 1024 * 1024;
++
++    pub fn init(a: std.mem.Allocator, original: Source, hidden: u64) !Backing {
++        if (original.length > maximum_bytes) return error.VolumeLimit;
++        const checked = try view.View.initSource(original, hidden);
++        const metadata = try a.alloc(u8, @as(usize, checked.geometry.data_start) * 512);
++        errdefer a.free(metadata);
++        var offset: usize = 0;
++        while (offset < metadata.len) {
++            const count = @min(block.scratch_bytes, metadata.len - offset);
++            try original.read(offset, metadata[offset..][0..count]);
++            offset += count;
++        }
++        const clusters = try a.alloc(?[*]u8, checked.geometry.clusters);
++        @memset(clusters, null);
++        errdefer a.free(clusters);
++        var result = Backing{ .allocator = a, .original = original, .geometry = checked.geometry, .metadata = metadata, .clusters = clusters };
++        const snapshot = try view.View.initSource(result.source(), hidden);
++        if (!std.meta.eql(snapshot.geometry, result.geometry)) return error.SourceChanged;
++        return result;
++    }
++    pub fn deinit(self: *Backing) void {
++        for (self.cached.items) |bytes| self.allocator.free(bytes);
++        self.cached.deinit(self.allocator);
++        self.allocator.free(self.clusters);
++        self.allocator.free(self.metadata);
++        self.clusters = &.{};
++        self.metadata = &.{};
++    }
++    fn clusterSize(self: Backing) usize {
++        return @as(usize, self.geometry.sectors_per_cluster) * 512;
++    }
++    fn span(self: *Backing, offset: usize, count: usize) ![]u8 {
++        if (offset > self.original.length or count > self.original.length - offset) return error.SourceBounds;
++        if (offset < self.metadata.len) {
++            if (count > self.metadata.len - offset) return error.SourceBounds;
++            return self.metadata[offset..][0..count];
++        }
++        const relative = offset - self.metadata.len;
++        const size = self.clusterSize();
++        const index = relative / size;
++        const within = relative % size;
++        if (index >= self.clusters.len or count > size - within) return error.SourceBounds;
++        if (self.clusters[index] == null) {
++            const bytes = try self.allocator.alloc(u8, size);
++            errdefer self.allocator.free(bytes);
++            try self.original.read(self.metadata.len + index * size, bytes);
++            try self.cached.append(self.allocator, bytes);
++            self.clusters[index] = bytes.ptr;
++        }
++        return self.clusters[index].?[within..][0..count];
++    }
++    pub fn source(self: *const Backing) Source {
++        return .{ .context = self, .length = self.original.length, .read_fn = read };
++    }
++    fn read(raw: *const anyopaque, offset: usize, out: []u8) !void {
++        const self: *const Backing = @ptrCast(@alignCast(raw));
++        var done: usize = 0;
++        while (done < out.len) {
++            const at = offset + done;
++            if (at < self.metadata.len) {
++                const count = @min(out.len - done, self.metadata.len - at);
++                @memcpy(out[done..][0..count], self.metadata[at..][0..count]);
++                done += count;
++                continue;
++            }
++            const relative = at - self.metadata.len;
++            const index = relative / self.clusterSize();
++            const within = relative % self.clusterSize();
++            var count = @min(out.len - done, self.clusterSize() - within);
++            if (index < self.clusters.len and self.clusters[index] != null) {
++                @memcpy(out[done..][0..count], self.clusters[index].?[within..][0..count]);
++            } else {
++                // Batch untouched runs so a full fingerprint does not issue
++                // one physical I/O and UI checkpoint for every cluster.
++                while (count < out.len - done) {
++                    const following = (relative + count) / self.clusterSize();
++                    if (following < self.clusters.len and self.clusters[following] != null) break;
++                    count += @min(out.len - done - count, self.clusterSize());
++                }
++                try self.original.read(at, out[done..][0..count]);
++            }
++            done += count;
++        }
++    }
++};
++
++/// Same audited replacement and publication order as prepareDelta, without
++/// a full-volume allocation. Two consecutive plans see the preceding private
++/// changes and independently fingerprint the source state they will replace.
++pub fn prepareBacking(a: std.mem.Allocator, backing: *Backing, changes: []const Change) !Prepared {
++    if (changes.len > 4096) return error.VolumeLimit;
++    for (changes, 0..) |change, i| {
++        try validPath(change.path);
++        if (change.bytes) |bytes| {
++            if (bytes.len > std.math.maxInt(u32)) return error.FileLimit;
++            // Borrowed payloads must be independent of the mutable metadata
++            // and cached clusters, just as for contiguous preparation.
++            if (overlaps(bytes, backing.metadata)) return error.SourceAlias;
++            for (backing.cached.items) |cached| if (overlaps(bytes, cached)) return error.SourceAlias;
++        }
++        for (changes[0..i]) |other| if (std.ascii.eqlIgnoreCase(change.path, other.path)) return error.DuplicateChange;
++    }
++    var hash = std.crypto.hash.sha2.Sha256.init(.{});
++    var work: [block.scratch_bytes]u8 = undefined;
++    const source = backing.source();
++    var offset: usize = 0;
++    while (offset < source.length) {
++        const count = @min(work.len, source.length - offset);
++        try source.read(offset, work[0..count]);
++        hash.update(work[0..count]);
++        offset += count;
++    }
++    const digest = hash.finalResult();
++    if (changes.len == 0) return .{ .allocator = a, .bytes = &.{}, .writes = &.{}, .source_sha256 = digest, .changed_files = 0, .volume_bytes = source.length, .compact = true };
++    const dirty = try a.alloc(bool, backing.geometry.sectors);
++    defer a.free(dirty);
++    @memset(dirty, false);
++    const applied = try applyBackingChanges(a, &.{}, backing, backing.geometry, changes, dirty);
++    defer a.free(applied.depth);
++    const fat = Fat{ .bytes = &.{}, .backing = backing, .geo = backing.geometry, .directory_depth = applied.depth };
++    var count: usize = 0;
++    for (dirty) |changed| if (changed) {
++        count += 1;
++    };
++    const compact = try a.alloc(u8, count * 512);
++    errdefer a.free(compact);
++    var writes: std.ArrayList(Write) = .empty;
++    defer writes.deinit(a);
++    offset = 0;
++    for (dirty, 0..) |changed, sector| {
++        if (!changed) continue;
++        const order = try fat.order(@intCast(sector));
++        @memcpy(compact[offset..][0..512], try backing.span(sector * 512, 512));
++        defer offset += 512;
++        if (writes.items.len != 0) {
++            const prior = &writes.items[writes.items.len - 1];
++            if (prior.order == order and prior.first + prior.count == sector and prior.count < 256) {
++                prior.count += 1;
++                continue;
++            }
++        }
++        try writes.append(a, .{ .first = @intCast(sector), .count = 1, .order = order, .data_offset = offset });
++    }
++    return .{ .allocator = a, .bytes = compact, .writes = try writes.toOwnedSlice(a), .source_sha256 = digest, .changed_files = applied.changed_files, .volume_bytes = source.length, .compact = true };
++}
++fn overlaps(a: []const u8, b: []const u8) bool {
++    return a.len != 0 and b.len != 0 and @intFromPtr(a.ptr) < @intFromPtr(b.ptr) + b.len and @intFromPtr(b.ptr) < @intFromPtr(a.ptr) + a.len;
++}
++
+ /// Exact file set below an existing directory. Empty extra directories and
+ /// unlisted files are rejected. Read-only; no allocation or volume mutation.
+ pub fn verifyTree(original: []const u8, hidden: u64, path: []const u8, expected: []const []const u8) !void {
+     const checked = try view.View.init(original, hidden);
++    var fat = Fat{ .bytes = @constCast(original), .geo = checked.geometry, .directory_depth = &.{} };
++    return verifyTreeFat(&fat, path, expected);
++}
++pub fn verifyTreeBacking(backing: *Backing, path: []const u8, expected: []const []const u8) !void {
++    var fat = Fat{ .bytes = &.{}, .backing = backing, .geo = backing.geometry, .directory_depth = &.{} };
++    return verifyTreeFat(&fat, path, expected);
++}
++fn verifyTreeFat(fat: *Fat, path: []const u8, expected: []const []const u8) !void {
+     if (expected.len > 4096) return error.FileLimit;
+     try validPath(path);
+     for (expected, 0..) |name, i| {
+         try validPath(name);
+         for (expected[0..i]) |other| if (std.ascii.eqlIgnoreCase(name, other)) return error.DuplicateChange;
+     }
+-    // The iterator does not write bytes or use directory_depth.
+-    var fat = Fat{ .bytes = @constCast(original), .geo = checked.geometry, .directory_depth = &.{} };
+     var parent: u32 = 2;
+     var parts = std.mem.splitScalar(u8, path, '/');
+     while (parts.next()) |name| {
+@@ -133,13 +302,16 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
+ 
+ const Applied = struct { depth: []u8, changed_files: usize };
+ fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geometry, changes: []const Change, dirty: ?[]bool) !Applied {
++    return applyBackingChanges(allocator, bytes, null, geometry, changes, dirty);
++}
++fn applyBackingChanges(allocator: std.mem.Allocator, bytes: []u8, backing: ?*Backing, geometry: format.Geometry, changes: []const Change, dirty: ?[]bool) !Applied {
+     const owners = try allocator.alloc(u8, geometry.clusters + 2);
+     defer allocator.free(owners);
+     @memset(owners, 0);
+     const depth = try allocator.alloc(u8, owners.len);
+     errdefer allocator.free(depth);
+     @memset(depth, 0);
+-    var fat = Fat{ .bytes = bytes, .geo = geometry, .directory_depth = depth, .dirty = dirty };
++    var fat = Fat{ .bytes = bytes, .backing = backing, .geo = geometry, .directory_depth = depth, .dirty = dirty };
+     try fat.audit(allocator, owners);
+     const original_directories = try allocator.dupe(u8, depth);
+     defer allocator.free(original_directories);
+@@ -148,7 +320,7 @@ fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geom
+     for (changes) |change| if (try fat.replace(change)) {
+         changed_files += 1;
+     };
+-    if (changed_files != 0) fat.updateInfo();
++    if (changed_files != 0) try fat.updateInfo();
+     return .{ .depth = depth, .changed_files = changed_files };
+ }
+ 
+@@ -317,7 +489,7 @@ const Iterator = struct {
+             self.position += 32;
+             self.entries += 1;
+             if (self.entries > 262144) return error.SourceFat;
+-            const raw = self.fat.bytes[offset..][0..32];
++            const raw = (try self.fat.read(offset, 32))[0..32];
+             if (raw[0] == 0) {
+                 self.finished = true;
+                 if (self.lfn.active) return error.SourceFat;
+@@ -372,15 +544,19 @@ const Iterator = struct {
+ 
+ const Fat = struct {
+     bytes: []u8,
++    backing: ?*Backing = null,
+     geo: format.Geometry,
+     directory_depth: []u8,
+     original_directories: []const u8 = &.{},
+     free_hint: u32 = 2,
+     dirty: ?[]bool = null,
+ 
+-    fn mutable(self: *Fat, offset: usize, count: usize) []u8 {
++    fn read(self: Fat, offset: usize, count: usize) ![]const u8 {
++        return if (self.backing) |backing| try backing.span(offset, count) else self.bytes[offset..][0..count];
++    }
++    fn mutable(self: *Fat, offset: usize, count: usize) ![]u8 {
+         if (self.dirty) |dirty| if (count != 0) @memset(dirty[offset / 512 .. (offset + count - 1) / 512 + 1], true);
+-        return self.bytes[offset..][0..count];
++        return if (self.backing) |backing| try backing.span(offset, count) else self.bytes[offset..][0..count];
+     }
+ 
+     fn verifyChildren(self: *Fat, parent: u32, depth: u8, path: []u8, length: usize, expected: []const []const u8, found: []bool, entries: *usize) !void {
+@@ -420,18 +596,18 @@ const Fat = struct {
+         if (cluster < 2 or cluster >= self.geo.clusters + 2) return error.SourceFat;
+         return (@as(usize, self.geo.data_start) + @as(usize, cluster - 2) * self.geo.sectors_per_cluster) * 512;
+     }
+-    fn value(self: Fat, cluster: u32) u32 {
+-        return u32at(self.bytes, 32 * 512 + @as(usize, cluster) * 4) & 0x0fff_ffff;
++    fn value(self: Fat, cluster: u32) !u32 {
++        return u32at(try self.read(32 * 512 + @as(usize, cluster) * 4, 4), 0) & 0x0fff_ffff;
+     }
+-    fn set(self: *Fat, cluster: u32, value_: u32) void {
++    fn set(self: *Fat, cluster: u32, value_: u32) !void {
+         for (0..2) |copy| {
+             const offset = (32 + copy * self.geo.sectors_per_fat) * 512 + @as(usize, cluster) * 4;
+-            put32(self.mutable(offset, 4), 0, (u32at(self.bytes, offset) & 0xf000_0000) | (value_ & 0x0fff_ffff));
++            put32((try self.mutable(offset, 4)), 0, (u32at(try self.read(offset, 4), 0) & 0xf000_0000) | (value_ & 0x0fff_ffff));
+         }
+     }
+     fn next(self: Fat, cluster: u32) !?u32 {
+         _ = try self.clusterOffset(cluster);
+-        const value_ = self.value(cluster);
++        const value_ = (try self.value(cluster));
+         if (value_ >= 0x0fff_fff8) return null;
+         _ = try self.clusterOffset(value_);
+         return value_;
+@@ -476,7 +652,7 @@ const Fat = struct {
+                 }
+             }
+         }
+-        for (2..self.geo.clusters + 2) |i| if ((self.value(@intCast(i)) != 0) != (owners[i] != 0)) return error.SourceAllocation;
++        for (2..self.geo.clusters + 2) |i| if (((try self.value(@intCast(i))) != 0) != (owners[i] != 0)) return error.SourceAllocation;
+     }
+     fn child(self: *Fat, parent: u32, name: []const u8) !?Entry {
+         var iterator = Iterator{ .fat = self, .cluster = parent };
+@@ -497,11 +673,11 @@ const Fat = struct {
+             // would destroy its entries while the old FAT still owns all
+             // their chains. A failed payload write then creates orphans.
+             const payload_safe = depth != 0 or self.original_directories.len == 0 or self.original_directories[cluster] == 0;
+-            if (self.value(cluster) == 0 and payload_safe) {
+-                self.set(cluster, 0x0fff_ffff);
++            if ((try self.value(cluster)) == 0 and payload_safe) {
++                try self.set(cluster, 0x0fff_ffff);
+                 self.directory_depth[cluster] = depth;
+                 const offset = try self.clusterOffset(cluster);
+-                @memset(self.mutable(offset, self.clusterSize()), 0);
++                @memset((try self.mutable(offset, self.clusterSize())), 0);
+                 self.free_hint = cluster + 1;
+                 return cluster;
+             }
+@@ -514,7 +690,7 @@ const Fat = struct {
+         var cluster = first;
+         while (true) {
+             const following = try self.next(cluster);
+-            self.set(cluster, 0);
++            try self.set(cluster, 0);
+             self.free_hint = @min(self.free_hint, cluster);
+             cluster = following orelse break;
+         }
+@@ -527,7 +703,7 @@ const Fat = struct {
+         while (done < bytes.len) {
+             const offset = try self.clusterOffset(cluster);
+             const amount = @min(self.clusterSize(), bytes.len - done);
+-            if (!std.mem.eql(u8, self.bytes[offset..][0..amount], bytes[done..][0..amount])) return false;
++            if (!std.mem.eql(u8, try self.read(offset, amount), bytes[done..][0..amount])) return false;
+             done += amount;
+             cluster = (try self.next(cluster)) orelse break;
+         }
+@@ -547,8 +723,8 @@ const Fat = struct {
+                 if (depth > maximum_depth) return error.Path;
+                 const cluster = try self.allocate(depth);
+                 const offset = try self.clusterOffset(cluster);
+-                shortEntry(self.mutable(offset, 32)[0..32], ".          ".*, true, cluster, 0);
+-                shortEntry(self.mutable(offset + 32, 32)[0..32], "..         ".*, true, if (parent == 2) 0 else parent, 0);
++                shortEntry((try self.mutable(offset, 32))[0..32], ".          ".*, true, cluster, 0);
++                shortEntry((try self.mutable(offset + 32, 32))[0..32], "..         ".*, true, if (parent == 2) 0 else parent, 0);
+                 _ = try self.create(parent, name, true, cluster);
+                 parent = cluster;
+             }
+@@ -574,14 +750,14 @@ const Fat = struct {
+         while (done < bytes.len) {
+             const cluster = try self.allocate(0);
+             if (first == 0) first = cluster;
+-            if (last != 0) self.set(last, cluster);
++            if (last != 0) try self.set(last, cluster);
+             last = cluster;
+             const amount = @min(self.clusterSize(), bytes.len - done);
+             const offset = try self.clusterOffset(cluster);
+-            @memcpy(self.mutable(offset, amount), bytes[done..][0..amount]);
++            @memcpy((try self.mutable(offset, amount)), bytes[done..][0..amount]);
+             done += amount;
+         }
+-        const raw = self.mutable(entry_offset, 32);
++        const raw = (try self.mutable(entry_offset, 32));
+         put16(raw, 20, @truncate(first >> 16));
+         put16(raw, 26, @truncate(first));
+         put32(raw, 28, @intCast(bytes.len));
+@@ -594,7 +770,7 @@ const Fat = struct {
+             while (try iterator.next()) |child_entry| try self.removeTree(child_entry, depth + 1);
+         }
+         try self.free(entry.cluster());
+-        for (entry.slots[0..entry.slot_count]) |offset| self.mutable(offset, 1)[0] = 0xe5;
++        for (entry.slots[0..entry.slot_count]) |offset| (try self.mutable(offset, 1))[0] = 0xe5;
+     }
+     fn create(self: *Fat, parent: u32, name: []const u8, directory: bool, cluster: u32) !usize {
+         var short = "R4UP0000BIN".*;
+@@ -623,14 +799,14 @@ const Fat = struct {
+                     current = following;
+                 } else {
+                     const fresh = try self.allocate(self.directory_depth[parent]);
+-                    self.set(current, fresh);
++                    try self.set(current, fresh);
+                     current = fresh;
+                 }
+                 at = 0;
+             }
+             const offset = try self.clusterOffset(current) + at;
+             at += 32;
+-            const first = self.bytes[offset];
++            const first = (try self.read(offset, 1))[0];
+             if (first == 0) past_end = true;
+             if (past_end or first == 0xe5) {
+                 slots[found] = offset;
+@@ -640,13 +816,13 @@ const Fat = struct {
+         // Consuming an end marker must not expose stale bytes after it.
+         if (past_end) {
+             if (at < self.clusterSize()) {
+-                self.mutable((try self.clusterOffset(current)) + at, 1)[0] = 0;
+-            } else if (try self.next(current)) |following| self.mutable(try self.clusterOffset(following), 1)[0] = 0;
++                (try self.mutable((try self.clusterOffset(current)) + at, 1))[0] = 0;
++            } else if (try self.next(current)) |following| (try self.mutable(try self.clusterOffset(following), 1))[0] = 0;
+         }
+         const sum = checksum(&short);
+         for (0..lfn_count) |i| {
+             const ordinal = lfn_count - i;
+-            const raw = self.mutable(slots[i], 32);
++            const raw = (try self.mutable(slots[i], 32));
+             @memset(raw, 0);
+             raw[0] = @as(u8, @intCast(ordinal)) | (if (i == 0) @as(u8, 64) else 0);
+             raw[11] = 15;
+@@ -657,19 +833,19 @@ const Fat = struct {
+             }
+         }
+         const offset = slots[lfn_count];
+-        shortEntry(self.mutable(offset, 32)[0..32], short, directory, cluster, 0);
++        shortEntry((try self.mutable(offset, 32))[0..32], short, directory, cluster, 0);
+         return offset;
+     }
+-    fn updateInfo(self: *Fat) void {
++    fn updateInfo(self: *Fat) !void {
+         var free_count: u32 = 0;
+         var next_free: u32 = 0xffff_ffff;
+-        for (2..self.geo.clusters + 2) |i| if (self.value(@intCast(i)) == 0) {
++        for (2..self.geo.clusters + 2) |i| if ((try self.value(@intCast(i))) == 0) {
+             free_count += 1;
+             if (next_free == 0xffff_ffff) next_free = @intCast(i);
+         };
+         for ([_]usize{ 1, 7 }) |sector| {
+-            put32(self.mutable(sector * 512 + 488, 4), 0, free_count);
+-            put32(self.mutable(sector * 512 + 492, 4), 0, next_free);
++            put32((try self.mutable(sector * 512 + 488, 4)), 0, free_count);
++            put32((try self.mutable(sector * 512 + 492, 4)), 0, next_free);
+         }
+     }
+     fn order(self: Fat, sector: u32) !u8 {
 diff --git a/Platform/SDK/r4os/storage_tools/installation.zig b/Platform/SDK/r4os/storage_tools/installation.zig
-index 3e9bfc0..e60f0c4 100644
+index 3e9bfc0..b0d3a61 100644
 --- a/Platform/SDK/r4os/storage_tools/installation.zig
 +++ b/Platform/SDK/r4os/storage_tools/installation.zig
-@@ -5,11 +5,39 @@ const partition = @import("partition.zig");
+@@ -5,11 +5,40 @@ const partition = @import("partition.zig");
  pub const guid = partition.guid;
  pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
  pub const Medium = enum { local, usb };
 -pub const standard_bytes: u64 = 2048 * 1024 * 1024;
 -pub const first_lbas = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
 +pub const system_mb: u64 = 10 * 1024;
-+pub const standard_bytes: u64 = 12 * 1024 * 1024 * 1024;
++pub const recovery_mb: u64 = 5 * 1024;
++pub const standard_bytes: u64 = 16 * 1024 * 1024 * 1024;
 +pub const legacy_bytes: u64 = 2 * 1024 * 1024 * 1024;
-+pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + 512) * 2048 };
++pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + recovery_mb) * 2048 };
  // The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
  // separately addressed backup boot sector.
  pub const minimum_data_sectors: u64 = 16 * 2048 + 1;
 +pub const minimum_sectors: u64 = first_lbas[4] + minimum_data_sectors + 33;
 +
-+fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64) ![5]partition.Range {
++fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64, recovery_sectors: u64) ![5]partition.Range {
 +    const recovery = first_lbas[2] + system_sectors;
-+    const data = recovery + 512 * 2048;
++    const data = recovery + recovery_sectors;
 +    if (sector_bytes != 512 or sectors > std.math.maxInt(u64) / 512 or
 +        sectors < data + minimum_data_sectors + 33) return error.Geometry;
 +    return .{
 +        .{ .first = first_lbas[0], .count = 2048 },
 +        .{ .first = first_lbas[1], .count = 128 * 2048 },
 +        .{ .first = first_lbas[2], .count = system_sectors },
-+        .{ .first = recovery, .count = 512 * 2048 },
++        .{ .first = recovery, .count = recovery_sectors },
 +        .{ .first = data, .count = sectors - 33 - data },
 +    };
 +}
@@ -39,12 +462,12 @@ index 3e9bfc0..e60f0c4 100644
 +        legacy_bytes => 1024 * 2048,
 +        else => return error.Geometry,
 +    };
-+    return ranges(bytes / 512, 512, system_sectors);
++    return ranges(bytes / 512, 512, system_sectors, if (bytes == legacy_bytes) 512 * 2048 else recovery_mb * 2048);
 +}
  pub const boot_paths = [_][]const u8{
      "boot/r4os.elf",           "boot/preload.r4i",        "boot/preload/hidreport.r4p",
      "boot/preload/usbhid.r4p", "boot/preload/usbbot.r4p", "boot/preload/usbscsi.r4p",
-@@ -49,15 +77,11 @@ pub const Layout = struct {
+@@ -49,15 +78,11 @@ pub const Layout = struct {
  
      pub fn prepare(sectors: u64, sector_bytes: u32, ids: Identifiers) !Layout {
          try ids.validate();
@@ -57,7 +480,7 @@ index 3e9bfc0..e60f0c4 100644
 -            .{ .first = first_lbas[3], .count = 512 * 2048 },
 -            .{ .first = first_lbas[4], .count = sectors - 33 - first_lbas[4] },
 -        } };
-+        return .{ .sectors = sectors, .ids = ids, .ranges = try ranges(sectors, sector_bytes, system_mb * 2048) };
++        return .{ .sectors = sectors, .ids = ids, .ranges = try ranges(sectors, sector_bytes, system_mb * 2048, recovery_mb * 2048) };
 +    }
 +    pub fn prepareSource(bytes: u64, ids: Identifiers) !Layout {
 +        try ids.validate();
@@ -65,7 +488,7 @@ index 3e9bfc0..e60f0c4 100644
      }
      pub fn part(self: Layout, role: Role) partition.Range {
          return self.ranges[@intFromEnum(role)];
-@@ -129,7 +153,14 @@ pub const Layout = struct {
+@@ -129,7 +154,14 @@ pub const Layout = struct {
              "    path: guid({s}):/CURRENT/recovery.elf\n    module_path: guid({s}):/CURRENT/runtime.img\n" ++
              "    module_string: recovery.runtime=1\n    resolution: 1280x720x32\n\n/R4OS Recovery Previous\n    protocol: limine\n" ++
              "    path: guid({s}):/PREVIOUS/recovery.elf\n    module_path: guid({s}):/PREVIOUS/runtime.img\n" ++

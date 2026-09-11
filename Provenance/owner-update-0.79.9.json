@@ -1,20 +1,20 @@
 {
   "schema": 1,
-  "reason": "10-GB installation default and bounded sparse release images from their SDK owner; other frozen sources retained.",
+  "reason": "10 GB SYSTEM, 5 GB Recovery, 16 GB source images and bounded FAT self-update preparation; exact canonical SDK imports.",
   "owners": [
     {
       "owner": "SDK",
-      "sourceCommit": "67ab7fb2d7a71d9a8284f147fae6137547787c13",
+      "sourceCommit": "d45953492b236609946a1c2f2141020816e1ee92",
       "baseRecoveryCommit": "595a28f192f2b3306829a74f0d0a5e2335ae6a21",
       "pendingOwnerCommit": false,
       "patch": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
-      "patchSha256": "c73c12b6723af9176bf35c7dd31f2ed231404b686d7cabe4a25f7a3589d0fb77",
+      "patchSha256": "b8880fcbad641de64161b3a3fbc375a8a6c13fd422c542fb0f119ade5c458ea1",
       "files": [
         {
           "path": "Platform/SDK/r4os/storage_tools/installation.zig",
           "sourcePath": "r4os/storage_tools/installation.zig",
-          "sha256": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb",
-          "sourceSha256": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb",
+          "sha256": "3ab739e5818ea5a13a7982a27e395abc44bb5c27432446e0a9e3eb343afac47d",
+          "sourceSha256": "3ab739e5818ea5a13a7982a27e395abc44bb5c27432446e0a9e3eb343afac47d",
           "byteIdentical": true
         },
         {
@@ -22,6 +22,13 @@
           "sourcePath": "r4os/storage_tools/sparse_image.zig",
           "sha256": "1d1d20b9a7e5b3bca05b3b06e8c4330cabf72d37298edc2c1e12e31f97cca1a5",
           "sourceSha256": "1d1d20b9a7e5b3bca05b3b06e8c4330cabf72d37298edc2c1e12e31f97cca1a5",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "sourcePath": "r4os/storage_tools/fat32_update.zig",
+          "sha256": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
+          "sourceSha256": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
           "byteIdentical": true
         }
       ]

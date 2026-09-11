@@ -300,8 +300,8 @@ const State = struct {
         var buffer: [1024]u8 = undefined;
         const source = if (self.source == .cached) "cached ZIP" else "GitHub release";
         const review_text = switch (target.operation) {
-            .install => std.fmt.bufPrint(&buffer, "Disk {d}: {d}MB - ALL DATA ERASED\nNew layout (not current partitions):\nBIOSBOOT 1MB + BOOT 128MB FAT32\nSYSTEM {d}MB NTFS\nRECOVERY 512MB FAT32\nDATA remaining {d}MB NTFS\nSource: {s}", .{
-                disk.info.reference.slot,                                                             disk.info.sector_count / 2048, r4os.storage_tools.installation.system_mb,
+            .install => std.fmt.bufPrint(&buffer, "Disk {d}: {d}MB - ALL DATA ERASED\nNew layout (not current partitions):\nBIOSBOOT 1MB + BOOT 128MB FAT32\nSYSTEM {d}MB NTFS\nRECOVERY {d}MB FAT32\nDATA remaining {d}MB NTFS\nSource: {s}", .{
+                disk.info.reference.slot,                                                             disk.info.sector_count / 2048, r4os.storage_tools.installation.system_mb, r4os.storage_tools.installation.recovery_mb,
                 (disk.info.sector_count - 33 - r4os.storage_tools.installation.first_lbas[4]) / 2048, source,
             }),
             .system => std.fmt.bufPrint(&buffer, "Disk {d}: SYSTEM partition {d}, {d}MB\nReplace ALL SYSTEM files and BOOT kernel.\nKeep partition sizes and identifiers.\nKeep DATA, RECOVERY and limine.conf.\nBOOT partition: {d}\nSource: {s}", .{

@@ -6,24 +6,25 @@ pub const guid = partition.guid;
 pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
 pub const Medium = enum { local, usb };
 pub const system_mb: u64 = 10 * 1024;
-pub const standard_bytes: u64 = 12 * 1024 * 1024 * 1024;
+pub const recovery_mb: u64 = 5 * 1024;
+pub const standard_bytes: u64 = 16 * 1024 * 1024 * 1024;
 pub const legacy_bytes: u64 = 2 * 1024 * 1024 * 1024;
-pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + 512) * 2048 };
+pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + recovery_mb) * 2048 };
 // The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
 // separately addressed backup boot sector.
 pub const minimum_data_sectors: u64 = 16 * 2048 + 1;
 pub const minimum_sectors: u64 = first_lbas[4] + minimum_data_sectors + 33;
 
-fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64) ![5]partition.Range {
+fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64, recovery_sectors: u64) ![5]partition.Range {
     const recovery = first_lbas[2] + system_sectors;
-    const data = recovery + 512 * 2048;
+    const data = recovery + recovery_sectors;
     if (sector_bytes != 512 or sectors > std.math.maxInt(u64) / 512 or
         sectors < data + minimum_data_sectors + 33) return error.Geometry;
     return .{
         .{ .first = first_lbas[0], .count = 2048 },
         .{ .first = first_lbas[1], .count = 128 * 2048 },
         .{ .first = first_lbas[2], .count = system_sectors },
-        .{ .first = recovery, .count = 512 * 2048 },
+        .{ .first = recovery, .count = recovery_sectors },
         .{ .first = data, .count = sectors - 33 - data },
     };
 }
@@ -36,7 +37,7 @@ pub fn sourceRanges(bytes: u64) ![5]partition.Range {
         legacy_bytes => 1024 * 2048,
         else => return error.Geometry,
     };
-    return ranges(bytes / 512, 512, system_sectors);
+    return ranges(bytes / 512, 512, system_sectors, if (bytes == legacy_bytes) 512 * 2048 else recovery_mb * 2048);
 }
 pub const boot_paths = [_][]const u8{
     "boot/r4os.elf",           "boot/preload.r4i",        "boot/preload/hidreport.r4p",
@@ -77,7 +78,7 @@ pub const Layout = struct {
 
     pub fn prepare(sectors: u64, sector_bytes: u32, ids: Identifiers) !Layout {
         try ids.validate();
-        return .{ .sectors = sectors, .ids = ids, .ranges = try ranges(sectors, sector_bytes, system_mb * 2048) };
+        return .{ .sectors = sectors, .ids = ids, .ranges = try ranges(sectors, sector_bytes, system_mb * 2048, recovery_mb * 2048) };
     }
     pub fn prepareSource(bytes: u64, ids: Identifiers) !Layout {
         try ids.validate();

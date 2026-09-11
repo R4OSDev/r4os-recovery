@@ -29,13 +29,14 @@ function Header([byte[]]$Entries,[string]$DiskGuid,[uint64]$Current,[uint64]$Bac
     U32 $h 16 (Crc $h 92)
     return ,$h
 }
-function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolution='1024x768x32',[hashtable]$ExtraFilesByRole=@{}){
+function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolution='1024x768x32',[hashtable]$ExtraFilesByRole=@{},[long]$DiskMB=2048,[long]$SystemMB=1024,[long]$RecoveryMB=512){
     $name=if($BadManifest){'damaged'}else{"disk-$Number"}
     $dir=Join-Path $output $name
     [IO.Directory]::CreateDirectory($dir)|Out-Null
     $roles=@('BIOSBOOT','BOOT','SYSTEM','RECOVERY','DATA')
-    [uint64[]]$starts=@(2048,4096,266240,2363392,3411968)
-    [uint64[]]$lengths=@(2048,262144,2097152,1048576,(4194304-34-3411968+1))
+    [uint64]$sectors=$DiskMB*2048
+    [uint64[]]$starts=@(2048,4096,266240,(266240+$SystemMB*2048),(266240+($SystemMB+$RecoveryMB)*2048))
+    [uint64[]]$lengths=@(2048,262144,($SystemMB*2048),($RecoveryMB*2048),($sectors-33-$starts[4]))
     $types=@('21686148-6449-6e6f-744e-656564454649','c12a7328-f81f-11d2-ba4b-00a0c93ec93b',
         'ebd0a0a2-b9e5-4433-87c0-68b6b72699c7','ebd0a0a2-b9e5-4433-87c0-68b6b72699c7','ebd0a0a2-b9e5-4433-87c0-68b6b72699c7')
     $parts=[ordered]@{}
@@ -59,14 +60,14 @@ function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolu
     $diskPath=Join-Path $output "$name.img"
     $disk=[IO.File]::Open($diskPath,[IO.FileMode]::Create,[IO.FileAccess]::ReadWrite)
     try{
-        $disk.SetLength(2048MB)
+        $disk.SetLength($DiskMB*1MB)
         $mbr=[byte[]]::new(512);$mbr[450]=238;$mbr[510]=85;$mbr[511]=170
-        U32 $mbr 440 $Number;U32 $mbr 454 1;U32 $mbr 458 (4194304-1)
+        U32 $mbr 440 $Number;U32 $mbr 454 1;U32 $mbr 458 ($sectors-1)
         Write-At $disk 0 $mbr
-        Write-At $disk 512 (Header $entries (Id $Number 0) 1 (4194304-1) 2)
+        Write-At $disk 512 (Header $entries (Id $Number 0) 1 ($sectors-1) 2 $sectors)
         Write-At $disk 1024 $entries
-        Write-At $disk ((4194304-33)*512) $entries
-        Write-At $disk ((4194304-1)*512) (Header $entries (Id $Number 0) (4194304-1) 1 (4194304-33))
+        Write-At $disk (($sectors-33)*512) $entries
+        Write-At $disk (($sectors-1)*512) (Header $entries (Id $Number 0) ($sectors-1) 1 ($sectors-33) $sectors)
         for($i=1;$i -lt 5;$i++){
             $role=$roles[$i]
             $witness=Join-Path $dir "$role.txt"

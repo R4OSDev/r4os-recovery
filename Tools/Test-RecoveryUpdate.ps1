@@ -85,7 +85,7 @@ function New-Seed([int]$Number){
   if($relative -notin @('recovery.elf','runtime.img')){$extras+="$($file.FullName)|/CURRENT/$relative"}
  }
  foreach($file in Get-ChildItem -LiteralPath $previousStage -File -Recurse){$extras+="$($file.FullName)|/PREVIOUS/$([IO.Path]::GetRelativePath($previousStage,$file.FullName).Replace('\','/'))"}
- $image=New-Installation $Number $false '1280x720x32' @{RECOVERY=$extras}
+ $image=New-Installation $Number $false '1280x720x32' @{RECOVERY=$extras} -DiskMB $baseDiskMB -SystemMB $baseSystemMB -RecoveryMB $baseRecoveryMB
  $dir=Join-Path $output "disk-$Number";$config=Join-Path $dir 'limine.conf';$guid=Id $Number 4
  [IO.File]::WriteAllText($config,"# Keep this user configuration byte for byte.`ntimeout: 5`ndefault_entry: 1`n`n/R4OS Recovery`n    protocol: limine`n    path: guid($guid):/CURRENT/recovery.elf`n    resolution: 1280x720x32`n    module_path: guid($guid):/CURRENT/runtime.img`n    module_string: recovery.runtime=1`n`n/R4OS Recovery (Previous)`n    protocol: limine`n    path: guid($guid):/PREVIOUS/recovery.elf`n    resolution: 1280x720x32`n    module_path: guid($guid):/PREVIOUS/runtime.img`n    module_string: recovery.runtime=1`n",$utf8)
  $volume=Join-Path $dir 'boot-fixed.img';Checked $imageCreator @('--output',$volume,'--size','128','--volume-only','--add-list',(Join-Path $dir 'BOOT.list'))
@@ -96,7 +96,7 @@ function New-Seed([int]$Number){
   # Storage enumeration fixtures round DATA down to whole MB. This update
   # acceptance instead uses a real release's exact DATA filesystem extent.
   $source=[IO.File]::OpenRead($BaseImage)
-  try{$source.Position=3411968L*512;$f.Position=$source.Position;$buffer=[byte[]]::new(1MB);[long]$left=$source.Length-33*512-$source.Position
+  try{$source.Position=$baseDataFirst*512;$f.Position=$source.Position;$buffer=[byte[]]::new(1MB);[long]$left=$source.Length-33*512-$source.Position
    while($left -gt 0){$amount=[int][Math]::Min($left,$buffer.Length);$source.ReadExactly($buffer,0,$amount);$f.Write($buffer,0,$amount);$left-=$amount}
   }finally{$source.Dispose()}
   $f.Flush($true)
@@ -149,7 +149,10 @@ try {
  Test-RecoveryInventory $root|Out-Null
  if(-not ('InstallationImageCheck' -as [type])){Add-Type -Path (Join-Path $distribution 'Tools/InstallationImage.Check.cs')}
  $baseCheck=[InstallationImageCheck]::new($BaseImage)
- try{if($baseCheck.Bytes -ne 2048MB){throw 'Recovery fixture requires a standard 2048 MB release disk.'}}finally{$baseCheck.Dispose()}
+ try{
+  if($baseCheck.Bytes -notin @(2GB,16GB)){throw 'Recovery fixture requires a standard legacy or current release disk.'}
+  $baseDiskMB=[long]($baseCheck.Bytes/1MB);$baseSystemMB=[long]($baseCheck.Partitions['SYSTEM'].Count/2048);$baseRecoveryMB=[long]($baseCheck.Partitions['RECOVERY'].Count/2048);$baseDataFirst=$baseCheck.Partitions['DATA'].First
+ }finally{$baseCheck.Dispose()}
  $imageCreator=Get-RecoveryImageCreator $root $Zig
  $zipSource=Join-Path $output 'host-zip-source';Expand-Package (Join-Path $root 'Legal/Sources/Protocols-R4Zip.zip') $zipSource
  $sdk=Join-Path $root 'Platform/SDK';$hostTool=Join-Path $output "recovery-host$suffix"

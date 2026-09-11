@@ -7000,8 +7000,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
-      "bytes": 32043,
-      "sha256": "875bb1ca96f657d12ca3a1832097c88be7092a6a74c0ec2dcd7b3af1cf71d812",
+      "bytes": 41285,
+      "sha256": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
       "originalSha256": null,
       "origin": null
     },
@@ -7042,8 +7042,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/installation.zig",
-      "bytes": 10127,
-      "sha256": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb",
+      "bytes": 10292,
+      "sha256": "3ab739e5818ea5a13a7982a27e395abc44bb5c27432446e0a9e3eb343afac47d",
       "originalSha256": null,
       "origin": null
     },
@@ -9144,8 +9144,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 23002,
-      "sha256": "4b924edcf8780184c5989ef676f2b64535be7735126fe293b31d636ef5a0bce8",
+      "bytes": 23148,
+      "sha256": "0e2c9780b3dae54b85894ee605c9bfefa7e1c1ec4ec909bf6771ad3c1528d695",
       "originalSha256": null,
       "origin": null
     },
@@ -9242,8 +9242,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 46578,
-      "sha256": "50d98db262a4ac7a62b3c9879b0fefe868e5aba3390030452b5088257186b72e",
+      "bytes": 46623,
+      "sha256": "929bc0f72cad184bc66add0dd9ff662685173811f641a7f4ba078a560832380a",
       "originalSha256": null,
       "origin": null
     },
@@ -9312,8 +9312,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/recovery_slots.zig",
-      "bytes": 7872,
-      "sha256": "c2ae6ca2f4fdf1131608b2718ad3a4b47890a194e15934167264afe6b00b9689",
+      "bytes": 9000,
+      "sha256": "87aaff6fbe7e01e3d0c5f1a9bb4f54a6ce714ed9e2d11cf7f5774e1d94c6e1ac",
       "originalSha256": null,
       "origin": null
     },
@@ -9326,8 +9326,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/recovery_update.zig",
-      "bytes": 8157,
-      "sha256": "296499ec1a93a32103258212a537c99ab90a0d9bffa3b00df6b09618bed1f07a",
+      "bytes": 9545,
+      "sha256": "a31d2527e9e36c8b8f586287926ea194aec25cc033a3754a540856504065f689",
       "originalSha256": null,
       "origin": null
     },
@@ -10279,8 +10279,8 @@
     },
     {
       "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
-      "bytes": 6272,
-      "sha256": "c73c12b6723af9176bf35c7dd31f2ed231404b686d7cabe4a25f7a3589d0fb77",
+      "bytes": 28669,
+      "sha256": "b8880fcbad641de64161b3a3fbc375a8a6c13fd422c542fb0f119ade5c458ea1",
       "originalSha256": null,
       "origin": null
     }
@@ -15716,6 +15716,46 @@
         }
       ],
       "reason": "Use the imported canonical software-graphics menu generator while accepting exact legacy source menus."
+    },
+    {
+      "changes": [
+        {
+          "after": "b8880fcbad641de64161b3a3fbc375a8a6c13fd422c542fb0f119ade5c458ea1",
+          "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
+          "before": "c73c12b6723af9176bf35c7dd31f2ed231404b686d7cabe4a25f7a3589d0fb77"
+        },
+        {
+          "after": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "before": "875bb1ca96f657d12ca3a1832097c88be7092a6a74c0ec2dcd7b3af1cf71d812"
+        },
+        {
+          "after": "3ab739e5818ea5a13a7982a27e395abc44bb5c27432446e0a9e3eb343afac47d",
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "before": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb"
+        },
+        {
+          "after": "0e2c9780b3dae54b85894ee605c9bfefa7e1c1ec4ec909bf6771ad3c1528d695",
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "4b924edcf8780184c5989ef676f2b64535be7735126fe293b31d636ef5a0bce8"
+        },
+        {
+          "after": "929bc0f72cad184bc66add0dd9ff662685173811f641a7f4ba078a560832380a",
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "50d98db262a4ac7a62b3c9879b0fefe868e5aba3390030452b5088257186b72e"
+        },
+        {
+          "after": "87aaff6fbe7e01e3d0c5f1a9bb4f54a6ce714ed9e2d11cf7f5774e1d94c6e1ac",
+          "path": "RecoveryTools/Menu/src/recovery_slots.zig",
+          "before": "c2ae6ca2f4fdf1131608b2718ad3a4b47890a194e15934167264afe6b00b9689"
+        },
+        {
+          "after": "a31d2527e9e36c8b8f586287926ea194aec25cc033a3754a540856504065f689",
+          "path": "RecoveryTools/Menu/src/recovery_update.zig",
+          "before": "296499ec1a93a32103258212a537c99ab90a0d9bffa3b00df6b09618bed1f07a"
+        }
+      ],
+      "reason": "R4OS 0.79.9 final 10 GB SYSTEM / 5 GB RECOVERY defaults and canonical SDK lazy FAT self-update backing"
     }
   ]
 }

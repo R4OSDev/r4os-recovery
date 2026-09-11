@@ -76,11 +76,11 @@ Backup-GPT am echten Datentraeger-Ende. Startausrichtung jeweils 1 MB.
   DATA        Rest   NTFS      ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 
 Die konkrete Rolle der Basic-Data-Partitionen folgt der Installations-
-beschreibung, nicht allein deren Typ/Label. Standard-disk.img ab R4OS 0.79.9: 12288 MB.
+beschreibung, nicht allein deren Typ/Label. Standard-disk.img ab R4OS 0.79.9: 16384 MB.
 DATA endet am letzten nutzbaren GPT-Sektor; sein Rest muss eine tatsaechlich
 formatierbare NTFS-Geometrie ergeben: mindestens 32769 Sektoren, also
-16 MB plus 512 Bytes. Das kleinste Medium hat damit 22319138 Sektoren
-(11427398656 Bytes). Native 4Kn, dynamische Windows-Disks,
+16 MB plus 512 Bytes. Das kleinste Medium hat damit 31756322 Sektoren
+(16259236864 Bytes). Native 4Kn, dynamische Windows-Disks,
 RAID, VHD und Verschieben ganzer Partitionen sind nicht Bestandteil 0.76.X.
 Recovery 0.1.59 liest sowohl die frueheren 2048-MB-Quellimages mit 1024 MB
 SYSTEM als auch die neuen 12288-MB-Quellimages mit 10240 MB SYSTEM.
@@ -294,9 +294,11 @@ Diese Sektion bindet das neue Paket schon vor dem Schreiben an genau das
 vom Kernel erwartete RAM-Abbild. Bestehende aeltere Slots ohne diese Sektion
 koennen nach vollstaendiger Versions-/Inhaltspruefung erhalten bleiben.
 
-Die Anwendung liest genau ein privates RECOVERY-Volume als temporaeren
-Arbeitsbereich. Der gemeinsame prepareDelta-Pfad mutiert diesen zweimal und
-kopiert jeweils nur beruehrte Sektoren in einen unabhaengigen Schreibplan.
+Ab 0.1.59 haelt der gemeinsame FAT-Backing-Pfad nur Boot-/FAT-Metadaten
+und bedarfsweise benoetigte Datencluster. Sonstige Dateiinhalte und der
+vollstaendige Partitionshash werden blockweise gelesen. Zwei aufeinander
+aufbauende Schreibplaene besitzen jeweils nur ihre geaenderten Sektoren.
+Die Quellpartition darf bis 8 GB gross sein; neue Installationen nutzen 5 GB.
 Der Arbeitsbereich wird vor dem exklusiven Claim freigegeben. Jeder Plan
 bindet sich an den SHA256 seines vollstaendigen Ausgangszustands; CURRENT
 erwartet dabei genau das Resultat des PREVIOUS-Plans. Ein unveraenderter
@@ -374,10 +376,10 @@ und Neustart verfuegbar. Der Ablauf verspricht keine Powerfail-Atomizitaet.
 Quellimages ab R4OS 0.79.9
 -------------------------
 
-Das ZIP bleibt auf 2 GB begrenzt. Ein R4OS-Paket darf bis 16 GB
+Das ZIP bleibt auf 2 GB begrenzt. Ein R4OS-Paket darf bis 20 GB
 unkomprimierten Inhalt enthalten; davon ist genau disk.img eine
-gepruefte 2- oder 12-GB-Quelle. Alle anderen Eintraege zusammen bleiben
+gepruefte 2- oder 16-GB-Quelle. Alle anderen Eintraege zusammen bleiben
 auf 4 GB begrenzt. Recovery-Pakete behalten die alte 4-GB-Nutzgrenze.
 Der unveraenderte ZIP64-/Streamingpfad hasht jeden entpackten Block.
 sparse_image haelt nur nichtleere 64-KB-Bloecke und deren Index im RAM;
-12 GB logischer Imageumfang sind keine 12-GB-RAM-Reservierung.
+16 GB logischer Imageumfang sind keine 16-GB-RAM-Reservierung.

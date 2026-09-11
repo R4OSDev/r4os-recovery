@@ -8,6 +8,40 @@ const selection = @import("selection.zig");
 const state = @import("recovery_state.zig");
 const slots = @import("recovery_slots.zig");
 const GuestTarget = r4os.storage_tools_guest.Target;
+const Reader = struct {
+    device: tools.io.Device,
+    pump: @import("resident.zig").Pump,
+    read_bytes: u64 = 0,
+    next_checkpoint: u64 = 0,
+
+    fn source(self: *Reader) tools.byte_source.Source {
+        return .{ .context = self, .length = @intCast(self.device.sectors * 512), .read_fn = read };
+    }
+    fn read(raw: *const anyopaque, at: usize, out: []u8) !void {
+        const self: *Reader = @ptrCast(@alignCast(@constCast(raw)));
+        var sector: [512]u8 = undefined;
+        var done: usize = 0;
+        while (done < out.len) {
+            const offset = at + done;
+            const within = offset % 512;
+            if (within != 0 or out.len - done < 512) {
+                try self.device.read(offset / 512, &sector);
+                const count = @min(out.len - done, 512 - within);
+                @memcpy(out[done..][0..count], sector[within..][0..count]);
+                done += count;
+            } else {
+                const count = @min((out.len - done) / 512 * 512, tools.io.scratch_bytes);
+                try self.device.read(offset / 512, out[done..][0..count]);
+                done += count;
+            }
+        }
+        self.read_bytes += out.len;
+        if (self.read_bytes >= self.next_checkpoint) {
+            try self.pump.run("Checking Recovery and preserving INSTALL", self.read_bytes, 0);
+            self.next_checkpoint = self.read_bytes + 1024 * 1024;
+        }
+    }
+};
 pub const Updater = struct {
     session: *packages.Session,
     target: GuestTarget,
@@ -31,7 +65,7 @@ pub const Updater = struct {
         const a = session.arena.allocator();
         const storage = r4os.storage.Context{ .sys = session.sys };
         var target = GuestTarget{ .storage = storage, .target = installed.parts[3] };
-        if (target.target.sector_count > 1024 * 2048) return error.SlotSize;
+        if (target.target.sector_count > tools.fat32_update.Backing.maximum_bytes / 512) return error.SlotSize;
         // Unknown boot slot must never allow rotation of the running fallback.
         var running_previous = false;
         if (own_source) {
@@ -40,19 +74,14 @@ pub const Updater = struct {
             const boot = if (size > 0 and size <= facts.len) state.Boot.parse(facts[0..@intCast(size)]) catch null else null;
             running_previous = if (boot) |b| b.previous or !state.guid.eql(b.disk, disk.info.disk_guid) or !state.guid.eql(b.partition, target.target.partition_guid) else true;
         }
-        const original = try session.pool.allocator().alloc(u8, @intCast(target.target.sector_count * 512));
-        defer session.pool.allocator().free(original);
-        const reader = target.device(null);
-        var done: usize = 0;
-        while (done < original.len) {
-            const amount = @min(original.len - done, tools.io.scratch_bytes);
-            try reader.read(done / 512, original[done..][0..amount]);
-            done += amount;
-            try session.pool.pump.run("Reading RECOVERY and preserving INSTALL", done, original.len);
-        }
-        var result = Updater{ .session = session, .target = target, .disk = .{ .storage = storage, .target = r4os.storage.Context.wholeDevice(disk.info) },
-            .table = try a.create(tools.partition.Plan), .plan = try slots.Plan.prepareDelta(a, original, target.target.first_lba, installed.manifest.installation_id, session.prepared.?, running_previous, session.pool.pump),
-            .work = try a.alloc(u8, tools.io.scratch_bytes), .own_source = own_source };
+        // Preparation borrows the device; the final sector deltas are resident
+        // and independent before the exclusive mutation claim is acquired.
+        var reader = Reader{ .device = target.device(null), .pump = session.pool.pump };
+        var scratch = std.heap.ArenaAllocator.init(session.pool.allocator());
+        defer scratch.deinit();
+        var backing = try tools.fat32_update.Backing.init(scratch.allocator(), reader.source(), target.target.first_lba);
+        defer backing.deinit();
+        var result = Updater{ .session = session, .target = target, .disk = .{ .storage = storage, .target = r4os.storage.Context.wholeDevice(disk.info) }, .table = try a.create(tools.partition.Plan), .plan = try slots.Plan.prepareBacking(a, &backing, target.target.first_lba, installed.manifest.installation_id, session.prepared.?, running_previous, session.pool.pump), .work = try a.alloc(u8, tools.io.scratch_bytes), .own_source = own_source };
         result.table.* = try tools.partition.Plan.read(result.disk.device(null), result.work);
         try catalog.revalidate(session.sys, selected);
         return result;

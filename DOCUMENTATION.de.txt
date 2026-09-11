@@ -1443,10 +1443,14 @@ auf ihren bisherigen Besitzerstaenden.
 Recovery 0.1.59 / R4OS 0.79.9
 -----------------------------
 
-Neue Installationen besitzen 10240 MB SYSTEM; das Standardimage hat
-12288 MB. Das Menue verwendet die gemeinsamen SDK-Groessen und
+Neue Installationen besitzen 10240 MB SYSTEM und 5120 MB RECOVERY;
+das Standardimage hat 16384 MB. Das Menue verwendet die gemeinsamen SDK-Groessen und
 blendet zu kleine Installationsziele aus. Bestehende Updateziele
 behalten Grenzen, IDs, DATA und RECOVERY. Alte 2-GB-Releases bleiben
-lesbar. Neue 12-GB-Releases benoetigen diese Recovery-Version.
-Nur installation.zig und sparse_image.zig werden vom SDK uebernommen;
+lesbar. Neue 16-GB-Releases benoetigen diese Recovery-Version.
+installation.zig, sparse_image.zig und fat32_update.zig stammen aus
+expliziten SDK-Imports. Der Selbstupdate-Pfad verwendet private FAT-Metadaten
+und bedarfsweise Datencluster statt eines vollstaendigen Partitionspuffers;
+INSTALL und unbekannte Dateien bleiben erhalten. Beide unabhaengigen
+Schreibplaene behalten den vollstaendigen SHA256 ihres Ausgangszustands;
 die importierten Runtime-Module und der Plattformvertrag bleiben fest.

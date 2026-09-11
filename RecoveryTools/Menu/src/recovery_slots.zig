@@ -13,7 +13,10 @@ pub const Slot = struct {
     files: []Payload,
 
     pub fn read(a: std.mem.Allocator, bytes: []const u8, hidden: u64, prefix: []const u8, pump: Pump) !Slot {
-        const view = try tools.fat32_view.View.init(bytes, hidden);
+        return readSource(a, tools.byte_source.Source.slice(bytes), hidden, prefix, pump, null);
+    }
+    fn readSource(a: std.mem.Allocator, source: tools.byte_source.Source, hidden: u64, prefix: []const u8, pump: Pump, backing: ?*tools.fat32_update.Backing) !Slot {
+        const view = try tools.fat32_view.View.initSource(source, hidden);
         const manifest_path = try std.fmt.allocPrint(a, "{s}/manifest.json", .{prefix});
         const manifest_bytes = try view.readFile(a, manifest_path, package.max_manifest_bytes);
         const manifest = try package.parse(package.RecoveryManifest, a, manifest_bytes);
@@ -22,7 +25,7 @@ pub const Slot = struct {
         const paths = try a.alloc([]const u8, files.len);
         var total: u64 = manifest_bytes.len;
         for (manifest.files, 0..) |file, i| {
-            if (file.bytes > bytes.len or total > bytes.len - file.bytes) return error.SlotSize;
+            if (file.bytes > source.length or total > source.length - file.bytes) return error.SlotSize;
             total += file.bytes;
             paths[i] = file.path;
             const path = try std.fmt.allocPrint(a, "{s}/{s}", .{ prefix, file.path });
@@ -33,7 +36,10 @@ pub const Slot = struct {
         }
         paths[manifest.files.len] = "manifest.json";
         files[manifest.files.len] = .{ .path = "manifest.json", .bytes = manifest_bytes };
-        try tools.fat32_update.verifyTree(bytes, hidden, prefix, paths);
+        if (backing) |b| try tools.fat32_update.verifyTreeBacking(b, prefix, paths) else {
+            const ptr: [*]const u8 = @ptrCast(source.context);
+            try tools.fat32_update.verifyTree(ptr[source.offset..][0..source.length], hidden, prefix, paths);
+        }
         const result = Slot{ .manifest_bytes = manifest_bytes, .manifest = manifest, .files = files };
         try result.verifyPair(a, false);
         return result;
@@ -62,15 +68,20 @@ pub const Plan = struct {
     current: tools.fat32_update.Prepared,
     unchanged: bool,
     pub fn prepare(a: std.mem.Allocator, original: []const u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump) !Plan {
-        return prepareMode(a, @constCast(original), hidden, installation, prepared, running_previous, pump, false);
+        return prepareMode(a, @constCast(original), hidden, installation, prepared, running_previous, pump, false, null);
     }
     pub fn prepareDelta(a: std.mem.Allocator, original: []u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump) !Plan {
-        return prepareMode(a, original, hidden, installation, prepared, running_previous, pump, true);
+        return prepareMode(a, original, hidden, installation, prepared, running_previous, pump, true, null);
     }
-    fn update(a: std.mem.Allocator, original: []u8, hidden: u64, changes: []const tools.fat32_update.Change, compact: bool) !tools.fat32_update.Prepared {
+    pub fn prepareBacking(a: std.mem.Allocator, backing: *tools.fat32_update.Backing, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump) !Plan {
+        return prepareMode(a, &.{}, hidden, installation, prepared, running_previous, pump, true, backing);
+    }
+    fn update(a: std.mem.Allocator, original: []u8, hidden: u64, changes: []const tools.fat32_update.Change, compact: bool, backing: ?*tools.fat32_update.Backing) !tools.fat32_update.Prepared {
+        if (backing) |b| return tools.fat32_update.prepareBacking(a, b, changes);
         return if (compact) tools.fat32_update.prepareDelta(a, original, hidden, changes) else tools.fat32_update.prepare(a, original, hidden, changes);
     }
-    fn prepareMode(a: std.mem.Allocator, original: []u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump, compact: bool) !Plan {
+    fn prepareMode(a: std.mem.Allocator, original: []u8, hidden: u64, installation: state.guid.Guid, prepared: package.Prepared, running_previous: bool, pump: Pump, compact: bool, backing: ?*tools.fat32_update.Backing) !Plan {
+        const source = if (backing) |b| b.source() else tools.byte_source.Source.slice(original);
         if (prepared.kind != .recovery or original.len > 1024 * 1024 * 1024) return error.InvalidTarget;
         try package.validateRecovery(prepared.recovery);
         const payloads = try a.alloc(Payload, prepared.recovery.files.len + 1);
@@ -78,14 +89,14 @@ pub const Plan = struct {
         payloads[prepared.recovery.files.len] = .{ .path = "manifest.json", .bytes = prepared.recovery_archive.manifest };
         const next = Slot{ .manifest_bytes = prepared.recovery_archive.manifest, .manifest = prepared.recovery, .files = payloads };
         try next.verifyPair(a, true);
-        const current: ?Slot = Slot.read(a, original, hidden, "CURRENT", pump) catch |err| switch (err) {
+        const current: ?Slot = Slot.readSource(a, source, hidden, "CURRENT", pump, backing) catch |err| switch (err) {
             error.OutOfMemory, error.Cancelled => return err,
             else => null,
         };
         if (current) |old| if (std.mem.eql(u8, old.manifest_bytes, next.manifest_bytes)) {
-            return .{ .previous = null, .current = try update(a, original, hidden, &.{}, compact), .unchanged = true };
+            return .{ .previous = null, .current = try update(a, original, hidden, &.{}, compact, backing), .unchanged = true };
         };
-        const view = try tools.fat32_view.View.init(original, hidden);
+        const view = try tools.fat32_view.View.initSource(source, hidden);
         const record = view.readFile(a, "state.r4s", state.maximum) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => "",
@@ -96,11 +107,11 @@ pub const Plan = struct {
         if (rotate) {
             try current.?.changes(a, "PREVIOUS", &changes);
             try pump.run("Preparing confirmed CURRENT to PREVIOUS", 0, 0);
-            previous = try update(a, original, hidden, changes.items, compact);
+            previous = try update(a, original, hidden, changes.items, compact, backing);
         } else {
             // Preserve the existing fallback. Refuse an update that cannot
             // offer the verified previous package promised by this action.
-            _ = Slot.read(a, original, hidden, "PREVIOUS", pump) catch |err| switch (err) {
+            _ = Slot.readSource(a, source, hidden, "PREVIOUS", pump, backing) catch |err| switch (err) {
                 error.OutOfMemory, error.Cancelled => return err,
                 else => return error.PreviousUnavailable,
             };
@@ -111,6 +122,6 @@ pub const Plan = struct {
         const unconfirmed = try state.encode(&record_buffer, installation, next.manifest.recoveryVersion, next.manifest_bytes, false);
         try changes.append(a, .{ .path = "state.r4s", .bytes = unconfirmed });
         try pump.run("Preparing new CURRENT and unconfirmed state", 0, 0);
-        return .{ .previous = previous, .current = try update(a, if (compact) original else if (previous) |p| p.bytes else original, hidden, changes.items, compact), .unchanged = false };
+        return .{ .previous = previous, .current = try update(a, if (compact) original else if (previous) |p| p.bytes else original, hidden, changes.items, compact, backing), .unchanged = false };
     }
 };
