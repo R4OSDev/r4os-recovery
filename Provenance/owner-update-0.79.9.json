@@ -4,11 +4,11 @@
   "owners": [
     {
       "owner": "SDK",
-      "sourceCommit": "d45953492b236609946a1c2f2141020816e1ee92",
+      "sourceCommit": "4a6577b86b68facb19982e04b3a5d5a41809968f",
       "baseRecoveryCommit": "595a28f192f2b3306829a74f0d0a5e2335ae6a21",
       "pendingOwnerCommit": false,
       "patch": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
-      "patchSha256": "b8880fcbad641de64161b3a3fbc375a8a6c13fd422c542fb0f119ade5c458ea1",
+      "patchSha256": "c1896345a4fd92edd202a8ae40314ae41bac621b3bcf3a3dc68995dd1e6765cf",
       "files": [
         {
           "path": "Platform/SDK/r4os/storage_tools/installation.zig",
@@ -27,8 +27,8 @@
         {
           "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
           "sourcePath": "r4os/storage_tools/fat32_update.zig",
-          "sha256": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
-          "sourceSha256": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
+          "sha256": "7b311d865eda09677517337452d4dbc3b0d0fabac0a94e382ef932a0ae98ab8b",
+          "sourceSha256": "7b311d865eda09677517337452d4dbc3b0d0fabac0a94e382ef932a0ae98ab8b",
           "byteIdentical": true
         }
       ]

@@ -1,5 +1,5 @@
 diff --git a/Platform/SDK/r4os/storage_tools/fat32_update.zig b/Platform/SDK/r4os/storage_tools/fat32_update.zig
-index f3a6b2c..a482d4a 100644
+index f3a6b2c..c4fddde 100644
 --- a/Platform/SDK/r4os/storage_tools/fat32_update.zig
 +++ b/Platform/SDK/r4os/storage_tools/fat32_update.zig
 @@ -5,6 +5,7 @@ const std = @import("std");
@@ -10,13 +10,13 @@ index f3a6b2c..a482d4a 100644
  /// Null removes the named file or complete directory tree. Changes are
  /// applied in caller order to the private image, before any device writes.
  pub const Change = struct { path: []const u8, bytes: ?[]const u8 };
-@@ -12,18 +13,186 @@ const Write = struct { first: u32, count: u32, order: u8, data_offset: usize = 0
+@@ -12,18 +13,205 @@ const Write = struct { first: u32, count: u32, order: u8, data_offset: usize = 0
  const maximum_depth = 24;
  const final_order = 27;
  
 +/// Private, lazy preparation storage. Keep both FATs and the boot metadata;
 +/// cache a data cluster only when the mutation engine actually needs it.
-+/// File reads and full-volume fingerprints stream untouched data directly.
++/// File reads and fingerprints stream untouched allocated data directly.
 +/// The source remains borrowed until preparation finishes. Returned plans
 +/// own all their writes and do not retain this backing or the device.
 +pub const Backing = struct {
@@ -129,18 +129,37 @@ index f3a6b2c..a482d4a 100644
 +        }
 +        for (changes[0..i]) |other| if (std.ascii.eqlIgnoreCase(change.path, other.path)) return error.DuplicateChange;
 +    }
++    const source = backing.source();
++    var ranges: std.ArrayList(SourceRange) = .empty;
++    defer ranges.deinit(a);
++    try ranges.append(a, .{ .first = 0, .count = backing.geometry.data_start });
++    for (0..backing.geometry.clusters) |index| {
++        const value = u32at(backing.metadata, 32 * 512 + (index + 2) * 4) & 0x0fff_ffff;
++        if (value == 0) continue;
++        const first = backing.geometry.data_start + @as(u32, @intCast(index)) * backing.geometry.sectors_per_cluster;
++        const prior = &ranges.items[ranges.items.len - 1];
++        if (prior.first + prior.count == first) prior.count += backing.geometry.sectors_per_cluster else try ranges.append(a, .{ .first = first, .count = backing.geometry.sectors_per_cluster });
++    }
++    // Metadata binds the allocation map and every directory reference.
++    // Fingerprint all allocated contents, including unrelated INSTALL files;
++    // unallocated bytes are not filesystem state and are never bulk-written.
 +    var hash = std.crypto.hash.sha2.Sha256.init(.{});
 +    var work: [block.scratch_bytes]u8 = undefined;
-+    const source = backing.source();
-+    var offset: usize = 0;
-+    while (offset < source.length) {
-+        const count = @min(work.len, source.length - offset);
-+        try source.read(offset, work[0..count]);
-+        hash.update(work[0..count]);
-+        offset += count;
++    for (ranges.items) |range| {
++        hashRange(&hash, range);
++        var offset: usize = @as(usize, range.first) * 512;
++        const end = offset + @as(usize, range.count) * 512;
++        while (offset < end) {
++            const count = @min(work.len, end - offset);
++            try source.read(offset, work[0..count]);
++            hash.update(work[0..count]);
++            offset += count;
++        }
 +    }
++    const owned_ranges = try ranges.toOwnedSlice(a);
++    errdefer a.free(owned_ranges);
 +    const digest = hash.finalResult();
-+    if (changes.len == 0) return .{ .allocator = a, .bytes = &.{}, .writes = &.{}, .source_sha256 = digest, .changed_files = 0, .volume_bytes = source.length, .compact = true };
++    if (changes.len == 0) return .{ .allocator = a, .bytes = &.{}, .writes = &.{}, .source_sha256 = digest, .source_ranges = owned_ranges, .changed_files = 0, .volume_bytes = source.length, .compact = true };
 +    const dirty = try a.alloc(bool, backing.geometry.sectors);
 +    defer a.free(dirty);
 +    @memset(dirty, false);
@@ -155,7 +174,7 @@ index f3a6b2c..a482d4a 100644
 +    errdefer a.free(compact);
 +    var writes: std.ArrayList(Write) = .empty;
 +    defer writes.deinit(a);
-+    offset = 0;
++    var offset: usize = 0;
 +    for (dirty, 0..) |changed, sector| {
 +        if (!changed) continue;
 +        const order = try fat.order(@intCast(sector));
@@ -170,7 +189,7 @@ index f3a6b2c..a482d4a 100644
 +        }
 +        try writes.append(a, .{ .first = @intCast(sector), .count = 1, .order = order, .data_offset = offset });
 +    }
-+    return .{ .allocator = a, .bytes = compact, .writes = try writes.toOwnedSlice(a), .source_sha256 = digest, .changed_files = applied.changed_files, .volume_bytes = source.length, .compact = true };
++    return .{ .allocator = a, .bytes = compact, .writes = try writes.toOwnedSlice(a), .source_sha256 = digest, .source_ranges = owned_ranges, .changed_files = applied.changed_files, .volume_bytes = source.length, .compact = true };
 +}
 +fn overlaps(a: []const u8, b: []const u8) bool {
 +    return a.len != 0 and b.len != 0 and @intFromPtr(a.ptr) < @intFromPtr(b.ptr) + b.len and @intFromPtr(b.ptr) < @intFromPtr(a.ptr) + a.len;
@@ -199,7 +218,61 @@ index f3a6b2c..a482d4a 100644
      var parent: u32 = 2;
      var parts = std.mem.splitScalar(u8, path, '/');
      while (parts.next()) |name| {
-@@ -133,13 +302,16 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
+@@ -38,11 +226,19 @@ pub fn verifyTree(original: []const u8, hidden: u64, path: []const u8, expected:
+     for (found[0..expected.len]) |yes| if (!yes) return error.SourceFileMissing;
+ }
+ 
++const SourceRange = struct { first: u32, count: u32 };
++fn hashRange(hash: *std.crypto.hash.sha2.Sha256, range: SourceRange) void {
++    var encoded: [8]u8 = undefined;
++    std.mem.writeInt(u32, encoded[0..4], range.first, .little);
++    std.mem.writeInt(u32, encoded[4..8], range.count, .little);
++    hash.update(&encoded);
++}
+ pub const Prepared = struct {
+     allocator: std.mem.Allocator,
+     bytes: []u8,
+     writes: []Write,
+     source_sha256: [32]u8,
++    source_ranges: []SourceRange = &.{},
+     changed_files: usize,
+     volume_bytes: usize = 0,
+     compact: bool = false,
+@@ -55,6 +251,8 @@ pub const Prepared = struct {
+     }
+ 
+     pub fn deinit(self: *Prepared) void {
++        self.allocator.free(self.source_ranges);
++        self.source_ranges = &.{};
+         self.allocator.free(self.writes);
+         self.allocator.free(self.bytes);
+         self.writes = &.{};
+@@ -64,6 +262,24 @@ pub const Prepared = struct {
+         try device.requireExclusive();
+         if (device.sectors * 512 != self.volumeLength() or work.len < 512 or work.len % 512 != 0) return error.Geometry;
+         var digest = std.crypto.hash.sha2.Sha256.init(.{});
++        if (self.source_ranges.len != 0) {
++            var previous_end: u64 = 0;
++            for (self.source_ranges) |range| {
++                const end = @as(u64, range.first) + range.count;
++                if (range.count == 0 or range.first < previous_end or end > device.sectors) return error.Geometry;
++                previous_end = end;
++                hashRange(&digest, range);
++                var at: u64 = range.first;
++                while (at < end) {
++                    const count: usize = @intCast(@min(end - at, work.len / 512));
++                    try device.read(at, work[0 .. count * 512]);
++                    digest.update(work[0 .. count * 512]);
++                    at += count;
++                }
++            }
++            if (!std.mem.eql(u8, &digest.finalResult(), &self.source_sha256)) return error.SourceChanged;
++            return;
++        }
+         var offset: usize = 0;
+         while (offset < self.volumeLength()) {
+             const amount = @min(self.volumeLength() - offset, work.len);
+@@ -133,13 +349,16 @@ pub fn prepare(allocator: std.mem.Allocator, original: []const u8, hidden: u64,
  
  const Applied = struct { depth: []u8, changed_files: usize };
  fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geometry, changes: []const Change, dirty: ?[]bool) !Applied {
@@ -217,7 +290,7 @@ index f3a6b2c..a482d4a 100644
      try fat.audit(allocator, owners);
      const original_directories = try allocator.dupe(u8, depth);
      defer allocator.free(original_directories);
-@@ -148,7 +320,7 @@ fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geom
+@@ -148,7 +367,7 @@ fn applyChanges(allocator: std.mem.Allocator, bytes: []u8, geometry: format.Geom
      for (changes) |change| if (try fat.replace(change)) {
          changed_files += 1;
      };
@@ -226,7 +299,7 @@ index f3a6b2c..a482d4a 100644
      return .{ .depth = depth, .changed_files = changed_files };
  }
  
-@@ -317,7 +489,7 @@ const Iterator = struct {
+@@ -317,7 +536,7 @@ const Iterator = struct {
              self.position += 32;
              self.entries += 1;
              if (self.entries > 262144) return error.SourceFat;
@@ -235,7 +308,7 @@ index f3a6b2c..a482d4a 100644
              if (raw[0] == 0) {
                  self.finished = true;
                  if (self.lfn.active) return error.SourceFat;
-@@ -372,15 +544,19 @@ const Iterator = struct {
+@@ -372,15 +591,19 @@ const Iterator = struct {
  
  const Fat = struct {
      bytes: []u8,
@@ -257,7 +330,7 @@ index f3a6b2c..a482d4a 100644
      }
  
      fn verifyChildren(self: *Fat, parent: u32, depth: u8, path: []u8, length: usize, expected: []const []const u8, found: []bool, entries: *usize) !void {
-@@ -420,18 +596,18 @@ const Fat = struct {
+@@ -420,18 +643,18 @@ const Fat = struct {
          if (cluster < 2 or cluster >= self.geo.clusters + 2) return error.SourceFat;
          return (@as(usize, self.geo.data_start) + @as(usize, cluster - 2) * self.geo.sectors_per_cluster) * 512;
      }
@@ -281,7 +354,7 @@ index f3a6b2c..a482d4a 100644
          if (value_ >= 0x0fff_fff8) return null;
          _ = try self.clusterOffset(value_);
          return value_;
-@@ -476,7 +652,7 @@ const Fat = struct {
+@@ -476,7 +699,7 @@ const Fat = struct {
                  }
              }
          }
@@ -290,7 +363,7 @@ index f3a6b2c..a482d4a 100644
      }
      fn child(self: *Fat, parent: u32, name: []const u8) !?Entry {
          var iterator = Iterator{ .fat = self, .cluster = parent };
-@@ -497,11 +673,11 @@ const Fat = struct {
+@@ -497,11 +720,11 @@ const Fat = struct {
              // would destroy its entries while the old FAT still owns all
              // their chains. A failed payload write then creates orphans.
              const payload_safe = depth != 0 or self.original_directories.len == 0 or self.original_directories[cluster] == 0;
@@ -305,7 +378,7 @@ index f3a6b2c..a482d4a 100644
                  self.free_hint = cluster + 1;
                  return cluster;
              }
-@@ -514,7 +690,7 @@ const Fat = struct {
+@@ -514,7 +737,7 @@ const Fat = struct {
          var cluster = first;
          while (true) {
              const following = try self.next(cluster);
@@ -314,7 +387,7 @@ index f3a6b2c..a482d4a 100644
              self.free_hint = @min(self.free_hint, cluster);
              cluster = following orelse break;
          }
-@@ -527,7 +703,7 @@ const Fat = struct {
+@@ -527,7 +750,7 @@ const Fat = struct {
          while (done < bytes.len) {
              const offset = try self.clusterOffset(cluster);
              const amount = @min(self.clusterSize(), bytes.len - done);
@@ -323,7 +396,7 @@ index f3a6b2c..a482d4a 100644
              done += amount;
              cluster = (try self.next(cluster)) orelse break;
          }
-@@ -547,8 +723,8 @@ const Fat = struct {
+@@ -547,8 +770,8 @@ const Fat = struct {
                  if (depth > maximum_depth) return error.Path;
                  const cluster = try self.allocate(depth);
                  const offset = try self.clusterOffset(cluster);
@@ -334,7 +407,7 @@ index f3a6b2c..a482d4a 100644
                  _ = try self.create(parent, name, true, cluster);
                  parent = cluster;
              }
-@@ -574,14 +750,14 @@ const Fat = struct {
+@@ -574,14 +797,14 @@ const Fat = struct {
          while (done < bytes.len) {
              const cluster = try self.allocate(0);
              if (first == 0) first = cluster;
@@ -352,7 +425,7 @@ index f3a6b2c..a482d4a 100644
          put16(raw, 20, @truncate(first >> 16));
          put16(raw, 26, @truncate(first));
          put32(raw, 28, @intCast(bytes.len));
-@@ -594,7 +770,7 @@ const Fat = struct {
+@@ -594,7 +817,7 @@ const Fat = struct {
              while (try iterator.next()) |child_entry| try self.removeTree(child_entry, depth + 1);
          }
          try self.free(entry.cluster());
@@ -361,7 +434,7 @@ index f3a6b2c..a482d4a 100644
      }
      fn create(self: *Fat, parent: u32, name: []const u8, directory: bool, cluster: u32) !usize {
          var short = "R4UP0000BIN".*;
-@@ -623,14 +799,14 @@ const Fat = struct {
+@@ -623,14 +846,14 @@ const Fat = struct {
                      current = following;
                  } else {
                      const fresh = try self.allocate(self.directory_depth[parent]);
@@ -378,7 +451,7 @@ index f3a6b2c..a482d4a 100644
              if (first == 0) past_end = true;
              if (past_end or first == 0xe5) {
                  slots[found] = offset;
-@@ -640,13 +816,13 @@ const Fat = struct {
+@@ -640,13 +863,13 @@ const Fat = struct {
          // Consuming an end marker must not expose stale bytes after it.
          if (past_end) {
              if (at < self.clusterSize()) {
@@ -395,7 +468,7 @@ index f3a6b2c..a482d4a 100644
              @memset(raw, 0);
              raw[0] = @as(u8, @intCast(ordinal)) | (if (i == 0) @as(u8, 64) else 0);
              raw[11] = 15;
-@@ -657,19 +833,19 @@ const Fat = struct {
+@@ -657,19 +880,19 @@ const Fat = struct {
              }
          }
          const offset = slots[lfn_count];

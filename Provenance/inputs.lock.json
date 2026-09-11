@@ -7000,8 +7000,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
-      "bytes": 41285,
-      "sha256": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4",
+      "bytes": 43875,
+      "sha256": "7b311d865eda09677517337452d4dbc3b0d0fabac0a94e382ef932a0ae98ab8b",
       "originalSha256": null,
       "origin": null
     },
@@ -9144,8 +9144,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 23148,
-      "sha256": "0e2c9780b3dae54b85894ee605c9bfefa7e1c1ec4ec909bf6771ad3c1528d695",
+      "bytes": 23219,
+      "sha256": "a2e75293e04a6f1d3b224d5b44cea25584ad9f5505f7f8ca2893b21beee00a6f",
       "originalSha256": null,
       "origin": null
     },
@@ -10279,8 +10279,8 @@
     },
     {
       "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
-      "bytes": 28669,
-      "sha256": "b8880fcbad641de64161b3a3fbc375a8a6c13fd422c542fb0f119ade5c458ea1",
+      "bytes": 32356,
+      "sha256": "c1896345a4fd92edd202a8ae40314ae41bac621b3bcf3a3dc68995dd1e6765cf",
       "originalSha256": null,
       "origin": null
     }
@@ -15756,6 +15756,26 @@
         }
       ],
       "reason": "R4OS 0.79.9 final 10 GB SYSTEM / 5 GB RECOVERY defaults and canonical SDK lazy FAT self-update backing"
+    },
+    {
+      "changes": [
+        {
+          "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
+          "after": "c1896345a4fd92edd202a8ae40314ae41bac621b3bcf3a3dc68995dd1e6765cf",
+          "before": "b8880fcbad641de64161b3a3fbc375a8a6c13fd422c542fb0f119ade5c458ea1"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/fat32_update.zig",
+          "after": "7b311d865eda09677517337452d4dbc3b0d0fabac0a94e382ef932a0ae98ab8b",
+          "before": "e3eabc0b7de2fc7b02d45bd3107c9f449683a088d914b6fe99e7d96fb8a054c4"
+        },
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "after": "a2e75293e04a6f1d3b224d5b44cea25584ad9f5505f7f8ca2893b21beee00a6f",
+          "before": "0e2c9780b3dae54b85894ee605c9bfefa7e1c1ec4ec909bf6771ad3c1528d695"
+        }
+      ],
+      "reason": "Bound self-update I/O to metadata and allocated FAT contents; retain position-bound source generation checks and untouched free sectors"
     }
   ]
 }

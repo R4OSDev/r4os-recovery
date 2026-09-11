@@ -295,12 +295,13 @@ vom Kernel erwartete RAM-Abbild. Bestehende aeltere Slots ohne diese Sektion
 koennen nach vollstaendiger Versions-/Inhaltspruefung erhalten bleiben.
 
 Ab 0.1.59 haelt der gemeinsame FAT-Backing-Pfad nur Boot-/FAT-Metadaten
-und bedarfsweise benoetigte Datencluster. Sonstige Dateiinhalte und der
-vollstaendige Partitionshash werden blockweise gelesen. Zwei aufeinander
+und bedarfsweise benoetigte Datencluster. Der positionsgebundene SHA256
+prueft alle Metadaten und belegten Bereiche, auch unbekannte Dateien und
+INSTALL-Inhalte. Freie Sektoren werden nicht eingelesen. Zwei aufeinander
 aufbauende Schreibplaene besitzen jeweils nur ihre geaenderten Sektoren.
 Die Quellpartition darf bis 8 GB gross sein; neue Installationen nutzen 5 GB.
 Der Arbeitsbereich wird vor dem exklusiven Claim freigegeben. Jeder Plan
-bindet sich an den SHA256 seines vollstaendigen Ausgangszustands; CURRENT
+bindet sich an den SHA256 dieses Dateisystem-Ausgangszustands; CURRENT
 erwartet dabei genau das Resultat des PREVIOUS-Plans. Ein unveraenderter
 CURRENT erzeugt keine Plan-Nutzdaten. Nur nach vollstaendigem Flush und
 Readback des PREVIOUS-Plans beginnt der CURRENT-Plan. Der gemeinsame SDK-Mechanismus prueft die gesamte Belegung,

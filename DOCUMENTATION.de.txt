@@ -1452,5 +1452,7 @@ installation.zig, sparse_image.zig und fat32_update.zig stammen aus
 expliziten SDK-Imports. Der Selbstupdate-Pfad verwendet private FAT-Metadaten
 und bedarfsweise Datencluster statt eines vollstaendigen Partitionspuffers;
 INSTALL und unbekannte Dateien bleiben erhalten. Beide unabhaengigen
-Schreibplaene behalten den vollstaendigen SHA256 ihres Ausgangszustands;
+Schreibplaene binden Metadaten und belegte Quellbereiche samt Positionen
+an einen SHA256; freie Bereiche werden nicht gelesen.
+
 die importierten Runtime-Module und der Plattformvertrag bleiben fest.

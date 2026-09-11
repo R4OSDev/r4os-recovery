@@ -15,7 +15,7 @@ const final_order = 27;
 
 /// Private, lazy preparation storage. Keep both FATs and the boot metadata;
 /// cache a data cluster only when the mutation engine actually needs it.
-/// File reads and full-volume fingerprints stream untouched data directly.
+/// File reads and fingerprints stream untouched allocated data directly.
 /// The source remains borrowed until preparation finishes. Returned plans
 /// own all their writes and do not retain this backing or the device.
 pub const Backing = struct {
@@ -128,18 +128,37 @@ pub fn prepareBacking(a: std.mem.Allocator, backing: *Backing, changes: []const 
         }
         for (changes[0..i]) |other| if (std.ascii.eqlIgnoreCase(change.path, other.path)) return error.DuplicateChange;
     }
+    const source = backing.source();
+    var ranges: std.ArrayList(SourceRange) = .empty;
+    defer ranges.deinit(a);
+    try ranges.append(a, .{ .first = 0, .count = backing.geometry.data_start });
+    for (0..backing.geometry.clusters) |index| {
+        const value = u32at(backing.metadata, 32 * 512 + (index + 2) * 4) & 0x0fff_ffff;
+        if (value == 0) continue;
+        const first = backing.geometry.data_start + @as(u32, @intCast(index)) * backing.geometry.sectors_per_cluster;
+        const prior = &ranges.items[ranges.items.len - 1];
+        if (prior.first + prior.count == first) prior.count += backing.geometry.sectors_per_cluster else try ranges.append(a, .{ .first = first, .count = backing.geometry.sectors_per_cluster });
+    }
+    // Metadata binds the allocation map and every directory reference.
+    // Fingerprint all allocated contents, including unrelated INSTALL files;
+    // unallocated bytes are not filesystem state and are never bulk-written.
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
     var work: [block.scratch_bytes]u8 = undefined;
-    const source = backing.source();
-    var offset: usize = 0;
-    while (offset < source.length) {
-        const count = @min(work.len, source.length - offset);
-        try source.read(offset, work[0..count]);
-        hash.update(work[0..count]);
-        offset += count;
+    for (ranges.items) |range| {
+        hashRange(&hash, range);
+        var offset: usize = @as(usize, range.first) * 512;
+        const end = offset + @as(usize, range.count) * 512;
+        while (offset < end) {
+            const count = @min(work.len, end - offset);
+            try source.read(offset, work[0..count]);
+            hash.update(work[0..count]);
+            offset += count;
+        }
     }
+    const owned_ranges = try ranges.toOwnedSlice(a);
+    errdefer a.free(owned_ranges);
     const digest = hash.finalResult();
-    if (changes.len == 0) return .{ .allocator = a, .bytes = &.{}, .writes = &.{}, .source_sha256 = digest, .changed_files = 0, .volume_bytes = source.length, .compact = true };
+    if (changes.len == 0) return .{ .allocator = a, .bytes = &.{}, .writes = &.{}, .source_sha256 = digest, .source_ranges = owned_ranges, .changed_files = 0, .volume_bytes = source.length, .compact = true };
     const dirty = try a.alloc(bool, backing.geometry.sectors);
     defer a.free(dirty);
     @memset(dirty, false);
@@ -154,7 +173,7 @@ pub fn prepareBacking(a: std.mem.Allocator, backing: *Backing, changes: []const 
     errdefer a.free(compact);
     var writes: std.ArrayList(Write) = .empty;
     defer writes.deinit(a);
-    offset = 0;
+    var offset: usize = 0;
     for (dirty, 0..) |changed, sector| {
         if (!changed) continue;
         const order = try fat.order(@intCast(sector));
@@ -169,7 +188,7 @@ pub fn prepareBacking(a: std.mem.Allocator, backing: *Backing, changes: []const 
         }
         try writes.append(a, .{ .first = @intCast(sector), .count = 1, .order = order, .data_offset = offset });
     }
-    return .{ .allocator = a, .bytes = compact, .writes = try writes.toOwnedSlice(a), .source_sha256 = digest, .changed_files = applied.changed_files, .volume_bytes = source.length, .compact = true };
+    return .{ .allocator = a, .bytes = compact, .writes = try writes.toOwnedSlice(a), .source_sha256 = digest, .source_ranges = owned_ranges, .changed_files = applied.changed_files, .volume_bytes = source.length, .compact = true };
 }
 fn overlaps(a: []const u8, b: []const u8) bool {
     return a.len != 0 and b.len != 0 and @intFromPtr(a.ptr) < @intFromPtr(b.ptr) + b.len and @intFromPtr(b.ptr) < @intFromPtr(a.ptr) + a.len;
@@ -207,11 +226,19 @@ fn verifyTreeFat(fat: *Fat, path: []const u8, expected: []const []const u8) !voi
     for (found[0..expected.len]) |yes| if (!yes) return error.SourceFileMissing;
 }
 
+const SourceRange = struct { first: u32, count: u32 };
+fn hashRange(hash: *std.crypto.hash.sha2.Sha256, range: SourceRange) void {
+    var encoded: [8]u8 = undefined;
+    std.mem.writeInt(u32, encoded[0..4], range.first, .little);
+    std.mem.writeInt(u32, encoded[4..8], range.count, .little);
+    hash.update(&encoded);
+}
 pub const Prepared = struct {
     allocator: std.mem.Allocator,
     bytes: []u8,
     writes: []Write,
     source_sha256: [32]u8,
+    source_ranges: []SourceRange = &.{},
     changed_files: usize,
     volume_bytes: usize = 0,
     compact: bool = false,
@@ -224,6 +251,8 @@ pub const Prepared = struct {
     }
 
     pub fn deinit(self: *Prepared) void {
+        self.allocator.free(self.source_ranges);
+        self.source_ranges = &.{};
         self.allocator.free(self.writes);
         self.allocator.free(self.bytes);
         self.writes = &.{};
@@ -233,6 +262,24 @@ pub const Prepared = struct {
         try device.requireExclusive();
         if (device.sectors * 512 != self.volumeLength() or work.len < 512 or work.len % 512 != 0) return error.Geometry;
         var digest = std.crypto.hash.sha2.Sha256.init(.{});
+        if (self.source_ranges.len != 0) {
+            var previous_end: u64 = 0;
+            for (self.source_ranges) |range| {
+                const end = @as(u64, range.first) + range.count;
+                if (range.count == 0 or range.first < previous_end or end > device.sectors) return error.Geometry;
+                previous_end = end;
+                hashRange(&digest, range);
+                var at: u64 = range.first;
+                while (at < end) {
+                    const count: usize = @intCast(@min(end - at, work.len / 512));
+                    try device.read(at, work[0 .. count * 512]);
+                    digest.update(work[0 .. count * 512]);
+                    at += count;
+                }
+            }
+            if (!std.mem.eql(u8, &digest.finalResult(), &self.source_sha256)) return error.SourceChanged;
+            return;
+        }
         var offset: usize = 0;
         while (offset < self.volumeLength()) {
             const amount = @min(self.volumeLength() - offset, work.len);
