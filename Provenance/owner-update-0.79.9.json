@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "reason": "10-GB installation default and bounded sparse release images from their SDK owner; other frozen sources retained.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "sourceCommit": "67ab7fb2d7a71d9a8284f147fae6137547787c13",
+      "baseRecoveryCommit": "595a28f192f2b3306829a74f0d0a5e2335ae6a21",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
+      "patchSha256": "c73c12b6723af9176bf35c7dd31f2ed231404b686d7cabe4a25f7a3589d0fb77",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "sourcePath": "r4os/storage_tools/installation.zig",
+          "sha256": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb",
+          "sourceSha256": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/sparse_image.zig",
+          "sourcePath": "r4os/storage_tools/sparse_image.zig",
+          "sha256": "1d1d20b9a7e5b3bca05b3b06e8c4330cabf72d37298edc2c1e12e31f97cca1a5",
+          "sourceSha256": "1d1d20b9a7e5b3bca05b3b06e8c4330cabf72d37298edc2c1e12e31f97cca1a5",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

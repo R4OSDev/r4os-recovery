@@ -7,6 +7,8 @@ const versions = r4os.version_info;
 pub const Pump = @import("resident.zig").Pump;
 pub const max_archive_bytes = 2 * 1024 * 1024 * 1024;
 pub const max_payload_bytes = 4 * 1024 * 1024 * 1024;
+// SYSTEM images remain sparse; the ordinary payload allowance stays bounded.
+pub const max_system_payload_bytes = r4os.storage_tools.installation.standard_bytes + max_payload_bytes;
 pub const max_manifest_bytes = 1024 * 1024;
 pub const Kind = enum { r4os, recovery };
 pub const File = struct { path: []const u8, bytes: u64, sha256: []const u8 };
@@ -195,16 +197,19 @@ fn extract(allocator: std.mem.Allocator, image_allocator: std.mem.Allocator, cod
     if (input.len < 22 or input.len > max_archive_bytes) return error.ArchiveSize;
     const entries = try allocator.alloc(zip.Entry, zip.max_entries);
     const info = try codec.inspect(input, entries);
-    if (info.entries == 0 or info.total_bytes > max_payload_bytes) return error.PayloadSize;
+    const maximum = if (kind == .r4os) max_system_payload_bytes else max_payload_bytes;
+    if (info.entries == 0 or info.total_bytes > maximum) return error.PayloadSize;
     const contents = try allocator.alloc([]u8, info.entries);
     @memset(contents, &.{});
     const work = try allocator.create(zip.Work);
     defer allocator.destroy(work);
     var result = Archive{ .original = input, .entries = entries[0..info.entries], .contents = contents, .manifest = undefined };
     var offset: u64 = 0;
+    var ordinary_bytes: u64 = 0;
     for (result.entries, 0..) |entry, i| {
         if (kind == .r4os and std.mem.eql(u8, try entry.name(input), "disk.img")) {
-            if (entry.bytes != 2048 * 1024 * 1024 or entry.directory != 0) return error.SourceImageSize;
+            if (entry.directory != 0) return error.SourceImageSize;
+            _ = r4os.storage_tools.installation.sourceRanges(entry.bytes) catch return error.SourceImageSize;
             const image = try r4os.storage_tools.sparse_image.Image.init(image_allocator, @intCast(entry.bytes));
             result.disk = image;
             const window = try allocator.alloc(u8, zip.stream_buffer_bytes);
@@ -221,6 +226,8 @@ fn extract(allocator: std.mem.Allocator, image_allocator: std.mem.Allocator, cod
             try image.finish();
             result.disk_sha256 = hash.finalResult();
         } else {
+            if (entry.bytes > max_payload_bytes - ordinary_bytes) return error.PayloadSize;
+            ordinary_bytes += entry.bytes;
             const output = try allocator.alloc(u8, @intCast(entry.bytes));
             contents[i] = output;
             var progress = try codec.begin(input, &entry, output, work);

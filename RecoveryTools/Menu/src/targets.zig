@@ -51,7 +51,7 @@ pub fn allowed(boot: ?Boot, disk: Disk, operation: Operation) bool {
     if (operation == .install) {
         // Fixed five-part layout, at least 16 MB DATA and final GPT records.
         const layout = @import("r4os").storage_tools.installation;
-        if (d.sector_count < layout.first_lbas[4] + layout.minimum_data_sectors + 33) return false;
+        if (d.sector_count < layout.minimum_sectors) return false;
         return !(source.usb and sameDevice(source.device, d.reference));
     }
     return !disk.ambiguous and
@@ -120,11 +120,17 @@ pub fn unchanged(old: Disk, current: Disk) bool {
 
 test "boot policy and identity never derive write authority from OS names" {
     const t = std.testing;
-    var disk = Disk{ .info = .{ .reference = .{ .slot = 2, .generation = 1 }, .sector_count = 4194304, .sector_bytes = 512, .flags = abi.storage_device_writable | abi.storage_device_table_valid | abi.storage_device_gpt, .bus = abi.storage_bus_nvme }, .partitions = &.{} };
+    var disk = Disk{ .info = .{ .reference = .{ .slot = 2, .generation = 1 }, .sector_count = @import("r4os").storage_tools.installation.standard_bytes / 512, .sector_bytes = 512, .flags = abi.storage_device_writable | abi.storage_device_table_valid | abi.storage_device_gpt, .bus = abi.storage_bus_nvme }, .partitions = &.{} };
     const local = Boot{ .device = disk.info.reference, .usb = false };
     const usb = Boot{ .device = .{ .slot = 3, .generation = 1 }, .usb = true };
     try t.expect(allowed(local, disk, .install));
     try t.expect(allowed(usb, disk, .install));
+    const original_sectors = disk.info.sector_count;
+    disk.info.sector_count = @import("r4os").storage_tools.installation.minimum_sectors - 1;
+    try t.expect(!allowed(local, disk, .install));
+    disk.info.sector_count += 1;
+    try t.expect(allowed(local, disk, .install));
+    disk.info.sector_count = original_sectors;
     try t.expect(!allowed(null, disk, .install));
     disk.info.flags |= abi.storage_device_partial;
     try t.expect(!allowed(local, disk, .install));

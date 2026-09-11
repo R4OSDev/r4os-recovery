@@ -5,11 +5,39 @@ const partition = @import("partition.zig");
 pub const guid = partition.guid;
 pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
 pub const Medium = enum { local, usb };
-pub const standard_bytes: u64 = 2048 * 1024 * 1024;
-pub const first_lbas = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
+pub const system_mb: u64 = 10 * 1024;
+pub const standard_bytes: u64 = 12 * 1024 * 1024 * 1024;
+pub const legacy_bytes: u64 = 2 * 1024 * 1024 * 1024;
+pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + 512) * 2048 };
 // The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
 // separately addressed backup boot sector.
 pub const minimum_data_sectors: u64 = 16 * 2048 + 1;
+pub const minimum_sectors: u64 = first_lbas[4] + minimum_data_sectors + 33;
+
+fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64) ![5]partition.Range {
+    const recovery = first_lbas[2] + system_sectors;
+    const data = recovery + 512 * 2048;
+    if (sector_bytes != 512 or sectors > std.math.maxInt(u64) / 512 or
+        sectors < data + minimum_data_sectors + 33) return error.Geometry;
+    return .{
+        .{ .first = first_lbas[0], .count = 2048 },
+        .{ .first = first_lbas[1], .count = 128 * 2048 },
+        .{ .first = first_lbas[2], .count = system_sectors },
+        .{ .first = recovery, .count = 512 * 2048 },
+        .{ .first = data, .count = sectors - 33 - data },
+    };
+}
+
+/// Release readers accept the previous 1-GB SYSTEM source as well as the
+/// current 10-GB source. This never selects the geometry of an update target.
+pub fn sourceRanges(bytes: u64) ![5]partition.Range {
+    const system_sectors: u64 = switch (bytes) {
+        standard_bytes => system_mb * 2048,
+        legacy_bytes => 1024 * 2048,
+        else => return error.Geometry,
+    };
+    return ranges(bytes / 512, 512, system_sectors);
+}
 pub const boot_paths = [_][]const u8{
     "boot/r4os.elf",           "boot/preload.r4i",        "boot/preload/hidreport.r4p",
     "boot/preload/usbhid.r4p", "boot/preload/usbbot.r4p", "boot/preload/usbscsi.r4p",
@@ -49,15 +77,11 @@ pub const Layout = struct {
 
     pub fn prepare(sectors: u64, sector_bytes: u32, ids: Identifiers) !Layout {
         try ids.validate();
-        if (sector_bytes != 512 or sectors > std.math.maxInt(u64) / 512 or
-            sectors < first_lbas[4] + minimum_data_sectors + 33) return error.Geometry;
-        return .{ .sectors = sectors, .ids = ids, .ranges = .{
-            .{ .first = first_lbas[0], .count = 2048 },
-            .{ .first = first_lbas[1], .count = 128 * 2048 },
-            .{ .first = first_lbas[2], .count = 1024 * 2048 },
-            .{ .first = first_lbas[3], .count = 512 * 2048 },
-            .{ .first = first_lbas[4], .count = sectors - 33 - first_lbas[4] },
-        } };
+        return .{ .sectors = sectors, .ids = ids, .ranges = try ranges(sectors, sector_bytes, system_mb * 2048) };
+    }
+    pub fn prepareSource(bytes: u64, ids: Identifiers) !Layout {
+        try ids.validate();
+        return .{ .sectors = bytes / 512, .ids = ids, .ranges = try sourceRanges(bytes) };
     }
     pub fn part(self: Layout, role: Role) partition.Range {
         return self.ranges[@intFromEnum(role)];
@@ -129,7 +153,14 @@ pub const Layout = struct {
             "    path: guid({s}):/CURRENT/recovery.elf\n    module_path: guid({s}):/CURRENT/runtime.img\n" ++
             "    module_string: recovery.runtime=1\n    resolution: 1280x720x32\n\n/R4OS Recovery Previous\n    protocol: limine\n" ++
             "    path: guid({s}):/PREVIOUS/recovery.elf\n    module_path: guid({s}):/PREVIOUS/runtime.img\n" ++
-            "    module_string: recovery.runtime=1\n    resolution: 1280x720x32\n", .{ @as(u8, if (medium == .local) 1 else 2), boot, boot, boot, boot, boot, boot, recovery, recovery, recovery, recovery });
+            "    module_string: recovery.runtime=1\n    resolution: 1280x720x32\n\n/R4OS Software Graphics\n" ++
+            "    protocol: limine\n    path: guid({s}):/boot/r4os.elf\n    cmdline: r4os.graphics=software\n" ++
+            "    module_path: guid({s}):/boot/preload.r4i\n    module_string: r4os.preload.image=PRELOAD.R4I\n" ++
+            "    module_path: guid({s}):/boot/preload/hidreport.r4p\n    module_string: r4os.preload.usb-r4p=HIDREPORT\n" ++
+            "    module_path: guid({s}):/boot/preload/usbhid.r4p\n    module_string: r4os.preload.usb-r4p=USBHID\n" ++
+            "    module_path: guid({s}):/boot/preload/usbbot.r4p\n    module_string: r4os.preload.usb-r4p=USBBOT\n" ++
+            "    module_path: guid({s}):/boot/preload/usbscsi.r4p\n    module_string: r4os.preload.usb-r4p=USBSCSI\n" ++
+            "    resolution: 1280x720x32\n", .{ @as(u8, if (medium == .local) 1 else 2), boot, boot, boot, boot, boot, boot, recovery, recovery, recovery, recovery, boot, boot, boot, boot, boot, boot });
     }
 };
 

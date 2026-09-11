@@ -1439,3 +1439,14 @@ Der bestehende System-Update-Test akzeptiert historische Zielmenues und
 meldet eine abgewiesene Quellvorpruefung sofort. Recovery/Kernel 0.1.58,
 Menue 0.1.21; die eingefrorene Plattform und importierten Module bleiben
 auf ihren bisherigen Besitzerstaenden.
+
+Recovery 0.1.59 / R4OS 0.79.9
+-----------------------------
+
+Neue Installationen besitzen 10240 MB SYSTEM; das Standardimage hat
+12288 MB. Das Menue verwendet die gemeinsamen SDK-Groessen und
+blendet zu kleine Installationsziele aus. Bestehende Updateziele
+behalten Grenzen, IDs, DATA und RECOVERY. Alte 2-GB-Releases bleiben
+lesbar. Neue 12-GB-Releases benoetigen diese Recovery-Version.
+Nur installation.zig und sparse_image.zig werden vom SDK uebernommen;
+die importierten Runtime-Module und der Plattformvertrag bleiben fest.

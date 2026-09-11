@@ -300,8 +300,9 @@ const State = struct {
         var buffer: [1024]u8 = undefined;
         const source = if (self.source == .cached) "cached ZIP" else "GitHub release";
         const review_text = switch (target.operation) {
-            .install => std.fmt.bufPrint(&buffer, "Disk {d}: {d}MB - ALL DATA ERASED\nNew layout (not current partitions):\nBIOSBOOT 1MB + BOOT 128MB FAT32\nSYSTEM 1024MB NTFS\nRECOVERY 512MB FAT32\nDATA remaining {d}MB NTFS\nSource: {s}", .{
-                disk.info.reference.slot, disk.info.sector_count / 2048, (disk.info.sector_count - 33 - 3411968) / 2048, source,
+            .install => std.fmt.bufPrint(&buffer, "Disk {d}: {d}MB - ALL DATA ERASED\nNew layout (not current partitions):\nBIOSBOOT 1MB + BOOT 128MB FAT32\nSYSTEM {d}MB NTFS\nRECOVERY 512MB FAT32\nDATA remaining {d}MB NTFS\nSource: {s}", .{
+                disk.info.reference.slot,                                                             disk.info.sector_count / 2048, r4os.storage_tools.installation.system_mb,
+                (disk.info.sector_count - 33 - r4os.storage_tools.installation.first_lbas[4]) / 2048, source,
             }),
             .system => std.fmt.bufPrint(&buffer, "Disk {d}: SYSTEM partition {d}, {d}MB\nReplace ALL SYSTEM files and BOOT kernel.\nKeep partition sizes and identifiers.\nKeep DATA, RECOVERY and limine.conf.\nBOOT partition: {d}\nSource: {s}", .{
                 disk.info.reference.slot,                                              affected.partition_number, affected.sector_count / 2048,
@@ -408,7 +409,7 @@ const State = struct {
             result_message = session.failureMessage(&self.notice, actual);
             var detail: [256]u8 = undefined;
             self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYPACKAGE] rejected={s} vm_error={d} writes=0 ram_capacity={d} ram_required={d}\r\n", .{
-                @errorName(actual), session.pool.last_error, session.pool.ram_bytes,
+                @errorName(actual),                                                                  session.pool.last_error, session.pool.ram_bytes,
                 if (session.prepared) |prepared| prepared.recovery.minimumRamBytes else @as(u64, 0),
             }) catch "");
             return;

@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "3b733e9d2016990e0f2e00df4447dc4268ea854416c44c0117ed3024b4c07f93",
+      "sha256": "f98bb353b53d725bb92b6c7cfe581807cd0deed30fef2345d44725f52b99e1e8",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -7042,8 +7042,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/installation.zig",
-      "bytes": 8274,
-      "sha256": "76662ecc3ab887f1b7d43d2f4b71370328487b1939025d1b2f1352f868227c8f",
+      "bytes": 10127,
+      "sha256": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb",
       "originalSha256": null,
       "origin": null
     },
@@ -7252,8 +7252,8 @@
     },
     {
       "path": "Platform/SDK/r4os/storage_tools/sparse_image.zig",
-      "bytes": 4409,
-      "sha256": "867a49b1b7373a98bcb8913e880003db42ff68e69c7260c3a1f43fda6263fea1",
+      "bytes": 4458,
+      "sha256": "1d1d20b9a7e5b3bca05b3b06e8c4330cabf72d37298edc2c1e12e31f97cca1a5",
       "originalSha256": null,
       "origin": null
     },
@@ -9144,8 +9144,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 22081,
-      "sha256": "a74fa69ac2e8d93fc236267c3897f0ab9028aeca1a5077258d837fac2bd48aaf",
+      "bytes": 23002,
+      "sha256": "4b924edcf8780184c5989ef676f2b64535be7735126fe293b31d636ef5a0bce8",
       "originalSha256": null,
       "origin": null
     },
@@ -9166,14 +9166,14 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "46249b7647be5e64a517d19319611e706372a54869738d9828aa41994dd1a318",
+      "sha256": "ff9c01fae95943b99e75949d493ad2f935e47bec1e6f2a51d32c14a13cbcb646",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/boot_config.zig",
-      "bytes": 8226,
-      "sha256": "4385eecc50e88ac54315214ca0c345a32cd602191fcf5b7c4cc4fb9bb15b86c3",
+      "bytes": 7191,
+      "sha256": "6733ca636f97cd51474966687e1d11d6f6dadad986b096f44d78b47b547556db",
       "originalSha256": null,
       "origin": null
     },
@@ -9242,8 +9242,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 46357,
-      "sha256": "e9c4404dc1c8a7a7498fabe151f57257eda9d4ee6ffa3fbfc7f8aa1a03ac2d7b",
+      "bytes": 46578,
+      "sha256": "50d98db262a4ac7a62b3c9879b0fefe868e5aba3390030452b5088257186b72e",
       "originalSha256": null,
       "origin": null
     },
@@ -9291,8 +9291,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package.zig",
-      "bytes": 18331,
-      "sha256": "f29355b5a56b779c15cd3754593a4e5e6593486b253a2d1173221fc209a0caa2",
+      "bytes": 18833,
+      "sha256": "78575351127b7dce534d44018d32b9bd5b5ce70fcfcc8647bcc5c6a06014ea65",
       "originalSha256": null,
       "origin": null
     },
@@ -9361,8 +9361,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/system_source.zig",
-      "bytes": 14942,
-      "sha256": "108a56c5916c43f0a04c6b4627d074794415516df35cf8a1edfa34dc3ae99f19",
+      "bytes": 14822,
+      "sha256": "19f41a0cef7410fb5fc796b5939bf1c3e607219e766093b1b561617df98ba5b8",
       "originalSha256": null,
       "origin": null
     },
@@ -9375,8 +9375,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/targets.zig",
-      "bytes": 9745,
-      "sha256": "8bb7f78a220be8a0795b0286595d5c37e3abf1da740b94a4fa6ff94a4a98ae70",
+      "bytes": 10095,
+      "sha256": "c320e4a261dff31d9d61b77d022205ec4e1d41f515f5bcb034d241c9cd9f42cd",
       "originalSha256": null,
       "origin": null
     },
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "1eef53a40be598ce7826e6d3b7ef652a93f317dc44cf2ae7a18a1460e83bf106",
+      "sha256": "935dc772c964017fbe109cb6edf644b02de10131dccd1c0ab6cf8bac230c3e8c",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "6824fe219de1d394b7706dc8bf37defd74255b136c2650530065703f7fb24df6",
+      "sha256": "1d68cb127a30d2ba16400b5d8441f5da394c2a9514d314138dd661e190acb761",
       "originalSha256": null,
       "origin": null
     },
@@ -10276,6 +10276,13 @@
       "origin": null,
       "sha256": "d72e2e6df26e3e2244b46ee8580d4f13adfaf9499f8c568eaab248e08b6e80ef",
       "bytes": 24799
+    },
+    {
+      "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
+      "bytes": 6272,
+      "sha256": "c73c12b6723af9176bf35c7dd31f2ed231404b686d7cabe4a25f7a3589d0fb77",
+      "originalSha256": null,
+      "origin": null
     }
   ],
   "validation": "Host container, binary imports, protocol-role closure and pinned file integrity; guest admission follows 0.76.2/0.76.3.",
@@ -15634,6 +15641,81 @@
           "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
         }
       ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "3b733e9d2016990e0f2e00df4447dc4268ea854416c44c0117ed3024b4c07f93",
+          "after": "f98bb353b53d725bb92b6c7cfe581807cd0deed30fef2345d44725f52b99e1e8"
+        },
+        {
+          "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
+          "before": null,
+          "after": "c73c12b6723af9176bf35c7dd31f2ed231404b686d7cabe4a25f7a3589d0fb77"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "before": "76662ecc3ab887f1b7d43d2f4b71370328487b1939025d1b2f1352f868227c8f",
+          "after": "1351089c7674a2cd95a62a501e20205b58b83b57b57ad0e86eea0a70b5927dfb"
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/sparse_image.zig",
+          "before": "867a49b1b7373a98bcb8913e880003db42ff68e69c7260c3a1f43fda6263fea1",
+          "after": "1d1d20b9a7e5b3bca05b3b06e8c4330cabf72d37298edc2c1e12e31f97cca1a5"
+        },
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "a74fa69ac2e8d93fc236267c3897f0ab9028aeca1a5077258d837fac2bd48aaf",
+          "after": "4b924edcf8780184c5989ef676f2b64535be7735126fe293b31d636ef5a0bce8"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "46249b7647be5e64a517d19319611e706372a54869738d9828aa41994dd1a318",
+          "after": "ff9c01fae95943b99e75949d493ad2f935e47bec1e6f2a51d32c14a13cbcb646"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "e9c4404dc1c8a7a7498fabe151f57257eda9d4ee6ffa3fbfc7f8aa1a03ac2d7b",
+          "after": "50d98db262a4ac7a62b3c9879b0fefe868e5aba3390030452b5088257186b72e"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/package.zig",
+          "before": "f29355b5a56b779c15cd3754593a4e5e6593486b253a2d1173221fc209a0caa2",
+          "after": "78575351127b7dce534d44018d32b9bd5b5ce70fcfcc8647bcc5c6a06014ea65"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/system_source.zig",
+          "before": "108a56c5916c43f0a04c6b4627d074794415516df35cf8a1edfa34dc3ae99f19",
+          "after": "19f41a0cef7410fb5fc796b5939bf1c3e607219e766093b1b561617df98ba5b8"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/targets.zig",
+          "before": "8bb7f78a220be8a0795b0286595d5c37e3abf1da740b94a4fa6ff94a4a98ae70",
+          "after": "c320e4a261dff31d9d61b77d022205ec4e1d41f515f5bcb034d241c9cd9f42cd"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "1eef53a40be598ce7826e6d3b7ef652a93f317dc44cf2ae7a18a1460e83bf106",
+          "after": "935dc772c964017fbe109cb6edf644b02de10131dccd1c0ab6cf8bac230c3e8c"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "6824fe219de1d394b7706dc8bf37defd74255b136c2650530065703f7fb24df6",
+          "after": "1d68cb127a30d2ba16400b5d8441f5da394c2a9514d314138dd661e190acb761"
+        }
+      ],
+      "reason": "R4OS 0.79.9: 10 GB SYSTEM, legacy source compatibility and sparse ZIP64 image bounds; Recovery 0.1.59, Menu 0.1.22."
+    },
+    {
+      "changes": [
+        {
+          "after": "6733ca636f97cd51474966687e1d11d6f6dadad986b096f44d78b47b547556db",
+          "before": "4385eecc50e88ac54315214ca0c345a32cd602191fcf5b7c4cc4fb9bb15b86c3",
+          "path": "RecoveryTools/Menu/src/boot_config.zig"
+        }
+      ],
+      "reason": "Use the imported canonical software-graphics menu generator while accepting exact legacy source menus."
     }
   ]
 }

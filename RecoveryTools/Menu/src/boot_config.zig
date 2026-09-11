@@ -39,31 +39,20 @@ fn reference(actual: []const u8, boot: [16]u8, path: []const u8) bool {
     return std.ascii.eqlIgnoreCase(actual, expected);
 }
 
-// The frozen SDK describes the original three-entry release menu. Accept
-// the 0.79 software graphics extension explicitly, without importing a new
-// platform or weakening source validation to the custom target-menu policy.
-fn softwareEntry(allocator: std.mem.Allocator, boot_id: [16]u8) ![]u8 {
-    const boot = setup.guid.format(boot_id);
-    return std.fmt.allocPrint(allocator, "\n/R4OS Software Graphics\n" ++
-        "    protocol: limine\n    path: guid({s}):/boot/r4os.elf\n    cmdline: r4os.graphics=software\n" ++
-        "    module_path: guid({s}):/boot/preload.r4i\n    module_string: r4os.preload.image=PRELOAD.R4I\n" ++
-        "    module_path: guid({s}):/boot/preload/hidreport.r4p\n    module_string: r4os.preload.usb-r4p=HIDREPORT\n" ++
-        "    module_path: guid({s}):/boot/preload/usbhid.r4p\n    module_string: r4os.preload.usb-r4p=USBHID\n" ++
-        "    module_path: guid({s}):/boot/preload/usbbot.r4p\n    module_string: r4os.preload.usb-r4p=USBBOT\n" ++
-        "    module_path: guid({s}):/boot/preload/usbscsi.r4p\n    module_string: r4os.preload.usb-r4p=USBSCSI\n" ++
-        "    resolution: 1280x720x32\n", .{ boot, boot, boot, boot, boot, boot });
+// The imported layout now produces the canonical software-graphics entry.
+// Older source releases end exactly before that extension.
+fn legacyLength(config: []const u8) !usize {
+    return std.mem.indexOf(u8, config, "\n/R4OS Software Graphics\n") orelse error.SourceBootConfig;
 }
 
 /// Packaged source images must match a supported canonical menu exactly.
 /// Existing target installations use verify() and retain their own bytes.
 pub fn verifySource(allocator: std.mem.Allocator, config: []const u8, layout: setup.Layout) !void {
-    const software = try softwareEntry(allocator, layout.ids.partitions[1]);
-    defer allocator.free(software);
     for ([_]setup.Medium{ .local, .usb }) |medium| {
         const base = try layout.limineConfig(allocator, medium);
         defer allocator.free(base);
         if (std.mem.eql(u8, config, base)) return;
-        if (std.mem.startsWith(u8, config, base) and std.mem.eql(u8, config[base.len..], software)) return;
+        if (std.mem.eql(u8, config, base[0..try legacyLength(base)])) return;
     }
     return error.SourceBootConfig;
 }
@@ -109,9 +98,10 @@ test "custom menu bytes are accepted; wrong GUID or mixed preload is refused" {
     const a = std.testing.allocator;
     var entropy: [7][16]u8 = .{.{0} ** 16} ** 7;
     for (&entropy, 0..) |*id, i| id[0] = @intCast(i + 1);
-    const layout = try setup.Layout.prepare(4194304, 512, try setup.Identifiers.fromEntropy(entropy));
-    const base = try layout.limineConfig(a, .local);
-    defer a.free(base);
+    const layout = try setup.Layout.prepare(setup.standard_bytes / 512, 512, try setup.Identifiers.fromEntropy(entropy));
+    const canonical = try layout.limineConfig(a, .local);
+    defer a.free(canonical);
+    const base = canonical[0..try legacyLength(canonical)];
     const custom = try std.fmt.allocPrint(a, "# Keep my configuration\r\n{s}\n/Other OS\nprotocol: efi\npath: boot():/EFI/Other/start.efi\n", .{base});
     defer a.free(custom);
     try verify(custom, layout.ids.partitions[1]);
@@ -125,15 +115,13 @@ test "source menus require legacy bytes or exactly one canonical software graphi
     const a = std.testing.allocator;
     var entropy: [7][16]u8 = .{.{0} ** 16} ** 7;
     for (&entropy, 0..) |*id, i| id[0] = @intCast(i + 1);
-    const layout = try setup.Layout.prepare(4194304, 512, try setup.Identifiers.fromEntropy(entropy));
-    const software = try softwareEntry(a, layout.ids.partitions[1]);
-    defer a.free(software);
+    const layout = try setup.Layout.prepare(setup.standard_bytes / 512, 512, try setup.Identifiers.fromEntropy(entropy));
     for ([_]setup.Medium{ .local, .usb }) |medium| {
-        const base = try layout.limineConfig(a, medium);
-        defer a.free(base);
-        try verifySource(a, base, layout);
-        const config = try std.mem.concat(a, u8, &.{ base, software });
+        const config = try layout.limineConfig(a, medium);
         defer a.free(config);
+        const base = config[0..try legacyLength(config)];
+        const software = config[base.len..];
+        try verifySource(a, base, layout);
         try verifySource(a, config, layout);
         try verify(config, layout.ids.partitions[1]);
         try std.testing.expectError(error.SourceBootConfig, verifySource(a, config[0 .. config.len - 1], layout));

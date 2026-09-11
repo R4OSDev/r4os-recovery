@@ -56,22 +56,20 @@ pub const Tree = struct {
         return null;
     }
     pub fn read(allocator: std.mem.Allocator, image: r4os.storage_tools.byte_source.Source, release: []const u8, pump: Pump) !Tree {
-        if (image.length != 2048 * 1024 * 1024) return error.SourceImageSize;
+        const expected = r4os.storage_tools.installation.sourceRanges(image.length) catch return error.SourceImageSize;
         const ram = try allocator.create(Ram);
         ram.* = .{ .bytes = image };
         const scratch = try allocator.alloc(u8, io.scratch_bytes);
         const table = try allocator.create(partition.Plan);
         table.* = try partition.Plan.read(ram.device(), scratch);
         if (table.kind != .gpt or table.first_usable != 34 or table.last_usable != image.length / 512 - 34) return error.SourceLayout;
-        const starts = [_]u64{ 2048, 4096, 266240, 2363392, 3411968 };
-        const counts = [_]u64{ 2048, 262144, 2097152, 1048576, image.length / 512 - 33 - starts[4] };
         for (table.entries, 0..) |entry, i| {
             if (i >= 5) {
                 if (entry.present) return error.SourceLayout;
                 continue;
             }
             const kind = if (i == 0) partition.bios_type else if (i == 1) partition.esp_type else partition.basic_type;
-            if (!entry.present or entry.first != starts[i] or entry.count != counts[i] or !partition.guid.eql(entry.type_guid, kind)) return error.SourceLayout;
+            if (!entry.present or entry.first != expected[i].first or entry.count != expected[i].count or !partition.guid.eql(entry.type_guid, kind)) return error.SourceLayout;
         }
         const system = table.entries[2];
         ram.bytes = try image.range(@intCast(system.first * 512), @intCast(system.count * 512));
@@ -168,7 +166,7 @@ pub fn verifyInstallation(allocator: std.mem.Allocator, prepared: @import("packa
         details.value.bootFiles.len != setup.boot_paths.len or system.bootFiles.len != setup.boot_paths.len) return error.SourceVersion;
     var ids = setup.Identifiers{ .installation = manifest.installation_id, .disk = manifest.disk_guid, .partitions = undefined };
     for (manifest.partitions, 0..) |part, i| ids.partitions[i] = part.partition_guid;
-    const source_layout = try setup.Layout.prepare(image.length / 512, 512, ids);
+    const source_layout = try setup.Layout.prepareSource(image.length, ids);
     const config = try boot.readFile(allocator, "boot/limine.conf", 16384);
     try @import("boot_config.zig").verifySource(allocator, config, source_layout);
     for (setup.boot_paths) |path| {

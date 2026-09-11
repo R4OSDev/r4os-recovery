@@ -3,6 +3,7 @@
 const std = @import("std");
 const Source = @import("byte_source.zig").Source;
 pub const block_bytes = 64 * 1024;
+pub const maximum_bytes: usize = 16 * 1024 * 1024 * 1024;
 pub const Image = struct {
     allocator: std.mem.Allocator,
     length: usize,
@@ -14,7 +15,7 @@ pub const Image = struct {
     complete: bool = false,
 
     pub fn init(allocator: std.mem.Allocator, length: usize) !*Image {
-        if (length > 4 * 1024 * 1024 * 1024) return error.ImageLimit;
+        if (length > maximum_bytes) return error.ImageLimit;
         const self = try allocator.create(Image);
         errdefer allocator.destroy(self);
         const blocks = try allocator.alloc(?[]const u8, std.math.divCeil(usize, length, block_bytes) catch return error.ImageLimit);
