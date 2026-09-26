@@ -2042,3 +2042,6 @@ pub const buildR4DevTable = generated.buildR4DevTable;
 // R4OS-KERNEL-API-GENERATED-EXPORTS:END
 
 pub const FileCopyProgress = generated.FileCopyProgress;
+
+pub const DirectoryChangeCursor = generated.DirectoryChangeCursor;
+pub const DirectoryScanCursor = generated.DirectoryScanCursor;

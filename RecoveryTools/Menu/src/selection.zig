@@ -81,7 +81,9 @@ pub const Catalog = struct {
             if (storage.volume(inv.generation, volume.reference.slot, &actual) != abi.storage_result_present or
                 !std.meta.eql(volume.reference, actual.reference) or !model.sameTarget(volume.target, actual.target)) return error.StorageChanged;
             const probe = os.Probe{ .context = &reader, .read_at = VolumeReader.readAt, .entry = VolumeReader.entry };
-            disk.systems.merge(probe.detect());
+            const detected = probe.detect();
+            if (reader.entry_failed) return error.StorageChanged;
+            disk.systems.merge(detected);
             const manifest = reader.manifest(result.allocator) catch |err| {
                 if (err == error.OutOfMemory) return err;
                 disk.invalid_manifest = true;
@@ -142,6 +144,10 @@ const VolumeReader = struct {
     sys: *const r4os.r4sys.Context,
     letter: u8,
     buffer: [512]u8 = undefined,
+    scan_path: [512]u8 = .{0} ** 512,
+    scan_cursor: r4os.abi.DirectoryScanCursor = .{},
+    scan_index: u32 = 0,
+    entry_failed: bool = false,
     fn path(self: *VolumeReader, relative: []const u8) ?[:0]u8 {
         return std.fmt.bufPrintZ(&self.buffer, "{c}:\\{s}", .{ self.letter, relative }) catch null;
     }
@@ -156,8 +162,37 @@ const VolumeReader = struct {
         const self: *VolumeReader = @ptrCast(@alignCast(ctx));
         const full = self.path(relative) orelse return null;
         @memset(out, 0);
-        const result = self.sys.dirEntry(full, index + 2, out);
-        if (result < 0 or result == r4os.r4sys.dir_entry_result_end) return null;
+        var result: i32 = undefined;
+        if (self.sys.hasFn("directory_next")) {
+            if (index == 0 or index != self.scan_index or !std.mem.eql(u8, full, std.mem.sliceTo(&self.scan_path, 0))) {
+                self.scan_cursor = .{};
+                self.scan_index = 0;
+                @memset(&self.scan_path, 0);
+                @memcpy(self.scan_path[0..full.len], full);
+            }
+            var info: r4os.abi.FileInfo = .{};
+            while (true) {
+                result = self.sys.directoryNext(full, &self.scan_cursor, out, &info);
+                if (result == 2) {
+                    if (self.sys.programShouldClose()) {
+                        self.entry_failed = true;
+                        return null;
+                    }
+                    self.sys.sleepTicks(0);
+                    continue;
+                }
+                if (result < 0) break;
+                const at = self.scan_index;
+                self.scan_index += 1;
+                if (at == index) break;
+            }
+        } else result = self.sys.dirEntry(full, index + 2, out);
+        if (result < 0) {
+            // A missing optional probe directory is ordinary absence. I/O,
+            // stale generations or a too-small output invalidate this scan.
+            if (result != r4os.r4sys.dir_entry_result_end and result != -3 and result != -4) self.entry_failed = true;
+            return null;
+        }
         const text = std.mem.sliceTo(out, 0);
         const start = if (std.mem.lastIndexOfAny(u8, text, "\\/")) |i| i + 1 else 0;
         return text[start..];

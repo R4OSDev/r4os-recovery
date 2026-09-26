@@ -1238,6 +1238,10 @@ pub const Context = struct {
         return self.base.dirList(path, out);
     }
 
+    pub fn directoryNext(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryScanCursor, out: []u8, info: *abi.FileInfo) i32 {
+        return self.base.directoryNext(path, cursor, out, info);
+    }
+
     pub fn dirEntry(self: *const Context, path: [*:0]const u8, index: u32, out: []u8) i32 {
         return self.base.dirEntry(path, index, out);
     }

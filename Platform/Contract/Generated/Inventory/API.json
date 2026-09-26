@@ -3,10 +3,10 @@
   "generated_from": "API/ApiContract.json",
   "contract_schema_version": 11,
   "summary": {
-    "function_count": 344,
-    "group_slot_count": 344,
+    "function_count": 356,
+    "group_slot_count": 356,
     "sdk_only_count": 0,
-    "public_count": 252,
+    "public_count": 264,
     "advanced_count": 92
   },
   "functions": [
@@ -1697,6 +1697,150 @@
       "slot": 143,
       "exposure": "public",
       "description": "Copies under one paired filesystem request, rejecting source aliases before destination mutation. Caller exclusively owns the supplied nonempty buffer until return. File-stream result codes: 0 success, invalid for identical files, too_large above 4 GB, I/O on failure. Progress reports completed appends; failure may leave a partial target. No automatic retry or rollback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.notification_create",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 144,
+      "exposure": "public",
+      "description": "Create a resident process-owned notification with revision zero. Handles never repeat within a boot. Returns notification status; output changes only on success. Allocation failure is explicit. Close explicitly or let exact process retirement reclaim it.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.notification_query",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 145,
+      "exposure": "public",
+      "description": "Read the notification revision. Read before testing the userland predicate, then wait with that revision to avoid a lost wake. Foreign or consumed handles are stale; output changes only on success.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.notification_notify",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 146,
+      "exposure": "public",
+      "description": "Increment the revision and wake at most wake_count enrolled tasks atomically. Count must be positive; UINT32_MAX broadcasts. A caller racing enrollment observes the changed revision. No permit, CPU-memory ownership or GPU completion is manufactured. Revision exhaustion closes the object and wakes all with closed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.notification_wait",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 147,
+      "exposure": "public",
+      "description": "Wait only while the resident revision equals observed_sequence. Zero polls; UINT64_MAX waits indefinitely. Predicate check, scheduler enrollment and notify share one owner. Returns 0 on change/wake, 1 on timeout, negative on failure/close; caller must recheck its own predicate. Close cancels enrolled waits. Hard kill detaches the actual task node and needs no caller destructor. No caller address or unwind guard is retained across sleep.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.notification_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 148,
+      "exposure": "public",
+      "description": "Close admission, cancel enrolled waits and release resident backing. Returns 0 after release; retry notification_error_release for the same closed handle. A failed free retains backing and prevents process-slot reuse. Further ordinary operations on a closed retained object fail; a consumed handle is stale.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_local_get",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 149,
+      "exposure": "public",
+      "description": "Read a process-local immutable publication by nonzero key. Returns program_local_ok and zero if absent. A key can be a boot-stable library token address. Output changes only on success. No other process, user pointer ownership or current-thread identity is exposed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_local_publish",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 150,
+      "exposure": "public",
+      "description": "Publish a nonzero process-local value exactly once for a nonzero key. Returns program_local_ok if installed, program_local_existing if another caller already installed a value; both write the winning value. Caller owns candidate memory and discards it when it loses. Published data must outlive all program threads; no replacement, destructor or allocator policy is provided. The process reaper removes metadata after thread retirement and before VM teardown. Errors leave output unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_current_handle",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 151,
+      "exposure": "public",
+      "description": "Copy the calling program thread identity, including thread and process generations, into ProgramJoinHandle. Returns thread_ok on success, thread_error_no_instance outside a program thread, or thread_error_invalid for a null output. Errors leave output unchanged. The identity is borrowed: no pin, join lease, allocation or wait is created; normal status/join admission and retirement rules still apply. Lookup uses the current task execution owner and never scans a registry. Valid for the main thread as well as secondary threads.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.cpu_capacity",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 152,
+      "exposure": "public",
+      "description": "Copy current schedulable CPU capacity for ordinary program threads. Returns thread_ok, thread_error_invalid for null output, or thread_error_busy before capacity is available; errors leave output unchanged. available_cpus counts one atomic scheduler-admission mask snapshot (no process affinity restrictions currently exist). configured_cpus counts dense CPU slots admitted by the boot SMP plan, including failed/offline slots; it is not the CPUID package count, firmware total or kernel maximum. Capacity is advisory, not a reservation, affinity mask, cache topology or performance guarantee. No allocation or wait.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_exit",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 153,
+      "exposure": "public",
+      "description": "Terminates the entire calling program from its main or a secondary thread. On admission this does not return. reason accepts program_exit_reason_natural or program_exit_reason_failed only; invalid reason returns thread_error_invalid, missing program-thread ownership returns thread_error_no_instance, and a non-sleepable context or held kernel lock/unwind lifetime returns thread_error_busy without initiating exit. The first committed concurrent process exit wins. The existing exit/reaper path closes admission, stops peers and retains stacks, I/O and graphics resources through actual retirement; the caller transfers its own terminal Task to the scheduler reaper. Does not run user destructors, atexit, TLS callbacks, stream flushing or foreign stack unwinding; normal userland shutdown precedes this primitive, fatal shutdown may omit it. External kill still rejects self. Older providers may omit this optional tail.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.platform_input_snapshot",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 154,
+      "exposure": "public",
+      "description": "Copy the canonical ACPI/USB Consumer input snapshot without consuming events.1 success, negative invalid output. Caller initializes version1/size64; output unchanged on failure. No hardware access, callback or allocation. Desktop policy observes counter deltas and lid state independently from normal keyboard text.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.directory_next",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 155,
+      "exposure": "public",
+      "description": "Resume owner-bound directory enumeration without prefix scans. Initialize DirectoryScanCursor to defaults. Returns 0 file, 1 directory, 2 bounded progress without an entry (retry), -5 complete EOF, -10 restart after directory mutation, history overflow, owner/path/mount change; other negatives are errors (-1 invalid, -3 missing mount, -7 output too small, -9 I/O). On restart/error discard all partial results; no truncated successful generation. Cursor and output are unchanged on errors; progress and EOF publish cursor only. Success copies a NUL-terminated absolute path. One call examines at most 256 physical directory entries, with a bounded NTFS ancestor stack. Internal state is opaque, must not be edited or used concurrently. No persistent kernel resource, allocation or mount pin; discarding/resetting cursor cancels/closes immediately. A call pins its mount and holds the filesystem request gate; an unmount between calls invalidates continuation. Old dir_entry ABI remains unchanged. A found entry also copies FileInfo metadata from the same enumeration record; no second name lookup. NTFS directory-index metadata has the same snapshot semantics as its index entry. On progress, EOF or failure metadata is unchanged.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"

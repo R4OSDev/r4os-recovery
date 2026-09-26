@@ -5771,6 +5771,35 @@ pub const FileCopyProgress = extern struct {
     max_chunk: u32 = 0,
 };
 
+pub const CpuCapacity = extern struct {
+    available_cpus: u32 = 0,
+    configured_cpus: u32 = 0,
+};
+
+pub const PlatformInputSnapshot = extern struct {
+    version: u32 = 1,
+    size: u32 = 64,
+    sequence: u64 = 0,
+    brightness_up: u64 = 0,
+    brightness_down: u64 = 0,
+    lid_sequence: u64 = 0,
+    lid_state: u32 = 0,
+    capabilities: u32 = 0,
+    sources: u32 = 0,
+    reserved: u32 = 0,
+    since_ns: u64 = 0,
+};
+
+pub const DirectoryScanCursor = extern struct {
+    version: u32 = 1,
+    size: u32 = 1088,
+    change: DirectoryChangeCursor = .{},
+    owner_id: u32 = 0,
+    owner_kind: u32 = 0,
+    owner_generation: u64 = 0,
+    backend: [128]u64 = .{0} ** 128,
+};
+
 pub const R4SysFns = struct {
     pub const write = *const fn ([*]const u8, u32) callconv(.c) i32;
     pub const putc = *const fn (u8) callconv(.c) void;
@@ -5913,12 +5942,24 @@ pub const R4SysFns = struct {
     pub const directory_change_begin = *const fn ([*:0]const u8, *DirectoryChangeCursor) callconv(.c) i32;
     pub const directory_change_poll = *const fn (*DirectoryChangeCursor) callconv(.c) i32;
     pub const file_copy_buffered = *const fn ([*:0]const u8, [*:0]const u8, [*]u8, u32, *FileCopyProgress) callconv(.c) i32;
+    pub const notification_create = *const fn (*u64) callconv(.c) i32;
+    pub const notification_query = *const fn (u64, *u64) callconv(.c) i32;
+    pub const notification_notify = *const fn (u64, u32) callconv(.c) i32;
+    pub const notification_wait = *const fn (u64, u64, u64) callconv(.c) i32;
+    pub const notification_close = *const fn (u64) callconv(.c) i32;
+    pub const program_local_get = *const fn (u64, *u64) callconv(.c) i32;
+    pub const program_local_publish = *const fn (u64, u64, *u64) callconv(.c) i32;
+    pub const thread_current_handle = *const fn (*ProgramJoinHandle) callconv(.c) i32;
+    pub const cpu_capacity = *const fn (*CpuCapacity) callconv(.c) i32;
+    pub const program_exit = *const fn (i32, u32) callconv(.c) i32;
+    pub const platform_input_snapshot = *const fn (*PlatformInputSnapshot) callconv(.c) i32;
+    pub const directory_next = *const fn ([*:0]const u8, *DirectoryScanCursor, [*]u8, u32, *FileInfo) callconv(.c) i32;
 };
 
 pub const R4XStartR4Sys = extern struct {
     magic: u32 = 827937618,
-    abi_version: u32 = 18,
-    size: u32 = 1168,
+    abi_version: u32 = 25,
+    size: u32 = 1264,
     flags: u32 = 0,
     write: usize = 0,
     putc: usize = 0,
@@ -6064,6 +6105,18 @@ pub const R4XStartR4Sys = extern struct {
     directory_change_begin: usize = 0,
     directory_change_poll: usize = 0,
     file_copy_buffered: usize = 0,
+    notification_create: usize = 0,
+    notification_query: usize = 0,
+    notification_notify: usize = 0,
+    notification_wait: usize = 0,
+    notification_close: usize = 0,
+    program_local_get: usize = 0,
+    program_local_publish: usize = 0,
+    thread_current_handle: usize = 0,
+    cpu_capacity: usize = 0,
+    program_exit: usize = 0,
+    platform_input_snapshot: usize = 0,
+    directory_next: usize = 0,
 };
 
 pub const R4DeskFns = struct {
@@ -6675,6 +6728,18 @@ pub const R4SysSlots = [_]R4ApiSlotMeta{
     .{ .number = 141, .offset = 1144, .name = "directory_change_begin", .state = .function, .required = false },
     .{ .number = 142, .offset = 1152, .name = "directory_change_poll", .state = .function, .required = false },
     .{ .number = 143, .offset = 1160, .name = "file_copy_buffered", .state = .function, .required = false },
+    .{ .number = 144, .offset = 1168, .name = "notification_create", .state = .function, .required = false },
+    .{ .number = 145, .offset = 1176, .name = "notification_query", .state = .function, .required = false },
+    .{ .number = 146, .offset = 1184, .name = "notification_notify", .state = .function, .required = false },
+    .{ .number = 147, .offset = 1192, .name = "notification_wait", .state = .function, .required = false },
+    .{ .number = 148, .offset = 1200, .name = "notification_close", .state = .function, .required = false },
+    .{ .number = 149, .offset = 1208, .name = "program_local_get", .state = .function, .required = false },
+    .{ .number = 150, .offset = 1216, .name = "program_local_publish", .state = .function, .required = false },
+    .{ .number = 151, .offset = 1224, .name = "thread_current_handle", .state = .function, .required = false },
+    .{ .number = 152, .offset = 1232, .name = "cpu_capacity", .state = .function, .required = false },
+    .{ .number = 153, .offset = 1240, .name = "program_exit", .state = .function, .required = false },
+    .{ .number = 154, .offset = 1248, .name = "platform_input_snapshot", .state = .function, .required = false },
+    .{ .number = 155, .offset = 1256, .name = "directory_next", .state = .function, .required = false },
 };
 
 pub const R4DeskSlots = [_]R4ApiSlotMeta{
@@ -10571,7 +10636,33 @@ comptime {
     if (@offsetOf(FileCopyProgress, "source_size") != 16) @compileError("generated ABI offset drift: FileCopyProgress.source_size");
     if (@offsetOf(FileCopyProgress, "chunks") != 24) @compileError("generated ABI offset drift: FileCopyProgress.chunks");
     if (@offsetOf(FileCopyProgress, "max_chunk") != 28) @compileError("generated ABI offset drift: FileCopyProgress.max_chunk");
-    if (@sizeOf(R4XStartR4Sys) != 1168) @compileError("generated ABI size drift: R4XStartR4Sys");
+    if (@sizeOf(CpuCapacity) != 8) @compileError("generated ABI size drift: CpuCapacity");
+    if (@alignOf(CpuCapacity) != 4) @compileError("generated ABI alignment drift: CpuCapacity");
+    if (@offsetOf(CpuCapacity, "available_cpus") != 0) @compileError("generated ABI offset drift: CpuCapacity.available_cpus");
+    if (@offsetOf(CpuCapacity, "configured_cpus") != 4) @compileError("generated ABI offset drift: CpuCapacity.configured_cpus");
+    if (@sizeOf(PlatformInputSnapshot) != 64) @compileError("generated ABI size drift: PlatformInputSnapshot");
+    if (@alignOf(PlatformInputSnapshot) != 8) @compileError("generated ABI alignment drift: PlatformInputSnapshot");
+    if (@offsetOf(PlatformInputSnapshot, "version") != 0) @compileError("generated ABI offset drift: PlatformInputSnapshot.version");
+    if (@offsetOf(PlatformInputSnapshot, "size") != 4) @compileError("generated ABI offset drift: PlatformInputSnapshot.size");
+    if (@offsetOf(PlatformInputSnapshot, "sequence") != 8) @compileError("generated ABI offset drift: PlatformInputSnapshot.sequence");
+    if (@offsetOf(PlatformInputSnapshot, "brightness_up") != 16) @compileError("generated ABI offset drift: PlatformInputSnapshot.brightness_up");
+    if (@offsetOf(PlatformInputSnapshot, "brightness_down") != 24) @compileError("generated ABI offset drift: PlatformInputSnapshot.brightness_down");
+    if (@offsetOf(PlatformInputSnapshot, "lid_sequence") != 32) @compileError("generated ABI offset drift: PlatformInputSnapshot.lid_sequence");
+    if (@offsetOf(PlatformInputSnapshot, "lid_state") != 40) @compileError("generated ABI offset drift: PlatformInputSnapshot.lid_state");
+    if (@offsetOf(PlatformInputSnapshot, "capabilities") != 44) @compileError("generated ABI offset drift: PlatformInputSnapshot.capabilities");
+    if (@offsetOf(PlatformInputSnapshot, "sources") != 48) @compileError("generated ABI offset drift: PlatformInputSnapshot.sources");
+    if (@offsetOf(PlatformInputSnapshot, "reserved") != 52) @compileError("generated ABI offset drift: PlatformInputSnapshot.reserved");
+    if (@offsetOf(PlatformInputSnapshot, "since_ns") != 56) @compileError("generated ABI offset drift: PlatformInputSnapshot.since_ns");
+    if (@sizeOf(DirectoryScanCursor) != 1088) @compileError("generated ABI size drift: DirectoryScanCursor");
+    if (@alignOf(DirectoryScanCursor) != 8) @compileError("generated ABI alignment drift: DirectoryScanCursor");
+    if (@offsetOf(DirectoryScanCursor, "version") != 0) @compileError("generated ABI offset drift: DirectoryScanCursor.version");
+    if (@offsetOf(DirectoryScanCursor, "size") != 4) @compileError("generated ABI offset drift: DirectoryScanCursor.size");
+    if (@offsetOf(DirectoryScanCursor, "change") != 8) @compileError("generated ABI offset drift: DirectoryScanCursor.change");
+    if (@offsetOf(DirectoryScanCursor, "owner_id") != 48) @compileError("generated ABI offset drift: DirectoryScanCursor.owner_id");
+    if (@offsetOf(DirectoryScanCursor, "owner_kind") != 52) @compileError("generated ABI offset drift: DirectoryScanCursor.owner_kind");
+    if (@offsetOf(DirectoryScanCursor, "owner_generation") != 56) @compileError("generated ABI offset drift: DirectoryScanCursor.owner_generation");
+    if (@offsetOf(DirectoryScanCursor, "backend") != 64) @compileError("generated ABI offset drift: DirectoryScanCursor.backend");
+    if (@sizeOf(R4XStartR4Sys) != 1264) @compileError("generated ABI size drift: R4XStartR4Sys");
     if (@offsetOf(R4XStartR4Sys, "write") != 16) @compileError("generated ABI offset drift: R4XStartR4Sys.write");
     if (@offsetOf(R4XStartR4Sys, "putc") != 24) @compileError("generated ABI offset drift: R4XStartR4Sys.putc");
     if (@offsetOf(R4XStartR4Sys, "sleep_ticks") != 32) @compileError("generated ABI offset drift: R4XStartR4Sys.sleep_ticks");
@@ -10716,6 +10807,18 @@ comptime {
     if (@offsetOf(R4XStartR4Sys, "directory_change_begin") != 1144) @compileError("generated ABI offset drift: R4XStartR4Sys.directory_change_begin");
     if (@offsetOf(R4XStartR4Sys, "directory_change_poll") != 1152) @compileError("generated ABI offset drift: R4XStartR4Sys.directory_change_poll");
     if (@offsetOf(R4XStartR4Sys, "file_copy_buffered") != 1160) @compileError("generated ABI offset drift: R4XStartR4Sys.file_copy_buffered");
+    if (@offsetOf(R4XStartR4Sys, "notification_create") != 1168) @compileError("generated ABI offset drift: R4XStartR4Sys.notification_create");
+    if (@offsetOf(R4XStartR4Sys, "notification_query") != 1176) @compileError("generated ABI offset drift: R4XStartR4Sys.notification_query");
+    if (@offsetOf(R4XStartR4Sys, "notification_notify") != 1184) @compileError("generated ABI offset drift: R4XStartR4Sys.notification_notify");
+    if (@offsetOf(R4XStartR4Sys, "notification_wait") != 1192) @compileError("generated ABI offset drift: R4XStartR4Sys.notification_wait");
+    if (@offsetOf(R4XStartR4Sys, "notification_close") != 1200) @compileError("generated ABI offset drift: R4XStartR4Sys.notification_close");
+    if (@offsetOf(R4XStartR4Sys, "program_local_get") != 1208) @compileError("generated ABI offset drift: R4XStartR4Sys.program_local_get");
+    if (@offsetOf(R4XStartR4Sys, "program_local_publish") != 1216) @compileError("generated ABI offset drift: R4XStartR4Sys.program_local_publish");
+    if (@offsetOf(R4XStartR4Sys, "thread_current_handle") != 1224) @compileError("generated ABI offset drift: R4XStartR4Sys.thread_current_handle");
+    if (@offsetOf(R4XStartR4Sys, "cpu_capacity") != 1232) @compileError("generated ABI offset drift: R4XStartR4Sys.cpu_capacity");
+    if (@offsetOf(R4XStartR4Sys, "program_exit") != 1240) @compileError("generated ABI offset drift: R4XStartR4Sys.program_exit");
+    if (@offsetOf(R4XStartR4Sys, "platform_input_snapshot") != 1248) @compileError("generated ABI offset drift: R4XStartR4Sys.platform_input_snapshot");
+    if (@offsetOf(R4XStartR4Sys, "directory_next") != 1256) @compileError("generated ABI offset drift: R4XStartR4Sys.directory_next");
     if (@sizeOf(R4XStartR4Desk) != 488) @compileError("generated ABI size drift: R4XStartR4Desk");
     if (@offsetOf(R4XStartR4Desk, "read_key") != 16) @compileError("generated ABI offset drift: R4XStartR4Desk.read_key");
     if (@offsetOf(R4XStartR4Desk, "mouse_state") != 24) @compileError("generated ABI offset drift: R4XStartR4Desk.mouse_state");
@@ -11074,13 +11177,25 @@ pub const R4SysProvider = struct {
     directory_change_begin: ?R4SysFns.directory_change_begin = null,
     directory_change_poll: ?R4SysFns.directory_change_poll = null,
     file_copy_buffered: ?R4SysFns.file_copy_buffered = null,
+    notification_create: ?R4SysFns.notification_create = null,
+    notification_query: ?R4SysFns.notification_query = null,
+    notification_notify: ?R4SysFns.notification_notify = null,
+    notification_wait: ?R4SysFns.notification_wait = null,
+    notification_close: ?R4SysFns.notification_close = null,
+    program_local_get: ?R4SysFns.program_local_get = null,
+    program_local_publish: ?R4SysFns.program_local_publish = null,
+    thread_current_handle: ?R4SysFns.thread_current_handle = null,
+    cpu_capacity: ?R4SysFns.cpu_capacity = null,
+    program_exit: ?R4SysFns.program_exit = null,
+    platform_input_snapshot: ?R4SysFns.platform_input_snapshot = null,
+    directory_next: ?R4SysFns.directory_next = null,
 };
 
 pub fn buildR4SysTable(provider: R4SysProvider) R4XStartR4Sys {
     return .{
         .magic = 827937618,
-        .abi_version = 18,
-        .size = 1168,
+        .abi_version = 25,
+        .size = 1264,
         .flags = 0,
         .write = if (provider.write) |callback| @intFromPtr(callback) else 0,
         .putc = if (provider.putc) |callback| @intFromPtr(callback) else 0,
@@ -11226,6 +11341,18 @@ pub fn buildR4SysTable(provider: R4SysProvider) R4XStartR4Sys {
         .directory_change_begin = if (provider.directory_change_begin) |callback| @intFromPtr(callback) else 0,
         .directory_change_poll = if (provider.directory_change_poll) |callback| @intFromPtr(callback) else 0,
         .file_copy_buffered = if (provider.file_copy_buffered) |callback| @intFromPtr(callback) else 0,
+        .notification_create = if (provider.notification_create) |callback| @intFromPtr(callback) else 0,
+        .notification_query = if (provider.notification_query) |callback| @intFromPtr(callback) else 0,
+        .notification_notify = if (provider.notification_notify) |callback| @intFromPtr(callback) else 0,
+        .notification_wait = if (provider.notification_wait) |callback| @intFromPtr(callback) else 0,
+        .notification_close = if (provider.notification_close) |callback| @intFromPtr(callback) else 0,
+        .program_local_get = if (provider.program_local_get) |callback| @intFromPtr(callback) else 0,
+        .program_local_publish = if (provider.program_local_publish) |callback| @intFromPtr(callback) else 0,
+        .thread_current_handle = if (provider.thread_current_handle) |callback| @intFromPtr(callback) else 0,
+        .cpu_capacity = if (provider.cpu_capacity) |callback| @intFromPtr(callback) else 0,
+        .program_exit = if (provider.program_exit) |callback| @intFromPtr(callback) else 0,
+        .platform_input_snapshot = if (provider.platform_input_snapshot) |callback| @intFromPtr(callback) else 0,
+        .directory_next = if (provider.directory_next) |callback| @intFromPtr(callback) else 0,
     };
 }
 

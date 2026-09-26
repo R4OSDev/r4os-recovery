@@ -4,9 +4,9 @@
   "source_schema_version": 11,
   "source_baseline_id": "standalone-contract-0.64.11",
   "summary": {
-    "group_function_signatures": 344,
+    "group_function_signatures": 356,
     "sdk_operation_contracts": 0,
-    "parity_entries": 344,
+    "parity_entries": 356,
     "cross_language_fixtures": 1
   },
   "signature_parity": [
@@ -1277,6 +1277,114 @@
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4SysFns.file_copy_buffered",
       "c_contract": "R4SysFileCopyBufferedFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.notification_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.notification_create",
+      "c_contract": "R4SysNotificationCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.notification_query",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.notification_query",
+      "c_contract": "R4SysNotificationQueryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.notification_notify",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.notification_notify",
+      "c_contract": "R4SysNotificationNotifyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.notification_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.notification_wait",
+      "c_contract": "R4SysNotificationWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.notification_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.notification_close",
+      "c_contract": "R4SysNotificationCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_local_get",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_local_get",
+      "c_contract": "R4SysProgramLocalGetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_local_publish",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_local_publish",
+      "c_contract": "R4SysProgramLocalPublishFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_current_handle",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_current_handle",
+      "c_contract": "R4SysThreadCurrentHandleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.cpu_capacity",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.cpu_capacity",
+      "c_contract": "R4SysCpuCapacityFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_exit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_exit",
+      "c_contract": "R4SysProgramExitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.platform_input_snapshot",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.platform_input_snapshot",
+      "c_contract": "R4SysPlatformInputSnapshotFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.directory_next",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.directory_next",
+      "c_contract": "R4SysDirectoryNextFn",
       "coverage": "generated_signature"
     },
     {

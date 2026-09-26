@@ -1624,6 +1624,13 @@
       }
     },
     {
+      "path": "Kernel/display/ownership.zig",
+      "bytes": 2309,
+      "sha256": "d16aeca15f2d8299ef566bfb6a6824247b9eda0b364103422dfbf6a2770e9f1c",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/display/presenter.zig",
       "bytes": 3020,
       "sha256": "3c3a841fcc2fd76017b6d539a6a69059243218daac96e6e11c3b88f78f8755e5",
@@ -1964,6 +1971,20 @@
       }
     },
     {
+      "path": "Kernel/font_test.zig",
+      "bytes": 69,
+      "sha256": "fcd28167b0b14e1940e54558178fb8a060c8c47de667a4db5ad37581d30adacb",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/fs/directory_changes.zig",
+      "bytes": 2559,
+      "sha256": "a586acf4d813e26c861d2097a62cb58bd0d25ec2c5636db16905b2098f8935a0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/fs/drive.zig",
       "bytes": 6808,
       "sha256": "0862691361c91fbe0f0bfd122e6281d8c52ae76fcce9ecc87444c482823baa04",
@@ -1974,9 +1995,16 @@
       }
     },
     {
+      "path": "Kernel/fs/fat/directory_growth.zig",
+      "bytes": 4979,
+      "sha256": "68dde1b190d6922e5ac0f6920852249e5513feafe58bcb14254749f447a89cd6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 147364,
-      "sha256": "5e81dee8ecb4535a95b881bef3888a545fb5b760ac4f8becde0896c88c74543e",
+      "bytes": 153233,
+      "sha256": "00b71d33c68f7d6fcd0a50e7a7af3007e41e66553cf105a90d64e822f9430adc",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "origin": {
         "path": "fs/fat/fat32.zig",
@@ -1995,8 +2023,8 @@
     },
     {
       "path": "Kernel/fs/ntfs/ntfs.zig",
-      "bytes": 39141,
-      "sha256": "edac7e9c0e28848e8b3eb5ad06b1582885dfd895dbaa83b6336cea00019abe56",
+      "bytes": 39575,
+      "sha256": "73384f49fed0c2fe77a84ec06242dc3d5379cedd00d94ed96127bd5ba905decb",
       "originalSha256": "8a1173a1a809eaa815b2c38af102b52dedab3d50d8c2daea986cd56c9be4f2b2",
       "origin": {
         "path": "fs/ntfs/ntfs.zig",
@@ -2075,8 +2103,8 @@
     },
     {
       "path": "Kernel/fs/vfs.zig",
-      "bytes": 33264,
-      "sha256": "4992fdc5a5c9f1d43ce044631f0e6dd41ad807495b64bc6abe9e6d735624b7bf",
+      "bytes": 35937,
+      "sha256": "edf26b769a16e1be3d4e30464ebd11aed8ec731797d7052c8b59bbeaee29ff6a",
       "originalSha256": "5e480aef4115f5a4ab577e878e66ce5302a4898e542936501adc67830cc2885b",
       "origin": {
         "path": "fs/vfs.zig",
@@ -3401,8 +3429,8 @@
     },
     {
       "path": "Kernel/program/r4sys.zig",
-      "bytes": 214387,
-      "sha256": "979e85b98b98ea680465c31b6306b1960c2c4b7cda0f1262d56d5b674c18aa07",
+      "bytes": 218878,
+      "sha256": "f90ed335153c8fd2af3c216b8a01dacf08774835f119ff7dfd4b2a7a9afab180",
       "originalSha256": "d8b44cd993395db12d23057a6c8d0f76ea728e5b4d520720578c78d34111f957",
       "origin": {
         "path": "program/r4sys.zig",
@@ -3411,8 +3439,8 @@
     },
     {
       "path": "Kernel/program/r4x_api.zig",
-      "bytes": 160931,
-      "sha256": "0e683cf52e9e952d9a3d696e6246709d7d103e4133ccfda1d6000af6771ce2f1",
+      "bytes": 161062,
+      "sha256": "431583bf902c3e5f5f5abf68026704e0355354e542fb3edeeb1a4f3b4e4dd55b",
       "originalSha256": "55233d42de7fa821f7ff650ea3789abb7fecf21cadafdd0c10c235480011a6dc",
       "origin": {
         "path": "program/r4x_api.zig",
@@ -3431,8 +3459,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 819273,
-      "sha256": "18371d995d6897c5786724f032f4f5dc1a9172329942e27d559cc91a26b2da06",
+      "bytes": 819463,
+      "sha256": "a83da2f7ceb52140b0fb1f02d526002e444136711e9894501d7f3051e6e2adf7",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3691,8 +3719,8 @@
     },
     {
       "path": "Kernel/Support/ntfs_volume.zig",
-      "bytes": 313352,
-      "sha256": "97e26188dc9e898a880d13043f0044ecd2be0643a9767815bff2b6102ef41285",
+      "bytes": 317031,
+      "sha256": "df00037375c76559dc976261721949647aad180bb5ab71d64758088a270066a8",
       "originalSha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
       "origin": {
         "path": "Support/ntfs_volume.zig",
@@ -3772,7 +3800,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "42e0ccfd41776850c888e2117bf70116867b06f11b087ad62a50e49a858fb93c",
+      "sha256": "13fbd6dbd5eb07cc0512c561631052953c09661dfdeecc3637bd4e6172d1d847",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3808,6 +3836,27 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Contract-0.78.28.patch",
+      "bytes": 330067,
+      "sha256": "00c62ff238c2068f8f0db392509ad1f001ddad25410b5a0691f61ff37d7d78c8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Contract-0.78.56.patch",
+      "bytes": 1260,
+      "sha256": "1e43293718df3e7c40c079d6c4c1e8b1764983bd52f8d4b004b17a94dfa4a07e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Contract-0.81.26.patch",
+      "bytes": 178844,
+      "sha256": "5afe32700e66a98749346273e2307ac76ac803293d2323dfd6fad2312773ac85",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/Distribution-0.76.15.patch",
       "bytes": 4710,
       "sha256": "0d6fddc9dce06eec060cf4e15f8b1299faaa8dff7883a8af4816aa5dc6aee7e4",
@@ -3832,6 +3881,13 @@
       "path": "Legal/Changes/Distribution-0.76.9.patch",
       "bytes": 60696,
       "sha256": "82282b5ba92c0b517544b7a723217d82792eb64009c5e24447e9e2d5ba9e8e40",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Distribution-0.78.73.patch",
+      "bytes": 996,
+      "sha256": "319594885dfb4825e64985c4592cd48da355d1c444ebc9f6a445fb870dc4527d",
       "originalSha256": null,
       "origin": null
     },
@@ -3920,6 +3976,55 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.78.19.patch",
+      "bytes": 3532,
+      "sha256": "ae3c85cb395974fb6b8a848cead1cb93080a07e552789467cd8d3480b5d46aec",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.20.patch",
+      "bytes": 18937,
+      "sha256": "2c0f3dfd42911453a05b52060ab7ae7869eef828656eb0113c67d323d915efc4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.21.patch",
+      "bytes": 7916,
+      "sha256": "7de95278f5589d1e4bcaa480516f2de729ec3c608267e6a9b64098411f949bdc",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.23.patch",
+      "bytes": 17520,
+      "sha256": "00b5068ce82b1a076eadd23ab8682cfba0a1acbd0ad898a768f3a99db5fc8be6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.24.patch",
+      "bytes": 78780,
+      "sha256": "c6ab22ff38190629a74704f141035f2a6dae460c37ce31d9a2a4f110b5cfd46e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.28.patch",
+      "bytes": 17167,
+      "sha256": "987068829bd43c8be699c1af448174594e1530ae575759ebfc41cd1cb16ab7fa",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.29.patch",
+      "bytes": 32825,
+      "sha256": "03f22cb2cef55f5fbcff79eeaa80efb7de4e536f18444bc5bc9a755dfcdc3b91",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/Kernel-0.78.3.patch",
       "bytes": 19920,
       "sha256": "9a2f21f1c37e8a39a7f166b6b839d4191a8fbc41029621db1a5a76b872b96d29",
@@ -3927,9 +4032,163 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.78.30.patch",
+      "bytes": 9996,
+      "sha256": "552847453bf10d9335e0fad91a23c33014b8f2b7738e3048c742b0e05286f24d",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.31.patch",
+      "bytes": 18946,
+      "sha256": "99a772045a817bd6758c68f0559be33814444581a273df6ecfe17571108e8380",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.32.patch",
+      "bytes": 54845,
+      "sha256": "c40f7272057bffc3845ba2abb571e3e84b7108550451c162112adf6badfd43d0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.33.patch",
+      "bytes": 589,
+      "sha256": "e7cb305b4db3b234c80f0964a1a2be60b7ab7d2e6cfe2a1409ff56464cf112a6",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.34.patch",
+      "bytes": 7499,
+      "sha256": "7b471c798e8d51b732c15c28ece08f4993b810dc338c5c3068884a3753f13c84",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.35.patch",
+      "bytes": 9336,
+      "sha256": "81e390cd2f462968d0e36ab6942354015e56c198ae71c26eb9d60ec3446a9839",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.49.patch",
+      "bytes": 51052,
+      "sha256": "fbc1630ac11fed299186764f7ef3efc60fc15400eb714cbd3d1b5e781c5d446e",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.50.patch",
+      "bytes": 13727,
+      "sha256": "47b7855f64d828ae6efbef5a108598f3ab23c47242aecf611beb18cec1ca08a8",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.51.patch",
+      "bytes": 44140,
+      "sha256": "9d36fcafc44f437a21d8b3d7b67309e7edaf512061c3bf708a30f8233eda04d5",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.52.patch",
+      "bytes": 13398,
+      "sha256": "3230c5b0549927f7049014a07b66624860fd08483d0077c17773828412cc419d",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.53.patch",
+      "bytes": 4018,
+      "sha256": "9bce6ecda22628ce6a1e66f55f332a81fec324acd0091c281cd51f36112b939d",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.56.patch",
+      "bytes": 8705,
+      "sha256": "e412c331454f08d7fe7118555f8c839a331c0e5dbffa81f1abaf1a6c53dfc627",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.57.patch",
+      "bytes": 11606,
+      "sha256": "c6c15fa066dd8876a706b88ea1cd1a0b9131c428bcc0a619c42e8661eef5f966",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.59.patch",
+      "bytes": 4695,
+      "sha256": "fb21e56c6310673997ffe7e44cb7c239861b91a80bf9ca7d7f92c1cfd2e8fbf3",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.64.patch",
+      "bytes": 2652,
+      "sha256": "ff78cd5102d3a8b8f79cb99558933b30b52773b6aa82fd14d80a6bd74484255d",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.65.patch",
+      "bytes": 4736,
+      "sha256": "5b0f8ed1df942978c5988da11109069e55b5d48bb05c7ab80a77c9f6e872f8c1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.67.patch",
+      "bytes": 6426,
+      "sha256": "f370a98ac31d5a8134dfa65b571b11d6c63fbe8fb8db114f71d7ae9db2f0a9c9",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.73.patch",
+      "bytes": 1251,
+      "sha256": "aeb955504676cea4714b563942ff27388241e90c3bd570862ec92cf4c3b2908a",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.75.patch",
+      "bytes": 23623,
+      "sha256": "0403720f3c5b4456e71afe08c1bc275fff7a5799f927d679af787a1d90dacbee",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.78.76.patch",
+      "bytes": 24799,
+      "sha256": "d72e2e6df26e3e2244b46ee8580d4f13adfaf9499f8c568eaab248e08b6e80ef",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/Kernel-0.78.9.patch",
       "bytes": 30829,
       "sha256": "65987ba950d4b01a11637585af1c251b01264522024eed594823362eeae1ced0",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.81.12.patch",
+      "bytes": 27578,
+      "sha256": "3741cb761d4287f1e7f65d0d12536ec7a9109e75e8471fad29565045422a1821",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.81.26.patch",
+      "bytes": 50367,
+      "sha256": "1b0a2ab1818c245611e48d488597556844c8f39b63f46d7b9e5e2990e807bfe2",
       "originalSha256": null,
       "origin": null
     },
@@ -4032,9 +4291,121 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/SDK-0.78.19.patch",
+      "bytes": 1833,
+      "sha256": "559fc87187f21477c150afdd380fc074a0672aa05885a95d1c1aae888bf2bd75",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.20.patch",
+      "bytes": 16970,
+      "sha256": "3d0e7b13c6b4393614b96e155ed55d1025147417d832a98aa865f8f4b8ffeae1",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.21.patch",
+      "bytes": 3834,
+      "sha256": "2319e929d2ebe8c84efa7a46efef68290a7255d248b02f17699cedf811fa9993",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.28.patch",
+      "bytes": 7963,
+      "sha256": "bc5292d47302ac9793a434f7c191367e0d7892df55136a6559462a0cd1818a09",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.29.patch",
+      "bytes": 29140,
+      "sha256": "5abe8094b0bec6a5a9388b74123b97ff8d58622f9b1a7ce2763f0b872dd190ae",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/SDK-0.78.3.patch",
       "bytes": 17636,
       "sha256": "9b230de2d6b24a75ec3c4aed4ba4bec8c12b93c1374c794f89a0d70630c4e671",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.30.patch",
+      "bytes": 9459,
+      "sha256": "a9734ef1a9c8f4f57fd91fce188d0d341cba3d0b3768d4feb350a4971c552432",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.31.patch",
+      "bytes": 5661,
+      "sha256": "e942566ffc300ba38639c0ebcc4c324e5b7eefae06865abcb230be6cefadc712",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.52.patch",
+      "bytes": 1596,
+      "sha256": "8a404e9763922b37df541173f7d9942fb1d23a530bfd66b3552f4c36dde97acd",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.54.patch",
+      "bytes": 2930,
+      "sha256": "9e9141dab7394977b9eb4ce45efbac3bae30bb1ef47961fac99781016599a8a4",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.58.patch",
+      "bytes": 31087,
+      "sha256": "df2936deb7b0642d2457d0f86e68f406dd9467856cf6dd66cfc289f3dd96d28c",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.61.patch",
+      "bytes": 5079,
+      "sha256": "fa16e733319b46ece9c52c37d6011a9f2394ad6ac28c736a184fd1bb3f5c6447",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.64.patch",
+      "bytes": 4539,
+      "sha256": "9308c460645b30927d44bdd8341bd033ddbd10fd2da90dcf7c5165870f6b9666",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.70.patch",
+      "bytes": 47034,
+      "sha256": "f96eb8134abe358607e513893ec47ff9c8057bead2e71f348cd8c4380a0cb9ec",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.78.73.patch",
+      "bytes": 6646,
+      "sha256": "6cf87148512403e79edb32761c4fc2e3199ffc71a2ff80c458c629db4ea0b81b",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
+      "bytes": 32356,
+      "sha256": "c1896345a4fd92edd202a8ae40314ae41bac621b3bcf3a3dc68995dd1e6765cf",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.81.26.patch",
+      "bytes": 13495,
+      "sha256": "6188f2221c7b7a9e105345e92ae4b5b23bb46b79ffd3ef47105cc1366dc0d1e8",
       "originalSha256": null,
       "origin": null
     },
@@ -5764,7 +6135,7 @@
     {
       "path": "Platform/Contract/ABI/R4XStart.txt",
       "bytes": 6024,
-      "sha256": "03664c3b866e722b9175463d6f57cef49a5324f02598cb9043d750a9e585fbe8",
+      "sha256": "dceeb3c8df072ec2dd51a7c36ae03b17fe820b043816f5773f1e5a902dd26863",
       "originalSha256": "0f609aa28328eae556609636eaff1476de07086889ed6498212e08bb8f4e48b9",
       "origin": {
         "path": "ABI/R4XStart.txt",
@@ -5793,8 +6164,8 @@
     },
     {
       "path": "Platform/Contract/API/ApiContract.baseline.json",
-      "bytes": 2685410,
-      "sha256": "5abc03d563a8efeee04f319c73860aa81e123a1daeacec1a8f744ca1a7c9f9b8",
+      "bytes": 2740097,
+      "sha256": "a0428b777f751044e84db6a83a0a434fac15feb4cfd913424be83dd556907bc5",
       "originalSha256": "97e256c07eeefe143eaa68cb613d27dc83e9d0cc33cd4930526e40eadd6a0dfa",
       "origin": {
         "path": "API/ApiContract.baseline.json",
@@ -5803,8 +6174,8 @@
     },
     {
       "path": "Platform/Contract/API/ApiContract.json",
-      "bytes": 2700303,
-      "sha256": "9e853f64b0f32c97fc869d10f0bdf1a22834f6d0aa03a58d7d924a0f5ccf45d0",
+      "bytes": 2740097,
+      "sha256": "a0428b777f751044e84db6a83a0a434fac15feb4cfd913424be83dd556907bc5",
       "originalSha256": "97e256c07eeefe143eaa68cb613d27dc83e9d0cc33cd4930526e40eadd6a0dfa",
       "origin": {
         "path": "API/ApiContract.json",
@@ -5863,8 +6234,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Conformance/C/ApiContractConformanceGenerated.c",
-      "bytes": 32765,
-      "sha256": "158197efbc86659ddda97515b773e504c63a99c15b295d01a4e436c7a14ec872",
+      "bytes": 33930,
+      "sha256": "3b384b77a5bfc8f7ae956b8239b8ca897cd5ab605b41b72231bc58344b273c6b",
       "originalSha256": "0aebce262c618dfe812c48d12390abc21f19cde73b92baae404f1aff2ad986c2",
       "origin": {
         "path": "Generated/Conformance/C/ApiContractConformanceGenerated.c",
@@ -5873,8 +6244,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
-      "bytes": 556454,
-      "sha256": "fb2466b8c32a1af366289759fdb027ffc5d8908f4688f652117aab522618ddb1",
+      "bytes": 561924,
+      "sha256": "42e5c06df872a307d29ccc87bdd20ae7c74257eec2431727e0e9251bc7ea5377",
       "originalSha256": "2e20f17d87bc31bb40c14ce2ade616106974da6703ff9f28ab67348bf9b6f355",
       "origin": {
         "path": "Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
@@ -5933,8 +6304,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Docs/API/R4SYS.md",
-      "bytes": 15886,
-      "sha256": "830179b99230dde2cbf58e34a83604eee759dda0452fcbb6b6b5e0b41ae7e62f",
+      "bytes": 17055,
+      "sha256": "a7e664bf3d194344bc2c4ef616296974f37533b8545657cf192912cae689dbab",
       "originalSha256": "02b5e106febf010c7a95857794f247327d7db06524e957f8b6b3cc7ce4216e79",
       "origin": {
         "path": "Generated/Docs/API/R4SYS.md",
@@ -5943,8 +6314,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Docs/OperationContracts.md",
-      "bytes": 108411,
-      "sha256": "09c237c34f380a31a726229ff8660fc06e31d152502c93a08694f4866b5ea088",
+      "bytes": 111890,
+      "sha256": "2ce8cd1ff1d18ef9350b8bacae9d15df98e47e7aa0c0e07130fb3551bfbe00ca",
       "originalSha256": "8a3ae1ed4ddb1db0a3d85e003b7a0633a5147e898cfb65b71f5cf7e471a4d577",
       "origin": {
         "path": "Generated/Docs/OperationContracts.md",
@@ -5953,8 +6324,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
-      "bytes": 402866,
-      "sha256": "7b7bd5c4ded809e35f7035a9407021c020c0fe89762cbc8301b2913946a47835",
+      "bytes": 404748,
+      "sha256": "0c215e0d7162ad406cf654d45b19a52f538ba927a5a37334cfa061bf924a2506",
       "originalSha256": "5da6fc48921237641a1a9fffde0c296393c0085d074c9f867b18b24f65fee3d1",
       "origin": {
         "path": "Generated/Docs/PayloadTypes.md",
@@ -5963,8 +6334,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Docs/ZigCParity.json",
-      "bytes": 101802,
-      "sha256": "6a7a4d87e1a6df1d635fcb8d0e39e5d3e72956ec840738717137201f415962e7",
+      "bytes": 105347,
+      "sha256": "6555e2393fa6e84d0669d6aab2d78ece4bf274c264a06bc7926058c002cb5bd3",
       "originalSha256": "a4c8a0d13079e04f0acf49e05512b7f939ad3cd61e97d3821b5f8e1feb99ab4a",
       "origin": {
         "path": "Generated/Docs/ZigCParity.json",
@@ -6033,8 +6404,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Inventory/API.json",
-      "bytes": 141186,
-      "sha256": "16c06d91cc1fcee905d9b21a9ce08e9332197397e32ede40d49792cd663e74f6",
+      "bytes": 150988,
+      "sha256": "870dee17700fdfb0b3db4878fe55372214342d72680bf3781a5e789445e62fc0",
       "originalSha256": "526a334441ccabf36e38e793b77995ea4988a5214f69e4ab868648dd30f15220",
       "origin": {
         "path": "Generated/Inventory/API.json",
@@ -6043,8 +6414,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
-      "bytes": 163374,
-      "sha256": "6d0661d535e6892254d52badb6f9c5e966607b6c90e5fea09781d1d538d7dc8b",
+      "bytes": 163551,
+      "sha256": "33c0d306bbc1304de9fbcfa9a5ef8953554c81f2d806c96beebb94ab23c3352e",
       "originalSha256": "d15c5a8c0949f84c0f42145f3e1529c4661e6cba633a731d10899ac316a45884",
       "origin": {
         "path": "Generated/Kernel/Zig/r4x_api_exports.zig",
@@ -6053,8 +6424,8 @@
     },
     {
       "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
-      "bytes": 949601,
-      "sha256": "72fa47505a0a33445b973381600b277653c2dafbcd900891432a85b1f49b3db4",
+      "bytes": 959993,
+      "sha256": "c77cc5be2bafe3e0d39d257da6a4f1f704b811c5aedde981577fdf35350a0b96",
       "originalSha256": "91b1dcd9751f788a3b87016000630a69e9e009a08c0a16fcbae495422f5be8ca",
       "origin": {
         "path": "Generated/Kernel/Zig/r4x_api_generated.zig",
@@ -6073,8 +6444,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
-      "bytes": 808971,
-      "sha256": "dc694da409eea8bea334b22d54d9aac2901b2015b8ee560c2c2d7be70803f99e",
+      "bytes": 816706,
+      "sha256": "3ee4399c5763f5a9e2591c8a3f14de1114ad1f2c0d7d7fc57669adcc85e25ca4",
       "originalSha256": "8045c102dcfb1c152ccd73a766042f2454b0e408fb1b4fb1d5e0dcbdb37a5b96",
       "origin": {
         "path": "Generated/SDK/C/include/r4os/abi_generated.h",
@@ -6083,8 +6454,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
-      "bytes": 162704,
-      "sha256": "5cff7ea1fab859ac45cd31cbe762b3776ef0e6388a7d8ca330f95b6956c67e2a",
+      "bytes": 162881,
+      "sha256": "f3044beac72c9e3cf586b48d6e52ca0c28248da22a3f7bf9a95fd7222d16da27",
       "originalSha256": "ad4e74cb80812c91d1ff9646a2fef04214590c714efa378ce5e0f9465466617a",
       "origin": {
         "path": "Generated/SDK/Zig/abi_exports.zig",
@@ -6093,8 +6464,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
-      "bytes": 893088,
-      "sha256": "1723f1996b04a178829e3d009be5eb1be36cef4a7661fce51620ed65854baff8",
+      "bytes": 901520,
+      "sha256": "a3accceba89308cd0346bd3cb02c40b49e2584aac72340c4c52a96973e3bd424",
       "originalSha256": "c58591f60947930599257a013012a618930d57186428a60b7c83a1914fd69a1c",
       "origin": {
         "path": "Generated/SDK/Zig/abi_generated.zig",
@@ -6103,8 +6474,8 @@
     },
     {
       "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
-      "bytes": 221950,
-      "sha256": "19d3a08cc97f64da29068558ee5ef68112bcd938973be191e5e0359c1cf7e19b",
+      "bytes": 222127,
+      "sha256": "c8c14f65f6e9f473eae09da969192d0b768ec4882a71eadf61749955ed782b17",
       "originalSha256": "b5f1ee979388c37ed6c2b8c1ccc87e7d913f3aa35e767e7cc6baf3544c63aa30",
       "origin": {
         "path": "Generated/SDK/Zig/abi.zig",
@@ -6184,7 +6555,7 @@
     {
       "path": "Platform/Contract/Tools/ApiContractGen/src/main.zig",
       "bytes": 154054,
-      "sha256": "a14725df57876163484c0ea893c416f922314b2d8d551ee961fe41d4fec22414",
+      "sha256": "b4e43631334134f4acc80d9c3b1ceaa7e67ed31b783d3f50f1171f4a8ac86b65",
       "originalSha256": "ba78bdcdef7dee99be31a29c411562e818bee700a3659ce84fb21f4b0ab86dff",
       "origin": {
         "path": "Tools/ApiContractGen/src/main.zig",
@@ -6474,8 +6845,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_storage.zig",
-      "bytes": 26572,
-      "sha256": "517362f795e8e3b03111133a1f341954573a22d487f58f1cf37ac3c988db7c98",
+      "bytes": 27563,
+      "sha256": "48d8251e7c857e7c0f08d6e8959ef9200a635ab1b8dd834db1a27e5732fd0826",
       "originalSha256": "517362f795e8e3b03111133a1f341954573a22d487f58f1cf37ac3c988db7c98",
       "origin": {
         "path": "r4os/app_storage.zig",
@@ -6745,8 +7116,8 @@
     },
     {
       "path": "Platform/SDK/r4os/ntfs_volume.zig",
-      "bytes": 313622,
-      "sha256": "e73ccd100c5743179ba516658e5c4564a6084b835d274083bcddf39eda05e99a",
+      "bytes": 317301,
+      "sha256": "127cd41abd1fa4093281b5cea60029edae155fc9732739183817b353604e6820",
       "originalSha256": "a659807ee2bedd0613be7ba3b74ab2bd4d082401590d4e7a6ac9478a0845ff94",
       "origin": {
         "path": "r4os/ntfs_volume.zig",
@@ -6765,8 +7136,8 @@
     },
     {
       "path": "Platform/SDK/r4os/program.zig",
-      "bytes": 229407,
-      "sha256": "ba31a5d7692af47755a2fbf63f60497f552d824338163df5d703c1c50f34ea82",
+      "bytes": 229720,
+      "sha256": "1b2f20a1eef4a5e5aba1488ef06fc62add81da707132db9365ae3b0cf924742f",
       "originalSha256": "df51028b3acbc32ea419796bcee55222ca6040acad89e58a632f88267b3d4f9c",
       "origin": {
         "path": "r4os/program.zig",
@@ -6855,8 +7226,8 @@
     },
     {
       "path": "Platform/SDK/r4os/r4sys.zig",
-      "bytes": 63943,
-      "sha256": "e6317868f6ad39764ea395d421fc48a04dedaf223e54c8331ce760321ddbf31f",
+      "bytes": 64155,
+      "sha256": "85f9a0a3e3d981f7589169e35d42aa411b0b1a459e8399d0ab292f7956328b35",
       "originalSha256": "80533465450f6e258da61301167301c5c133714d28f4a1c4145e232aef46414a",
       "origin": {
         "path": "r4os/r4sys.zig",
@@ -6934,6 +7305,13 @@
       }
     },
     {
+      "path": "Platform/SDK/r4os/registry_selftest.zig",
+      "bytes": 3608,
+      "sha256": "18a41559b21d5df21c39de6686b05b9231c9cad49e3b52e0a95297075f731a5c",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Platform/SDK/r4os/registry.zig",
       "bytes": 28068,
       "sha256": "44cb5c5062f48bc6bb179ebfee21c916749f4583bf182a7160f5b6eb4413497e",
@@ -6959,6 +7337,13 @@
         "path": "r4os/runtime_r4l.zig",
         "source": "SDK"
       }
+    },
+    {
+      "path": "Platform/SDK/r4os/secure_random.zig",
+      "bytes": 1717,
+      "sha256": "933d6e25e89095374e852cddeb5b2cc65412690961a4db462678e55ca41a96e0",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Platform/SDK/r4os/service_deadline.zig",
@@ -7713,8 +8098,8 @@
     },
     {
       "path": "Platform/SDK/Shared/C/include/r4os/app_storage.h",
-      "bytes": 24810,
-      "sha256": "0d365bdfdbac64127e23e4fcd5f8df2774c026dfcd960762b1f650197961d929",
+      "bytes": 26271,
+      "sha256": "e4c1bdf71b76e8c9486286f63a4cc802515ebaa7f5c9d8d6848ff8a242095a2d",
       "originalSha256": "27013dd031c754f4d85a6e38cb5e557b3fd4eff4564dfa92af70b5217412a604",
       "origin": {
         "path": "Shared/C/include/r4os/app_storage.h",
@@ -7823,8 +8208,8 @@
     },
     {
       "path": "Platform/SDK/Shared/C/include/r4os/r4sys.h",
-      "bytes": 29064,
-      "sha256": "58e1fbe415d893acd7185ac0e9b1e4c036c372e18cc6b6135a2a5bf57f2f0b94",
+      "bytes": 29070,
+      "sha256": "c2ad7337422009fb6b83a7943836332784cdf06d3b81305e7468462fc9925aca",
       "originalSha256": "5adc129090c3dfdf3935609cbdc276add82d2a1ea83856ea7515fd244b0c3b23",
       "origin": {
         "path": "Shared/C/include/r4os/r4sys.h",
@@ -9166,7 +9551,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "ff9c01fae95943b99e75949d493ad2f935e47bec1e6f2a51d32c14a13cbcb646",
+      "sha256": "5b7b01ec70eb8361bddd8f5341c0c086e1aa5b0365a76029635671c1b58c1cdc",
       "originalSha256": null,
       "origin": null
     },
@@ -9340,8 +9725,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/selection.zig",
-      "bytes": 9941,
-      "sha256": "664b2a7040a156028007cf8fab537ad0d4100ff72e40b2a5cfeb337ba3ac3cde",
+      "bytes": 11476,
+      "sha256": "8c12065c88bec12a5567095ba1b0c89740af25b0987fed73527d88673c8d466f",
       "originalSha256": null,
       "origin": null
     },
@@ -9495,7 +9880,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "d98f2562bfa6949ca5d2c8d030908701118058d96fe0d2a635fe1a55f1cc64c9",
+      "sha256": "832311fb0b3245f349943d46f1711fade21d123a6556d992450fa79a4a68c870",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9904,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "6958a846bf076f052112aadc52fd61b1bf159048afc92497818738dc345ec093",
+      "sha256": "ef293223982d172d9dd9e7a1d0d045372d9e583d19054e2ac426763a58c3c2db",
       "originalSha256": null,
       "origin": null
     },
@@ -9938,356 +10323,6 @@
       "path": "Runtime/TEMP/README.TXT",
       "bytes": 72,
       "sha256": "0b2d1bc4949c34ae923aa9958e2510e4b59125945ddef35542a247c9b7f81db5",
-      "originalSha256": null,
-      "origin": null
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.19.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "ae3c85cb395974fb6b8a848cead1cb93080a07e552789467cd8d3480b5d46aec",
-      "bytes": 3532
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.19.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "559fc87187f21477c150afdd380fc074a0672aa05885a95d1c1aae888bf2bd75",
-      "bytes": 1833
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.20.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "2c0f3dfd42911453a05b52060ab7ae7869eef828656eb0113c67d323d915efc4",
-      "bytes": 18937
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.20.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "3d0e7b13c6b4393614b96e155ed55d1025147417d832a98aa865f8f4b8ffeae1",
-      "bytes": 16970
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.21.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "7de95278f5589d1e4bcaa480516f2de729ec3c608267e6a9b64098411f949bdc",
-      "bytes": 7916
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.21.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "2319e929d2ebe8c84efa7a46efef68290a7255d248b02f17699cedf811fa9993",
-      "bytes": 3834
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.23.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "00b5068ce82b1a076eadd23ab8682cfba0a1acbd0ad898a768f3a99db5fc8be6",
-      "bytes": 17520
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.24.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "c6ab22ff38190629a74704f141035f2a6dae460c37ce31d9a2a4f110b5cfd46e",
-      "bytes": 78780
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.28.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "987068829bd43c8be699c1af448174594e1530ae575759ebfc41cd1cb16ab7fa",
-      "bytes": 17167
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.28.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "bc5292d47302ac9793a434f7c191367e0d7892df55136a6559462a0cd1818a09",
-      "bytes": 7963
-    },
-    {
-      "path": "Legal/Changes/Contract-0.78.28.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "00c62ff238c2068f8f0db392509ad1f001ddad25410b5a0691f61ff37d7d78c8",
-      "bytes": 330067
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.29.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "5abe8094b0bec6a5a9388b74123b97ff8d58622f9b1a7ce2763f0b872dd190ae",
-      "bytes": 29140
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.29.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "03f22cb2cef55f5fbcff79eeaa80efb7de4e536f18444bc5bc9a755dfcdc3b91",
-      "bytes": 32825
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.30.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "a9734ef1a9c8f4f57fd91fce188d0d341cba3d0b3768d4feb350a4971c552432",
-      "bytes": 9459
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.30.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "552847453bf10d9335e0fad91a23c33014b8f2b7738e3048c742b0e05286f24d",
-      "bytes": 9996
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.31.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "99a772045a817bd6758c68f0559be33814444581a273df6ecfe17571108e8380",
-      "bytes": 18946
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.31.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "e942566ffc300ba38639c0ebcc4c324e5b7eefae06865abcb230be6cefadc712",
-      "bytes": 5661
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.32.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "c40f7272057bffc3845ba2abb571e3e84b7108550451c162112adf6badfd43d0",
-      "bytes": 54845
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.33.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "e7cb305b4db3b234c80f0964a1a2be60b7ab7d2e6cfe2a1409ff56464cf112a6",
-      "bytes": 589
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.34.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "7b471c798e8d51b732c15c28ece08f4993b810dc338c5c3068884a3753f13c84",
-      "bytes": 7499
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.35.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "81e390cd2f462968d0e36ab6942354015e56c198ae71c26eb9d60ec3446a9839",
-      "bytes": 9336
-    },
-    {
-      "path": "Kernel/font_test.zig",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "fcd28167b0b14e1940e54558178fb8a060c8c47de667a4db5ad37581d30adacb",
-      "bytes": 69
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.49.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "fbc1630ac11fed299186764f7ef3efc60fc15400eb714cbd3d1b5e781c5d446e",
-      "bytes": 51052
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.50.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "47b7855f64d828ae6efbef5a108598f3ab23c47242aecf611beb18cec1ca08a8",
-      "bytes": 13727
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.51.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "9d36fcafc44f437a21d8b3d7b67309e7edaf512061c3bf708a30f8233eda04d5",
-      "bytes": 44140
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.52.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "3230c5b0549927f7049014a07b66624860fd08483d0077c17773828412cc419d",
-      "bytes": 13398
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.52.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "8a404e9763922b37df541173f7d9942fb1d23a530bfd66b3552f4c36dde97acd",
-      "bytes": 1596
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.53.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "9bce6ecda22628ce6a1e66f55f332a81fec324acd0091c281cd51f36112b939d",
-      "bytes": 4018
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.54.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "9e9141dab7394977b9eb4ce45efbac3bae30bb1ef47961fac99781016599a8a4",
-      "bytes": 2930
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.56.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "e412c331454f08d7fe7118555f8c839a331c0e5dbffa81f1abaf1a6c53dfc627",
-      "bytes": 8705
-    },
-    {
-      "path": "Legal/Changes/Contract-0.78.56.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "1e43293718df3e7c40c079d6c4c1e8b1764983bd52f8d4b004b17a94dfa4a07e",
-      "bytes": 1260
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.57.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "c6c15fa066dd8876a706b88ea1cd1a0b9131c428bcc0a619c42e8661eef5f966",
-      "bytes": 11606
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.58.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "df2936deb7b0642d2457d0f86e68f406dd9467856cf6dd66cfc289f3dd96d28c",
-      "bytes": 31087
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.59.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "fb21e56c6310673997ffe7e44cb7c239861b91a80bf9ca7d7f92c1cfd2e8fbf3",
-      "bytes": 4695
-    },
-    {
-      "path": "Platform/SDK/r4os/secure_random.zig",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "933d6e25e89095374e852cddeb5b2cc65412690961a4db462678e55ca41a96e0",
-      "bytes": 1717
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.61.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "fa16e733319b46ece9c52c37d6011a9f2394ad6ac28c736a184fd1bb3f5c6447",
-      "bytes": 5079
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.64.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "ff78cd5102d3a8b8f79cb99558933b30b52773b6aa82fd14d80a6bd74484255d",
-      "bytes": 2652
-    },
-    {
-      "path": "Platform/SDK/r4os/registry_selftest.zig",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "18a41559b21d5df21c39de6686b05b9231c9cad49e3b52e0a95297075f731a5c",
-      "bytes": 3608
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.64.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "9308c460645b30927d44bdd8341bd033ddbd10fd2da90dcf7c5165870f6b9666",
-      "bytes": 4539
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.65.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "5b0f8ed1df942978c5988da11109069e55b5d48bb05c7ab80a77c9f6e872f8c1",
-      "bytes": 4736
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.67.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "f370a98ac31d5a8134dfa65b571b11d6c63fbe8fb8db114f71d7ae9db2f0a9c9",
-      "bytes": 6426
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.70.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "f96eb8134abe358607e513893ec47ff9c8057bead2e71f348cd8c4380a0cb9ec",
-      "bytes": 47034
-    },
-    {
-      "path": "Legal/Changes/SDK-0.78.73.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "6cf87148512403e79edb32761c4fc2e3199ffc71a2ff80c458c629db4ea0b81b",
-      "bytes": 6646
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.73.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "aeb955504676cea4714b563942ff27388241e90c3bd570862ec92cf4c3b2908a",
-      "bytes": 1251
-    },
-    {
-      "path": "Legal/Changes/Distribution-0.78.73.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "319594885dfb4825e64985c4592cd48da355d1c444ebc9f6a445fb870dc4527d",
-      "bytes": 996
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.75.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "0403720f3c5b4456e71afe08c1bc275fff7a5799f927d679af787a1d90dacbee",
-      "bytes": 23623
-    },
-    {
-      "path": "Kernel/display/ownership.zig",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "d16aeca15f2d8299ef566bfb6a6824247b9eda0b364103422dfbf6a2770e9f1c",
-      "bytes": 2309
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.78.76.patch",
-      "originalSha256": null,
-      "origin": null,
-      "sha256": "d72e2e6df26e3e2244b46ee8580d4f13adfaf9499f8c568eaab248e08b6e80ef",
-      "bytes": 24799
-    },
-    {
-      "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
-      "bytes": 32356,
-      "sha256": "c1896345a4fd92edd202a8ae40314ae41bac621b3bcf3a3dc68995dd1e6765cf",
-      "originalSha256": null,
-      "origin": null
-    },
-    {
-      "path": "Legal/Changes/Kernel-0.81.12.patch",
-      "bytes": 27578,
-      "sha256": "3741cb761d4287f1e7f65d0d12536ec7a9109e75e8471fad29565045422a1821",
       "originalSha256": null,
       "origin": null
     }
@@ -15838,6 +15873,256 @@
         }
       ],
       "reason": "0.81.12: finalize canonical Kernel 05f82df transfer patch and provenance"
+    },
+    {
+      "reason": "0.81.26: kompatible Verzeichnisfortsetzung und kanonische FAT-LFN-/Verzeichnisbesitzer",
+      "changes": [
+        {
+          "after": "a586acf4d813e26c861d2097a62cb58bd0d25ec2c5636db16905b2098f8935a0",
+          "path": "Kernel/fs/directory_changes.zig",
+          "before": null
+        },
+        {
+          "after": "68dde1b190d6922e5ac0f6920852249e5513feafe58bcb14254749f447a89cd6",
+          "path": "Kernel/fs/fat/directory_growth.zig",
+          "before": null
+        },
+        {
+          "after": "dabb7b51338c69364f39128a4a011a02437d2eba7ba39996b430ad6f60271fe8",
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "5e81dee8ecb4535a95b881bef3888a545fb5b760ac4f8becde0896c88c74543e"
+        },
+        {
+          "after": "73384f49fed0c2fe77a84ec06242dc3d5379cedd00d94ed96127bd5ba905decb",
+          "path": "Kernel/fs/ntfs/ntfs.zig",
+          "before": "edac7e9c0e28848e8b3eb5ad06b1582885dfd895dbaa83b6336cea00019abe56"
+        },
+        {
+          "after": "77ab535e0cc41727e61612f964cb225f63ccf651ae4ba1df62238606d4f1e1d3",
+          "path": "Kernel/fs/vfs.zig",
+          "before": "4992fdc5a5c9f1d43ce044631f0e6dd41ad807495b64bc6abe9e6d735624b7bf"
+        },
+        {
+          "after": "89087c7206cbea133a62e46315c46562506c4fd6e04c1fe0a7b577d64df8430f",
+          "path": "Kernel/program/r4sys.zig",
+          "before": "979e85b98b98ea680465c31b6306b1960c2c4b7cda0f1262d56d5b674c18aa07"
+        },
+        {
+          "after": "431583bf902c3e5f5f5abf68026704e0355354e542fb3edeeb1a4f3b4e4dd55b",
+          "path": "Kernel/program/r4x_api.zig",
+          "before": "0e683cf52e9e952d9a3d696e6246709d7d103e4133ccfda1d6000af6771ce2f1"
+        },
+        {
+          "after": "a83da2f7ceb52140b0fb1f02d526002e444136711e9894501d7f3051e6e2adf7",
+          "path": "Kernel/program/r4x.zig",
+          "before": "18371d995d6897c5786724f032f4f5dc1a9172329942e27d559cc91a26b2da06"
+        },
+        {
+          "after": "9c86ac56c011b07bd0991fda50917d18ac212f56632881a3c45ef36d44b1973d",
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "before": "97e26188dc9e898a880d13043f0044ecd2be0643a9767815bff2b6102ef41285"
+        },
+        {
+          "after": "13fbd6dbd5eb07cc0512c561631052953c09661dfdeecc3637bd4e6172d1d847",
+          "path": "Kernel/VERSION.R4S",
+          "before": "42e0ccfd41776850c888e2117bf70116867b06f11b087ad62a50e49a858fb93c"
+        },
+        {
+          "after": "dceeb3c8df072ec2dd51a7c36ae03b17fe820b043816f5773f1e5a902dd26863",
+          "path": "Platform/Contract/ABI/R4XStart.txt",
+          "before": "03664c3b866e722b9175463d6f57cef49a5324f02598cb9043d750a9e585fbe8"
+        },
+        {
+          "after": "a0428b777f751044e84db6a83a0a434fac15feb4cfd913424be83dd556907bc5",
+          "path": "Platform/Contract/API/ApiContract.baseline.json",
+          "before": "5abc03d563a8efeee04f319c73860aa81e123a1daeacec1a8f744ca1a7c9f9b8"
+        },
+        {
+          "after": "a0428b777f751044e84db6a83a0a434fac15feb4cfd913424be83dd556907bc5",
+          "path": "Platform/Contract/API/ApiContract.json",
+          "before": "9e853f64b0f32c97fc869d10f0bdf1a22834f6d0aa03a58d7d924a0f5ccf45d0"
+        },
+        {
+          "after": "3b384b77a5bfc8f7ae956b8239b8ca897cd5ab605b41b72231bc58344b273c6b",
+          "path": "Platform/Contract/Generated/Conformance/C/ApiContractConformanceGenerated.c",
+          "before": "158197efbc86659ddda97515b773e504c63a99c15b295d01a4e436c7a14ec872"
+        },
+        {
+          "after": "42e5c06df872a307d29ccc87bdd20ae7c74257eec2431727e0e9251bc7ea5377",
+          "path": "Platform/Contract/Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
+          "before": "fb2466b8c32a1af366289759fdb027ffc5d8908f4688f652117aab522618ddb1"
+        },
+        {
+          "after": "a7e664bf3d194344bc2c4ef616296974f37533b8545657cf192912cae689dbab",
+          "path": "Platform/Contract/Generated/Docs/API/R4SYS.md",
+          "before": "830179b99230dde2cbf58e34a83604eee759dda0452fcbb6b6b5e0b41ae7e62f"
+        },
+        {
+          "after": "2ce8cd1ff1d18ef9350b8bacae9d15df98e47e7aa0c0e07130fb3551bfbe00ca",
+          "path": "Platform/Contract/Generated/Docs/OperationContracts.md",
+          "before": "09c237c34f380a31a726229ff8660fc06e31d152502c93a08694f4866b5ea088"
+        },
+        {
+          "after": "0c215e0d7162ad406cf654d45b19a52f538ba927a5a37334cfa061bf924a2506",
+          "path": "Platform/Contract/Generated/Docs/PayloadTypes.md",
+          "before": "7b7bd5c4ded809e35f7035a9407021c020c0fe89762cbc8301b2913946a47835"
+        },
+        {
+          "after": "6555e2393fa6e84d0669d6aab2d78ece4bf274c264a06bc7926058c002cb5bd3",
+          "path": "Platform/Contract/Generated/Docs/ZigCParity.json",
+          "before": "6a7a4d87e1a6df1d635fcb8d0e39e5d3e72956ec840738717137201f415962e7"
+        },
+        {
+          "after": "870dee17700fdfb0b3db4878fe55372214342d72680bf3781a5e789445e62fc0",
+          "path": "Platform/Contract/Generated/Inventory/API.json",
+          "before": "16c06d91cc1fcee905d9b21a9ce08e9332197397e32ede40d49792cd663e74f6"
+        },
+        {
+          "after": "33c0d306bbc1304de9fbcfa9a5ef8953554c81f2d806c96beebb94ab23c3352e",
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_exports.zig",
+          "before": "6d0661d535e6892254d52badb6f9c5e966607b6c90e5fea09781d1d538d7dc8b"
+        },
+        {
+          "after": "c77cc5be2bafe3e0d39d257da6a4f1f704b811c5aedde981577fdf35350a0b96",
+          "path": "Platform/Contract/Generated/Kernel/Zig/r4x_api_generated.zig",
+          "before": "72fa47505a0a33445b973381600b277653c2dafbcd900891432a85b1f49b3db4"
+        },
+        {
+          "after": "3ee4399c5763f5a9e2591c8a3f14de1114ad1f2c0d7d7fc57669adcc85e25ca4",
+          "path": "Platform/Contract/Generated/SDK/C/include/r4os/abi_generated.h",
+          "before": "dc694da409eea8bea334b22d54d9aac2901b2015b8ee560c2c2d7be70803f99e"
+        },
+        {
+          "after": "f3044beac72c9e3cf586b48d6e52ca0c28248da22a3f7bf9a95fd7222d16da27",
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_exports.zig",
+          "before": "5cff7ea1fab859ac45cd31cbe762b3776ef0e6388a7d8ca330f95b6956c67e2a"
+        },
+        {
+          "after": "a3accceba89308cd0346bd3cb02c40b49e2584aac72340c4c52a96973e3bd424",
+          "path": "Platform/Contract/Generated/SDK/Zig/abi_generated.zig",
+          "before": "1723f1996b04a178829e3d009be5eb1be36cef4a7661fce51620ed65854baff8"
+        },
+        {
+          "after": "c8c14f65f6e9f473eae09da969192d0b768ec4882a71eadf61749955ed782b17",
+          "path": "Platform/Contract/Generated/SDK/Zig/abi.zig",
+          "before": "19d3a08cc97f64da29068558ee5ef68112bcd938973be191e5e0359c1cf7e19b"
+        },
+        {
+          "after": "b4e43631334134f4acc80d9c3b1ceaa7e67ed31b783d3f50f1171f4a8ac86b65",
+          "path": "Platform/Contract/Tools/ApiContractGen/src/main.zig",
+          "before": "a14725df57876163484c0ea893c416f922314b2d8d551ee961fe41d4fec22414"
+        },
+        {
+          "after": "48d8251e7c857e7c0f08d6e8959ef9200a635ab1b8dd834db1a27e5732fd0826",
+          "path": "Platform/SDK/r4os/app_storage.zig",
+          "before": "517362f795e8e3b03111133a1f341954573a22d487f58f1cf37ac3c988db7c98"
+        },
+        {
+          "after": "518e6b529f9eba71494d23f73a4549213bcded4ece566b3df85148f7a8e0020d",
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "before": "e73ccd100c5743179ba516658e5c4564a6084b835d274083bcddf39eda05e99a"
+        },
+        {
+          "after": "1b2f20a1eef4a5e5aba1488ef06fc62add81da707132db9365ae3b0cf924742f",
+          "path": "Platform/SDK/r4os/program.zig",
+          "before": "ba31a5d7692af47755a2fbf63f60497f552d824338163df5d703c1c50f34ea82"
+        },
+        {
+          "after": "85f9a0a3e3d981f7589169e35d42aa411b0b1a459e8399d0ab292f7956328b35",
+          "path": "Platform/SDK/r4os/r4sys.zig",
+          "before": "e6317868f6ad39764ea395d421fc48a04dedaf223e54c8331ce760321ddbf31f"
+        },
+        {
+          "after": "5b7b01ec70eb8361bddd8f5341c0c086e1aa5b0365a76029635671c1b58c1cdc",
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "ff9c01fae95943b99e75949d493ad2f935e47bec1e6f2a51d32c14a13cbcb646"
+        },
+        {
+          "after": "4b0e8cb772f1a40ef179d510b593d0ebb60bbc4b90e9410e376c62ab39512ca0",
+          "path": "RecoveryTools/Menu/src/selection.zig",
+          "before": "664b2a7040a156028007cf8fab537ad0d4100ff72e40b2a5cfeb337ba3ac3cde"
+        }
+      ]
+    },
+    {
+      "reason": "0.81.26: Recovery 0.1.61 mit Runtime- und Shellversion koppeln",
+      "changes": [
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "d98f2562bfa6949ca5d2c8d030908701118058d96fe0d2a635fe1a55f1cc64c9",
+          "after": "832311fb0b3245f349943d46f1711fade21d123a6556d992450fa79a4a68c870"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "6958a846bf076f052112aadc52fd61b1bf159048afc92497818738dc345ec093",
+          "after": "ef293223982d172d9dd9e7a1d0d045372d9e583d19054e2ac426763a58c3c2db"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "after": "00b71d33c68f7d6fcd0a50e7a7af3007e41e66553cf105a90d64e822f9430adc",
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "dabb7b51338c69364f39128a4a011a02437d2eba7ba39996b430ad6f60271fe8"
+        },
+        {
+          "after": "edf26b769a16e1be3d4e30464ebd11aed8ec731797d7052c8b59bbeaee29ff6a",
+          "path": "Kernel/fs/vfs.zig",
+          "before": "77ab535e0cc41727e61612f964cb225f63ccf651ae4ba1df62238606d4f1e1d3"
+        },
+        {
+          "after": "f90ed335153c8fd2af3c216b8a01dacf08774835f119ff7dfd4b2a7a9afab180",
+          "path": "Kernel/program/r4sys.zig",
+          "before": "89087c7206cbea133a62e46315c46562506c4fd6e04c1fe0a7b577d64df8430f"
+        },
+        {
+          "after": "df00037375c76559dc976261721949647aad180bb5ab71d64758088a270066a8",
+          "path": "Kernel/Support/ntfs_volume.zig",
+          "before": "9c86ac56c011b07bd0991fda50917d18ac212f56632881a3c45ef36d44b1973d"
+        },
+        {
+          "after": "127cd41abd1fa4093281b5cea60029edae155fc9732739183817b353604e6820",
+          "path": "Platform/SDK/r4os/ntfs_volume.zig",
+          "before": "518e6b529f9eba71494d23f73a4549213bcded4ece566b3df85148f7a8e0020d"
+        },
+        {
+          "after": "e4c1bdf71b76e8c9486286f63a4cc802515ebaa7f5c9d8d6848ff8a242095a2d",
+          "path": "Platform/SDK/Shared/C/include/r4os/app_storage.h",
+          "before": "0d365bdfdbac64127e23e4fcd5f8df2774c026dfcd960762b1f650197961d929"
+        },
+        {
+          "after": "8c12065c88bec12a5567095ba1b0c89740af25b0987fed73527d88673c8d466f",
+          "path": "RecoveryTools/Menu/src/selection.zig",
+          "before": "4b0e8cb772f1a40ef179d510b593d0ebb60bbc4b90e9410e376c62ab39512ca0"
+        }
+      ],
+      "reason": "0.81.26: C-Fassade und eindeutige Weitergabe von Cursorfehlern im Recovery-Menue"
+    },
+    {
+      "changes": [
+        {
+          "path": "Legal/Changes/Contract-0.81.26.patch",
+          "after": "5afe32700e66a98749346273e2307ac76ac803293d2323dfd6fad2312773ac85",
+          "before": null
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.81.26.patch",
+          "after": "1b0a2ab1818c245611e48d488597556844c8f39b63f46d7b9e5e2990e807bfe2",
+          "before": null
+        },
+        {
+          "path": "Legal/Changes/SDK-0.81.26.patch",
+          "after": "6188f2221c7b7a9e105345e92ae4b5b23bb46b79ffd3ef47105cc1366dc0d1e8",
+          "before": null
+        },
+        {
+          "path": "Platform/SDK/Shared/C/include/r4os/r4sys.h",
+          "after": "c2ad7337422009fb6b83a7943836332784cdf06d3b81305e7468462fc9925aca",
+          "before": "58e1fbe415d893acd7185ac0e9b1e4c036c372e18cc6b6135a2a5bf57f2f0b94"
+        }
+      ],
+      "reason": "0.81.26: nachgewiesene Besitzercommits und Delta-Provenance; kanonischer C-Pfadtyp"
     }
   ]
 }

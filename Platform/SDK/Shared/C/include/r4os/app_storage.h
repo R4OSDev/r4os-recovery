@@ -59,6 +59,8 @@ typedef struct R4DirectoryNext {
     int32_t raw_code;
     uint8_t is_directory;
     R4FilePath path;
+    uint8_t has_info;
+    R4FileInfo info;
 } R4DirectoryNext;
 
 typedef struct R4DirectoryIterator {
@@ -66,6 +68,8 @@ typedef struct R4DirectoryIterator {
     const R4FilePath *directory;
     uint32_t index;
     uint8_t ended;
+    uint8_t legacy_after_removal;
+    R4DirectoryScanCursor cursor;
 } R4DirectoryIterator;
 
 typedef struct R4StreamReader {
@@ -223,7 +227,10 @@ static inline R4Operation r4_files_rename(R4Files *files, const R4FilePath *sour
 }
 
 static inline R4DirectoryIterator r4_files_iterate(R4Files files, const R4FilePath *directory) {
-    R4DirectoryIterator result = {files, directory, 2u, 0u}; return result;
+    R4DirectoryIterator result = {0};
+    result.files = files; result.directory = directory; result.index = 2u;
+    result.cursor.version = 1u; result.cursor.size = sizeof(result.cursor);
+    return result;
 }
 
 static inline R4DirectoryNext r4_directory_next(R4DirectoryIterator *iterator) {
@@ -232,13 +239,36 @@ static inline R4DirectoryNext r4_directory_next(R4DirectoryIterator *iterator) {
     if (iterator->directory == 0 || iterator->files.system == 0 || iterator->files.system->table == 0 || iterator->files.system->table->dir_entry == 0) {
         result.state = R4_DIRECTORY_FAILED; result.raw_code = R4OS_ERR_NO_FN; return result;
     }
-    int32_t raw = ((R4SysDirEntryFn)(uintptr_t)iterator->files.system->table->dir_entry)(iterator->directory->bytes, iterator->index, result.path.bytes, (uint32_t)sizeof(result.path.bytes));
+    const R4XStartR4Sys *table = iterator->files.system->table;
+    int resumable = !iterator->legacy_after_removal && iterator->index >= 2u &&
+        (iterator->index == 2u || iterator->cursor.change.mount_generation != 0) &&
+        table->size >= offsetof(R4XStartR4Sys, directory_next) + sizeof(table->directory_next) && table->directory_next != 0;
+    int32_t raw;
+    if (resumable) {
+        for (;;) {
+            raw = ((R4SysDirectoryNextFn)(uintptr_t)table->directory_next)(iterator->directory->bytes, &iterator->cursor,
+                result.path.bytes, (uint32_t)sizeof(result.path.bytes), &result.info);
+            if (raw != 2) break;
+            if (r4sys_program_should_close(iterator->files.system)) { raw = -10; break; }
+            r4sys_sleep_ticks(iterator->files.system, 0);
+        }
+    } else raw = ((R4SysDirEntryFn)(uintptr_t)table->dir_entry)(iterator->directory->bytes, iterator->index, result.path.bytes, (uint32_t)sizeof(result.path.bytes));
+    result.has_info = resumable && (raw == 0 || raw == 1);
     result.raw_code = raw;
     if (raw == R4SYS_DIR_ENTRY_RESULT_END) { iterator->ended = 1u; result.state = R4_DIRECTORY_END; return result; }
     if (raw < 0) { result.state = R4_DIRECTORY_FAILED; return result; }
     iterator->index += 1u; result.state = R4_DIRECTORY_ENTRY; result.is_directory = raw == 1;
     while (result.path.length < sizeof(result.path.bytes) && result.path.bytes[result.path.length] != 0) result.path.length += 1u;
     result.path.absolute = 1u; return result;
+}
+
+static inline void r4_directory_revisit_after_removal(R4DirectoryIterator *iterator) {
+    if (iterator == 0) return;
+    iterator->legacy_after_removal = 1u;
+    iterator->cursor = (R4DirectoryScanCursor){0};
+    iterator->cursor.version = 1u; iterator->cursor.size = sizeof(iterator->cursor);
+    if (iterator->index > 2u) --iterator->index;
+    iterator->ended = 0u;
 }
 
 static inline R4StreamReader r4_files_stream_reader(R4Files files, const R4FilePath *path) {

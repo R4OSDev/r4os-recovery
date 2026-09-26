@@ -3,7 +3,7 @@
 <!-- R4OS-APIREF:BEGIN R4SYS (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4SYS (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Sys` v18, 1168 Bytes, 141 Funktionsfelder und 144 Slots insgesamt.
+Kernel-Gruppentabelle `R4XStartR4Sys` v25, 1264 Bytes, 153 Funktionsfelder und 156 Slots insgesamt.
 Signatur-Wahrheit: `abi.R4SysFns` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
@@ -153,4 +153,16 @@ Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 | 141 | 1144 | function | `directory_change_begin` | `*const fn ([*:0]const u8, *DirectoryChangeCursor) callconv(.c) i32` |
 | 142 | 1152 | function | `directory_change_poll` | `*const fn (*DirectoryChangeCursor) callconv(.c) i32` |
 | 143 | 1160 | function | `file_copy_buffered` | `*const fn ([*:0]const u8, [*:0]const u8, [*]u8, u32, *FileCopyProgress) callconv(.c) i32` |
+| 144 | 1168 | function | `notification_create` | `*const fn (*u64) callconv(.c) i32` |
+| 145 | 1176 | function | `notification_query` | `*const fn (u64, *u64) callconv(.c) i32` |
+| 146 | 1184 | function | `notification_notify` | `*const fn (u64, u32) callconv(.c) i32` |
+| 147 | 1192 | function | `notification_wait` | `*const fn (u64, u64, u64) callconv(.c) i32` |
+| 148 | 1200 | function | `notification_close` | `*const fn (u64) callconv(.c) i32` |
+| 149 | 1208 | function | `program_local_get` | `*const fn (u64, *u64) callconv(.c) i32` |
+| 150 | 1216 | function | `program_local_publish` | `*const fn (u64, u64, *u64) callconv(.c) i32` |
+| 151 | 1224 | function | `thread_current_handle` | `*const fn (*ProgramJoinHandle) callconv(.c) i32` |
+| 152 | 1232 | function | `cpu_capacity` | `*const fn (*CpuCapacity) callconv(.c) i32` |
+| 153 | 1240 | function | `program_exit` | `*const fn (i32, u32) callconv(.c) i32` |
+| 154 | 1248 | function | `platform_input_snapshot` | `*const fn (*PlatformInputSnapshot) callconv(.c) i32` |
+| 155 | 1256 | function | `directory_next` | `*const fn ([*:0]const u8, *DirectoryScanCursor, [*]u8, u32, *FileInfo) callconv(.c) i32` |
 <!-- R4OS-APIREF:END R4SYS -->

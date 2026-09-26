@@ -69,6 +69,7 @@ pub const DirectoryKind = enum(u8) { file, directory };
 pub const DirectoryEntry = struct {
     kind: DirectoryKind,
     path: []const u8,
+    info: ?abi.FileInfo = null,
 };
 
 pub const DirectoryNext = union(enum) {
@@ -190,12 +191,24 @@ pub const DirectoryIterator = struct {
     directory: PathZ,
     index: u32 = 2,
     ended: bool = false,
+    cursor: abi.DirectoryScanCursor = .{},
+    legacy_after_removal: bool = false,
 
     pub fn next(self: *DirectoryIterator, out_path: []u8) DirectoryNext {
         if (self.ended) return .end;
         if (out_path.len == 0) return .{ .failure = abi.file_stream_error_invalid };
         @memset(out_path, 0);
-        const raw = self.files.sys.dirEntry(self.directory.ptr, self.index, out_path);
+        var info: abi.FileInfo = .{};
+        const resumable = !self.legacy_after_removal and self.index >= 2 and
+            (self.index == 2 or self.cursor.change.mount_generation != 0) and self.files.sys.hasFn("directory_next");
+        const raw = if (resumable) blk: {
+            while (true) {
+                const result = self.files.sys.directoryNext(self.directory.ptr, &self.cursor, out_path, &info);
+                if (result != 2) break :blk result;
+                if (self.files.sys.programShouldClose()) return .{ .failure = -10 };
+                self.files.sys.sleepTicks(0);
+            }
+        } else self.files.sys.dirEntry(self.directory.ptr, self.index, out_path);
         if (raw == r4sys.dir_entry_result_end) {
             self.ended = true;
             return .end;
@@ -205,6 +218,7 @@ pub const DirectoryIterator = struct {
         return .{ .entry = .{
             .kind = if (raw == 1) .directory else .file,
             .path = spanZ(out_path),
+            .info = if (resumable) info else null,
         } };
     }
 
@@ -212,6 +226,10 @@ pub const DirectoryIterator = struct {
     /// removing the entry just returned by `next`, its successor shifts into
     /// that same logical index and must be visited before advancing again.
     pub fn revisitAfterRemoval(self: *DirectoryIterator) void {
+        // Deleting while iterating intentionally changes the generation.
+        // Preserve the old live-index removal contract for this traversal.
+        self.legacy_after_removal = true;
+        self.cursor = .{};
         if (self.index > 2) self.index -= 1;
         self.ended = false;
     }

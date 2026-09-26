@@ -1,6 +1,7 @@
 const r4x_api = @import("r4x_api.zig");
 const std = @import("std");
 const drive = @import("../fs/drive.zig");
+const directory_changes = @import("../fs/directory_changes.zig");
 const vfs = @import("../fs/vfs.zig");
 const page_cache = @import("../fs/page_cache.zig");
 const fs_request = @import("../fs/request.zig");
@@ -1282,6 +1283,7 @@ pub fn fileWriteAt(path_ptr: [*:0]const u8, offset: u64, data_ptr: [*]const u8, 
     if (!invalidateStreamSlotsForResolved(target.drive_ref.letter, targetOnBootVolume(target), parent, entry, baseName(target.path)))
         return -6;
     if (entry.isDir()) return -4;
+    defer vfs.notifyDirectoryChanged(volume, parent);
     const data = data_ptr[0..@intCast(len)];
     const written = vfs.writeFileRange(volume, entry, @intCast(offset), data) orelse return -6;
     ok = true;
@@ -1610,6 +1612,7 @@ pub fn fileStreamFinish(path_ptr: [*:0]const u8, expected_size: u64, flags: u32)
         } else {
             clearStreamSlot(slot);
         }
+        vfs.notifyDirectoryChanged(volume, parent);
         ok = true;
         return file_stream_result_ok;
     }
@@ -1724,6 +1727,32 @@ pub fn dirList(path_ptr: [*:0]const u8, out_ptr: [*]u8, max_len: u32) callconv(.
     return @intCast(len);
 }
 
+pub fn directoryChangeBegin(path_ptr: [*:0]const u8, cursor: *r4x_api.DirectoryChangeCursor) callconv(.c) i32 {
+    if (cursor.version != 1 or cursor.size != @sizeOf(r4x_api.DirectoryChangeCursor) or cursor.reserved != 0) return -1;
+    var path_buf: [max_api_path]u8 = undefined;
+    const raw_path = copyZ(path_ptr, &path_buf) orelse return -1;
+    var resolved_buf: [max_api_path]u8 = undefined;
+    const target = resolveTarget(raw_path, &resolved_buf) orelse return -1;
+    const volume = targetVolume(target) orelse return -3;
+    var req = fs_request.beginVolume(.dir_entry, target.drive_ref.letter, volume) orelse return -9;
+    var ok = false;
+    defer fs_request.finish(&req, ok);
+    var node: vfs.NodeRef = undefined;
+    switch (vfs.resolvePathStatus(volume, target.path, &node)) {
+        .found => {},
+        .not_found => return -3,
+        .io => return -9,
+    }
+    const mount = volume.accessReference() orelse return -3;
+    cursor.* = directory_changes.begin(mount, node);
+    ok = true;
+    return 0;
+}
+
+pub fn directoryChangePoll(cursor: *r4x_api.DirectoryChangeCursor) callconv(.c) i32 {
+    return directory_changes.poll(cursor);
+}
+
 pub fn dirEntry(path_ptr: [*:0]const u8, index: u32, out_ptr: [*]u8, max_len: u32) callconv(.c) i32 {
     if (max_len == 0) return -1;
     var path_buf: [max_api_path]u8 = undefined;
@@ -1765,6 +1794,64 @@ pub fn dirEntry(path_ptr: [*:0]const u8, index: u32, out_ptr: [*]u8, max_len: u3
     var entry_path_buf: [max_api_path]u8 = undefined;
     const entry_path = joinPathToBuffer(target.path, entry_name, entry_path_buf[0..]) orelse return -7;
     if (!copyDrivePathZ(target.drive_ref.letter, entry_path, out)) return -7;
+    ok = true;
+    return if (entry.isDir()) 1 else 0;
+}
+
+pub fn directoryNext(path_ptr: [*:0]const u8, cursor: *r4x_api.DirectoryScanCursor, out_ptr: [*]u8, max_len: u32, info: *FileInfo) callconv(.c) i32 {
+    if (cursor.version != 1 or cursor.size != @sizeOf(r4x_api.DirectoryScanCursor) or max_len == 0) return -1;
+    const owner = currentStreamOwner() orelse return -1;
+    var next = cursor.*;
+    const initial = next.change.mount_generation == 0;
+    if (!initial and (next.owner_id != owner.id or next.owner_generation != owner.generation or next.owner_kind != @intFromEnum(owner.kind))) return -10;
+    var path_buf: [max_api_path]u8 = undefined;
+    const raw = copyZ(path_ptr, &path_buf) orelse return -1;
+    var resolved: [max_api_path]u8 = undefined;
+    const target = resolveTarget(raw, &resolved) orelse return -1;
+    const volume = targetVolume(target) orelse return if (initial) -3 else -10;
+    var req = fs_request.beginVolume(.dir_entry, target.drive_ref.letter, volume) orelse return -9;
+    var ok = false;
+    defer fs_request.finish(&req, ok);
+    const mount = volume.accessReference() orelse return -3;
+    var node: vfs.NodeRef = undefined;
+    switch (vfs.resolvePathStatus(volume, target.path, &node)) {
+        .found => {},
+        .not_found => return if (initial) -3 else -10,
+        .io => return -9,
+    }
+    if (initial) {
+        next = .{ .change = directory_changes.begin(mount, node), .owner_id = owner.id, .owner_kind = @intFromEnum(owner.kind), .owner_generation = owner.generation };
+    } else {
+        if (next.change.node != node or next.change.mount_slot != mount.slot or next.change.mount_generation != mount.generation) return -10;
+        if (directory_changes.poll(&next.change) != 0) return -10;
+    }
+    var entry: vfs.Entry = undefined;
+    switch (vfs.nextDirectoryEntry(volume, node, &next.backend, &entry)) {
+        .io => return -9,
+        .again => {
+            cursor.* = next;
+            ok = true;
+            return 2;
+        },
+        .not_found => {
+            cursor.* = next;
+            ok = true;
+            return dir_entry_result_end;
+        },
+        .found => {},
+    }
+    var joined: [max_api_path]u8 = undefined;
+    const path = joinPathToBuffer(target.path, entry.name[0..entry.name_len], &joined) orelse return -7;
+    // Build in private storage: errors must not expose half an output path.
+    var full: [max_api_path]u8 = undefined;
+    if (!copyDrivePathZ(target.drive_ref.letter, path, &full)) return -7;
+    const len = std.mem.indexOfScalar(u8, &full, 0) orelse return -7;
+    if (len + 1 > max_len) return -7;
+    var metadata = FileInfo{ .exists = 1, .is_dir = @intFromBool(entry.isDir()), .drive = target.drive_ref.letter, .attr = entry.attr, .size = entry.size, .first_cluster = @truncate(entry.node), .created_time = entry.created_time, .created_date = entry.created_date, .access_date = entry.access_date, .modified_time = entry.modified_time, .modified_date = entry.modified_date };
+    copyFixedZ(&metadata.name, entry.name[0..entry.name_len]);
+    @memcpy(out_ptr[0 .. len + 1], full[0 .. len + 1]);
+    info.* = metadata;
+    cursor.* = next;
     ok = true;
     return if (entry.isDir()) 1 else 0;
 }

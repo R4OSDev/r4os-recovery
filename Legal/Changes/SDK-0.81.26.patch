@@ -1,0 +1,265 @@
+diff --git a/Platform/SDK/Shared/C/include/r4os/app_storage.h b/Platform/SDK/Shared/C/include/r4os/app_storage.h
+index 6fd85da..899edb9 100644
+--- a/Platform/SDK/Shared/C/include/r4os/app_storage.h
++++ b/Platform/SDK/Shared/C/include/r4os/app_storage.h
+@@ -59,6 +59,8 @@ typedef struct R4DirectoryNext {
+     int32_t raw_code;
+     uint8_t is_directory;
+     R4FilePath path;
++    uint8_t has_info;
++    R4FileInfo info;
+ } R4DirectoryNext;
+ 
+ typedef struct R4DirectoryIterator {
+@@ -66,6 +68,8 @@ typedef struct R4DirectoryIterator {
+     const R4FilePath *directory;
+     uint32_t index;
+     uint8_t ended;
++    uint8_t legacy_after_removal;
++    R4DirectoryScanCursor cursor;
+ } R4DirectoryIterator;
+ 
+ typedef struct R4StreamReader {
+@@ -223,7 +227,10 @@ static inline R4Operation r4_files_rename(R4Files *files, const R4FilePath *sour
+ }
+ 
+ static inline R4DirectoryIterator r4_files_iterate(R4Files files, const R4FilePath *directory) {
+-    R4DirectoryIterator result = {files, directory, 2u, 0u}; return result;
++    R4DirectoryIterator result = {0};
++    result.files = files; result.directory = directory; result.index = 2u;
++    result.cursor.version = 1u; result.cursor.size = sizeof(result.cursor);
++    return result;
+ }
+ 
+ static inline R4DirectoryNext r4_directory_next(R4DirectoryIterator *iterator) {
+@@ -232,7 +239,21 @@ static inline R4DirectoryNext r4_directory_next(R4DirectoryIterator *iterator) {
+     if (iterator->directory == 0 || iterator->files.system == 0 || iterator->files.system->table == 0 || iterator->files.system->table->dir_entry == 0) {
+         result.state = R4_DIRECTORY_FAILED; result.raw_code = R4OS_ERR_NO_FN; return result;
+     }
+-    int32_t raw = ((R4SysDirEntryFn)(uintptr_t)iterator->files.system->table->dir_entry)(iterator->directory->bytes, iterator->index, result.path.bytes, (uint32_t)sizeof(result.path.bytes));
++    const R4XStartR4Sys *table = iterator->files.system->table;
++    int resumable = !iterator->legacy_after_removal && iterator->index >= 2u &&
++        (iterator->index == 2u || iterator->cursor.change.mount_generation != 0) &&
++        table->size >= offsetof(R4XStartR4Sys, directory_next) + sizeof(table->directory_next) && table->directory_next != 0;
++    int32_t raw;
++    if (resumable) {
++        for (;;) {
++            raw = ((R4SysDirectoryNextFn)(uintptr_t)table->directory_next)(iterator->directory->bytes, &iterator->cursor,
++                result.path.bytes, (uint32_t)sizeof(result.path.bytes), &result.info);
++            if (raw != 2) break;
++            if (r4sys_program_should_close(iterator->files.system)) { raw = -10; break; }
++            r4sys_sleep_ticks(iterator->files.system, 0);
++        }
++    } else raw = ((R4SysDirEntryFn)(uintptr_t)table->dir_entry)(iterator->directory->bytes, iterator->index, result.path.bytes, (uint32_t)sizeof(result.path.bytes));
++    result.has_info = resumable && (raw == 0 || raw == 1);
+     result.raw_code = raw;
+     if (raw == R4SYS_DIR_ENTRY_RESULT_END) { iterator->ended = 1u; result.state = R4_DIRECTORY_END; return result; }
+     if (raw < 0) { result.state = R4_DIRECTORY_FAILED; return result; }
+@@ -241,6 +262,15 @@ static inline R4DirectoryNext r4_directory_next(R4DirectoryIterator *iterator) {
+     result.path.absolute = 1u; return result;
+ }
+ 
++static inline void r4_directory_revisit_after_removal(R4DirectoryIterator *iterator) {
++    if (iterator == 0) return;
++    iterator->legacy_after_removal = 1u;
++    iterator->cursor = (R4DirectoryScanCursor){0};
++    iterator->cursor.version = 1u; iterator->cursor.size = sizeof(iterator->cursor);
++    if (iterator->index > 2u) --iterator->index;
++    iterator->ended = 0u;
++}
++
+ static inline R4StreamReader r4_files_stream_reader(R4Files files, const R4FilePath *path) {
+     R4StreamReader result = {files, path, 0u, 0u}; return result;
+ }
+diff --git a/Platform/SDK/Shared/C/include/r4os/r4sys.h b/Platform/SDK/Shared/C/include/r4os/r4sys.h
+index ba08055..d59e1d5 100644
+--- a/Platform/SDK/Shared/C/include/r4os/r4sys.h
++++ b/Platform/SDK/Shared/C/include/r4os/r4sys.h
+@@ -54,7 +54,7 @@ typedef struct R4Sys {
+ #define R4SYS_FILE_STREAM_OPEN_LEASE R4OS_FILE_STREAM_OPEN_LEASE
+ #define R4SYS_FILE_STREAM_FINISH_KEEP_OWNERSHIP (1u << 0)
+ 
+-static inline int32_t r4sys_file_copy_buffered(R4Sys *sys, const char *source, const char *target, uint8_t *buffer, uint32_t capacity, R4FileCopyProgress *progress) {
++static inline int32_t r4sys_file_copy_buffered(R4Sys *sys, const uint8_t *source, const uint8_t *target, uint8_t *buffer, uint32_t capacity, R4FileCopyProgress *progress) {
+     if (source == 0 || target == 0 || buffer == 0 || capacity == 0 || progress == 0) return R4OS_FILE_STREAM_ERROR_INVALID;
+     if (sys == 0 || sys->table == 0) return R4OS_ERR_NO_GROUP;
+     if (sys->table->size < offsetof(R4XStartR4Sys, file_copy_buffered) + sizeof(uintptr_t) || sys->table->file_copy_buffered == 0) return R4OS_ERR_NO_FN;
+diff --git a/Platform/SDK/r4os/app_storage.zig b/Platform/SDK/r4os/app_storage.zig
+index cb04ae0..9ca14ab 100644
+--- a/Platform/SDK/r4os/app_storage.zig
++++ b/Platform/SDK/r4os/app_storage.zig
+@@ -69,6 +69,7 @@ pub const DirectoryKind = enum(u8) { file, directory };
+ pub const DirectoryEntry = struct {
+     kind: DirectoryKind,
+     path: []const u8,
++    info: ?abi.FileInfo = null,
+ };
+ 
+ pub const DirectoryNext = union(enum) {
+@@ -190,12 +191,24 @@ pub const DirectoryIterator = struct {
+     directory: PathZ,
+     index: u32 = 2,
+     ended: bool = false,
++    cursor: abi.DirectoryScanCursor = .{},
++    legacy_after_removal: bool = false,
+ 
+     pub fn next(self: *DirectoryIterator, out_path: []u8) DirectoryNext {
+         if (self.ended) return .end;
+         if (out_path.len == 0) return .{ .failure = abi.file_stream_error_invalid };
+         @memset(out_path, 0);
+-        const raw = self.files.sys.dirEntry(self.directory.ptr, self.index, out_path);
++        var info: abi.FileInfo = .{};
++        const resumable = !self.legacy_after_removal and self.index >= 2 and
++            (self.index == 2 or self.cursor.change.mount_generation != 0) and self.files.sys.hasFn("directory_next");
++        const raw = if (resumable) blk: {
++            while (true) {
++                const result = self.files.sys.directoryNext(self.directory.ptr, &self.cursor, out_path, &info);
++                if (result != 2) break :blk result;
++                if (self.files.sys.programShouldClose()) return .{ .failure = -10 };
++                self.files.sys.sleepTicks(0);
++            }
++        } else self.files.sys.dirEntry(self.directory.ptr, self.index, out_path);
+         if (raw == r4sys.dir_entry_result_end) {
+             self.ended = true;
+             return .end;
+@@ -205,6 +218,7 @@ pub const DirectoryIterator = struct {
+         return .{ .entry = .{
+             .kind = if (raw == 1) .directory else .file,
+             .path = spanZ(out_path),
++            .info = if (resumable) info else null,
+         } };
+     }
+ 
+@@ -212,6 +226,10 @@ pub const DirectoryIterator = struct {
+     /// removing the entry just returned by `next`, its successor shifts into
+     /// that same logical index and must be visited before advancing again.
+     pub fn revisitAfterRemoval(self: *DirectoryIterator) void {
++        // Deleting while iterating intentionally changes the generation.
++        // Preserve the old live-index removal contract for this traversal.
++        self.legacy_after_removal = true;
++        self.cursor = .{};
+         if (self.index > 2) self.index -= 1;
+         self.ended = false;
+     }
+diff --git a/Platform/SDK/r4os/ntfs_volume.zig b/Platform/SDK/r4os/ntfs_volume.zig
+index e6377ce..667e89d 100644
+--- a/Platform/SDK/r4os/ntfs_volume.zig
++++ b/Platform/SDK/r4os/ntfs_volume.zig
+@@ -34,6 +34,7 @@ pub const WorkStats = struct {
+     cluster_bitmap_probes: u64 = 0,
+     record_bitmap_probes: u64 = 0,
+     read_zero_bytes: u64 = 0,
++    directory_entries: u64 = 0,
+ };
+ 
+ pub const SECTOR_SIZE: usize = 512;
+@@ -1977,6 +1978,78 @@ pub fn recordParentAndName(v: *const Volume, record_number: u64) ?RecordName {
+ // Enumeration (read side)
+ // ---------------------------------------------------------------------------
+ 
++pub const DirectoryCursor = extern struct {
++    pub const Frame = extern struct { vcn: u64 = 0, offset: u32 = 0, child_done: u32 = 0 };
++    state: u32 = 0,
++    depth: u32 = 0,
++    frames: [MAX_INDEX_DEPTH]Frame = .{Frame{}} ** MAX_INDEX_DEPTH,
++};
++pub const DirectoryNextStatus = enum { found, not_found, again, io };
++
++/// Resume an in-order I30 traversal. Ancestors retain only a physical entry
++/// offset and whether its child was consumed. Reloading a node never scans
++/// the prefix. All scratch belongs to this call's enclosing volume gate.
++pub fn nextDirectoryEntry(v: *const Volume, dir: u64, cursor: *DirectoryCursor, out: *Entry) DirectoryNextStatus {
++    if (cursor.state > 2 or cursor.depth > MAX_INDEX_DEPTH) return .io;
++    if (cursor.state == 2) return .not_found;
++    if (cursor.state == 0) cursor.* = .{ .state = 1, .depth = 1 };
++    if (cursor.depth == 0) return .io;
++    const header = loadRecord(v, dir, v.scratch.record[0..]) orelse return .io;
++    const record = v.scratch.record[0..v.record_bytes];
++    const root_attr = ntfs.findAttribute(record, header, .index_root, &ntfs.I30_NAME_UTF16) orelse return .io;
++    var root = ntfs.IndexRoot.parse(root_attr.value) orelse return .io;
++    var alloc = AttrScratch{};
++    if (root.header.hasSubNodes()) {
++        if (!collectAttribute(v, dir, .index_allocation, &ntfs.I30_NAME_UTF16, &alloc)) return .io;
++        const reloaded = loadRecord(v, dir, v.scratch.record[0..]) orelse return .io;
++        const attr = ntfs.findAttribute(record, reloaded, .index_root, &ntfs.I30_NAME_UTF16) orelse return .io;
++        root = ntfs.IndexRoot.parse(attr.value) orelse return .io;
++    }
++    var examined: u32 = 0;
++    while (examined < 256) : (examined += 1) {
++        const level = cursor.depth - 1;
++        const frame = &cursor.frames[level];
++        if (frame.child_done > 1) return .io;
++        var entries = root.entries;
++        if (level != 0) {
++            if (!loadIndexBlockCached(v, dir, alloc.runs[0..alloc.count], frame.vcn)) return .io;
++            const block = ntfs.IndexBlock.parse(v.scratch.block[0..v.index_block_bytes]) orelse return .io;
++            entries = block.entries;
++        }
++        if (frame.offset >= entries.len) return .io; // Missing END is corruption.
++        var it = ntfs.IndexEntryIterator.init(entries[frame.offset..]);
++        const entry = it.next() orelse return .io;
++        if (work_counters_enabled) v.scratch.work.directory_entries += 1;
++        if (entry.hasSubNode() and frame.child_done == 0) {
++            if (cursor.depth >= MAX_INDEX_DEPTH) return .io;
++            const child = entry.sub_node_vcn orelse return .io;
++            // Reject cycles before reloading the same index buffer.
++            for (cursor.frames[1..cursor.depth]) |ancestor| if (ancestor.vcn == child) return .io;
++            frame.child_done = 1;
++            cursor.frames[cursor.depth] = .{ .vcn = child };
++            cursor.depth += 1;
++            continue;
++        }
++        if (entry.isEnd()) {
++            cursor.depth -= 1;
++            if (cursor.depth == 0) {
++                cursor.state = 2;
++                return .not_found;
++            }
++            continue;
++        }
++        frame.offset += entry.entry_length;
++        frame.child_done = 0;
++        const name = entry.fileName() orelse return .io;
++        if (name.namespace == ntfs.NAMESPACE_DOS) continue;
++        const reference = ntfs.FileReference.parse(entry.file_reference);
++        if (dir == ntfs.MFT_RECORD_ROOT and reference.record < ntfs.MFT_FIRST_NORMAL) continue;
++        out.* = entryFromFileName(reference, name) orelse return .io;
++        return .found;
++    }
++    return .again;
++}
++
+ pub const EnumSink = struct {
+     out: ?[]u8 = null,
+     cursor: usize = 0,
+diff --git a/Platform/SDK/r4os/program.zig b/Platform/SDK/r4os/program.zig
+index e079b1e..587a8ad 100644
+--- a/Platform/SDK/r4os/program.zig
++++ b/Platform/SDK/r4os/program.zig
+@@ -1872,6 +1872,11 @@ pub const Context = struct {
+         return table_fn(path, out.ptr, @intCast(out.len));
+     }
+ 
++    pub fn directoryNext(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryScanCursor, out: []u8, info: *abi.FileInfo) i32 {
++        const table_fn = self.sysFn("directory_next") orelse return self.unavailable("sys");
++        return table_fn(path, cursor, out.ptr, @intCast(out.len), info);
++    }
++
+     pub fn dirEntry(self: *const Context, path: [*:0]const u8, index: u32, out: []u8) i32 {
+         const table_fn = self.sysFn("dir_entry") orelse return self.unavailable("sys");
+         return table_fn(path, index, out.ptr, @intCast(out.len));
+diff --git a/Platform/SDK/r4os/r4sys.zig b/Platform/SDK/r4os/r4sys.zig
+index 63aa22d..bbcabc4 100644
+--- a/Platform/SDK/r4os/r4sys.zig
++++ b/Platform/SDK/r4os/r4sys.zig
+@@ -1238,6 +1238,10 @@ pub const Context = struct {
+         return self.base.dirList(path, out);
+     }
+ 
++    pub fn directoryNext(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryScanCursor, out: []u8, info: *abi.FileInfo) i32 {
++        return self.base.directoryNext(path, cursor, out, info);
++    }
++
+     pub fn dirEntry(self: *const Context, path: [*:0]const u8, index: u32, out: []u8) i32 {
+         return self.base.dirEntry(path, index, out);
+     }

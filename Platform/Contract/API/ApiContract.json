@@ -597,10 +597,10 @@
       "fn_namespace": "R4SysFns",
       "required": true,
       "magic": 827937618,
-      "abi_version": 18,
+      "abi_version": 25,
       "header_size": 16,
       "pointer_size": 8,
-      "size": 1168,
+      "size": 1264,
       "slots": [
         {
           "number": 0,
@@ -11626,6 +11626,789 @@
             "close_rule": "path_based_no_handle",
             "outputs": "progress_reported",
             "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "caller_capacity_without_required_size",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 144,
+          "offset": 1168,
+          "name": "notification_create",
+          "state": "function",
+          "required": false,
+          "description": "Create a resident process-owned notification with revision zero. Handles never repeat within a boot. Returns notification status; output changes only on success. Allocation failure is explicit. Close explicitly or let exact process retirement reclaim it.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "out_handle",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u64"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "returns_owned_handle",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "explicit_close_required",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 145,
+          "offset": 1176,
+          "name": "notification_query",
+          "state": "function",
+          "required": false,
+          "description": "Read the notification revision. Read before testing the userland predicate, then wait with that revision to avoid a lost wake. Foreign or consumed handles are stale; output changes only on success.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "handle",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "out_sequence",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u64"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "idempotent",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 146,
+          "offset": 1184,
+          "name": "notification_notify",
+          "state": "function",
+          "required": false,
+          "description": "Increment the revision and wake at most wake_count enrolled tasks atomically. Count must be positive; UINT32_MAX broadcasts. A caller racing enrollment observes the changed revision. No permit, CPU-memory ownership or GPU completion is manufactured. Revision exhaustion closes the object and wakes all with closed.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "handle",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "wake_count",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "borrowed",
+            "buffer_lifetime": "none",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 147,
+          "offset": 1192,
+          "name": "notification_wait",
+          "state": "function",
+          "required": false,
+          "description": "Wait only while the resident revision equals observed_sequence. Zero polls; UINT64_MAX waits indefinitely. Predicate check, scheduler enrollment and notify share one owner. Returns 0 on change/wake, 1 on timeout, negative on failure/close; caller must recheck its own predicate. Close cancels enrolled waits. Hard kill detaches the actual task node and needs no caller destructor. No caller address or unwind guard is retained across sleep.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "handle",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "observed_sequence",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "timeout_ticks",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "borrowed",
+            "buffer_lifetime": "none",
+            "blocking": "blocking_wait",
+            "threading": "thread_safe",
+            "timeout": "wait_budget",
+            "cancel": "shutdown_wakeup",
+            "timeout_outcome": "completion_wins",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 148,
+          "offset": 1200,
+          "name": "notification_close",
+          "state": "function",
+          "required": false,
+          "description": "Close admission, cancel enrolled waits and release resident backing. Returns 0 after release; retry notification_error_release for the same closed handle. A failed free retains backing and prevents process-slot reuse. Further ordinary operations on a closed retained object fail; a consumed handle is stale.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "handle",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "consumes_owned_handle",
+            "buffer_lifetime": "none",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "invalidates_on_success",
+            "outputs": "none",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 149,
+          "offset": 1208,
+          "name": "program_local_get",
+          "state": "function",
+          "required": false,
+          "description": "Read a process-local immutable publication by nonzero key. Returns program_local_ok and zero if absent. A key can be a boot-stable library token address. Output changes only on success. No other process, user pointer ownership or current-thread identity is exposed.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "key",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "out_value",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u64"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "idempotent",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 150,
+          "offset": 1216,
+          "name": "program_local_publish",
+          "state": "function",
+          "required": false,
+          "description": "Publish a nonzero process-local value exactly once for a nonzero key. Returns program_local_ok if installed, program_local_existing if another caller already installed a value; both write the winning value. Caller owns candidate memory and discards it when it loses. Published data must outlive all program threads; no replacement, destructor or allocator policy is provided. The process reaper removes metadata after thread retirement and before VM teardown. Errors leave output unchanged.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "key",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "value",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u64"
+                }
+              },
+              {
+                "name": "out_value",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u64"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "program",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "may_have_occurred",
+            "retry": "idempotent",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 151,
+          "offset": 1224,
+          "name": "thread_current_handle",
+          "state": "function",
+          "required": false,
+          "description": "Copy the calling program thread identity, including thread and process generations, into ProgramJoinHandle. Returns thread_ok on success, thread_error_no_instance outside a program thread, or thread_error_invalid for a null output. Errors leave output unchanged. The identity is borrowed: no pin, join lease, allocation or wait is created; normal status/join admission and retirement rules still apply. Lookup uses the current task execution owner and never scans a registry. Valid for the main thread as well as secondary threads.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "out_handle",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "ProgramJoinHandle"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "thread",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "idempotent",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 152,
+          "offset": 1232,
+          "name": "cpu_capacity",
+          "state": "function",
+          "required": false,
+          "description": "Copy current schedulable CPU capacity for ordinary program threads. Returns thread_ok, thread_error_invalid for null output, or thread_error_busy before capacity is available; errors leave output unchanged. available_cpus counts one atomic scheduler-admission mask snapshot (no process affinity restrictions currently exist). configured_cpus counts dense CPU slots admitted by the boot SMP plan, including failed/offline slots; it is not the CPUID package count, firmware total or kernel maximum. Capacity is advisory, not a reservation, affinity mask, cache topology or performance guarantee. No allocation or wait.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "output",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "CpuCapacity"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "thread",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "idempotent",
+            "buffer_too_small": "fixed_capacity",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 153,
+          "offset": 1240,
+          "name": "program_exit",
+          "state": "function",
+          "required": false,
+          "description": "Terminates the entire calling program from its main or a secondary thread. On admission this does not return. reason accepts program_exit_reason_natural or program_exit_reason_failed only; invalid reason returns thread_error_invalid, missing program-thread ownership returns thread_error_no_instance, and a non-sleepable context or held kernel lock/unwind lifetime returns thread_error_busy without initiating exit. The first committed concurrent process exit wins. The existing exit/reaper path closes admission, stops peers and retains stacks, I/O and graphics resources through actual retirement; the caller transfers its own terminal Task to the scheduler reaper. Does not run user destructors, atexit, TLS callbacks, stream flushing or foreign stack unwinding; normal userland shutdown precedes this primitive, fatal shutdown may omit it. External kill still rejects self. Older providers may omit this optional tail.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "exit_code",
+                "type": {
+                  "kind": "scalar",
+                  "name": "i32"
+                }
+              },
+              {
+                "name": "reason",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "thread",
+            "ownership": "none",
+            "buffer_lifetime": "none",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "cancel_wake_join_cleanup",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "may_have_occurred",
+            "retry": "never_automatic",
+            "buffer_too_small": "none",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 154,
+          "offset": 1248,
+          "name": "platform_input_snapshot",
+          "state": "function",
+          "required": false,
+          "description": "Copy the canonical ACPI/USB Consumer input snapshot without consuming events.1 success, negative invalid output. Caller initializes version1/size64; output unchanged on failure. No hardware access, callback or allocation. Desktop policy observes counter deltas and lid state independently from normal keyboard text.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "output",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "PlatformInputSnapshot"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "none",
+            "ownership": "borrowed",
+            "buffer_lifetime": "call",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "success_only",
+            "side_effects": "none",
+            "retry": "idempotent",
+            "buffer_too_small": "none",
+            "language_parity": "zig_and_c_required"
+          }
+        },
+        {
+          "number": 155,
+          "offset": 1256,
+          "name": "directory_next",
+          "state": "function",
+          "required": false,
+          "description": "Resume owner-bound directory enumeration without prefix scans. Initialize DirectoryScanCursor to defaults. Returns 0 file, 1 directory, 2 bounded progress without an entry (retry), -5 complete EOF, -10 restart after directory mutation, history overflow, owner/path/mount change; other negatives are errors (-1 invalid, -3 missing mount, -7 output too small, -9 I/O). On restart/error discard all partial results; no truncated successful generation. Cursor and output are unchanged on errors; progress and EOF publish cursor only. Success copies a NUL-terminated absolute path. One call examines at most 256 physical directory entries, with a bounded NTFS ancestor stack. Internal state is opaque, must not be edited or used concurrently. No persistent kernel resource, allocation or mount pin; discarding/resetting cursor cancels/closes immediately. A call pins its mount and holds the filesystem request gate; an unmount between calls invalidates continuation. Old dir_entry ABI remains unchanged. A found entry also copies FileInfo metadata from the same enumeration record; no second name lookup. NTFS directory-index metadata has the same snapshot semantics as its index entry. On progress, EOF or failure metadata is unchanged.",
+          "signature": {
+            "calling_convention": "c",
+            "parameters": [
+              {
+                "name": "arg0",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "sentinel",
+                  "is_const": true,
+                  "sentinel": 0,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "input",
+                  "nullable": false,
+                  "length_by": "nul_terminator",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "cursor",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "DirectoryScanCursor"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "arg2",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "many",
+                  "is_const": false,
+                  "child": {
+                    "kind": "scalar",
+                    "name": "u8"
+                  },
+                  "direction": "inout",
+                  "nullable": false,
+                  "length_by": "arg3",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              },
+              {
+                "name": "arg3",
+                "type": {
+                  "kind": "scalar",
+                  "name": "u32"
+                }
+              },
+              {
+                "name": "info",
+                "type": {
+                  "kind": "pointer",
+                  "pointer_kind": "single",
+                  "is_const": false,
+                  "child": {
+                    "kind": "named",
+                    "name": "FileInfo"
+                  },
+                  "direction": "output",
+                  "nullable": false,
+                  "length_by": "none",
+                  "ownership": "borrowed",
+                  "lifetime": "call"
+                }
+              }
+            ],
+            "returns": {
+              "kind": "scalar",
+              "name": "i32"
+            }
+          },
+          "semantics": {
+            "exposure": "public",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": true,
+            "error_domain": "filesystem",
+            "ownership": "caller_buffer",
+            "buffer_lifetime": "call",
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "reentrant",
+            "callback_context": "none",
+            "buffer_completion": "call",
+            "shutdown": "none",
+            "close_rule": "path_based_no_handle",
+            "outputs": "success_only",
+            "side_effects": "none",
             "retry": "never_automatic",
             "buffer_too_small": "caller_capacity_without_required_size",
             "language_parity": "zig_and_c_required"
@@ -74586,6 +75369,331 @@
       ],
       "values": [],
       "description": "Completed copy appends and source size. Counters remain meaningful on I/O failure but do not imply a durable or complete target. Caller initializes version and size."
+    },
+    {
+      "name": "CpuCapacity",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 8,
+      "alignment": 4,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "available_cpus",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Currently schedulable CPUs available to ordinary program threads; positive on success.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "configured_cpus",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Boot-configured dense CPU slot count; at least available_cpus, includes failed/offline slots.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Advisory scheduler capacity snapshot; no CPU topology or affinity ownership."
+    },
+    {
+      "name": "PlatformInputSnapshot",
+      "source": "API/ApiContract.json",
+      "classification": "fixed_layout",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 64,
+      "alignment": 8,
+      "source_layout": "extern",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Wire version1.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Caller byte capacity.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "64"
+        },
+        {
+          "name": "sequence",
+          "offset": 8,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Monotonic publication sequence, zero before any source.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "brightness_up",
+          "offset": 16,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Monotonic count of confirmed brightness-increase events; not a held key or synthetic scancode.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "brightness_down",
+          "offset": 24,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Monotonic count of confirmed brightness-decrease events.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "lid_sequence",
+          "offset": 32,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Publication sequence of the latest confirmed lid state or source loss.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "lid_state",
+          "offset": 40,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "0 unknown,1 open,2 closed. No system sleep is implied.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "capabilities",
+          "offset": 44,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Source capabilities: bit0 brightness events, bit1 lid. Not a claim about panel control or physical qualification.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "sources",
+          "offset": 48,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Available producers: bit0 ACPI, bit1 USB Consumer.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "reserved",
+          "offset": 52,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Zero.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "since_ns",
+          "offset": 56,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Canonical monotonic time of the last update; zero before source publication.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        }
+      ],
+      "values": [],
+      "description": "Non-consuming snapshot of canonical platform input. Independent consumers retain their own counters. On first read or counter regression they establish a baseline without replaying historical button presses. Lid state is level-triggered; source removal resets it to unknown. The desktop owns screen/brightness policy. No AML, vendor scancode or sleep transition in this common owner."
+    },
+    {
+      "name": "DirectoryScanCursor",
+      "source": "API/ApiContract.json",
+      "classification": "extensible",
+      "representation": "extern_struct",
+      "version": 1,
+      "size": 1088,
+      "alignment": 8,
+      "source_layout": "extern",
+      "size_field": "size",
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Cursor version.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Cursor size.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "1088"
+        },
+        {
+          "name": "change",
+          "offset": 8,
+          "type": {
+            "kind": "named",
+            "name": "DirectoryChangeCursor"
+          },
+          "description": "Bound exact mount/directory and unconsumed mutation sequence.",
+          "size": 40,
+          "alignment": 8,
+          "source_type": "DirectoryChangeCursor",
+          "default_kind": "empty"
+        },
+        {
+          "name": "owner_id",
+          "offset": 48,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Opaque logical caller identity.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "owner_kind",
+          "offset": 52,
+          "type": {
+            "kind": "scalar",
+            "name": "u32"
+          },
+          "description": "Opaque logical caller kind.",
+          "size": 4,
+          "alignment": 4,
+          "source_type": "u32",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "owner_generation",
+          "offset": 56,
+          "type": {
+            "kind": "scalar",
+            "name": "u64"
+          },
+          "description": "Opaque logical caller generation.",
+          "size": 8,
+          "alignment": 8,
+          "source_type": "u64",
+          "default_kind": "integer",
+          "default_value": "0"
+        },
+        {
+          "name": "backend",
+          "offset": 64,
+          "type": {
+            "kind": "array",
+            "length": 128,
+            "child": {
+              "kind": "scalar",
+              "name": "u64"
+            }
+          },
+          "description": "Opaque filesystem continuation, zero on initialization.",
+          "size": 1024,
+          "alignment": 8,
+          "source_type": "[128]u64",
+          "default_kind": "zero_array"
+        }
+      ],
+      "values": [],
+      "description": "Caller-owned physical enumeration cursor. No retained pointers or kernel resources. Bindings are checked on every call; mutation requires discard and a fresh complete generation. Do not concurrently use a cursor or modify opaque state."
     }
   ],
   "operations": [],

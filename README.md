@@ -345,3 +345,15 @@ and private extent for retry. The frozen address windows, lazy VM contract,
 resident Recovery preparation and imported runtime modules remain independent.
 The transfer receipt records the canonical source, Recovery patch and hashes;
 Recovery and its kernel advance together to 0.1.60.
+
+
+Directory continuation (0.81.26)
+-------------------------------
+Recovery/Kernel 0.1.61 and Menu 0.1.23 use compatible caller-owned FAT/NTFS
+continuation. Filesystem change publication and FAT cross-cluster LFN/growth
+validation accompany the transfer. The R4SYS layout tail and required new
+payloads are imported; unimplemented optional tail slots remain zero. Other
+platform groups, scheduler/lifecycle policy and 39 imported modules stay pinned.
+Menu rejects a failed/stale directory probe instead of treating it as EOF.
+Owner commits, exact file hashes and the Recovery delta are recorded in
+Provenance/owner-update-0.81.26.json. No public Recovery asset was published.

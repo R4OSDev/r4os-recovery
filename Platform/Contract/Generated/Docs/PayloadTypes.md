@@ -5,7 +5,7 @@ Diese Datei wird deterministisch aus `API/ApiContract.json` erzeugt. Manuelle Ä
 Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenzen und Conformance-Fixtures werden produktiv aus diesem Schema erzeugt; handgeschriebene Dateien bleiben nur Fassaden oder erklaerende Texte.
 
 - Schema: v11, Baseline `standalone-contract-0.64.11`
-- Reachability: 162 von 162 Typen aufgelöst oder explizit klassifiziert
+- Reachability: 165 von 165 Typen aufgelöst oder explizit klassifiziert
 - Zentrale SDK-only-Wurzeln: 0; Runtime-R4Ls besitzen libraryeigene Vertraege
 - Operationen: 0; Fehlerdomänen: 63; Konstanten: 1461; Limits: 109
 
@@ -183,6 +183,9 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
 | `AudioServiceOutputState` | fixed_layout | extern_struct | 1520/8 | 1520/8 | 1520/8 | 1520/8 |
 | `DirectoryChangeCursor` | extensible | extern_struct | 40/8 | 40/8 | 40/8 | 40/8 |
 | `FileCopyProgress` | extensible | extern_struct | 32/8 | 32/8 | 32/8 | 32/8 |
+| `CpuCapacity` | fixed_layout | extern_struct | 8/4 | 8/4 | 8/4 | 8/4 |
+| `PlatformInputSnapshot` | fixed_layout | extern_struct | 64/8 | 64/8 | 64/8 | 64/8 |
+| `DirectoryScanCursor` | extensible | extern_struct | 1088/8 | 1088/8 | 1088/8 | 1088/8 |
 
 ## Typdetails
 
@@ -5110,6 +5113,56 @@ Kernel-, Zig- und C-Program-ABI, R4L-Identitaeten, Contractlayouts, API-Referenz
 | `source_size` | 16 | 8 | 8 | `u64` | - |
 | `chunks` | 24 | 4 | 4 | `u32` | - |
 | `max_chunk` | 28 | 4 | 4 | `u32` | - |
+
+### `CpuCapacity`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 8 / 4
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `available_cpus` | 0 | 4 | 4 | `u32` | - |
+| `configured_cpus` | 4 | 4 | 4 | `u32` | - |
+
+### `PlatformInputSnapshot`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `fixed_layout`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 64 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `sequence` | 8 | 8 | 8 | `u64` | - |
+| `brightness_up` | 16 | 8 | 8 | `u64` | - |
+| `brightness_down` | 24 | 8 | 8 | `u64` | - |
+| `lid_sequence` | 32 | 8 | 8 | `u64` | - |
+| `lid_state` | 40 | 4 | 4 | `u32` | - |
+| `capabilities` | 44 | 4 | 4 | `u32` | - |
+| `sources` | 48 | 4 | 4 | `u32` | - |
+| `reserved` | 52 | 4 | 4 | `u32` | - |
+| `since_ns` | 56 | 8 | 8 | `u64` | - |
+
+### `DirectoryScanCursor`
+
+- Quelle: `API/ApiContract.json`
+- Klasse: `extensible`
+- Repräsentation: `extern_struct`
+- Version/Größe/Alignment: 1 / 1088 / 8
+
+| Feld | Offset | Größe | Align | Quelltyp | Pointer-/Buffervertrag |
+|---|---:|---:|---:|---|---|
+| `version` | 0 | 4 | 4 | `u32` | - |
+| `size` | 4 | 4 | 4 | `u32` | - |
+| `change` | 8 | 40 | 8 | `DirectoryChangeCursor` | - |
+| `owner_id` | 48 | 4 | 4 | `u32` | - |
+| `owner_kind` | 52 | 4 | 4 | `u32` | - |
+| `owner_generation` | 56 | 8 | 8 | `u64` | - |
+| `backend` | 64 | 1024 | 8 | `[128]u64` | - |
 
 ## Fehlerdomänen
 

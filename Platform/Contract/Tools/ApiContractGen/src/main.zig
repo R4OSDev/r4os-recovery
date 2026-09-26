@@ -389,7 +389,7 @@ const phase_a_groups = [_]ExpectedGroup{
     // atomic registry batches at slots 120..122. 0.70.8 appends asynchronous
     // offset writes, file-size queries and advisory range locks at 123..125.
     // 0.76.8 appends fifteen storage inventory/claim/I/O/mount/use slots.
-    .{ .id = 1, .name = "R4SYS", .kind = .kernel_table, .functions = 138, .reserved = 2, .tombstones = 1 },
+    .{ .id = 1, .name = "R4SYS", .kind = .kernel_table, .functions = 153, .reserved = 2, .tombstones = 1 },
     // 0.62.31 activates slot 36 for Unicode keyboard codepoints while the
     // original byte-oriented read_key remains ABI-compatible at slot 0.
     // The append-only console input transport occupies slot 52; 0.69.47
