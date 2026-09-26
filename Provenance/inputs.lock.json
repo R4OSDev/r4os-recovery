@@ -2861,8 +2861,8 @@
     },
     {
       "path": "Kernel/memory/heap.zig",
-      "bytes": 43353,
-      "sha256": "65483c9dc0c8a27ec9d679cdccb5be4990ffc52a274db193449904d25c9c1f0e",
+      "bytes": 48728,
+      "sha256": "40aefaf8e9a65c590fd9ba1ba98e0a00582d23b4e43eabbba073e0520ef63ae8",
       "originalSha256": "0b9d09d80aa3a988f930c0870f44aa0f96a4042f1d5c140a92078ad328ddc306",
       "origin": {
         "path": "memory/heap.zig",
@@ -2901,8 +2901,8 @@
     },
     {
       "path": "Kernel/memory/owner_locks.zig",
-      "bytes": 8127,
-      "sha256": "24699694c2d0f0f96bbc064cbdc4d3395acbfc1c2a09d12a60bdb50f2d2f7326",
+      "bytes": 8476,
+      "sha256": "184f366f6152361282fdbf2c4f660cd25f15c2cd1674bd5536cd58124be630c8",
       "originalSha256": "24699694c2d0f0f96bbc064cbdc4d3395acbfc1c2a09d12a60bdb50f2d2f7326",
       "origin": {
         "path": "memory/owner_locks.zig",
@@ -2961,8 +2961,8 @@
     },
     {
       "path": "Kernel/memory/virt.zig",
-      "bytes": 144455,
-      "sha256": "a84415efc2aea2913fb667921e8a4c0164ece616927439780b03efc07fc41d4f",
+      "bytes": 150195,
+      "sha256": "1ef607d4eb5a4fdc09ffcd902f362ce34d10435cc338623a0626bdea592f2bd2",
       "originalSha256": "5886ef809b23129837e2c0b85eb29d3c557daa4dee3920f3723290141520f113",
       "origin": {
         "path": "memory/virt.zig",
@@ -3772,7 +3772,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "f98bb353b53d725bb92b6c7cfe581807cd0deed30fef2345d44725f52b99e1e8",
+      "sha256": "42e0ccfd41776850c888e2117bf70116867b06f11b087ad62a50e49a858fb93c",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9495,7 +9495,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "935dc772c964017fbe109cb6edf644b02de10131dccd1c0ab6cf8bac230c3e8c",
+      "sha256": "d98f2562bfa6949ca5d2c8d030908701118058d96fe0d2a635fe1a55f1cc64c9",
       "originalSha256": null,
       "origin": null
     },
@@ -9519,7 +9519,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "1d68cb127a30d2ba16400b5d8441f5da394c2a9514d314138dd661e190acb761",
+      "sha256": "6958a846bf076f052112aadc52fd61b1bf159048afc92497818738dc345ec093",
       "originalSha256": null,
       "origin": null
     },
@@ -10281,6 +10281,13 @@
       "path": "Legal/Changes/SDK-0.79.9-system-capacity.patch",
       "bytes": 32356,
       "sha256": "c1896345a4fd92edd202a8ae40314ae41bac621b3bcf3a3dc68995dd1e6765cf",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.81.12.patch",
+      "bytes": 27578,
+      "sha256": "3741cb761d4287f1e7f65d0d12536ec7a9109e75e8471fad29565045422a1821",
       "originalSha256": null,
       "origin": null
     }
@@ -15776,6 +15783,61 @@
         }
       ],
       "reason": "Bound self-update I/O to metadata and allocated FAT contents; retain position-bound source generation checks and untouched free sectors"
+    },
+    {
+      "changes": [
+        {
+          "before": "65483c9dc0c8a27ec9d679cdccb5be4990ffc52a274db193449904d25c9c1f0e",
+          "path": "Kernel/memory/heap.zig",
+          "after": "40aefaf8e9a65c590fd9ba1ba98e0a00582d23b4e43eabbba073e0520ef63ae8"
+        },
+        {
+          "before": "a84415efc2aea2913fb667921e8a4c0164ece616927439780b03efc07fc41d4f",
+          "path": "Kernel/memory/virt.zig",
+          "after": "1ef607d4eb5a4fdc09ffcd902f362ce34d10435cc338623a0626bdea592f2bd2"
+        },
+        {
+          "before": "f98bb353b53d725bb92b6c7cfe581807cd0deed30fef2345d44725f52b99e1e8",
+          "path": "Kernel/VERSION.R4S",
+          "after": "42e0ccfd41776850c888e2117bf70116867b06f11b087ad62a50e49a858fb93c"
+        }
+      ],
+      "reason": "0.81.12: compatible A2-0005 resident commit and heap owner transfer; Recovery/Kernel 0.1.60"
+    },
+    {
+      "changes": [
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "935dc772c964017fbe109cb6edf644b02de10131dccd1c0ab6cf8bac230c3e8c",
+          "after": "d98f2562bfa6949ca5d2c8d030908701118058d96fe0d2a635fe1a55f1cc64c9"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "1d68cb127a30d2ba16400b5d8441f5da394c2a9514d314138dd661e190acb761",
+          "after": "6958a846bf076f052112aadc52fd61b1bf159048afc92497818738dc345ec093"
+        }
+      ],
+      "reason": "0.81.12: pair Recovery 0.1.60 with its RAM runtime identity and shell version"
+    },
+    {
+      "changes": [
+        {
+          "before": "24699694c2d0f0f96bbc064cbdc4d3395acbfc1c2a09d12a60bdb50f2d2f7326",
+          "after": "184f366f6152361282fdbf2c4f660cd25f15c2cd1674bd5536cd58124be630c8",
+          "path": "Kernel/memory/owner_locks.zig"
+        }
+      ],
+      "reason": "0.81.12: import compatible owner-state query required by bounded resident transactions"
+    },
+    {
+      "changes": [
+        {
+          "after": "3741cb761d4287f1e7f65d0d12536ec7a9109e75e8471fad29565045422a1821",
+          "path": "Legal/Changes/Kernel-0.81.12.patch",
+          "before": null
+        }
+      ],
+      "reason": "0.81.12: finalize canonical Kernel 05f82df transfer patch and provenance"
     }
   ]
 }

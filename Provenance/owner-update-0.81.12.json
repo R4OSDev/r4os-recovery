@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "reason": "A2-0005: bounded resident commits, zero-before-map, retryable rollback and heap-owner release with compatible pinned Recovery ownership.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "baseRecoveryCommit": "6644e2dadb24f3c10a24414dda3ef1e7afae7bb3",
+      "sourceCommit": "05f82df447d9e0982553dc65bad65f951834732d",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.81.12.patch",
+      "patchSha256": "3741cb761d4287f1e7f65d0d12536ec7a9109e75e8471fad29565045422a1821",
+      "importMode": "Heap byte-identical; resident VM transaction applied as owner patch while keeping Recovery address windows. Only faultResolutionAllowed is added from canonical owner_locks; frozen stack/exception implementation remains separate. No runtime module or API transfer.",
+      "files": [
+        {
+          "path": "Kernel/memory/heap.zig",
+          "sourcePath": "memory/heap.zig",
+          "sha256": "40aefaf8e9a65c590fd9ba1ba98e0a00582d23b4e43eabbba073e0520ef63ae8",
+          "sourceSha256": "40aefaf8e9a65c590fd9ba1ba98e0a00582d23b4e43eabbba073e0520ef63ae8",
+          "byteIdentical": true
+        },
+        {
+          "path": "Kernel/memory/virt.zig",
+          "sourcePath": "memory/virt.zig",
+          "sha256": "1ef607d4eb5a4fdc09ffcd902f362ce34d10435cc338623a0626bdea592f2bd2",
+          "sourceSha256": "fb4e350a56c6f775d004e18f9e641e91a2c35e6f498def8c141a658ca931853d",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/memory/owner_locks.zig",
+          "sourcePath": "memory/owner_locks.zig",
+          "sha256": "184f366f6152361282fdbf2c4f660cd25f15c2cd1674bd5536cd58124be630c8",
+          "sourceSha256": "d6f4ae5b65615cb4bc1cd19a3eeb7b23f1342492934252637a4912672afb998b",
+          "byteIdentical": false
+        }
+      ]
+    }
+  ]
+}

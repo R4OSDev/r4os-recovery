@@ -334,3 +334,14 @@ registration. The existing driver-manager shutdown sequence is retained.
 
 Recovery 0.1.57 imports these canonical files from Kernel 0.1.132.
 The Menu artifact remains at 0.1.20.
+
+## Resident commit ownership (0.81.12)
+
+The compatible Kernel owner change splits eager VM commits into at most
+64-page sections and zeros private extents before publishing mappings. Heap
+growth releases its metadata owner while the range transaction and task
+unwind guard retain lifetime. Failed rollback keeps its exact mapped prefix
+and private extent for retry. The frozen address windows, lazy VM contract,
+resident Recovery preparation and imported runtime modules remain independent.
+The transfer receipt records the canonical source, Recovery patch and hashes;
+Recovery and its kernel advance together to 0.1.60.

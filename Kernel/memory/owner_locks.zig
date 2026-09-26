@@ -159,6 +159,13 @@ pub const Lock = struct {
 
 var held_rank: [percpu.max_cpus]u8 = .{0} ** percpu.max_cpus;
 
+// Compatible owner-state query from the canonical kernel. Recovery keeps
+// its pinned stack/exception implementation; this query only determines
+// whether a resident commit can release its outer critical section.
+pub fn faultResolutionAllowed() bool {
+    return held_rank[percpu.currentIndex()] == 0 and percpu.runtimeCriticalDepth().* == 0;
+}
+
 // The small ranks are leaf-domain entry points.  They may call into the
 // heap/VM stack, while that stack never calls back into the originating
 // registry or I/O owner.  Logging is terminal and therefore comes last.
