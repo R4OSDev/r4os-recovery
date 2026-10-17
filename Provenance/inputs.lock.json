@@ -3739,8 +3739,8 @@
     },
     {
       "path": "Kernel/Support/system_update_recovery.zig",
-      "bytes": 70187,
-      "sha256": "37ec92faf55dbdcda30f49ae95abba5d1723ea143447182359bb9da4843c24cd",
+      "bytes": 70426,
+      "sha256": "957b34d83103693e346da006eff9c1cbd40ba1570454e3e795d3e43c4b3d7033",
       "originalSha256": "37ec92faf55dbdcda30f49ae95abba5d1723ea143447182359bb9da4843c24cd",
       "origin": {
         "path": "Support/system_update_recovery.zig",
@@ -7711,8 +7711,8 @@
     },
     {
       "path": "Platform/SDK/r4os/system_update_engine.zig",
-      "bytes": 212036,
-      "sha256": "ee9726e42edd418d6f8f2bc4359fc7397d5013c89b6e67d4b1ce9c1daf156e63",
+      "bytes": 211979,
+      "sha256": "d5d6456a094ee4742b70e90a2280964bc2dd96e032dd127e010cccd951fd2ba5",
       "originalSha256": "ee9726e42edd418d6f8f2bc4359fc7397d5013c89b6e67d4b1ce9c1daf156e63",
       "origin": {
         "path": "r4os/system_update_engine.zig",
@@ -7731,8 +7731,8 @@
     },
     {
       "path": "Platform/SDK/r4os/system_update_recovery.zig",
-      "bytes": 70187,
-      "sha256": "37ec92faf55dbdcda30f49ae95abba5d1723ea143447182359bb9da4843c24cd",
+      "bytes": 70426,
+      "sha256": "957b34d83103693e346da006eff9c1cbd40ba1570454e3e795d3e43c4b3d7033",
       "originalSha256": "37ec92faf55dbdcda30f49ae95abba5d1723ea143447182359bb9da4843c24cd",
       "origin": {
         "path": "r4os/system_update_recovery.zig",
@@ -9880,7 +9880,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "832311fb0b3245f349943d46f1711fade21d123a6556d992450fa79a4a68c870",
+      "sha256": "6cab58b0eabd8582911efe36892bc50729084e175cbf150a928db5ad0bd62fff",
       "originalSha256": null,
       "origin": null
     },
@@ -9904,7 +9904,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "ef293223982d172d9dd9e7a1d0d045372d9e583d19054e2ac426763a58c3c2db",
+      "sha256": "cdedfa6542a596c6afaf4e304336747789b6701083a68b5c4310069d4bcf1983",
       "originalSha256": null,
       "origin": null
     },
@@ -16123,6 +16123,41 @@
         }
       ],
       "reason": "0.81.26: nachgewiesene Besitzercommits und Delta-Provenance; kanonischer C-Pfadtyp"
+    },
+    {
+      "reason": "0.84.20: SYSUPD v5-only in exact Recovery parser and frozen SDK owners; remove v2-v4 translations, preserve v5 rollback and new files",
+      "changes": [
+        {
+          "after": "957b34d83103693e346da006eff9c1cbd40ba1570454e3e795d3e43c4b3d7033",
+          "path": "Kernel/Support/system_update_recovery.zig",
+          "before": "37ec92faf55dbdcda30f49ae95abba5d1723ea143447182359bb9da4843c24cd"
+        },
+        {
+          "after": "d5d6456a094ee4742b70e90a2280964bc2dd96e032dd127e010cccd951fd2ba5",
+          "path": "Platform/SDK/r4os/system_update_engine.zig",
+          "before": "ee9726e42edd418d6f8f2bc4359fc7397d5013c89b6e67d4b1ce9c1daf156e63"
+        },
+        {
+          "after": "957b34d83103693e346da006eff9c1cbd40ba1570454e3e795d3e43c4b3d7033",
+          "path": "Platform/SDK/r4os/system_update_recovery.zig",
+          "before": "37ec92faf55dbdcda30f49ae95abba5d1723ea143447182359bb9da4843c24cd"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "832311fb0b3245f349943d46f1711fade21d123a6556d992450fa79a4a68c870",
+          "after": "6cab58b0eabd8582911efe36892bc50729084e175cbf150a928db5ad0bd62fff",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S"
+        },
+        {
+          "before": "ef293223982d172d9dd9e7a1d0d045372d9e583d19054e2ac426763a58c3c2db",
+          "after": "cdedfa6542a596c6afaf4e304336747789b6701083a68b5c4310069d4bcf1983",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S"
+        }
+      ],
+      "reason": "0.84.20: pair Recovery0.1.62 release with exact runtime identity and shell-version configuration"
     }
   ]
 }

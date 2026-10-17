@@ -62,6 +62,11 @@ RAM. A failed update can be recovered through the fixed Previous entry in
 Limine; shared filesystem or bootloader damage still needs an external USB.
 The original ZIP cache and existing Limine configuration remain intact.
 
+The Recovery-owned SYSUPD core and its pinned SDK accept only journal v5.
+V2–v4 are rejected; v5 identities, checksums, restart-batch continuation and
+rollback, including new files without old contents, remain supported. The
+separate R4CACHE1 and Recovery package journals keep their existing formats.
+
 The recovery kernel reuses selected R4OS kernel components. Compatible
 drivers, protocols, services, console applications, and libraries are
 imported as a pinned, jointly verified set. Recovery has its own release cycle;

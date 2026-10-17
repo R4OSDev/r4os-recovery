@@ -9,9 +9,8 @@ const system_update_batch = r4os.system_update_batch;
 const header_size: usize = r4u_manifest.header_size;
 const manifest_max: usize = 32 * 1024;
 // Worst case: 32 payloads x 4 paths x up to 1023 bytes (0.60.19 limits)
-// plus header lines. R4U_JOURNAL=4 binds release, package, concrete
-// components and the durable inventory completion phase; v2/v3 journals
-// remain readable for interrupted older transactions.
+// plus header lines. Only R4U_JOURNAL=5 is supported, binding release,
+// package, concrete components and durable restart-batch progress.
 const journal_max: usize = system_update_recovery.journal_max;
 // 0.60.14: 64-KB-Chunks statt 4 KB - zusammen mit dem NTFS-Deferred-
 // Stream-Pfad faellt das Staging von ~5 Device-Flushes pro 4 KB auf

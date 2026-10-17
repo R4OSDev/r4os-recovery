@@ -370,10 +370,9 @@ pub fn serializeJournal(journal: *const TransactionJournal, out: []u8) ?[]const 
     return out[0..len];
 }
 
-/// Parses both the current canonical v2 journal and the older v2 shape which
-/// predates content fingerprints/per-payload rollback markers.  Legacy
-/// journals remain fail-closed during recovery whenever their missing
-/// identity data cannot authorize a mutation.
+/// Parses only journal v5. Unsupported formats never authorize recovery.
+/// Every payload keeps its explicit rollback marker; missing old content
+/// remains valid for a newly created target.
 pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal) bool {
     if (slot > 1 or data.len == 0 or data.len > journal_max) return false;
     const checksum_marker = std.mem.lastIndexOf(u8, data, "CHECKSUM=") orelse return false;
@@ -383,24 +382,15 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
     const expected = parseU32(trim(data[checksum_marker + "CHECKSUM=".len .. checksum_end])) orelse return false;
     if (checksum(data[0..checksum_marker]) != expected) return false;
     const journal_version = journalField(data, "R4U_JOURNAL=") orelse return false;
-    const current = equalsIgnoreCase(journal_version, "5");
-    const component_format = current or equalsIgnoreCase(journal_version, "4");
-    const prior = equalsIgnoreCase(journal_version, "3");
-    const legacy = equalsIgnoreCase(journal_version, "2");
-    const modern = component_format or prior;
-    if (!modern and !legacy) return false;
-    if (!journalLinesKnown(data[0..checksum_marker], modern, component_format, current)) return false;
+    if (!equalsIgnoreCase(journal_version, "5")) return false;
+    if (!journalLinesKnown(data[0..checksum_marker])) return false;
     const reboot = parseYesNo(journalField(data, "REBOOT=") orelse return false) orelse return false;
-    const foundation = if (modern)
-        if (equalsIgnoreCase(journalField(data, "PRIORITY=") orelse return false, "foundation"))
-            true
-        else if (equalsIgnoreCase(journalField(data, "PRIORITY=") orelse return false, "normal"))
-            false
-        else
-            return false
+    const foundation = if (equalsIgnoreCase(journalField(data, "PRIORITY=") orelse return false, "foundation"))
+        true
+    else if (equalsIgnoreCase(journalField(data, "PRIORITY=") orelse return false, "normal"))
+        false
     else
-        false;
-
+        return false;
     journal.* = .{
         .valid = true,
         .slot = slot,
@@ -409,31 +399,22 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
         .phase = parsePhase(journalField(data, "PHASE=") orelse "") orelse return false,
         .package_digest = parseU32(journalField(data, "PACKAGE_DIGEST=") orelse "") orelse return false,
         .package_length = parseU64(journalField(data, "PACKAGE_LENGTH=") orelse "") orelse return false,
-        .manifest_checksum = if (modern) parseU32(journalField(data, "MANIFEST_CHECKSUM=") orelse "") orelse return false else 0,
-        .component_digest = if (modern) parseU32(journalField(data, "COMPONENT_DIGEST=") orelse "") orelse return false else 0,
-        .component_count = if (modern) parseU32(journalField(data, "COMPONENTS=") orelse "") orelse return false else 0,
-        .components_bound = if (component_format)
-            if (equalsIgnoreCase(journalField(data, "COMPONENT_BINDING=") orelse return false, "bound"))
-                true
-            else if (equalsIgnoreCase(journalField(data, "COMPONENT_BINDING=") orelse return false, "legacy"))
-                false
-            else
-                return false
+        .manifest_checksum = parseU32(journalField(data, "MANIFEST_CHECKSUM=") orelse "") orelse return false,
+        .component_digest = parseU32(journalField(data, "COMPONENT_DIGEST=") orelse "") orelse return false,
+        .component_count = parseU32(journalField(data, "COMPONENTS=") orelse "") orelse return false,
+        .components_bound = if (equalsIgnoreCase(journalField(data, "COMPONENT_BINDING=") orelse return false, "bound"))
+            true
+        else if (equalsIgnoreCase(journalField(data, "COMPONENT_BINDING=") orelse return false, "legacy"))
+            false
         else
-            false,
+            return false,
         .foundation = foundation,
-        .package_payload_count = if (component_format)
-            parseU32(journalField(data, "PACKAGE_PAYLOADS=") orelse "") orelse return false
-        else
-            parseU32(journalField(data, "PAYLOADS=") orelse "") orelse return false,
+        .package_payload_count = parseU32(journalField(data, "PACKAGE_PAYLOADS=") orelse "") orelse return false,
         .payload_count = parseU32(journalField(data, "PAYLOADS=") orelse "") orelse return false,
         .committed_count = parseU32(journalField(data, "COMMITTED=") orelse "") orelse return false,
         .rollback_count = parseU32(journalField(data, "ROLLED_BACK=") orelse "") orelse return false,
         .reboot = reboot,
-        .batch = if (current)
-            parseYesNo(journalField(data, "BATCH=") orelse return false) orelse return false
-        else
-            false,
+        .batch = parseYesNo(journalField(data, "BATCH=") orelse return false) orelse return false,
     };
     if (journal.transaction_generation == 0 or
         journal.journal_generation == 0 or
@@ -452,18 +433,15 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
     ) orelse return false).len;
     journal.source_version_len = copyTextZ(
         journal.source_version[0..],
-        journalField(data, if (modern) "SOURCE_RELEASE=" else "SOURCE_VERSION=") orelse return false,
+        journalField(data, "SOURCE_RELEASE=") orelse return false,
     ) orelse return false;
     journal.target_version_len = copyTextZ(
         journal.target_version[0..],
-        journalField(data, if (modern) "RELEASE=" else "TARGET_VERSION=") orelse return false,
+        journalField(data, "RELEASE=") orelse return false,
     ) orelse return false;
     journal.package_version_len = copyTextZ(
         journal.package_version[0..],
-        if (modern)
-            journalField(data, "PACKAGE_VERSION=") orelse return false
-        else
-            journal.targetVersionText(),
+        journalField(data, "PACKAGE_VERSION=") orelse return false,
     ) orelse return false;
     if (!versionTextValid(journal.sourceVersionText()) or
         !versionTextValid(journal.targetVersionText()) or
@@ -477,12 +455,11 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
     var seen_components: [max_package_payloads]bool = .{false} ** max_package_payloads;
     var found: u32 = 0;
     var found_components: u32 = 0;
-    var rollback_marker_count: u32 = 0;
     var pos: usize = 0;
     while (nextLine(data[0..checksum_marker], &pos)) |line_raw| {
         const line = trim(line_raw);
         if (startsWith(line, "COMPONENT;")) {
-            if (!component_format or !componentFieldsKnown(line)) return false;
+            if (!componentFieldsKnown(line)) return false;
             const index_u32 = parseU32(requiredField(line, "index=") orelse return false) orelse return false;
             if (index_u32 >= journal.component_count) return false;
             const index: usize = @intCast(index_u32);
@@ -576,10 +553,7 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
 
         entry.replace_required = parseBool01(requiredField(line, "required=") orelse return false) orelse return false;
         entry.committed = parseBool01(requiredField(line, "committed=") orelse return false) orelse return false;
-        if (optionalField(line, "rolled_back=")) |raw_rolled_back| {
-            rollback_marker_count += 1;
-            entry.rolled_back = parseBool01(raw_rolled_back) orelse return false;
-        }
+        entry.rolled_back = parseBool01(requiredField(line, "rolled_back=") orelse return false) orelse return false;
         if (entry.committed and entry.rolled_back) return false;
         if (!entry.replace_required) {
             if (!entry.target_existed) return false;
@@ -591,31 +565,9 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
         }
         found += 1;
     }
-    if (component_format and journal.components_bound and found_components != journal.component_count) return false;
-    if (component_format and !journal.components_bound and found_components != 0) return false;
+    if (journal.components_bound and found_components != journal.component_count) return false;
+    if (!journal.components_bound and found_components != 0) return false;
     if (found != journal.payload_count) return false;
-    if (rollback_marker_count != 0 and rollback_marker_count != journal.payload_count) return false;
-    journal.rollback_markers_present = rollback_marker_count != 0;
-
-    if (rollback_marker_count == 0 and journal.rollback_count != 0) {
-        // Compatibility with journals written before the per-payload marker:
-        // the legacy writer counted replace-required entries in reverse order.
-        // Mark intervening no-op payloads too, producing the canonical suffix
-        // that the current replay state machine persists.
-        var remaining = journal.rollback_count;
-        var cursor: usize = journal.payload_count;
-        while (cursor > 0 and remaining > 0) {
-            cursor -= 1;
-            journal.payloads[cursor].rolled_back = true;
-            if (journal.payloads[cursor].replace_required) remaining -= 1;
-        }
-        if (remaining != 0) return false;
-        journal.rollback_count = 0;
-        var inferred_index: usize = 0;
-        while (inferred_index < journal.payload_count) : (inferred_index += 1) {
-            if (journal.payloads[inferred_index].rolled_back) journal.rollback_count += 1;
-        }
-    }
     return journalValid(journal);
 }
 
@@ -890,24 +842,8 @@ pub fn journalValid(journal: *const TransactionJournal) bool {
             (committed_count == journal.package_payload_count or committed_count == journal.payload_count) and rollback_count == 0,
         .applied, .post_boot, .cleanup => committed_count == journal.payload_count and rollback_count == 0,
         .rollback => true,
-        // Current journals mark every payload.  A legacy terminal journal may
-        // have counted only replace-required entries and is still safe because
-        // terminal recovery performs no further mutation.
-        .rolled_back => committed_count == 0 and
-            (if (journal.rollback_markers_present)
-                rollback_count == journal.payload_count
-            else
-                allRequiredPayloadsRolledBack(journal)),
+        .rolled_back => committed_count == 0 and rollback_count == journal.payload_count,
     };
-}
-
-fn allRequiredPayloadsRolledBack(journal: *const TransactionJournal) bool {
-    var index: usize = 0;
-    while (index < journal.payload_count) : (index += 1) {
-        const entry = &journal.payloads[index];
-        if (entry.replace_required and !entry.rolled_back) return false;
-    }
-    return true;
 }
 
 pub fn journalPathsValid(journal: *const TransactionJournal) bool {
@@ -1201,63 +1137,26 @@ fn baseName(path: []const u8) []const u8 {
     return path;
 }
 
-fn journalLinesKnown(data: []const u8, modern: bool, component_format: bool, current: bool) bool {
-    const common = [_][]const u8{
-        "R4U_JOURNAL=",
-        "TRANSACTION_GENERATION=",
-        "JOURNAL_GENERATION=",
-        "PHASE=",
-        "PACKAGE_DIGEST=",
-        "PACKAGE_LENGTH=",
-        "SOURCE=",
-        "PAYLOADS=",
-        "COMMITTED=",
-        "ROLLED_BACK=",
-        "REBOOT=",
+fn journalLinesKnown(data: []const u8) bool {
+    const allowed = [_][]const u8{
+        "R4U_JOURNAL=",      "TRANSACTION_GENERATION=", "JOURNAL_GENERATION=",
+        "PHASE=",            "PACKAGE_DIGEST=",         "PACKAGE_LENGTH=",
+        "SOURCE=",           "PAYLOADS=",               "COMMITTED=",
+        "ROLLED_BACK=",      "REBOOT=",                 "MANIFEST_CHECKSUM=",
+        "COMPONENT_DIGEST=", "COMPONENTS=",             "COMPONENT_BINDING=",
+        "PRIORITY=",         "PACKAGE_VERSION=",        "SOURCE_RELEASE=",
+        "RELEASE=",          "PACKAGE_PAYLOADS=",       "BATCH=",
     };
     var pos: usize = 0;
     while (nextLine(data, &pos)) |line_raw| {
         const line = trim(line_raw);
         if (line.len == 0) return false;
-        if (startsWith(line, "PAYLOAD;")) continue;
-        if (startsWith(line, "COMPONENT;")) {
-            if (!component_format) return false;
-            continue;
-        }
+        if (startsWith(line, "PAYLOAD;") or startsWith(line, "COMPONENT;")) continue;
         var matched = false;
-        for (common) |prefix| {
+        for (allowed) |prefix| {
             if (startsWith(line, prefix)) {
                 matched = true;
                 break;
-            }
-        }
-        if (!matched and modern) {
-            const current_fields = [_][]const u8{
-                "MANIFEST_CHECKSUM=",
-                "COMPONENT_DIGEST=",
-                "COMPONENTS=",
-                "COMPONENT_BINDING=",
-                "PRIORITY=",
-                "PACKAGE_VERSION=",
-                "SOURCE_RELEASE=",
-                "RELEASE=",
-            };
-            for (current_fields) |prefix| {
-                if (startsWith(line, prefix)) {
-                    matched = true;
-                    break;
-                }
-            }
-        }
-        if (!matched and component_format and startsWith(line, "PACKAGE_PAYLOADS=")) matched = true;
-        if (!matched and current and startsWith(line, "BATCH=")) matched = true;
-        if (!matched and !modern) {
-            const legacy_fields = [_][]const u8{ "SOURCE_VERSION=", "TARGET_VERSION=" };
-            for (legacy_fields) |prefix| {
-                if (startsWith(line, prefix)) {
-                    matched = true;
-                    break;
-                }
             }
         }
         if (!matched) return false;
@@ -1575,7 +1474,7 @@ fn testJournalWithTarget(journal: *TransactionJournal, target: []const u8) void 
     entry.backup_len = buildInternal83Name(entry.backup_path[0..], target, 'B', 5, 0) orelse 0;
 }
 
-test "v5 journal roundtrip preserves v4 component bindings and batch marker" {
+test "v5 journal roundtrip preserves component bindings and rejects retired formats" {
     var journal: TransactionJournal = undefined;
     testJournalWithTarget(&journal, "C:\\R4OS\\SOFTWARE\\TERMINAL\\TERMINAL.R4X");
     journal.package_digest = 1234;
@@ -1609,6 +1508,44 @@ test "v5 journal roundtrip preserves v4 component bindings and batch marker" {
     try testing.expectEqualStrings("0.1.3", parsed.components[0].versionText());
     try testing.expect(parsed.foundation);
     try testing.expect(!parsed.batch);
+    try testing.expect(!parsed.payloads[0].target_existed);
+    try testing.expect(!parsed.payloads[0].old_known);
+
+    // Real historical key sets with freshly valid checksums exercise the
+    // format boundary independently of unknown v5-only fields.
+    const marker = std.mem.lastIndexOf(u8, encoded, "CHECKSUM=") orelse return error.TestUnexpectedResult;
+    for ("23406") |version| {
+        var retired: [8192]u8 = undefined;
+        var len: usize = 0;
+        var pos: usize = 0;
+        while (nextLine(encoded[0..marker], &pos)) |line| {
+            const old = version >= '2' and version <= '4';
+            if (old and startsWith(line, "BATCH=")) continue;
+            if (old and version < '4' and (startsWith(line, "COMPONENT;") or startsWith(line, "COMPONENT_BINDING=") or startsWith(line, "PACKAGE_PAYLOADS="))) continue;
+            if (version == '2' and (startsWith(line, "MANIFEST_CHECKSUM=") or startsWith(line, "COMPONENT_DIGEST=") or startsWith(line, "COMPONENTS=") or startsWith(line, "PRIORITY=") or startsWith(line, "PACKAGE_VERSION="))) continue;
+            if (startsWith(line, "R4U_JOURNAL=")) {
+                try testing.expect(appendKeyValue(retired[0..], &len, "R4U_JOURNAL=", &.{version}));
+            } else if (version == '2' and startsWith(line, "SOURCE_RELEASE=")) {
+                try testing.expect(appendKeyValue(retired[0..], &len, "SOURCE_VERSION=", line["SOURCE_RELEASE=".len..]));
+            } else if (version == '2' and startsWith(line, "RELEASE=")) {
+                try testing.expect(appendKeyValue(retired[0..], &len, "TARGET_VERSION=", line["RELEASE=".len..]));
+            } else try testing.expect(appendLine(retired[0..], &len, line));
+        }
+        const digest = checksum(retired[0..len]);
+        try testing.expect(appendKeyU64(retired[0..], &len, "CHECKSUM=", digest));
+        parsed = .{ .transaction_generation = 777 };
+        try testing.expect(!parseJournalInto(retired[0..len], 0, &parsed));
+        try testing.expect(!parsed.valid);
+        try testing.expectEqual(@as(u64, 777), parsed.transaction_generation);
+    }
+    buffer["R4U_JOURNAL=".len] = '5';
+    var len = marker;
+    try testing.expect(appendKeyU64(buffer[0..], &len, "CHECKSUM=", checksum(buffer[0..marker])));
+    try testing.expect(parseJournalInto(buffer[0..len], 0, &parsed));
+    try testing.expectEqual(@as(u8, 1), selectNewestSlot(.{ true, true }, .{ true, true }, .{ 1, 2 }).selected);
+    try testing.expectEqual(@as(u8, 0), selectNewestSlot(.{ true, true }, .{ true, false }, .{ 1, 2 }).selected);
+    buffer[marker - 2] ^= 1;
+    try testing.expect(!parseJournalInto(buffer[0..len], 0, &parsed));
 }
 
 test "restart batch recovery commits every bound payload before post boot" {
@@ -1633,11 +1570,18 @@ test "restart batch recovery commits every bound payload before post boot" {
 
     const MockIo = struct {
         commit_count: usize = 0,
+        rollback_count: usize = 0,
+        fail_persist: usize = 0,
         persist_count: usize = 0,
 
         pub fn persist(self: *@This(), _: *TransactionJournal) bool {
             self.persist_count += 1;
-            return true;
+            return self.persist_count != self.fail_persist;
+        }
+
+        pub fn rollbackPayload(self: *@This(), _: *const JournalPayload) MutationStatus {
+            self.rollback_count += 1;
+            return .ok;
         }
 
         pub fn commitPayload(self: *@This(), _: *const JournalPayload) MutationStatus {
@@ -1655,6 +1599,27 @@ test "restart batch recovery commits every bound payload before post boot" {
     try testing.expectEqual(@as(u32, 1), journal.committed_count);
     try testing.expectEqual(@as(usize, 1), io.commit_count);
     try testing.expect(io.persist_count >= 3);
+
+    journal.payloads[0].old_known = true;
+    journal.phase = .post_boot;
+    io.persist_count = 0;
+    io.fail_persist = 2;
+    try testing.expectEqual(ReplayStatus.io, rollbackToTerminal(&io, &journal));
+    try testing.expectEqual(JournalPhase.rollback, journal.phase);
+    try testing.expectEqual(@as(usize, 1), io.rollback_count);
+    var buffer: [8192]u8 = undefined;
+    const encoded = serializeJournal(&journal, buffer[0..]) orelse return error.TestUnexpectedResult;
+    var reopened: TransactionJournal = .{};
+    try testing.expect(parseJournalInto(encoded, 1, &reopened));
+    try testing.expectEqualStrings(journal.payloads[0].targetText(), reopened.payloads[0].targetText());
+    try testing.expectEqual(@as(u64, 40), reopened.payloads[0].old_size);
+    io.fail_persist = 0;
+    try testing.expectEqual(ReplayStatus.ok, rollbackToTerminal(&io, &reopened));
+    try testing.expectEqual(JournalPhase.rolled_back, reopened.phase);
+    try testing.expectEqual(@as(u32, 1), reopened.rollback_count);
+    const terminal_mutations = io.rollback_count;
+    try testing.expectEqual(ReplayStatus.ok, rollbackToTerminal(&io, &reopened));
+    try testing.expectEqual(terminal_mutations, io.rollback_count);
 }
 
 test "an ASCII target set stays acceptable" {
