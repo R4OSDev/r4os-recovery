@@ -1456,3 +1456,15 @@ Schreibplaene binden Metadaten und belegte Quellbereiche samt Positionen
 an einen SHA256; freie Bereiche werden nicht gelesen.
 
 die importierten Runtime-Module und der Plattformvertrag bleiben fest.
+
+Hostpruefung veroeffentlichter Full-Pakete 0.84.47
+------------------------------------------------
+Tools/Test-PublishedRelease.ps1 erlaubt jetzt fuer Download und Cachefreigabe
+900 Sekunden. Eine SSH-Cachebeobachtung bleibt auf 180 Sekunden der noch
+verfuegbaren Frist begrenzt. Der beobachtete 60-Sekunden-Abbruch beim
+geprueften Dateiaustausch war eine zu kurze Hosttestfrist; derselbe echte
+Menue-Download bestand mit der laengeren Frist samt vollem ZIP-Hash und
+unveraenderten anderen Partitionen und Quellimage. Beide Versuche sind unter
+ExFiles/Reports/Releases/20261018-08447/ ausserhalb von Git abgelegt.
+Nur der Hostpruefer ist geaendert; Recovery 0.1.63 und das veroeffentlichte
+R4OS-Paket bleiben bytegleich. Kein neuer Benchmark fuer diese Hostaenderung.

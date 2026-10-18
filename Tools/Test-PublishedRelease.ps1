@@ -3,7 +3,7 @@ param([Parameter(Mandatory)][ValidateSet('Recovery','R4OS')][string]$Product,
       [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{64}$')][string]$Sha256,
       [Parameter(Mandatory)][string]$BaseImage,
       [ValidateSet('Slim','Full')][string]$Profile='Full',
-      [ValidateRange(60,900)][int]$TimeoutSeconds=600)
+      [ValidateRange(60,900)][int]$TimeoutSeconds=900)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 $root=Split-Path $PSScriptRoot -Parent;$workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
 . (Join-Path $PSScriptRoot 'Inventory.ps1')
@@ -80,7 +80,7 @@ function Observe-Cache([string]$Command,[DateTime]$Deadline){
  # window and the enclosing download deadline, without ignoring failures.
  $remaining=[long][Math]::Floor(($Deadline-[DateTime]::UtcNow).TotalMilliseconds)
  if($remaining -le 0){throw 'Public cache observation exceeded the download deadline.'}
- $timeout=[int][Math]::Min(60000,$remaining)
+ $timeout=[int][Math]::Min(180000,$remaining)
  $measurement=[Diagnostics.Stopwatch]::StartNew()
  $value=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',$Command)) -TimeoutMilliseconds $timeout
  $elapsed=$measurement.ElapsedMilliseconds
@@ -145,6 +145,6 @@ try{
 if((Other-Bytes) -cne $before -or (Get-RecoveryHash $BaseImage) -cne $sourceHash){throw 'Download changed an unrelated partition or its source image.'}
 $report=@{schema=1;result='PASS';product=$Product;version=$Version;profile=$Profile;asset=$assetName;releaseId=$metadata.id;assetId=$asset.id;url=$url;sha256=$Sha256;bytes=$asset.size;
  cpus=4;ramBytes=8GB;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);sourceImageSha256=$sourceHash;otherPartitionsUnchanged=$true;runnerSha256=Get-RecoveryHash $PSCommandPath;serialSha256=Get-RecoveryHash $serialLog;clientsSha256=Get-RecoveryHash $clientLog;
- cacheObservationCount=$cacheObservationCount;cacheObservationTimeoutMilliseconds=60000;cacheObservationMaxMilliseconds=$cacheObservationMaxMs;cacheObservationsOver20s=$cacheObservationsOver20s}
+ cacheObservationCount=$cacheObservationCount;cacheObservationTimeoutMilliseconds=180000;cacheObservationMaxMilliseconds=$cacheObservationMaxMs;cacheObservationsOver20s=$cacheObservationsOver20s}
 Write-RecoveryJson (Join-Path $output 'published-release-results.json') $report
 Write-Host "Published $Product $Version PASS: actual menu GitHub download, complete cached ZIP SHA256, SMP4/8GB, unrelated partitions unchanged."
