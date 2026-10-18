@@ -1,0 +1,114 @@
+diff --git a/Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig b/Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig
+index 62b8e11..0640b55 100644
+--- a/Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig
++++ b/Platform/SDK/Tests/Simulation/CheckStorageTools0769.zig
+@@ -53,8 +53,37 @@ test "five-role layout, GUID boot references and Limine GPT publication" {
+     var entropy: [7][16]u8 = .{.{0} ** 16} ** 7;
+     for (&entropy, 0..) |*id, i| id[0] = @intCast(i + 1);
+     const ids = try tools.installation.Identifiers.fromEntropy(entropy);
++    const setup = tools.installation;
++    try eq(@as(u64, 22 * 1024 * 1024 * 1024), setup.standard_bytes);
++    const legacy = try setup.Layout.prepareSource(setup.legacy_bytes, ids);
++    try eq(@as(u64, 1024 * 2048), legacy.part(.SYSTEM).count);
++    try eq(@as(u64, 2363392), legacy.part(.RECOVERY).first);
++    try eq(@as(u64, 512 * 2048), legacy.part(.RECOVERY).count);
++    const previous = try setup.Layout.prepareSource(setup.previous_bytes, ids);
++    try eq(@as(u64, 10 * 1024 * 2048), previous.part(.SYSTEM).count);
++    try eq(@as(u64, 21237760), previous.part(.RECOVERY).first);
++    const current = try setup.Layout.prepareSource(setup.standard_bytes, ids);
++    try eq(@as(u64, 16 * 1024 * 2048), current.part(.SYSTEM).count);
++    try eq(@as(u64, 33820672), current.part(.RECOVERY).first);
++    try eq(@as(u64, 5 * 1024 * 2048), current.part(.RECOVERY).count);
++    try eq(previous.part(.DATA).count, current.part(.DATA).count);
++    const sparse = try tools.sparse_image.Image.init(a, setup.standard_bytes);
++    defer sparse.deinit();
++    try expectError(error.ImageLimit, tools.sparse_image.Image.init(a, setup.standard_bytes + 1));
++    try std.testing.expectError(error.Geometry, setup.sourceRanges(setup.standard_bytes - 512));
+     var work: [tools.io.scratch_bytes]u8 = undefined;
+-    for ([_]u64{ tools.installation.standard_bytes / 512, 16 * 1024 * 2048 }) |sectors| {
++    for ([_]u64{ setup.legacy_bytes, setup.previous_bytes }) |bytes| {
++        var source = BootFixture{ .sectors = bytes / 512 };
++        var progress = tools.io.Progress{};
++        const source_layout = try setup.Layout.prepareSource(bytes, ids);
++        var source_plan = try table.Plan.read(source.device(&progress), &work);
++        try source_layout.bind(&source_plan);
++        try source_plan.commit(source.device(&progress), &work);
++        const readback = try table.Plan.read(source.device(&progress), &work);
++        try eq(source_layout.part(.SYSTEM).count, readback.entries[2].count);
++        try expectError(error.Geometry, setup.Layout.prepare(bytes / 512, 512, ids));
++    }
++    for ([_]u64{ tools.installation.standard_bytes / 512, 32 * 1024 * 2048 }) |sectors| {
+         var fixture = BootFixture{ .sectors = sectors };
+         var progress = tools.io.Progress{};
+         const device = fixture.device(&progress);
+@@ -81,7 +110,8 @@ test "five-role layout, GUID boot references and Limine GPT publication" {
+             const config = try layout.limineConfig(a, medium);
+             defer a.free(config);
+             try expect(std.mem.indexOf(u8, config, if (medium == .local) "default_entry: 1" else "default_entry: 2") != null);
+-            try eq(@as(usize, 3), std.mem.count(u8, config, "protocol: limine"));
++            try eq(@as(usize, 4), std.mem.count(u8, config, "protocol: limine"));
++            try eq(@as(usize, 1), std.mem.count(u8, config, "cmdline: r4os.graphics=software"));
+             try expect(std.mem.indexOf(u8, config, &table.guid.format(ids.partitions[1])) != null);
+             try expect(std.mem.indexOf(u8, config, ":/CURRENT/runtime.img") != null);
+             try expect(std.mem.indexOf(u8, config, ":/PREVIOUS/runtime.img") != null);
+diff --git a/Platform/SDK/r4os/storage_tools/installation.zig b/Platform/SDK/r4os/storage_tools/installation.zig
+index b0d3a61..1d4e304 100644
+--- a/Platform/SDK/r4os/storage_tools/installation.zig
++++ b/Platform/SDK/r4os/storage_tools/installation.zig
+@@ -5,9 +5,10 @@ const partition = @import("partition.zig");
+ pub const guid = partition.guid;
+ pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
+ pub const Medium = enum { local, usb };
+-pub const system_mb: u64 = 10 * 1024;
++pub const system_mb: u64 = 16 * 1024;
+ pub const recovery_mb: u64 = 5 * 1024;
+-pub const standard_bytes: u64 = 16 * 1024 * 1024 * 1024;
++pub const standard_bytes: u64 = 22 * 1024 * 1024 * 1024;
++pub const previous_bytes: u64 = 16 * 1024 * 1024 * 1024;
+ pub const legacy_bytes: u64 = 2 * 1024 * 1024 * 1024;
+ pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + recovery_mb) * 2048 };
+ // The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
+@@ -29,11 +30,12 @@ fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64, recovery_sectors
+     };
+ }
+ 
+-/// Release readers accept the previous 1-GB SYSTEM source as well as the
+-/// current 10-GB source. This never selects the geometry of an update target.
++/// Release readers accept 1-, 10- and 16-GB SYSTEM sources.
++/// This never selects the geometry of an update target.
+ pub fn sourceRanges(bytes: u64) ![5]partition.Range {
+     const system_sectors: u64 = switch (bytes) {
+         standard_bytes => system_mb * 2048,
++        previous_bytes => 10 * 1024 * 2048,
+         legacy_bytes => 1024 * 2048,
+         else => return error.Geometry,
+     };
+@@ -98,8 +100,14 @@ pub const Layout = struct {
+     /// confirmation/claim belong to the caller; commit retains the existing
+     /// table fingerprint and performs its normal stale-source check.
+     pub fn bind(self: Layout, table: *partition.Plan) !void {
++        // Historical source layouts remain reproducible; new installation
++        // targets still obtain their geometry exclusively through prepare.
++        const expected = if (self.sectors == previous_bytes / 512 or self.sectors == legacy_bytes / 512)
++            try prepareSource(self.sectors * 512, self.ids)
++        else
++            try prepare(self.sectors, 512, self.ids);
+         if (table.sectors != self.sectors or table.kind != .none or !table.blank or
+-            !std.meta.eql(self, try prepare(self.sectors, 512, self.ids))) return error.Geometry;
++            !std.meta.eql(self, expected)) return error.Geometry;
+         try table.initializeGpt(self.ids.disk);
+         inline for (std.meta.fields(Role)) |field| {
+             const role: Role = @enumFromInt(field.value);
+diff --git a/Platform/SDK/r4os/storage_tools/sparse_image.zig b/Platform/SDK/r4os/storage_tools/sparse_image.zig
+index a2fbc07..b622c74 100644
+--- a/Platform/SDK/r4os/storage_tools/sparse_image.zig
++++ b/Platform/SDK/r4os/storage_tools/sparse_image.zig
+@@ -3,7 +3,7 @@
+ const std = @import("std");
+ const Source = @import("byte_source.zig").Source;
+ pub const block_bytes = 64 * 1024;
+-pub const maximum_bytes: usize = 16 * 1024 * 1024 * 1024;
++pub const maximum_bytes: usize = @import("installation.zig").standard_bytes;
+ pub const Image = struct {
+     allocator: std.mem.Allocator,
+     length: usize,

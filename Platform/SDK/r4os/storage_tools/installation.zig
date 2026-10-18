@@ -5,9 +5,10 @@ const partition = @import("partition.zig");
 pub const guid = partition.guid;
 pub const Role = enum { BIOSBOOT, BOOT, SYSTEM, RECOVERY, DATA };
 pub const Medium = enum { local, usb };
-pub const system_mb: u64 = 10 * 1024;
+pub const system_mb: u64 = 16 * 1024;
 pub const recovery_mb: u64 = 5 * 1024;
-pub const standard_bytes: u64 = 16 * 1024 * 1024 * 1024;
+pub const standard_bytes: u64 = 22 * 1024 * 1024 * 1024;
+pub const previous_bytes: u64 = 16 * 1024 * 1024 * 1024;
 pub const legacy_bytes: u64 = 2 * 1024 * 1024 * 1024;
 pub const first_lbas = [_]u64{ 2048, 4096, 266240, 266240 + system_mb * 2048, 266240 + (system_mb + recovery_mb) * 2048 };
 // The canonical NTFS builder needs 4096 complete 4-KB clusters plus its
@@ -29,11 +30,12 @@ fn ranges(sectors: u64, sector_bytes: u32, system_sectors: u64, recovery_sectors
     };
 }
 
-/// Release readers accept the previous 1-GB SYSTEM source as well as the
-/// current 10-GB source. This never selects the geometry of an update target.
+/// Release readers accept 1-, 10- and 16-GB SYSTEM sources.
+/// This never selects the geometry of an update target.
 pub fn sourceRanges(bytes: u64) ![5]partition.Range {
     const system_sectors: u64 = switch (bytes) {
         standard_bytes => system_mb * 2048,
+        previous_bytes => 10 * 1024 * 2048,
         legacy_bytes => 1024 * 2048,
         else => return error.Geometry,
     };
@@ -98,8 +100,14 @@ pub const Layout = struct {
     /// confirmation/claim belong to the caller; commit retains the existing
     /// table fingerprint and performs its normal stale-source check.
     pub fn bind(self: Layout, table: *partition.Plan) !void {
+        // Historical source layouts remain reproducible; new installation
+        // targets still obtain their geometry exclusively through prepare.
+        const expected = if (self.sectors == previous_bytes / 512 or self.sectors == legacy_bytes / 512)
+            try prepareSource(self.sectors * 512, self.ids)
+        else
+            try prepare(self.sectors, 512, self.ids);
         if (table.sectors != self.sectors or table.kind != .none or !table.blank or
-            !std.meta.eql(self, try prepare(self.sectors, 512, self.ids))) return error.Geometry;
+            !std.meta.eql(self, expected)) return error.Geometry;
         try table.initializeGpt(self.ids.disk);
         inline for (std.meta.fields(Role)) |field| {
             const role: Role = @enumFromInt(field.value);

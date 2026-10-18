@@ -3,7 +3,7 @@
 const std = @import("std");
 const Source = @import("byte_source.zig").Source;
 pub const block_bytes = 64 * 1024;
-pub const maximum_bytes: usize = 16 * 1024 * 1024 * 1024;
+pub const maximum_bytes: usize = @import("installation.zig").standard_bytes;
 pub const Image = struct {
     allocator: std.mem.Allocator,
     length: usize,

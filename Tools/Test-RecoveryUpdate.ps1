@@ -150,7 +150,7 @@ try {
  if(-not ('InstallationImageCheck' -as [type])){Add-Type -Path (Join-Path $distribution 'Tools/InstallationImage.Check.cs')}
  $baseCheck=[InstallationImageCheck]::new($BaseImage)
  try{
-  if($baseCheck.Bytes -notin @(2GB,16GB)){throw 'Recovery fixture requires a standard legacy or current release disk.'}
+  if($baseCheck.Bytes -notin @(2GB,16GB,22GB)){throw 'Recovery fixture requires a standard legacy or current release disk.'}
   $baseDiskMB=[long]($baseCheck.Bytes/1MB);$baseSystemMB=[long]($baseCheck.Partitions['SYSTEM'].Count/2048);$baseRecoveryMB=[long]($baseCheck.Partitions['RECOVERY'].Count/2048);$baseDataFirst=$baseCheck.Partitions['DATA'].First
  }finally{$baseCheck.Dispose()}
  $imageCreator=Get-RecoveryImageCreator $root $Zig

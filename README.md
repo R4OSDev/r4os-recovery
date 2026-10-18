@@ -256,8 +256,10 @@ The largest observed total in three SMP4/6-GB workflows is 1,466,601,472
 bytes. Adding 512 MB reserve and rounding up gives a new package minimum
 of 2 GB OS-usable RAM. Final asset qualification is planned for 0.78.14.
 The complete source and write plans must fit in physically reserved RAM
-before any target write. The shared minimum disk is 1,763,722,240 bytes;
-BOOT/SYSTEM/RECOVERY retain 128/1024/512 MB and DATA uses the remaining space.
+before any target write. New installations use 128 MB BOOT, 16 GB SYSTEM
+and 5 GB RECOVERY; DATA uses the remaining space. Standard source images are
+22 GB. Recovery also reads the previous 16-GB (10-GB SYSTEM) and 2-GB
+(1-GB SYSTEM) source images. Updates retain the target geometry and IDs.
 
 `Artifacts/Qualification/0.76.23/report.json` records actual RAM peaks,
 capacity, complete install/update evidence and exact package identities.

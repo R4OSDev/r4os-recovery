@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "release": "0.84.46",
+  "date": "2026-10-18",
+  "scope": "16-GB SYSTEM / 22-GB release source; preserve previous source geometries and update-target identity. Only two compatible SDK owner files imported. Existing frozen fixture updated locally for the real fourth software-graphics boot entry.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "sourceCommit": "66c0ec3eeac8bf940f29afd515a7c6eba4aab61d",
+      "baseRecoveryCommit": "e409efbd4499f5c44572665d193957c6cc1beef7",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.84.46.patch",
+      "patchSha256": "ebbafca934831fe2ba9d1510e9600940f6ba8bc3a5a9cd6ad8d3137fbd832502",
+      "importMode": "Exact two owner files only; unrelated frozen platform and runtime modules retained. Existing component fixture gains capacity/source checks.",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/storage_tools/installation.zig",
+          "sourcePath": "r4os/storage_tools/installation.zig",
+          "sha256": "aab73992ed50c224202bb4721e773de18a556fec15bf1678da05811394ffa071",
+          "sourceSha256": "aab73992ed50c224202bb4721e773de18a556fec15bf1678da05811394ffa071",
+          "byteIdentical": true
+        },
+        {
+          "path": "Platform/SDK/r4os/storage_tools/sparse_image.zig",
+          "sourcePath": "r4os/storage_tools/sparse_image.zig",
+          "sha256": "fc7977a51859ff06c8570721c40740c8d104057d5d60c1229371458f58493403",
+          "sourceSha256": "fc7977a51859ff06c8570721c40740c8d104057d5d60c1229371458f58493403",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}
