@@ -217,3 +217,10 @@ pub fn lastInterruptResidue(handle: DeviceHandle) u32 {
     defer instance.releaseControllerOwnership();
     return instance.lastInterruptResidue();
 }
+
+// Kernel-resident HID supplies a wake-only callback; it takes no class owner.
+pub fn inputInterest(endpoint: EndpointHandle, hook: ?native.TopologyHook) bool {
+    const instance = acquireId(endpoint.device.controller_id) orelse return false;
+    defer instance.releaseControllerOwnership();
+    return instance.inputInterest(endpoint, hook);
+}

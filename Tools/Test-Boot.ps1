@@ -1,6 +1,7 @@
 param(
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both',
     [ValidateSet('poweroff', 'reboot', 'ram', 'terminal')][string]$Action = 'poweroff',
+    [ValidateSet(1,3)][int]$Controllers = 1,
     [string]$Zig = '', [string]$Qemu = '', [string]$LimineRoot = '',
     [string]$OvmfCode = '', [string]$OvmfVars = '',
     [ValidateRange(10, 300)][int]$TimeoutSeconds = 120
@@ -85,6 +86,7 @@ function Remove-RecoveryBootMedium([int]$Port, [bool]$InteractiveTerminal) {
 }
 
 try {
+    if ($Controllers -eq 3 -and $Action -ne 'terminal') { throw 'Three-controller production case requires -Action terminal.' }
     [IO.Directory]::CreateDirectory($output) | Out-Null
     $resultPath = Join-Path $output 'boot-results.json'
     if (Test-Path -LiteralPath $resultPath) { Remove-Item -LiteralPath $resultPath -Force }
@@ -155,7 +157,8 @@ try {
             $serialLog = Join-Path $output "$mode-$case-serial.log"
             $errorLog = Join-Path $output "$mode-$case-qemu.log"
             if (Test-Path -LiteralPath $serialLog) { Remove-Item -LiteralPath $serialLog -Force }
-            $arguments = @('-machine', "q35,accel=$($profile.AcceleratorChain)", '-cpu', $profile.CpuModel,
+            $machine = "q35,accel=$($profile.AcceleratorChain)" + $(if ($Controllers -eq 3) {',i8042=off'} else {''})
+            $arguments = @('-machine', $machine, '-cpu', $profile.CpuModel,
                 '-m', '1024', '-smp', '4', '-display', 'none', '-monitor', 'none', '-no-reboot',
                 '-nic', 'none', '-serial', "file:$serialLog")
             $qmpPort = 0
@@ -164,8 +167,13 @@ try {
                 $listener.Start(); $qmpPort = $listener.LocalEndpoint.Port; $listener.Stop()
                 $fileNode = @{driver='file'; filename=$fixture; 'node-name'='recovery-file'; 'read-only'=$true} | ConvertTo-Json -Compress
                 $rawNode = @{driver='raw'; file='recovery-file'; 'node-name'='recovery-source'; 'read-only'=$true} | ConvertTo-Json -Compress
-                $arguments += @('-qmp', "tcp:127.0.0.1:${qmpPort},server=on,wait=off", '-device', 'qemu-xhci,id=recovery-xhci',
+                $controller = 'qemu-xhci,id=recovery-xhci' + $(if ($Controllers -eq 3) {',addr=8'} else {''})
+                $arguments += @('-qmp', "tcp:127.0.0.1:${qmpPort},server=on,wait=off", '-device', $controller,
                     '-blockdev', $fileNode, '-blockdev', $rawNode, '-device', 'usb-storage,drive=recovery-source,id=recovery-boot,bootindex=1')
+                if ($Controllers -eq 3) {
+                    $arguments += @('-device','qemu-xhci,id=keyboard-xhci,addr=6','-device','qemu-xhci,id=mouse-xhci,addr=7',
+                        '-device','usb-kbd,bus=keyboard-xhci.0','-device','usb-mouse,bus=mouse-xhci.0')
+                }
             } else { $arguments += @('-drive', "format=raw,file=$fixture", '-snapshot') }
             if ($mode -eq 'Uefi') {
                 $varsCopy = Join-Path $output 'OVMF-vars.fd'
@@ -216,9 +224,10 @@ try {
                 }
                 if ($exitCode -ne 0 -or $text -notmatch $marker -or $text -match '\[CRASH\]|result=FAILED' -or ($usesRuntime -and !$removed)) { throw "Recovery $mode/$Action/$case failed; inspect $serialLog and $errorLog" }
                 if ($Action -eq 'terminal' -and $text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0') { throw 'Production terminal did not retain SMP4.' }
+                if ($Controllers -eq 3 -and $text -notmatch '\[RECOVERYINPUT\] ready=1 keyboard_usb=1 mouse=0') { throw 'Production Recovery input policy differs from its keyboard-only contract.' }
                 if ($Action -eq 'reboot' -and $text -notmatch '\[RESET\]') { throw 'QEMU exited without a Recovery reset witness.' }
             }
-            $run = [ordered]@{firmware=$mode; action=$Action; case=$case; result='ok'; cpus=4; accelerator=$profile.Name;
+            $run = [ordered]@{firmware=$mode; action=$Action; case=$case; result='ok'; cpus=4; controllers=$Controllers; accelerator=$profile.Name;
                 seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3); qemuExitCode=$exitCode; kernelSha256=Get-RecoveryHash $kernel;
                 fixtureSha256=Get-RecoveryHash $fixture; systemPartition=$false; serialLog=$serialLog;
                 bootMediumRemoved=$removed; expectedReject=$expectedReject; rejectionObserved=$rejected;
@@ -233,4 +242,7 @@ try {
 } catch {
     Write-Error $_ -ErrorAction Continue
     exit 1
+} finally {
+    Get-ChildItem -LiteralPath $output -Filter '*.img' -File -ErrorAction SilentlyContinue | Remove-Item -Force
+    if (Test-Path -LiteralPath $sourceRoot) { Remove-Item -LiteralPath $sourceRoot -Recurse -Force }
 }

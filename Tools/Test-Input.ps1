@@ -94,7 +94,7 @@ try{
         $start=[Diagnostics.ProcessStartInfo]::new($Qemu);$start.UseShellExecute=$false;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
         foreach($argument in $arguments){$start.ArgumentList.Add($argument)}
         $process=[Diagnostics.Process]::new();$process.StartInfo=$start
-        $watch=[Diagnostics.Stopwatch]::StartNew();$started=$false;$session=$null;$sent=@{}
+        $watch=[Diagnostics.Stopwatch]::StartNew();$started=$false;$session=$null;$sent=@{};$faultWitnesses=@()
         Write-Host "Recovery input $name, SMP4, $($profile.Name), i8042=$ps2."
         try{
             if(!$process.Start()){throw 'QEMU did not start.'}
@@ -105,7 +105,7 @@ try{
                 [string]$text=Get-Content -Raw -LiteralPath $serialLog
                 if($text -match '\[CRASH\]|result=FAILED'){throw "Input probe failed: $serialLog"}
                 if($Controllers -eq 3){
-                    foreach($phase in @('MULTI_INPUT','MULTI_DETACH','MULTI_REPLUG')){
+                    foreach($phase in @('MULTI_INPUT','MULTI_NOIRQ','MULTI_KEY_DOWN','MULTI_KEY_REMOVE','MULTI_KEY_REPLACE','MULTI_KEY_TEXT','MULTI_DETACH','MULTI_REPLUG')){
                         if($sent.ContainsKey($phase) -or !($text -match "\[RECOVERYINPUT\] phase=$phase")){continue}
                         if($null -eq $session){$session=Open-Qmp $port}
                         switch($phase){
@@ -113,6 +113,19 @@ try{
                                 $null=Qmp $session 'input-send-event' @{events=@(@{type='rel';data=@{axis='x';value=20}},@{type='rel';data=@{axis='y';value=10}})}
                                 Send-Keys $session @('a')
                             }
+                            'MULTI_NOIRQ'{
+                                $faultWitnesses+=Set-QmpXhciFault $session -ControllerId 'input-xhci' -DisableInterrupts
+                                $faultWitnesses+=Set-QmpXhciFault $session -ControllerId 'mouse-xhci' -DisableInterrupts
+                                $null=Qmp $session 'blockdev-reopen' @{options=@(@{driver='file';'node-name'='raw-file';filename=$rawPath;cache=@{direct=$true;'no-flush'=$false}})}
+                                Send-Keys $session @('n')
+                            }
+                            'MULTI_KEY_DOWN'{$null=Qmp $session 'input-send-event' @{events=@(@{type='key';data=@{down=$true;key=@{type='qcode';data='shift'}}})}}
+                            'MULTI_KEY_REMOVE'{$null=Qmp $session 'device_del' @{id='recovery-keyboard'}}
+                            'MULTI_KEY_REPLACE'{
+                                $null=Qmp $session 'device_add' @{driver='usb-kbd';id='recovery-keyboard';bus='input-xhci.0';port='1'}
+                                $null=Qmp $session 'input-send-event' @{events=@(@{type='key';data=@{down=$false;key=@{type='qcode';data='shift'}}})}
+                            }
+                            'MULTI_KEY_TEXT'{Send-Keys $session @('d')}
                             'MULTI_DETACH'{$null=Qmp $session 'device_del' @{id='multi-raw'};Start-Sleep -Milliseconds 300;Send-Keys $session @('b')}
                             'MULTI_REPLUG'{$null=Qmp $session 'device_add' @{driver='usb-storage';drive='raw-node';id='multi-raw';bus='mouse-xhci.0';port='2'};Send-Keys $session @('c')}
                         }
@@ -146,11 +159,17 @@ try{
         [string]$text=Get-Content -Raw -LiteralPath $serialLog
         $visible=if($origin -eq 'Usb'){1}else{0};$expectedInput=$inputDevice.ToUpperInvariant()
         $expected=if($Controllers -eq 3){'\[RECOVERYINPUT\] result=OK cpus=4 controllers=3 pci=3 input=USB mouse=1 medium_bytes=262144 write_readback=OK hotplug=OK stale=REJECTED source=USB'}else{"\[RECOVERYINPUT\] result=OK cpus=4 input=$expectedInput layouts=EN,DE navigation=OK text=OK terminal_file=OK shell_exit=OK mouse=0 usb_storage=$visible"}
-        if($sent.Count -ne 3 -or $text -notmatch $expected){throw "Incomplete input witness: $serialLog"}
+        $expectedPhases=if($Controllers -eq 3){8}else{3}
+        if($sent.Count -ne $expectedPhases -or $text -notmatch $expected){throw "Incomplete input witness: $serialLog"}
+        $optimization=$null
+        if($Controllers -eq 3){
+            if($faultWitnesses.Count -ne 2 -or $text -notmatch 'dma_pages=68 idle_worker=(\d+) fallback_waits=([1-9]\d*) old_key_release=OK'){throw 'Missing Recovery DMA/idle/IRQ-fallback/key-release witness.'}
+            $optimization=@{dmaPages=68;idleWorkerIterations=[long]$Matches[1];completionFallbacks=[long]$Matches[2];oldKeyRelease=$true;hardwareIrqSuppression=$faultWitnesses;directHostIo=$true}
+        }
         $bus=$origin.ToLowerInvariant()
         if($text -notmatch "\[RECOVERYSTORAGE\] source=ok bus=$bus slot=current"){throw 'Input probe booted from the wrong medium.'}
         $run=[ordered]@{firmware=$mode;boot=$origin;keyboard=$inputDevice;controllers=$Controllers;i8042=$ps2;result='ok';cpus=4;accelerator=$profile.Name;
-            seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog}
+            seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog;optimization=$optimization}
         $runs+=$run;Write-RecoveryJson $resultPath @{schema=1;runs=$runs}
         Write-Host "Recovery input $name OK ($($run.seconds) seconds)."
     }}}

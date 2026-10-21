@@ -904,6 +904,12 @@ fn eventIrqHandler(_: u8, raw_context: usize) callconv(.c) u32 {
     if ((status_value & (USBSTS_EINT | USBSTS_PCD)) != 0)
         @as(*volatile u32, @ptrFromInt(op + OP_USBSTS)).* = status_value & (USBSTS_EINT | USBSTS_PCD);
     _ = @atomicRmw(u64, &instance.irq_handled_async, .Add, 1, .monotonic);
+    var waiting = @atomicLoad(u16, &instance.completion_waiting, .acquire);
+    while (waiting != 0) {
+        const slot: u4 = @intCast(@ctz(waiting));
+        waiting &= waiting - 1;
+        instance.completion_events[slot].signal();
+    }
     instance.event_irq.signal();
     return irq_router.IRQ_RESULT_HANDLED;
 }
@@ -1064,19 +1070,23 @@ fn hostPoll(raw_context: ?*anyopaque) callconv(.c) i32 {
 
 fn hostShutdown(raw_context: ?*anyopaque) callconv(.c) i32 {
     const instance: *Instance = @ptrCast(@alignCast(raw_context orelse return -1));
-    if (!instance.acquireControllerOwnership()) return -1;
-    defer instance.releaseControllerOwnership();
-    const ok = instance.teardownForReprobe();
-    if (ok) {
+    const hook: ?TopologyHook = block: {
+        if (!instance.acquireControllerOwnership()) return -1;
+        defer instance.releaseControllerOwnership();
+        if (instance.controller_ownership.depth != 1) return -2;
+        if (!instance.teardownForReprobe()) {
+            instance.current.reason = "xHCI unload deferred or halt failed; resources retained";
+            return -2;
+        }
         @atomicStore(u32, &instance.registration_id, 0, .release);
         instance.current.probed = false;
         instance.current.controller_running = false;
         instance.current.present = false;
         instance.current.reason = "xHCI backend unloaded";
-    } else {
-        instance.current.reason = "xHCI unload deferred or halt failed; resources retained";
-    }
-    return if (ok) 0 else -2;
+        break :block instance.topology_hook;
+    };
+    if (hook) |callback| callback();
+    return 0;
 }
 
 fn hostStatus(raw_context: ?*anyopaque, out: *usb_host.Status) callconv(.c) i32 {
@@ -1482,6 +1492,15 @@ pub const Instance = struct {
     port_task_id: u32 = 0,
     port_task_iterations: u64 = 0,
     event_irq: sync.Event = sync.Event.initMode(false, .auto_reset),
+    completion_events: [9]sync.Event = .{sync.Event.initMode(false, .auto_reset)} ** 9,
+    completion_matches: [9]?event_router.Match = .{null} ** 9,
+    completion_waiting: u16 = 0,
+    completion_parks: u64 = 0,
+    completion_fallbacks: u64 = 0,
+    completion_signals: u64 = 0,
+    input_generations: [MAX_USB_DEVICES]u64 = .{0} ** MAX_USB_DEVICES,
+    input_endpoints: [MAX_USB_DEVICES]u8 = .{0} ** MAX_USB_DEVICES,
+    input_hook: ?TopologyHook = null,
     irq_registered: bool = false,
     activated_owner_id: u32 = 0,
     canonical_backend: usb_host.Descriptor = .{
@@ -1578,17 +1597,32 @@ pub const Instance = struct {
         }
     }
 
-    fn idleDeviceWait(instance: *Instance, wait: *usb_wait.Wait) void {
-        const index = instance.active_runtime_index orelse {
-            wait.idle();
-            return;
-        };
-        if (scheduler.current() == null or !transactionOwnedByCurrent(&instance.runtimes[index])) {
-            wait.idle();
+    fn completionIdle(instance: *Instance, wait: *usb_wait.Wait, slot: usize) void {
+        wait.iterations +%= 1;
+        if (!wait.deadline.canBlock()) {
+            asm volatile ("pause");
             return;
         }
-        if (!wait.mayBlockOnIdle()) {
+        _ = @atomicRmw(u64, &instance.completion_parks, .Add, 1, .monotonic);
+        if (instance.completion_events[slot].wait(1)) {
+            _ = @atomicRmw(u64, &instance.completion_signals, .Add, 1, .monotonic);
+        } else {
+            _ = @atomicRmw(u64, &instance.completion_fallbacks, .Add, 1, .monotonic);
+            wait.blocked_ticks +%= 1;
+        }
+    }
+
+    fn idleDeviceWait(instance: *Instance, wait: *usb_wait.Wait, slot: usize) void {
+        if (!wait.deadline.canBlock() or wait.iterations < 32) {
             wait.pollOnce();
+            return;
+        }
+        const index = instance.active_runtime_index orelse {
+            instance.completionIdle(wait, slot);
+            return;
+        };
+        if (!transactionOwnedByCurrent(&instance.runtimes[index])) {
+            instance.completionIdle(wait, slot);
             return;
         }
         const generation = instance.runtimes[index].generation;
@@ -1597,7 +1631,7 @@ pub const Instance = struct {
         instance.persistActiveRuntime();
         var released: u32 = 0;
         while (released < depth) : (released += 1) instance.releaseControllerOwnership();
-        wait.idle();
+        instance.completionIdle(wait, slot);
         instance.restoreControllerOwnership(depth);
         if (!instance.runtimes[index].active or instance.runtimes[index].generation != generation or !instance.activateRuntime(index))
             @panic("xHCI pinned runtime changed during wait");
@@ -1664,6 +1698,8 @@ pub const Instance = struct {
         instance.active_command = null;
         const event_flags = interrupts.saveAndDisableRuntime();
         instance.event_irq.reset();
+        if (@atomicLoad(u16, &instance.completion_waiting, .acquire) != 0) @panic("xHCI teardown with completion waiter");
+        for (&instance.completion_events) |*event| event.reset();
         interrupts.restore(event_flags);
         @atomicStore(bool, &instance.irq_registered, false, .release);
         instance.activated_owner_id = owner_id;
@@ -3026,18 +3062,12 @@ pub const Instance = struct {
         const device: [*]u8 = @ptrFromInt(instance.first_device_virt);
         const input: [*]u8 = @ptrFromInt(instance.first_input_virt);
         const descriptor: [*]u8 = @ptrFromInt(instance.first_descriptor_virt);
-        const interrupt_buffer: [*]u8 = @ptrFromInt(instance.first_interrupt_buffer_virt);
-        const bulk_buffer: [*]u8 = @ptrFromInt(instance.first_bulk_buffer_virt);
         @memset(device[0..DEVICE_CONTEXT_BYTES], 0);
         @memset(input[0..INPUT_CONTEXT_BYTES], 0);
         @memset(descriptor[0..DESCRIPTOR_BYTES], 0);
-        @memset(interrupt_buffer[0..INTERRUPT_BUFFER_BYTES], 0);
-        @memset(bulk_buffer[0..BULK_BUFFER_BYTES], 0);
         const dcbaa: [*]u64 = @ptrFromInt(instance.dcbaa_virt);
         dcbaa[instance.current.addressed_slot_id] = instance.current.device_context_phys;
         instance.initEp0Ring();
-        instance.initInterruptRing();
-        instance.initBulkRings();
         return true;
     }
 
@@ -3059,21 +3089,10 @@ pub const Instance = struct {
             rt.device_context_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "device context");
             rt.input_context_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "input context");
             rt.ep0_ring_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "ep0 ring");
-            rt.interrupt_ring_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "interrupt ring");
-            rt.interrupt_buffer_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "interrupt buffer");
-            rt.bulk_in_ring_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "bulk in ring");
-            rt.bulk_out_ring_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "bulk out ring");
-            rt.bulk_buffer_frames = BULK_BUFFER_FRAMES;
-            rt.bulk_buffer_phys = allocContiguousZero(BULK_BUFFER_FRAMES) orelse return instance.failAllocRuntime(i, "bulk buffer");
             rt.descriptor_phys = allocFrameZero() orelse return instance.failAllocRuntime(i, "descriptor");
             rt.device_virt = phys.physToVirt(rt.device_context_phys);
             rt.input_virt = phys.physToVirt(rt.input_context_phys);
             rt.ep0_ring_virt = phys.physToVirt(rt.ep0_ring_phys);
-            rt.interrupt_ring_virt = phys.physToVirt(rt.interrupt_ring_phys);
-            rt.interrupt_buffer_virt = phys.physToVirt(rt.interrupt_buffer_phys);
-            rt.bulk_in_ring_virt = phys.physToVirt(rt.bulk_in_ring_phys);
-            rt.bulk_out_ring_virt = phys.physToVirt(rt.bulk_out_ring_phys);
-            rt.bulk_buffer_virt = phys.physToVirt(rt.bulk_buffer_phys);
             rt.descriptor_virt = phys.physToVirt(rt.descriptor_phys);
             instance.current.retained_slots += 1;
             return i;
@@ -3081,6 +3100,51 @@ pub const Instance = struct {
         instance.current.failures += 1;
         instance.current.reason = "xHCI runtime table full";
         return null;
+    }
+
+    // Incomplete groups have never been submitted and may roll back locally.
+    // Complete groups remain owned through possible command timeout/failure.
+    fn ensureInterruptStorage(instance: *Instance) bool {
+        if (instance.active_runtime_index == null) return false;
+        if (instance.current.interrupt_ring_phys != 0 or instance.current.interrupt_buffer_phys != 0)
+            return instance.current.interrupt_ring_phys != 0 and instance.current.interrupt_buffer_phys != 0 and instance.first_interrupt_ring_virt != 0 and instance.first_interrupt_buffer_virt != 0;
+        var ring = allocFrameZero() orelse return false;
+        const buffer = allocFrameZero() orelse {
+            freeDmaFrame(&ring);
+            return false;
+        };
+        instance.current.interrupt_ring_phys = ring;
+        instance.current.interrupt_buffer_phys = buffer;
+        instance.first_interrupt_ring_virt = phys.physToVirt(ring);
+        instance.first_interrupt_buffer_virt = phys.physToVirt(buffer);
+        instance.initInterruptRing();
+        instance.persistActiveRuntime();
+        return true;
+    }
+    fn ensureBulkStorage(instance: *Instance) bool {
+        if (instance.active_runtime_index == null) return false;
+        if (instance.current.bulk_in_ring_phys != 0 or instance.current.bulk_out_ring_phys != 0 or instance.current.bulk_buffer_phys != 0)
+            return instance.current.bulk_in_ring_phys != 0 and instance.current.bulk_out_ring_phys != 0 and instance.current.bulk_buffer_phys != 0 and instance.current.bulk_buffer_frames == BULK_BUFFER_FRAMES and instance.first_bulk_in_ring_virt != 0 and instance.first_bulk_out_ring_virt != 0 and instance.first_bulk_buffer_virt != 0;
+        var input = allocFrameZero() orelse return false;
+        var output = allocFrameZero() orelse {
+            freeDmaFrame(&input);
+            return false;
+        };
+        const buffer = allocContiguousZero(BULK_BUFFER_FRAMES) orelse {
+            freeDmaFrame(&output);
+            freeDmaFrame(&input);
+            return false;
+        };
+        instance.current.bulk_in_ring_phys = input;
+        instance.current.bulk_out_ring_phys = output;
+        instance.current.bulk_buffer_phys = buffer;
+        instance.current.bulk_buffer_frames = BULK_BUFFER_FRAMES;
+        instance.first_bulk_in_ring_virt = phys.physToVirt(input);
+        instance.first_bulk_out_ring_virt = phys.physToVirt(output);
+        instance.first_bulk_buffer_virt = phys.physToVirt(buffer);
+        instance.initBulkRings();
+        instance.persistActiveRuntime();
+        return true;
     }
 
     fn failAllocRuntime(instance: *Instance, index_value: usize, what: []const u8) ?usize {
@@ -3772,13 +3836,18 @@ pub const Instance = struct {
 
     pub fn configureFirstInterruptInEndpoint(instance: *Instance, endpoint_address: u8, max_packet: u16, interval: u8) bool {
         if (!instance.selectedDeviceAllowsMutation()) return false;
-        if (!instance.current.get_config_ok or instance.current.addressed_slot_id == 0 or instance.first_input_virt == 0 or instance.first_interrupt_ring_virt == 0) return false;
+        if (!instance.current.get_config_ok or instance.current.addressed_slot_id == 0 or instance.first_input_virt == 0) return false;
         if (instance.current.interrupt_endpoint_faulted) return false;
         if ((endpoint_address & 0x80) == 0) return false;
         const endpoint_number: u8 = endpoint_address & 0x0F;
         if (endpoint_number == 0) return false;
         const dci: u8 = endpoint_number * 2 + 1;
         if (dci >= 32) return false;
+        if (!instance.ensureInterruptStorage()) {
+            instance.current.failures += 1;
+            instance.current.reason = "xHCI interrupt DMA allocation unavailable; retained owner unchanged";
+            return false;
+        }
         if (instance.currentInterruptOwnerMatch()) |owner| _ = instance.deferred_events.purge(owner);
         instance.releaseInterruptTransfer(true);
         instance.current.interrupt_pending = false;
@@ -3852,11 +3921,15 @@ pub const Instance = struct {
         if (!instance.selectedDeviceAllowsMutation()) return false;
         if (!instance.current.get_config_ok or instance.current.addressed_slot_id == 0 or instance.first_input_virt == 0) return false;
         if (instance.current.bulk_endpoints_faulted) return false;
-        if (instance.first_bulk_in_ring_virt == 0 or instance.first_bulk_out_ring_virt == 0) return false;
         if ((in_address & 0x80) == 0 or (out_address & 0x80) != 0) return false;
         const in_dci = endpointDci(in_address);
         const out_dci = endpointDci(out_address);
         if (in_dci == 0 or out_dci == 0 or in_dci >= 32 or out_dci >= 32) return false;
+        if (!instance.ensureBulkStorage()) {
+            instance.current.failures += 1;
+            instance.current.reason = "xHCI bulk DMA allocation unavailable; retained owner unchanged";
+            return false;
+        }
         const max_dci = if (in_dci > out_dci) in_dci else out_dci;
 
         const input: [*]u32 = @ptrFromInt(instance.first_input_virt);
@@ -4473,42 +4546,7 @@ pub const Instance = struct {
             instance.current.interrupt_pending = false;
             instance.current.interrupt_pending_streak = 0;
         }
-        if (!instance.current.interrupt_pending) {
-            const buf: [*]u8 = @ptrFromInt(instance.first_interrupt_buffer_virt);
-            @memset(buf[0..out.len], 0);
-            instance.current.last_interrupt_request_len = @intCast(out.len);
-            instance.current.last_interrupt_residue = 0;
-            instance.current.last_interrupt_actual_len = 0;
-            instance.current.last_interrupt_completion_code = 0;
-            const submission = instance.writeInterruptTrb(
-                instance.current.interrupt_buffer_phys,
-                @intCast(out.len),
-                trbType(TRB_TYPE_NORMAL) | TRB_IOC,
-            );
-            instance.current.interrupt_pending_trb_phys = submission.trb_phys;
-            const expected = event_router.transferMatch(
-                instance.current.addressed_slot_id,
-                instance.current.interrupt_endpoint_id,
-                submission.trb_phys,
-            );
-            instance.current.interrupt_transfer_handle = instance.transfer_objects.begin(
-                .interrupt_in,
-                expected,
-                timer.tickCount(),
-            ) orelse {
-                instance.current.interrupt_pending_trb_phys = 0;
-                instance.current.failures += 1;
-                return .failed;
-            };
-            dmaFence();
-            instance.current.interrupt_pending = true;
-            instance.current.interrupt_pending_streak = 0;
-            instance.writeDoorbell(instance.current.addressed_slot_id, instance.current.interrupt_endpoint_id);
-            if (submission.advance.wrapped) {
-                instance.current.interrupt_ring_wraps += 1;
-                instance.emitInterruptWrapMarker(submission.enqueue, submission.producer_cycle, submission.advance);
-            }
-        }
+        if (!instance.current.interrupt_pending and !instance.armInterruptReport(out.len)) return .failed;
         const expected = event_router.transferMatch(
             instance.current.addressed_slot_id,
             instance.current.interrupt_endpoint_id,
@@ -4569,7 +4607,53 @@ pub const Instance = struct {
         var i: usize = 0;
         while (i < copy_len) : (i += 1) out[i] = buf[i];
         instance.current.interrupt_reports += 1;
+        const subscribed = if (instance.active_runtime_index) |index|
+            instance.input_generations[index] == instance.runtimes[index].generation and instance.input_endpoints[index] == instance.current.interrupt_endpoint_id
+        else
+            false;
+        if (subscribed) {
+            const requested_last = instance.current.last_interrupt_request_len;
+            const residue_last = instance.current.last_interrupt_residue;
+            const actual_last = instance.current.last_interrupt_actual_len;
+            const code_last = instance.current.last_interrupt_completion_code;
+            _ = instance.armInterruptReport(out.len);
+            instance.current.last_interrupt_request_len = requested_last;
+            instance.current.last_interrupt_residue = residue_last;
+            instance.current.last_interrupt_actual_len = actual_last;
+            instance.current.last_interrupt_completion_code = code_last;
+        }
         return .report;
+    }
+
+    // Reserve the exact ledger entry before publishing any ring TRB.
+    // A failed eager resubmit does not invalidate the copied old report.
+    fn armInterruptReport(instance: *Instance, bytes: usize) bool {
+        if (instance.current.interrupt_pending or instance.current.interrupt_endpoint_faulted) return false;
+        const physical = instance.current.interrupt_ring_phys + @as(u64, instance.current.interrupt_enqueue) * @sizeOf(Trb);
+        const expected = event_router.transferMatch(instance.current.addressed_slot_id, instance.current.interrupt_endpoint_id, physical);
+        const handle = instance.transfer_objects.begin(.interrupt_in, expected, timer.tickCount()) orelse {
+            instance.current.failures += 1;
+            return false;
+        };
+        const buffer: [*]u8 = @ptrFromInt(instance.first_interrupt_buffer_virt);
+        @memset(buffer[0..bytes], 0);
+        instance.current.last_interrupt_request_len = @intCast(bytes);
+        instance.current.last_interrupt_residue = 0;
+        instance.current.last_interrupt_actual_len = 0;
+        instance.current.last_interrupt_completion_code = 0;
+        const submission = instance.writeInterruptTrb(instance.current.interrupt_buffer_phys, @intCast(bytes), trbType(TRB_TYPE_NORMAL) | TRB_IOC);
+        if (submission.trb_phys != physical) @panic("interrupt reservation/ring mismatch");
+        instance.current.interrupt_pending_trb_phys = physical;
+        instance.current.interrupt_transfer_handle = handle;
+        dmaFence();
+        instance.current.interrupt_pending = true;
+        instance.current.interrupt_pending_streak = 0;
+        instance.writeDoorbell(instance.current.addressed_slot_id, instance.current.interrupt_endpoint_id);
+        if (submission.advance.wrapped) {
+            instance.current.interrupt_ring_wraps += 1;
+            instance.emitInterruptWrapMarker(submission.enqueue, submission.producer_cycle, submission.advance);
+        }
+        return true;
     }
 
     pub fn lastInterruptActualLength(instance: *Instance) usize {
@@ -5402,11 +5486,49 @@ pub const Instance = struct {
         return false;
     }
 
+    pub fn inputInterest(instance: *Instance, endpoint: EndpointHandle, hook: ?TopologyHook) bool {
+        const index = instance.runtimeIndexForIdentity(endpoint.device.slot_id, endpoint.device.port) orelse return hook == null;
+        const rt = &instance.runtimes[index];
+        if (rt.generation != endpoint.device.generation) return hook == null;
+        if (hook) |callback| {
+            const dci = if (instance.active_runtime_index == index) instance.current.interrupt_endpoint_id else rt.interrupt_endpoint_id;
+            if (endpoint.kind != .interrupt_in or dci != endpoint.endpoint_id or !instance.deviceHandleCurrent(endpoint.device)) return false;
+            instance.input_hook = callback;
+            instance.input_generations[index] = endpoint.device.generation;
+            instance.input_endpoints[index] = dci;
+        } else if (instance.input_generations[index] == endpoint.device.generation and instance.input_endpoints[index] == endpoint.endpoint_id) {
+            instance.input_generations[index] = 0;
+            instance.input_endpoints[index] = 0;
+        }
+        return true;
+    }
+    fn notifyInput(instance: *Instance, event: XhciEvent) void {
+        const hook = instance.input_hook orelse return;
+        for (&instance.runtimes, 0..) |*rt, index| {
+            if (!rt.active or rt.detach_pending or instance.input_generations[index] != rt.generation or instance.input_endpoints[index] != event.endpoint_id) continue;
+            const expected = if (instance.active_runtime_index == index) instance.currentInterruptOwnerMatch() else runtimeInterruptOwnerMatch(rt);
+            if (expected) |match| {
+                if (event_router.matches(event, match)) {
+                    hook();
+                    return;
+                }
+            }
+        }
+    }
+
     fn routeForeignEvent(instance: *Instance, event: XhciEvent) void {
         if (instance.pending_port_changes.route(event, instance.current.port_count_seen)) return;
         if (instance.eventHasLiveOwner(event)) {
             switch (instance.deferred_events.enqueue(event)) {
-                .queued => return,
+                .queued => {
+                    for (instance.completion_matches, 0..) |candidate, slot| {
+                        if (candidate) |expected| {
+                            if (event_router.matches(event, expected)) instance.completion_events[slot].signal();
+                        }
+                    }
+                    instance.notifyInput(event);
+                    return;
+                },
                 .overflow => {
                     _ = instance.clearOverflowedInterruptOwner(event);
                 },
@@ -5450,6 +5572,19 @@ pub const Instance = struct {
         instance.current.last_wait_cancelled = false;
         if (instance.deferred_events.take(expected)) |event| return event;
         if (instance.drainEventBatch(expected)) |event| return event;
+        const completion_slot: usize = switch (expected) {
+            .command => MAX_USB_DEVICES,
+            .transfer => instance.active_runtime_index orelse @panic("completion without runtime"),
+        };
+        if (instance.completion_matches[completion_slot] != null) @panic("completion slot already enrolled");
+        instance.completion_events[completion_slot].reset();
+        instance.completion_matches[completion_slot] = expected;
+        const mask = @as(u16, 1) << @as(u4, @intCast(completion_slot));
+        _ = @atomicRmw(u16, &instance.completion_waiting, .Or, mask, .release);
+        defer {
+            _ = @atomicRmw(u16, &instance.completion_waiting, .And, ~mask, .acq_rel);
+            instance.completion_matches[completion_slot] = null;
+        }
         var wait = usb_wait.Wait.begin(
             usb_timing.XHCI_EVENT_TIMEOUT_MS,
             "xhci-event",
@@ -5508,7 +5643,7 @@ pub const Instance = struct {
                 timeout_clock = .cpu_guard;
                 break;
             }
-            instance.idleDeviceWait(&wait);
+            instance.idleDeviceWait(&wait, completion_slot);
         }
         const elapsed_ticks = deadline.elapsedTicks();
         const elapsed_hpet = deadline.elapsedHpet();

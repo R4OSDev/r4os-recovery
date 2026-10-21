@@ -1,10 +1,11 @@
+const std = @import("std");
 const protocol_api = @import("../../kernel/protocol_api.zig");
 const r4p = @import("../../program/r4p.zig");
 const r4p_contract = @import("../../net/r4p_contract.zig");
 const keyboard = @import("../input/keyboard.zig");
 const hid_set1 = @import("../input/hid_set1.zig");
 const timer_core = @import("../../kernel/timer.zig");
-const hid_poll_idle_ticks: u64 = @max(1, (10 * @as(u64, timer_core.DEFAULT_HZ)) / 1000);
+const hid_poll_idle_ticks: u64 = @max(1, (100 * @as(u64, timer_core.DEFAULT_HZ)) / 1000);
 const mouse = @import("../input/mouse.zig");
 const usb_core = @import("core.zig");
 const hid_report = @import("hid_report.zig");
@@ -142,6 +143,14 @@ pub const Status = struct {
 var current: Status = .{};
 var keyboard_binding: HidBinding = .{};
 var mouse_binding: HidBinding = .{};
+var pending_keyboard_release: HidBinding = .{};
+var pending_release_active = false;
+var input_wake: sync.Event = sync.Event.initMode(false, .auto_reset);
+var input_signals: u64 = 0;
+fn signalInputWork() callconv(.c) void {
+    _ = @atomicRmw(u64, &input_signals, .Add, 1, .monotonic);
+    input_wake.signal();
+}
 var service_polls: u64 = 0;
 var keyboard_backpressure_active = false;
 var keyboard_backpressure_polls: u64 = 0;
@@ -168,8 +177,8 @@ pub fn initWithOptions(selected: Options) bool {
     defer releaseClass();
     options = selected;
     current = .{ .initialized = true, .reason = "no USB HID boot device found" };
-    keyboard_binding = .{};
-    mouse_binding = .{};
+    retireBinding(&keyboard_binding, .keyboard);
+    retireBinding(&mouse_binding, .mouse);
     service_polls = 0;
     keyboard_backpressure_active = false;
     keyboard_backpressure_polls = 0;
@@ -196,6 +205,7 @@ pub fn initWithOptions(selected: Options) bool {
 
 fn topologyChangedHook() callconv(.c) void {
     reconcileBindings();
+    signalInputWork();
     _ = startPollTask();
     @import("msc.zig").topologyChanged();
 }
@@ -208,8 +218,8 @@ fn reconcileBindings() void {
     defer releaseClass();
     topology_reconciles +%= 1;
 
-    if (keyboard_binding.present and !bindingStillPublished(&keyboard_binding)) keyboard_binding = .{};
-    if (mouse_binding.present and !bindingStillPublished(&mouse_binding)) mouse_binding = .{};
+    if (keyboard_binding.present and !bindingStillPublished(&keyboard_binding)) retireBinding(&keyboard_binding, .keyboard);
+    if (mouse_binding.present and !bindingStillPublished(&mouse_binding)) retireBinding(&mouse_binding, .mouse);
     if (!keyboard_binding.bound) {
         keyboard_backpressure_active = false;
         keyboard.setPollHook(null);
@@ -242,6 +252,27 @@ pub fn bindingFor(device: xhci.DeviceHandle) ?bool {
         if (binding.bound and d.controller_id == device.controller_id and d.generation == device.generation and d.port == device.port and d.slot_id == device.slot_id) return n == 1;
     }
     return null;
+}
+
+fn retireBinding(binding: *HidBinding, kind: HidKind) void {
+    if (binding.present) _ = xhci.inputInterest(binding.endpoint, null);
+    if (kind == .keyboard and binding.last_report_len != 0) {
+        if (pending_release_active) @panic("old keyboard release overwritten");
+        pending_keyboard_release = binding.*;
+        pending_release_active = true;
+    }
+    binding.* = .{};
+}
+fn flushKeyboardRelease() bool {
+    if (!keyboard.canAccept(KEYBOARD_REPORT_QUEUE_RESERVE)) return false;
+    const binding = &pending_keyboard_release;
+    const len = std.math.clamp(@as(usize, binding.last_report_len), 8, REPORT_BUFFER_LEN);
+    var released: [REPORT_BUFFER_LEN]u8 = .{0} ** REPORT_BUFFER_LEN;
+    if (binding.report_id_heuristic and len > 8) released[0] = binding.last_report[0];
+    if (!decodeKeyboardReportR4p(binding, released[0..len])) return false;
+    pending_release_active = false;
+    pending_keyboard_release = .{};
+    return true;
 }
 
 fn bindingStillPublished(binding: *const HidBinding) bool {
@@ -299,7 +330,7 @@ fn handleCandidate(dev: *const usb_core.Device, candidate: HidInterfaceCandidate
         return;
     };
     if (kind == .keyboard) {
-        if (keyboard_binding.bound) return;
+        if (keyboard_binding.bound or pending_release_active) return;
         current.keyboard_present = true;
         fillBinding(&keyboard_binding, dev, candidate);
         if (bindDevice(&keyboard_binding, .keyboard)) {
@@ -413,16 +444,14 @@ pub fn servicePoll() void {
     if (!acquireClass()) return;
     defer releaseClass();
     service_polls +%= 1;
+    if (pending_release_active and flushKeyboardRelease()) reconcileBindings();
     pollKeyboard();
     pollMouse();
 }
 
-// 0.56.17: Autonomer Input-Poll-Task (Befund 7.1). Bisher trieben nur die
-// poll_hooks in keyboard.readChar/mouse.snapshotForApi das USB-HID-Polling -
-// ohne Konsumenten stand die Eingabe still. Der Task pollt selbst im
-// 1-Tick-Takt (10 ms, passend zum typischen Endpoint-bInterval von 8-10 ms);
-// die poll_hooks bleiben als Fallback bestehen. Start aus main.zig NACH
-// initTaskRuntime (task.init() wischt fruehere Threads).
+// Mailbox publication wakes this resident worker. Reset before polling keeps
+// signals received during service or wait enrollment;100ms bounds fallback.
+// Consumer poll hooks remain available without adding product input classes.
 const POLL_TASK_MARKER_FIRST: u64 = 300; // erster Marker nach ~3 s
 const POLL_TASK_MARKER_INTERVAL: u64 = 6000; // danach alle ~60 s
 
@@ -465,6 +494,7 @@ pub fn startPollTask() bool {
 
 fn pollTaskMain() callconv(.c) void {
     while (true) {
+        input_wake.reset();
         servicePoll();
         _ = @atomicRmw(u64, &poll_task_iterations, .Add, 1, .monotonic);
         if (@atomicLoad(u64, &poll_task_iterations, .monotonic) == POLL_TASK_MARKER_FIRST or
@@ -473,9 +503,7 @@ fn pollTaskMain() callconv(.c) void {
         {
             emitPollTaskMarker();
         }
-        // 0.56.29: 10 ms Echtzeit-Raster (wie 1 Tick bei 100 Hz) - bei
-        // 1000 Hz wuerde 1 Tick sonst 1000 MMIO-Pollrunden/s bedeuten.
-        scheduler.sleepTicksWithReason(hid_poll_idle_ticks, "usb-hid-poll-idle");
+        _ = input_wake.wait(hid_poll_idle_ticks);
     }
 }
 
@@ -619,6 +647,10 @@ fn bindDevice(binding: *HidBinding, kind: HidKind) bool {
         return false;
     }
     binding.bound = bindInterruptInput(binding);
+    if (binding.bound and !xhci.inputInterest(binding.endpoint, signalInputWork)) {
+        binding.bound = false;
+        current.reason = "exact HID input notification binding failed";
+    }
     return binding.bound;
 }
 
@@ -670,6 +702,7 @@ fn mousePollHook() callconv(.c) void {
 fn pollKeyboard() void {
     if (!acquireClass()) return;
     defer releaseClass();
+    if (pending_release_active) return;
     _ = pollBinding(&keyboard_binding, .keyboard);
 }
 

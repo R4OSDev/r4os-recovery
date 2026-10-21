@@ -145,6 +145,25 @@ boot source use separate controllers; an additional 8-MB raw medium exercises
 256-KB reads/writes and detach/replug with stale-identity rejection. Completed
 fixture images are removed. The production Recovery UI remains keyboard operated.
 
+Recovery 0.1.65 / Recovery Kernel 0.1.63 carries the retained USB optimizations
+from normal Kernel 0.1.381. Each controller has nine resident completion wait slots; exact
+mailbox matching grants completion, with a bounded one-tick progress fallback
+under the original deadline. HID subscribes by runtime generation and endpoint,
+wakes its resident worker after mailbox publication and keeps a 100-ms idle
+fallback. Completed reports are copied before the next subscribed transfer is
+reserved and armed; detached keyboard state is retained until release decoding.
+Endpoint DMA groups are allocated on demand, with local rollback only before
+publication and acknowledgement-based retention afterwards. Successful shutdown
+notifies the existing class topology hook after the last controller guard.
+Same-runtime persistence and the original bulk copy/64-KB contracts remain.
+The semantic delta is recorded in `Provenance/owner-update-0.86.32.json`.
+
+The same three-controller input acceptance additionally checks 68 owned DMA
+pages, bounded idle worker activity, real controller INTE suppression with
+direct backing-file I/O and completion fallback, and held-Shift retirement
+before a replacement keyboard receives key-up. BIOS and UEFI remain two
+short affected cases; other installation/network tests need no repetition.
+
 ## Recovery console host
 
 `RecoveryTools/Menu` owns RECOVERY.R4X and builds against the pinned SDK and

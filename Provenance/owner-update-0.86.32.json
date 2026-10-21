@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "release": "0.86.32",
+  "date": "2026-10-21",
+  "scope": "Semantic transfer of retained normal USB0.86.28/.29/.31 protocols to frozen Zig Recovery0.1.65. No rejected0.86.30 bulk change, no binary/module or unrelated platform refresh. Product Recovery remains keyboard operated; the existing input probe alone admits the mouse backend.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "sourceCommit": "e82798eb60f2501e8a33c65a9a7510ed2cfa63e1",
+      "baseRecoveryCommit": "49e9ecf09c8e56a7d237194a9f2af2f1daaea98c",
+      "frozenKernelBaseCommit": "0932e25ccc99d3e31e757b644e3f72f585fd2897",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.86.32.patch",
+      "patchSha256": "70aa9668eb4640bb6ec216ed2b882608afbe0add2eb27baa84b2209d300bc477",
+      "importMode": "Semantic Rust-to-Zig: resident per-controller exact completion enrollment, mailbox-before-wake and one-tick original-deadline fallback; generation/DCI HID subscription, next report reservation before TRB publication, retained old-key release; lazy endpoint DMA groups and post-controller-owner class retirement. Keep original persist/64KB/bulk copy semantics. Existing input probe extends only affected DMA/idle/IRQ/key-lifecycle witnesses. Files are not byte-identical imports.",
+      "sourceFiles": [
+        {
+          "path": "Rust/usb/xhci_async.rs",
+          "sha256": "76102eaa2535c74b1ec813cae66f1ddd95df6107555caa56a07f98c649d3a796"
+        },
+        {
+          "path": "Rust/usb/xhci_state.rs",
+          "sha256": "94a2be810a5f8e136745149051f18dc404e8857ca61bd0b528635271382ae7c6"
+        },
+        {
+          "path": "Rust/usb/xhci_events.rs",
+          "sha256": "51525121fb873ff275dcea452bf720d7a4da6de4a5258e2965da83a0c2d8a64b"
+        },
+        {
+          "path": "Rust/usb/xhci_owner.rs",
+          "sha256": "c6422eeac839c952058882046f3ad970adbdbc0aecc908af10da6eb454d8e936"
+        },
+        {
+          "path": "Rust/usb/xhci_transfers.rs",
+          "sha256": "c1d83db4cd023f4bb487749d8ac565382bfe4384be75ec70d046d1047cd77747"
+        },
+        {
+          "path": "Rust/usb/xhci_runtime.rs",
+          "sha256": "14552703ca26614a1ed0b215730cb7f59c284f4edb2217213edf65e0fca4b4e7"
+        },
+        {
+          "path": "Rust/usb/xhci_enumeration.rs",
+          "sha256": "8946bd7b254a4aa624d794fad1625834865c93a411d37dfbaee61f8fac3259e0"
+        },
+        {
+          "path": "Rust/usb/xhci_endpoints.rs",
+          "sha256": "6898bade73227d265aece6ad0add8e7f17d530b1ad8e20f82ca78575b67ec7a3"
+        },
+        {
+          "path": "Rust/usb/xhci_host.rs",
+          "sha256": "d206a36a053255f621d99c812854f74d3067e607ffe7d3ba9c66390b54cf6733"
+        },
+        {
+          "path": "Rust/usb/xhci_api.rs",
+          "sha256": "1ba40a72cd0cdb91930359a9d59baeaa8a1b0eedb854ea63c0bfa0eae669e5b5"
+        },
+        {
+          "path": "Rust/usb/hid.rs",
+          "sha256": "4bf3c3eed9eeb89c0c9832b4ffa645ecac902350468029ed6955c9e029f99d90"
+        }
+      ],
+      "files": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "sha256": "d326579065673c8746c232860ea58ea3e3408840e6fbd7ae0c4281a98c798b4f",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/hid.zig",
+          "sha256": "91cedc5dbe7f3ea8e95bc9592ba55870d7b8b6fa0a987661d3807e5534501a95",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/xhci.zig",
+          "sha256": "1227bf4d00b9b5a86c979ef23d98b93510d56828025b206663025552ac7b42f7",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/xhci_api.zig",
+          "sha256": "000940d9e6964fed892c0f4d1eaaf518a63648262a85afc94e8636addd691d43",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/kernel/recovery_input_probe.zig",
+          "sha256": "64ab2d8f2960bc2ed021352c1454b4b095029f5ae22d14a6e2374a308b87f12c",
+          "byteIdentical": false
+        }
+      ]
+    }
+  ]
+}

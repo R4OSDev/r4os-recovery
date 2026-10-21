@@ -1832,8 +1832,8 @@
     },
     {
       "path": "Kernel/driver/usb/hid.zig",
-      "bytes": 37722,
-      "sha256": "c22d41c1a285a47aafb9b3a2e1db78bdd21487d488329e0a5e09836f6ae8a7c9",
+      "bytes": 39114,
+      "sha256": "91cedc5dbe7f3ea8e95bc9592ba55870d7b8b6fa0a987661d3807e5534501a95",
       "originalSha256": "d80b57e7b9f5bdd96a684dbd5fa61fb297ccd128ff82d8fbcbb8928548497fc4",
       "origin": {
         "path": "driver/usb/hid.zig",
@@ -1892,8 +1892,8 @@
     },
     {
       "path": "Kernel/driver/usb/xhci_api.zig",
-      "bytes": 8694,
-      "sha256": "1bc3858cebc7a92eb384dbbcec0cddf384a46a78e5e25cdd00bb765896c5a24e",
+      "bytes": 9041,
+      "sha256": "000940d9e6964fed892c0f4d1eaaf518a63648262a85afc94e8636addd691d43",
       "originalSha256": null,
       "origin": null
     },
@@ -1969,8 +1969,8 @@
     },
     {
       "path": "Kernel/driver/usb/xhci.zig",
-      "bytes": 278501,
-      "sha256": "ba9838c3a29e4d5c85e5e5c7382225cb20e11c92aa9c1b635cd315b5bea14990",
+      "bytes": 285990,
+      "sha256": "1227bf4d00b9b5a86c979ef23d98b93510d56828025b206663025552ac7b42f7",
       "originalSha256": "79ced8d7ed2709d92f4e3ec529e7a15cab7eabc179c73e2e2cd97061670daff9",
       "origin": {
         "path": "driver/usb/xhci.zig",
@@ -2614,8 +2614,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_input_probe.zig",
-      "bytes": 10838,
-      "sha256": "1a4e8c7da7e768b637803012afc8496e33d13183f2488db156392921748e6fa7",
+      "bytes": 14245,
+      "sha256": "64ab2d8f2960bc2ed021352c1454b4b095029f5ae22d14a6e2374a308b87f12c",
       "originalSha256": null,
       "origin": null
     },
@@ -3807,7 +3807,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "d73bc5f9b78880b6b37d7293310094cb93e50580c21ccf0a51f2dc591a0b80d3",
+      "sha256": "d326579065673c8746c232860ea58ea3e3408840e6fbd7ae0c4281a98c798b4f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4203,6 +4203,13 @@
       "path": "Legal/Changes/Kernel-0.86.27.patch",
       "bytes": 551244,
       "sha256": "30602013c5075059a2d06061553b426d14f79f81db5d43fb7f913c44cbfa549c",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/Kernel-0.86.32.patch",
+      "bytes": 37785,
+      "sha256": "70aa9668eb4640bb6ec216ed2b882608afbe0add2eb27baa84b2209d300bc477",
       "originalSha256": null,
       "origin": null
     },
@@ -9901,7 +9908,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "7e8af341b90d05576eff502bf01f11f1c9a7254d43d0afcc1dfec86de470bfb1",
+      "sha256": "fad57b646af493c7828a5a6ddf913896e2042c0f4a73b56a51b07e0845525e67",
       "originalSha256": null,
       "origin": null
     },
@@ -9925,7 +9932,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "9b72e784471b23c3d0f327bfa5139f58fc5eb676ebc7985d7753033acb9d5deb",
+      "sha256": "94a9c22b95c05018b22b63657a4f1c8d2b4ea3b82292622ada456bb5f44b42d7",
       "originalSha256": null,
       "origin": null
     },
@@ -16347,6 +16354,76 @@
           "after": "30602013c5075059a2d06061553b426d14f79f81db5d43fb7f913c44cbfa549c",
           "path": "Legal/Changes/Kernel-0.86.27.patch",
           "before": "70a35ab44c70c96774bdeebee9d22fe7593a7fa64b0cb5ab55bb3d6ee61ec4ff"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "after": "91cedc5dbe7f3ea8e95bc9592ba55870d7b8b6fa0a987661d3807e5534501a95",
+          "path": "Kernel/driver/usb/hid.zig",
+          "before": "c22d41c1a285a47aafb9b3a2e1db78bdd21487d488329e0a5e09836f6ae8a7c9"
+        },
+        {
+          "after": "000940d9e6964fed892c0f4d1eaaf518a63648262a85afc94e8636addd691d43",
+          "path": "Kernel/driver/usb/xhci_api.zig",
+          "before": "1bc3858cebc7a92eb384dbbcec0cddf384a46a78e5e25cdd00bb765896c5a24e"
+        },
+        {
+          "after": "1227bf4d00b9b5a86c979ef23d98b93510d56828025b206663025552ac7b42f7",
+          "path": "Kernel/driver/usb/xhci.zig",
+          "before": "ba9838c3a29e4d5c85e5e5c7382225cb20e11c92aa9c1b635cd315b5bea14990"
+        },
+        {
+          "after": "08d6c2021784d63171490bd8b667c0c3e0b6940ee510a6d364eb118681b3906f",
+          "path": "Kernel/kernel/recovery_input_probe.zig",
+          "before": "1a4e8c7da7e768b637803012afc8496e33d13183f2488db156392921748e6fa7"
+        },
+        {
+          "after": "8f8f99fefb16117327df2d16eacee36e02397639871319caef52cc40429a0dff",
+          "path": "Legal/Changes/Kernel-0.86.32.patch",
+          "before": null
+        },
+        {
+          "after": "fad57b646af493c7828a5a6ddf913896e2042c0f4a73b56a51b07e0845525e67",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "7e8af341b90d05576eff502bf01f11f1c9a7254d43d0afcc1dfec86de470bfb1"
+        },
+        {
+          "after": "94a9c22b95c05018b22b63657a4f1c8d2b4ea3b82292622ada456bb5f44b42d7",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "9b72e784471b23c3d0f327bfa5139f58fc5eb676ebc7985d7753033acb9d5deb"
+        }
+      ],
+      "reason": "0.86.32: retained USB waits, HID generation/release and lazy DMA from qualified Kernel0.1.381; explicit Recovery0.1.65 source delta and affected input probe"
+    },
+    {
+      "reason": "0.86.32: exact input probe waits for acknowledged replacement binding before sending hardware text",
+      "changes": [
+        {
+          "before": "08d6c2021784d63171490bd8b667c0c3e0b6940ee510a6d364eb118681b3906f",
+          "path": "Kernel/kernel/recovery_input_probe.zig",
+          "after": "64ab2d8f2960bc2ed021352c1454b4b095029f5ae22d14a6e2374a308b87f12c"
+        },
+        {
+          "before": "8f8f99fefb16117327df2d16eacee36e02397639871319caef52cc40429a0dff",
+          "path": "Legal/Changes/Kernel-0.86.32.patch",
+          "after": "9925ec418d16c442b0dd9a6d2efe49bfa208f9a67e5e5dbcec32528151937a0e"
+        }
+      ]
+    },
+    {
+      "reason": "0.86.32: final Recovery kernel artifact identity0.1.63; qualified USB/input functions byte-identical",
+      "changes": [
+        {
+          "before": "d73bc5f9b78880b6b37d7293310094cb93e50580c21ccf0a51f2dc591a0b80d3",
+          "after": "d326579065673c8746c232860ea58ea3e3408840e6fbd7ae0c4281a98c798b4f",
+          "path": "Kernel/VERSION.R4S"
+        },
+        {
+          "before": "9925ec418d16c442b0dd9a6d2efe49bfa208f9a67e5e5dbcec32528151937a0e",
+          "after": "70aa9668eb4640bb6ec216ed2b882608afbe0add2eb27baa84b2209d300bc477",
+          "path": "Legal/Changes/Kernel-0.86.32.patch"
         }
       ]
     }
