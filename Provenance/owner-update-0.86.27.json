@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "release": "0.86.27",
+  "date": "2026-10-21",
+  "scope": "Semantic backport of qualified normal Kernel 0.1.377 USB multi-controller architecture to the independent frozen Zig Recovery. Recovery-only input acceptance admits mouse backend only with three xHCI functions; product UI remains keyboard operated. No binary/module refresh or unrelated platform import.",
+  "owners": [
+    {
+      "owner": "Kernel",
+      "sourceCommit": "dde6a524df7840af9bfbc6c60d4e29338f8dd8cd",
+      "baseRecoveryCommit": "a3471ad8440073fdcb0fcc8a3f219a27a5939ddc",
+      "frozenKernelBaseCommit": "0932e25ccc99d3e31e757b644e3f72f585fd2897",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.86.27.patch",
+      "patchSha256": "30602013c5075059a2d06061553b426d14f79f81db5d43fb7f913c44cbfa549c",
+      "importMode": "Semantic Rust-to-frozen-Zig adaptation: explicit resident Instance receiver, exact registry/epoch ownership, per-instance IRQ and worker, scoped HID/MSC and exact PCI diagnosis. Existing Zig block lifetime protocol extended for offline/drain/exact retirement. Local Recovery probe and snapshot-copy callers adjusted. Files are not byte-identical imports.",
+      "sourceFiles": [
+        {
+          "path": "Rust/usb/xhci_runtime.rs",
+          "sha256": "46560140c754ded2ea1b1f6115374eeb8cbacbe7214d574df1ce96fbbedca8b2"
+        },
+        {
+          "path": "Rust/usb/xhci_ports.rs",
+          "sha256": "1429216bfb6f0f0a6e78c56439607c0c7dba1743eab3cab7bb5b008b13b02106"
+        },
+        {
+          "path": "Rust/usb/msc.rs",
+          "sha256": "f5fb43b83956a15c24b4b6ca364f5a7880c04ac0a048649a7a14a8856c2cd763"
+        },
+        {
+          "path": "Rust/usb/xhci_transfers.rs",
+          "sha256": "aa8ca17744c3d74dafa0fecf62c8be5be5999c7bbc48b5c91bce10ba16897f37"
+        },
+        {
+          "path": "Rust/usb/xhci_api.rs",
+          "sha256": "a1b94764ef5347fb1443b55698c6264601cd0d1f206e907183239ea09e01d2a1"
+        },
+        {
+          "path": "Rust/usb/xhci_events.rs",
+          "sha256": "b76dad74ef2019a6c3435b497ce205747bb0b9275a48bb02c0abd288b0e73be9"
+        },
+        {
+          "path": "Rust/usb/xhci_async.rs",
+          "sha256": "80ab3f03bb680b03fdd6f0d2c1775320286dab394a18a539bc90cdb021c7ac3b"
+        },
+        {
+          "path": "Rust/usb/core.rs",
+          "sha256": "e8b88052e6f18d17ef8f1e2f93365b902526403ab9b309f0bdd66ed5e98d0ce5"
+        },
+        {
+          "path": "Rust/usb/hid.rs",
+          "sha256": "5a019b2583023485e79599676adb252da06607855a39f9ef99a77019808c9078"
+        },
+        {
+          "path": "Rust/usb/hid_boot.rs",
+          "sha256": "56f6864d8c8c0001d4b5a6207ab229f5cc35d6aeccf1c6e63f8ecaf3a63c949d"
+        },
+        {
+          "path": "Rust/usb/host_controller.rs",
+          "sha256": "19252784f2c7c439673a0e880cfe20714ac3eff699765eac4afb61acca2e2a0d"
+        },
+        {
+          "path": "Rust/usb/xhci_types.rs",
+          "sha256": "b8e443b86601b5621873ea045feabaecc27a37b369d07feac324b6b1e9334295"
+        },
+        {
+          "path": "Rust/usb/xhci.rs",
+          "sha256": "983ce9de26eca767ff224851021e5402cb2328cee23be432f9689e61e9aad433"
+        },
+        {
+          "path": "Rust/platform/device_inventory.rs",
+          "sha256": "c478af04cc4289d3b12c42454dc669c3ab61e7c5cd044bcb1c8e5051aa1bfcca"
+        },
+        {
+          "path": "Rust/storage/block_registry.rs",
+          "sha256": "139af38c1018de013b2149b9c95620b539306466407525596b2ce60718018955"
+        },
+        {
+          "path": "Rust/storage/block_execution.rs",
+          "sha256": "68142625f52ada5273160c064efe2ef4a5e4602285837561713b73da5db27ff0"
+        }
+      ],
+      "files": [
+        {
+          "path": "Kernel/driver/usb/core.zig",
+          "sha256": "b01276eb69eda10fe0472ca10036fcf1fcc99de5e4ac8e091bc6187d6c579190",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/hid.zig",
+          "sha256": "c22d41c1a285a47aafb9b3a2e1db78bdd21487d488329e0a5e09836f6ae8a7c9",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/host_controller.zig",
+          "sha256": "56fd1266abafabe89cc9a17ce85c0ecfff936cd5f1a944a94fa380c019a99b6c",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/msc.zig",
+          "sha256": "c80e1ce5821e346b56c7dff0200844a51d424e92635473e7d7371c46fcb67ab6",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/xhci.zig",
+          "sha256": "ba9838c3a29e4d5c85e5e5c7382225cb20e11c92aa9c1b635cd315b5bea14990",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/driver/usb/xhci_api.zig",
+          "sha256": "1bc3858cebc7a92eb384dbbcec0cddf384a46a78e5e25cdd00bb765896c5a24e",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/kernel/recovery_input.zig",
+          "sha256": "0cb80bf736411d04e76585d5eda3983c5e0e3e1f8b880c5fe00d288e7aaa962f",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/kernel/recovery_input_probe.zig",
+          "sha256": "1a4e8c7da7e768b637803012afc8496e33d13183f2488db156392921748e6fa7",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/kernel/recovery_storage.zig",
+          "sha256": "3ea702d38dc153db95e0e9faa9815ee12d72fde71071c43cd2de9709c5a766c4",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/platform/device_inventory.zig",
+          "sha256": "91740b344bf5e22e101c842120227a39638cf337bdad8caada799443973f578e",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/program/r4dev.zig",
+          "sha256": "5367ee4701b30a4868ce1951903c2212089ea8ded5c486d87e3e93488e71441a",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/storage/block.zig",
+          "sha256": "5d45c461ed47ba8c809fc4e69fa310e7c2ed6d54940b447fa28e6c6c37295aca",
+          "byteIdentical": false
+        }
+      ]
+    }
+  ]
+}

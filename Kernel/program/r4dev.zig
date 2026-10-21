@@ -2903,6 +2903,8 @@ pub fn performanceIrqTiming(irq: u32, out: *ProgramIrqTimingInfo) callconv(.c) i
 }
 
 pub fn deviceInventorySummary(out: *DeviceInventorySummary) callconv(.c) i32 {
+    if (!device_inventory.acquireSnapshot()) return -1;
+    defer device_inventory.releaseSnapshot();
     const s = device_inventory.snapshot();
     out.* = .{
         .total = @intCast(s.count),
@@ -2915,6 +2917,8 @@ pub fn deviceInventorySummary(out: *DeviceInventorySummary) callconv(.c) i32 {
 }
 
 pub fn deviceInventoryRecord(index: u32, out: *DeviceInventoryRecord) callconv(.c) i32 {
+    if (!device_inventory.acquireSnapshot()) return -1;
+    defer device_inventory.releaseSnapshot();
     const s = device_inventory.snapshot();
     if (index >= s.count) return 0;
     const record_index: usize = @intCast(index);
@@ -2940,6 +2944,8 @@ pub fn deviceInventoryRecord(index: u32, out: *DeviceInventoryRecord) callconv(.
 }
 
 pub fn hardwareSummary(out: *HardwareSummary) callconv(.c) i32 {
+    if (!device_inventory.acquireSnapshot()) return -1;
+    defer device_inventory.releaseSnapshot();
     const ai = acpi.info();
     const ps = pci_inventory.status();
     const irq = irq_status.status();

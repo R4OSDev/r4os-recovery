@@ -13,10 +13,15 @@ const storage = @import("recovery_storage.zig");
 const scheduler = @import("../sched/scheduler.zig");
 const smp = @import("smp.zig");
 const timer = @import("timer.zig");
+const core = @import("../driver/usb/core.zig");
+const xhci = @import("../driver/usb/xhci_api.zig");
+const msc = @import("../driver/usb/msc.zig");
+const inventory = @import("../platform/device_inventory.zig");
 const log = @import("log.zig");
 
 pub fn run() bool {
     if (smp.status().online != 4 or !storage.source.confirmed) return false;
+    if (@import("../platform/pci_inventory.zig").status().xhci_count >= 3) return runMulti();
     if (input_boot.mouseStatus() != .not_started or hid.status().mouse_bound) return false;
     if (block.isBusVisible(.usb) != storage.source.usb) return false;
     while (keyboard.readCodepoint() != null) {}
@@ -107,4 +112,95 @@ fn terminalWitness() bool {
     // The normal R4OS Terminal intentionally uppercases interactive input.
     ok = std.mem.eql(u8, std.mem.trim(u8, buffer[0..count], " \r\n\t"), "INPUT-OK");
     return ok;
+}
+
+// Same Input acceptance, limited to the changed controller routing and medium
+// lifetime. Production Recovery still admits keyboard input only.
+var transfer_buffer: [4096]u8 = undefined;
+var readback_buffer: [4096]u8 = undefined;
+fn runMulti() bool {
+    if (!storage.source.usb or !block.isBusVisible(.usb)) return false;
+    const initial = hid.status();
+    if (!initial.keyboard_bound or !initial.mouse_bound) return false;
+    var keyboard_id: u32 = 0;
+    var mouse_id: u32 = 0;
+    var medium_id: u32 = 0;
+    var raw: ?xhci.DeviceHandle = null;
+    var index: usize = 0;
+    while (core.deviceAt(index)) |dev| : (index += 1) {
+        const handle = xhci.deviceHandleFromCore(&dev);
+        if (hid.bindingFor(handle)) |is_mouse| {
+            if (is_mouse) mouse_id = dev.controller_id else keyboard_id = dev.controller_id;
+        }
+        if (msc.bindingFor(handle)) |status| {
+            if (status.sector_count == 16384) raw = handle else medium_id = dev.controller_id;
+        }
+    }
+    const old = raw orelse return false;
+    if (keyboard_id == 0 or mouse_id == 0 or medium_id == 0 or keyboard_id == mouse_id or mouse_id == medium_id or keyboard_id == medium_id or old.controller_id != mouse_id) return false;
+    if (!inventory.acquireSnapshot()) return false;
+    const snapshot = inventory.snapshot();
+    var active: usize = 0;
+    for (snapshot.records[0..snapshot.count]) |record| {
+        if (record.has_pci_address and record.class_code == 0x0c and record.subclass == 3 and record.prog_if == 0x30) {
+            if (record.binding == .with_driver and std.mem.endsWith(u8, record.status, "-active")) active += 1;
+        }
+    }
+    inventory.releaseSnapshot();
+    if (active != 3) return false;
+    keyboard.setLayout(.en_en);
+    while (keyboard.readCodepoint() != null) {}
+    log.puts("[RECOVERYINPUT] phase=MULTI_INPUT\r\n");
+    if (!expect(&.{'a'})) return false;
+    const mouse_deadline = timer.deadlineAfter(timer.tickCount(), @as(u64, timer.frequency()) * 10);
+    while (hid.status().decoded_mouse <= initial.decoded_mouse and timer.tickCount() < mouse_deadline) scheduler.sleepTicks(1);
+    if (hid.status().decoded_mouse <= initial.decoded_mouse) return false;
+    if (!mediumWork(old, true)) return false;
+    const prior = msc.bindingFor(old) orelse return false;
+    const block_index = prior.block_index orelse return false;
+    const old_identity = block.identity(block_index) orelse return false;
+    log.puts("[RECOVERYINPUT] phase=MULTI_DETACH\r\n");
+    const detach_deadline = timer.deadlineAfter(timer.tickCount(), @as(u64, timer.frequency()) * 15);
+    // Catalog removal precedes the class hook and block retirement. Observe
+    // all three real acknowledgements without assuming one scheduler turn.
+    while (timer.tickCount() < detach_deadline) {
+        if (!xhci.deviceHandleCurrent(old) and msc.bindingFor(old) == null and block.get(block_index) == null) break;
+        scheduler.sleepTicks(1);
+    }
+    if (xhci.deviceHandleCurrent(old) or msc.bindingFor(old) != null or block.get(block_index) != null) return false;
+    if (!expect(&.{'b'})) return false;
+    log.puts("[RECOVERYINPUT] phase=MULTI_REPLUG\r\n");
+    var replacement: ?xhci.DeviceHandle = null;
+    const attach_deadline = timer.deadlineAfter(timer.tickCount(), @as(u64, timer.frequency()) * 15);
+    while (timer.tickCount() < attach_deadline) {
+        index = 0;
+        while (core.deviceAt(index)) |dev| : (index += 1) {
+            if (dev.controller_id != old.controller_id or dev.port != old.port or dev.generation == old.generation) continue;
+            const handle = xhci.deviceHandleFromCore(&dev);
+            if (msc.bindingFor(handle) != null) replacement = handle;
+        }
+        if (replacement != null) break;
+        scheduler.sleepTicks(1);
+    }
+    const fresh = replacement orelse return false;
+    const current = msc.bindingFor(fresh) orelse return false;
+    const fresh_identity = block.identity(current.block_index orelse return false) orelse return false;
+    if (fresh_identity.reference.slot == old_identity.reference.slot and fresh_identity.reference.generation == old_identity.reference.generation) return false;
+    if (xhci.deviceHandleCurrent(old) or !mediumWork(fresh, false) or !expect(&.{'c'})) return false;
+    log.puts("[RECOVERYINPUT] result=OK cpus=4 controllers=3 pci=3 input=USB mouse=1 medium_bytes=262144 write_readback=OK hotplug=OK stale=REJECTED source=USB\r\n");
+    return true;
+}
+
+fn mediumWork(handle: xhci.DeviceHandle, write: bool) bool {
+    const status = msc.bindingFor(handle) orelse return false;
+    const index = status.block_index orelse return false;
+    for (0..64) |chunk| {
+        if (!block.readDirect(index, 2048 + chunk * 8, 8, &transfer_buffer)) return false;
+        for (transfer_buffer, 0..) |value, i| if (value != @as(u8, @intCast((chunk * transfer_buffer.len + i) % 251))) return false;
+        if (write) {
+            if (!block.writeDirect(index, 4096 + chunk * 8, 8, &transfer_buffer)) return false;
+            if (!block.readDirect(index, 4096 + chunk * 8, 8, &readback_buffer) or !std.mem.eql(u8, &transfer_buffer, &readback_buffer)) return false;
+        }
+    }
+    return !write or block.flush(index);
 }

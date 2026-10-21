@@ -1,4 +1,5 @@
-pub const MAX_USB_DEVICES: usize = 8;
+const interrupts = @import("../../arch/x86_64/interrupts.zig");
+pub const MAX_USB_DEVICES: usize = 64 * 8;
 pub const MAX_USB_CONFIGS: usize = 1;
 pub const MAX_USB_INTERFACES: usize = 8;
 pub const MAX_USB_ENDPOINTS: usize = 16;
@@ -27,6 +28,8 @@ pub const Interface = struct {
 };
 
 pub const Device = struct {
+    controller_id: u32 = 0,
+    generation: u64 = 0,
     active: bool = false,
     configured: bool = false,
     controller: []const u8 = "unknown",
@@ -73,17 +76,19 @@ pub const Device = struct {
 };
 
 pub const Summary = struct {
-    count: u8 = 0,
-    configured: u8 = 0,
+    count: u32 = 0,
+    configured: u32 = 0,
     truncated: bool = false,
 };
 
 var devices: [MAX_USB_DEVICES]Device = .{Device{}} ** MAX_USB_DEVICES;
-var device_count: u8 = 0;
+var device_count: u32 = 0;
 var truncated: bool = false;
 
 pub fn reset() void {
-    devices = .{Device{}} ** MAX_USB_DEVICES;
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
+    for (devices[0..device_count]) |*device| device.* = .{};
     device_count = 0;
     truncated = false;
 }
@@ -94,6 +99,8 @@ pub fn publishFirstDevice(device: Device) void {
 }
 
 pub fn publishDevice(device: Device) ?usize {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
     var d = device;
     d.active = true;
     if (device_count >= MAX_USB_DEVICES) {
@@ -107,11 +114,13 @@ pub fn publishDevice(device: Device) ?usize {
 }
 
 pub fn publishOrReplaceByPort(device: Device) ?usize {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
     var d = device;
     d.active = true;
     var i: usize = 0;
     while (i < device_count) : (i += 1) {
-        if (devices[i].port == d.port and sameController(devices[i].controller, d.controller)) {
+        if (devices[i].port == d.port and devices[i].controller_id == d.controller_id) {
             devices[i] = d;
             return i;
         }
@@ -120,6 +129,8 @@ pub fn publishOrReplaceByPort(device: Device) ?usize {
 }
 
 pub fn removeByPort(controller: []const u8, port: u8) bool {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
     var i: usize = 0;
     while (i < device_count) : (i += 1) {
         if (devices[i].port != port or !sameController(devices[i].controller, controller)) continue;
@@ -135,16 +146,54 @@ pub fn removeByPort(controller: []const u8, port: u8) bool {
 }
 
 pub fn count() usize {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
     return device_count;
 }
 
-pub fn deviceAt(index: usize) ?*const Device {
+pub fn deviceAt(index: usize) ?Device {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
     if (index >= device_count) return null;
-    return &devices[index];
+    return devices[index];
+}
+
+pub fn removeController(id: u32) void {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
+    var keep: usize = 0;
+    for (devices[0..device_count]) |device| {
+        if (device.controller_id != id) {
+            devices[keep] = device;
+            keep += 1;
+        }
+    }
+    for (devices[keep..device_count]) |*device| device.* = .{};
+    device_count = @intCast(keep);
+}
+pub fn contains(id: u32, generation: u64, port: u8, slot: u8) bool {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
+    for (devices[0..device_count]) |device| {
+        if (device.active and device.configured and device.controller_id == id and
+            device.generation == generation and generation != 0 and device.port == port and device.slot_id == slot) return true;
+    }
+    return false;
+}
+pub fn countController(id: u32) u32 {
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
+    var n: u32 = 0;
+    for (devices[0..device_count]) |device| {
+        if (device.controller_id == id) n += 1;
+    }
+    return n;
 }
 
 pub fn summary() Summary {
-    var configured: u8 = 0;
+    const flags = interrupts.saveAndDisableRuntime();
+    defer interrupts.restore(flags);
+    var configured: u32 = 0;
     var i: usize = 0;
     while (i < device_count) : (i += 1) {
         if (devices[i].configured) configured += 1;

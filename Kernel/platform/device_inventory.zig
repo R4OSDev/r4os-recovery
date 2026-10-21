@@ -3,6 +3,8 @@ const usb_core = @import("../driver/usb/core.zig");
 const usb_hid = @import("../driver/usb/hid.zig");
 const usb_msc = @import("../driver/usb/msc.zig");
 const usb_host = @import("../driver/usb/host_controller.zig");
+const xhci = @import("../driver/usb/xhci.zig");
+const sync = @import("../sched/sync.zig");
 const block = @import("../storage/block.zig");
 const cpu = @import("cpu.zig");
 const display = @import("../display/display.zig");
@@ -80,7 +82,14 @@ pub const Snapshot = struct {
 
 var current_snapshot: Snapshot = .{};
 var network_notes: [net.MAX_ADAPTERS][96]u8 = .{.{0} ** 96} ** net.MAX_ADAPTERS;
-var xhci_note: [256]u8 = .{0} ** 256;
+var xhci_notes: [64][256]u8 = .{.{0} ** 256} ** 64;
+var snapshot_owner = sync.UnwindGuard.init("hardware-inventory-snapshot");
+pub fn acquireSnapshot() bool {
+    return snapshot_owner.enter(2000);
+}
+pub fn releaseSnapshot() void {
+    if (!snapshot_owner.leave()) @panic("hardware inventory snapshot owner mismatch");
+}
 
 pub fn snapshot() *const Snapshot {
     current_snapshot = .{};
@@ -191,9 +200,9 @@ fn addUsbDeviceRecords(s: *Snapshot) void {
             .binding = .with_driver,
             .bus = .usb,
             .name = usbDeviceName(class_code, subclass, protocol),
-            .driver = usbDeviceDriver(class_code, subclass, protocol),
-            .status = usbDeviceStatus(d, class_code, subclass, protocol),
-            .note = usbDeviceNote(class_code, subclass, protocol),
+            .driver = usbDeviceDriver(&d, class_code, subclass, protocol),
+            .status = usbDeviceStatus(&d, class_code, subclass, protocol),
+            .note = usbDeviceNote(&d, class_code, subclass, protocol),
             .vendor_id = d.vendor_id,
             .device_id = d.product_id,
             .class_code = class_code,
@@ -289,9 +298,16 @@ fn usbDeviceName(class_code: u8, subclass: u8, protocol: u8) []const u8 {
     return "USB device";
 }
 
-fn usbDeviceNote(class_code: u8, subclass: u8, protocol: u8) []const u8 {
-    const hs = usb_hid.status();
-    const ms = usb_msc.status();
+fn usbDeviceNote(d: *const usb_core.Device, class_code: u8, subclass: u8, protocol: u8) []const u8 {
+    var hs = usb_hid.status();
+    const handle = @import("../driver/usb/xhci_api.zig").deviceHandleFromCore(d);
+    const binding = usb_hid.bindingFor(handle);
+    hs.keyboard_bound = binding != null and !binding.?;
+    hs.mouse_bound = binding != null and binding.?;
+    var ms = usb_msc.bindingFor(handle) orelse usb_msc.Status{};
+    const aggregate = usb_msc.status();
+    ms.bot_source = aggregate.bot_source;
+    ms.scsi_source = aggregate.scsi_source;
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x01 and hs.keyboard_bound) return usbKeyboardBoundNote(hs.boot_source);
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x01 and hs.protocol_required_missing != 0) return "HID keyboard binding blocked; source=none; HIDREPORT.R4P and USBHID.R4P required";
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x01) return "descriptor parsed; HID keyboard binding pending";
@@ -332,9 +348,16 @@ fn isR4pSource(source: []const u8) bool {
         (source.len == 7 and source[0] == 'p' and source[1] == 'r' and source[2] == 'e' and source[3] == 'l' and source[4] == 'o' and source[5] == 'a' and source[6] == 'd');
 }
 
-fn usbDeviceDriver(class_code: u8, subclass: u8, protocol: u8) []const u8 {
-    const hs = usb_hid.status();
-    const ms = usb_msc.status();
+fn usbDeviceDriver(d: *const usb_core.Device, class_code: u8, subclass: u8, protocol: u8) []const u8 {
+    var hs = usb_hid.status();
+    const handle = @import("../driver/usb/xhci_api.zig").deviceHandleFromCore(d);
+    const binding = usb_hid.bindingFor(handle);
+    hs.keyboard_bound = binding != null and !binding.?;
+    hs.mouse_bound = binding != null and binding.?;
+    var ms = usb_msc.bindingFor(handle) orelse usb_msc.Status{};
+    const aggregate = usb_msc.status();
+    ms.bot_source = aggregate.bot_source;
+    ms.scsi_source = aggregate.scsi_source;
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x01 and hs.keyboard_bound) return "USBHID";
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x02 and hs.mouse_bound) return "USBHID";
     if (class_code == 0x08 and ms.block_registered) return "USBMSC";
@@ -342,8 +365,15 @@ fn usbDeviceDriver(class_code: u8, subclass: u8, protocol: u8) []const u8 {
 }
 
 fn usbDeviceStatus(d: *const usb_core.Device, class_code: u8, subclass: u8, protocol: u8) []const u8 {
-    const hs = usb_hid.status();
-    const ms = usb_msc.status();
+    var hs = usb_hid.status();
+    const handle = @import("../driver/usb/xhci_api.zig").deviceHandleFromCore(d);
+    const binding = usb_hid.bindingFor(handle);
+    hs.keyboard_bound = binding != null and !binding.?;
+    hs.mouse_bound = binding != null and binding.?;
+    var ms = usb_msc.bindingFor(handle) orelse usb_msc.Status{};
+    const aggregate = usb_msc.status();
+    ms.bot_source = aggregate.bot_source;
+    ms.scsi_source = aggregate.scsi_source;
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x01 and hs.keyboard_bound) return "bound-input";
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x01 and hs.protocol_required_missing != 0) return "blocked";
     if (class_code == 0x03 and subclass == 0x01 and protocol == 0x02 and hs.mouse_bound) return "bound-input";
@@ -355,19 +385,19 @@ fn usbDeviceStatus(d: *const usb_core.Device, class_code: u8, subclass: u8, prot
 
 fn recordFromPciDevice(d: pci_inventory.Device) Record {
     const bus_kind: Bus = if (d.bus_kind == pci_inventory.bus_kind_ecam) .pcie else .pci;
-    return recordFromFields(bus_kind, d.bus, d.device, d.function, d.vendor_id, d.device_id, d.class_code, d.subclass, d.prog_if);
+    return recordFromFields(d, bus_kind, d.bus, d.device, d.function, d.vendor_id, d.device_id, d.class_code, d.subclass, d.prog_if);
 }
 
-fn recordFromFields(bus_kind: Bus, bus_no: u8, device_no: u8, function_no: u8, vendor_id: u16, device_id: u16, class_code: u8, subclass: u8, prog_if: u8) Record {
+fn recordFromFields(pci_function: pci_inventory.Device, bus_kind: Bus, bus_no: u8, device_no: u8, function_no: u8, vendor_id: u16, device_id: u16, class_code: u8, subclass: u8, prog_if: u8) Record {
     const known = knownName(class_code, subclass, prog_if, vendor_id, device_id);
-    const binding = bindingFor(class_code, subclass, prog_if, vendor_id, device_id);
+    const binding = bindingFor(pci_function, class_code, subclass, prog_if, vendor_id, device_id);
     return .{
         .binding = binding,
         .bus = bus_kind,
         .name = if (known.len > 0) known else "unclassified-device",
         .driver = driverFor(binding, class_code, subclass, vendor_id, device_id),
-        .status = statusFor(binding, class_code, subclass, vendor_id, device_id),
-        .note = noteFor(class_code, subclass, prog_if, vendor_id, device_id),
+        .status = statusFor(pci_function, binding, class_code, subclass, vendor_id, device_id),
+        .note = noteFor(pci_function, class_code, subclass, prog_if, vendor_id, device_id),
         .bus_no = bus_no,
         .device_no = device_no,
         .function_no = function_no,
@@ -409,12 +439,12 @@ fn knownName(class_code: u8, subclass: u8, prog_if: u8, vendor_id: u16, device_i
     return "";
 }
 
-fn bindingFor(class_code: u8, subclass: u8, prog_if: u8, vendor_id: u16, device_id: u16) Binding {
+fn bindingFor(pci_function: pci_inventory.Device, class_code: u8, subclass: u8, prog_if: u8, vendor_id: u16, device_id: u16) Binding {
     if (class_code == 0x01 and subclass == 0x01 and preloadBlockCount(.ata) > 0) return .with_driver;
     if (class_code == 0x01 and subclass == 0x06 and blockCount(.ahci) > 0) return .with_driver;
     if (class_code == 0x01 and subclass == 0x08 and preloadBlockCount(.nvme) > 0) return .with_driver;
     if (class_code == 0x01 and subclass == 0x08 and blockCount(.nvme) > 0) return .with_driver;
-    if (class_code == 0x0C and subclass == 0x03 and prog_if == 0x30 and xhciHostPresent()) return .with_driver;
+    if (class_code == 0x0C and subclass == 0x03 and prog_if == 0x30 and xhciHostPresent(pci_function)) return .with_driver;
     // Realtek-NICs, fuer die ein NetBackend gebunden ist, sind der PCI-Sicht
     // nach mit Treiber versorgt (sonst erscheint dieselbe Karte doppelt: als
     // gebundenes NetBackend UND als vermeintlich treiberloser Controller).
@@ -445,7 +475,7 @@ fn driverFor(binding: Binding, class_code: u8, subclass: u8, vendor_id: u16, dev
     return "platform";
 }
 
-fn statusFor(binding: Binding, class_code: u8, subclass: u8, vendor_id: u16, device_id: u16) []const u8 {
+fn statusFor(pci_function: pci_inventory.Device, binding: Binding, class_code: u8, subclass: u8, vendor_id: u16, device_id: u16) []const u8 {
     if (vendor_id == 0x10EC and (device_id == 0x8139 or device_id == 0x8168) and
         net.hasAdapterForDevice(vendor_id, device_id)) return "active-netbackend";
     if (class_code == 0x01 and subclass == 0x01 and preloadBlockCount(.ata) > 1) return "active-block-multi-preload";
@@ -466,11 +496,11 @@ fn statusFor(binding: Binding, class_code: u8, subclass: u8, vendor_id: u16, dev
         if (total_blocks > 1) return "active-block-multi";
         if (total_blocks > 0) return "active-block";
     }
-    if (class_code == 0x0C and subclass == 0x03 and xhciHostIsPreload()) {
-        return if (xhciHostActive()) "host-preload-active" else "host-preload-failed";
+    if (class_code == 0x0C and subclass == 0x03 and xhciHostIsPreload(pci_function)) {
+        return if (xhciHostActive(pci_function)) "host-preload-active" else "host-preload-failed";
     }
-    if (class_code == 0x0C and subclass == 0x03 and xhciHostPresent()) {
-        return if (xhciHostActive()) "host-rescue-active" else "host-rescue-failed";
+    if (class_code == 0x0C and subclass == 0x03 and xhciHostPresent(pci_function)) {
+        return if (xhciHostActive(pci_function)) "host-rescue-active" else "host-rescue-failed";
     }
     return switch (binding) {
         .with_driver => "bound-or-platform-active",
@@ -479,7 +509,7 @@ fn statusFor(binding: Binding, class_code: u8, subclass: u8, vendor_id: u16, dev
     };
 }
 
-fn noteFor(class_code: u8, subclass: u8, prog_if: u8, vendor_id: u16, device_id: u16) []const u8 {
+fn noteFor(pci_function: pci_inventory.Device, class_code: u8, subclass: u8, prog_if: u8, vendor_id: u16, device_id: u16) []const u8 {
     if (class_code == 0x01 and subclass == 0x01 and preloadBlockCount(.ata) > 1) return "Legacy IDE/ATA source=preload; ATAPIO.R4D blockdevices registered";
     if (class_code == 0x01 and subclass == 0x01 and preloadBlockCount(.ata) > 0) return "Legacy IDE/ATA source=preload; ATAPIO.R4D blockdevice registered";
     if (class_code == 0x01 and subclass == 0x06 and preloadBlockCount(.ahci) > 1) return "AHCI source=preload; AHCI.R4D IDENTIFY-backed parallel block devices active";
@@ -492,8 +522,8 @@ fn noteFor(class_code: u8, subclass: u8, prog_if: u8, vendor_id: u16, device_id:
     if (class_code == 0x01 and subclass == 0x08 and blockCount(.nvme) > 0) return "NVMe source=legacy-rescue; namespace registered as read/write block device";
     if (class_code == 0x01 and subclass == 0x08) return "NVMe candidate; standard owner is NVME.R4D preload";
     if (class_code == 0x0C and subclass == 0x03 and prog_if == 0x30) {
-        if (usb_host.findByName("XHCI")) |host_slot| {
-            return xhciHostNote(host_slot);
+        if (xhciIndex(pci_function)) |host_slot| {
+            return xhciHostNote(host_slot, pci_function);
         }
     }
     if (class_code == 0x0C and subclass == 0x03 and prog_if == 0x30) return "xHCI USB candidate; standard owner is XHCI.R4D preload";
@@ -637,31 +667,60 @@ fn blockCount(bus: block.Bus) usize {
     return found;
 }
 
-fn xhciHostPresent() bool {
-    return usb_host.findByName("XHCI") != null;
+fn xhciHostPresent(pci_function: pci_inventory.Device) bool {
+    return xhciController(pci_function) != null;
 }
 
-fn xhciHostActive() bool {
-    const index = usb_host.findByName("XHCI") orelse return false;
-    const controller = usb_host.at(index) orelse return false;
+fn xhciHostActive(pci_function: pci_inventory.Device) bool {
+    const controller = xhciController(pci_function) orelse return false;
     return controller.state == .active;
 }
 
-fn xhciHostIsPreload() bool {
-    const index = usb_host.findByName("XHCI") orelse return false;
-    const controller = usb_host.at(index) orelse return false;
+fn xhciHostIsPreload(pci_function: pci_inventory.Device) bool {
+    const controller = xhciController(pci_function) orelse return false;
     return controller.source == .preload;
 }
 
-fn xhciHostNote(index: usize) []const u8 {
-    @memset(xhci_note[0..], 0);
-    const controller = usb_host.at(index) orelse return "xHCI host registry entry unavailable";
+fn xhciIndex(device: pci_inventory.Device) ?usize {
+    const instance = xhci.forPci(device) orelse return null;
+    return usb_host.indexFromControllerId(instance.id());
+}
+fn xhciController(device: pci_inventory.Device) ?usb_host.Controller {
+    const instance = xhci.forPci(device) orelse return null;
+    const id = instance.id();
+    const index = usb_host.indexFromControllerId(id) orelse return null;
+    const controller = usb_host.at(index) orelse return null;
+    return if (controller.id == id) controller else null;
+}
+fn pciNoteIndex(device: pci_inventory.Device) ?usize {
+    var i: usize = 0;
+    while (pci_inventory.deviceAt(i)) |d| : (i += 1) {
+        if (d.bus == device.bus and d.device == device.device and d.function == device.function and d.vendor_id == device.vendor_id and d.device_id == device.device_id) return i;
+    }
+    return null;
+}
+fn xhciHostNote(index: usize, device: pci_inventory.Device) []const u8 {
+    const instance = xhci.forPci(device) orelse return "xHCI instance unavailable";
+    const id = instance.id();
+    const controller = usb_host.at(index) orelse return "xHCI registry unavailable";
+    if (controller.id != id) return "xHCI registration changed";
+    const note_index = pciNoteIndex(device) orelse return "PCI function missing from cached inventory";
+    const note = &xhci_notes[note_index];
+    @memset(note, 0);
     var status: usb_host.Status = .{};
-    const status_ok = usb_host.statusAt(index, &status) == 0;
-    var w = NoteWriter{ .out = xhci_note[0..] };
-    w.text("xHCI source=");
+    const status_ok = usb_host.statusById(id, &status) == 0;
+    var w = NoteWriter{ .out = note };
+    w.text("xHCI id=");
+    w.num(id);
+    w.text(" pci=");
+    w.num(device.bus);
+    w.text(":");
+    w.num(device.device);
+    w.text(".");
+    w.num(device.function);
+    w.text(" source=");
     w.text(usb_host.sourceLabel(controller.source));
-    w.text("; sole canonical owner; state=");
+    w.text(" state=");
     w.text(switch (controller.state) {
         .registered => "registered",
         .active => "active",

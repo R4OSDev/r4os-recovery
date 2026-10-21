@@ -10,17 +10,20 @@ pub fn init() bool {
     // Load protocols before entering controller ownership (module I/O may wait).
     if (!r4p.hasActiveR4p("usb.hid_boot") or !r4p.hasActiveR4p("usb.hid_report")) return false;
     const slot = registry.beginLoad("USBHID", 3, 1);
-    const bound = hid.initWithOptions(.{ .bind_mouse = false });
+    const probe_mouse = @import("config").recovery_probe == .input and @import("../platform/pci_inventory.zig").status().xhci_count >= 3;
+    const bound = hid.initWithOptions(.{ .bind_mouse = probe_mouse });
     const status = hid.status();
     if (slot) |index| {
         registry.setState(index, if (!status.initialized) .failed else if (bound) .active else .initialized);
     }
-    if (!status.initialized or status.mouse_bound) return false;
+    if (!status.initialized or (status.mouse_bound and !probe_mouse)) return false;
     if (!xhci.startPortTask()) return false;
     if (bound and !hid.startPollTask()) return false;
     log.puts("[RECOVERYINPUT] ready=1 keyboard_usb=");
     log.putDec(@intFromBool(status.keyboard_bound));
-    log.puts(" mouse=0 protocols=USBHID,HIDREPORT reason=");
+    log.puts(" mouse=");
+    log.putDec(@intFromBool(status.mouse_bound));
+    log.puts(" protocols=USBHID,HIDREPORT reason=");
     log.puts(status.reason);
     log.puts("\r\n");
     return true;

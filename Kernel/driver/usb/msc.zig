@@ -10,7 +10,7 @@ const r4p_contract = @import("../../net/r4p_contract.zig");
 const usb_core = @import("core.zig");
 const usb_host = @import("host_controller.zig");
 const retry_policy = @import("usb_msc_retry.zig");
-const xhci = @import("xhci.zig");
+const xhci = @import("xhci_api.zig");
 const usb_timing = @import("usb_boot_timing.zig");
 const usb_wait = @import("usb_boot_wait.zig");
 
@@ -149,6 +149,7 @@ const MAX_MSC_DEVICES = 16;
 const Medium = struct {
     state: Status = .{},
     index: usize = 0,
+    block_reference: @import("../../storage/access_state.zig").DeviceRef = .{ .slot = 0, .generation = 0 },
     ownership: sync.UnwindGuard = sync.UnwindGuard.init("usbmsc-device-bot"),
     data_buffer: [DATA_BUF_LEN]u8 = .{0} ** DATA_BUF_LEN,
 };
@@ -162,7 +163,8 @@ var media: [MAX_MSC_DEVICES]Medium = .{Medium{}} ** MAX_MSC_DEVICES;
 var registry_ownership = sync.UnwindGuard.init("usbmsc-registry");
 var last_medium = std.atomic.Value(usize).init(0);
 const OWNERSHIP_TIMEOUT_TICKS = 15 * @as(u64, timer.DEFAULT_HZ);
-var media_count: usize = 0;
+var media_count = std.atomic.Value(usize).init(0);
+var media_online: [MAX_MSC_DEVICES]std.atomic.Value(bool) = .{std.atomic.Value(bool).init(false)} ** MAX_MSC_DEVICES;
 const media_names = [_][]const u8{ "usb0", "usb1", "usb2", "usb3", "usb4", "usb5", "usb6", "usb7", "usb8", "usb9", "usb10", "usb11", "usb12", "usb13", "usb14", "usb15" };
 var bot_r4p_build = std.atomic.Value(u64).init(0);
 var bot_r4p_csw = std.atomic.Value(u64).init(0);
@@ -178,29 +180,87 @@ var external_owner: bool = false;
 pub fn init() bool {
     if (!registry_ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) return false;
     defer _ = registry_ownership.leave();
-    if (media_count != 0) return blockDeviceCount() != 0;
     var index: usize = 0;
     while (true) : (index += 1) {
-        if (!xhci.acquireControllerOwnership()) return false;
         const binding: ?DeviceBinding = if (usb_core.deviceAt(index)) |dev| .{
-            .descriptor = dev.*,
-            .device = xhci.deviceHandleFromCore(dev),
-            .bulk_in = xhci.bulkInHandleFromCore(dev),
-            .bulk_out = xhci.bulkOutHandleFromCore(dev),
+            .descriptor = dev,
+            .device = xhci.deviceHandleFromCore(&dev),
+            .bulk_in = xhci.bulkInHandleFromCore(&dev),
+            .bulk_out = xhci.bulkOutHandleFromCore(&dev),
         } else null;
-        xhci.releaseControllerOwnership();
         const selected = binding orelse break;
         const dev = &selected.descriptor;
         if (dev.first_interface_class != 0x08 or dev.first_interface_subclass != 0x06 or dev.first_interface_protocol != 0x50) continue;
-        if (media_count == media.len) break;
-        const item = &media[media_count];
-        item.index = media_count;
+        if (selected.device.generation == 0 or alreadyRegistered(selected.device)) continue;
+        const n = vacantMedium() orelse break;
+        const item = &media[n];
+        if (!item.ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) return false;
+        item.index = n;
         const current = &item.state;
         current.* = .{ .initialized = true };
-        _ = initializeMedium(current, &selected);
-        media_count += 1;
+        const registered = initializeMedium(current, &selected);
+        if (n >= media_count.load(.acquire)) media_count.store(n + 1, .release);
+        media_online[n].store(registered, .release);
+        _ = item.ownership.leave();
     }
     return blockDeviceCount() != 0;
+}
+
+fn sameDevice(a: xhci.DeviceHandle, b: xhci.DeviceHandle) bool {
+    return a.controller_id == b.controller_id and a.generation == b.generation and a.port == b.port and a.slot_id == b.slot_id;
+}
+
+fn vacantMedium() ?usize {
+    const count = media_count.load(.acquire);
+    for (media[0..count], 0..) |*item, n| {
+        if (media_online[n].load(.acquire)) continue;
+        if (!item.ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) return null;
+        const available = !item.state.block_registered;
+        _ = item.ownership.leave();
+        if (available) return n;
+    }
+    return if (count < media.len) count else null;
+}
+
+fn alreadyRegistered(device: xhci.DeviceHandle) bool {
+    for (media[0..media_count.load(.acquire)]) |*item| {
+        if (!item.ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) return true;
+        const same = sameDevice(item.state.device, device);
+        _ = item.ownership.leave();
+        if (same) return true;
+    }
+    return false;
+}
+
+pub fn topologyChanged() void {
+    if (!registry_ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) return;
+    defer _ = registry_ownership.leave();
+    for (media[0..media_count.load(.acquire)], 0..) |*item, n| {
+        if (!item.ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) continue;
+        const current = &item.state;
+        if (!xhci.deviceHandleCurrent(current.device)) {
+            media_online[n].store(false, .release);
+            if (current.block_registered) {
+                block.offlineExact(item.block_reference);
+                if (block.unregisterExact(item.block_reference)) current.block_registered = false;
+            }
+            current.media_changed = true;
+            current.present = false;
+            current.reason = "USB medium detached; old registration cannot address replacement";
+        }
+        _ = item.ownership.leave();
+    }
+    _ = init();
+}
+
+pub fn bindingFor(device: xhci.DeviceHandle) ?Status {
+    for (media[0..media_count.load(.acquire)]) |*item| {
+        if (!item.ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) return null;
+        const current = item.state;
+        _ = item.ownership.leave();
+        if (sameDevice(current.device, device) and current.present and current.block_registered and !current.media_changed) return current;
+    }
+    return null;
 }
 
 fn initializeMedium(current: *Status, binding: *const DeviceBinding) bool {
@@ -311,24 +371,31 @@ fn missingProtocolReason() []const u8 {
 
 pub fn blockDeviceCount() usize {
     var count: usize = 0;
-    for (media[0..media_count]) |device| if (device.state.block_registered) {
+    for (media_online[0..media_count.load(.acquire)]) |*online| if (online.load(.acquire)) {
         count += 1;
     };
     return count;
 }
 
 pub fn deviceIndex() ?usize {
-    for (media[0..media_count]) |device| if (device.state.block_registered) return device.state.block_index;
+    for (media[0..media_count.load(.acquire)], 0..) |*item, n| {
+        if (!media_online[n].load(.acquire)) continue;
+        if (!item.ownership.enter(OWNERSHIP_TIMEOUT_TICKS)) continue;
+        const index = item.state.block_index;
+        _ = item.ownership.leave();
+        if (index != null) return index;
+    }
     return null;
 }
 
 pub fn reselectActiveDevice() bool {
-    for (media[0..media_count]) |*item| if (item.state.block_registered) {
+    for (media[0..media_count.load(.acquire)], 0..) |*item, n| {
+        if (!media_online[n].load(.acquire)) continue;
         const current = &item.state;
         const transaction = beginMediumOperation(current) orelse return false;
         defer endMediumOperation(current, transaction);
         return ensureSelected(current);
-    };
+    }
     return false;
 }
 
@@ -348,12 +415,13 @@ fn usesReadWrite16(lba: u64, sectors: u16) bool {
 }
 
 fn registerBlockDevice(current: *Status) void {
-    const index = block.register(.{
+    const controller = xhci.controllerName(current.device.controller_id) orelse return;
+    const reference = block.registerReference(.{
         .name = media_names[medium(current).index],
         .model = current.model[0..current.model_len],
         .driver = "USBMSC",
         .bus = .usb,
-        .controller = "xhci",
+        .controller = controller,
         .port = current.port,
         .sector_size = current.sector_size,
         .sector_count = current.sector_count,
@@ -369,7 +437,8 @@ fn registerBlockDevice(current: *Status) void {
         .flush_fn = flushBlock,
         .state = .active,
     }) orelse return;
-    current.block_index = index;
+    medium(current).block_reference = reference;
+    current.block_index = reference.slot;
     current.block_registered = true;
 }
 
@@ -511,8 +580,8 @@ fn flushBlock(ctx: ?*anyopaque) bool {
 }
 
 fn ensureSelected(current: *Status) bool {
-    if (!xhci.acquireControllerOwnership()) return false;
-    defer xhci.releaseControllerOwnership();
+    const controller = xhci.acquireDevice(current.device) orelse return false;
+    defer controller.releaseControllerOwnership();
     if (current.media_changed or (current.block_registered and !xhci.deviceHandleCurrent(current.device))) {
         current.media_changed = true;
         current.failures += 1;
@@ -524,7 +593,7 @@ fn ensureSelected(current: *Status) bool {
         current.reason = "USBMSC transport recovery incomplete";
         return false;
     }
-    const xs = xhci.status();
+    const xs = xhci.deviceStatus(current.device);
     const exact_runtime = current.device.slot_id != 0 and
         xs.addressed_slot_id == current.device.slot_id and
         xs.addressed_port == current.device.port;
@@ -541,7 +610,7 @@ fn ensureSelected(current: *Status) bool {
             current.reason = "USBMSC device select failed";
             return false;
         }
-        const selected = xhci.status();
+        const selected = xhci.deviceStatus(current.device);
         if (selected.bulk_endpoints_faulted or selected.control_endpoint_faulted) {
             current.failures += 1;
             current.reason = "USBMSC xHCI endpoint faulted";
@@ -1274,8 +1343,8 @@ fn setDataLengthReason(current: *Status, detail: []const u8, actual_len: u32) vo
 }
 
 fn recoverTransport(current: *Status) bool {
-    if (!xhci.acquireControllerOwnership()) return false;
-    defer xhci.releaseControllerOwnership();
+    const controller = xhci.acquireDevice(current.device) orelse return false;
+    defer controller.releaseControllerOwnership();
     current.recoveries += 1;
     // Admission stays closed from the first ambiguous transport result until
     // BOT reset, both device-side ClearFeature requests, and the host-side

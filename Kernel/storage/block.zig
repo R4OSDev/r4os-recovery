@@ -311,6 +311,7 @@ pub const Device = struct {
 const DeviceSlot = struct {
     used: bool = false,
     retiring: bool = false,
+    offline: bool = false,
     pin_count: u32 = 0,
     retire_generation: u64 = 0,
     device: Device = undefined,
@@ -474,9 +475,16 @@ fn startControllerWorker(lane: u8, critical: bool) bool {
 }
 
 pub fn register(device: Device) ?usize {
+    const reference = registerReference(device) orelse return null;
+    return reference.slot;
+}
+
+// Capture the generation at publication, before any callback or wait.
+pub fn registerReference(device: Device) ?access.DeviceRef {
     const irq_flags = owner_locks.storage.acquire();
     const result = registerLocked(device);
     const controller_lane = if (result) |index| devices[index].device.controller_lane else block_dispatch.no_lane;
+    const reference = if (result) |index| devices[index].device.access_ref else null;
     owner_locks.storage.release(irq_flags);
     if (result != null) {
         if (runtimeWorkerIdentityAlive() and !controllerWorkerAlive(controller_lane)) {
@@ -485,7 +493,7 @@ pub fn register(device: Device) ?usize {
             }
         }
     }
-    return result;
+    return reference;
 }
 
 fn registerLocked(device: Device) ?usize {
@@ -517,6 +525,7 @@ fn registerLocked(device: Device) ?usize {
     normalized.queue_lock = sync.Mutex.initClass("block-device", sync.LockRank.block_device, .sleepable);
     devices[target_index].device = normalized;
     devices[target_index].retiring = false;
+    devices[target_index].offline = false;
     devices[target_index].pin_count = 0;
     devices[target_index].used = true;
     device_count += 1;
@@ -530,11 +539,32 @@ pub fn unregister(index: usize) bool {
     return false;
 }
 
+// Detach closes new I/O. Existing pinned work can still reach its backend to
+// receive a real error; mounted/busy registrations retain their exact identity.
+pub fn offlineExact(reference: access.DeviceRef) void {
+    const flags = owner_locks.storage.acquire();
+    defer owner_locks.storage.release(flags);
+    if (reference.slot >= device_slot_count) return;
+    const slot = &devices[reference.slot];
+    if (slot.used and slot.device.access_ref.generation == reference.generation) slot.offline = true;
+}
+
+pub fn unregisterExact(reference: access.DeviceRef) bool {
+    var token = prepareUnregisterExpected(reference.slot, reference) orelse return false;
+    if (commitUnregister(&token)) return true;
+    _ = cancelUnregister(&token);
+    return false;
+}
+
 // Stop new admissions and prove the complete device lifetime is quiescent,
 // but leave the registration intact. Callers may prepare several devices and
 // cancel all of them without having partially removed an owner.
 pub fn prepareUnregister(index: usize) ?UnregisterToken {
-    const slot = beginRetirement(index) orelse return null;
+    return prepareUnregisterExpected(index, null);
+}
+
+fn prepareUnregisterExpected(index: usize, expected: ?access.DeviceRef) ?UnregisterToken {
+    const slot = beginRetirement(index, expected) orelse return null;
     if (hasMountedDrive(index)) {
         cancelRetirement(slot);
         return null;
@@ -601,12 +631,13 @@ fn preparedSlot(index: usize, generation: u64) ?*DeviceSlot {
     return slot;
 }
 
-fn beginRetirement(index: usize) ?*DeviceSlot {
+fn beginRetirement(index: usize, expected: ?access.DeviceRef) ?*DeviceSlot {
     const irq_flags = owner_locks.storage.acquire();
     defer owner_locks.storage.release(irq_flags);
     if (index >= device_slot_count) return null;
     const slot = &devices[index];
     if (!slot.used or slot.retiring) return null;
+    if (expected) |ref| if (slot.device.access_ref.slot != ref.slot or slot.device.access_ref.generation != ref.generation) return null;
     if (slot.retire_generation == 0xFFFF_FFFF_FFFF_FFFF) return null;
     access.beginRetirementLocked(slot.device.access_ref) catch return null;
 
@@ -680,7 +711,7 @@ pub fn findByName(name: []const u8) ?usize {
 fn findByNameLocked(name: []const u8) ?usize {
     var index: usize = 0;
     while (index < device_slot_count) : (index += 1) {
-        if (!devices[index].used or busExcluded(devices[index].device.bus)) continue;
+        if (!devices[index].used or devices[index].retiring or devices[index].offline or busExcluded(devices[index].device.bus)) continue;
         if (strEqIgnoreCase(devices[index].device.name, name)) return index;
     }
     return null;
@@ -691,7 +722,7 @@ pub fn count() usize {
     defer owner_locks.storage.release(flags);
     var visible: usize = 0;
     for (devices[0..device_slot_count]) |*slot| {
-        if (slot.used and !slot.retiring and !busExcluded(slot.device.bus)) visible += 1;
+        if (slot.used and !slot.retiring and !slot.offline and !busExcluded(slot.device.bus)) visible += 1;
     }
     return visible;
 }
@@ -751,7 +782,7 @@ pub fn identity(index: usize) ?Identity {
     defer owner_locks.storage.release(guard);
     if (index >= device_slot_count) return null;
     const slot = &devices[index];
-    if (!slot.used or slot.retiring or busExcluded(slot.device.bus)) return null;
+    if (!slot.used or slot.retiring or slot.offline or busExcluded(slot.device.bus)) return null;
     const d = &slot.device;
     var result: Identity = .{ .reference = d.access_ref, .sectors = d.sector_count, .sector_bytes = d.sector_size, .writable = d.writable, .bus = d.bus };
     copyIdentityText(&result.name, d.name);
@@ -768,11 +799,15 @@ fn copyIdentityText(out: []u8, value: []const u8) void {
 pub fn get(index: usize) ?*const Device {
     const irq_flags = owner_locks.storage.acquire();
     defer owner_locks.storage.release(irq_flags);
-    if (index >= device_slot_count or !devices[index].used or devices[index].retiring or busExcluded(devices[index].device.bus)) return null;
+    if (index >= device_slot_count or !devices[index].used or devices[index].retiring or devices[index].offline or busExcluded(devices[index].device.bus)) return null;
     return &devices[index].device;
 }
 
 fn pinDevice(index: usize) ?DevicePin {
+    return pinDeviceExpected(index, null, false);
+}
+
+fn pinDeviceExpected(index: usize, expected: ?access.DeviceRef, drain: bool) ?DevicePin {
     const unwind = task_context.enterUnwind();
     if (!unwind.admitted()) return null;
 
@@ -780,6 +815,8 @@ fn pinDevice(index: usize) ?DevicePin {
     if (index >= device_slot_count or
         !devices[index].used or
         devices[index].retiring or
+        (devices[index].offline and !(drain and devices[index].pin_count != 0)) or
+        (if (expected) |ref| devices[index].device.access_ref.generation != ref.generation else false) or
         busExcluded(devices[index].device.bus) or
         devices[index].pin_count == 0xFFFF_FFFF)
     {
@@ -2230,16 +2267,23 @@ fn pumpControllerRuntimeQueues(worker_lane: u8) bool {
     var did_work = false;
     var index: usize = 0;
     while (index < device_slot_count) : (index += 1) {
-        if (!devices[index].used or devices[index].retiring) continue;
-        if (effectiveWorkerLane(devices[index].device.controller_lane) != worker_lane) continue;
-        if (pumpRuntimeDevice(index)) did_work = true;
+        const flags = owner_locks.storage.acquire();
+        const reference: ?access.DeviceRef = if (devices[index].used and !devices[index].retiring and
+            effectiveWorkerLane(devices[index].device.controller_lane) == worker_lane)
+            devices[index].device.access_ref
+        else
+            null;
+        owner_locks.storage.release(flags);
+        if (reference) |ref| if (pumpRuntimeDevice(ref)) {
+            did_work = true;
+        };
     }
     if (did_work) runtime_summary.worker_runs +%= 1;
     return did_work;
 }
 
-fn pumpRuntimeDevice(index: usize) bool {
-    var pin = pinDevice(index) orelse return false;
+fn pumpRuntimeDevice(reference: access.DeviceRef) bool {
+    var pin = pinDeviceExpected(reference.slot, reference, true) orelse return false;
     defer unpinDevice(&pin);
     return pumpDeviceQueue(pin.device, .runtime_worker);
 }

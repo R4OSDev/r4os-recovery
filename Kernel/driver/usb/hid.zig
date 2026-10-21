@@ -8,7 +8,16 @@ const hid_poll_idle_ticks: u64 = @max(1, (10 * @as(u64, timer_core.DEFAULT_HZ)) 
 const mouse = @import("../input/mouse.zig");
 const usb_core = @import("core.zig");
 const hid_report = @import("hid_report.zig");
-const xhci = @import("xhci.zig");
+const xhci = @import("xhci_api.zig");
+const sync = @import("../../sched/sync.zig");
+var class_ownership = sync.UnwindGuard.init("usb-hid-class");
+fn acquireClass() bool {
+    return class_ownership.enter(15 * @as(u64, timer_core.DEFAULT_HZ));
+}
+fn releaseClass() void {
+    if (!class_ownership.leave()) @panic("USB HID class owner mismatch");
+}
+
 const usb_host = @import("host_controller.zig");
 const k = @import("../../kernel/log.zig");
 const sched_task = @import("../../sched/task.zig");
@@ -155,8 +164,8 @@ pub fn init() bool {
 // Boot environments choose their admitted input classes once. Topology
 // reconciliation keeps the same choice when devices appear later.
 pub fn initWithOptions(selected: Options) bool {
-    if (!xhci.acquireControllerOwnership()) return false;
-    defer xhci.releaseControllerOwnership();
+    if (!acquireClass()) return false;
+    defer releaseClass();
     options = selected;
     current = .{ .initialized = true, .reason = "no USB HID boot device found" };
     keyboard_binding = .{};
@@ -174,7 +183,7 @@ pub fn initWithOptions(selected: Options) bool {
 
     var index: usize = 0;
     while (usb_core.deviceAt(index)) |dev| : (index += 1) {
-        scanDevice(dev);
+        scanDevice(&dev);
     }
 
     refreshAggregateStatus();
@@ -186,17 +195,18 @@ pub fn initWithOptions(selected: Options) bool {
 }
 
 fn topologyChangedHook() callconv(.c) void {
-    topology_reconciles +%= 1;
     reconcileBindings();
-    if (keyboard_binding.bound or mouse_binding.bound) _ = startPollTask();
+    _ = startPollTask();
+    @import("msc.zig").topologyChanged();
 }
 
 fn reconcileBindings() void {
-    if (!xhci.acquireControllerOwnership()) {
+    if (!acquireClass()) {
         current.reason = "USB HID topology reconcile ownership failed";
         return;
     }
-    defer xhci.releaseControllerOwnership();
+    defer releaseClass();
+    topology_reconciles +%= 1;
 
     if (keyboard_binding.present and !bindingStillPublished(&keyboard_binding)) keyboard_binding = .{};
     if (mouse_binding.present and !bindingStillPublished(&mouse_binding)) mouse_binding = .{};
@@ -210,7 +220,7 @@ fn reconcileBindings() void {
     current.missing_endpoint_hid = 0;
     current.protocol_required_missing = 0;
     var index: usize = 0;
-    while (usb_core.deviceAt(index)) |dev| : (index += 1) scanDevice(dev);
+    while (usb_core.deviceAt(index)) |dev| : (index += 1) scanDevice(&dev);
 
     refreshAggregateStatus();
     if (current.keyboard_bound and current.mouse_bound) {
@@ -224,14 +234,18 @@ fn reconcileBindings() void {
     }
 }
 
-fn bindingStillPublished(binding: *const HidBinding) bool {
-    if (!binding.present or binding.port == 0 or binding.device.slot_id == 0) return false;
-    var index: usize = 0;
-    while (usb_core.deviceAt(index)) |dev| : (index += 1) {
-        if (!dev.active or !dev.configured) continue;
-        if (dev.port == binding.port and dev.slot_id == binding.device.slot_id) return true;
+pub fn bindingFor(device: xhci.DeviceHandle) ?bool {
+    if (!acquireClass()) return null;
+    defer releaseClass();
+    for ([_]*const HidBinding{ &keyboard_binding, &mouse_binding }, 0..) |binding, n| {
+        const d = binding.device;
+        if (binding.bound and d.controller_id == device.controller_id and d.generation == device.generation and d.port == device.port and d.slot_id == device.slot_id) return n == 1;
     }
-    return false;
+    return null;
+}
+
+fn bindingStillPublished(binding: *const HidBinding) bool {
+    return binding.present and usb_core.contains(binding.device.controller_id, binding.device.generation, binding.device.port, binding.device.slot_id);
 }
 
 fn scanDevice(dev: *const usb_core.Device) void {
@@ -385,6 +399,8 @@ fn dispatchBoot(opcode: u32, op: *r4p_contract.UsbHidBootOp) bool {
 }
 
 pub fn status() Status {
+    if (!acquireClass()) return .{ .reason = "USB HID class busy" };
+    defer releaseClass();
     refreshAggregateStatus();
     return current;
 }
@@ -394,6 +410,8 @@ pub fn diagnosticPoll() void {
 }
 
 pub fn servicePoll() void {
+    if (!acquireClass()) return;
+    defer releaseClass();
     service_polls +%= 1;
     pollKeyboard();
     pollMouse();
@@ -419,14 +437,18 @@ pub const PollTaskSummary = struct {
 };
 
 pub fn pollTaskSummary() PollTaskSummary {
+    if (!acquireClass()) return .{};
+    defer releaseClass();
     return .{
         .started = poll_task_started,
         .task_id = poll_task_id,
-        .iterations = poll_task_iterations,
+        .iterations = @atomicLoad(u64, &poll_task_iterations, .monotonic),
     };
 }
 
 pub fn startPollTask() bool {
+    if (!acquireClass()) return false;
+    defer releaseClass();
     if (poll_task_started) return true;
     const worker = sched_task.createKernelThreadBlockedWithRole("usb-hid-poll", pollTaskMain, .input) orelse {
         k.puts("USBHID poll-task create failed\r\n");
@@ -444,10 +466,10 @@ pub fn startPollTask() bool {
 fn pollTaskMain() callconv(.c) void {
     while (true) {
         servicePoll();
-        poll_task_iterations +%= 1;
-        if (poll_task_iterations == POLL_TASK_MARKER_FIRST or
-            (poll_task_iterations > POLL_TASK_MARKER_FIRST and
-                (poll_task_iterations - POLL_TASK_MARKER_FIRST) % POLL_TASK_MARKER_INTERVAL == 0))
+        _ = @atomicRmw(u64, &poll_task_iterations, .Add, 1, .monotonic);
+        if (@atomicLoad(u64, &poll_task_iterations, .monotonic) == POLL_TASK_MARKER_FIRST or
+            (@atomicLoad(u64, &poll_task_iterations, .monotonic) > POLL_TASK_MARKER_FIRST and
+                (@atomicLoad(u64, &poll_task_iterations, .monotonic) - POLL_TASK_MARKER_FIRST) % POLL_TASK_MARKER_INTERVAL == 0))
         {
             emitPollTaskMarker();
         }
@@ -461,7 +483,9 @@ fn pollTaskMain() callconv(.c) void {
 // den 0.56.16-Halted-Check unter Dauer-Polling (halted_checks>0 bei
 // weiterhin aktiven Bindings = Output-Context-Offset korrekt).
 fn emitPollTaskMarker() void {
-    const xs = xhci.status();
+    if (!acquireClass()) return;
+    defer releaseClass();
+    const xs = xhci.deviceStatus(if (keyboard_binding.bound) keyboard_binding.device else mouse_binding.device);
     const keys = keyboard.stats();
     k.puts("[USBHIDPOLL] service_polls=");
     k.putDec(service_polls);
@@ -644,10 +668,14 @@ fn mousePollHook() callconv(.c) void {
 }
 
 fn pollKeyboard() void {
+    if (!acquireClass()) return;
+    defer releaseClass();
     _ = pollBinding(&keyboard_binding, .keyboard);
 }
 
 fn pollMouse() void {
+    if (!acquireClass()) return;
+    defer releaseClass();
     var count: usize = 0;
     while (count < MOUSE_POLL_BUDGET) : (count += 1) {
         if (!pollBinding(&mouse_binding, .mouse)) break;
@@ -664,11 +692,11 @@ fn pollBinding(binding: *HidBinding, kind: HidKind) bool {
         }
         keyboard_backpressure_active = false;
     }
-    if (!xhci.acquireControllerOwnership()) {
+    const controller = xhci.acquireDevice(binding.device) orelse {
         binding.failures += 1;
         return false;
-    }
-    defer xhci.releaseControllerOwnership();
+    };
+    defer controller.releaseControllerOwnership();
     if (!ensureSelected(binding, kind)) return false;
     var report: [REPORT_BUFFER_LEN]u8 = .{0} ** REPORT_BUFFER_LEN;
     const report_len = reportTransferLength(binding);
@@ -687,11 +715,11 @@ fn pollBinding(binding: *HidBinding, kind: HidKind) bool {
         },
     }
     const actual_report_len = if (actual_len == 0 or actual_len > report_len)
-        actualReportLength(report_len)
+        actualReportLength(binding.device, report_len)
     else
         @as(usize, @intCast(actual_len));
-    binding.last_report_request_len = clippedU8(xhci.lastInterruptRequestedLength());
-    binding.last_report_residue = xhci.lastInterruptResidue();
+    binding.last_report_request_len = clippedU8(xhci.lastInterruptRequestedLength(binding.device));
+    binding.last_report_residue = xhci.lastInterruptResidue(binding.device);
     binding.reports += 1;
     if (reportHasNonzero(report[0..actual_report_len])) {
         binding.last_nonzero_report = report;
@@ -717,8 +745,8 @@ fn reportTransferLength(binding: *const HidBinding) usize {
     return len;
 }
 
-fn actualReportLength(requested_len: usize) usize {
-    const actual = xhci.lastInterruptActualLength();
+fn actualReportLength(device: xhci.DeviceHandle, requested_len: usize) usize {
+    const actual = xhci.lastInterruptActualLength(device);
     if (actual == 0 or actual > requested_len) return requested_len;
     return actual;
 }
@@ -729,7 +757,7 @@ fn clippedU8(value: usize) u8 {
 }
 
 fn ensureSelected(binding: *HidBinding, kind: HidKind) bool {
-    const xs = xhci.status();
+    const xs = xhci.deviceStatus(binding.device);
     const exact_runtime = binding.device.slot_id != 0 and
         xs.addressed_slot_id == binding.device.slot_id and
         xs.addressed_port == binding.device.port;
@@ -746,7 +774,7 @@ fn ensureSelected(binding: *HidBinding, kind: HidKind) bool {
         };
         return false;
     }
-    const selected = xhci.status();
+    const selected = xhci.deviceStatus(binding.device);
     if (selected.addressed_slot_id == binding.device.slot_id and
         selected.addressed_port == binding.device.port and
         selected.interrupt_endpoint_configured and

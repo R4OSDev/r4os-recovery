@@ -2,6 +2,7 @@ param(
     [ValidateSet('Bios','Uefi','Both')][string]$Firmware='Both',
     [ValidateSet('All','Usb','Local')][string]$Boot='All',
     [ValidateSet('All','Usb','Ps2')][string]$Keyboard='All',
+    [ValidateSet(1,3)][int]$Controllers=1,
     [string]$Zig='', [string]$Qemu='', [string]$LimineRoot='',
     [string]$OvmfCode='', [string]$OvmfVars='',
     [ValidateRange(10,300)][int]$TimeoutSeconds=120
@@ -57,9 +58,15 @@ try{
     [string[]]$modes=if($Firmware -eq 'Both'){@('Bios','Uefi')}else{@($Firmware)}
     [string[]]$boots=if($Boot -eq 'All'){@('Usb','Local')}else{@($Boot)}
     [string[]]$keyboards=if($Keyboard -eq 'All'){@('Ps2','Usb')}else{@($Keyboard)}
+    if($Controllers -eq 3){
+        if($Boot -ne 'Usb' -or $Keyboard -ne 'Usb'){throw 'Three-controller acceptance requires -Boot Usb -Keyboard Usb.'}
+        $rawPath=Join-Path $output 'multi-raw.img'
+        $raw=[IO.File]::Open($rawPath,[IO.FileMode]::Create,[IO.FileAccess]::ReadWrite)
+        try{$raw.SetLength(8MB);$raw.Position=2048*512;$payload=[byte[]]::new(256KB);for($i=0;$i -lt $payload.Length;$i++){$payload[$i]=$i%251};$raw.Write($payload)}finally{$raw.Dispose()}
+    }
     $runs=@()
     foreach($mode in $modes){foreach($origin in $boots){foreach($inputDevice in $keyboards){
-        $name="$mode-$origin-$inputDevice"
+        $name="$mode-$origin-$inputDevice-C$Controllers"
         $serialLog=Join-Path $output "$name-serial.log";$errorLog=Join-Path $output "$name-qemu.log"
         if(Test-Path -LiteralPath $serialLog){Remove-Item -LiteralPath $serialLog -Force}
         $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0)
@@ -68,10 +75,18 @@ try{
         $ps2=if($inputDevice -eq 'Ps2'){'on'}else{'off'}
         $arguments=@('-machine',"q35,accel=$($profile.AcceleratorChain),i8042=$ps2",'-cpu',$profile.CpuModel,'-m','1024','-smp','4',
             '-display','none','-monitor','none','-no-reboot','-nic','none','-serial',"file:$serialLog",'-qmp',"tcp:127.0.0.1:$port,server=on,wait=off",
-            '-device','qemu-xhci,id=input-xhci','-device','usb-mouse,id=ignored-mouse',
-            '-drive',"if=none,id=usb-media,format=raw,file=$(Join-Path $output 'disk-1.img'),snapshot=on",'-device',"usb-storage,drive=usb-media,bootindex=$usbOrder",
+            '-drive',"if=none,id=usb-media,format=raw,file=$(Join-Path $output 'disk-1.img'),snapshot=on",
             '-drive',"if=none,id=local-media,format=raw,file=$(Join-Path $output 'disk-2.img'),snapshot=on",'-device',"ide-hd,drive=local-media,bus=ide.0,bootindex=$localOrder")
-        if($inputDevice -eq 'Usb'){$arguments+=@('-device','usb-kbd,id=recovery-keyboard')}
+        if($Controllers -eq 3){
+            $arguments+=@('-device','qemu-xhci,id=input-xhci,addr=6','-device','qemu-xhci,id=mouse-xhci,addr=7','-device','qemu-xhci,id=media-xhci,addr=8',
+                '-device','usb-mouse,id=ignored-mouse,bus=mouse-xhci.0,port=1','-device',"usb-storage,drive=usb-media,bus=media-xhci.0,port=1,bootindex=$usbOrder",
+                '-blockdev',(@{driver='file';filename=$rawPath;'node-name'='raw-file'}|ConvertTo-Json -Compress),
+                '-blockdev',(@{driver='raw';file='raw-file';'node-name'='raw-node'}|ConvertTo-Json -Compress),
+                '-device','usb-storage,drive=raw-node,id=multi-raw,bus=mouse-xhci.0,port=2')
+        }else{
+            $arguments+=@('-device','qemu-xhci,id=input-xhci','-device','usb-mouse,id=ignored-mouse', '-device',"usb-storage,drive=usb-media,bootindex=$usbOrder")
+        }
+        if($inputDevice -eq 'Usb'){$arguments+=@('-device','usb-kbd,id=recovery-keyboard,bus=input-xhci.0,port=1')}
         if($mode -eq 'Uefi'){
             $vars=Join-Path $output 'OVMF-vars.fd';Copy-Item -LiteralPath $OvmfVars -Destination $vars -Force
             $arguments+=@('-drive',"if=pflash,format=raw,unit=0,readonly=on,file=$OvmfCode",'-drive',"if=pflash,format=raw,unit=1,file=$vars")
@@ -89,6 +104,21 @@ try{
                 if(!(Test-Path -LiteralPath $serialLog)){continue}
                 [string]$text=Get-Content -Raw -LiteralPath $serialLog
                 if($text -match '\[CRASH\]|result=FAILED'){throw "Input probe failed: $serialLog"}
+                if($Controllers -eq 3){
+                    foreach($phase in @('MULTI_INPUT','MULTI_DETACH','MULTI_REPLUG')){
+                        if($sent.ContainsKey($phase) -or !($text -match "\[RECOVERYINPUT\] phase=$phase")){continue}
+                        if($null -eq $session){$session=Open-Qmp $port}
+                        switch($phase){
+                            'MULTI_INPUT'{
+                                $null=Qmp $session 'input-send-event' @{events=@(@{type='rel';data=@{axis='x';value=20}},@{type='rel';data=@{axis='y';value=10}})}
+                                Send-Keys $session @('a')
+                            }
+                            'MULTI_DETACH'{$null=Qmp $session 'device_del' @{id='multi-raw'};Start-Sleep -Milliseconds 300;Send-Keys $session @('b')}
+                            'MULTI_REPLUG'{$null=Qmp $session 'device_add' @{driver='usb-storage';drive='raw-node';id='multi-raw';bus='mouse-xhci.0';port='2'};Send-Keys $session @('c')}
+                        }
+                        $sent[$phase]=$true
+                    }
+                }
                 foreach($phase in @('EN','DE','TERMINAL')){
                     # Empty Get-Content output may be AutomationNull, whose
                     # collection -notmatch result is empty, not Boolean true.
@@ -115,13 +145,23 @@ try{
         }
         [string]$text=Get-Content -Raw -LiteralPath $serialLog
         $visible=if($origin -eq 'Usb'){1}else{0};$expectedInput=$inputDevice.ToUpperInvariant()
-        if($sent.Count -ne 3 -or $text -notmatch "\[RECOVERYINPUT\] result=OK cpus=4 input=$expectedInput layouts=EN,DE navigation=OK text=OK terminal_file=OK shell_exit=OK mouse=0 usb_storage=$visible"){throw "Incomplete input witness: $serialLog"}
+        $expected=if($Controllers -eq 3){'\[RECOVERYINPUT\] result=OK cpus=4 controllers=3 pci=3 input=USB mouse=1 medium_bytes=262144 write_readback=OK hotplug=OK stale=REJECTED source=USB'}else{"\[RECOVERYINPUT\] result=OK cpus=4 input=$expectedInput layouts=EN,DE navigation=OK text=OK terminal_file=OK shell_exit=OK mouse=0 usb_storage=$visible"}
+        if($sent.Count -ne 3 -or $text -notmatch $expected){throw "Incomplete input witness: $serialLog"}
         $bus=$origin.ToLowerInvariant()
         if($text -notmatch "\[RECOVERYSTORAGE\] source=ok bus=$bus slot=current"){throw 'Input probe booted from the wrong medium.'}
-        $run=[ordered]@{firmware=$mode;boot=$origin;keyboard=$inputDevice;i8042=$ps2;result='ok';cpus=4;accelerator=$profile.Name;
+        $run=[ordered]@{firmware=$mode;boot=$origin;keyboard=$inputDevice;controllers=$Controllers;i8042=$ps2;result='ok';cpus=4;accelerator=$profile.Name;
             seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog}
         $runs+=$run;Write-RecoveryJson $resultPath @{schema=1;runs=$runs}
         Write-Host "Recovery input $name OK ($($run.seconds) seconds)."
     }}}
     exit 0
-}catch{Write-Error "$($_.Exception.Message)`n$($_.ScriptStackTrace)" -ErrorAction Continue;exit 1}
+}catch{Write-Error "$($_.Exception.Message)`n$($_.ScriptStackTrace)" -ErrorAction Continue;exit 1}finally{
+    foreach($name in @('disk-1.img','disk-2.img','multi-raw.img','OVMF-vars.fd','fixture-inputs.json')){
+        $path=Join-Path $output $name
+        if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Force}
+    }
+    foreach($name in @('disk-1','disk-2')){
+        $path=Join-Path $output $name
+        if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Recurse -Force}
+    }
+}

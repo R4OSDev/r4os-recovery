@@ -130,6 +130,8 @@ pub fn runProbe() bool {
     if (!initialized or smp.status().online != 4) return false;
     const c = drive.get('C') orelse return false;
     if (c.role != .ram) return false;
+    if (!device_inventory.acquireSnapshot()) return false;
+    defer device_inventory.releaseSnapshot();
     const snapshot = device_inventory.snapshot();
     if (snapshot.truncated) return false;
     var usb_media_records: usize = 0;

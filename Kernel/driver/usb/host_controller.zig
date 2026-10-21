@@ -1,7 +1,7 @@
 const bootlog = @import("../../kernel/bootlog.zig");
 const builtin = @import("builtin");
 
-pub const MAX_CONTROLLERS: usize = 4;
+pub const MAX_CONTROLLERS: usize = 64;
 pub const MAX_NAME: usize = 32;
 
 pub const BACKEND_VERSION: u32 = 2;
@@ -94,6 +94,9 @@ pub const Descriptor = extern struct {
 };
 
 pub const Controller = struct {
+    id: u32 = 0,
+    callbacks: u32 = 0,
+    closing: bool = false,
     used: bool = false,
     name: [MAX_NAME]u8 = .{0} ** MAX_NAME,
     name_len: usize = 0,
@@ -113,227 +116,284 @@ pub const CleanupResult = struct {
 
 var controllers: [MAX_CONTROLLERS]Controller = .{Controller{}} ** MAX_CONTROLLERS;
 
+var next_id: u32 = 1;
+fn enter() u64 {
+    if (comptime builtin.is_test) return 0;
+    return @import("../../arch/x86_64/interrupts.zig").saveAndDisableRuntime();
+}
+fn leave(flags: u64) void {
+    if (comptime builtin.is_test) return;
+    @import("../../arch/x86_64/interrupts.zig").restore(flags);
+}
 pub fn reset() void {
+    const flags = enter();
+    defer leave(flags);
     controllers = .{Controller{}} ** MAX_CONTROLLERS;
 }
-
 pub fn registerBuiltIn(name: []const u8, descriptor: *const Descriptor) ?usize {
-    if (findByName(name) != null) return null;
-    const index = freeSlot() orelse return null;
-    const slot = &controllers[index];
-    slot.* = .{
-        .used = true,
-        .source = .builtin,
-        .state = .active,
-        .descriptor = descriptor,
-    };
-    copyName(name, slot);
-    if (!builtin.is_test) {
-        bootlog.puts("[USBHC] register built-in ");
-        bootlog.puts(slot.name[0..slot.name_len]);
-        bootlog.puts("\r\n");
-    }
-    return index;
+    return registerInternal(name, descriptor, 0, true);
 }
-
 pub fn register(name: []const u8, descriptor: *const Descriptor, owner_id: u32) ?usize {
-    if (findByName(name) != null) return null;
-    const index = freeSlot() orelse return null;
-    const slot = &controllers[index];
-    slot.* = .{
-        .used = true,
-        .source = sourceFromRaw(descriptor.source),
-        .owner_id = owner_id,
-        .state = .registered,
-        .descriptor = descriptor,
+    return registerInternal(name, descriptor, owner_id, false);
+}
+fn registerInternal(name: []const u8, descriptor: *const Descriptor, owner_id: u32, builtin_owner: bool) ?usize {
+    const copied = block: {
+        const flags = enter();
+        defer leave(flags);
+        if (findByName(name) != null or next_id == 0xffff_ffff) return null;
+        const index = freeSlot() orelse return null;
+        controllers[index] = .{ .used = true, .id = next_id, .source = if (builtin_owner) .builtin else sourceFromRaw(descriptor.source), .owner_id = owner_id, .state = if (builtin_owner) .active else .registered, .descriptor = descriptor };
+        next_id += 1;
+        copyName(name, &controllers[index]);
+        break :block .{ .index = index, .value = controllers[index] };
     };
-    copyName(name, slot);
     if (!builtin.is_test) {
-        bootlog.puts("[USBHC] register backend ");
-        bootlog.puts(slot.name[0..slot.name_len]);
-        bootlog.puts(" source=");
-        bootlog.puts(sourceLabel(slot.source));
+        bootlog.puts(if (builtin_owner) "[USBHC] register built-in " else "[USBHC] register backend ");
+        bootlog.puts(copied.value.name[0..copied.value.name_len]);
         bootlog.puts("\r\n");
     }
-    return index;
+    return copied.index;
 }
-
 pub fn setState(index: usize, state: State) bool {
-    if (index >= controllers.len or !controllers[index].used) return false;
-    controllers[index].state = state;
+    const flags = enter();
+    defer leave(flags);
+    const slot = mutableAt(index) orelse return false;
+    slot.state = state;
     return true;
 }
-
 pub fn controllerId(index: usize) u32 {
-    return @intCast(index + 1);
+    return if (at(index)) |slot| slot.id else 0;
 }
-
 pub fn indexFromControllerId(id: u32) ?usize {
-    if (id == 0 or id > controllers.len) return null;
-    const index: usize = @intCast(id - 1);
-    if (!controllers[index].used) return null;
-    return index;
+    const flags = enter();
+    defer leave(flags);
+    if (id == 0) return null;
+    for (controllers, 0..) |slot, index| {
+        if (slot.used and slot.id == id) return index;
+    }
+    return null;
 }
-
+pub fn at(index: usize) ?Controller {
+    const flags = enter();
+    defer leave(flags);
+    return if (mutableAt(index)) |slot| slot.* else null;
+}
 pub fn unregister(index: usize) bool {
-    if (index >= controllers.len or !controllers[index].used) return false;
-    if (controllers[index].descriptor) |descriptor| {
+    const slot = at(index) orelse return false;
+    return unregisterExact(index, slot.id, slot.owner_id);
+}
+fn unregisterExact(index: usize, id: u32, owner: u32) bool {
+    const copied = block: {
+        const flags = enter();
+        defer leave(flags);
+        const slot = mutableAt(index) orelse return false;
+        if (slot.id != id or slot.owner_id != owner or slot.closing or slot.callbacks != 0) return false;
+        slot.closing = true;
+        break :block slot.*;
+    };
+    if (copied.descriptor) |descriptor| {
         if (descriptor.shutdown) |shutdown| {
             if (shutdown(descriptor.context) < 0) {
-                controllers[index].state = .failed;
-                controllers[index].failures +%= 1;
+                const flags = enter();
+                defer leave(flags);
+                const slot = &controllers[index];
+                @import("std").debug.assert(slot.id == id and slot.closing);
+                slot.closing = false;
+                slot.state = .failed;
+                slot.failures +%= 1;
                 return false;
             }
         }
     }
+    const flags = enter();
+    defer leave(flags);
+    @import("std").debug.assert(controllers[index].id == id and controllers[index].callbacks == 0 and controllers[index].closing);
     controllers[index] = .{};
     return true;
 }
-
 pub fn unregisterByName(name: []const u8, owner_id: u32) bool {
-    const index = findByName(name) orelse return false;
-    if (controllers[index].owner_id != owner_id) return false;
-    return unregister(index);
-}
-
-pub fn cleanupOwner(owner_id: u32) CleanupResult {
-    if (owner_id == 0) return .{};
-    var result: CleanupResult = .{};
-    var index: usize = 0;
-    while (index < controllers.len) : (index += 1) {
-        if (!controllers[index].used or controllers[index].owner_id != owner_id) continue;
-        if (unregister(index)) {
-            result.removed += 1;
-        } else {
-            result.failed = true;
+    if (eqIgnoreCase(name, "XHCI")) {
+        var found = false;
+        var all = true;
+        for (0..MAX_CONTROLLERS) |index| {
+            const slot = at(index) orelse continue;
+            if (slot.owner_id != owner_id or !family(slot.name[0..slot.name_len])) continue;
+            found = true;
+            const ok = unregisterExact(index, slot.id, owner_id);
+            all = ok and all;
         }
+        return found and all;
+    }
+    const index = findByName(name) orelse return false;
+    const slot = at(index) orelse return false;
+    return unregisterExact(index, slot.id, owner_id);
+}
+pub fn cleanupOwner(owner_id: u32) CleanupResult {
+    var result: CleanupResult = .{};
+    if (owner_id == 0) return result;
+    for (0..MAX_CONTROLLERS) |index| {
+        const slot = at(index) orelse continue;
+        if (slot.owner_id != owner_id) continue;
+        if (unregisterExact(index, slot.id, owner_id)) result.removed += 1 else result.failed = true;
     }
     return result;
 }
-
 pub fn count() usize {
+    const flags = enter();
+    defer leave(flags);
     var n: usize = 0;
-    for (controllers) |controller| {
-        if (controller.used) n += 1;
+    for (controllers) |slot| {
+        if (slot.used) n += 1;
     }
     return n;
 }
-
-pub fn at(index: usize) ?*const Controller {
-    if (index >= controllers.len or !controllers[index].used) return null;
-    return &controllers[index];
-}
-
-pub fn statusAt(index: usize, out: *Status) i32 {
-    const slot = mutableAt(index) orelse return -1;
-    out.* = .{
-        .state = stateRaw(slot.state),
-        .source = sourceRaw(slot.source),
-        .transfers = slot.transfers,
-        .failures = slot.failures,
-        .polls = slot.polls,
-    };
-    const descriptor = slot.descriptor orelse return 0;
-    if (descriptor.status) |callback| {
-        const result = callback(descriptor.context, out);
-        if (result < 0) {
-            slot.failures +%= 1;
-            return result;
-        }
+const Lease = struct {
+    index: usize,
+    id: u32,
+    descriptor: Descriptor,
+    fn release(self: Lease) void {
+        const flags = enter();
+        defer leave(flags);
+        const slot = &controllers[self.index];
+        @import("std").debug.assert(slot.used and slot.id == self.id and slot.callbacks != 0);
+        slot.callbacks -= 1;
     }
+    fn account(self: Lease, result: i32, transfer: bool) i32 {
+        const flags = enter();
+        defer leave(flags);
+        const slot = &controllers[self.index];
+        @import("std").debug.assert(slot.used and slot.id == self.id and slot.callbacks != 0);
+        if (transfer) slot.transfers +%= 1;
+        if (result < 0) slot.failures +%= 1;
+        return result;
+    }
+};
+fn takeLease(index: usize, expected: ?u32) ?Lease {
+    const flags = enter();
+    defer leave(flags);
+    const slot = mutableAt(index) orelse return null;
+    if (slot.closing or slot.callbacks == 0xffff_ffff or (expected != null and slot.id != expected.?)) return null;
+    const descriptor = slot.descriptor orelse return null;
+    slot.callbacks += 1;
+    return .{ .index = index, .id = slot.id, .descriptor = descriptor.* };
+}
+fn deviceLease(device: DeviceHandle) ?Lease {
+    const index = indexFromControllerId(device.controller_id) orelse return null;
+    return takeLease(index, device.controller_id);
+}
+pub fn statusAt(index: usize, out: *Status) i32 {
+    return statusAtExpected(index, null, out);
+}
+pub fn statusById(id: u32, out: *Status) i32 {
+    const index = indexFromControllerId(id) orelse return -1;
+    return statusAtExpected(index, id, out);
+}
+fn statusAtExpected(index: usize, expected: ?u32, out: *Status) i32 {
+    const lease = takeLease(index, expected) orelse return -1;
+    defer lease.release();
+    const initial = at(index).?;
+    out.* = .{ .state = stateRaw(initial.state), .source = sourceRaw(initial.source), .transfers = initial.transfers, .failures = initial.failures, .polls = initial.polls };
+    const descriptor = lease.descriptor;
+    if (descriptor.status) |callback| {
+        const rc = callback(descriptor.context, out);
+        if (rc < 0) return lease.account(rc, false);
+    }
+    const slot = at(index).?;
     out.state = stateRaw(slot.state);
     out.source = sourceRaw(slot.source);
     out.flags |= descriptor.flags;
-    if (out.transfers < slot.transfers) out.transfers = slot.transfers;
-    if (out.failures < slot.failures) out.failures = slot.failures;
-    if (out.polls < slot.polls) out.polls = slot.polls;
+    out.transfers = @max(out.transfers, slot.transfers);
+    out.failures = @max(out.failures, slot.failures);
+    out.polls = @max(out.polls, slot.polls);
     return 0;
 }
-
 pub fn scan(index: usize) i32 {
-    const slot = mutableAt(index) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.port_scan orelse return fail(slot, -3);
-    const result = callback(descriptor.context);
-    return account(slot, result, false);
+    const lease = takeLease(index, null) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.port_scan orelse return lease.account(-3, false);
+    return lease.account(callback(d.context), false);
 }
-
 pub fn addressDevice(index: usize, port: u8, out: *DeviceHandle) i32 {
-    const slot = mutableAt(index) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.address_device orelse return fail(slot, -3);
-    const result = callback(descriptor.context, port, out);
-    if (result >= 0) out.controller_id = controllerId(index);
-    return account(slot, result, false);
+    const lease = takeLease(index, null) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.address_device orelse return lease.account(-3, false);
+    const rc = callback(d.context, port, out);
+    if (rc >= 0) out.controller_id = lease.id;
+    return lease.account(rc, false);
 }
-
 pub fn configureDevice(device: *const DeviceHandle, configuration: u8) i32 {
-    const slot = controllerForDevice(device) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.configure_device orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, device, configuration), false);
+    const lease = deviceLease(device.*) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.configure_device orelse return lease.account(-3, false);
+    return lease.account(callback(d.context, device, configuration), false);
 }
-
 pub fn controlTransfer(device: *const DeviceHandle, request: *const ControlRequest, buffer: []u8) i32 {
-    const slot = controllerForDevice(device) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.control_transfer orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, device, request, buffer.ptr, @intCast(buffer.len)), true);
+    const lease = deviceLease(device.*) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.control_transfer orelse return lease.account(-3, false);
+    return lease.account(callback(d.context, device, request, buffer.ptr, @intCast(buffer.len)), true);
 }
-
 pub fn bulkTransfer(endpoint: *const EndpointHandle, buffer: []u8, direction: u32) i32 {
-    const slot = controllerForDevice(&endpoint.device) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.bulk_transfer orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, endpoint, buffer.ptr, @intCast(buffer.len), direction), true);
+    const lease = deviceLease(endpoint.device) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.bulk_transfer orelse return lease.account(-3, false);
+    return lease.account(callback(d.context, endpoint, buffer.ptr, @intCast(buffer.len), direction), true);
 }
-
 pub fn interruptTransfer(endpoint: *const EndpointHandle, buffer: []u8, actual: *u32) i32 {
-    const slot = controllerForDevice(&endpoint.device) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.interrupt_transfer orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, endpoint, buffer.ptr, @intCast(buffer.len), actual), true);
+    const lease = deviceLease(endpoint.device) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.interrupt_transfer orelse return lease.account(-3, false);
+    return lease.account(callback(d.context, endpoint, buffer.ptr, @intCast(buffer.len), actual), true);
 }
-
 pub fn resetPort(index: usize, port: u8) i32 {
-    const slot = mutableAt(index) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.reset_port orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, port), false);
+    const lease = takeLease(index, null) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.reset_port orelse return lease.account(-3, false);
+    return lease.account(callback(d.context, port), false);
 }
-
 pub fn clearHalt(endpoint: *const EndpointHandle) i32 {
-    const slot = controllerForDevice(&endpoint.device) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.clear_halt orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, endpoint), false);
+    return endpointAction(endpoint, false);
 }
-
 pub fn resetEndpoint(endpoint: *const EndpointHandle) i32 {
-    const slot = controllerForDevice(&endpoint.device) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.reset_endpoint orelse return fail(slot, -3);
-    return account(slot, callback(descriptor.context, endpoint), false);
+    return endpointAction(endpoint, true);
 }
-
+fn endpointAction(endpoint: *const EndpointHandle, reset_endpoint: bool) i32 {
+    const lease = deviceLease(endpoint.device) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = (if (reset_endpoint) d.reset_endpoint else d.clear_halt) orelse return lease.account(-3, false);
+    return lease.account(callback(d.context, endpoint), false);
+}
 pub fn poll(index: usize) i32 {
-    const slot = mutableAt(index) orelse return -1;
-    const descriptor = slot.descriptor orelse return fail(slot, -2);
-    const callback = descriptor.poll orelse return fail(slot, -3);
-    slot.polls +%= 1;
-    return account(slot, callback(descriptor.context), false);
+    const lease = takeLease(index, null) orelse return -1;
+    defer lease.release();
+    const d = lease.descriptor;
+    const callback = d.poll orelse return lease.account(-3, false);
+    {
+        const flags = enter();
+        defer leave(flags);
+        controllers[index].polls +%= 1;
+    }
+    return lease.account(callback(d.context), false);
 }
-
+fn family(name: []const u8) bool {
+    return eqIgnoreCase(name, "XHCI") or (name.len >= 5 and eqIgnoreCase(name[0..5], "XHCI@"));
+}
 pub fn findByName(name: []const u8) ?usize {
-    var index: usize = 0;
-    while (index < controllers.len) : (index += 1) {
-        const controller = &controllers[index];
-        if (!controller.used) continue;
-        if (eqIgnoreCase(controller.name[0..controller.name_len], name)) return index;
+    const flags = enter();
+    defer leave(flags);
+    for (controllers, 0..) |slot, index| {
+        if (slot.used and (eqIgnoreCase(slot.name[0..slot.name_len], name) or (eqIgnoreCase(name, "XHCI") and family(slot.name[0..slot.name_len])))) return index;
     }
     return null;
 }
-
 pub fn sourceLabel(source: Source) []const u8 {
     return switch (source) {
         .builtin => "built-in",
@@ -341,34 +401,14 @@ pub fn sourceLabel(source: Source) []const u8 {
         .disk => "disk",
     };
 }
-
 fn freeSlot() ?usize {
-    var index: usize = 0;
-    while (index < controllers.len) : (index += 1) {
-        if (!controllers[index].used) return index;
+    for (controllers, 0..) |slot, index| {
+        if (!slot.used) return index;
     }
     return null;
 }
-
 fn mutableAt(index: usize) ?*Controller {
-    if (index >= controllers.len or !controllers[index].used) return null;
-    return &controllers[index];
-}
-
-fn controllerForDevice(device: *const DeviceHandle) ?*Controller {
-    const index = indexFromControllerId(device.controller_id) orelse return null;
-    return mutableAt(index);
-}
-
-fn account(slot: *Controller, result: i32, transfer: bool) i32 {
-    if (transfer) slot.transfers +%= 1;
-    if (result < 0) slot.failures +%= 1;
-    return result;
-}
-
-fn fail(slot: *Controller, result: i32) i32 {
-    slot.failures +%= 1;
-    return result;
+    return if (index < controllers.len and controllers[index].used) &controllers[index] else null;
 }
 
 fn stateRaw(state: State) u32 {
@@ -550,4 +590,44 @@ test "failed host shutdown vetoes unregister and owner cleanup" {
     try testing.expect(!cleanup.failed);
     try testing.expectEqual(@as(u32, 1), cleanup.removed);
     try testing.expectEqual(@as(usize, 0), count());
+}
+
+test "controller IDs distinguish equal local addresses and survive slot reuse" {
+    const testing = @import("std").testing;
+    reset();
+    test_shutdown_ok = true;
+    const descriptor = testDescriptor();
+    const first = register("XHCI@00:06.0", &descriptor, 42).?;
+    const second = register("XHCI@00:07.0", &descriptor, 42).?;
+    var a: DeviceHandle = .{};
+    var b: DeviceHandle = .{};
+    try testing.expectEqual(@as(i32, 0), addressDevice(first, 1, &a));
+    try testing.expectEqual(@as(i32, 0), addressDevice(second, 1, &b));
+    try testing.expect(a.port == b.port and a.slot_id == b.slot_id and a.controller_id != b.controller_id);
+    try testing.expect(unregister(first));
+    const replacement = register("XHCI@00:08.0", &descriptor, 42).?;
+    try testing.expectEqual(first, replacement);
+    try testing.expect(controllerId(replacement) != a.controller_id);
+    var bytes: [8]u8 = .{0} ** 8;
+    const stale: EndpointHandle = .{ .device = a, .kind = 2 };
+    try testing.expectEqual(@as(i32, -1), bulkTransfer(&stale, &bytes, 0));
+    const live: EndpointHandle = .{ .device = b, .kind = 2 };
+    try testing.expectEqual(@as(i32, 8), bulkTransfer(&live, &bytes, 0));
+    try testing.expect(unregisterByName("xhci", 42));
+    try testing.expectEqual(@as(usize, 0), count());
+}
+
+fn pinnedScan(_: ?*anyopaque) callconv(.c) i32 {
+    return if (unregisterByName("XHCI", 77)) -99 else 0;
+}
+test "active callback vetoes exact family unregister" {
+    const testing = @import("std").testing;
+    reset();
+    test_shutdown_ok = true;
+    var descriptor = testDescriptor();
+    descriptor.port_scan = pinnedScan;
+    const slot = register("XHCI@00:06.0", &descriptor, 77).?;
+    try testing.expectEqual(@as(i32, 0), scan(slot));
+    try testing.expectEqual(@as(usize, 1), count());
+    try testing.expect(unregisterByName("XHCI", 77));
 }

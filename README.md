@@ -130,6 +130,21 @@ USB-only cases disable the emulated PS/2 controller. The shared input path
 supports R4OS layouts, navigation and the existing Terminal; Recovery does
 not bind a mouse. Results live under `Artifacts/BootProbe/input/`.
 
+Since Recovery 0.1.64, every detected xHCI function owns independent state,
+DMA/rings, IRQ routing and worker identity. USB device handles include the
+controller ID and runtime generation. PCI diagnosis reports that exact
+function; detached media cannot address a replacement through an old handle.
+The frozen Zig adaptation and source hashes are recorded in
+`Provenance/owner-update-0.86.27.json`; its input lock remains explicit.
+
+For the affected three-controller case, build with `./Build.sh -Mode Kernel
+-BootProbe input`, then run `pwsh -File Tools/Test-Input.ps1 -Controllers 3
+-Boot Usb -Keyboard Usb -Firmware Both`. This existing input acceptance also
+admits the shared mouse backend inside the probe only. Keyboard, mouse and
+boot source use separate controllers; an additional 8-MB raw medium exercises
+256-KB reads/writes and detach/replug with stale-identity rejection. Completed
+fixture images are removed. The production Recovery UI remains keyboard operated.
+
 ## Recovery console host
 
 `RecoveryTools/Menu` owns RECOVERY.R4X and builds against the pinned SDK and
