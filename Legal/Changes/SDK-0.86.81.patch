@@ -1,0 +1,872 @@
+diff --git a/Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig b/Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig
+index 540fef7..b0e78cf 100644
+--- a/Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig
++++ b/Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig
+@@ -112,17 +112,6 @@ fn fakePerformance(out: *r4os.abi.ProgramPerformanceSummary) callconv(.c) i32 {
+     out.* = .{ .audio_stream_writes = 9 };
+     return 1;
+ }
+-fn fakeProgramInstanceStorageLegacy(out: *r4os.abi.ProgramInstanceStorageSummary) callconv(.c) i32 {
+-    @memset(@as([*]u8, @ptrCast(out))[0..256], 0);
+-    out.version = 1;
+-    out.size = 256;
+-    out.active_instances = 4;
+-    out.active_service_instances = 2;
+-    out.current_payload_bytes = 4096;
+-    out.payload_allocations = 11;
+-    out.payload_releases = 7;
+-    return 1;
+-}
+ fn fakeProgramInstanceStorageV2(out: *r4os.abi.ProgramInstanceStorageSummary) callconv(.c) i32 {
+     if (out.version < 2 or out.size < @sizeOf(r4os.abi.ProgramInstanceStorageSummary)) return -1;
+     out.* = .{ .active_instances = 4, .active_service_instances = 2, .current_payload_bytes = 4096, .payload_allocations = 11, .payload_releases = 7, .current_gui_frame_bytes = 8192 };
+@@ -185,7 +174,6 @@ fn initFacades() struct { audio: r4os.Audio, devices: r4os.Devices } {
+     dev_table.memory_block = @intFromPtr(&fakeMemoryBlock);
+     dev_table.memory_pressure_snapshot = @intFromPtr(&fakePressure);
+     dev_table.performance_summary = @intFromPtr(&fakePerformance);
+-    dev_table.program_instance_storage_summary = @intFromPtr(&fakeProgramInstanceStorageLegacy);
+     dev_table.program_instance_storage_summary_v2 = @intFromPtr(&fakeProgramInstanceStorageV2);
+     dev_table.program_instance_storage_self_test = @intFromPtr(&fakeProgramInstanceStorageSelfTest);
+     dev_table.execution_inventory_summary = @intFromPtr(&fakeExecutionInventory);
+@@ -263,12 +251,7 @@ test "advanced synth operations and R4DEV views stay explicit" {
+     try std.testing.expectEqual(@as(u32, 4), storage.active_instances);
+     try std.testing.expectEqual(@as(u64, 4096), storage.current_payload_bytes);
+     try std.testing.expectEqual(@as(u64, 8192), storage.current_gui_frame_bytes);
+-    var legacy_storage: r4os.abi.ProgramInstanceStorageSummary = undefined;
+-    @memset(std.mem.asBytes(&legacy_storage), 0xA5);
+-    try std.testing.expect(performance.raw.programInstanceStorageSummaryLegacy(&legacy_storage) > 0);
+-    try std.testing.expectEqual(@as(u32, 1), legacy_storage.version);
+-    try std.testing.expectEqual(@as(u32, 256), legacy_storage.size);
+-    try std.testing.expectEqual(@as(u8, 0xA5), std.mem.asBytes(&legacy_storage)[256]);
++    var legacy_storage: r4os.abi.ProgramInstanceStorageSummary = .{};
+     legacy_storage.version = 3;
+     legacy_storage.size = @sizeOf(r4os.abi.ProgramInstanceStorageSummary);
+     try std.testing.expect(performance.raw.programInstanceStorageSummaryV2(&legacy_storage) > 0);
+@@ -281,10 +264,8 @@ test "advanced synth operations and R4DEV views stay explicit" {
+     try std.testing.expectEqual(@as(u32, @sizeOf(r4os.abi.ProgramInstanceStorageSummary) - 1), legacy_storage.size);
+     try std.testing.expectEqual(@as(u8, 0xB6), std.mem.asBytes(&legacy_storage)[8]);
+     dev_table.size = 288;
+-    const legacy_fallback = performance.programInstanceStorage().?;
+-    try std.testing.expectEqual(@as(u32, 1), legacy_fallback.version);
+-    try std.testing.expectEqual(@as(u32, 256), legacy_fallback.size);
+-    try std.testing.expectEqual(@as(u64, 0), legacy_fallback.current_gui_frame_bytes);
++    try std.testing.expect(performance.programInstanceStorage() == null);
++    dev_table.size = @sizeOf(r4os.abi.R4XStartR4Dev);
+     var storage_test: r4os.abi.ProgramInstanceStorageSelfTestResult = .{};
+     try std.testing.expect(performance.programInstanceStorageSelfTest(&storage_test) > 0);
+     try std.testing.expectEqual(@as(u32, 27), storage_test.passed_cases);
+diff --git a/Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig b/Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig
+index d6c9a65..57c591f 100644
+--- a/Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig
++++ b/Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig
+@@ -312,24 +312,16 @@ fn resources() r4os.Resources {
+     return .{ .sys = r4os.r4sys.Context.init(&bundle) };
+ }
+ 
+-test "R4DEV registry source names keep v1 and expose V2 explicitly" {
++test "Recovery R4DEV registry uses only explicit current V2" {
+     const bundle = r4os.program.Bundle{ .raw = &fake_context };
+     const dev = r4os.r4dev.Context.init(&bundle);
+-    var summary_v1: r4os.abi.ProgramRegistrySummary = .{};
+-    var self_test_v1: r4os.abi.ProgramRegistrySelfTestResult = .{};
+     var summary_v2: r4os.abi.ProgramRegistrySummaryV2 = .{};
+     var self_test_v2: r4os.abi.ProgramRegistrySelfTestResultV2 = .{};
+-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySummary(&summary_v1));
+-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySelfTest(&self_test_v1));
+     try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySummaryV2(&summary_v2));
+     try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySelfTestV2(&self_test_v2));
+-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySummaryLegacy(&summary_v1));
+-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySelfTestLegacy(&self_test_v1));
+ 
+     const performance = r4os.PerformanceView{ .raw = dev };
+-    try std.testing.expect(performance.programRegistry() == null);
+     try std.testing.expect(performance.programRegistryV2() == null);
+-    try std.testing.expectEqual(r4os.abi.err_no_group, performance.programRegistrySelfTest(&self_test_v1));
+     try std.testing.expectEqual(r4os.abi.err_no_group, performance.programRegistrySelfTestV2(&self_test_v2));
+ }
+ 
+diff --git a/Platform/SDK/r4os/app_devices.zig b/Platform/SDK/r4os/app_devices.zig
+index f50566d..4965461 100644
+--- a/Platform/SDK/r4os/app_devices.zig
++++ b/Platform/SDK/r4os/app_devices.zig
+@@ -67,13 +67,6 @@ pub const PerformanceView = struct {
+     pub fn programInstanceStorageSelfTest(self: *const PerformanceView, out: *abi.ProgramInstanceStorageSelfTestResult) i32 {
+         return self.raw.programInstanceStorageSelfTest(out);
+     }
+-    pub fn programRegistry(self: *const PerformanceView) ?abi.ProgramRegistrySummary {
+-        var out: abi.ProgramRegistrySummary = .{};
+-        return if (self.raw.programRegistrySummary(&out) > 0) out else null;
+-    }
+-    pub fn programRegistrySelfTest(self: *const PerformanceView, out: *abi.ProgramRegistrySelfTestResult) i32 {
+-        return self.raw.programRegistrySelfTest(out);
+-    }
+     pub fn programRegistryV2(self: *const PerformanceView) ?abi.ProgramRegistrySummaryV2 {
+         var out: abi.ProgramRegistrySummaryV2 = .{};
+         return if (self.raw.programRegistrySummaryV2(&out) > 0) out else null;
+diff --git a/Platform/SDK/r4os/program.zig b/Platform/SDK/r4os/program.zig
+index 587a8ad..1f462fa 100644
+--- a/Platform/SDK/r4os/program.zig
++++ b/Platform/SDK/r4os/program.zig
+@@ -65,13 +65,12 @@ pub fn bundleValueFromR4XStart(raw: *const abi.R4XStartContext) ?Bundle {
+         .sys = resolveGroupTable(abi.R4XStartR4Sys, xs, .r4sys, abi.r4xstart_r4sys_magic, 1, @offsetOf(abi.R4XStartR4Sys, "write") + @sizeOf(usize)),
+         .desk = resolveGroupTable(abi.R4XStartR4Desk, xs, .r4desk, abi.r4xstart_r4desk_magic, abi.r4xstart_r4desk_version, abi.r4xstart_r4desk_size),
+         .draw = resolveGroupTable(abi.R4XStartR4Draw, xs, .r4draw, abi.r4xstart_r4draw_magic, abi.r4xstart_r4draw_version, abi.r4xstart_r4draw_size),
+-        // R4NET tail functions are optional and append-only. Keep older
+-        // kernels usable; tableFn checks the exact size of every requested
+-        // slot and netServiceRequest retains its raw-IPC fallback.
++        // Optional current R4NET operations are checked by exact slot size.
++        // Service requests require the generation-bound callback.
+         .net = resolveGroupTable(abi.R4XStartR4Net, xs, .r4net, abi.r4xstart_r4net_magic, 1, @offsetOf(abi.R4XStartR4Net, "tcp_connect") + @sizeOf(usize)),
+         .audio = resolveGroupTable(abi.R4XStartR4Audio, xs, .r4audio, abi.r4xstart_r4audio_magic, abi.r4xstart_r4audio_version, abi.r4xstart_r4audio_size),
+-        // R4DEV tail functions are optional and append-only. Older kernels
+-        // remain usable; tableFn checks the exact size of each requested slot.
++        // Optional Recovery operations are checked by exact slot size.
++        // Retired diagnostic prefixes are never used as V2 substitutes.
+         .dev = resolveGroupTable(abi.R4XStartR4Dev, xs, .r4dev, abi.r4xstart_r4dev_magic, 1, @offsetOf(abi.R4XStartR4Dev, "memory_summary") + @sizeOf(usize)),
+     };
+     if (candidate.sys == null) return null;
+@@ -478,15 +477,12 @@ pub const Context = struct {
+     }
+ 
+     pub fn programInstanceStorageSummary(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
++        // This convenience API initializes the complete current V2 record.
++        // Resolve first so an unavailable provider leaves caller bytes intact.
++        const table_fn = self.devFn("program_instance_storage_summary_v2") orelse return self.unavailable("dev");
+         out.* = .{};
+         out.version = 2;
+         out.size = @sizeOf(abi.ProgramInstanceStorageSummary);
+-        if (self.devFn("program_instance_storage_summary_v2")) |table_fn| return table_fn(out);
+-        return self.programInstanceStorageSummaryLegacy(out);
+-    }
+-
+-    pub fn programInstanceStorageSummaryLegacy(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
+-        const table_fn = self.devFn("program_instance_storage_summary") orelse return self.unavailable("dev");
+         return table_fn(out);
+     }
+ 
+@@ -500,16 +496,6 @@ pub const Context = struct {
+         return table_fn(out);
+     }
+ 
+-    pub fn programRegistrySummary(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
+-        const table_fn = self.devFn("program_registry_summary") orelse return self.unavailable("dev");
+-        return table_fn(out);
+-    }
+-
+-    pub fn programRegistrySelfTest(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
+-        const table_fn = self.devFn("program_registry_self_test") orelse return self.unavailable("dev");
+-        return table_fn(out);
+-    }
+-
+     pub fn programRegistrySummaryV2(self: *const Context, out: *abi.ProgramRegistrySummaryV2) i32 {
+         const table_fn = self.devFn("program_registry_summary_v2") orelse return self.unavailable("dev");
+         return table_fn(out);
+@@ -530,14 +516,6 @@ pub const Context = struct {
+         return table_fn(out);
+     }
+ 
+-    pub fn programRegistrySummaryLegacy(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
+-        return self.programRegistrySummary(out);
+-    }
+-
+-    pub fn programRegistrySelfTestLegacy(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
+-        return self.programRegistrySelfTest(out);
+-    }
+-
+     pub fn performanceTask(self: *const Context, index: u32) ?abi.ProgramTaskPerformanceInfo {
+         var out: abi.ProgramTaskPerformanceInfo = .{};
+         const table_fn = self.devFn("performance_task") orelse return null;
+@@ -784,7 +762,7 @@ pub const Context = struct {
+     }
+ 
+     pub fn readKeyCodepoint(self: *const Context) u32 {
+-        const table_fn = self.deskFn("read_key_codepoint") orelse return self.readKey();
++        const table_fn = self.deskFn("read_key_codepoint") orelse return 0;
+         return table_fn();
+     }
+ 
+@@ -1684,36 +1662,11 @@ pub const Context = struct {
+     }
+ 
+     pub fn fontInfo(self: *const Context, font_id: u32, out: *abi.GuiFontInfo) i32 {
+-        if (!self.hasDrawFn("gui_set_font")) {
+-            if (font_id != abi.gui_font_builtin_id) return 0;
+-            out.* = .{
+-                .id = abi.gui_font_builtin_id,
+-                .kind = 0,
+-                .flags = abi.gui_font_flag_renderable | abi.gui_font_flag_builtin,
+-                .weight = 400,
+-                .width = 8,
+-                .height = 8,
+-                .max_advance = 8,
+-                .line_height = 8,
+-                .baseline = 7,
+-                .glyph_count = 95,
+-                .strike_count = 1,
+-            };
+-            copyFixedZ(out.family[0..], "R4OS");
+-            copyFixedZ(out.face[0..], "Builtin 8x8");
+-            copyFixedZ(out.style[0..], "Regular");
+-            copyFixedZ(out.status[0..], "builtin fallback");
+-            return 1;
+-        }
+         const table_fn = self.drawFn("font_info") orelse return self.unavailable("draw");
+         return table_fn(font_id, out);
+     }
+ 
+     pub fn fontMeasure(self: *const Context, font_id: u32, value: [*:0]const u8, out: *abi.GuiTextMetrics) i32 {
+-        if (!self.hasDrawFn("gui_set_font")) {
+-            out.* = fallbackTextMetrics(value);
+-            return 0;
+-        }
+         const table_fn = self.drawFn("font_measure") orelse return self.unavailable("draw");
+         return table_fn(font_id, value, out);
+     }
+@@ -1725,37 +1678,19 @@ pub const Context = struct {
+         return table_fn(font_id, codepoint, row);
+     }
+ 
+-    /// Retrieves a complete cached glyph in one R4DRAW-v6 call. On older
+-    /// kernels the SDK composes the fixed-capacity result from font_info and
+-    /// font_glyph_row; proportional glyph metrics then degrade to face width
+-    /// and maximum advance while pixels remain exact.
++    /// Retrieves one complete snapshot through the current bitmap callback.
++    /// Missing capability returns the ordinary error without touching output.
+     pub fn fontGlyphBitmap(self: *const Context, font_id: u32, codepoint: u32, out: *abi.GuiGlyphBitmap) i32 {
+         if (codepoint > 0x10FFFF) return -1;
+-        if (self.drawFn("font_glyph_bitmap")) |table_fn| return table_fn(font_id, codepoint, out);
+-        if (!self.hasDrawFn("font_glyph_row")) return self.unavailable("draw");
+-
+-        var info: abi.GuiFontInfo = .{};
+-        const info_result = self.fontInfo(font_id, &info);
+-        if (info_result <= 0) return if (info_result < 0) info_result else -2;
+-        var bitmap = abi.GuiGlyphBitmap{
+-            .width = @min(info.width, 64),
+-            .height = @min(info.height, @as(u32, @typeInfo(@TypeOf((abi.GuiGlyphBitmap{}).rows)).array.len)),
+-            .advance = info.max_advance,
+-            .line_height = info.line_height,
+-            .baseline = info.baseline,
+-        };
+-        var row: u32 = 0;
+-        while (row < bitmap.height) : (row += 1) bitmap.rows[row] = self.fontGlyphRow(font_id, codepoint, row);
+-        out.* = bitmap;
+-        return 0;
++        const table_fn = self.drawFn("font_glyph_bitmap") orelse return self.unavailable("draw");
++        return table_fn(font_id, codepoint, out);
+     }
+ 
+-    /// Returns the non-zero generation paired with live font catalogue ids.
+-    /// Pre-v7 R4DRAW tables expose no reload generation and use stable 1.
++    /// Returns the actual generation paired with live font catalogue ids.
++    /// Zero is unavailable/unknown; no catalogue generation is invented.
+     pub fn fontRevision(self: *const Context) u32 {
+-        const table_fn = self.drawFn("font_revision") orelse return 1;
+-        const revision = table_fn();
+-        return if (revision == 0) 1 else revision;
++        const table_fn = self.drawFn("font_revision") orelse return 0;
++        return table_fn();
+     }
+ 
+     /// Rebuilds the R4DRAW catalogue from C:\R4OS\FONTS.  Returns the number
+@@ -1781,10 +1716,6 @@ pub const Context = struct {
+     }
+ 
+     pub fn textFont(self: *const Context, font_id: u32, x: i32, y: i32, value: [*:0]const u8, fg: u32, bg: u32) void {
+-        if (!self.hasDrawFn("gui_set_font")) {
+-            self.text(x, y, value, fg, bg);
+-            return;
+-        }
+         if (self.drawFn("text_font")) |table_fn| table_fn(font_id, x, y, value, fg, bg);
+     }
+ 
+@@ -2718,32 +2649,8 @@ pub const Context = struct {
+         if (payload.len > abi.ipc_max_message_size - abi.net_service_header_size) return abi.net_service_result_bad_request;
+         if (out.len < abi.net_service_header_size or out.len > abi.ipc_max_message_size) return abi.net_service_result_bad_request;
+ 
+-        const client_id = self.netServiceClientId();
+-        if (self.netFn("net_service_request")) |table_fn| {
+-            return table_fn(
+-                channel_id,
+-                op,
+-                request_id,
+-                client_id,
+-                payload.ptr,
+-                @intCast(payload.len),
+-                out.ptr,
+-                @intCast(out.len),
+-            );
+-        }
+-
+-        var message: [abi.ipc_max_message_size]u8 = undefined;
+-        writeNetServiceHeader(message[0..], channel_id, op, request_id, client_id, abi.net_service_result_ok, @intCast(payload.len)) orelse return abi.net_service_result_bad_request;
+-        if (payload.len != 0) @memcpy(message[abi.net_service_header_size .. abi.net_service_header_size + payload.len], payload);
+-        if (self.ipcSend(channel_id, message[0 .. abi.net_service_header_size + payload.len]) < 0) return abi.net_service_result_bad_service;
+-        var attempts: usize = 0;
+-        while (attempts < abi.ipc_queue_depth + 1) : (attempts += 1) {
+-            const got = self.ipcRecv(channel_id, out);
+-            if (got <= 0) return abi.net_service_result_bad_service;
+-            const response = out[0..@as(usize, @intCast(got))];
+-            if (netServiceResponseMatches(response, channel_id, op, request_id)) return got;
+-        }
+-        return abi.net_service_result_bad_service;
++        const table_fn = self.netFn("net_service_request") orelse return self.unavailable("net");
++        return table_fn(channel_id, op, request_id, self.netServiceClientId(), payload.ptr, @intCast(payload.len), out.ptr, @intCast(out.len));
+     }
+ 
+     pub fn netServiceClientId(self: *const Context) u16 {
+@@ -4217,29 +4124,6 @@ pub const Context = struct {
+     }
+ };
+ 
+-fn writeNetServiceHeader(out: []u8, channel_id: u32, op: u16, request_id: u32, client_id: u16, status: i32, payload_len: u16) ?void {
+-    if (out.len < abi.net_service_header_size) return null;
+-    writeU32(out, 0, abi.net_service_magic);
+-    writeU16(out, 4, abi.net_service_version);
+-    writeU16(out, 6, @intCast(channel_id));
+-    writeU16(out, 8, op);
+-    writeU16(out, 10, 0);
+-    writeU32(out, 12, request_id);
+-    writeU16(out, 16, client_id);
+-    writeU16(out, 18, payload_len);
+-    writeI32(out, 20, status);
+-}
+-
+-fn netServiceResponseMatches(response: []const u8, channel_id: u32, op: u16, request_id: u32) bool {
+-    if (response.len < abi.net_service_header_size) return false;
+-    if (readU32(response, 0) != abi.net_service_magic or readU16(response, 4) != abi.net_service_version) return false;
+-    if (readU16(response, 6) != @as(u16, @intCast(channel_id))) return false;
+-    if (readU16(response, 8) != op) return false;
+-    if (readU32(response, 12) != request_id) return false;
+-    const payload_len = readU16(response, 18);
+-    return abi.net_service_header_size + payload_len <= response.len;
+-}
+-
+ fn writeU16(out: []u8, offset: usize, value: u16) void {
+     out[offset] = @intCast(value & 0xFF);
+     out[offset + 1] = @intCast(value >> 8);
+@@ -4494,60 +4378,6 @@ fn parseConsoleHostKind(value: u32) abi.ConsoleHostKind {
+     };
+ }
+ 
+-fn fallbackTextMetrics(value: [*:0]const u8) abi.GuiTextMetrics {
+-    var line_w: u32 = 0;
+-    var max_w: u32 = 0;
+-    var lines: u32 = 1;
+-    var visible: u32 = 0;
+-    var i: usize = 0;
+-    while (i < 4096 and value[i] != 0) {
+-        const ch = value[i];
+-        const consumed = fallbackUtf8SequenceLength(value, i, 4096);
+-        i += consumed;
+-        if (ch == '\r') continue;
+-        if (ch == '\n') {
+-            if (line_w > max_w) max_w = line_w;
+-            line_w = 0;
+-            lines += 1;
+-            visible += @intCast(consumed);
+-            continue;
+-        }
+-        line_w += 8;
+-        visible += @intCast(consumed);
+-    }
+-    if (line_w > max_w) max_w = line_w;
+-    return .{
+-        .width = max_w,
+-        .height = lines * 8,
+-        .line_height = 8,
+-        .baseline = 7,
+-        .visible_bytes = visible,
+-    };
+-}
+-
+-fn fallbackUtf8SequenceLength(value: [*:0]const u8, start: usize, limit: usize) usize {
+-    const first = value[start];
+-    if (first < 0x80) return 1;
+-    const expected: usize = if (first >= 0xC2 and first <= 0xDF)
+-        2
+-    else if (first >= 0xE0 and first <= 0xEF)
+-        3
+-    else if (first >= 0xF0 and first <= 0xF4)
+-        4
+-    else
+-        return 1;
+-    if (expected > limit -| start) return 1;
+-    var offset: usize = 1;
+-    while (offset < expected) : (offset += 1) {
+-        if (value[start + offset] == 0 or (value[start + offset] & 0xC0) != 0x80) return 1;
+-    }
+-    if (first == 0xE0 and value[start + 1] < 0xA0) return 1;
+-    if (first == 0xED and value[start + 1] >= 0xA0) return 1;
+-    if (first == 0xF0 and value[start + 1] < 0x90) return 1;
+-    if (first == 0xF4 and value[start + 1] >= 0x90) return 1;
+-    return expected;
+-}
+-
+ var test_table_write_calls: u32 = 0;
+ var test_table_write_length: u32 = 0;
+ 
+@@ -4669,8 +4499,6 @@ test "program context distinguishes missing group null pointer and tombstone" {
+ var test_net_service_direct_calls: u32 = 0;
+ var test_net_service_raw_send_calls: u32 = 0;
+ var test_net_service_raw_recv_calls: u32 = 0;
+-var test_net_service_request_id: u32 = 0;
+-var test_net_service_op: u16 = 0;
+ 
+ fn testNetServiceDirect(
+     channel_id: u32,
+@@ -4689,30 +4517,14 @@ fn testNetServiceDirect(
+     return 3;
+ }
+ 
+-fn testNetServiceRawSend(channel_id: u32, data: [*]const u8, len: u32) callconv(.c) i32 {
++fn testNetServiceRawSend(_: u32, _: [*]const u8, _: u32) callconv(.c) i32 {
+     test_net_service_raw_send_calls += 1;
+-    if (channel_id != abi.ipc_channel_net_dns or len < abi.net_service_header_size) return -1;
+-    const request = data[0..len];
+-    test_net_service_op = readU16(request, 8);
+-    test_net_service_request_id = readU32(request, 12);
+-    return @intCast(len);
++    return -1;
+ }
+ 
+-fn testNetServiceRawRecv(channel_id: u32, out: [*]u8, max_len: u32) callconv(.c) i32 {
++fn testNetServiceRawRecv(_: u32, _: [*]u8, _: u32) callconv(.c) i32 {
+     test_net_service_raw_recv_calls += 1;
+-    if (channel_id != abi.ipc_channel_net_dns or max_len < abi.net_service_header_size + 3) return -1;
+-    const response = out[0..max_len];
+-    writeNetServiceHeader(
+-        response,
+-        channel_id,
+-        test_net_service_op,
+-        test_net_service_request_id,
+-        1,
+-        abi.net_service_result_ok,
+-        3,
+-    ) orelse return -1;
+-    @memcpy(response[abi.net_service_header_size .. abi.net_service_header_size + 3], "old");
+-    return @intCast(abi.net_service_header_size + 3);
++    return -1;
+ }
+ 
+ test "network service request prefers the generation-bound tail function" {
+@@ -4738,12 +4550,10 @@ test "network service request prefers the generation-bound tail function" {
+     try std.testing.expectEqual(@as(u32, 0), test_net_service_raw_recv_calls);
+ }
+ 
+-test "network service request retains raw IPC fallback for an older table" {
++test "network service request refuses a missing current slot without raw IPC or output mutation" {
+     test_net_service_direct_calls = 0;
+     test_net_service_raw_send_calls = 0;
+     test_net_service_raw_recv_calls = 0;
+-    test_net_service_request_id = 0;
+-    test_net_service_op = 0;
+ 
+     var raw: abi.R4XStartContext = .{};
+     var table: abi.R4XStartR4Net = .{};
+@@ -4752,12 +4562,72 @@ test "network service request retains raw IPC fallback for an older table" {
+     table.ipc_recv = @intFromPtr(&testNetServiceRawRecv);
+     var bundle: Bundle = .{ .raw = &raw, .net = &table };
+     const ctx = Context.initBundle(&bundle);
+-    var out: [abi.net_service_header_size + 3]u8 = undefined;
+-
+-    const got = ctx.netServiceRequest(abi.ipc_channel_net_dns, abi.net_service_op_dns_status_result, 92, "xyz", out[0..]);
+-    try std.testing.expectEqual(@as(i32, abi.net_service_header_size + 3), got);
+-    try std.testing.expectEqualStrings("old", out[abi.net_service_header_size..]);
++    var out: [abi.net_service_header_size + 3]u8 = .{0xA5} ** (abi.net_service_header_size + 3);
++    const got = ctx.netServiceRequest(abi.ipc_channel_net_dns, abi.net_service_op_dns_status_result, 92, "xyz", &out);
++    try std.testing.expectEqual(abi.err_no_fn, got);
+     try std.testing.expectEqual(@as(u32, 0), test_net_service_direct_calls);
+-    try std.testing.expectEqual(@as(u32, 1), test_net_service_raw_send_calls);
+-    try std.testing.expectEqual(@as(u32, 1), test_net_service_raw_recv_calls);
++    try std.testing.expectEqual(@as(u32, 0), test_net_service_raw_send_calls);
++    try std.testing.expectEqual(@as(u32, 0), test_net_service_raw_recv_calls);
++    try std.testing.expect(std.mem.allEqual(u8, &out, 0xA5));
++}
++
++var current_byte_calls: u32 = 0;
++fn currentByteKey() callconv(.c) u8 {
++    current_byte_calls += 1;
++    return 'A';
++}
++fn currentCodepoint() callconv(.c) u32 {
++    return 0x1F642;
++}
++fn currentFontInfo(font_id: u32, out: *abi.GuiFontInfo) callconv(.c) i32 {
++    out.* = .{ .id = font_id, .width = 13, .height = 17, .max_advance = 19 };
++    return 1;
++}
++fn currentFontMeasure(_: u32, _: [*:0]const u8, out: *abi.GuiTextMetrics) callconv(.c) i32 {
++    out.* = .{ .width = 37, .height = 17 };
++    return 0;
++}
++fn currentFontZero() callconv(.c) u32 {
++    return 0;
++}
++fn currentStorageV2(out: *abi.ProgramInstanceStorageSummary) callconv(.c) i32 {
++    if (out.version != 2 or out.size != @sizeOf(abi.ProgramInstanceStorageSummary)) return -1;
++    out.current_gui_frame_bytes = 8192;
++    return 1;
++}
++test "current SDK capabilities never synthesize fonts input or a storage prefix" {
++    var raw: abi.R4XStartContext = .{};
++    var draw: abi.R4XStartR4Draw = .{ .font_info = @intFromPtr(&currentFontInfo), .font_measure = @intFromPtr(&currentFontMeasure) };
++    var desk: abi.R4XStartR4Desk = .{ .read_key = @intFromPtr(&currentByteKey) };
++    var dev: abi.R4XStartR4Dev = .{ .program_instance_storage_summary = 1 };
++    const bundle: Bundle = .{ .raw = &raw, .draw = &draw, .desk = &desk, .dev = &dev };
++    const ctx = Context.initBundle(&bundle);
++    // Metadata queries depend on their own current callback, not a GUI setter.
++    var info: abi.GuiFontInfo = .{};
++    try std.testing.expectEqual(@as(i32, 1), ctx.fontInfo(14, &info));
++    try std.testing.expectEqual(@as(u32, 13), info.width);
++    var metrics: abi.GuiTextMetrics = .{};
++    try std.testing.expectEqual(@as(i32, 0), ctx.fontMeasure(14, "text", &metrics));
++    try std.testing.expectEqual(@as(u32, 37), metrics.width);
++    draw.size = @offsetOf(abi.R4XStartR4Draw, "font_info");
++    info.id = 123;
++    try std.testing.expectEqual(abi.err_no_fn, ctx.fontInfo(0, &info));
++    try std.testing.expectEqual(@as(u32, 123), info.id);
++    draw.size = @sizeOf(abi.R4XStartR4Draw);
++    try std.testing.expectEqual(@as(u32, 0), ctx.fontRevision());
++    draw.font_revision = @intFromPtr(&currentFontZero);
++    try std.testing.expectEqual(@as(u32, 0), ctx.fontRevision());
++    current_byte_calls = 0;
++    try std.testing.expectEqual(@as(u32, 0), ctx.readKeyCodepoint());
++    try std.testing.expectEqual(@as(u32, 0), current_byte_calls);
++    desk.read_key_codepoint = @intFromPtr(&currentCodepoint);
++    try std.testing.expectEqual(@as(u32, 0x1F642), ctx.readKeyCodepoint());
++    var storage: abi.ProgramInstanceStorageSummary = .{ .version = 77, .size = 88, .current_gui_frame_bytes = 99 };
++    try std.testing.expectEqual(abi.err_no_fn, ctx.programInstanceStorageSummary(&storage));
++    try std.testing.expectEqual(@as(u32, 77), storage.version);
++    try std.testing.expectEqual(@as(u64, 99), storage.current_gui_frame_bytes);
++    dev.program_instance_storage_summary_v2 = @intFromPtr(&currentStorageV2);
++    try std.testing.expectEqual(@as(i32, 1), ctx.programInstanceStorageSummary(&storage));
++    try std.testing.expectEqual(@as(u32, 2), storage.version);
++    try std.testing.expectEqual(@as(u64, 8192), storage.current_gui_frame_bytes);
+ }
+diff --git a/Platform/SDK/r4os/r4dev.zig b/Platform/SDK/r4os/r4dev.zig
+index afe174c..3f9a5bd 100644
+--- a/Platform/SDK/r4os/r4dev.zig
++++ b/Platform/SDK/r4os/r4dev.zig
+@@ -107,10 +107,6 @@ pub const Context = struct {
+         return self.base.programInstanceStorageSummary(out);
+     }
+ 
+-    pub fn programInstanceStorageSummaryLegacy(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
+-        return self.base.programInstanceStorageSummaryLegacy(out);
+-    }
+-
+     pub fn programInstanceStorageSummaryV2(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
+         return self.base.programInstanceStorageSummaryV2(out);
+     }
+@@ -119,14 +115,6 @@ pub const Context = struct {
+         return self.base.programInstanceStorageSelfTest(out);
+     }
+ 
+-    pub fn programRegistrySummary(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
+-        return self.base.programRegistrySummary(out);
+-    }
+-
+-    pub fn programRegistrySelfTest(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
+-        return self.base.programRegistrySelfTest(out);
+-    }
+-
+     pub fn programRegistrySummaryV2(self: *const Context, out: *abi.ProgramRegistrySummaryV2) i32 {
+         return self.base.programRegistrySummaryV2(out);
+     }
+@@ -145,14 +133,6 @@ pub const Context = struct {
+         return out;
+     }
+ 
+-    pub fn programRegistrySummaryLegacy(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
+-        return self.programRegistrySummary(out);
+-    }
+-
+-    pub fn programRegistrySelfTestLegacy(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
+-        return self.programRegistrySelfTest(out);
+-    }
+-
+     pub fn performanceTask(self: *const Context, index: u32) ?abi.ProgramTaskPerformanceInfo {
+         return self.base.performanceTask(index);
+     }
+diff --git a/Platform/SDK/r4os/r4xstart.zig b/Platform/SDK/r4os/r4xstart.zig
+index edc73c7..aec9306 100644
+--- a/Platform/SDK/r4os/r4xstart.zig
++++ b/Platform/SDK/r4os/r4xstart.zig
+@@ -788,7 +788,7 @@ pub const R4Desk = struct {
+     }
+ 
+     pub fn readKeyCodepoint(self: *const R4Desk) u32 {
+-        if (!self.hasFn("read_key_codepoint")) return self.readKey();
++        if (!self.hasFn("read_key_codepoint")) return 0;
+         const read_fn: ReadKeyCodepointFn = @ptrFromInt(self.table.read_key_codepoint);
+         return read_fn();
+     }
+@@ -1418,22 +1418,19 @@ pub const R4Draw = struct {
+     }
+ 
+     pub fn fontCount(self: *const R4Draw) u32 {
+-        if (!self.hasFn("font_count")) return 1;
++        if (!self.hasFn("font_count")) return 0;
+         const font_fn: FontCountFn = @ptrFromInt(self.table.font_count);
+         return font_fn();
+     }
+ 
+     pub fn fontInfo(self: *const R4Draw, font_id: u32, out: *abi.GuiFontInfo) i32 {
+-        if (!self.hasFn("font_info")) return fallbackFontInfo(font_id, out);
++        if (!self.hasFn("font_info")) return abi.err_no_fn;
+         const font_fn: FontInfoFn = @ptrFromInt(self.table.font_info);
+         return font_fn(font_id, out);
+     }
+ 
+     pub fn fontMeasure(self: *const R4Draw, font_id: u32, value: [*:0]const u8, out: *abi.GuiTextMetrics) i32 {
+-        if (!self.hasFn("font_measure")) {
+-            out.* = fallbackTextMetrics(value);
+-            return 0;
+-        }
++        if (!self.hasFn("font_measure")) return abi.err_no_fn;
+         const font_fn: FontMeasureFn = @ptrFromInt(self.table.font_measure);
+         return font_fn(font_id, value, out);
+     }
+@@ -1444,41 +1441,21 @@ pub const R4Draw = struct {
+         return font_fn(font_id, codepoint, row);
+     }
+ 
+-    /// Retrieves one complete glyph snapshot. R4DRAW-v6 resolves and copies
+-    /// it in one call; older tables are supported through their bounded row
+-    /// query. The legacy fallback cannot recover proportional per-glyph
+-    /// metrics, so it reports the face width and maximum advance.
++    /// Retrieves the current complete glyph snapshot. No row reconstruction
++    /// or approximate proportional metrics when that callback is unavailable.
+     pub fn fontGlyphBitmap(self: *const R4Draw, font_id: u32, codepoint: u32, out: *abi.GuiGlyphBitmap) i32 {
+         if (codepoint > 0x10FFFF) return -1;
+-        if (self.hasFn("font_glyph_bitmap")) {
+-            const font_fn: FontGlyphBitmapFn = @ptrFromInt(self.table.font_glyph_bitmap);
+-            return font_fn(font_id, codepoint, out);
+-        }
+-        if (!self.hasFn("font_glyph_row")) return abi.err_no_fn;
+-
+-        var info: abi.GuiFontInfo = .{};
+-        const info_result = self.fontInfo(font_id, &info);
+-        if (info_result <= 0) return if (info_result < 0) info_result else -2;
+-        var bitmap = abi.GuiGlyphBitmap{
+-            .width = @min(info.width, 64),
+-            .height = @min(info.height, @as(u32, bitmap_row_capacity)),
+-            .advance = info.max_advance,
+-            .line_height = info.line_height,
+-            .baseline = info.baseline,
+-        };
+-        var row: u32 = 0;
+-        while (row < bitmap.height) : (row += 1) bitmap.rows[row] = self.fontGlyphRow(font_id, codepoint, row);
+-        out.* = bitmap;
+-        return 0;
+-    }
+-
+-    /// Returns the generation paired with live font ids. Legacy tables use a
+-    /// stable generation because they cannot report catalogue reloads.
++        if (!self.hasFn("font_glyph_bitmap")) return abi.err_no_fn;
++        const font_fn: FontGlyphBitmapFn = @ptrFromInt(self.table.font_glyph_bitmap);
++        return font_fn(font_id, codepoint, out);
++    }
++
++    /// Returns the actual catalogue generation, or zero for unavailable.
++    /// A provider-returned zero stays zero; no stable generation is invented.
+     pub fn fontRevision(self: *const R4Draw) u32 {
+-        if (!self.hasFn("font_revision")) return 1;
++        if (!self.hasFn("font_revision")) return 0;
+         const font_fn: FontRevisionFn = @ptrFromInt(self.table.font_revision);
+-        const revision = font_fn();
+-        return if (revision == 0) 1 else revision;
++        return font_fn();
+     }
+ 
+     pub fn fontReload(self: *const R4Draw) i32 {
+@@ -1488,113 +1465,24 @@ pub const R4Draw = struct {
+     }
+ 
+     pub fn guiSetFont(self: *const R4Draw, font_id: u32) i32 {
+-        if (!self.hasFn("gui_set_font")) return if (font_id == abi.gui_font_builtin_id) 0 else -2;
++        if (!self.hasFn("gui_set_font")) return abi.err_no_fn;
+         const font_fn: GuiSetFontFn = @ptrFromInt(self.table.gui_set_font);
+         return font_fn(font_id);
+     }
+ 
+     pub fn guiFont(self: *const R4Draw, instance_id: u32, out: *abi.GuiFontInfo) i32 {
+-        if (!self.hasFn("gui_font")) {
+-            return fallbackFontInfo(abi.gui_font_builtin_id, out);
+-        }
++        if (!self.hasFn("gui_font")) return abi.err_no_fn;
+         const font_fn: GuiFontFn = @ptrFromInt(self.table.gui_font);
+         return font_fn(instance_id, out);
+     }
+ 
+     pub fn textFont(self: *const R4Draw, font_id: u32, x: i32, y: i32, value: [*:0]const u8, fg: u32, bg: u32) void {
+-        if (!self.hasFn("text_font")) {
+-            self.text(x, y, value, fg, bg);
+-            return;
+-        }
++        if (!self.hasFn("text_font")) return;
+         const text_fn: TextFontFn = @ptrFromInt(self.table.text_font);
+         text_fn(font_id, x, y, value, fg, bg);
+     }
+ };
+ 
+-fn fallbackFontInfo(font_id: u32, out: *abi.GuiFontInfo) i32 {
+-    if (font_id != abi.gui_font_builtin_id) return 0;
+-    out.* = .{
+-        .id = abi.gui_font_builtin_id,
+-        .kind = 0,
+-        .flags = abi.gui_font_flag_renderable | abi.gui_font_flag_builtin,
+-        .weight = 400,
+-        .width = 8,
+-        .height = 8,
+-        .max_advance = 8,
+-        .line_height = 8,
+-        .baseline = 7,
+-        .glyph_count = 95,
+-        .strike_count = 1,
+-    };
+-    copyFixedZ(out.family[0..], "R4OS");
+-    copyFixedZ(out.face[0..], "Builtin 8x8");
+-    copyFixedZ(out.style[0..], "Regular");
+-    copyFixedZ(out.status[0..], "builtin fallback");
+-    return 1;
+-}
+-
+-fn fallbackTextMetrics(value: [*:0]const u8) abi.GuiTextMetrics {
+-    var line_w: u32 = 0;
+-    var max_w: u32 = 0;
+-    var lines: u32 = 1;
+-    var visible: u32 = 0;
+-    var index: usize = 0;
+-    while (index < 4096 and value[index] != 0) {
+-        const ch = value[index];
+-        const consumed = fallbackUtf8SequenceLength(value, index, 4096);
+-        index += consumed;
+-        if (ch == '\r') continue;
+-        if (ch == '\n') {
+-            max_w = @max(max_w, line_w);
+-            line_w = 0;
+-            lines += 1;
+-            visible += @intCast(consumed);
+-            continue;
+-        }
+-        line_w += 8;
+-        visible += @intCast(consumed);
+-    }
+-    max_w = @max(max_w, line_w);
+-    return .{
+-        .width = max_w,
+-        .height = lines * 8,
+-        .line_height = 8,
+-        .baseline = 7,
+-        .visible_bytes = visible,
+-        .flags = 0,
+-    };
+-}
+-
+-fn fallbackUtf8SequenceLength(value: [*:0]const u8, start: usize, limit: usize) usize {
+-    const first = value[start];
+-    if (first < 0x80) return 1;
+-    const expected: usize = if (first >= 0xC2 and first <= 0xDF)
+-        2
+-    else if (first >= 0xE0 and first <= 0xEF)
+-        3
+-    else if (first >= 0xF0 and first <= 0xF4)
+-        4
+-    else
+-        return 1;
+-    if (expected > limit -| start) return 1;
+-    var offset: usize = 1;
+-    while (offset < expected) : (offset += 1) {
+-        if (value[start + offset] == 0 or (value[start + offset] & 0xC0) != 0x80) return 1;
+-    }
+-    if (first == 0xE0 and value[start + 1] < 0xA0) return 1;
+-    if (first == 0xED and value[start + 1] >= 0xA0) return 1;
+-    if (first == 0xF0 and value[start + 1] < 0x90) return 1;
+-    if (first == 0xF4 and value[start + 1] >= 0x90) return 1;
+-    return expected;
+-}
+-
+-fn copyFixedZ(out: []u8, value: []const u8) void {
+-    @memset(out, 0);
+-    if (out.len == 0) return;
+-    const count = @min(value.len, out.len - 1);
+-    if (count > 0) @memcpy(out[0..count], value[0..count]);
+-}
+-
+ const bitmap_row_capacity: usize = @typeInfo(@TypeOf((abi.GuiGlyphBitmap{}).rows)).array.len;
+ 
+ fn testBulkGlyphBitmap(_: u32, _: u32, out: *abi.GuiGlyphBitmap) callconv(.c) i32 {
+@@ -1631,12 +1519,12 @@ fn testLegacyGlyphRow(_: u32, _: u32, row: u32) callconv(.c) u64 {
+     return @as(u64, 1) << @intCast(row);
+ }
+ 
+-test "R4DRAW bulk glyph dispatch and legacy row fallback stay compatible" {
++test "R4DRAW current bulk glyph dispatch rejects missing callbacks without row substitution" {
+     var current_table = abi.R4XStartR4Draw{
+         .font_glyph_bitmap = @intFromPtr(&testBulkGlyphBitmap),
+         .font_revision = @intFromPtr(&testFontRevision),
+     };
+-    const current = R4Draw{ .table = &current_table };
++    const current = R4Draw{ .raw = undefined, .table = &current_table };
+     var bitmap: abi.GuiGlyphBitmap = .{};
+     try std.testing.expectEqual(@as(i32, 0), current.fontGlyphBitmap(0, 'A', &bitmap));
+     try std.testing.expectEqual(@as(u32, 7), bitmap.width);
+@@ -1650,18 +1538,45 @@ test "R4DRAW bulk glyph dispatch and legacy row fallback stay compatible" {
+         .font_info = @intFromPtr(&testLegacyFontInfo),
+         .font_glyph_row = @intFromPtr(&testLegacyGlyphRow),
+     };
+-    const legacy = R4Draw{ .table = &legacy_table };
+-    bitmap = .{};
++    const legacy = R4Draw{ .raw = undefined, .table = &legacy_table };
++    bitmap = .{ .width = 123, .rows = .{0xA5} ** bitmap_row_capacity };
+     try std.testing.expect(!legacy.hasFn("font_glyph_bitmap"));
+     try std.testing.expect(!legacy.hasFn("font_revision"));
+-    try std.testing.expectEqual(@as(u32, 1), legacy.fontRevision());
+-    try std.testing.expectEqual(@as(i32, 0), legacy.fontGlyphBitmap(7, 0x1F642, &bitmap));
+-    try std.testing.expectEqual(@as(u32, 11), bitmap.width);
+-    try std.testing.expectEqual(@as(u32, 3), bitmap.height);
+-    try std.testing.expectEqual(@as(u32, 12), bitmap.advance);
+-    try std.testing.expectEqual(@as(i32, 2), bitmap.baseline);
+-    try std.testing.expectEqual(@as(u64, 1), bitmap.rows[0]);
+-    try std.testing.expectEqual(@as(u64, 2), bitmap.rows[1]);
+-    try std.testing.expectEqual(@as(u64, 4), bitmap.rows[2]);
+-    try std.testing.expectEqual(@as(u64, 0), bitmap.rows[3]);
++    try std.testing.expectEqual(@as(u32, 0), legacy.fontRevision());
++    try std.testing.expectEqual(abi.err_no_fn, legacy.fontGlyphBitmap(7, 0x1F642, &bitmap));
++    try std.testing.expectEqual(@as(u32, 123), bitmap.width);
++    try std.testing.expectEqual(@as(u64, 0xA5), bitmap.rows[0]);
++    try std.testing.expectEqual(@as(u64, 0xA5), bitmap.rows[bitmap_row_capacity - 1]);
++    // A current callback's actual zero is unknown, never made-up generation1.
++    current_table.font_revision = @intFromPtr(&testUnknownFontRevision);
++    try std.testing.expectEqual(@as(u32, 0), current.fontRevision());
++    current_table.font_info = 0;
++    var info: abi.GuiFontInfo = .{ .id = 99 };
++    try std.testing.expectEqual(abi.err_no_fn, current.fontInfo(0, &info));
++    try std.testing.expectEqual(@as(u32, 99), info.id);
++    var metrics: abi.GuiTextMetrics = .{ .width = 123 };
++    try std.testing.expectEqual(abi.err_no_fn, current.fontMeasure(0, "text", &metrics));
++    try std.testing.expectEqual(@as(u32, 123), metrics.width);
++    try std.testing.expectEqual(@as(u32, 0), current.fontCount());
++    try std.testing.expectEqual(abi.err_no_fn, current.guiSetFont(abi.gui_font_builtin_id));
++    try std.testing.expectEqual(abi.err_no_fn, current.guiFont(1, &info));
++    try std.testing.expectEqual(@as(u32, 99), info.id);
++}
++
++fn testUnknownFontRevision() callconv(.c) u32 {
++    return 0;
++}
++var test_byte_key_calls: u32 = 0;
++fn testByteKey() callconv(.c) u8 {
++    test_byte_key_calls += 1;
++    return 'A';
++}
++test "R4DESK codepoint absence does not consume the separate byte stream" {
++    var table: abi.R4XStartR4Desk = .{ .read_key = @intFromPtr(&testByteKey) };
++    const desk: R4Desk = .{ .raw = undefined, .table = &table };
++    test_byte_key_calls = 0;
++    try std.testing.expectEqual(@as(u32, 0), desk.readKeyCodepoint());
++    try std.testing.expectEqual(@as(u32, 0), test_byte_key_calls);
++    try std.testing.expectEqual(@as(u8, 'A'), desk.readKey());
++    try std.testing.expectEqual(@as(u32, 1), test_byte_key_calls);
+ }

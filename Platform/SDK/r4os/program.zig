@@ -65,13 +65,12 @@ pub fn bundleValueFromR4XStart(raw: *const abi.R4XStartContext) ?Bundle {
         .sys = resolveGroupTable(abi.R4XStartR4Sys, xs, .r4sys, abi.r4xstart_r4sys_magic, 1, @offsetOf(abi.R4XStartR4Sys, "write") + @sizeOf(usize)),
         .desk = resolveGroupTable(abi.R4XStartR4Desk, xs, .r4desk, abi.r4xstart_r4desk_magic, abi.r4xstart_r4desk_version, abi.r4xstart_r4desk_size),
         .draw = resolveGroupTable(abi.R4XStartR4Draw, xs, .r4draw, abi.r4xstart_r4draw_magic, abi.r4xstart_r4draw_version, abi.r4xstart_r4draw_size),
-        // R4NET tail functions are optional and append-only. Keep older
-        // kernels usable; tableFn checks the exact size of every requested
-        // slot and netServiceRequest retains its raw-IPC fallback.
+        // Optional current R4NET operations are checked by exact slot size.
+        // Service requests require the generation-bound callback.
         .net = resolveGroupTable(abi.R4XStartR4Net, xs, .r4net, abi.r4xstart_r4net_magic, 1, @offsetOf(abi.R4XStartR4Net, "tcp_connect") + @sizeOf(usize)),
         .audio = resolveGroupTable(abi.R4XStartR4Audio, xs, .r4audio, abi.r4xstart_r4audio_magic, abi.r4xstart_r4audio_version, abi.r4xstart_r4audio_size),
-        // R4DEV tail functions are optional and append-only. Older kernels
-        // remain usable; tableFn checks the exact size of each requested slot.
+        // Optional Recovery operations are checked by exact slot size.
+        // Retired diagnostic prefixes are never used as V2 substitutes.
         .dev = resolveGroupTable(abi.R4XStartR4Dev, xs, .r4dev, abi.r4xstart_r4dev_magic, 1, @offsetOf(abi.R4XStartR4Dev, "memory_summary") + @sizeOf(usize)),
     };
     if (candidate.sys == null) return null;
@@ -478,15 +477,12 @@ pub const Context = struct {
     }
 
     pub fn programInstanceStorageSummary(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
+        // This convenience API initializes the complete current V2 record.
+        // Resolve first so an unavailable provider leaves caller bytes intact.
+        const table_fn = self.devFn("program_instance_storage_summary_v2") orelse return self.unavailable("dev");
         out.* = .{};
         out.version = 2;
         out.size = @sizeOf(abi.ProgramInstanceStorageSummary);
-        if (self.devFn("program_instance_storage_summary_v2")) |table_fn| return table_fn(out);
-        return self.programInstanceStorageSummaryLegacy(out);
-    }
-
-    pub fn programInstanceStorageSummaryLegacy(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
-        const table_fn = self.devFn("program_instance_storage_summary") orelse return self.unavailable("dev");
         return table_fn(out);
     }
 
@@ -497,16 +493,6 @@ pub const Context = struct {
 
     pub fn programInstanceStorageSelfTest(self: *const Context, out: *abi.ProgramInstanceStorageSelfTestResult) i32 {
         const table_fn = self.devFn("program_instance_storage_self_test") orelse return self.unavailable("dev");
-        return table_fn(out);
-    }
-
-    pub fn programRegistrySummary(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
-        const table_fn = self.devFn("program_registry_summary") orelse return self.unavailable("dev");
-        return table_fn(out);
-    }
-
-    pub fn programRegistrySelfTest(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
-        const table_fn = self.devFn("program_registry_self_test") orelse return self.unavailable("dev");
         return table_fn(out);
     }
 
@@ -528,14 +514,6 @@ pub const Context = struct {
     pub fn kernelVersion(self: *const Context, out: *abi.KernelVersion) i32 {
         const table_fn = self.devFn("kernel_version") orelse return self.unavailable("dev");
         return table_fn(out);
-    }
-
-    pub fn programRegistrySummaryLegacy(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
-        return self.programRegistrySummary(out);
-    }
-
-    pub fn programRegistrySelfTestLegacy(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
-        return self.programRegistrySelfTest(out);
     }
 
     pub fn performanceTask(self: *const Context, index: u32) ?abi.ProgramTaskPerformanceInfo {
@@ -784,7 +762,7 @@ pub const Context = struct {
     }
 
     pub fn readKeyCodepoint(self: *const Context) u32 {
-        const table_fn = self.deskFn("read_key_codepoint") orelse return self.readKey();
+        const table_fn = self.deskFn("read_key_codepoint") orelse return 0;
         return table_fn();
     }
 
@@ -1684,36 +1662,11 @@ pub const Context = struct {
     }
 
     pub fn fontInfo(self: *const Context, font_id: u32, out: *abi.GuiFontInfo) i32 {
-        if (!self.hasDrawFn("gui_set_font")) {
-            if (font_id != abi.gui_font_builtin_id) return 0;
-            out.* = .{
-                .id = abi.gui_font_builtin_id,
-                .kind = 0,
-                .flags = abi.gui_font_flag_renderable | abi.gui_font_flag_builtin,
-                .weight = 400,
-                .width = 8,
-                .height = 8,
-                .max_advance = 8,
-                .line_height = 8,
-                .baseline = 7,
-                .glyph_count = 95,
-                .strike_count = 1,
-            };
-            copyFixedZ(out.family[0..], "R4OS");
-            copyFixedZ(out.face[0..], "Builtin 8x8");
-            copyFixedZ(out.style[0..], "Regular");
-            copyFixedZ(out.status[0..], "builtin fallback");
-            return 1;
-        }
         const table_fn = self.drawFn("font_info") orelse return self.unavailable("draw");
         return table_fn(font_id, out);
     }
 
     pub fn fontMeasure(self: *const Context, font_id: u32, value: [*:0]const u8, out: *abi.GuiTextMetrics) i32 {
-        if (!self.hasDrawFn("gui_set_font")) {
-            out.* = fallbackTextMetrics(value);
-            return 0;
-        }
         const table_fn = self.drawFn("font_measure") orelse return self.unavailable("draw");
         return table_fn(font_id, value, out);
     }
@@ -1725,37 +1678,19 @@ pub const Context = struct {
         return table_fn(font_id, codepoint, row);
     }
 
-    /// Retrieves a complete cached glyph in one R4DRAW-v6 call. On older
-    /// kernels the SDK composes the fixed-capacity result from font_info and
-    /// font_glyph_row; proportional glyph metrics then degrade to face width
-    /// and maximum advance while pixels remain exact.
+    /// Retrieves one complete snapshot through the current bitmap callback.
+    /// Missing capability returns the ordinary error without touching output.
     pub fn fontGlyphBitmap(self: *const Context, font_id: u32, codepoint: u32, out: *abi.GuiGlyphBitmap) i32 {
         if (codepoint > 0x10FFFF) return -1;
-        if (self.drawFn("font_glyph_bitmap")) |table_fn| return table_fn(font_id, codepoint, out);
-        if (!self.hasDrawFn("font_glyph_row")) return self.unavailable("draw");
-
-        var info: abi.GuiFontInfo = .{};
-        const info_result = self.fontInfo(font_id, &info);
-        if (info_result <= 0) return if (info_result < 0) info_result else -2;
-        var bitmap = abi.GuiGlyphBitmap{
-            .width = @min(info.width, 64),
-            .height = @min(info.height, @as(u32, @typeInfo(@TypeOf((abi.GuiGlyphBitmap{}).rows)).array.len)),
-            .advance = info.max_advance,
-            .line_height = info.line_height,
-            .baseline = info.baseline,
-        };
-        var row: u32 = 0;
-        while (row < bitmap.height) : (row += 1) bitmap.rows[row] = self.fontGlyphRow(font_id, codepoint, row);
-        out.* = bitmap;
-        return 0;
+        const table_fn = self.drawFn("font_glyph_bitmap") orelse return self.unavailable("draw");
+        return table_fn(font_id, codepoint, out);
     }
 
-    /// Returns the non-zero generation paired with live font catalogue ids.
-    /// Pre-v7 R4DRAW tables expose no reload generation and use stable 1.
+    /// Returns the actual generation paired with live font catalogue ids.
+    /// Zero is unavailable/unknown; no catalogue generation is invented.
     pub fn fontRevision(self: *const Context) u32 {
-        const table_fn = self.drawFn("font_revision") orelse return 1;
-        const revision = table_fn();
-        return if (revision == 0) 1 else revision;
+        const table_fn = self.drawFn("font_revision") orelse return 0;
+        return table_fn();
     }
 
     /// Rebuilds the R4DRAW catalogue from C:\R4OS\FONTS.  Returns the number
@@ -1781,10 +1716,6 @@ pub const Context = struct {
     }
 
     pub fn textFont(self: *const Context, font_id: u32, x: i32, y: i32, value: [*:0]const u8, fg: u32, bg: u32) void {
-        if (!self.hasDrawFn("gui_set_font")) {
-            self.text(x, y, value, fg, bg);
-            return;
-        }
         if (self.drawFn("text_font")) |table_fn| table_fn(font_id, x, y, value, fg, bg);
     }
 
@@ -2718,32 +2649,8 @@ pub const Context = struct {
         if (payload.len > abi.ipc_max_message_size - abi.net_service_header_size) return abi.net_service_result_bad_request;
         if (out.len < abi.net_service_header_size or out.len > abi.ipc_max_message_size) return abi.net_service_result_bad_request;
 
-        const client_id = self.netServiceClientId();
-        if (self.netFn("net_service_request")) |table_fn| {
-            return table_fn(
-                channel_id,
-                op,
-                request_id,
-                client_id,
-                payload.ptr,
-                @intCast(payload.len),
-                out.ptr,
-                @intCast(out.len),
-            );
-        }
-
-        var message: [abi.ipc_max_message_size]u8 = undefined;
-        writeNetServiceHeader(message[0..], channel_id, op, request_id, client_id, abi.net_service_result_ok, @intCast(payload.len)) orelse return abi.net_service_result_bad_request;
-        if (payload.len != 0) @memcpy(message[abi.net_service_header_size .. abi.net_service_header_size + payload.len], payload);
-        if (self.ipcSend(channel_id, message[0 .. abi.net_service_header_size + payload.len]) < 0) return abi.net_service_result_bad_service;
-        var attempts: usize = 0;
-        while (attempts < abi.ipc_queue_depth + 1) : (attempts += 1) {
-            const got = self.ipcRecv(channel_id, out);
-            if (got <= 0) return abi.net_service_result_bad_service;
-            const response = out[0..@as(usize, @intCast(got))];
-            if (netServiceResponseMatches(response, channel_id, op, request_id)) return got;
-        }
-        return abi.net_service_result_bad_service;
+        const table_fn = self.netFn("net_service_request") orelse return self.unavailable("net");
+        return table_fn(channel_id, op, request_id, self.netServiceClientId(), payload.ptr, @intCast(payload.len), out.ptr, @intCast(out.len));
     }
 
     pub fn netServiceClientId(self: *const Context) u16 {
@@ -4217,29 +4124,6 @@ pub const Context = struct {
     }
 };
 
-fn writeNetServiceHeader(out: []u8, channel_id: u32, op: u16, request_id: u32, client_id: u16, status: i32, payload_len: u16) ?void {
-    if (out.len < abi.net_service_header_size) return null;
-    writeU32(out, 0, abi.net_service_magic);
-    writeU16(out, 4, abi.net_service_version);
-    writeU16(out, 6, @intCast(channel_id));
-    writeU16(out, 8, op);
-    writeU16(out, 10, 0);
-    writeU32(out, 12, request_id);
-    writeU16(out, 16, client_id);
-    writeU16(out, 18, payload_len);
-    writeI32(out, 20, status);
-}
-
-fn netServiceResponseMatches(response: []const u8, channel_id: u32, op: u16, request_id: u32) bool {
-    if (response.len < abi.net_service_header_size) return false;
-    if (readU32(response, 0) != abi.net_service_magic or readU16(response, 4) != abi.net_service_version) return false;
-    if (readU16(response, 6) != @as(u16, @intCast(channel_id))) return false;
-    if (readU16(response, 8) != op) return false;
-    if (readU32(response, 12) != request_id) return false;
-    const payload_len = readU16(response, 18);
-    return abi.net_service_header_size + payload_len <= response.len;
-}
-
 fn writeU16(out: []u8, offset: usize, value: u16) void {
     out[offset] = @intCast(value & 0xFF);
     out[offset + 1] = @intCast(value >> 8);
@@ -4494,60 +4378,6 @@ fn parseConsoleHostKind(value: u32) abi.ConsoleHostKind {
     };
 }
 
-fn fallbackTextMetrics(value: [*:0]const u8) abi.GuiTextMetrics {
-    var line_w: u32 = 0;
-    var max_w: u32 = 0;
-    var lines: u32 = 1;
-    var visible: u32 = 0;
-    var i: usize = 0;
-    while (i < 4096 and value[i] != 0) {
-        const ch = value[i];
-        const consumed = fallbackUtf8SequenceLength(value, i, 4096);
-        i += consumed;
-        if (ch == '\r') continue;
-        if (ch == '\n') {
-            if (line_w > max_w) max_w = line_w;
-            line_w = 0;
-            lines += 1;
-            visible += @intCast(consumed);
-            continue;
-        }
-        line_w += 8;
-        visible += @intCast(consumed);
-    }
-    if (line_w > max_w) max_w = line_w;
-    return .{
-        .width = max_w,
-        .height = lines * 8,
-        .line_height = 8,
-        .baseline = 7,
-        .visible_bytes = visible,
-    };
-}
-
-fn fallbackUtf8SequenceLength(value: [*:0]const u8, start: usize, limit: usize) usize {
-    const first = value[start];
-    if (first < 0x80) return 1;
-    const expected: usize = if (first >= 0xC2 and first <= 0xDF)
-        2
-    else if (first >= 0xE0 and first <= 0xEF)
-        3
-    else if (first >= 0xF0 and first <= 0xF4)
-        4
-    else
-        return 1;
-    if (expected > limit -| start) return 1;
-    var offset: usize = 1;
-    while (offset < expected) : (offset += 1) {
-        if (value[start + offset] == 0 or (value[start + offset] & 0xC0) != 0x80) return 1;
-    }
-    if (first == 0xE0 and value[start + 1] < 0xA0) return 1;
-    if (first == 0xED and value[start + 1] >= 0xA0) return 1;
-    if (first == 0xF0 and value[start + 1] < 0x90) return 1;
-    if (first == 0xF4 and value[start + 1] >= 0x90) return 1;
-    return expected;
-}
-
 var test_table_write_calls: u32 = 0;
 var test_table_write_length: u32 = 0;
 
@@ -4669,8 +4499,6 @@ test "program context distinguishes missing group null pointer and tombstone" {
 var test_net_service_direct_calls: u32 = 0;
 var test_net_service_raw_send_calls: u32 = 0;
 var test_net_service_raw_recv_calls: u32 = 0;
-var test_net_service_request_id: u32 = 0;
-var test_net_service_op: u16 = 0;
 
 fn testNetServiceDirect(
     channel_id: u32,
@@ -4689,30 +4517,14 @@ fn testNetServiceDirect(
     return 3;
 }
 
-fn testNetServiceRawSend(channel_id: u32, data: [*]const u8, len: u32) callconv(.c) i32 {
+fn testNetServiceRawSend(_: u32, _: [*]const u8, _: u32) callconv(.c) i32 {
     test_net_service_raw_send_calls += 1;
-    if (channel_id != abi.ipc_channel_net_dns or len < abi.net_service_header_size) return -1;
-    const request = data[0..len];
-    test_net_service_op = readU16(request, 8);
-    test_net_service_request_id = readU32(request, 12);
-    return @intCast(len);
+    return -1;
 }
 
-fn testNetServiceRawRecv(channel_id: u32, out: [*]u8, max_len: u32) callconv(.c) i32 {
+fn testNetServiceRawRecv(_: u32, _: [*]u8, _: u32) callconv(.c) i32 {
     test_net_service_raw_recv_calls += 1;
-    if (channel_id != abi.ipc_channel_net_dns or max_len < abi.net_service_header_size + 3) return -1;
-    const response = out[0..max_len];
-    writeNetServiceHeader(
-        response,
-        channel_id,
-        test_net_service_op,
-        test_net_service_request_id,
-        1,
-        abi.net_service_result_ok,
-        3,
-    ) orelse return -1;
-    @memcpy(response[abi.net_service_header_size .. abi.net_service_header_size + 3], "old");
-    return @intCast(abi.net_service_header_size + 3);
+    return -1;
 }
 
 test "network service request prefers the generation-bound tail function" {
@@ -4738,12 +4550,10 @@ test "network service request prefers the generation-bound tail function" {
     try std.testing.expectEqual(@as(u32, 0), test_net_service_raw_recv_calls);
 }
 
-test "network service request retains raw IPC fallback for an older table" {
+test "network service request refuses a missing current slot without raw IPC or output mutation" {
     test_net_service_direct_calls = 0;
     test_net_service_raw_send_calls = 0;
     test_net_service_raw_recv_calls = 0;
-    test_net_service_request_id = 0;
-    test_net_service_op = 0;
 
     var raw: abi.R4XStartContext = .{};
     var table: abi.R4XStartR4Net = .{};
@@ -4752,12 +4562,72 @@ test "network service request retains raw IPC fallback for an older table" {
     table.ipc_recv = @intFromPtr(&testNetServiceRawRecv);
     var bundle: Bundle = .{ .raw = &raw, .net = &table };
     const ctx = Context.initBundle(&bundle);
-    var out: [abi.net_service_header_size + 3]u8 = undefined;
-
-    const got = ctx.netServiceRequest(abi.ipc_channel_net_dns, abi.net_service_op_dns_status_result, 92, "xyz", out[0..]);
-    try std.testing.expectEqual(@as(i32, abi.net_service_header_size + 3), got);
-    try std.testing.expectEqualStrings("old", out[abi.net_service_header_size..]);
+    var out: [abi.net_service_header_size + 3]u8 = .{0xA5} ** (abi.net_service_header_size + 3);
+    const got = ctx.netServiceRequest(abi.ipc_channel_net_dns, abi.net_service_op_dns_status_result, 92, "xyz", &out);
+    try std.testing.expectEqual(abi.err_no_fn, got);
     try std.testing.expectEqual(@as(u32, 0), test_net_service_direct_calls);
-    try std.testing.expectEqual(@as(u32, 1), test_net_service_raw_send_calls);
-    try std.testing.expectEqual(@as(u32, 1), test_net_service_raw_recv_calls);
+    try std.testing.expectEqual(@as(u32, 0), test_net_service_raw_send_calls);
+    try std.testing.expectEqual(@as(u32, 0), test_net_service_raw_recv_calls);
+    try std.testing.expect(std.mem.allEqual(u8, &out, 0xA5));
+}
+
+var current_byte_calls: u32 = 0;
+fn currentByteKey() callconv(.c) u8 {
+    current_byte_calls += 1;
+    return 'A';
+}
+fn currentCodepoint() callconv(.c) u32 {
+    return 0x1F642;
+}
+fn currentFontInfo(font_id: u32, out: *abi.GuiFontInfo) callconv(.c) i32 {
+    out.* = .{ .id = font_id, .width = 13, .height = 17, .max_advance = 19 };
+    return 1;
+}
+fn currentFontMeasure(_: u32, _: [*:0]const u8, out: *abi.GuiTextMetrics) callconv(.c) i32 {
+    out.* = .{ .width = 37, .height = 17 };
+    return 0;
+}
+fn currentFontZero() callconv(.c) u32 {
+    return 0;
+}
+fn currentStorageV2(out: *abi.ProgramInstanceStorageSummary) callconv(.c) i32 {
+    if (out.version != 2 or out.size != @sizeOf(abi.ProgramInstanceStorageSummary)) return -1;
+    out.current_gui_frame_bytes = 8192;
+    return 1;
+}
+test "current SDK capabilities never synthesize fonts input or a storage prefix" {
+    var raw: abi.R4XStartContext = .{};
+    var draw: abi.R4XStartR4Draw = .{ .font_info = @intFromPtr(&currentFontInfo), .font_measure = @intFromPtr(&currentFontMeasure) };
+    var desk: abi.R4XStartR4Desk = .{ .read_key = @intFromPtr(&currentByteKey) };
+    var dev: abi.R4XStartR4Dev = .{ .program_instance_storage_summary = 1 };
+    const bundle: Bundle = .{ .raw = &raw, .draw = &draw, .desk = &desk, .dev = &dev };
+    const ctx = Context.initBundle(&bundle);
+    // Metadata queries depend on their own current callback, not a GUI setter.
+    var info: abi.GuiFontInfo = .{};
+    try std.testing.expectEqual(@as(i32, 1), ctx.fontInfo(14, &info));
+    try std.testing.expectEqual(@as(u32, 13), info.width);
+    var metrics: abi.GuiTextMetrics = .{};
+    try std.testing.expectEqual(@as(i32, 0), ctx.fontMeasure(14, "text", &metrics));
+    try std.testing.expectEqual(@as(u32, 37), metrics.width);
+    draw.size = @offsetOf(abi.R4XStartR4Draw, "font_info");
+    info.id = 123;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.fontInfo(0, &info));
+    try std.testing.expectEqual(@as(u32, 123), info.id);
+    draw.size = @sizeOf(abi.R4XStartR4Draw);
+    try std.testing.expectEqual(@as(u32, 0), ctx.fontRevision());
+    draw.font_revision = @intFromPtr(&currentFontZero);
+    try std.testing.expectEqual(@as(u32, 0), ctx.fontRevision());
+    current_byte_calls = 0;
+    try std.testing.expectEqual(@as(u32, 0), ctx.readKeyCodepoint());
+    try std.testing.expectEqual(@as(u32, 0), current_byte_calls);
+    desk.read_key_codepoint = @intFromPtr(&currentCodepoint);
+    try std.testing.expectEqual(@as(u32, 0x1F642), ctx.readKeyCodepoint());
+    var storage: abi.ProgramInstanceStorageSummary = .{ .version = 77, .size = 88, .current_gui_frame_bytes = 99 };
+    try std.testing.expectEqual(abi.err_no_fn, ctx.programInstanceStorageSummary(&storage));
+    try std.testing.expectEqual(@as(u32, 77), storage.version);
+    try std.testing.expectEqual(@as(u64, 99), storage.current_gui_frame_bytes);
+    dev.program_instance_storage_summary_v2 = @intFromPtr(&currentStorageV2);
+    try std.testing.expectEqual(@as(i32, 1), ctx.programInstanceStorageSummary(&storage));
+    try std.testing.expectEqual(@as(u32, 2), storage.version);
+    try std.testing.expectEqual(@as(u64, 8192), storage.current_gui_frame_bytes);
 }

@@ -3396,8 +3396,8 @@
     },
     {
       "path": "Kernel/program/r4dev.zig",
-      "bytes": 182295,
-      "sha256": "5367ee4701b30a4868ce1951903c2212089ea8ded5c486d87e3e93488e71441a",
+      "bytes": 180214,
+      "sha256": "8d7d1420eee36d523987698e5c4679b769f98917ece43bc01fad3b2d35a7872e",
       "originalSha256": "ad5fa8f328c6376b69d0ca3fe1c5afc49003e35648a8629d5ec19466e7ac6073",
       "origin": {
         "path": "program/r4dev.zig",
@@ -3466,8 +3466,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 819463,
-      "sha256": "a83da2f7ceb52140b0fb1f02d526002e444136711e9894501d7f3051e6e2adf7",
+      "bytes": 819536,
+      "sha256": "5b0f5d4e91c16635eb80d2e7c5d42a1a61834e6399fa7c9a67e0c4d1ee8254cd",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3807,7 +3807,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "d326579065673c8746c232860ea58ea3e3408840e6fbd7ae0c4281a98c798b4f",
+      "sha256": "d8503c689f9495687a8c24e50d79a057fcd85637c1a27a0a121a2db5eff8b42d",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -4214,6 +4214,13 @@
       "origin": null
     },
     {
+      "path": "Legal/Changes/Kernel-0.86.81.patch",
+      "bytes": 6570,
+      "sha256": "5332af29dbb3f059e278db12a0f37f2dd2a8b6967832f0ee733ca8db3fe1e1e7",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Legal/Changes/SDK-0.76.10.patch",
       "bytes": 6303,
       "sha256": "06afb8a6614b60a19783e9c7d1e3cd6da3049eaf618ed4e07e2ffb943c336c22",
@@ -4434,6 +4441,13 @@
       "path": "Legal/Changes/SDK-0.84.46.patch",
       "bytes": 7101,
       "sha256": "ebbafca934831fe2ba9d1510e9600940f6ba8bc3a5a9cd6ad8d3137fbd832502",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Legal/Changes/SDK-0.86.81.patch",
+      "bytes": 42706,
+      "sha256": "c99822664e8990daad0bfce76c9b0bf0c55579fd778ad9ea8c6c8ebc8762d219",
       "originalSha256": null,
       "origin": null
     },
@@ -6823,8 +6837,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_devices.zig",
-      "bytes": 4612,
-      "sha256": "72b5f8618b720dd29e380ee24cbbe3d69ef5634220bc787a031bd7e237c5a7aa",
+      "bytes": 4219,
+      "sha256": "7f59096d70920c57928651eca9940b3dfe15dfaf791ad6191514ac79249753cb",
       "originalSha256": "72b5f8618b720dd29e380ee24cbbe3d69ef5634220bc787a031bd7e237c5a7aa",
       "origin": {
         "path": "r4os/app_devices.zig",
@@ -7164,8 +7178,8 @@
     },
     {
       "path": "Platform/SDK/r4os/program.zig",
-      "bytes": 229720,
-      "sha256": "1b2f20a1eef4a5e5aba1488ef06fc62add81da707132db9365ae3b0cf924742f",
+      "bytes": 225077,
+      "sha256": "3fa1eb87a315c07b9b2047f204bc5282b207b8d2668c897b0c00de80dc278506",
       "originalSha256": "df51028b3acbc32ea419796bcee55222ca6040acad89e58a632f88267b3d4f9c",
       "origin": {
         "path": "r4os/program.zig",
@@ -7224,8 +7238,8 @@
     },
     {
       "path": "Platform/SDK/r4os/r4dev.zig",
-      "bytes": 11699,
-      "sha256": "daf5040f4e2a8c741f33eaeff0a7afa721b4e907b28183304bab5eb6e78c190c",
+      "bytes": 10861,
+      "sha256": "e30cbe79843f5edf29a66ffeff071f5dee36cee4672057ac89b4aa913dc54d88",
       "originalSha256": "b5c6156b3407d79b16921c8a0c0222fca7cfc828f6729fed6aa33c4a9f34e6d8",
       "origin": {
         "path": "r4os/r4dev.zig",
@@ -7294,8 +7308,8 @@
     },
     {
       "path": "Platform/SDK/r4os/r4xstart.zig",
-      "bytes": 82285,
-      "sha256": "5256208cbbc8584b6b2e1c7f0845860e76e45fb852954f0a6f5529d428cfe82d",
+      "bytes": 79982,
+      "sha256": "ab5b3ecf6032211a4c805bfbd6d07e6d834c685f09ad255122923f9e4f0d4460",
       "originalSha256": "0d6be58b8daa095ba88d0fb3fb978c9a1ebb172656b505d6e5d4f24e2bf61423",
       "origin": {
         "path": "r4os/r4xstart.zig",
@@ -8840,8 +8854,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig",
-      "bytes": 14397,
-      "sha256": "0f225f62311c92c9552e9423b527a6c9ffde90ba338f87758af3a5a8a39f7bdc",
+      "bytes": 13366,
+      "sha256": "5e5314a512be9b73eab94b26140d69221b304724567a9100ec3e54d17225a5ee",
       "originalSha256": "0f225f62311c92c9552e9423b527a6c9ffde90ba338f87758af3a5a8a39f7bdc",
       "origin": {
         "path": "Tests/Conformance/AudioDeviceFacadePrototype05827.zig",
@@ -8890,8 +8904,8 @@
     },
     {
       "path": "Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig",
-      "bytes": 24192,
-      "sha256": "366a4d96d9b22e3df5602839cef63b3177cca8d83c6c4a42ddec17dd57aa2679",
+      "bytes": 23477,
+      "sha256": "8ff1452a44d8012ab099652fccde3d3a42bfb97b95738f45254f4480fada883f",
       "originalSha256": "366a4d96d9b22e3df5602839cef63b3177cca8d83c6c4a42ddec17dd57aa2679",
       "origin": {
         "path": "Tests/Conformance/ResourceFacadePrototype05825.zig",
@@ -9579,7 +9593,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "4bb172e31c197b111877924385c32d32b87a7ad4046882bdbeeed8b2fe882f43",
+      "sha256": "557ca0721092a977df45ae12331eaed03b6b634f4f0bed5df5b3af31efa84654",
       "originalSha256": null,
       "origin": null
     },
@@ -9908,7 +9922,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "fad57b646af493c7828a5a6ddf913896e2042c0f4a73b56a51b07e0845525e67",
+      "sha256": "28a7e7dabe277877bb1cfd3dad2ae6c50082a96fcf90bf77bd9121ae6217bedf",
       "originalSha256": null,
       "origin": null
     },
@@ -9932,7 +9946,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "94a9c22b95c05018b22b63657a4f1c8d2b4ea3b82292622ada456bb5f44b42d7",
+      "sha256": "d86cbcafe75634a510536ee97e4733ad7d2405eab8d8cf5054ccfa1ee90e7c79",
       "originalSha256": null,
       "origin": null
     },
@@ -16424,6 +16438,96 @@
           "before": "9925ec418d16c442b0dd9a6d2efe49bfa208f9a67e5e5dbcec32528151937a0e",
           "after": "70aa9668eb4640bb6ec216ed2b882608afbe0add2eb27baa84b2209d300bc477",
           "path": "Legal/Changes/Kernel-0.86.32.patch"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "5367ee4701b30a4868ce1951903c2212089ea8ded5c486d87e3e93488e71441a",
+          "path": "Kernel/program/r4dev.zig",
+          "after": "8d7d1420eee36d523987698e5c4679b769f98917ece43bc01fad3b2d35a7872e"
+        },
+        {
+          "before": "a83da2f7ceb52140b0fb1f02d526002e444136711e9894501d7f3051e6e2adf7",
+          "path": "Kernel/program/r4x.zig",
+          "after": "9602fbd8a38fab4d477cb92b5067d07059e8e291bebf0917c7cf147c9b2711d7"
+        },
+        {
+          "before": "d326579065673c8746c232860ea58ea3e3408840e6fbd7ae0c4281a98c798b4f",
+          "path": "Kernel/VERSION.R4S",
+          "after": "d8503c689f9495687a8c24e50d79a057fcd85637c1a27a0a121a2db5eff8b42d"
+        },
+        {
+          "before": null,
+          "path": "Legal/Changes/Kernel-0.86.81.patch",
+          "after": "bfb4644120252fd38cf2f773485c8a946ab068764a3f3a6419082a7639e25f29"
+        },
+        {
+          "before": null,
+          "path": "Legal/Changes/SDK-0.86.81.patch",
+          "after": "c99822664e8990daad0bfce76c9b0bf0c55579fd778ad9ea8c6c8ebc8762d219"
+        },
+        {
+          "before": "72b5f8618b720dd29e380ee24cbbe3d69ef5634220bc787a031bd7e237c5a7aa",
+          "path": "Platform/SDK/r4os/app_devices.zig",
+          "after": "7f59096d70920c57928651eca9940b3dfe15dfaf791ad6191514ac79249753cb"
+        },
+        {
+          "before": "1b2f20a1eef4a5e5aba1488ef06fc62add81da707132db9365ae3b0cf924742f",
+          "path": "Platform/SDK/r4os/program.zig",
+          "after": "3fa1eb87a315c07b9b2047f204bc5282b207b8d2668c897b0c00de80dc278506"
+        },
+        {
+          "before": "daf5040f4e2a8c741f33eaeff0a7afa721b4e907b28183304bab5eb6e78c190c",
+          "path": "Platform/SDK/r4os/r4dev.zig",
+          "after": "e30cbe79843f5edf29a66ffeff071f5dee36cee4672057ac89b4aa913dc54d88"
+        },
+        {
+          "before": "5256208cbbc8584b6b2e1c7f0845860e76e45fb852954f0a6f5529d428cfe82d",
+          "path": "Platform/SDK/r4os/r4xstart.zig",
+          "after": "ab5b3ecf6032211a4c805bfbd6d07e6d834c685f09ad255122923f9e4f0d4460"
+        },
+        {
+          "before": "0f225f62311c92c9552e9423b527a6c9ffde90ba338f87758af3a5a8a39f7bdc",
+          "path": "Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig",
+          "after": "5e5314a512be9b73eab94b26140d69221b304724567a9100ec3e54d17225a5ee"
+        },
+        {
+          "before": "366a4d96d9b22e3df5602839cef63b3177cca8d83c6c4a42ddec17dd57aa2679",
+          "path": "Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig",
+          "after": "8ff1452a44d8012ab099652fccde3d3a42bfb97b95738f45254f4480fada883f"
+        },
+        {
+          "before": "4bb172e31c197b111877924385c32d32b87a7ad4046882bdbeeed8b2fe882f43",
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "after": "557ca0721092a977df45ae12331eaed03b6b634f4f0bed5df5b3af31efa84654"
+        },
+        {
+          "before": "fad57b646af493c7828a5a6ddf913896e2042c0f4a73b56a51b07e0845525e67",
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "after": "28a7e7dabe277877bb1cfd3dad2ae6c50082a96fcf90bf77bd9121ae6217bedf"
+        },
+        {
+          "before": "94a9c22b95c05018b22b63657a4f1c8d2b4ea3b82292622ada456bb5f44b42d7",
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "d86cbcafe75634a510536ee97e4733ad7d2405eab8d8cf5054ccfa1ee90e7c79"
+        }
+      ],
+      "reason": "0.86.81 bounded current font network Unicode and V2 diagnostic profile transfer from SDK51ed03d and Kerneld0bd13f"
+    },
+    {
+      "reason": "0.86.81 finalize typed optional Recovery prefix callbacks as null",
+      "changes": [
+        {
+          "path": "Kernel/program/r4x.zig",
+          "after": "5b0f5d4e91c16635eb80d2e7c5d42a1a61834e6399fa7c9a67e0c4d1ee8254cd",
+          "before": "9602fbd8a38fab4d477cb92b5067d07059e8e291bebf0917c7cf147c9b2711d7"
+        },
+        {
+          "path": "Legal/Changes/Kernel-0.86.81.patch",
+          "after": "5332af29dbb3f059e278db12a0f37f2dd2a8b6967832f0ee733ca8db3fe1e1e7",
+          "before": "bfb4644120252fd38cf2f773485c8a946ab068764a3f3a6419082a7639e25f29"
         }
       ]
     }

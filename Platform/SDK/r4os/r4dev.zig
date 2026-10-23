@@ -107,24 +107,12 @@ pub const Context = struct {
         return self.base.programInstanceStorageSummary(out);
     }
 
-    pub fn programInstanceStorageSummaryLegacy(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
-        return self.base.programInstanceStorageSummaryLegacy(out);
-    }
-
     pub fn programInstanceStorageSummaryV2(self: *const Context, out: *abi.ProgramInstanceStorageSummary) i32 {
         return self.base.programInstanceStorageSummaryV2(out);
     }
 
     pub fn programInstanceStorageSelfTest(self: *const Context, out: *abi.ProgramInstanceStorageSelfTestResult) i32 {
         return self.base.programInstanceStorageSelfTest(out);
-    }
-
-    pub fn programRegistrySummary(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
-        return self.base.programRegistrySummary(out);
-    }
-
-    pub fn programRegistrySelfTest(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
-        return self.base.programRegistrySelfTest(out);
     }
 
     pub fn programRegistrySummaryV2(self: *const Context, out: *abi.ProgramRegistrySummaryV2) i32 {
@@ -143,14 +131,6 @@ pub const Context = struct {
         var out: abi.KernelVersion = .{};
         if (self.base.kernelVersion(&out) <= 0) return null;
         return out;
-    }
-
-    pub fn programRegistrySummaryLegacy(self: *const Context, out: *abi.ProgramRegistrySummary) i32 {
-        return self.programRegistrySummary(out);
-    }
-
-    pub fn programRegistrySelfTestLegacy(self: *const Context, out: *abi.ProgramRegistrySelfTestResult) i32 {
-        return self.programRegistrySelfTest(out);
     }
 
     pub fn performanceTask(self: *const Context, index: u32) ?abi.ProgramTaskPerformanceInfo {

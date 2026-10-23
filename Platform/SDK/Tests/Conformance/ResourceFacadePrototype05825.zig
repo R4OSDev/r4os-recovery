@@ -312,24 +312,16 @@ fn resources() r4os.Resources {
     return .{ .sys = r4os.r4sys.Context.init(&bundle) };
 }
 
-test "R4DEV registry source names keep v1 and expose V2 explicitly" {
+test "Recovery R4DEV registry uses only explicit current V2" {
     const bundle = r4os.program.Bundle{ .raw = &fake_context };
     const dev = r4os.r4dev.Context.init(&bundle);
-    var summary_v1: r4os.abi.ProgramRegistrySummary = .{};
-    var self_test_v1: r4os.abi.ProgramRegistrySelfTestResult = .{};
     var summary_v2: r4os.abi.ProgramRegistrySummaryV2 = .{};
     var self_test_v2: r4os.abi.ProgramRegistrySelfTestResultV2 = .{};
-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySummary(&summary_v1));
-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySelfTest(&self_test_v1));
     try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySummaryV2(&summary_v2));
     try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySelfTestV2(&self_test_v2));
-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySummaryLegacy(&summary_v1));
-    try std.testing.expectEqual(r4os.abi.err_no_group, dev.programRegistrySelfTestLegacy(&self_test_v1));
 
     const performance = r4os.PerformanceView{ .raw = dev };
-    try std.testing.expect(performance.programRegistry() == null);
     try std.testing.expect(performance.programRegistryV2() == null);
-    try std.testing.expectEqual(r4os.abi.err_no_group, performance.programRegistrySelfTest(&self_test_v1));
     try std.testing.expectEqual(r4os.abi.err_no_group, performance.programRegistrySelfTestV2(&self_test_v2));
 }
 

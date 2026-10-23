@@ -7890,10 +7890,10 @@ fn configureR4XStartR4DevTable() void {
         .boot_info_summary = &r4api.r4dev.bootInfoSummary,
         .boot_info_memory_count = &r4api.r4dev.bootInfoMemoryCount,
         .boot_info_memory_entry = &r4api.r4dev.bootInfoMemoryEntry,
-        .program_instance_storage_summary = &r4api.r4dev.programInstanceStorageSummary,
+        .program_instance_storage_summary = null, // Retired prefix in this Recovery profile; slot remains.
         .program_instance_storage_self_test = &r4api.r4dev.programInstanceStorageSelfTest,
-        .program_registry_summary = &r4api.r4dev.programRegistrySummary,
-        .program_registry_self_test = &r4api.r4dev.programRegistrySelfTest,
+        .program_registry_summary = null, // Retired prefix in this Recovery profile; slot remains.
+        .program_registry_self_test = null, // Retired prefix in this Recovery profile; slot remains.
         .program_registry_summary_v2 = &r4api.r4dev.programRegistrySummaryV2,
         .program_registry_self_test_v2 = &r4api.r4dev.programRegistrySelfTestV2,
         .execution_inventory_summary = &r4api.r4dev.executionInventorySummary,

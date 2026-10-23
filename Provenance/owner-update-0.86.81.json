@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "release": "0.86.81",
+  "date": "2026-10-23",
+  "scope": "Recovery66/own Kernel64/Menu25: only needed current font, Unicode and generation-bound network callbacks, full current V2 diagnostics and disabled obsolete prefix providers. All39 imported modules and original sources unchanged; no normal runtime/ABI or USB/transactional install/update/rollback change.",
+  "profileAbi": {
+    "frozenContract": "0.64.11",
+    "r4devVersion": 8,
+    "r4devBytes": 344,
+    "disabledOptionalSlots": [
+      27,
+      29,
+      30
+    ],
+    "offsets": [
+      232,
+      248,
+      256
+    ],
+    "slotReuse": false,
+    "fullNormalContract45Imported": false
+  },
+  "owners": [
+    {
+      "owner": "SDK",
+      "sourceCommit": "51ed03d813d9baeab630746f1d1bbc46c2d2a1e6",
+      "baseRecoveryCommit": "f33329dae2db9944087de555c1726aa6c017cb09",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.86.81.patch",
+      "patchSha256": "c99822664e8990daad0bfce76c9b0bf0c55579fd778ad9ea8c6c8ebc8762d219",
+      "importMode": "Bounded semantic transfer to the existing frozen Zig Recovery profile; no whole normal SDK/Contract/Kernel import. Existing optional retired callback names remain at their exact old offsets with zero providers. Needed current V2/header checks, font/Unicode/network semantics only; files are not byte-identical imports.",
+      "sourceFiles": [
+        {
+          "path": "r4os/program.zig",
+          "sha256": "41be6edf48034e64c0406062dfe582a710392c6d2fa06e008a699b08a2bc7b40"
+        },
+        {
+          "path": "r4os/r4xstart.zig",
+          "sha256": "e44aab31f39c0191afead414e38260b4b6cdb6105f1ea3a6c23ebc52511988fa"
+        },
+        {
+          "path": "r4os/r4dev.zig",
+          "sha256": "0f32372741de485da7ddb7392084a8c1e78f74fcc8875a6a964ad84b339d7659"
+        },
+        {
+          "path": "r4os/app_devices.zig",
+          "sha256": "a119a8e8757653d09e7fde040e042968ce22f0ba6d0fe3d1d758e44b6eb2f934"
+        },
+        {
+          "path": "Tests/Conformance/AudioDeviceFacadePrototype05827.zig",
+          "sha256": "e2ff5a2c39e2cf568254f9f386a3b27741ea7d3930cd368111fe26dca8aeb507"
+        },
+        {
+          "path": "Tests/Conformance/ResourceFacadePrototype05825.zig",
+          "sha256": "58cbf73f86a89d5fb560fef555fab8927eef646082967743017efb842d646df4"
+        }
+      ],
+      "files": [
+        {
+          "path": "Platform/SDK/Tests/Conformance/AudioDeviceFacadePrototype05827.zig",
+          "sha256": "5e5314a512be9b73eab94b26140d69221b304724567a9100ec3e54d17225a5ee",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/Tests/Conformance/ResourceFacadePrototype05825.zig",
+          "sha256": "8ff1452a44d8012ab099652fccde3d3a42bfb97b95738f45254f4480fada883f",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/app_devices.zig",
+          "sha256": "7f59096d70920c57928651eca9940b3dfe15dfaf791ad6191514ac79249753cb",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/program.zig",
+          "sha256": "3fa1eb87a315c07b9b2047f204bc5282b207b8d2668c897b0c00de80dc278506",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/r4dev.zig",
+          "sha256": "e30cbe79843f5edf29a66ffeff071f5dee36cee4672057ac89b4aa913dc54d88",
+          "byteIdentical": false
+        },
+        {
+          "path": "Platform/SDK/r4os/r4xstart.zig",
+          "sha256": "ab5b3ecf6032211a4c805bfbd6d07e6d834c685f09ad255122923f9e4f0d4460",
+          "byteIdentical": false
+        }
+      ]
+    },
+    {
+      "owner": "Kernel",
+      "sourceCommit": "d0bd13f1073c7fd18f0a975f540c46d194bb7737",
+      "baseRecoveryCommit": "f33329dae2db9944087de555c1726aa6c017cb09",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/Kernel-0.86.81.patch",
+      "patchSha256": "5332af29dbb3f059e278db12a0f37f2dd2a8b6967832f0ee733ca8db3fe1e1e7",
+      "importMode": "Bounded semantic transfer to the existing frozen Zig Recovery profile; no whole normal SDK/Contract/Kernel import. Existing optional retired callback names remain at their exact old offsets with zero providers. Needed current V2/header checks, font/Unicode/network semantics only; files are not byte-identical imports.",
+      "sourceFiles": [
+        {
+          "path": "Rust/program/r4dev/providers.rs",
+          "sha256": "0f686722ba7745072879bad014284b5dac5bf30a14767600f87ebad40dd785ac"
+        },
+        {
+          "path": "Rust/program/runtime_tables.rs",
+          "sha256": "31c0554f4f1cfe77bcae6d6f8e71526150b602da6c83d2b0c547cddb9c32cb9d"
+        }
+      ],
+      "files": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "sha256": "d8503c689f9495687a8c24e50d79a057fcd85637c1a27a0a121a2db5eff8b42d",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/program/r4dev.zig",
+          "sha256": "8d7d1420eee36d523987698e5c4679b769f98917ece43bc01fad3b2d35a7872e",
+          "byteIdentical": false
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "sha256": "5b0f5d4e91c16635eb80d2e7c5d42a1a61834e6399fa7c9a67e0c4d1ee8254cd",
+          "byteIdentical": false
+        }
+      ]
+    }
+  ],
+  "localFiles": [
+    {
+      "path": "VERSION.R4S",
+      "sha256": "d574cd7f0cd73835d5ac2119b264339bbb5e8d034e470028ea120f2043f1adc7"
+    },
+    {
+      "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+      "sha256": "28a7e7dabe277877bb1cfd3dad2ae6c50082a96fcf90bf77bd9121ae6217bedf"
+    },
+    {
+      "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+      "sha256": "d86cbcafe75634a510536ee97e4733ad7d2405eab8d8cf5054ccfa1ee90e7c79"
+    },
+    {
+      "path": "RecoveryTools/Menu/module.R4MF",
+      "sha256": "557ca0721092a977df45ae12331eaed03b6b634f4f0bed5df5b3af31efa84654"
+    }
+  ],
+  "limits": "Only the affected independent Zig Recovery profile is transferred. Unused frozen C/Rust/raw metadata remain historical build inputs, not a new normal SDK/profile promise. Normal R4DEV35/728 is not required by this Recovery. Original module archives/binaries are not regenerated."
+}

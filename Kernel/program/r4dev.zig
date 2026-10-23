@@ -434,9 +434,7 @@ pub const ProgramPerformanceSummary = r4x_api.ProgramPerformanceSummary;
 
 pub const ProgramInstanceStorageSummary = r4x_api.ProgramInstanceStorageSummary;
 pub const ProgramInstanceStorageSelfTestResult = r4x_api.ProgramInstanceStorageSelfTestResult;
-pub const ProgramRegistrySummary = r4x_api.ProgramRegistrySummary;
 pub const ProgramRegistrySummaryV2 = r4x_api.ProgramRegistrySummaryV2;
-pub const ProgramRegistrySelfTestResult = r4x_api.ProgramRegistrySelfTestResult;
 pub const ProgramRegistrySelfTestResultV2 = r4x_api.ProgramRegistrySelfTestResultV2;
 pub const ProgramInventorySummary = r4x_api.ProgramInventorySummary;
 pub const program_registry_self_test_operation_arm_lifecycle_failure = r4x_api.program_registry_self_test_operation_arm_lifecycle_failure;
@@ -521,28 +519,7 @@ pub const ProgramStoragePerformanceInfo = r4x_api.ProgramStoragePerformanceInfo;
 
 pub const ProgramBootPhasePerformanceInfo = r4x_api.ProgramBootPhasePerformanceInfo;
 
-const program_instance_storage_summary_v1_size: u32 = 256;
 const program_instance_storage_summary_v2_size: u32 = @sizeOf(ProgramInstanceStorageSummary);
-
-fn writeProgramInstanceStorageSummaryPrefix(
-    out: *ProgramInstanceStorageSummary,
-    value: *const ProgramInstanceStorageSummary,
-    byte_count: u32,
-) void {
-    const destination: [*]u8 = @ptrCast(out);
-    const source = std.mem.asBytes(value);
-    @memcpy(destination[0..byte_count], source[0..byte_count]);
-}
-
-pub fn programInstanceStorageSummary(out: *ProgramInstanceStorageSummary) callconv(.c) i32 {
-    var value: ProgramInstanceStorageSummary = .{};
-    const provider = program_instance_storage_summary_provider;
-    if (provider) |fill| fill(&value);
-    value.version = 1;
-    value.size = program_instance_storage_summary_v1_size;
-    writeProgramInstanceStorageSummaryPrefix(out, &value, program_instance_storage_summary_v1_size);
-    return if (provider != null) 1 else 0;
-}
 
 pub fn programInstanceStorageSummaryV2(out: *ProgramInstanceStorageSummary) callconv(.c) i32 {
     if (out.version < 2 or out.size < program_instance_storage_summary_v2_size) return -1;
@@ -568,39 +545,8 @@ pub fn programInstanceStorageSelfTest(out: *ProgramInstanceStorageSelfTestResult
     return result;
 }
 
-pub fn programRegistrySummary(out: *ProgramRegistrySummary) callconv(.c) i32 {
-    var value: ProgramRegistrySummaryV2 = .{};
-    const provider = program_registry_summary_provider orelse {
-        out.* = .{};
-        return 0;
-    };
-    provider(&value);
-    var legacy: ProgramRegistrySummary = .{};
-    @memcpy(std.mem.asBytes(&legacy), std.mem.asBytes(&value)[0..@sizeOf(ProgramRegistrySummary)]);
-    legacy.version = 1;
-    legacy.size = @sizeOf(ProgramRegistrySummary);
-    out.* = legacy;
-    return 1;
-}
-
-pub fn programRegistrySelfTest(out: *ProgramRegistrySelfTestResult) callconv(.c) i32 {
-    var value: ProgramRegistrySelfTestResultV2 = .{
-        .operation = out.operation,
-    };
-    const provider = program_registry_self_test_provider orelse {
-        out.* = .{ .operation = value.operation };
-        return 0;
-    };
-    const result = provider(&value);
-    var legacy: ProgramRegistrySelfTestResult = .{};
-    @memcpy(std.mem.asBytes(&legacy), std.mem.asBytes(&value)[0..@sizeOf(ProgramRegistrySelfTestResult)]);
-    legacy.version = 1;
-    legacy.size = @sizeOf(ProgramRegistrySelfTestResult);
-    out.* = legacy;
-    return result;
-}
-
 pub fn programRegistrySummaryV2(out: *ProgramRegistrySummaryV2) callconv(.c) i32 {
+    if (out.version < 2 or out.size < @sizeOf(ProgramRegistrySummaryV2)) return -1;
     var value: ProgramRegistrySummaryV2 = .{};
     const provider = program_registry_summary_provider orelse {
         out.* = value;
@@ -614,6 +560,7 @@ pub fn programRegistrySummaryV2(out: *ProgramRegistrySummaryV2) callconv(.c) i32
 }
 
 pub fn programRegistrySelfTestV2(out: *ProgramRegistrySelfTestResultV2) callconv(.c) i32 {
+    if (out.version < 2 or out.size < @sizeOf(ProgramRegistrySelfTestResultV2)) return -1;
     var value: ProgramRegistrySelfTestResultV2 = .{
         .operation = out.operation,
         .lifecycle_phase = out.lifecycle_phase,
@@ -656,9 +603,9 @@ pub fn kernelVersion(out: *KernelVersion) callconv(.c) i32 {
 }
 
 comptime {
-    if (@sizeOf(ProgramRegistrySummary) != 160 or @sizeOf(ProgramRegistrySummaryV2) != 224)
+    if (@sizeOf(ProgramRegistrySummaryV2) != 224)
         @compileError("R4DEV program registry summary ABI drift");
-    if (@sizeOf(ProgramRegistrySelfTestResult) != 64 or @sizeOf(ProgramRegistrySelfTestResultV2) != 136)
+    if (@sizeOf(ProgramRegistrySelfTestResultV2) != 136)
         @compileError("R4DEV program registry self-test ABI drift");
     if (@sizeOf(ProgramInventorySummary) != 160)
         @compileError("R4DEV execution inventory summary ABI drift");

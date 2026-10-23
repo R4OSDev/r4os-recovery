@@ -67,13 +67,6 @@ pub const PerformanceView = struct {
     pub fn programInstanceStorageSelfTest(self: *const PerformanceView, out: *abi.ProgramInstanceStorageSelfTestResult) i32 {
         return self.raw.programInstanceStorageSelfTest(out);
     }
-    pub fn programRegistry(self: *const PerformanceView) ?abi.ProgramRegistrySummary {
-        var out: abi.ProgramRegistrySummary = .{};
-        return if (self.raw.programRegistrySummary(&out) > 0) out else null;
-    }
-    pub fn programRegistrySelfTest(self: *const PerformanceView, out: *abi.ProgramRegistrySelfTestResult) i32 {
-        return self.raw.programRegistrySelfTest(out);
-    }
     pub fn programRegistryV2(self: *const PerformanceView) ?abi.ProgramRegistrySummaryV2 {
         var out: abi.ProgramRegistrySummaryV2 = .{};
         return if (self.raw.programRegistrySummaryV2(&out) > 0) out else null;

@@ -788,7 +788,7 @@ pub const R4Desk = struct {
     }
 
     pub fn readKeyCodepoint(self: *const R4Desk) u32 {
-        if (!self.hasFn("read_key_codepoint")) return self.readKey();
+        if (!self.hasFn("read_key_codepoint")) return 0;
         const read_fn: ReadKeyCodepointFn = @ptrFromInt(self.table.read_key_codepoint);
         return read_fn();
     }
@@ -1418,22 +1418,19 @@ pub const R4Draw = struct {
     }
 
     pub fn fontCount(self: *const R4Draw) u32 {
-        if (!self.hasFn("font_count")) return 1;
+        if (!self.hasFn("font_count")) return 0;
         const font_fn: FontCountFn = @ptrFromInt(self.table.font_count);
         return font_fn();
     }
 
     pub fn fontInfo(self: *const R4Draw, font_id: u32, out: *abi.GuiFontInfo) i32 {
-        if (!self.hasFn("font_info")) return fallbackFontInfo(font_id, out);
+        if (!self.hasFn("font_info")) return abi.err_no_fn;
         const font_fn: FontInfoFn = @ptrFromInt(self.table.font_info);
         return font_fn(font_id, out);
     }
 
     pub fn fontMeasure(self: *const R4Draw, font_id: u32, value: [*:0]const u8, out: *abi.GuiTextMetrics) i32 {
-        if (!self.hasFn("font_measure")) {
-            out.* = fallbackTextMetrics(value);
-            return 0;
-        }
+        if (!self.hasFn("font_measure")) return abi.err_no_fn;
         const font_fn: FontMeasureFn = @ptrFromInt(self.table.font_measure);
         return font_fn(font_id, value, out);
     }
@@ -1444,41 +1441,21 @@ pub const R4Draw = struct {
         return font_fn(font_id, codepoint, row);
     }
 
-    /// Retrieves one complete glyph snapshot. R4DRAW-v6 resolves and copies
-    /// it in one call; older tables are supported through their bounded row
-    /// query. The legacy fallback cannot recover proportional per-glyph
-    /// metrics, so it reports the face width and maximum advance.
+    /// Retrieves the current complete glyph snapshot. No row reconstruction
+    /// or approximate proportional metrics when that callback is unavailable.
     pub fn fontGlyphBitmap(self: *const R4Draw, font_id: u32, codepoint: u32, out: *abi.GuiGlyphBitmap) i32 {
         if (codepoint > 0x10FFFF) return -1;
-        if (self.hasFn("font_glyph_bitmap")) {
-            const font_fn: FontGlyphBitmapFn = @ptrFromInt(self.table.font_glyph_bitmap);
-            return font_fn(font_id, codepoint, out);
-        }
-        if (!self.hasFn("font_glyph_row")) return abi.err_no_fn;
-
-        var info: abi.GuiFontInfo = .{};
-        const info_result = self.fontInfo(font_id, &info);
-        if (info_result <= 0) return if (info_result < 0) info_result else -2;
-        var bitmap = abi.GuiGlyphBitmap{
-            .width = @min(info.width, 64),
-            .height = @min(info.height, @as(u32, bitmap_row_capacity)),
-            .advance = info.max_advance,
-            .line_height = info.line_height,
-            .baseline = info.baseline,
-        };
-        var row: u32 = 0;
-        while (row < bitmap.height) : (row += 1) bitmap.rows[row] = self.fontGlyphRow(font_id, codepoint, row);
-        out.* = bitmap;
-        return 0;
+        if (!self.hasFn("font_glyph_bitmap")) return abi.err_no_fn;
+        const font_fn: FontGlyphBitmapFn = @ptrFromInt(self.table.font_glyph_bitmap);
+        return font_fn(font_id, codepoint, out);
     }
 
-    /// Returns the generation paired with live font ids. Legacy tables use a
-    /// stable generation because they cannot report catalogue reloads.
+    /// Returns the actual catalogue generation, or zero for unavailable.
+    /// A provider-returned zero stays zero; no stable generation is invented.
     pub fn fontRevision(self: *const R4Draw) u32 {
-        if (!self.hasFn("font_revision")) return 1;
+        if (!self.hasFn("font_revision")) return 0;
         const font_fn: FontRevisionFn = @ptrFromInt(self.table.font_revision);
-        const revision = font_fn();
-        return if (revision == 0) 1 else revision;
+        return font_fn();
     }
 
     pub fn fontReload(self: *const R4Draw) i32 {
@@ -1488,112 +1465,23 @@ pub const R4Draw = struct {
     }
 
     pub fn guiSetFont(self: *const R4Draw, font_id: u32) i32 {
-        if (!self.hasFn("gui_set_font")) return if (font_id == abi.gui_font_builtin_id) 0 else -2;
+        if (!self.hasFn("gui_set_font")) return abi.err_no_fn;
         const font_fn: GuiSetFontFn = @ptrFromInt(self.table.gui_set_font);
         return font_fn(font_id);
     }
 
     pub fn guiFont(self: *const R4Draw, instance_id: u32, out: *abi.GuiFontInfo) i32 {
-        if (!self.hasFn("gui_font")) {
-            return fallbackFontInfo(abi.gui_font_builtin_id, out);
-        }
+        if (!self.hasFn("gui_font")) return abi.err_no_fn;
         const font_fn: GuiFontFn = @ptrFromInt(self.table.gui_font);
         return font_fn(instance_id, out);
     }
 
     pub fn textFont(self: *const R4Draw, font_id: u32, x: i32, y: i32, value: [*:0]const u8, fg: u32, bg: u32) void {
-        if (!self.hasFn("text_font")) {
-            self.text(x, y, value, fg, bg);
-            return;
-        }
+        if (!self.hasFn("text_font")) return;
         const text_fn: TextFontFn = @ptrFromInt(self.table.text_font);
         text_fn(font_id, x, y, value, fg, bg);
     }
 };
-
-fn fallbackFontInfo(font_id: u32, out: *abi.GuiFontInfo) i32 {
-    if (font_id != abi.gui_font_builtin_id) return 0;
-    out.* = .{
-        .id = abi.gui_font_builtin_id,
-        .kind = 0,
-        .flags = abi.gui_font_flag_renderable | abi.gui_font_flag_builtin,
-        .weight = 400,
-        .width = 8,
-        .height = 8,
-        .max_advance = 8,
-        .line_height = 8,
-        .baseline = 7,
-        .glyph_count = 95,
-        .strike_count = 1,
-    };
-    copyFixedZ(out.family[0..], "R4OS");
-    copyFixedZ(out.face[0..], "Builtin 8x8");
-    copyFixedZ(out.style[0..], "Regular");
-    copyFixedZ(out.status[0..], "builtin fallback");
-    return 1;
-}
-
-fn fallbackTextMetrics(value: [*:0]const u8) abi.GuiTextMetrics {
-    var line_w: u32 = 0;
-    var max_w: u32 = 0;
-    var lines: u32 = 1;
-    var visible: u32 = 0;
-    var index: usize = 0;
-    while (index < 4096 and value[index] != 0) {
-        const ch = value[index];
-        const consumed = fallbackUtf8SequenceLength(value, index, 4096);
-        index += consumed;
-        if (ch == '\r') continue;
-        if (ch == '\n') {
-            max_w = @max(max_w, line_w);
-            line_w = 0;
-            lines += 1;
-            visible += @intCast(consumed);
-            continue;
-        }
-        line_w += 8;
-        visible += @intCast(consumed);
-    }
-    max_w = @max(max_w, line_w);
-    return .{
-        .width = max_w,
-        .height = lines * 8,
-        .line_height = 8,
-        .baseline = 7,
-        .visible_bytes = visible,
-        .flags = 0,
-    };
-}
-
-fn fallbackUtf8SequenceLength(value: [*:0]const u8, start: usize, limit: usize) usize {
-    const first = value[start];
-    if (first < 0x80) return 1;
-    const expected: usize = if (first >= 0xC2 and first <= 0xDF)
-        2
-    else if (first >= 0xE0 and first <= 0xEF)
-        3
-    else if (first >= 0xF0 and first <= 0xF4)
-        4
-    else
-        return 1;
-    if (expected > limit -| start) return 1;
-    var offset: usize = 1;
-    while (offset < expected) : (offset += 1) {
-        if (value[start + offset] == 0 or (value[start + offset] & 0xC0) != 0x80) return 1;
-    }
-    if (first == 0xE0 and value[start + 1] < 0xA0) return 1;
-    if (first == 0xED and value[start + 1] >= 0xA0) return 1;
-    if (first == 0xF0 and value[start + 1] < 0x90) return 1;
-    if (first == 0xF4 and value[start + 1] >= 0x90) return 1;
-    return expected;
-}
-
-fn copyFixedZ(out: []u8, value: []const u8) void {
-    @memset(out, 0);
-    if (out.len == 0) return;
-    const count = @min(value.len, out.len - 1);
-    if (count > 0) @memcpy(out[0..count], value[0..count]);
-}
 
 const bitmap_row_capacity: usize = @typeInfo(@TypeOf((abi.GuiGlyphBitmap{}).rows)).array.len;
 
@@ -1631,12 +1519,12 @@ fn testLegacyGlyphRow(_: u32, _: u32, row: u32) callconv(.c) u64 {
     return @as(u64, 1) << @intCast(row);
 }
 
-test "R4DRAW bulk glyph dispatch and legacy row fallback stay compatible" {
+test "R4DRAW current bulk glyph dispatch rejects missing callbacks without row substitution" {
     var current_table = abi.R4XStartR4Draw{
         .font_glyph_bitmap = @intFromPtr(&testBulkGlyphBitmap),
         .font_revision = @intFromPtr(&testFontRevision),
     };
-    const current = R4Draw{ .table = &current_table };
+    const current = R4Draw{ .raw = undefined, .table = &current_table };
     var bitmap: abi.GuiGlyphBitmap = .{};
     try std.testing.expectEqual(@as(i32, 0), current.fontGlyphBitmap(0, 'A', &bitmap));
     try std.testing.expectEqual(@as(u32, 7), bitmap.width);
@@ -1650,18 +1538,45 @@ test "R4DRAW bulk glyph dispatch and legacy row fallback stay compatible" {
         .font_info = @intFromPtr(&testLegacyFontInfo),
         .font_glyph_row = @intFromPtr(&testLegacyGlyphRow),
     };
-    const legacy = R4Draw{ .table = &legacy_table };
-    bitmap = .{};
+    const legacy = R4Draw{ .raw = undefined, .table = &legacy_table };
+    bitmap = .{ .width = 123, .rows = .{0xA5} ** bitmap_row_capacity };
     try std.testing.expect(!legacy.hasFn("font_glyph_bitmap"));
     try std.testing.expect(!legacy.hasFn("font_revision"));
-    try std.testing.expectEqual(@as(u32, 1), legacy.fontRevision());
-    try std.testing.expectEqual(@as(i32, 0), legacy.fontGlyphBitmap(7, 0x1F642, &bitmap));
-    try std.testing.expectEqual(@as(u32, 11), bitmap.width);
-    try std.testing.expectEqual(@as(u32, 3), bitmap.height);
-    try std.testing.expectEqual(@as(u32, 12), bitmap.advance);
-    try std.testing.expectEqual(@as(i32, 2), bitmap.baseline);
-    try std.testing.expectEqual(@as(u64, 1), bitmap.rows[0]);
-    try std.testing.expectEqual(@as(u64, 2), bitmap.rows[1]);
-    try std.testing.expectEqual(@as(u64, 4), bitmap.rows[2]);
-    try std.testing.expectEqual(@as(u64, 0), bitmap.rows[3]);
+    try std.testing.expectEqual(@as(u32, 0), legacy.fontRevision());
+    try std.testing.expectEqual(abi.err_no_fn, legacy.fontGlyphBitmap(7, 0x1F642, &bitmap));
+    try std.testing.expectEqual(@as(u32, 123), bitmap.width);
+    try std.testing.expectEqual(@as(u64, 0xA5), bitmap.rows[0]);
+    try std.testing.expectEqual(@as(u64, 0xA5), bitmap.rows[bitmap_row_capacity - 1]);
+    // A current callback's actual zero is unknown, never made-up generation1.
+    current_table.font_revision = @intFromPtr(&testUnknownFontRevision);
+    try std.testing.expectEqual(@as(u32, 0), current.fontRevision());
+    current_table.font_info = 0;
+    var info: abi.GuiFontInfo = .{ .id = 99 };
+    try std.testing.expectEqual(abi.err_no_fn, current.fontInfo(0, &info));
+    try std.testing.expectEqual(@as(u32, 99), info.id);
+    var metrics: abi.GuiTextMetrics = .{ .width = 123 };
+    try std.testing.expectEqual(abi.err_no_fn, current.fontMeasure(0, "text", &metrics));
+    try std.testing.expectEqual(@as(u32, 123), metrics.width);
+    try std.testing.expectEqual(@as(u32, 0), current.fontCount());
+    try std.testing.expectEqual(abi.err_no_fn, current.guiSetFont(abi.gui_font_builtin_id));
+    try std.testing.expectEqual(abi.err_no_fn, current.guiFont(1, &info));
+    try std.testing.expectEqual(@as(u32, 99), info.id);
+}
+
+fn testUnknownFontRevision() callconv(.c) u32 {
+    return 0;
+}
+var test_byte_key_calls: u32 = 0;
+fn testByteKey() callconv(.c) u8 {
+    test_byte_key_calls += 1;
+    return 'A';
+}
+test "R4DESK codepoint absence does not consume the separate byte stream" {
+    var table: abi.R4XStartR4Desk = .{ .read_key = @intFromPtr(&testByteKey) };
+    const desk: R4Desk = .{ .raw = undefined, .table = &table };
+    test_byte_key_calls = 0;
+    try std.testing.expectEqual(@as(u32, 0), desk.readKeyCodepoint());
+    try std.testing.expectEqual(@as(u32, 0), test_byte_key_calls);
+    try std.testing.expectEqual(@as(u8, 'A'), desk.readKey());
+    try std.testing.expectEqual(@as(u32, 1), test_byte_key_calls);
 }

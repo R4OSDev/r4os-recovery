@@ -72,6 +72,19 @@ drivers, protocols, services, console applications, and libraries are
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
 normal R4OS packages include an explicitly selected complete Recovery release.
 
+The 0.1.66 source profile (roadmap 0.86.81) adopts only the needed current
+SDK font, Unicode and generation-bound network request semantics. Missing
+callbacks return unavailable; glyph rows, font generations and raw IPC do not
+substitute for those callbacks. The three obsolete diagnostic prefix providers
+are disabled at their existing optional slots 27/29/30; full V2 diagnostics
+remain. The frozen Contract 0.64.11 and R4DEV v8/344-byte table keep their
+identities and layout. This is an independent profile transfer, not an import
+of the normal R4DEV v35/728-byte table or the full normal SDK.
+The original 39 runtime modules, their archives and transactional update,
+rollback, boot confirmation and kernel/runtime pairing remain pinned. Exact
+owner commits, semantic patches and hashes are in
+`Provenance/owner-update-0.86.81.json`.
+
 `./Release.sh Prepare` (Windows: `Release.bat Prepare`) creates the independent
 ZIP, input/owner provenance and SHA256SUMS from the clean, pushed Recovery
 source. After qualification, `Publish -Prepared` uploads those exact assets
