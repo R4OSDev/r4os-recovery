@@ -6907,8 +6907,8 @@
     },
     {
       "path": "Platform/SDK/r4os/app_web.zig",
-      "bytes": 83614,
-      "sha256": "6e57804f61b771117c24ec2a91e4f3765ed653502f9c9c057a5e382b3dd3b8c5",
+      "bytes": 84275,
+      "sha256": "ced618cea5ed55eca827963e72bfa7182a87ab704a6719a7a44439b9f739a872",
       "originalSha256": "afc6def13ed0910683072109b615915c8fcfc1857ed6bcf09993ca24a7df45df",
       "origin": {
         "path": "r4os/app_web.zig",
@@ -9571,8 +9571,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 23230,
-      "sha256": "64001f21b3df3b376ba341ca69f8b5aa2193925352f9de0df59e972cc59b9aab",
+      "bytes": 23911,
+      "sha256": "8ce9273726cf1f57b8a2f4902e3cb866ae9087fe2f7c493e2c28909883979cdb",
       "originalSha256": null,
       "origin": null
     },
@@ -9593,7 +9593,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 589,
-      "sha256": "557ca0721092a977df45ae12331eaed03b6b634f4f0bed5df5b3af31efa84654",
+      "sha256": "8cde1df0d45f7c647cbdcf876540b3530995fa2cb6cc4b3d01466625edcc1221",
       "originalSha256": null,
       "origin": null
     },
@@ -9634,15 +9634,22 @@
     },
     {
       "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
-      "bytes": 11764,
-      "sha256": "cdf3af74be05175ecf3f1f5eb85c545bce8358da6aa5dbec786d69e8229b6926",
+      "bytes": 12732,
+      "sha256": "ae1852ace28cb1c5535c3ce5e9bb13e5fd1bbc8408e08592776b1f6374a38992",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "RecoveryTools/Menu/src/download_progress.zig",
+      "bytes": 3229,
+      "sha256": "01572ad2bf248e7f1cf59d1a6c542efd2ce6dfb5dee1157f84800ff0107acc82",
       "originalSha256": null,
       "origin": null
     },
     {
       "path": "RecoveryTools/Menu/src/download.zig",
-      "bytes": 9337,
-      "sha256": "ed6e94b8f34a9cbb9994ce679cfea1e7c497638a54246a7ebd7bcada7c2962cf",
+      "bytes": 13194,
+      "sha256": "aa33ea2b3b1927224496b0105d645dd8bf1388e9a7d23aa96fd229b850475ac3",
       "originalSha256": null,
       "origin": null
     },
@@ -9669,8 +9676,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 46623,
-      "sha256": "929bc0f72cad184bc66add0dd9ff662685173811f641a7f4ba078a560832380a",
+      "bytes": 47019,
+      "sha256": "2fb0ca2bc3708b95accff22b1df3e16b57fce5da416bc39d10c288e3003087c7",
       "originalSha256": null,
       "origin": null
     },
@@ -9809,8 +9816,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/tests.zig",
-      "bytes": 309,
-      "sha256": "d33e299299a9fe2c9432ffd321c41196df247681fa730554e00bbb748d02ee31",
+      "bytes": 384,
+      "sha256": "8911d780ed2523978397d977158f1c4d4980b5435901ff6007fc566aebdde619",
       "originalSha256": null,
       "origin": null
     },
@@ -9922,7 +9929,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "28a7e7dabe277877bb1cfd3dad2ae6c50082a96fcf90bf77bd9121ae6217bedf",
+      "sha256": "cd331978fc4260604d762f5a01ebb941d856f4004f5c24c6033c72a679c9f1f5",
       "originalSha256": null,
       "origin": null
     },
@@ -9946,7 +9953,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "d86cbcafe75634a510536ee97e4733ad7d2405eab8d8cf5054ccfa1ee90e7c79",
+      "sha256": "686babbcad36d256bc911ac10ce4d26608e8862a282bf525a0a134818ab5e7b2",
       "originalSha256": null,
       "origin": null
     },
@@ -16530,6 +16537,91 @@
           "before": "bfb4644120252fd38cf2f773485c8a946ab068764a3f3a6419082a7639e25f29"
         }
       ]
+    },
+    {
+      "changes": [
+        {
+          "after": "ced618cea5ed55eca827963e72bfa7182a87ab704a6719a7a44439b9f739a872",
+          "before": "6e57804f61b771117c24ec2a91e4f3765ed653502f9c9c057a5e382b3dd3b8c5",
+          "path": "Platform/SDK/r4os/app_web.zig"
+        },
+        {
+          "after": "8cde1df0d45f7c647cbdcf876540b3530995fa2cb6cc4b3d01466625edcc1221",
+          "before": "557ca0721092a977df45ae12331eaed03b6b634f4f0bed5df5b3af31efa84654",
+          "path": "RecoveryTools/Menu/module.R4MF"
+        },
+        {
+          "after": "01572ad2bf248e7f1cf59d1a6c542efd2ce6dfb5dee1157f84800ff0107acc82",
+          "before": null,
+          "path": "RecoveryTools/Menu/src/download_progress.zig"
+        },
+        {
+          "after": "46a3d639d031cec10677102a83e40dfb7dcd36cfbbebcb765630465b0d81afa8",
+          "before": "ed6e94b8f34a9cbb9994ce679cfea1e7c497638a54246a7ebd7bcada7c2962cf",
+          "path": "RecoveryTools/Menu/src/download.zig"
+        },
+        {
+          "after": "f4addddc8e5ab108d64d00753fb81410f81ebe971d05a45a7a0172b9562392d2",
+          "before": "929bc0f72cad184bc66add0dd9ff662685173811f641a7f4ba078a560832380a",
+          "path": "RecoveryTools/Menu/src/main.zig"
+        },
+        {
+          "after": "7cb671aff9cdba92d7a9ce550f08f109706367b059e98b2cb0a2e5868351b6d0",
+          "before": "d33e299299a9fe2c9432ffd321c41196df247681fa730554e00bbb748d02ee31",
+          "path": "RecoveryTools/Menu/src/tests.zig"
+        }
+      ],
+      "reason": "Recovery 0.1.67 download progress and three resumable retries"
+    },
+    {
+      "reason": "Recovery 0.1.67 runtime identity and interrupted transfer witnesses",
+      "changes": [
+        {
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+          "after": "f4179d57bbd029325eeae94986331c353fbe9266e2345967362872ab404d0b2d",
+          "before": "cdf3af74be05175ecf3f1f5eb85c545bce8358da6aa5dbec786d69e8229b6926"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "after": "cd331978fc4260604d762f5a01ebb941d856f4004f5c24c6033c72a679c9f1f5",
+          "before": "28a7e7dabe277877bb1cfd3dad2ae6c50082a96fcf90bf77bd9121ae6217bedf"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "after": "686babbcad36d256bc911ac10ce4d26608e8862a282bf525a0a134818ab5e7b2",
+          "before": "d86cbcafe75634a510536ee97e4733ad7d2405eab8d8cf5054ccfa1ee90e7c79"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "64001f21b3df3b376ba341ca69f8b5aa2193925352f9de0df59e972cc59b9aab",
+          "after": "8ce9273726cf1f57b8a2f4902e3cb866ae9087fe2f7c493e2c28909883979cdb"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/download_diagnostic.zig",
+          "before": "f4179d57bbd029325eeae94986331c353fbe9266e2345967362872ab404d0b2d",
+          "after": "ae1852ace28cb1c5535c3ce5e9bb13e5fd1bbc8408e08592776b1f6374a38992"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": "46a3d639d031cec10677102a83e40dfb7dcd36cfbbebcb765630465b0d81afa8",
+          "after": "aa33ea2b3b1927224496b0105d645dd8bf1388e9a7d23aa96fd229b850475ac3"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "f4addddc8e5ab108d64d00753fb81410f81ebe971d05a45a7a0172b9562392d2",
+          "after": "2fb0ca2bc3708b95accff22b1df3e16b57fce5da416bc39d10c288e3003087c7"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/tests.zig",
+          "before": "7cb671aff9cdba92d7a9ce550f08f109706367b059e98b2cb0a2e5868351b6d0",
+          "after": "8911d780ed2523978397d977158f1c4d4980b5435901ff6007fc566aebdde619"
+        }
+      ],
+      "reason": "Recovery 0.1.67 explains terminal download failures and documents retry behavior"
     }
   ]
 }

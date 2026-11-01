@@ -44,6 +44,7 @@ const State = struct {
     notice_return: Page = .menu,
     notice: [256]u8 = undefined,
     message: []const u8 = "",
+    progress_message: [256]u8 = undefined,
     progress: u32 = 0,
     working: bool = false,
     ssh_line: [96]u8 = .{0} ** 96,
@@ -325,8 +326,10 @@ const State = struct {
 
     fn pump(raw: ?*anyopaque, phase: []const u8, done: u64, total: u64) bool {
         const self: *State = @ptrCast(@alignCast(raw.?));
-        self.message = phase;
-        self.progress = if (total == 0) 0 else @intCast(@min(100, done * 100 / total));
+        const length = @min(phase.len, self.progress_message.len);
+        @memcpy(self.progress_message[0..length], phase[0..length]);
+        self.message = self.progress_message[0..length];
+        self.progress = if (total == 0) 0 else @intCast(@min(@as(u128, 100), @as(u128, done) * 100 / total));
         if (self.sys.programShouldClose()) return false;
         const now = self.sys.ticks();
         if (now - self.work_view_tick >= self.sys.ticksFromMilliseconds(100)) {
@@ -523,9 +526,9 @@ const State = struct {
         }, .kind = self.kind(), .profile = self.profile, .pump = .{ .context = self, .function = pump } };
         self.cache = client.run() catch |err| {
             self.page = .dialog;
-            self.message = downloads.message(err);
+            self.message = downloads.describe(err, client.last_network_error, client.last_http_status, client.retry_attempts, &self.notice);
             var detail: [192]u8 = undefined;
-            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYDOWNLOAD] error={s} network={s} target_writes=0\r\n", .{ @errorName(err), if (client.last_network_error) |network| @tagName(network) else "none" }) catch "");
+            self.sys.write(std.fmt.bufPrint(&detail, "[RECOVERYDOWNLOAD] error={s} network={s} http={d} retries={d} target_writes=0\r\n", .{ @errorName(err), if (client.last_network_error) |network| @tagName(network) else "none", client.last_http_status orelse 0, client.retry_attempts }) catch "");
             return false;
         };
         self.source_warning = "";

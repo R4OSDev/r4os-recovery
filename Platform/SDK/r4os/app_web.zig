@@ -202,6 +202,7 @@ pub const FetchResult = union(enum) {
 };
 
 pub const DownloadProgress = *const fn (?*anyopaque, u64, u64) bool;
+pub const DownloadRetry = *const fn (?*anyopaque, u8, Error, u64, ?u64) bool;
 pub const DownloadWrite = *const fn (?*anyopaque, u64, []const u8) bool;
 
 /// A successful write returns only after the supplied bytes are durably owned
@@ -223,6 +224,8 @@ pub const DownloadOptions = struct {
     stop: ?*const abi.R4StopFlag = null,
     progress: ?DownloadProgress = null,
     progress_context: ?*anyopaque = null,
+    max_retries: u8 = 1,
+    retry: ?DownloadRetry = null,
     headers: []const u8 = "",
     method: http.Method = .get,
     resume_from: u64 = 0,
@@ -570,8 +573,11 @@ pub const WebTransport = struct {
                     transferred += failure.transferred;
                     resume_offset += failure.transferred;
                     if (failure.total_size) |total| expected_size = total;
-                    if (options.method == .get and shouldRetryDownload(failure.cause, read_retries)) {
+                    if (options.method == .get and shouldRetryDownload(failure.cause, read_retries, options.max_retries)) {
                         read_retries += 1;
+                        if (options.retry) |retry| {
+                            if (!retry(options.progress_context, read_retries, failure.cause, resume_offset, expected_size)) return .{ .failure = .cancelled };
+                        }
                         continue;
                     }
                     return .{ .failure = failure.cause };
@@ -1066,8 +1072,8 @@ fn downloadTargetAuthorized(options: DownloadOptions, url: []const u8) bool {
         true;
 }
 
-fn shouldRetryDownload(failure: Error, attempts: u8) bool {
-    if (attempts != 0) return false;
+fn shouldRetryDownload(failure: Error, attempts: u8, max_retries: u8) bool {
+    if (attempts >= max_retries) return false;
     return failure == .read_timeout or failure == .read_reset or failure == .read_peer_closed or failure == .read_failed or failure == .tls_close_notify;
 }
 
@@ -1327,8 +1333,11 @@ test "stream download pump resumes once with exact range and durable offsets" {
         },
         else => return error.TestUnexpectedResult,
     }
-    try std.testing.expect(shouldRetryDownload(.read_peer_closed, 0));
-    try std.testing.expect(!shouldRetryDownload(.read_peer_closed, 1));
+    try std.testing.expect(shouldRetryDownload(.read_peer_closed, 0, 3));
+    try std.testing.expect(shouldRetryDownload(.read_peer_closed, 1, 3));
+    try std.testing.expect(shouldRetryDownload(.read_peer_closed, 2, 3));
+    try std.testing.expect(!shouldRetryDownload(.read_peer_closed, 3, 3));
+    try std.testing.expect(!shouldRetryDownload(.tls_certificate_rejected, 0, 3));
 
     var range_buffer: [128]u8 = undefined;
     try std.testing.expectEqualStrings("x-test: yes\nRange: bytes=2-\n", appendRangeHeader("x-test: yes\n", 2, range_buffer[0..]).?);

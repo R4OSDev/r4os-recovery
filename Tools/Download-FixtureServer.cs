@@ -13,6 +13,8 @@ public sealed class RecoveryDownloadFixtureServer : IDisposable {
     readonly Thread thread;
     volatile bool stopped;
     public readonly ConcurrentQueue<string> Requests = new ConcurrentQueue<string>();
+    public int Retry3Count;
+    public int Retry4Count;
     public int Port { get; }
     public RecoveryDownloadFixtureServer(string directory) {
         root = Path.GetFullPath(directory);
@@ -50,17 +52,35 @@ public sealed class RecoveryDownloadFixtureServer : IDisposable {
                     if (name == "redirect.zip") { Header(stream, 302, 0, "Location: /good.zip\r\n"); return; }
                     bool truncated = name == "truncated.zip";
                     bool corrupt = name == "wrong.zip";
-                    string path = Path.Combine(root, truncated || corrupt ? "good.zip" : name);
+                    bool retry3 = name == "retry3.zip";
+                    bool retry4 = name == "retry4.zip";
+                    string path = Path.Combine(root, truncated || corrupt || retry3 || retry4 ? "good.zip" : name);
                     if (!File.Exists(path)) { Header(stream, 404, 0); return; }
                     using (var file = File.OpenRead(path)) {
-                        Header(stream, 200, file.Length, "Content-Type: application/octet-stream\r\n");
+                        long start = 0;
+                        if (retry3 || retry4) {
+                            foreach (string line in request.Split('\n')) {
+                                if (!line.StartsWith("Range:", StringComparison.OrdinalIgnoreCase)) continue;
+                                string value = line.Substring(6).Trim();
+                                if (!value.StartsWith("bytes=", StringComparison.OrdinalIgnoreCase) || !value.EndsWith("-") ||
+                                    !long.TryParse(value.Substring(6, value.Length - 7), out start) || start <= 0 || start >= file.Length) {
+                                    Header(stream, 416, 0); return;
+                                }
+                            }
+                        }
+                        string extra = "Content-Type: application/octet-stream\r\n";
+                        if (start != 0) extra += "Content-Range: bytes " + start + "-" + (file.Length - 1) + "/" + file.Length + "\r\n";
+                        Header(stream, start == 0 ? 200 : 206, file.Length - start, extra);
+                        file.Position = start;
+                        int attempt = retry3 ? Interlocked.Increment(ref Retry3Count) : retry4 ? Interlocked.Increment(ref Retry4Count) : 0;
+                        bool drop = (retry3 && attempt <= 3) || (retry4 && attempt <= 4);
                         var buffer = new byte[65536]; long sent = 0;
                         while (!stopped) {
-                            int amount = file.Read(buffer, 0, truncated ? 4096 : buffer.Length);
+                            int amount = file.Read(buffer, 0, truncated || drop ? 4096 : buffer.Length);
                             if (amount == 0) break;
                             if (corrupt && sent == 0) buffer[0] ^= 1;
                             stream.Write(buffer, 0, amount); sent += amount;
-                            if (truncated) break;
+                            if (truncated || drop) break;
                         }
                         stream.Flush();
                     }

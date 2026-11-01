@@ -203,6 +203,17 @@ Das Asset muss uploaded sein, zum Versionstag und exakten Repositorypfad
 passen und einen SHA-256-Digest besitzen. HTTPS-Weiterleitungen bleiben auf
 den freigegebenen GitHub-/Asset-Hosts. Lokale Pakete bleiben ohne Netz nutzbar.
 
+Der Release-Download zeigt im Recovery-Menue laufend geladene Daten,
+Gesamtgroesse, Prozent und die Uebertragungsrate in KB/s oder MB/s
+(jeweils 1024er-Einheiten). Die Anzeige wird hoechstens alle 100 ms neu
+gezeichnet. Bei einem Transportabbruch folgen maximal drei weitere
+Versuche; bereits geladene Bytes werden nur nach gueltiger HTTP-206-Range-
+Antwort fortgesetzt. Nutzerabbruch, HTTP-Ablehnung, ungueltige Pakete und
+Cachefehler loesen keinen solchen Retry aus. Nach dem letzten Fehler zeigt
+der Dialog die Ursache samt technischem Fehlercode und Anzahl der Retries.
+Der bisherige verifizierte ZIP-Cache bleibt bis zur erfolgreichen
+Paketpruefung und Aktivierung erhalten.
+
 Beide Cachekanaele haben dieselbe unabhaengige Transaktionsfolge. INSTALL
 liegt ausschliesslich auf der bestaetigten Boot-RECOVERY-Partition R:.
 RELEASE bzw. RECOVERY besitzen je .ZIP, .PART und kurzlebig .LCK, .TMP,

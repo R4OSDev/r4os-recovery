@@ -1,4 +1,4 @@
-param([switch]$ReuseFixture,[switch]$LiveOnly,[switch]$NoCuts,[string]$Zig='', [string]$Qemu='')
+param([switch]$ReuseFixture,[switch]$LiveOnly,[switch]$NoCuts,[switch]$OnlyR4OS,[string]$Zig='', [string]$Qemu='')
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
@@ -66,15 +66,17 @@ if(!$ReuseFixture){
  $package=New-R4OSReleasePackage -Image $sourceImage -BootRoot $bootRoot -RecoveryPackage $good -LegalRoot $legalRoot -ReleaseVersion '0.76.16' -KernelVersion ((Get-RecoveryFields (Join-Path $root 'Kernel/VERSION.R4S')).KERNEL_VERSION[0]) -Profile slim -OutputRoot (Join-Path $output 'system')
  Copy-Item -LiteralPath $package.path -Destination $normal -Force
  Older-Zip $good $oldRecovery;Older-Zip $normal $oldNormal
- foreach($name in @('good','redirect','truncated','wrong')){Metadata $name $good}
+ foreach($name in @('good','redirect','truncated','wrong','retry3','retry4')){Metadata $name $good}
  Metadata invalid $bad;Metadata normal $normal r4os
  $null=New-Installation 1 $false '1024x768x32' @{RECOVERY=@("$oldRecovery|/INSTALL/RECOVERY.ZIP","$oldNormal|/INSTALL/RELEASE.ZIP")}
  $files=@{}
- foreach($relative in @('disk-1.img','good.zip','invalid.zip','normal.zip','older-recovery.zip','older-r4os.zip','meta-good.json','meta-redirect.json','meta-truncated.json','meta-wrong.json','meta-invalid.json','meta-normal.json')){$files[$relative]=Get-RecoveryHash (Join-Path $output $relative)}
+ foreach($relative in @('disk-1.img','good.zip','invalid.zip','normal.zip','older-recovery.zip','older-r4os.zip','meta-good.json','meta-redirect.json','meta-truncated.json','meta-wrong.json','meta-retry3.json','meta-retry4.json','meta-invalid.json','meta-normal.json')){$files[$relative]=Get-RecoveryHash (Join-Path $output $relative)}
  Write-RecoveryJson $stamp @{inputs=$fixtureInputs;files=$files}
 }
 $null=[RecoveryDownloadFatFaults]::Check((Join-Path $output 'disk-1.img'))
-. (Join-Path $root 'Artifacts/HostSources/Distribution/Tools/Qemu-HostProfile.ps1')
+$sources=Join-Path $root 'Artifacts/HostSources/Distribution'
+if(!(Test-Path -LiteralPath $sources)){[IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $root 'Legal/Sources/Distribution.zip'),$sources)}
+. (Join-Path $sources 'Tools/Qemu-HostProfile.ps1')
 $profile=Resolve-R4QemuHostProfile $Qemu
 $askpass=Join-Path $output "askpass$suffix";Checked $Zig @('cc','-O2',(Join-Path $root 'Tools/Guest-Askpass.c'),'-o',$askpass)
 $ssh=(Get-Command "ssh$suffix" -CommandType Application|Select-Object -First 1).Source
@@ -109,9 +111,9 @@ function Stop-Guest {
   $process.Dispose();$script:process=$null
  }
 }
-function Witness([string]$Argument,[int]$ExitCode=0){
+function Witness([string]$Argument,[int]$ExitCode=0,[int]$TimeoutMs=180000){
  $elapsed=[Diagnostics.Stopwatch]::StartNew()
- $text=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /DOWNLOADSMOKE $Argument")) '' 180000 $ExitCode
+ $text=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /DOWNLOADSMOKE $Argument")) '' $TimeoutMs $ExitCode
  Write-Host $text
  Write-Host ("Witness {0}: {1:N3}s" -f $Argument,$elapsed.Elapsed.TotalSeconds)
  if($ExitCode -eq 0 -and $text -notmatch '\[DOWNLOADSMOKE\] result=OK'){throw "Incomplete witness: $Argument"}
@@ -125,6 +127,11 @@ function Cache-Matches([string]$File,[switch]$R4OS,[switch]$Complete){
 try{
  $image=Join-Path $output 'run.img';Copy-Item -LiteralPath (Join-Path $output 'disk-1.img') -Destination $image -Force
  Start-Guest $image main
+ if($OnlyR4OS){
+  Cache-Matches $oldRecovery -Complete;Cache-Matches $oldNormal -R4OS -Complete
+  $null=Witness "R4OS $base normal" 0 300000
+  Cache-Matches $normal -R4OS -Complete;Cache-Matches $oldRecovery -Complete
+ }else{
  $null=Witness LIVE
  if(!$LiveOnly){
   Cache-Matches $oldRecovery -Complete;Cache-Matches $oldNormal -R4OS -Complete
@@ -136,13 +143,22 @@ try{
    if($text -notmatch "error=$wanted"){throw "Unexpected rejection: $case"}
    Cache-Matches $oldRecovery;Cache-Matches $oldNormal -R4OS -Complete
   }
+  $text=Witness "FIXTURE $base retry4" 1
+  if($text -notmatch 'error=NetworkDownload' -or $server.Retry4Count -ne 4){throw 'Retry limit exceeded or wrong interruption result.'}
+  Cache-Matches $oldRecovery -Complete
+  $text=Witness "FIXTURE $base retry3"
+  if($server.Retry3Count -ne 4 -or $text -notmatch 'Retry 3/3' -or $text -notmatch 'Loaded .* / .* \| [0-9]+% \| [0-9]+\.[0-9]+ (KB|MB)/s'){
+   throw 'Three resumable retries or visible progress were not observed.'
+  }
+  Cache-Matches $good -Complete
   $null=Witness "FIXTURE $base redirect";Cache-Matches $good -Complete;Cache-Matches $oldNormal -R4OS -Complete
   $null=Witness "FIXTURE $base good";Cache-Matches $good -Complete
-  $null=Witness "R4OS $base normal";Cache-Matches $normal -R4OS -Complete;Cache-Matches $good -Complete
+  $null=Witness "R4OS $base normal" 0 300000;Cache-Matches $normal -R4OS -Complete;Cache-Matches $good -Complete
+ }
  }
  $runs+=@{name='main';seconds=$watch.Elapsed.TotalSeconds};Stop-Guest
  $null=[RecoveryDownloadFatFaults]::Check($image)
- if(!$LiveOnly -and !$NoCuts){
+ if(!$OnlyR4OS -and !$LiveOnly -and !$NoCuts){
   foreach($cut in @('journal','publish','cleanup')){
    Copy-Item -LiteralPath (Join-Path $output 'disk-1.img') -Destination $image -Force
    Start-Guest $image "cut-$cut"
@@ -169,7 +185,7 @@ try{
    $null=[RecoveryDownloadFatFaults]::Check($image)
   }
  }
- if(!$LiveOnly -and !$NoCuts){
+ if(!$OnlyR4OS -and !$LiveOnly -and !$NoCuts){
   foreach($fault in @('alias-backup','alias-published','lfn-detached','orphan-create')){
    $source=Join-Path $output $(if($fault -eq 'orphan-create'){'disk-1.img'}else{'journal-durable.img'})
    Copy-Item -LiteralPath $source -Destination $image -Force
@@ -184,7 +200,7 @@ try{
   }
  }
  if((Get-RecoveryHash $scratch) -cne $targetBefore){throw 'An installation target was modified.'}
- $report=@{schema=1;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;targetBefore=$targetBefore;targetAfter=Get-RecoveryHash $scratch;runs=$runs;liveOnly=[bool]$LiveOnly;cuts=[bool](!$NoCuts -and !$LiveOnly)}
+ $report=@{schema=1;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;targetBefore=$targetBefore;targetAfter=Get-RecoveryHash $scratch;runs=$runs;liveOnly=[bool]$LiveOnly;onlyR4OS=[bool]$OnlyR4OS;cuts=[bool](!$OnlyR4OS -and !$NoCuts -and !$LiveOnly)}
  Write-RecoveryJson (Join-Path $output 'download-results.json') $report
  Write-Host 'Recovery downloads: all requested witnesses passed; installation target unchanged.'
 }finally{

@@ -49,6 +49,8 @@ and [the technical contracts](RecoveryTools/Contracts.de.txt) for details.
 ## Recovery tools
 
 - Install R4OS from a stored release ZIP or a release downloaded from GitHub.
+- GitHub downloads show transferred and total size, percentage, and speed;
+  interrupted transfers resume up to three times and report the final cause.
 - Replace a selected R4OS system installation and update Recovery independently.
 - Manage partitions through the reusable R4PART console application.
 - Run the existing terminal and provide SSH and FTP access for offline repair.

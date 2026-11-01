@@ -3,6 +3,7 @@ const r4os = @import("r4os");
 const github = @import("github.zig");
 const cache = @import("cache.zig");
 const packages = @import("package_session.zig");
+const download_progress = @import("download_progress.zig");
 const time = r4os.time_contract;
 // WebTransport already supplies User-Agent and identity encoding. Its shared
 // header serialization uses LF; the HTTP owner produces CRLF on the wire.
@@ -15,16 +16,32 @@ pub const Client = struct {
     profile: github.Profile = .slim,
     pump: packages.resident.Pump = .{},
     last_network_error: ?r4os.app_web.Error = null,
+    last_http_status: ?u16 = null,
     sink_error: bool = false,
     cancelled: bool = false,
+    meter: download_progress.Meter = .{},
+    retry_attempts: u8 = 0,
+    progress_text: [160]u8 = undefined,
 
-    fn progress(raw: ?*anyopaque, done: u64, total: u64) bool {
-        const self: *Client = @ptrCast(@alignCast(raw.?));
-        self.pump.run("Downloading release package", done, total) catch {
+    fn showProgress(self: *Client, done: u64, total: u64) bool {
+        const rate = self.meter.update(self.sys.ticks(), done, self.sys.monotonicHz());
+        const line = download_progress.format(&self.progress_text, done, total, rate, self.retry_attempts);
+        self.pump.run(line, done, total) catch {
             self.cancelled = true;
             return false;
         };
         return true;
+    }
+
+    fn progress(raw: ?*anyopaque, done: u64, total: u64) bool {
+        const self: *Client = @ptrCast(@alignCast(raw.?));
+        return self.showProgress(done, total);
+    }
+    fn retry(raw: ?*anyopaque, attempt: u8, _: r4os.app_web.Error, done: u64, total: ?u64) bool {
+        const self: *Client = @ptrCast(@alignCast(raw.?));
+        self.retry_attempts = attempt;
+        self.meter.reset(self.sys.ticks(), done);
+        return self.showProgress(done, total orelse 0);
     }
     fn apiProgress(raw: ?*anyopaque) callconv(.c) bool {
         const self: *Client = @ptrCast(@alignCast(raw.?));
@@ -69,6 +86,7 @@ pub const Client = struct {
             },
             .response => |value| value,
         };
+        self.last_http_status = response.status;
         if (response.status == 404) return error.NoCompatibleRelease;
         if (response.status == 403 or response.status == 429) return error.GitHubRateLimit;
         if (response.status != 200 or !response.secure) return error.ReleaseMetadata;
@@ -78,6 +96,10 @@ pub const Client = struct {
     /// Product callers always use the bound GitHub asset URL. The bounded
     /// guest witness may substitute only its host-side QEMU fixture server.
     pub fn receive(self: *Client, transaction: *cache.Cache, asset: github.Asset, fixture_url: ?[]const u8) !packages.Preview {
+        self.last_http_status = null;
+        self.last_network_error = null;
+        self.sink_error = false;
+        self.cancelled = false;
         if (asset.kind != self.kind or asset.profile != self.profile) return error.AssetMismatch;
         if (fixture_url) |url| if (!allowFixture(null, url)) return error.ReleaseMetadata;
         var arena = std.heap.ArenaAllocator.init(self.sys.allocator());
@@ -89,12 +111,17 @@ pub const Client = struct {
         const path = cache.paths(self.kind).part;
         defer _ = self.sys.fileStreamAbort(path);
         const io = try allocator.alloc(u8, 64 * 1024);
+        self.retry_attempts = 0;
+        self.meter.reset(self.sys.ticks(), 0);
+        if (!self.showProgress(0, asset.bytes)) return error.Cancelled;
         const downloaded = self.web.download(fixture_url orelse asset.url, raw, io, scratch, .{ .context = self, .write_fn = write }, .{
             .headers = headers ++ "Accept: application/octet-stream\n",
             .expected_size = asset.bytes,
             .timeout = time.timeoutFinite(time.durationFromNanoseconds(900_000_000_000)),
             .progress = progress,
             .progress_context = self,
+            .max_retries = 3,
+            .retry = retry,
             .target_authorizer = if (fixture_url != null) allowFixture else github.allowTarget,
         });
         const result = switch (downloaded) {
@@ -105,6 +132,7 @@ pub const Client = struct {
             .range_not_satisfiable => return error.IncompleteDownload,
             .response => |value| value,
         };
+        self.last_http_status = result.status;
         if ((result.status != 200 and result.status != 206) or (fixture_url == null and !result.secure) or result.total_size != asset.bytes or result.transferred != asset.bytes) return error.IncompleteDownload;
         if (self.sys.fileStreamFinish(path, asset.bytes, 0) != 0) return error.CacheIo;
         const session = try allocator.create(packages.Session);
@@ -168,4 +196,38 @@ pub fn message(err: anyerror) []const u8 {
         error.OutOfMemory => "Not enough RAM to validate this download. The current ZIP was retained.",
         else => "The downloaded package failed validation. The current ZIP was retained.",
     };
+}
+
+pub fn describe(err: anyerror, network: ?r4os.app_web.Error, http_status: ?u16, retries: u8, buffer: []u8) []const u8 {
+    if (err == error.NetworkDownload) {
+        const code = if (network) |value| @tagName(value) else "unknown";
+        const reason: []const u8 = if (network) |value| switch (value) {
+            .dns_timeout, .connect_timeout, .read_timeout => "Connection timed out",
+            .dns_not_found, .dns_failed => "GitHub host could not be resolved",
+            .connect_failed => "Connection to GitHub failed",
+            .read_reset, .read_peer_closed, .tls_close_notify => "Connection closed during download",
+            .tls_certificate_rejected, .tls_certificate_hostname_rejected, .tls_certificate_root_rejected, .tls_certificate_chain_rejected, .tls_certificate_clock_invalid, .tls_certificate_validity_rejected => "TLS certificate verification failed",
+            .redirect_disallowed, .policy_rejected => "Download redirect was rejected",
+            else => "Network transfer failed",
+        } else "Network transfer failed";
+        return std.fmt.bufPrint(buffer, "{s} ({s}); {d}/3 retries used. Existing ZIP retained.", .{ reason, code, retries }) catch message(err);
+    }
+    if (err == error.IncompleteDownload) {
+        if (http_status) |status| {
+            if (status != 200 and status != 206) return std.fmt.bufPrint(buffer, "GitHub asset returned HTTP {d}. Existing ZIP retained.", .{status}) catch message(err);
+        }
+        return "GitHub sent an incomplete or inconsistent asset. Existing ZIP retained.";
+    }
+    if (err == error.HashMismatch or err == error.SourceChanged or err == error.AssetMismatch) {
+        return std.fmt.bufPrint(buffer, "Package validation failed ({s}). Existing ZIP retained.", .{@errorName(err)}) catch message(err);
+    }
+    return std.fmt.bufPrint(buffer, "{s} ({s})", .{ message(err), @errorName(err) }) catch message(err);
+}
+
+test "download failure explains timeout, HTTP rejection and package validation" {
+    var buffer: [256]u8 = undefined;
+    try std.testing.expect(std.mem.indexOf(u8, describe(error.NetworkDownload, .read_timeout, null, 3, &buffer), "Connection timed out (read_timeout); 3/3 retries used") != null);
+    try std.testing.expect(std.mem.indexOf(u8, describe(error.IncompleteDownload, null, 404, 0, &buffer), "HTTP 404") != null);
+    try std.testing.expect(std.mem.indexOf(u8, describe(error.HashMismatch, null, null, 0, &buffer), "HashMismatch") != null);
+    try std.testing.expect(std.mem.indexOf(u8, describe(error.Cancelled, null, null, 0, &buffer), "Download cancelled") != null);
 }

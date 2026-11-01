@@ -9,12 +9,22 @@ const time = r4os.time_contract;
 const Hook = struct {
     sys: *const r4os.r4sys.Context,
     stop_on: []const u8 = "",
-    last_phase: []const u8 = "",
-    fn progress(raw: ?*anyopaque, phase: []const u8, _: u64, _: u64) bool {
+    last_phase: [160]u8 = undefined,
+    last_phase_len: usize = 0,
+    last_bucket: u64 = std.math.maxInt(u64),
+    last_retry: u8 = 0,
+    fn progress(raw: ?*anyopaque, phase: []const u8, done: u64, total: u64) bool {
         const self: *Hook = @ptrCast(@alignCast(raw.?));
-        if (!std.mem.eql(u8, self.last_phase, phase)) {
-            self.last_phase = phase;
-            var line: [144]u8 = undefined;
+        const download_phase = std.mem.indexOf(u8, phase, "Loaded ") != null;
+        const retry: u8 = if (std.mem.startsWith(u8, phase, "Retry ")) phase[6] - '0' else 0;
+        const bucket: u64 = if (download_phase and total != 0) @min(@as(u64, 10), done * 10 / total) else std.math.maxInt(u64);
+        const changed = if (download_phase) bucket != self.last_bucket or retry != self.last_retry else !std.mem.eql(u8, self.last_phase[0..self.last_phase_len], phase);
+        if (changed) {
+            self.last_bucket = bucket;
+            self.last_retry = retry;
+            self.last_phase_len = @min(self.last_phase.len, phase.len);
+            @memcpy(self.last_phase[0..self.last_phase_len], phase[0..self.last_phase_len]);
+            var line: [256]u8 = undefined;
             self.sys.write(std.fmt.bufPrint(&line, "[DOWNLOADSMOKE] tick={d} phase={s}\r\n", .{ self.sys.ticks(), phase }) catch "");
         }
         if (self.stop_on.len != 0 and std.mem.eql(u8, self.stop_on, phase)) {
@@ -151,6 +161,9 @@ fn execute(app: *r4os.App, args: []const u8) !void {
     var client = download.Client{ .sys = &sys, .dev = &dev, .web = web, .kind = kind, .pump = pump };
     const source = try std.fmt.bufPrint(&url, "{s}/{s}.zip", .{ base, name });
     const preview = client.receive(transaction, asset, source) catch |err| {
+        var detail: [256]u8 = undefined;
+        sys.write("[DOWNLOADSMOKE] reason=");
+        sys.println(download.describe(err, client.last_network_error, client.last_http_status, client.retry_attempts, &detail));
         if (client.last_network_error) |network| {
             sys.write("[DOWNLOADSMOKE] network=");
             sys.println(@tagName(network));
