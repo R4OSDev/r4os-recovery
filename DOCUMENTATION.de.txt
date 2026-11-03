@@ -1468,3 +1468,29 @@ unveraenderten anderen Partitionen und Quellimage. Beide Versuche sind unter
 ExFiles/Reports/Releases/20261018-08447/ ausserhalb von Git abgelegt.
 Nur der Hostpruefer ist geaendert; Recovery 0.1.63 und das veroeffentlichte
 R4OS-Paket bleiben bytegleich. Kein neuer Benchmark fuer diese Hostaenderung.
+
+
+SDK-gesteuerter Build seit 0.89.32
+--------------------------------
+Build.ps1 waehlt das benannte Recoveryprofil des aktuellen SDK; dessen drei
+Profiles-Dateien bestimmen Werkzeuge, Codegen und die festgehaltenen
+Plattformeingaenge. -SdkRoot oder R4OS_RECOVERY_SDK_ROOT bezeichnet nur den
+SDK-Ort. Bewusste Entwicklungsstaende benoetigen einen zuvor durch dieses SDK
+erzeugten Beleg ueber R4OS_SDK_DEVELOPMENT_PROFILE.
+
+Platform/SDK, Platform/Contract und Legal/Sources bleiben unveraendert.
+SDK/Tools/RecoveryProfiles.ps1 erzeugt aus dem geprueften Arbeits-Snapshot
+einen separaten Kompatibilitaetsbereich unter Artifacts/SDKProfile/SDK.
+Dessen Compilerwerte sind Ableitungen von SDK/Profiles/Build.json; der alte
+Runtime-/API-Code wird nicht auf den produktiven Rust-Kernel umgestellt.
+RecoveryTools/Menu verwendet diesen erzeugten Bereich. Kernel/build.zig
+liest das SDK-Profil typisiert. Die vorhandenen Boot-/Testoptionen und das
+Linkerlayout bleiben Recoverybesitz. Artefakte und BIOS-/UEFI-/Downloadfaelle
+werden weiterhin mit den bestehenden Besitzerwerkzeugen gebaut/geprueft.
+
+Provenance/inputs.lock.json haelt Originale und kontrollierte Revisionen
+fest; seine alte Importtoolchain ist ausschliesslich historische Provenienz.
+Artifacts/SDKProfile/profile.json bindet den tatsaechlichen SDK-/Profilstand
+und die erzeugte Buildfassung. Ein gefaelschtes oder geaendertes Original
+wird vor dem Build abgewiesen. Werkzeuge und fremde Contract-/Systemquellen
+werden nicht still aus lokalen Alternativstaenden uebernommen.

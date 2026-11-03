@@ -1,9 +1,12 @@
 # Shared deterministic runtime-volume/host-tool build. Caller verifies inputs.
 function Get-RecoveryImageCreator([string]$Root, [string]$Zig) {
-    $output = Join-Path $Root 'Artifacts/HostTools'
+    . (Join-Path $PSScriptRoot 'SDKProfile.ps1')
+    $sdkContext=Get-RecoverySdkContext $Root $Zig
+    $hostOptimize=$sdkContext.data.Build.codegen.recovery.image_creator_optimize
+    $output = Join-Path $Root 'Artifacts/HostTools' 
     [IO.Directory]::CreateDirectory($output) | Out-Null
     $program = Join-Path $output $(if ($IsWindows) {'imagecreater.exe'} else {'imagecreater'})
-    & $Zig build-exe -OReleaseSafe --cache-dir (Join-Path $output '.Cache') --global-cache-dir (Join-Path $output '.GlobalCache') --dep storage_tools `
+    & $Zig build-exe ('-O'+$hostOptimize) --cache-dir (Join-Path $output '.Cache') --global-cache-dir (Join-Path $output '.GlobalCache') --dep storage_tools `
         "-Mroot=$(Join-Path $Root 'Platform/Distribution/Tools/ImageCreator/src/main.zig')" `
         "-Mstorage_tools=$(Join-Path $Root 'Platform/SDK/r4os/storage_tools.zig')" "-femit-bin=$program"
     if ($LASTEXITCODE -ne 0) { throw 'Frozen Recovery ImageCreator build failed.' }

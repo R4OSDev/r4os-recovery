@@ -1,4 +1,4 @@
-param([string]$WorkspaceRoot = '', [string]$Plan = '')
+param([string]$WorkspaceRoot = '', [string]$Plan = '', [string]$SdkRoot='')
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -6,6 +6,9 @@ Set-StrictMode -Version Latest
 $recoveryRoot = Split-Path $PSScriptRoot -Parent
 if (!$WorkspaceRoot) { $WorkspaceRoot = [IO.Path]::GetFullPath((Join-Path $recoveryRoot '../..')) }
 if (!$Plan) { $Plan = Join-Path $recoveryRoot 'Provenance/import-plan.json' }
+if(!$SdkRoot){$SdkRoot=[IO.Path]::GetFullPath('../SDK',$recoveryRoot)}
+. (Join-Path $SdkRoot 'Tools/ProfileData.ps1')
+$importSdk=Read-R4SdkProfiles $SdkRoot
 $selection = Get-Content -Raw -LiteralPath $Plan | ConvertFrom-Json -AsHashtable
 $work = Join-Path $WorkspaceRoot 'Temp/RecoveryImport'
 [IO.Directory]::CreateDirectory($work) | Out-Null
@@ -39,7 +42,7 @@ try {
     }
     $zig = Join-Path $WorkspaceRoot $(if ($IsWindows) {'DevKit/Toolchains/Zig/zig.exe'} else {'DevKit/Toolchains/Zig/zig'})
     $zigVersion = & $zig version
-    if ($LASTEXITCODE -ne 0 -or $zigVersion -cne $selection.toolchain.version) { throw 'Zig version differs from explicit import plan.' }
+    if ($LASTEXITCODE -ne 0 -or $zigVersion -cne $importSdk.Tools.tools.zig.version) { throw 'Zig version differs from selected SDK.' }
     $log = Join-Path $work 'owner-builds.log'
     Start-Transcript -LiteralPath $log -Force | Out-Null
     try {

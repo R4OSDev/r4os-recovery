@@ -1,6 +1,32 @@
 const std = @import("std");
 
+// Build policy is supplied by the selected SDK, not by the frozen ABI inputs.
+const RecoveryPolicy = struct {
+    target: []const u8,
+    optimize: std.builtin.OptimizeMode,
+    cpu_features_sub: []const std.Target.x86.Feature,
+    cpu_features_add: []const std.Target.x86.Feature,
+    code_model: std.builtin.CodeModel,
+    red_zone: bool,
+    pic: bool,
+    sanitize_c: std.zig.SanitizeC,
+    single_threaded: bool,
+    stack_check: bool,
+    stack_protector: bool,
+    strip_default: bool,
+};
+
+fn sdkPolicy(b: *std.Build) RecoveryPolicy {
+    const path = b.option([]const u8, "sdk-build-profile-json", "SDK-selected Build.json") orelse @panic("Use Recovery/Build.ps1 with a selected SDK profile");
+    const bytes = std.Io.Dir.cwd().readFileAlloc(b.graph.io, path, b.allocator, .limited(1024 * 1024)) catch @panic("Cannot read SDK build profile");
+    const Document = struct { codegen: struct { recovery: RecoveryPolicy } };
+    const parsed = std.json.parseFromSlice(Document, b.allocator, bytes, .{ .ignore_unknown_fields = true }) catch @panic("Invalid SDK recovery profile");
+    if (!std.mem.eql(u8, parsed.value.codegen.recovery.target, "x86_64-freestanding-none")) @panic("Unsupported Recovery target");
+    return parsed.value.codegen.recovery;
+}
+
 pub fn build(b: *std.Build) void {
+    const profile = sdkPolicy(b);
     const RecoveryProbe = enum { none, poweroff, reboot, ram, storage, input, ui };
     const recovery_probe = b.option(RecoveryProbe, "recovery-probe", "Bounded Recovery foundation guest witness") orelse .none;
     const recovery_version_source = b.option([]const u8, "recovery-version", "Recovery release version") orelse @panic("Recovery version must be supplied by Build.ps1");
@@ -10,7 +36,7 @@ pub fn build(b: *std.Build) void {
         @panic("Build the paired runtime.img through Build.ps1 before building the Recovery kernel");
     // The R4OS kernel is pinned to ReleaseSafe. Debug overflows the Zig 0.16
     // ELF linker, while the kernel must never inherit a caller optimization.
-    const optimize: std.builtin.OptimizeMode = .ReleaseSafe;
+    const optimize = profile.optimize;
     const enable_exception_test = b.option(
         bool,
         "exception-test",
@@ -85,16 +111,14 @@ pub fn build(b: *std.Build) void {
         bool,
         "strip-kernel",
         "Strip host-only debug and symbol sections from the installed kernel ELF",
-    ) orelse true;
+    ) orelse profile.strip_default;
 
     const target = b.resolveTargetQuery(.{
         .cpu_arch = .x86_64,
         .os_tag = .freestanding,
         .abi = .none,
-        .cpu_features_sub = std.Target.x86.featureSet(&.{
-            .mmx, .sse, .sse2, .sse3, .ssse3, .sse4_1, .sse4_2, .avx, .avx2,
-        }),
-        .cpu_features_add = std.Target.x86.featureSet(&.{.soft_float}),
+        .cpu_features_sub = std.Target.x86.featureSet(profile.cpu_features_sub),
+        .cpu_features_add = std.Target.x86.featureSet(profile.cpu_features_add),
     });
 
     const contract = b.dependency("r4os_contract", .{});
@@ -108,13 +132,13 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("recovery_main.zig"),
         .target = target,
         .optimize = optimize,
-        .code_model = .kernel,
-        .red_zone = false,
-        .pic = false,
-        .sanitize_c = .off,
-        .single_threaded = false,
-        .stack_check = false,
-        .stack_protector = false,
+        .code_model = profile.code_model,
+        .red_zone = profile.red_zone,
+        .pic = profile.pic,
+        .sanitize_c = profile.sanitize_c,
+        .single_threaded = profile.single_threaded,
+        .stack_check = profile.stack_check,
+        .stack_protector = profile.stack_protector,
         .strip = strip_kernel,
     });
     const config = b.addOptions();
@@ -241,7 +265,7 @@ pub fn build(b: *std.Build) void {
     addFontUnitTest(b, test_step);
     addBootscreenUnitTest(b, test_step);
     addContractUnitTest(b, test_step, contract, config, "services_tests.zig");
-    addLoaderTests(b, test_step, contract, config);
+    addLoaderTests(b, test_step, contract, config, profile.optimize);
 
     addProviderNegative(
         b,
@@ -332,9 +356,9 @@ fn addLoaderTests(
     test_step: *std.Build.Step,
     contract: *std.Build.Dependency,
     config: *std.Build.Step.Options,
+    optimize: std.builtin.OptimizeMode,
 ) void {
     const target = b.graph.host;
-    const optimize: std.builtin.OptimizeMode = .ReleaseSafe;
     const root = b.createModule(.{
         .root_source_file = b.path("loader_tests.zig"),
         .target = target,

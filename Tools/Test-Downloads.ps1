@@ -13,6 +13,9 @@ $suffix=if($IsWindows){'.exe'}else{''}
 if(!$Zig){$Zig=Join-Path $workspace "DevKit/Toolchains/Zig/zig$suffix"}
 if(!$Qemu){$Qemu=Join-Path $workspace "DevKit/Emulation/QEMU/qemu-system-x86_64$suffix"}
 $LimineRoot=Join-Path $workspace 'DevKit/Boot/Limine';$limine=Join-Path $LimineRoot $(if($IsWindows){'limine-tool-windows-x86/limine.exe'}else{'limine'})
+. (Join-Path $PSScriptRoot 'SDKProfile.ps1')
+$sdkContext=Get-RecoverySdkContext $root $Zig
+Assert-RecoverySdkBootTools $sdkContext $Qemu $LimineRoot
 $output=Join-Path $root 'Artifacts/BootProbe/downloads';[IO.Directory]::CreateDirectory($output)|Out-Null
 $kernel=Join-Path $root 'Artifacts/Kernel/bin/recovery.elf';$runtime=Join-Path $root 'Artifacts/Runtime/runtime.img'
 $utf8=[Text.UTF8Encoding]::new($false)

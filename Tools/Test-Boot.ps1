@@ -23,6 +23,9 @@ if (!$OvmfCode) {
 if (!$OvmfVars) {
     $OvmfVars = if ($IsLinux) {'/usr/share/OVMF/OVMF_VARS_4M.fd'} else {Join-Path $workspace 'DevKit/Emulation/QEMU/share/edk2-i386-vars.fd'}
 }
+. (Join-Path $PSScriptRoot 'SDKProfile.ps1')
+$sdkContext=Get-RecoverySdkContext $recoveryRoot $Zig
+Assert-RecoverySdkBootTools $sdkContext $Qemu $LimineRoot
 $limine = Join-Path $LimineRoot $(if ($IsWindows) {'limine-tool-windows-x86/limine.exe'} else {'limine'})
 $output = Join-Path $recoveryRoot "Artifacts/BootProbe/$Action"
 $kernel = Join-Path $output 'bin/recovery.elf'

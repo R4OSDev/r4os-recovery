@@ -1,6 +1,10 @@
 # Recovery-owned applications build against the pinned SDK and Contract.
 # Frozen imported modules under Runtime are never rebuilt by this path.
 function Build-RecoveryTools([string]$Root, [string]$Zig) {
+    . (Join-Path $PSScriptRoot 'SDKProfile.ps1')
+    $sdkContext=Get-RecoverySdkContext $Root $Zig
+    . (Join-Path $sdkContext.sdk_root 'Tools/RecoveryProfiles.ps1')
+    $sdkOverlay=New-R4SdkRecoveryOverlay $sdkContext
     $lock = Get-Content -Raw -LiteralPath (Join-Path $Root 'Provenance/inputs.lock.json') | ConvertFrom-Json -AsHashtable
     $providers = @($lock.platformProviders)
     foreach ($module in $lock.modules) {

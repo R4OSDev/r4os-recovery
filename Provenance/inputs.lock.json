@@ -1545,8 +1545,8 @@
     },
     {
       "path": "Kernel/build.zig",
-      "bytes": 15881,
-      "sha256": "21d8818becb8e1dacd67f98c077683009c4d79f8cae391c1ff0bee8c2f53b7c3",
+      "bytes": 17204,
+      "sha256": "e77c05a4087d2354e8d0d2ebdedaefec1ed13d17c1cb12ecdc2903ebe4e0c1ab",
       "originalSha256": "8892ef6a596303a128b07a6ae3b826a45c85a39a2a411db451cdf20b9654b3e0",
       "origin": {
         "path": "build.zig",
@@ -9585,8 +9585,8 @@
     },
     {
       "path": "RecoveryTools/Menu/build.zig.zon",
-      "bytes": 293,
-      "sha256": "c458d3d5908ca1b49e46ec4963de57cfa4420575b0dc0025f9072197bd1f42c1",
+      "bytes": 305,
+      "sha256": "cdcb6982b065da57492e73a5b3097678dc25127f03737e578a64e8a8790dc821",
       "originalSha256": null,
       "origin": null
     },
@@ -16622,6 +16622,53 @@
         }
       ],
       "reason": "Recovery 0.1.67 explains terminal download failures and documents retry behavior"
+    },
+    {
+      "reason": "0.89.32: SDK recovery build profile; frozen platform and original archives unchanged",
+      "changes": [
+        {
+          "path": "Kernel/build.zig",
+          "before": "21d8818becb8e1dacd67f98c077683009c4d79f8cae391c1ff0bee8c2f53b7c3",
+          "after": "a17a5591642e77132ba3d0b868cdc42c164e31d24c42b70454ca847d9d7d9ea8"
+        }
+      ]
+    },
+    {
+      "reason": "0.89.32: Recovery Menu uses SDK-generated compatibility overlay as its technical Zig location",
+      "changes": [
+        {
+          "path": "RecoveryTools/Menu/build.zig.zon",
+          "after": "cdcb6982b065da57492e73a5b3097678dc25127f03737e578a64e8a8790dc821",
+          "before": "c458d3d5908ca1b49e46ec4963de57cfa4420575b0dc0025f9072197bd1f42c1"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "a17a5591642e77132ba3d0b868cdc42c164e31d24c42b70454ca847d9d7d9ea8",
+          "path": "Kernel/build.zig",
+          "after": "e71ec675f3ce9fc5592f3c776af2fb8db1bc420ed2f3e1d137430f4980d2397d"
+        }
+      ],
+      "reason": "0.89.32: loader owner checks use selected SDK recovery optimization"
+    },
+    {
+      "changes": [
+        {
+          "path": "Kernel/build.zig",
+          "before": "e71ec675f3ce9fc5592f3c776af2fb8db1bc420ed2f3e1d137430f4980d2397d",
+          "after": "e77c05a4087d2354e8d0d2ebdedaefec1ed13d17c1cb12ecdc2903ebe4e0c1ab"
+        }
+      ],
+      "reason": "0.89.32: share parsed SDK policy with existing loader test builder"
     }
-  ]
+  ],
+  "sdkProfile": {
+    "id": "r4os-recovery-zig-v1",
+    "authority": "SDK/Profiles/Build.json, Tools.json, Components.json",
+    "baselineToolchainHistoricalOnly": true,
+    "actualBuildRecord": "Artifacts/SDKProfile/profile.json",
+    "frozenOriginalsPreserved": true
+  }
 }

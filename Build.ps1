@@ -1,6 +1,6 @@
 param(
     [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'DownloadTest', 'NetworkTest')][string]$Mode = 'Verify',
-    [string]$Zig = '',
+    [string]$Zig = '', [string]$SdkRoot='',
     [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
 )
@@ -8,6 +8,11 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 try {
+    . (Join-Path $PSScriptRoot 'Tools/SDKProfile.ps1')
+    $sdkContext=Get-RecoverySdkContext $PSScriptRoot $Zig $SdkRoot
+    $Zig=$sdkContext.zig
+    $env:R4OS_RECOVERY_SDK_ROOT=$sdkContext.sdk_root
+    $sdkBuildJson=Join-Path $sdkContext.sdk_root 'Profiles/Build.json'
     . (Join-Path $PSScriptRoot 'Tools/Inventory.ps1')
     $report = Test-RecoveryInventory -Root $PSScriptRoot
     $output = Join-Path $PSScriptRoot 'Artifacts/Verification'
@@ -22,12 +27,6 @@ try {
         if ($Mode -eq 'InputTest') { $BootProbe = 'input' }
         if ($Mode -in @('UITest', 'PackageTest')) { $BootProbe = 'ui' }
         if ($Mode -in @('NetworkTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'DownloadTest')) { $BootProbe = 'none' }
-        if (!$Zig) {
-            $Zig = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot $(if ($IsWindows) {'../../DevKit/Toolchains/Zig/zig.exe'} else {'../../DevKit/Toolchains/Zig/zig'})))
-        }
-        $expected = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Provenance/inputs.lock.json') | ConvertFrom-Json -AsHashtable
-        $actualVersion = & $Zig version
-        if ($LASTEXITCODE -ne 0 -or $actualVersion -cne $expected.toolchain.version) { throw 'Recovery requires the recorded Zig version.' }
         $release = Get-RecoveryFields (Join-Path $PSScriptRoot 'VERSION.R4S')
         $version = $release.RECOVERY_VERSION[0]
         if ($version -cnotmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'Invalid Recovery version.' }
@@ -43,7 +42,7 @@ try {
             $prefix = Join-Path $PSScriptRoot $(if ($probe -eq 'none') {'Artifacts/Kernel'} else {"Artifacts/BootProbe/$probe"})
             Push-Location (Join-Path $PSScriptRoot 'Kernel')
             try {
-                & $Zig build --prefix $prefix "--fork=$(Join-Path $PSScriptRoot 'Platform/Contract')" "-Drecovery-version=$version" "-Drecovery-probe=$probe" @runtimeArguments
+                & $Zig build --prefix $prefix "--fork=$(Join-Path $PSScriptRoot 'Platform/Contract')" "-Dsdk-build-profile-json=$sdkBuildJson" "-Drecovery-version=$version" "-Drecovery-probe=$probe" @runtimeArguments
                 if ($LASTEXITCODE -ne 0) { throw 'Recovery kernel build failed.' }
             } finally { Pop-Location }
             Write-Host "Recovery kernel: $(Join-Path $prefix 'bin/recovery.elf')"
