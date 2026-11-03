@@ -5,12 +5,6 @@ function Get-RecoverySdkContext([string]$Root,[string]$Zig='',[string]$SdkRoot='
 }
 
 function Assert-RecoverySdkBootTools($Context,[string]$Qemu,[string]$LimineRoot) {
-    $hostName=if($IsWindows){'Windows'}else{'Linux'}
-    $qemuVersion=[string]$Context.data.Tools.tools.qemu.hosts[$hostName].version
-    $reported=(@(& $Qemu --version 2>&1) -join "`n")
-    if($LASTEXITCODE -ne 0 -or !$reported.StartsWith(('QEMU emulator version '+$qemuVersion+' '),[StringComparison]::Ordinal)){throw 'RecoverySdkQemuMismatch'}
-    $limine=Join-Path $LimineRoot $(if($IsWindows){'limine-tool-windows-x86/limine.exe'}else{'limine'})
-    $lines=@(& $limine --version 2>&1)
-    $reported=if($lines.Count){[string]$lines[0]}else{''}
-    if($LASTEXITCODE -ne 0 -or $reported -cne ('Limine '+$Context.data.Tools.tools.limine.version)){throw 'RecoverySdkLimineMismatch'}
+    . (Join-Path $Context.sdk_root 'Tools/BuildContext.ps1')
+    Assert-R4SdkBootTools $Context.sdk_root $Qemu $LimineRoot
 }
