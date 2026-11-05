@@ -622,6 +622,7 @@ var dns_cache_entries: [DNS_CACHE_ENTRIES]DnsCacheEntry = .{DnsCacheEntry{}} ** 
 var dns_cache_next_slot: usize = 0;
 var arp_cache_entries: [ARP_CACHE_ENTRIES]ArpCacheEntry = .{ArpCacheEntry{}} ** ARP_CACHE_ENTRIES;
 var arp_cache_next_slot: usize = 0;
+var arp_rx_next_request_tick: [MAX_ADAPTERS]u64 = .{0} ** MAX_ADAPTERS;
 var icmp_sequence: u16 = 1;
 var arp_cache_updated_tick: u64 = 0;
 var ethernet_r4p_rx: u64 = 0;
@@ -751,6 +752,7 @@ pub fn init() void {
     dns_cache_next_slot = 0;
     arp_cache_entries = .{ArpCacheEntry{}} ** ARP_CACHE_ENTRIES;
     arp_cache_next_slot = 0;
+    arp_rx_next_request_tick = .{0} ** MAX_ADAPTERS;
     tcp.reset();
     tcp_rto.reset();
     tcp_proactive_retransmits = 0;
@@ -5841,6 +5843,7 @@ pub fn arpFlush() void {
     arp_cache_updated_tick = 0;
     arp_cache_entries = .{ArpCacheEntry{}} ** ARP_CACHE_ENTRIES;
     arp_cache_next_slot = 0;
+    arp_rx_next_request_tick = .{0} ** MAX_ADAPTERS;
 }
 
 pub fn dhcpAcquireDefault() TxResult {
@@ -7287,6 +7290,7 @@ fn resolveIpv4DestMac(target_ip: [4]u8, out_mac: *[6]u8) TxResult {
 }
 
 fn resolveIpv4DestMacForAdapter(adapter_index: usize, target_ip: [4]u8, out_mac: *[6]u8) TxResult {
+    if (adapter_index >= adapter_count) return .no_adapter;
     const route = routeIpv4Target(target_ip);
     if (route.result != .ok) {
         arp_stats.last_error = route.last_error;
@@ -7301,6 +7305,28 @@ fn resolveIpv4DestMacForAdapter(adapter_index: usize, target_ip: [4]u8, out_mac:
         arp_stats.cache_hits += 1;
         arp_stats.last_error = "cache-hit";
         return .ok;
+    }
+
+    // RX owns the only protocol consumer. Waiting here for an ARP reply
+    // recursively consumes TCP frames ahead of that reply until the nesting
+    // limit is reached; every ACK then stalls the queue for another timeout.
+    // Leave the unsent ACK/FIN/retransmit with its TCP owner and return to the
+    // outer drain. A later activation retries after the ARP reply is consumed.
+    // Bound requests per adapter so a missing router cannot create an ARP storm.
+    if (isRxTaskCurrent()) {
+        const now = time_core.monotonicTicks();
+        if (now >= arp_rx_next_request_tick[adapter_index]) {
+            arp_rx_next_request_tick[adapter_index] = now +| ARP_RESOLVE_TIMEOUT_TICKS;
+            arp_stats.pending_packets += 1;
+            arp_stats.resolve_attempts += 1;
+            const result = sendArpRequest(adapter_index, route.next_hop_ip);
+            if (result != .ok) {
+                arp_stats.pending_drops += 1;
+                return result;
+            }
+        }
+        arp_stats.last_error = "resolve-pending";
+        return .busy;
     }
 
     arp_stats.pending_packets += 1;

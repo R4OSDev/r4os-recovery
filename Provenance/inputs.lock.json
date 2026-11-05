@@ -3046,8 +3046,8 @@
     },
     {
       "path": "Kernel/net/core.zig",
-      "bytes": 276724,
-      "sha256": "6b79817bc3c9df02aaf1602016e24cca70ac5b232caecea36e7968e0a389c8d7",
+      "bytes": 278038,
+      "sha256": "b839cc03aa89647b6cf7286622174d16de3a188e48b92c1b7965374a62a0abe9",
       "originalSha256": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
       "origin": {
         "path": "net/core.zig",
@@ -3807,7 +3807,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "d8503c689f9495687a8c24e50d79a057fcd85637c1a27a0a121a2db5eff8b42d",
+      "sha256": "f969004b98fa4b58f7bc171d5a542ae487697d5213c9b168ec299f707d13dec9",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -9830,8 +9830,8 @@
     },
     {
       "path": "RecoveryTools/README.md",
-      "bytes": 994,
-      "sha256": "f83d394261576da8c03e491bd752cb7aed13960ee35ac13717e0428478838d65",
+      "bytes": 1013,
+      "sha256": "6e1642929f37316c26a875e98a89c8f74cd27f496e111506875b58f85ae4ff7f",
       "originalSha256": null,
       "origin": null
     },
@@ -9929,7 +9929,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "cd331978fc4260604d762f5a01ebb941d856f4004f5c24c6033c72a679c9f1f5",
+      "sha256": "8feaa81cd56c6f2bcb0ea965f4631cabc6495b853454fd1fc25f3434d331c2d7",
       "originalSha256": null,
       "origin": null
     },
@@ -9953,7 +9953,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "686babbcad36d256bc911ac10ce4d26608e8862a282bf525a0a134818ab5e7b2",
+      "sha256": "d6ded4eb87a254dafb0c36d99acf18938c82f68201ad524b97662bbcbfada13b",
       "originalSha256": null,
       "origin": null
     },
@@ -16662,6 +16662,46 @@
         }
       ],
       "reason": "0.89.32: share parsed SDK policy with existing loader test builder"
+    },
+    {
+      "reason": "OssiPC: reproduce routed TCP collapse at ARP expiry; keep Recovery RX worker nonblocking while resolving the next hop, with per-adapter request pacing.",
+      "changes": [
+        {
+          "after": "b839cc03aa89647b6cf7286622174d16de3a188e48b92c1b7965374a62a0abe9",
+          "path": "Kernel/net/core.zig",
+          "before": "6b79817bc3c9df02aaf1602016e24cca70ac5b232caecea36e7968e0a389c8d7"
+        }
+      ]
+    },
+    {
+      "reason": "Recovery68/own Kernel65: independent ARP RX forward-progress correction; imported modules and Menu26 unchanged.",
+      "changes": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "d8503c689f9495687a8c24e50d79a057fcd85637c1a27a0a121a2db5eff8b42d",
+          "after": "f969004b98fa4b58f7bc171d5a542ae487697d5213c9b168ec299f707d13dec9"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "cd331978fc4260604d762f5a01ebb941d856f4004f5c24c6033c72a679c9f1f5",
+          "after": "8feaa81cd56c6f2bcb0ea965f4631cabc6495b853454fd1fc25f3434d331c2d7"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "686babbcad36d256bc911ac10ce4d26608e8862a282bf525a0a134818ab5e7b2",
+          "after": "d6ded4eb87a254dafb0c36d99acf18938c82f68201ad524b97662bbcbfada13b"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "path": "RecoveryTools/README.md",
+          "after": "6e1642929f37316c26a875e98a89c8f74cd27f496e111506875b58f85ae4ff7f",
+          "before": "f83d394261576da8c03e491bd752cb7aed13960ee35ac13717e0428478838d65"
+        }
+      ],
+      "reason": "Document Recovery68 ARP forward progress and remove obsolete Recovery tool/build descriptions."
     }
   ],
   "sdkProfile": {

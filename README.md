@@ -74,6 +74,16 @@ drivers, protocols, services, console applications, and libraries are
 imported as a pinned, jointly verified set. Recovery has its own release cycle;
 normal R4OS packages include an explicitly selected complete Recovery release.
 
+Recovery 0.1.68 / its own Kernel 0.1.65 keeps the RX worker running when a
+next-hop ARP entry expires. The worker requests resolution without waiting;
+TCP retains the unsent ACK, FIN or retransmit until a later activation.
+Requests are paced per adapter. This prevents queued TCP traffic from hiding
+an already received ARP reply behind recursive resolution waits. A routed
+64-MB SMP4 transfer reproduces the old collapse after the 30-second ARP TTL;
+the corrected pair transfers every byte with the expected SHA-256 across
+two router-cache expirations. The imported runtime modules and Menu 0.1.26
+remain byte-identical. This guest result does not replace an OssiPC retest.
+
 The 0.1.66 source profile (roadmap 0.86.81) adopts only the needed current
 SDK font, Unicode and generation-bound network request semantics. Missing
 callbacks return unavailable; glyph rows, font generations and raw IPC do not

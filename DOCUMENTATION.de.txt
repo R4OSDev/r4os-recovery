@@ -1,6 +1,32 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
+Stand 0.89.58: Recovery 0.1.68 / eigener Kernel 0.1.65
+----------------------------------------------------
+
+Ein abgelaufener Router-ARP-Eintrag darf den einzigen RX-Protokollworker
+nicht beim Senden von TCP-ACKs, FIN oder Retransmits blockieren. Bisher
+verarbeitete seine ARP-Warteschleife weitere TCP-Pakete rekursiv; diese
+warteten auf dieselbe ARP-Antwort, bis die Verschachtelungsgrenze den
+Fortschritt stoppte. ARP-Antworten lagen bereits in der gemeinsamen Queue.
+Die aufgestaute Verarbeitung verursachte Timeouts und kurze Downloadraten
+von nur wenigen KB/s trotz zuvor etwa 1 MB/s.
+
+Der RX-Worker fordert ARP jetzt ohne Warten an und gibt Busy an den
+TCP-Besitzer zurueck. Dessen ausstehende ACK-/FIN-/Sendekatalogzustaende
+bleiben erhalten und werden nach dem normalen RX-Drain erneut angetrieben.
+Pro Adapter begrenzt das bestehende 500-ms-Aufloesungsbudget neue Anfragen.
+Init und ARP-Flush setzen diese Frist zurueck. Andere Aufrufer behalten
+ihren bisherigen begrenzten Aufloesungsweg.
+
+Ein gerouteter 64-MB-SMP4-Gasttransfer reproduziert den alten Einbruch nach
+30 Sekunden. Mit dem neuen Produktionspaar laufen 67108864 Bytes mit
+korrekter SHA256 in rund64 Sekunden durch, einschliesslich zweier
+Router-ARP-Ablaufe und ohne ARP-Timeout. Die39 importierten Laufzeitmodule
+und RECOVERY.R4X0.1.26 sind bytegleich; keine normale Rust-Kernelaenderung.
+Reale Hardware und Windows werden aus diesem Gastbeleg nicht abgeleitet.
+Projektweiter Ergebnisbeleg: Docs/Deployment/RecoveryNet08958.json.
+
 Stand 0.76.23
 ------------
 
@@ -22,8 +48,8 @@ Workspace kopiert oder ueber das Netz nachgeladen.
 
 -Mode Kernel baut das zugehoerige Artifacts/Runtime/runtime.img und
 Artifacts/Kernel/bin/recovery.elf mit dem festgehaltenen
-Zig, lokalem Contract und ReleaseSafe/soft_float. -Zig waehlt bei Bedarf das
-Hostwerkzeug; der Default kommt aus dem benachbarten DevKit. Kernel/Build.sh
+Zig, lokalem Contract und Recovery-Codegenprofil des SDK. -Zig waehlt bei
+Bedarf das Hostwerkzeug; der Default folgt dem SDK-Profil. Kernel/Build.sh
 und Kernel/Build.bat delegieren denselben Einstieg. Kernel/recovery_main.zig
 ist die separate Bootfolge, Kernel/main.zig bleibt als Herkunftsreferenz.
 Recovery VERSION.R4S und Kernel/VERSION.R4S besitzen eigene Versionen.
