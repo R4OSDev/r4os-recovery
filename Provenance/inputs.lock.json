@@ -327,6 +327,27 @@
       "archiveSha256": "5818e520798c1fb7c048e638df8b153ccb65f0294f58dac0c7fe9a7fba918c28",
       "commit": "ff349e375fd4993162d015b3b45150fc2b3a3769",
       "remote": "https://github.com/R4OSDev/r4os-libraries.git"
+    },
+    {
+      "id": "Recovery-Embedded-0.90.85",
+      "archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
+      "archiveSha256": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
+      "commit": "97f7ccd69a4c074b5f149fec897669449560e2c5",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "SDK-Controller-0.90.85",
+      "archive": "Legal/Sources/SDK-Controller-0.90.85.zip",
+      "archiveSha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
+      "commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
+      "remote": "https://github.com/R4OSDev/r4os-sdk.git"
+    },
+    {
+      "id": "Services-SshService-0.90.85",
+      "archive": "Legal/Sources/Services-SshService-0.90.85.zip",
+      "archiveSha256": "f34f4671c98ad25376debb18d47b5eaeecf731a7f40bea4338202f524c87fd01",
+      "commit": "d45633d6b8cd757392f84e92db90f79d70b7f7c5",
+      "remote": "https://github.com/R4OSDev/r4os-service-sshservice.git"
     }
   ],
   "platformProviders": [
@@ -363,17 +384,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.2.3",
-        "manifest_sha256": "1927345c5ab0b9450fa88b7c4f0d89996e96115863e8185262012fdbe7201e56",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-AHCI",
+        "original_version": "0.2.3",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-AHCI",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "9807934e7f0b5ae5ad0ae8f70ed334e46e9252da629a0361c3a08f348019267f",
-        "source_tree_sha256": "0cd7503a85026b9b7b0bbd7dc45f9ff6241ef9011af6b16482b1a8bcf34791ed"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "0cd7503a85026b9b7b0bbd7dc45f9ff6241ef9011af6b16482b1a8bcf34791ed",
+        "manifest_sha256": "1927345c5ab0b9450fa88b7c4f0d89996e96115863e8185262012fdbe7201e56",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -395,17 +417,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.3",
-        "manifest_sha256": "af82cc2fe885fdb0e1d85fed52b150681fb0100d406470244cc8bd1db507075a",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-ATAPIO",
+        "original_version": "0.1.3",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-ATAPIO",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "cc9269fdc7b83df73bc30e5d74225129f2de77d7eb2611528749d1270a5fecf4",
-        "source_tree_sha256": "189202516b3a0ebf5e7b4352424523f1500f7a2ac3efb8e9bbe3ba5fdee61816"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "189202516b3a0ebf5e7b4352424523f1500f7a2ac3efb8e9bbe3ba5fdee61816",
+        "manifest_sha256": "af82cc2fe885fdb0e1d85fed52b150681fb0100d406470244cc8bd1db507075a",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -427,17 +450,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.7",
-        "manifest_sha256": "e9dbe1e321315991a419c0d2cd4921abca312d21816cf18a148673a52815e529",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-NVME",
+        "original_version": "0.1.7",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-NVME",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "2d967f83c564dc14e4044a71bf5a3f5a68fb40b3ceb2a8ce487e0bab79326f28",
-        "source_tree_sha256": "0547e291cfcd7eeff16278986da74e2442b728392392e8c15ff100a7bd2580dc"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "0547e291cfcd7eeff16278986da74e2442b728392392e8c15ff100a7bd2580dc",
+        "manifest_sha256": "e9dbe1e321315991a419c0d2cd4921abca312d21816cf18a148673a52815e529",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -459,17 +483,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "f3c80c29fa2821926b8f6de1bb7787cad24460b98054a48ed3a6397ac3ae65fb",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-XHCI",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-XHCI",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "61f570637a6f5bfa451ec7b73b204f2c4e10aeed588f82245793b82918a9a375",
-        "source_tree_sha256": "4971235a0047a3ebeb1e3f76b0ecdbdb1a06c599950876582621cd8c699ef029"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "4971235a0047a3ebeb1e3f76b0ecdbdb1a06c599950876582621cd8c699ef029",
+        "manifest_sha256": "f3c80c29fa2821926b8f6de1bb7787cad24460b98054a48ed3a6397ac3ae65fb",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -491,17 +516,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "9bb0526c4df915171ef3e6f9b140320f1e61499eb08db2d56fdddcd635dfa74f",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-USBMSC",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-USBMSC",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "4e2cffaef0b039b78b2614245138a798522307a97df66be8b0ddc3dfedfe5e2d",
-        "source_tree_sha256": "b94e20b6464ceddbe199d31de576deb92464df4291a3794619c115abb65e810d"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "b94e20b6464ceddbe199d31de576deb92464df4291a3794619c115abb65e810d",
+        "manifest_sha256": "9bb0526c4df915171ef3e6f9b140320f1e61499eb08db2d56fdddcd635dfa74f",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -523,17 +549,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.4",
-        "manifest_sha256": "01014da2238852bd7c41be37304f07d6a6d33abf5ac7277e664dc2749c15598c",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-RTL8139",
+        "original_version": "0.1.4",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-RTL8139",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "2b05031a23e6df28d2b214247ed748f210ab1c3f82e7c013d4b9056119916770",
-        "source_tree_sha256": "9837ab26ef4c0788ba4bdc59548451a079102fd0cab288fafdf0ef3192f846fe"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "9837ab26ef4c0788ba4bdc59548451a079102fd0cab288fafdf0ef3192f846fe",
+        "manifest_sha256": "01014da2238852bd7c41be37304f07d6a6d33abf5ac7277e664dc2749c15598c",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -555,17 +582,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.3",
-        "manifest_sha256": "93e022cd6721d4aef7a116239a893dec844767a19aa444dfc999e727c988e2e7",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-RTL8168",
+        "original_version": "0.1.3",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-RTL8168",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "3d6556ef78d88b0b323dd59cd2e4599aacd2e15dac2bf39db20faddd107f553d",
-        "source_tree_sha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40",
+        "manifest_sha256": "93e022cd6721d4aef7a116239a893dec844767a19aa444dfc999e727c988e2e7",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -587,17 +615,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.4",
-        "manifest_sha256": "34c22f12bd12e0a61c3755aab590ca0c6846fc74a11078b1bc845dba69909b41",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Drivers-VirtioNet",
+        "original_version": "0.1.4",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Drivers-VirtioNet",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee",
-        "source_tree_sha256": "5163e079f54c10dec5a67a6d3ade16f7ca9b0a567cc264c4edb0320cf5d531cf"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "5163e079f54c10dec5a67a6d3ade16f7ca9b0a567cc264c4edb0320cf5d531cf",
+        "manifest_sha256": "34c22f12bd12e0a61c3755aab590ca0c6846fc74a11078b1bc845dba69909b41",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -624,17 +653,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "aef173103c52ce589beb8de3f7335941194c8c0538f2b7689b07215b2842bfe3",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-UsbHidBoot",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-UsbHidBoot",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "a80667dd3506622687f79b7de1b0856ae775cfa9806feb257a6b4e0aab2774ae",
-        "source_tree_sha256": "584daab0a97876e9c1427de92b7ffc4dda2bbc0a1157688e4f3421bd0ffd895f"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "584daab0a97876e9c1427de92b7ffc4dda2bbc0a1157688e4f3421bd0ffd895f",
+        "manifest_sha256": "aef173103c52ce589beb8de3f7335941194c8c0538f2b7689b07215b2842bfe3",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -661,17 +691,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "bc438f0677ad307124da974a87d7e8ec58ecbbcbe7de676b9dbc5e97aa9abbbc",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-UsbHidReport",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-UsbHidReport",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "2c2258a74c9a0e622ca86634dc308bc2f387d6b0d84ee8fbb49ed0ca9536aec6",
-        "source_tree_sha256": "bc7099caa73353b7e8bdcb413f3aabf606543b9b20d26eae2cf2f77002395522"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "bc7099caa73353b7e8bdcb413f3aabf606543b9b20d26eae2cf2f77002395522",
+        "manifest_sha256": "bc438f0677ad307124da974a87d7e8ec58ecbbcbe7de676b9dbc5e97aa9abbbc",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -698,17 +729,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "37a5bcce8e9c658db436e21c341fc47098f3e16a9e7324b81295188c16483731",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-UsbMscBot",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-UsbMscBot",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "3972cd1970975f48e6a2cd5a8cf9e4b3e54015a72e8c62648f42406d137f6d12",
-        "source_tree_sha256": "49e2c2274f47858080e3916ad6273ce222b5c7d3993b2bc4e2c49c285b1426fc"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "49e2c2274f47858080e3916ad6273ce222b5c7d3993b2bc4e2c49c285b1426fc",
+        "manifest_sha256": "37a5bcce8e9c658db436e21c341fc47098f3e16a9e7324b81295188c16483731",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -737,17 +769,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "d2387b2b5363c53fa0ca9e544431a05389749964b9e66464129da87bc37ec838",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-UsbScsiBlock",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-UsbScsiBlock",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "6d2059e4c0c046b53db8a54f523bf92064ab8d62c7872c84f48ad517169e62f5",
-        "source_tree_sha256": "5812f692f9a3f20780f4167b54c1e096453f6fc5f7149c9d0740cfa4c660bb5a"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "5812f692f9a3f20780f4167b54c1e096453f6fc5f7149c9d0740cfa4c660bb5a",
+        "manifest_sha256": "d2387b2b5363c53fa0ca9e544431a05389749964b9e66464129da87bc37ec838",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -774,17 +807,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "2af486c878a9ac0c601c21e4cb855984199c6c76649643eb965193a4135ecbc4",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetEthernet",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetEthernet",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "fba3dbd8154b239945d40b5a25ecefe10befb8e0d8e4ad9bb2ff00e0dc84e22b",
-        "source_tree_sha256": "ce521ae6b663d4740ac41d6e55e5947051f5bbf38bdcf55dabf9ad33f9316f38"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "ce521ae6b663d4740ac41d6e55e5947051f5bbf38bdcf55dabf9ad33f9316f38",
+        "manifest_sha256": "2af486c878a9ac0c601c21e4cb855984199c6c76649643eb965193a4135ecbc4",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -813,17 +847,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "c7c11ba5668541142137b1451c71f394fdb452bc465bdc4423674b15d2e1ad2f",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetArp",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetArp",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "069bc221bbe172ff7bd0d794bb00b1fc9011a8b0bc0b9028f2b17d763c947bc6",
-        "source_tree_sha256": "6156b4742baeb6ae9edd6b056bf926e45a54d844e1b3a002276f28c0d73539b2"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "6156b4742baeb6ae9edd6b056bf926e45a54d844e1b3a002276f28c0d73539b2",
+        "manifest_sha256": "c7c11ba5668541142137b1451c71f394fdb452bc465bdc4423674b15d2e1ad2f",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -853,17 +888,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "d1f6d59d805e0c8247cf021b112e2104a4952eb09a049758334fdc0d08f4bcee",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetIpv4",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetIpv4",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "c8722898a07fe4a1448f26dd00f0cab4c3efe52b5178bca7fe9741c1133b6bc4",
-        "source_tree_sha256": "b9453eb2e83bb47d5ce3202c2e3719f14df5c952a2f6bec75c8536a701c8aa2c"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "b9453eb2e83bb47d5ce3202c2e3719f14df5c952a2f6bec75c8536a701c8aa2c",
+        "manifest_sha256": "d1f6d59d805e0c8247cf021b112e2104a4952eb09a049758334fdc0d08f4bcee",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -892,17 +928,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "44e50f0b8214a4d78e0e57725fd43d76e18a0a8767a6c78a1159077a33e3bd07",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetIcmp",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetIcmp",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "1212203cc1deee375d1650d6908ca90cf4fd516a0bff97668a10998136f71952",
-        "source_tree_sha256": "d0c58f323562d0271289d3ea5cae5c54b77104fb953f55093ec48e0f1260aec9"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "d0c58f323562d0271289d3ea5cae5c54b77104fb953f55093ec48e0f1260aec9",
+        "manifest_sha256": "44e50f0b8214a4d78e0e57725fd43d76e18a0a8767a6c78a1159077a33e3bd07",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -931,17 +968,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "aec871fc5ae5dc372bde9a9e126fb944d251bb59ef187f0c75c975201bcee8cc",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetUdp",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetUdp",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "5cdae4ff1db9cc92dd05c14da65c7045ad17fc13285a60a2d7363d6f726739ed",
-        "source_tree_sha256": "0527093345c31df0b0fe1674c8f2cdbaa1aefbf4cebb0372ccc48b3be02868a4"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "0527093345c31df0b0fe1674c8f2cdbaa1aefbf4cebb0372ccc48b3be02868a4",
+        "manifest_sha256": "aec871fc5ae5dc372bde9a9e126fb944d251bb59ef187f0c75c975201bcee8cc",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -970,17 +1008,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.3",
-        "manifest_sha256": "bf2a88625b24db846fe51cb83143f5634636b33b67f4fa0962329d60fdfbbb8b",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetTcp",
+        "original_version": "0.1.3",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetTcp",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "a3c083c6681324794951aaca1121278066a746068185bb6cb7d7695d8c95ab0f",
-        "source_tree_sha256": "d8ecb6ec7696caeb5cc3ee09f2e2696f19a413d84322d19520c354fdfd8fda28"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "d8ecb6ec7696caeb5cc3ee09f2e2696f19a413d84322d19520c354fdfd8fda28",
+        "manifest_sha256": "bf2a88625b24db846fe51cb83143f5634636b33b67f4fa0962329d60fdfbbb8b",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1010,17 +1049,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "3b51a7fd2695d25019e06eee5a0de2f9f6c2090a8410d30e6b2a4d02e2ac025f",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetDns",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetDns",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "6578c827ab03a51b9b2cb2a8898eab1fd5688fb178af42d7786d0275679f7332",
-        "source_tree_sha256": "d1281aadc8a0e44aa5143f14df8d3e6a6bae2d105771718ece9a23bd288fecec"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "d1281aadc8a0e44aa5143f14df8d3e6a6bae2d105771718ece9a23bd288fecec",
+        "manifest_sha256": "3b51a7fd2695d25019e06eee5a0de2f9f6c2090a8410d30e6b2a4d02e2ac025f",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1050,17 +1090,18 @@
       ],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-NetDhcp",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-NetDhcp",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35",
-        "source_tree_sha256": "6349dbe3b8286f21423d35f58c38a83a7502818f9a8a5d2178cd8212a4b75627"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "6349dbe3b8286f21423d35f58c38a83a7502818f9a8a5d2178cd8212a4b75627",
+        "manifest_sha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1087,17 +1128,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.4",
-        "manifest_sha256": "a7fd8b30d151f81e79a841346dfe31aefd779e03a78cc217e916fa66a1725636",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-R4Http",
+        "original_version": "0.1.4",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-R4Http",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "1c0eacbadced2c4f64999e0cb30ec82101ec031f7482f6a944885c2a59743630",
-        "source_tree_sha256": "05ab9a2f055f608a3d66a0afe59b7fd26e1ff88d6f899c52728f3de39b6bd8a5"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "05ab9a2f055f608a3d66a0afe59b7fd26e1ff88d6f899c52728f3de39b6bd8a5",
+        "manifest_sha256": "a7fd8b30d151f81e79a841346dfe31aefd779e03a78cc217e916fa66a1725636",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1124,17 +1166,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.2.7",
-        "manifest_sha256": "8c33ffcf0713afe6da3fba4aa41870101ea7915fc0ea38ce2b21493a8ee352e0",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-R4Tls",
+        "original_version": "0.2.7",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-R4Tls",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "d89f879664214968ac71c682161977562ed7a8b0495390ed635de45945f84cf0",
-        "source_tree_sha256": "37334fcadcd1e324228aa989f958641d60e792ca2152a5f0ab3e98da45963458"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "37334fcadcd1e324228aa989f958641d60e792ca2152a5f0ab3e98da45963458",
+        "manifest_sha256": "8c33ffcf0713afe6da3fba4aa41870101ea7915fc0ea38ce2b21493a8ee352e0",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1161,17 +1204,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "1703500d227173e455d74a7f82119314a6976d6cd58965ca095d3412801d58d2",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-JSON",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-JSON",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "81652e2a9d2f9fdbdcf20fca6441cd81b9edf30e9381e8c4dcf2ed8f05f0be40",
-        "source_tree_sha256": "659b9c1b6ea1b7bc850572bcb5b220ca18724aae5ff9ea7b890a32b7ca12924e"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "659b9c1b6ea1b7bc850572bcb5b220ca18724aae5ff9ea7b890a32b7ca12924e",
+        "manifest_sha256": "1703500d227173e455d74a7f82119314a6976d6cd58965ca095d3412801d58d2",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1193,17 +1237,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.5",
-        "manifest_sha256": "ee9fb61ca874966dfa46426f8f282e3783468fe5bd438df66a1872d658bcc345",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Services-DhcpService",
+        "original_version": "0.1.5",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Services-DhcpService",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "f9fb5baca65814b7033bbf937972d7e7366428ee39d9f7f8d2ad6418923c78d7",
-        "source_tree_sha256": "82142acf40d78c1c5f900cfacdcd1ae24b9570bcfa09d1837e1a088bed7c358e"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "82142acf40d78c1c5f900cfacdcd1ae24b9570bcfa09d1837e1a088bed7c358e",
+        "manifest_sha256": "ee9fb61ca874966dfa46426f8f282e3783468fe5bd438df66a1872d658bcc345",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1225,17 +1270,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.3",
-        "manifest_sha256": "a5b91016568a6bd797ea57ca049c69a2144bde2762410b349b988b39756851b4",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Services-DnsService",
+        "original_version": "0.1.3",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Services-DnsService",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f",
-        "source_tree_sha256": "483234ab3450cdf8d9b7d6ad2270be2fcf6416f6ec2357821087c9fc61c9ad36"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "483234ab3450cdf8d9b7d6ad2270be2fcf6416f6ec2357821087c9fc61c9ad36",
+        "manifest_sha256": "a5b91016568a6bd797ea57ca049c69a2144bde2762410b349b988b39756851b4",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1257,17 +1303,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.6",
-        "manifest_sha256": "9140c4b9b37ea611aa4f5c653bd9eed9cb699822ea124d77d7446b3c5296a67c",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Services-TcpService",
+        "original_version": "0.1.6",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Services-TcpService",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "b3f352e613ab2270d1090a1e50692c557d0741227149a9b2be032aa0ae46d77f",
-        "source_tree_sha256": "2964101f2588c14b021291ac47d2c08f7a4af4033d4870c2fac8f9fc6a95a0bf"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "2964101f2588c14b021291ac47d2c08f7a4af4033d4870c2fac8f9fc6a95a0bf",
+        "manifest_sha256": "9140c4b9b37ea611aa4f5c653bd9eed9cb699822ea124d77d7446b3c5296a67c",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1289,17 +1336,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.3",
-        "manifest_sha256": "121029d3fdf495da28bb6c74a60492a88bed55fadc9f4183b2c2f27bd1f40e76",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Services-UdpService",
+        "original_version": "0.1.3",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Services-UdpService",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "b2e2566e7ac6dc580bb468f905ca0eddcd5bc16c3c7f8f5310daba0e254c2096",
-        "source_tree_sha256": "21430753941de01fdcf3809f5de43f2bc1401901e6b9bb0d9e01c97df6c6cc22"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "21430753941de01fdcf3809f5de43f2bc1401901e6b9bb0d9e01c97df6c6cc22",
+        "manifest_sha256": "121029d3fdf495da28bb6c74a60492a88bed55fadc9f4183b2c2f27bd1f40e76",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1323,17 +1371,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.9",
-        "manifest_sha256": "5423a08d4e8edb44b92a015a85bf67a12d5f746c47297792256ef15fefded36b",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Services-SshService",
+        "original_version": "0.1.9",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Services-SshService",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e",
-        "source_tree_sha256": "a5b99dd76dabcde2e9f0c95e23337244db1916f6af26c82778a34af875e3197f"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "e2f8cb7d78d9c002f56db571cbbccdbb59739c121a039ae7a18668591908f70a",
+        "manifest_sha256": "5423a08d4e8edb44b92a015a85bf67a12d5f746c47297792256ef15fefded36b",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1355,17 +1404,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.7",
-        "manifest_sha256": "41a98e344a36cbf31fa6917b0a7e89aeb23444b5a627b415c71823a0f1925a43",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Services-FtpService",
+        "original_version": "0.1.7",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Services-FtpService",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "7164483e247d08b9e633adbde697db8eb130f39feac34ed84b5944040222d4e2",
-        "source_tree_sha256": "032fe04fe1d2e23dbe2e83841c17eb111100483a00d811ebfe3ed5515c2ecb24"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "032fe04fe1d2e23dbe2e83841c17eb111100483a00d811ebfe3ed5515c2ecb24",
+        "manifest_sha256": "41a98e344a36cbf31fa6917b0a7e89aeb23444b5a627b415c71823a0f1925a43",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1391,17 +1441,18 @@
       "protocolDependencies": [],
       "resources": "Assets/Desktop.ico",
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.12",
-        "manifest_sha256": "91025fd623f6c23ae10bed82d70212d6e65e85ab17458b6eade079dc25fd3bfb",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-Terminal",
+        "original_version": "0.1.12",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-Terminal",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "88f27b812331f65b3ef0ddcd62767aebfecd227e2f81797e5945893818453571",
-        "source_tree_sha256": "f1f002c424930198fb245bd39336ce1e0bb218a4d236f35d6fee609ea4132427"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "f1f002c424930198fb245bd39336ce1e0bb218a4d236f35d6fee609ea4132427",
+        "manifest_sha256": "91025fd623f6c23ae10bed82d70212d6e65e85ab17458b6eade079dc25fd3bfb",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1422,17 +1473,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "f92a7b3e09dc29b9e198bcefe7ff5783a9e7c55d1fc6e6ec57a22e6ebf7a726d",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-ServiceManager",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-ServiceManager",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "d667cac55be9cd6a188224f7a76b0d0883455d53fdc73a4a0b295a152e059ad6",
-        "source_tree_sha256": "9cb9f901d3eb42631bcfbd4d12de3860ab5455c7c201239de2aaf46073242e7e"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "9cb9f901d3eb42631bcfbd4d12de3860ab5455c7c201239de2aaf46073242e7e",
+        "manifest_sha256": "f92a7b3e09dc29b9e198bcefe7ff5783a9e7c55d1fc6e6ec57a22e6ebf7a726d",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1453,17 +1505,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "fe62f8eb3af97a64127cf436195150651edccde2eb28ca248807866893bbf632",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-Help",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-Help",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "b28b79664411936a3b31d3acfe8e0c42f2ddde0712731442955f1d6b0d74476a",
-        "source_tree_sha256": "240d7fa439a248d918440445978677a82fe38bb9ae63bba74f0d28ad1f5fdc69"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "240d7fa439a248d918440445978677a82fe38bb9ae63bba74f0d28ad1f5fdc69",
+        "manifest_sha256": "fe62f8eb3af97a64127cf436195150651edccde2eb28ca248807866893bbf632",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1485,17 +1538,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "92a8b4f2a120251db076c2be6070523fc1b77fbe70b9171565ed2927029969a3",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-IpConfig",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-IpConfig",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "0d21eb1d63bf6c3497a56740f62b38b016f50109ab51ac8fce6f899f0f1f5dbe",
-        "source_tree_sha256": "33aee525e2d1c12cf1e9e6aaf3ff1c3c450a54f73e47f17a36663913e6c3ae51"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "33aee525e2d1c12cf1e9e6aaf3ff1c3c450a54f73e47f17a36663913e6c3ae51",
+        "manifest_sha256": "92a8b4f2a120251db076c2be6070523fc1b77fbe70b9171565ed2927029969a3",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1518,17 +1572,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "c359e95d719c7d86eb79be8003809cbb3fc3657f2b7fe49c266559364bad206e",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-SysInfo",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-SysInfo",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "0a550c3b3ba4df83eb8af2c39cadd6c1a0b5f15b95cf17dfc4343efca307fdff",
-        "source_tree_sha256": "e8d46f6d94be43c813cf69796c20f37b1ae3fe02f6bcb6c80c0ce0be583eb90e"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "e8d46f6d94be43c813cf69796c20f37b1ae3fe02f6bcb6c80c0ce0be583eb90e",
+        "manifest_sha256": "c359e95d719c7d86eb79be8003809cbb3fc3657f2b7fe49c266559364bad206e",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1550,17 +1605,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "c6151a152d5d90ec3b35b32b4114f45436741957c8eaff0c7494647201d79e99",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-HttpGet",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-HttpGet",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "8c80d0a455c9565ba50f03bf2f075e493ab6b1a92246320796003b91baca852b",
-        "source_tree_sha256": "00c43da2354972dfe775adc3713f98d5150fa297aa83c9b0b1802d1b8f13bbe2"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "00c43da2354972dfe775adc3713f98d5150fa297aa83c9b0b1802d1b8f13bbe2",
+        "manifest_sha256": "c6151a152d5d90ec3b35b32b4114f45436741957c8eaff0c7494647201d79e99",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1583,17 +1639,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.1",
-        "manifest_sha256": "5b8152f4ae3b33e2403222b98dd58834bcb3b0c7159f756591a4b4b623d80ee9",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-NetCat",
+        "original_version": "0.1.1",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-NetCat",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "4f9a40d6febdfa6497570395538dd1cff5fc2f1cbf915e7978365901c4a232cd",
-        "source_tree_sha256": "1f3ce9a0326013086ce001f53ec3ceb89cb0251c3b443ed852beec140b330464"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "1f3ce9a0326013086ce001f53ec3ceb89cb0251c3b443ed852beec140b330464",
+        "manifest_sha256": "5b8152f4ae3b33e2403222b98dd58834bcb3b0c7159f756591a4b4b623d80ee9",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1619,17 +1676,18 @@
       "protocolDependencies": [],
       "resources": null,
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.2.2",
-        "manifest_sha256": "1f38416dc4184785d9e190961a405300aa2f589906b0255162cb2dbbff0b46f1",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "Platform/Libraries/R4STD",
+        "original_version": "0.2.2",
         "owner": "Recovery",
+        "source": "Platform/Libraries/R4STD",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b",
-        "source_tree_sha256": "e54452d2b71929b6d5927ad9d21e0af259d7b04e637c71f15ebd907f6dd56b1f"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "e54452d2b71929b6d5927ad9d21e0af259d7b04e637c71f15ebd907f6dd56b1f",
+        "manifest_sha256": "1f38416dc4184785d9e190961a405300aa2f589906b0255162cb2dbbff0b46f1",
+        "source_archive": "Legal/Sources/Libraries-0.90.85.zip"
       }
     },
     {
@@ -1653,17 +1711,18 @@
         "src/help.txt"
       ],
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.5",
-        "manifest_sha256": "230d02891333f7a9a637dfa8c894a61689c06b6fe6670531c6fb5cef14da546f",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Apps-R4Part",
+        "original_version": "0.1.5",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Apps-R4Part",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "59b709f50ef87f141ebb2833635d9ff23f37b3caa82a273efbe8800a2e385cd5",
-        "source_tree_sha256": "aa4f9f0394897e2c425c811e4477377d4776ec2438116a0b3a38b6578eb2f103"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "aa4f9f0394897e2c425c811e4477377d4776ec2438116a0b3a38b6578eb2f103",
+        "manifest_sha256": "230d02891333f7a9a637dfa8c894a61689c06b6fe6670531c6fb5cef14da546f",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     },
     {
@@ -1690,17 +1749,18 @@
       "protocolDependencies": [],
       "resources": [],
       "rebuild": {
-        "generation": 2,
-        "frozen_sdk": "0.64.210",
-        "original_version": "0.1.2",
-        "manifest_sha256": "5f7537554fcf69da3719c25714c96326bb6e7b6cb72822bdc969e1db023a2d99",
-        "frozen_libraries": "0.64.58",
-        "controller_sdk": "0.64.212",
         "frozen_contract": "0.64.93",
-        "source": "RecoveryTools/Embedded/Protocols-R4Zip",
+        "original_version": "0.1.2",
         "owner": "Recovery",
+        "source": "RecoveryTools/Embedded/Protocols-R4Zip",
+        "frozen_libraries": "0.64.58",
         "original_artifact_sha256": "045d4ac5e539fbe630ecc3c69d4fb8647c49b1ae05a1ccddbe6e3d2b5471ff5e",
-        "source_tree_sha256": "dc71e5068a762094dc5c0980b474166e8b83899c4ce5ef6e30e40860c9730c37"
+        "generation": 2,
+        "controller_sdk": "0.64.212",
+        "frozen_sdk": "0.64.210",
+        "source_tree_sha256": "dc71e5068a762094dc5c0980b474166e8b83899c4ce5ef6e30e40860c9730c37",
+        "manifest_sha256": "5f7537554fcf69da3719c25714c96326bb6e7b6cb72822bdc969e1db023a2d99",
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
       }
     }
   ],
@@ -5496,7 +5556,7 @@
         "source": "Services-SshService",
         "path": "RecoveryTools/Embedded/Services-SshService",
         "derivativeOwner": "Recovery",
-        "sourceTreeSha256": "a5b99dd76dabcde2e9f0c95e23337244db1916f6af26c82778a34af875e3197f",
+        "sourceTreeSha256": "e2f8cb7d78d9c002f56db571cbbccdbb59739c121a039ae7a18668591908f70a",
         "controllerSdk": "0.64.212"
       }
     },
@@ -7004,11 +7064,44 @@
       "origin": null
     },
     {
+      "path": "Legal/Sources/README-0.90.85.txt",
+      "originalSha256": null,
+      "origin": {
+        "source": null,
+        "path": "Legal/Sources/README-0.90.85.txt",
+        "derivativeOwner": "Recovery"
+      },
+      "sha256": "2aae60e2b3c78ab5ab1648c98d6ed4629673e8028080f34ec3fce1b786df820e",
+      "bytes": 1524
+    },
+    {
+      "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
+      "originalSha256": null,
+      "origin": {
+        "source": "Recovery-Embedded-0.90.85",
+        "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
+        "derivativeOwner": "Recovery"
+      },
+      "sha256": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
+      "bytes": 887835
+    },
+    {
       "path": "Legal/Sources/SDK-0.90.84.zip",
       "bytes": 11252790,
       "sha256": "1e8348d1a6794cb87c1fa297e222d668d8154ca39bf892d26b346ec151b3590c",
       "originalSha256": null,
       "origin": null
+    },
+    {
+      "path": "Legal/Sources/SDK-Controller-0.90.85.zip",
+      "originalSha256": null,
+      "origin": {
+        "source": "SDK-Controller-0.90.85",
+        "path": "Legal/Sources/SDK-Controller-0.90.85.zip",
+        "derivativeOwner": "Recovery"
+      },
+      "sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
+      "bytes": 11274719
     },
     {
       "path": "Legal/Sources/SDK.zip",
@@ -7037,6 +7130,17 @@
       "sha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
       "originalSha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
       "origin": null
+    },
+    {
+      "path": "Legal/Sources/Services-SshService-0.90.85.zip",
+      "sha256": "f34f4671c98ad25376debb18d47b5eaeecf731a7f40bea4338202f524c87fd01",
+      "bytes": 86955,
+      "originalSha256": "f34f4671c98ad25376debb18d47b5eaeecf731a7f40bea4338202f524c87fd01",
+      "origin": {
+        "source": "Services-SshService-0.90.85",
+        "path": "",
+        "derivativeOwner": "Recovery"
+      }
     },
     {
       "path": "Legal/Sources/Services-SshService.zip",
@@ -47344,8 +47448,8 @@
         "path": "build.zig",
         "derivativeOwner": "Recovery"
       },
-      "bytes": 955,
-      "sha256": "a2f8828a6a9e38999bddd07f76792cc0557239134ed00a0f708a94fd2cabfd8a"
+      "bytes": 1073,
+      "sha256": "446ac78e32491f0e18d391407e57379c15f6ad5edc777994068e984bb89552f7"
     },
     {
       "path": "RecoveryTools/Embedded/Services-SshService/build.zig.zon",
@@ -47388,8 +47492,8 @@
         "path": "src/main.zig",
         "derivativeOwner": "Recovery"
       },
-      "bytes": 339620,
-      "sha256": "44c6cdb2ce30034617e8b8a3b149cf52f38f00945e4e123734d6ab196b02f23d"
+      "bytes": 347056,
+      "sha256": "73e9f0143b5252b9345acb5296706f127e301f71c27a7903d4874fc930e30fd4"
     },
     {
       "path": "RecoveryTools/Embedded/Services-SshService/src/sftp_write_policy.zig",
@@ -48336,13 +48440,13 @@
     {
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "bytes": 431635,
-      "sha256": "7d0e0bcf03d6df0c2f24e0df5380b699eb3ce4bc595ff66662d97803b104dd67",
+      "sha256": "20dbd0b0bb44585ede246300a4ed8b8be471c186bffa87a27adf8c31149f2215",
       "originalSha256": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e",
       "origin": {
         "source": "Services-SshService",
         "path": "RecoveryTools/Embedded/Services-SshService",
         "derivativeOwner": "Recovery",
-        "sourceTreeSha256": "a5b99dd76dabcde2e9f0c95e23337244db1916f6af26c82778a34af875e3197f",
+        "sourceTreeSha256": "e2f8cb7d78d9c002f56db571cbbccdbb59739c121a039ae7a18668591908f70a",
         "controllerSdk": "0.64.212"
       }
     },
@@ -74793,6 +74897,46 @@
           "path": "RecoveryTools/Embedded/Drivers-RTL8168/src/rtl8168_host_model.zig",
           "before": "a1d6d7c943716fde1c4f5db59f8f3d680b9d0a50d76756746ddc784812d082bc",
           "after": "5195d4b729d8eb83c1e8d5c4689472b1b7ffdc5a9f2d095f8a0642df736985a4"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 supply exact current38 derivative source projects/Menu/builders and canonical SDK212 controller source alongside preserved canonical Contract93/SDK210/Libraries58 and original archives. Actual passed39 source inputs independently matched.",
+      "changes": [
+        {
+          "path": "Legal/Sources/README-0.90.85.txt",
+          "before": null,
+          "after": "2aae60e2b3c78ab5ab1648c98d6ed4629673e8028080f34ec3fce1b786df820e"
+        },
+        {
+          "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
+          "before": null,
+          "after": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96"
+        },
+        {
+          "path": "Legal/Sources/SDK-Controller-0.90.85.zip",
+          "before": null,
+          "after": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 complete source-bound39 target rebuilds admitted after source tree checks and whole binary/manifest readback.38 explicit Recovery-owned derivatives plus canonical R4STD9; genuine App2/DriverInit2/ProtocolInit2/Query2. Menu28, Recovery70/ownKernel67 identities. Original source archives retained. Runtime qualification follows separately.",
+      "changes": [
+        {
+          "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+          "before": "7d0e0bcf03d6df0c2f24e0df5380b699eb3ce4bc595ff66662d97803b104dd67",
+          "after": "20dbd0b0bb44585ede246300a4ed8b8be471c186bffa87a27adf8c31149f2215"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-SshService/build.zig",
+          "before": "a2f8828a6a9e38999bddd07f76792cc0557239134ed00a0f708a94fd2cabfd8a",
+          "after": "446ac78e32491f0e18d391407e57379c15f6ad5edc777994068e984bb89552f7"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-SshService/src/main.zig",
+          "before": "44c6cdb2ce30034617e8b8a3b149cf52f38f00945e4e123734d6ab196b02f23d",
+          "after": "73e9f0143b5252b9345acb5296706f127e301f71c27a7903d4874fc930e30fd4"
         }
       ]
     }

@@ -597,11 +597,11 @@
       "name": "SSHD",
       "version": "0.1.10",
       "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
-      "sha256": "7d0e0bcf03d6df0c2f24e0df5380b699eb3ce4bc595ff66662d97803b104dd67",
+      "sha256": "20dbd0b0bb44585ede246300a4ed8b8be471c186bffa87a27adf8c31149f2215",
       "bytes": 431635,
       "source": "Services-SshService",
       "source_path": "RecoveryTools/Embedded/Services-SshService",
-      "source_tree_sha256": "a5b99dd76dabcde2e9f0c95e23337244db1916f6af26c82778a34af875e3197f",
+      "source_tree_sha256": "e2f8cb7d78d9c002f56db571cbbccdbb59739c121a039ae7a18668591908f70a",
       "imports": [
         "R4SYS:Query2:2",
         "R4NET:Query2:2",
@@ -841,5 +841,33 @@
   "native_status": "pending",
   "public_binary_release": "not published; Distribution still pins68 until coherent release work.",
   "original_source_archives_unchanged": true,
-  "runtime39_source_rebuilt_generation2": true
+  "runtime39_source_rebuilt_generation2": true,
+  "corresponding_sources": {
+    "commit": "97f7ccd69a4c074b5f149fec897669449560e2c5",
+    "files": 392,
+    "archive": "Recovery-Embedded-0.90.85.zip",
+    "sha256": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
+    "controller_commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
+    "controller_archive": "SDK-Controller-0.90.85.zip",
+    "controller_sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
+    "all_archive_source_bytes_equal_actual_passed_build_inputs": true,
+    "canonical_r4std_source": "Legal/Sources/Libraries-0.90.85.zip",
+    "scope": "Current38 derivative source projects, Menu and builder scripts. Whole canonical Contract93/SDK210/Libraries58 archives remain separately supplied; controller SDK212 exact source also supplied. Original archives and licensing retained."
+  },
+  "ssh_completion_correction": {
+    "reason": "Observed native truncated successful SSH exec during UEFI GPT repair; guest serial proves command completed.",
+    "source_owner": "Services/SshService",
+    "source_commit": "d45633d6b8cd757392f84e92db90f79d70b7f7c5",
+    "source_version": "0.1.21",
+    "source_main_sha256": "4dc66ca038f7ccf8dc415f3aa8b8371be64b99f589fb1eb00e5bfd159a3484e2",
+    "ported_functions": [
+      "pumpConsoleOutput",
+      "scheduleProgramExit"
+    ],
+    "technical_adaptation": "Existing Recovery instance-ID API payload retained; completion uses successful exact console revision before closing. Same five owner regression scenarios, genuine generation2 host mock tables.",
+    "all_original_channel_flow_oracles_preserved": true,
+    "original_failure": "Research/API-ABI/Migration/0.90.85/NetworkBeforeSshDrain/Proof.json",
+    "source_archive": "Services-SshService-0.90.85.zip",
+    "source_archive_sha256": "f34f4671c98ad25376debb18d47b5eaeecf731a7f40bea4338202f524c87fd01"
+  }
 }

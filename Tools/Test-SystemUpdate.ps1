@@ -9,6 +9,7 @@ $distribution=Join-Path $workspace 'Repositories/Distribution'
 . (Join-Path $PSScriptRoot 'Inventory.ps1')
 . (Join-Path $PSScriptRoot 'Runtime.ps1')
 . (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1')
+. (Join-Path $PSScriptRoot 'Fixture-Copy.ps1')
 . (Join-Path $PSScriptRoot 'Guest-Qmp.ps1')
 . (Join-Path $PSScriptRoot 'Guest-NetClients.ps1')
 . (Join-Path $distribution 'Tools/Qemu-HostProfile.ps1')
@@ -78,7 +79,7 @@ function Witness([string]$Path){
 }
 function New-Target([int]$Size){
  $dir=Join-Path $output "fixture-$Size";[IO.Directory]::CreateDirectory($dir)|Out-Null
- $target=Join-Path $output "fixture-$Size.img";Copy-Item -LiteralPath $BaseImage -Destination $target -Force
+ $target=Join-Path $output "fixture-$Size.img";Copy-RecoveryFixture $BaseImage $target
  $check=[InstallationImageCheck]::new($BaseImage)
  try{
   if($check.Bytes -ne 2048MB){throw 'The update fixture requires a standard 2048 MB source image.'}
@@ -161,8 +162,8 @@ try {
  if($Cases.Count){$matrix=@($matrix|Where-Object {$_.name -in $Cases});if($matrix.Count -ne $Cases.Count){throw 'Unknown system-update case.'}}
  foreach($case in $matrix){
   $name=$case.name;$watch=[Diagnostics.Stopwatch]::StartNew()
-  $target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath (Join-Path $output "fixture-$($case.size).img") -Destination $target -Force
-  $boot=Join-Path $output "$name-boot.img";Copy-Item -LiteralPath $seed -Destination $boot -Force
+  $target=Join-Path $output "$name-target.img";Copy-RecoveryFixture (Join-Path $output "fixture-$($case.size).img") $target
+  $boot=Join-Path $output "$name-boot.img";Copy-RecoveryFixture $seed $boot
   $before=Witness $target;$targetHash=Get-RecoveryHash $target;$bootHash=Get-RecoveryHash $boot
   Write-Host "Recovery system update ${name}: SMP4, $RamMB MB, BIOS USB boot."
   try{

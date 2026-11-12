@@ -52,3 +52,17 @@ for the canonical SDK's static grapheme snapshot, and the BSD-2-Clause
 license for its Limine BIOS adapter. The SDK archive retains the original
 MIT notice for the SHA256 compression leaf and all original source
 provenance. This source adoption does not relicense imported material.
+
+## Rebuilt embedded consumer sources (0.90.85)
+
+The38 Recovery-owned derivatives under `RecoveryTools/Embedded` retain their
+original licenses and notices. `Legal/Sources/Recovery-Embedded-0.90.85.zip`
+supplies their current build inputs, Menu and builder scripts, while every
+original source archive remains available. The RTL8168 GPL-2.0-only firmware
+material and its license remain in that derivative and its current archive.
+R4STD0.2.9 is rebuilt from the complete canonical Libraries58 archive
+`Legal/Sources/Libraries-0.90.85.zip`; its source and all dependency notices
+remain exact. `SDK-Controller-0.90.85.zip` supplies the separate canonical
+SDK212 controller; the compiled SDK210/Contract93 archives remain separate.
+`Legal/Sources/README-0.90.85.txt` records their build relationship. No license
+is changed by rebuilding the modules or using generation2 entry points.

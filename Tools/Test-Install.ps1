@@ -8,6 +8,7 @@ $distribution=Join-Path $workspace 'Repositories/Distribution'
 . (Join-Path $PSScriptRoot 'Inventory.ps1')
 . (Join-Path $PSScriptRoot 'Runtime.ps1')
 . (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1')
+. (Join-Path $PSScriptRoot 'Fixture-Copy.ps1')
 . (Join-Path $PSScriptRoot 'Guest-Qmp.ps1')
 . (Join-Path $PSScriptRoot 'Guest-NetClients.ps1')
 . (Join-Path $distribution 'Tools/Qemu-HostProfile.ps1')
@@ -128,7 +129,7 @@ try {
  }
  foreach($case in $matrix) {
   $name=$case.name;$watch=[Diagnostics.Stopwatch]::StartNew()
-  $boot=Join-Path $output "$name-boot.img";Copy-Item -LiteralPath $seed -Destination $boot -Force
+  $boot=Join-Path $output "$name-boot.img";Copy-RecoveryFixture $seed $boot
   if($case.own){Grow-LocalFixture $boot}
   $target=if($case.own){$boot}else{Join-Path $output "$name-target.img"}
   if(!$case.own){Blank $target 22GB}

@@ -43,7 +43,7 @@ function Part-Run([string[]]$Commands,[string[]]$Expected=@(),[int]$Errors=0){
         if($console.Finish(20000) -ne 0){throw 'R4PART console returned failure.'}
         $text=$console.Output
     }catch{
-        $null=Ssh 'SERVMAN STATUS SSHD'
+        $null=Ssh 'SERVMAN LIST'
         $null=Ssh 'R4DIAG TASKS'
         throw
     }finally{
@@ -123,7 +123,7 @@ function Test-R4Part([bool]$Recovery=$true) {
             Write-Host 'Concurrent NTFS volumes: 16-MB C: write and 40-MB Y: transfer, both readback hashes OK.'
         }
     }catch{
-        $null=Ssh 'SERVMAN STATUS SSHD'
+        $null=Ssh 'SERVMAN LIST'
         $null=Ssh 'SERVMAN DIAG'
         throw
     }finally{if($null -ne $parallel){$parallel.Dispose()}}

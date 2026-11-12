@@ -9,6 +9,7 @@ $distribution=Join-Path $workspace 'Repositories/Distribution'
 . (Join-Path $PSScriptRoot 'Inventory.ps1')
 . (Join-Path $PSScriptRoot 'Runtime.ps1')
 . (Join-Path $PSScriptRoot 'Storage-Fixtures.ps1')
+. (Join-Path $PSScriptRoot 'Fixture-Copy.ps1')
 . (Join-Path $PSScriptRoot 'Guest-Qmp.ps1')
 . (Join-Path $PSScriptRoot 'Guest-NetClients.ps1')
 . (Join-Path $distribution 'Tools/Qemu-HostProfile.ps1')
@@ -195,7 +196,7 @@ try {
  $matrix=@('UsbSelfUpdate','LocalSelfUpdate')
  if($Cases.Count){foreach($case in $Cases){if($case -notin @('UsbSelfUpdate','LocalSelfUpdate','NewCurrentBoot','ReadonlyConfirmation','CutCurrent','PreviousAfterCut')){throw 'Unknown Recovery-update case.'}};$matrix=@($matrix|Where-Object {$_ -in $Cases})}
  foreach($case in $matrix){
-  $name=$case;$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $seed -Destination $target -Force
+  $name=$case;$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-RecoveryFixture $seed $target
   $before=Witness $target
   Write-Host "Recovery update ${name}: SMP4, $RamMB MB, BIOS $name boot."
   try{
@@ -237,7 +238,7 @@ try {
   Write-Host "PASS $name ($([Math]::Round($watch.Elapsed.TotalSeconds,2)) s)"
  }
  if(!$Cases.Count -or 'NewCurrentBoot' -in $Cases){
-  $name='NewCurrentBoot';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $updated -Destination $target -Force
+  $name='NewCurrentBoot';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-RecoveryFixture $updated $target
   $before=Witness $target;Check-Current $target
   try{
    Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=boot,format=raw,file=$target",'-device','nvme,drive=boot,serial=NEW-CURRENT,bootindex=1')
@@ -270,7 +271,7 @@ try {
   # The state was collected from the actual successful UI boot above. Apply
   # it to the identical private seed so the fault starts from confirmed bytes.
   $name='CutCurrent';$watch=[Diagnostics.Stopwatch]::StartNew();$target=$cutImage
-  Copy-Item -LiteralPath $seed -Destination $target -Force;Checked $hostTool @('--set-state',$target,$confirmationFile)
+  Copy-RecoveryFixture $seed $target;Checked $hostTool @('--set-state',$target,$confirmationFile)
   $writePlan=Join-Path $output 'current-writes.json';Checked $hostTool @('--write-plan',$target,$SourcePackage,$writePlan)
   $plan=Get-Content -Raw -LiteralPath $writePlan|ConvertFrom-Json -AsHashtable
   $check=[InstallationImageCheck]::new($target);$occupied=[Collections.Generic.HashSet[long]]::new()
@@ -293,7 +294,7 @@ try {
   Record-Run $name $watch $target
  }
  if(!$Cases.Count -or 'PreviousAfterCut' -in $Cases){
-  $name='PreviousAfterCut';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-Item -LiteralPath $cutImage -Destination $target -Force
+  $name='PreviousAfterCut';$watch=[Diagnostics.Stopwatch]::StartNew();$target=Join-Path $output "$name-target.img";Copy-RecoveryFixture $cutImage $target
   $before=Witness $target
   try{
    Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=boot,format=raw,file=$target",'-device','usb-storage,drive=boot,bootindex=1')

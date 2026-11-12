@@ -516,6 +516,7 @@ const ChannelState = struct {
     last_output_len: u32 = 0,
     last_clear_count: u32 = 0,
     last_console_revision: u32 = 0,
+    console_snapshot_valid: bool = false,
     last_console_stream_bytes: u32 = 0,
     last_output_dropped_bytes: u32 = 0,
     last_console_change_tick: u64 = 0,
@@ -2352,10 +2353,7 @@ fn handleConnectionSession(
 
         if (!channel.close_after_output and channel.shell_started) {
             if (remoteProgramExitCode(app, channel.shell_instance)) |exit_code| {
-                channel.last_exit_code = exit_code;
-                noteChannelExit(stats, exit_code);
-                noteCloseReason(stats, "remote-exit");
-                scheduleChannelClose(&channel, sshExitStatus(exit_code));
+                scheduleProgramExit(app, stats, &channel, exit_code);
             }
         }
 
@@ -2375,10 +2373,7 @@ fn handleConnectionSession(
             now -| channel.last_console_change_tick >= exec_settle_ticks and
             (channel.shell_instance == 0 or remoteProgramDone(app, channel.shell_instance)))
         {
-            channel.last_exit_code = 0;
-            noteChannelExit(stats, 0);
-            noteCloseReason(stats, "exec-output-stable");
-            scheduleChannelClose(&channel, 0);
+            scheduleProgramExit(app, stats, &channel, 0);
         }
 
         if (!channel.close_after_output and channel.client_eof and !channel.exec_started and channel.eof_tick != 0 and now -| channel.eof_tick >= eof_grace) {
@@ -3908,6 +3903,22 @@ fn pumpConsoleOutput(app: *const App, conn_id: u32, stats: *ServiceStats, key: [
     const stream_bytes = state.stdout_bytes +% state.stderr_bytes;
     const stream_delta = stream_bytes -% channel.last_console_stream_bytes;
     const dropped_delta = state.output_dropped_bytes -% channel.last_output_dropped_bytes;
+    // The console retains a bounded tail. Once unseen bytes have fallen out
+    // of it, a successful SSH exit would certify a corrupt structured stream.
+    // Ordinary scrolling of already delivered bytes is not an overrun; an
+    // explicit console clear starts a new transcript instead.
+    if (state.clear_count == channel.last_clear_count and dropped_delta != 0 and stream_delta > got) {
+        var message: [160]u8 = undefined;
+        const diagnostic = std.fmt.bufPrint(&message, "SSHD: console output lost {d} bytes; command output incomplete.\r\n", .{stream_delta - got}) catch return false;
+        if (!queueChannelData(stats, buffers, diagnostic)) return false;
+        stats.channel_output_failures +%= 1;
+        setLastProtocolError(stats, "console-output-overrun");
+        noteCloseReason(stats, "console-output-overrun");
+        _ = app.sys.programKill(channel.shell_instance);
+        noteChannelExit(stats, 3);
+        scheduleChannelClose(channel, 3);
+        return true;
+    }
     const output_changed = state.clear_count != channel.last_clear_count or
         state.output_len != channel.last_output_len or
         stream_delta != 0 or
@@ -3977,6 +3988,7 @@ fn pumpConsoleOutput(app: *const App, conn_id: u32, stats: *ServiceStats, key: [
     }
     channel.last_output_len = @intCast(got);
     channel.last_console_revision = revision;
+    channel.console_snapshot_valid = true;
     channel.last_console_stream_bytes = stream_bytes;
     channel.last_output_dropped_bytes = state.output_dropped_bytes;
     return true;
@@ -5757,10 +5769,132 @@ fn sendChannelDataPacket(app: *const App, conn_id: u32, key: []const u8, buffers
     return sendEncryptedPacket(app, conn_id, key, w.slice(), buffers, rng, seq_out);
 }
 
+fn scheduleProgramExit(app: *const App, stats: *ServiceStats, channel: *ChannelState, exit_code: i32) void {
+    // Exit can be published after this iteration's console snapshot. Closing
+    // now would disable the next pump and discard the producer's final lines.
+    // The terminal is done: its latest stable revision must have reached our
+    // output queue before that queue may be drained and EOF sent. Failed or
+    // racing snapshots leave the channel open for the normal bounded pump.
+    if (!channel.console_snapshot_valid or
+        channel.last_console_revision != app.sys.consoleRevision(channel.shell_instance)) return;
+    channel.last_exit_code = exit_code;
+    noteChannelExit(stats, exit_code);
+    noteCloseReason(stats, "remote-exit");
+    scheduleChannelClose(channel, sshExitStatus(exit_code));
+}
+
 fn scheduleChannelClose(channel: *ChannelState, exit_code: u32) void {
     if (channel.close_after_output) return;
     channel.close_after_output = true;
     channel.close_after_output_status = exit_code;
+}
+
+test "program exit drains the last console revision before channel close" {
+    const Peer = struct {
+        var output: []const u8 = "prefix\n";
+        var revision: u32 = 1;
+        var change_during_read: bool = false;
+        var stream_override: ?u32 = null;
+        var dropped: u32 = 0;
+        var killed: u32 = 0;
+        fn readRevision(_: u32) callconv(.c) u32 {
+            return revision;
+        }
+        fn readState(_: u32, state: *r4os.abi.ConsoleState) callconv(.c) i32 {
+            state.* = .{ .output_len = @intCast(output.len), .stdout_bytes = stream_override orelse @intCast(output.len), .output_dropped_bytes = dropped };
+            return 0;
+        }
+        fn kill(instance: u32) callconv(.c) i32 {
+            killed = instance;
+            return 0;
+        }
+        fn readOutput(_: u32, bytes: [*]u8, capacity: u32) callconv(.c) i32 {
+            std.debug.assert(capacity > output.len);
+            @memcpy(bytes[0..output.len], output);
+            if (change_during_read) {
+                revision += 1;
+                change_during_read = false;
+            }
+            return @intCast(output.len);
+        }
+        fn ticks() callconv(.c) u64 {
+            return 123;
+        }
+    };
+    const raw: r4os.platform2.abi.R4XStartContext2 = .{};
+    const sys_table: r4os.platform2.abi.R4XStartR4Sys2 = .{ .ticks = @intFromPtr(&Peer.ticks), .program_kill = @intFromPtr(&Peer.kill) };
+    const desk_table: r4os.platform2.abi.R4XStartR4Desk2 = .{
+        .console_revision = @intFromPtr(&Peer.readRevision),
+        .console_state = @intFromPtr(&Peer.readState),
+        .console_output = @intFromPtr(&Peer.readOutput),
+    };
+    const context: r4os.platform2.Context = .{ .raw = &raw, .tables = .{ @intFromPtr(&sys_table), @intFromPtr(&desk_table), 0, 0, 0, 0 } };
+    const app: App = .{ .sys = r4os.r4sys.Context.fromProgram(.{ .generation2 = &context }), .net = undefined };
+    const buffers = try std.testing.allocator.create(SessionBuffers);
+    defer std.testing.allocator.destroy(buffers);
+    buffers.* = .{};
+    var stats: ServiceStats = .{};
+    var channel: ChannelState = .{ .shell_started = true, .exec_started = true, .shell_instance = 7 };
+    var rng: SessionRng = undefined;
+    var seq: u32 = 0;
+
+    // The producer is still running during this successful snapshot, then
+    // writes its final line and exits before the service checks its status.
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    try std.testing.expectEqualStrings("prefix\n", buffers.channel_output.peek());
+    Peer.output = "prefix\ncleanup returned\n";
+    Peer.revision += 1;
+    scheduleProgramExit(&app, &stats, &channel, 17);
+    try std.testing.expect(!channel.close_after_output);
+    // A blocked send window must not turn queued old output into a final
+    // snapshot, nor may an unstable console read acknowledge new output.
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    scheduleProgramExit(&app, &stats, &channel, 17);
+    try std.testing.expect(!channel.close_after_output);
+    try std.testing.expect(buffers.channel_output.consume("prefix\n".len));
+    Peer.change_during_read = true;
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    scheduleProgramExit(&app, &stats, &channel, 17);
+    try std.testing.expect(!channel.close_after_output);
+    try std.testing.expect(buffers.channel_output.empty());
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    scheduleProgramExit(&app, &stats, &channel, 17);
+    try std.testing.expect(channel.close_after_output);
+    try std.testing.expectEqual(@as(u32, 17), channel.close_after_output_status);
+    try std.testing.expectEqualStrings("cleanup returned\n", buffers.channel_output.peek());
+
+    // Even an empty command needs a successful snapshot; revision zero alone
+    // is not evidence that its output was read.
+    channel = .{ .shell_started = true, .exec_started = true, .shell_instance = 8 };
+    buffers.channel_output.clear();
+    Peer.output = "";
+    Peer.revision = 0;
+    scheduleProgramExit(&app, &stats, &channel, 0);
+    try std.testing.expect(!channel.close_after_output);
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    scheduleProgramExit(&app, &stats, &channel, 0);
+    try std.testing.expect(channel.close_after_output);
+
+    // A retained tail cannot replace unread bytes, even if the producer has
+    // already exited successfully. Report loss and retire this exact child.
+    channel = .{ .shell_started = true, .exec_started = true, .shell_instance = 9 };
+    buffers.channel_output.clear();
+    Peer.output = "tail";
+    Peer.stream_override = 100;
+    Peer.dropped = 96;
+    Peer.revision = 1;
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    try std.testing.expect(channel.close_after_output);
+    try std.testing.expectEqual(@as(u32, 3), channel.close_after_output_status);
+    try std.testing.expectEqual(@as(u32, 9), Peer.killed);
+    try std.testing.expect(std.mem.indexOf(u8, buffers.channel_output.peek(), "lost 96 bytes") != null);
+
+    // Dropping a previously delivered prefix is normal scrolling.
+    channel = .{ .shell_started = true, .exec_started = true, .shell_instance = 10, .last_console_stream_bytes = 96, .last_output_dropped_bytes = 92, .last_output_len = 4 };
+    buffers.channel_output.clear();
+    try std.testing.expect(pumpConsoleOutput(&app, 0, &stats, "", buffers, &rng, &seq, &channel));
+    try std.testing.expect(!channel.close_after_output);
+    try std.testing.expectEqualStrings("tail", buffers.channel_output.peek());
 }
 
 fn sendChannelExitAndClose(app: *const App, conn_id: u32, key: []const u8, buffers: *SessionBuffers, rng: *SessionRng, seq_out: *u32, channel: *ChannelState, exit_code: u32) void {
