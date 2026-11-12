@@ -21,7 +21,7 @@ function Test-StorageAccess {
         }finally{$held.Dispose()}
         Start-Sleep -Milliseconds 200
         try{$null=Storage-Command $(if($kind -eq 'disconnect'){'WAITFREE'}else{'FREE'})}catch{
-            $null=Ssh 'SERVMAN STATUS SSHD'
+            $null=Ssh 'SERVMAN LIST'
             $null=Ssh 'IPCONFIG /ALL'
             throw
         }

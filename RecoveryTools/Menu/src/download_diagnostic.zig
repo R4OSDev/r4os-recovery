@@ -48,7 +48,7 @@ const SmallSink = struct {
         return true;
     }
 };
-pub fn run(app: *r4os.App, args: []const u8) i32 {
+pub fn run(app: *r4os.App2, args: []const u8) i32 {
     const sys = app.system();
     execute(app, args) catch |err| {
         var line: [128]u8 = undefined;
@@ -58,7 +58,7 @@ pub fn run(app: *r4os.App, args: []const u8) i32 {
     sys.write("[DOWNLOADSMOKE] result=OK target_writes=0\r\n");
     return 0;
 }
-fn execute(app: *r4os.App, args: []const u8) !void {
+fn execute(app: *r4os.App2, args: []const u8) !void {
     const sys = app.system();
     const dev = app.devicesLowLevel() orelse return error.Unavailable;
     var web = app.web() orelse return error.Unavailable;
@@ -174,7 +174,7 @@ fn execute(app: *r4os.App, args: []const u8) !void {
     sys.write(try std.fmt.bufPrint(&line, "[DOWNLOADSMOKE] activated={s} bytes={d}\r\n", .{ std.mem.sliceTo(&preview.version, 0), preview.bytes }));
 }
 
-fn fatFiles(app: *r4os.App, allocator: std.mem.Allocator, large: bool) !void {
+fn fatFiles(app: *r4os.App2, allocator: std.mem.Allocator, large: bool) !void {
     const sys = app.system();
     const before = sys.driveInfo('R' - 'A') orelse return error.CacheUnavailable;
     if (before.cluster_bytes != 4096) return error.FixtureGeometry;

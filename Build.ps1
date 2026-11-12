@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Verify', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'DownloadTest', 'NetworkTest')][string]$Mode = 'Verify',
+    [ValidateSet('Verify', 'Embedded', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'DownloadTest', 'NetworkTest')][string]$Mode = 'Verify',
     [string]$Zig = '', [string]$SdkRoot='',
     [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
     [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
@@ -19,6 +19,16 @@ try {
     [IO.Directory]::CreateDirectory($output) | Out-Null
     Write-RecoveryJson (Join-Path $output 'inventory.json') $report
     Write-Host ("Recovery inventory OK: {0} files, {1} modules, {2} binary imports." -f $report.files, $report.modules, $report.imports)
+    if ($Mode -eq 'Embedded') {
+        . (Join-Path $PSScriptRoot 'Tools/Embedded.ps1')
+        $rebuilt=@(Build-RecoveryEmbedded -Root $PSScriptRoot -Zig $Zig)
+        foreach($item in $rebuilt){
+            $locked=Join-Path $PSScriptRoot ('Runtime'+(Get-RecoveryFields (Join-Path $PSScriptRoot ($item.source+'/module.R4MF'))).TARGET[0])
+            if((Get-RecoveryHash $locked) -cne $item.sha256){throw "Rebuilt embedded artifact differs from admitted Runtime: $($item.name)"}
+        }
+        Write-Host 'All39 embedded source builds match the admitted Runtime bytes.'
+        exit 0
+    }
     if ($Mode -ne 'Verify') {
         if ($Mode -eq 'BootTest' -and $BootProbe -eq 'none') { $BootProbe = 'poweroff' }
         if ($Mode -eq 'BootTest' -and $BootProbe -eq 'ram') { throw 'Use -Mode RuntimeTest for the RAM witness.' }

@@ -42,7 +42,7 @@ fn pump(raw: ?*anyopaque, _: []const u8, _: u64, _: u64) bool {
     sys.taskYield();
     return !sys.programShouldClose();
 }
-pub fn run(app: *r4os.App, args: []const u8) i32 {
+pub fn run(app: *r4os.App2, args: []const u8) i32 {
     const sys = app.system();
     const dev = app.devicesLowLevel() orelse return 1;
     witness(&sys, &dev, args) catch |err| {

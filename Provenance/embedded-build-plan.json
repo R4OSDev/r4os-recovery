@@ -1,0 +1,1551 @@
+{
+  "schema": 1,
+  "scope": "Explicit Recovery-owned derivatives of all38 original module archives plus canonical R4STD9/Libraries58. Real source ports/rebuilds/native qualification pending; no claim that a metadata rename completes migration. Original43 archives remain untouched. Module targets and39 roles unchanged.",
+  "snapshot_sdk": "0.64.210",
+  "snapshot_contract": "0.64.93",
+  "snapshot_libraries": "0.64.58",
+  "modules": [
+    {
+      "name": "AHCI",
+      "kind": 3,
+      "original_source": "Drivers-AHCI",
+      "original_archive": "Legal/Sources/Drivers-AHCI.zip",
+      "original_archive_sha256": "8327c1db0daa25f8a7a5f77671f43266bae63f623363b57017f39e3370bc3fee",
+      "original_version": "0.2.3",
+      "source": "RecoveryTools/Embedded/Drivers-AHCI",
+      "version": "0.2.4",
+      "target": "Runtime/R4OS/DRIVERS/AHCI.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "e4785005a865993788c2db4c7297c0af897e0dcd245eb629d00644ed3ede0056",
+        "build.zig.zon": "167d723b5b0efe5a009f19c7ffdfd328ff2aa8d45b5547d9a868bcc65450816c",
+        "module.R4MF": "beea14aba1897180f3516f06f0a8e8cab7cf4c416de370a822610b78fa8fe032",
+        "src/ahci_state.zig": "5e004e0f23b3175153fd69a18b5986707393fd60ffbdd48558a96c533d5e0790",
+        "src/main.zig": "3a6ccf5f8396ad07d324195e19d13474bf5bac4b00fcb539672cdd9cea9f0baa"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "167d723b5b0efe5a009f19c7ffdfd328ff2aa8d45b5547d9a868bcc65450816c",
+          "after": "08efe173300fc00896891056f3051ec195c5d7e33ccb0a5aa2cd996819a221d4"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "beea14aba1897180f3516f06f0a8e8cab7cf4c416de370a822610b78fa8fe032",
+          "after": "1927345c5ab0b9450fa88b7c4f0d89996e96115863e8185262012fdbe7201e56"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "3a6ccf5f8396ad07d324195e19d13474bf5bac4b00fcb539672cdd9cea9f0baa",
+          "after": "4f884c1059d10d0577a5a934ac65cdf85a941526b31abd973edc7d4060492ece"
+        }
+      ],
+      "original_artifact_sha256": "9807934e7f0b5ae5ad0ae8f70ed334e46e9252da629a0361c3a08f348019267f"
+    },
+    {
+      "name": "ATAPIO",
+      "kind": 3,
+      "original_source": "Drivers-ATAPIO",
+      "original_archive": "Legal/Sources/Drivers-ATAPIO.zip",
+      "original_archive_sha256": "20d603579d64202e047b7f9bcf07c7e0a765b5526b2b01dd6fc0bdf8512bb4c1",
+      "original_version": "0.1.3",
+      "source": "RecoveryTools/Embedded/Drivers-ATAPIO",
+      "version": "0.1.4",
+      "target": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "3f686bf18f367c14a08e1624b4835f5ccbb8a0ad8a77a4537ca7959f79476611",
+        "module.R4MF": "fd9487af10c85cc0044964723e50795ac2363186d145dbc00469c5bc2cb00a65",
+        "src/main.zig": "0c2ec8b7d48b880e2104b37d18c0be59346ff70c1211f73f7a27d0d0a5d9c6aa"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "3f686bf18f367c14a08e1624b4835f5ccbb8a0ad8a77a4537ca7959f79476611",
+          "after": "1775f3d7a4d27cae768e6cc6764cc10e213d71a4e2b0fbd505780377f53122f8"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "fd9487af10c85cc0044964723e50795ac2363186d145dbc00469c5bc2cb00a65",
+          "after": "af82cc2fe885fdb0e1d85fed52b150681fb0100d406470244cc8bd1db507075a"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "0c2ec8b7d48b880e2104b37d18c0be59346ff70c1211f73f7a27d0d0a5d9c6aa",
+          "after": "78c08152a476f28a8d4823555d756e027d7fd21e3005488268515b0d6d275786"
+        }
+      ],
+      "original_artifact_sha256": "cc9269fdc7b83df73bc30e5d74225129f2de77d7eb2611528749d1270a5fecf4"
+    },
+    {
+      "name": "NVME",
+      "kind": 3,
+      "original_source": "Drivers-NVME",
+      "original_archive": "Legal/Sources/Drivers-NVME.zip",
+      "original_archive_sha256": "a4e51cb58972a16de86227a653f9a60fb55f3dd2bb570d35dd92963c39f036a7",
+      "original_version": "0.1.7",
+      "source": "RecoveryTools/Embedded/Drivers-NVME",
+      "version": "0.1.8",
+      "target": "Runtime/R4OS/DRIVERS/NVME.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "8c4accb96536abb61ad8a4c75ff3031b109e4a95ff8e4b64220886a2b328e62c",
+        "build.zig.zon": "26a10e53c892a0823980a230629ea65c8aababc8041ff63f8e4626229ab4f373",
+        "module.R4MF": "a5960a17cca3bb2ef0eedf7eb02e705781fbe8a4da3f0835c51809d67040866c",
+        "src/main.zig": "f326f8765edae29a0955a7493fc6b3f273024133bea8ffe12c80f2d63f4b3829",
+        "src/nvme_state.zig": "db243ba1602bc91863371001954a0a120be0855e2e47df599ca2915dc745a53a"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "26a10e53c892a0823980a230629ea65c8aababc8041ff63f8e4626229ab4f373",
+          "after": "e13bee9d7139ae5cf0ccc710d704e987efb3f7bd66b3d5f4570b90c8f5f9a71b"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "a5960a17cca3bb2ef0eedf7eb02e705781fbe8a4da3f0835c51809d67040866c",
+          "after": "e9dbe1e321315991a419c0d2cd4921abca312d21816cf18a148673a52815e529"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "f326f8765edae29a0955a7493fc6b3f273024133bea8ffe12c80f2d63f4b3829",
+          "after": "58572e578dc74cf657c800af50a3b4ae69164dfb5fb9d505746279ea93bab623"
+        }
+      ],
+      "original_artifact_sha256": "2d967f83c564dc14e4044a71bf5a3f5a68fb40b3ceb2a8ce487e0bab79326f28"
+    },
+    {
+      "name": "XHCI",
+      "kind": 3,
+      "original_source": "Drivers-XHCI",
+      "original_archive": "Legal/Sources/Drivers-XHCI.zip",
+      "original_archive_sha256": "89ef74224ac0f118ba1d679de4601741c433bb239160fa4e33f83c9b3fd21cc5",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Drivers-XHCI",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/DRIVERS/XHCI.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "bb48d58638d603ec5d7d8e34ea3ca933c8aad5bfc989a415e0d674ee5ec5a062",
+        "module.R4MF": "1be10ff75bff88504713b6237fb2a8c5e69412db4314b4dddfa306a537c64bdb",
+        "src/main.zig": "276a4f5a50a405c62afd2be2dd5326b8be02eff7cf935db5045c525e470826e9"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "bb48d58638d603ec5d7d8e34ea3ca933c8aad5bfc989a415e0d674ee5ec5a062",
+          "after": "9116ab3734a9b827eb9da5f098f1aaba254c456b363fd7bcf5602fe961e48a5f"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "1be10ff75bff88504713b6237fb2a8c5e69412db4314b4dddfa306a537c64bdb",
+          "after": "f3c80c29fa2821926b8f6de1bb7787cad24460b98054a48ed3a6397ac3ae65fb"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "276a4f5a50a405c62afd2be2dd5326b8be02eff7cf935db5045c525e470826e9",
+          "after": "3d7cab70ec260ac6e2c0420c3ecb345396c5e019bcef407256d1e528761a906b"
+        }
+      ],
+      "original_artifact_sha256": "61f570637a6f5bfa451ec7b73b204f2c4e10aeed588f82245793b82918a9a375"
+    },
+    {
+      "name": "USBMSC",
+      "kind": 3,
+      "original_source": "Drivers-USBMSC",
+      "original_archive": "Legal/Sources/Drivers-USBMSC.zip",
+      "original_archive_sha256": "3a7db38f31dd46ed97de7cf9167a4e2f1854dfe442abe3ad95d34859f13b8c7d",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Drivers-USBMSC",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/DRIVERS/USBMSC.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "82c54fd08ff10a98177be0d125e1b1c41e4034b49f489ac5fab66777a0397e93",
+        "module.R4MF": "4ec66924d225b29ea9257d68be9499dd7a8540504e74f1e34c1585ad6ba4f8ea",
+        "src/main.zig": "f73b9d698734159fbf4fbc09ca6835e417ec70ea138a82a566fc84d984ae605e"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "82c54fd08ff10a98177be0d125e1b1c41e4034b49f489ac5fab66777a0397e93",
+          "after": "8acadda4747e6b3e2869319de29c0392c096c380265d96127b9f7872a3bb864c"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "4ec66924d225b29ea9257d68be9499dd7a8540504e74f1e34c1585ad6ba4f8ea",
+          "after": "9bb0526c4df915171ef3e6f9b140320f1e61499eb08db2d56fdddcd635dfa74f"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "f73b9d698734159fbf4fbc09ca6835e417ec70ea138a82a566fc84d984ae605e",
+          "after": "687a34bdddafb976b6fed25134e2fc45c05e0e4327c6582fb9116436a26340c5"
+        }
+      ],
+      "original_artifact_sha256": "4e2cffaef0b039b78b2614245138a798522307a97df66be8b0ddc3dfedfe5e2d"
+    },
+    {
+      "name": "RTL8139",
+      "kind": 3,
+      "original_source": "Drivers-RTL8139",
+      "original_archive": "Legal/Sources/Drivers-RTL8139.zip",
+      "original_archive_sha256": "d828e6f8dd49e174370a5cb20d5c1c8a4b26942219fba4cafc7fdea95294937e",
+      "original_version": "0.1.4",
+      "source": "RecoveryTools/Embedded/Drivers-RTL8139",
+      "version": "0.1.5",
+      "target": "Runtime/R4OS/DRIVERS/RTL8139.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "0875aa07cae20200f087a7318ff857cd797e7c2777fd599b368a9c275c75f8e4",
+        "build.zig.zon": "40f57a801a84d5dfeefde768e06179bcb8898bcb4bf93e4a115bf41a514fddb8",
+        "module.R4MF": "43f9d82633765a1da60419f7e8b389f641bd260137c511b27d0f38d958e8df35",
+        "src/irq_policy.zig": "8d16e198139103faaad60a6e8c937ddcd2d66edf8c763b6cced902226526a4e6",
+        "src/main.zig": "b383663fabbc2d3095c6e9dd8e4bb868fee8b0c6927ded1d0a67002414b67d8c",
+        "src/rx_guard.zig": "398c1f33a97a8c3e09f218a181f04bb51654a2fba7f0645fb5e7caf35daab1cd"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "40f57a801a84d5dfeefde768e06179bcb8898bcb4bf93e4a115bf41a514fddb8",
+          "after": "4029f8b767cd5a9cf0254693ee24d150a14db11188dd46298bc6826933f3a460"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "43f9d82633765a1da60419f7e8b389f641bd260137c511b27d0f38d958e8df35",
+          "after": "01014da2238852bd7c41be37304f07d6a6d33abf5ac7277e664dc2749c15598c"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "b383663fabbc2d3095c6e9dd8e4bb868fee8b0c6927ded1d0a67002414b67d8c",
+          "after": "710ab07bb023b051cb85e80df26243bbf1a0d79a798a1d952987b7e21453480b"
+        }
+      ],
+      "original_artifact_sha256": "2b05031a23e6df28d2b214247ed748f210ab1c3f82e7c013d4b9056119916770"
+    },
+    {
+      "name": "RTL8168",
+      "kind": 3,
+      "original_source": "Drivers-RTL8168",
+      "original_archive": "Legal/Sources/Drivers-RTL8168.zip",
+      "original_archive_sha256": "71da142286b0fcdaceca0086f794efb0ef3e32eb40e36aebcec872d5af455747",
+      "original_version": "0.1.3",
+      "source": "RecoveryTools/Embedded/Drivers-RTL8168",
+      "version": "0.1.4",
+      "target": "Runtime/R4OS/DRIVERS/RTL8168.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "8ae7bc8956f8313cc0a0d7d2fc6ecfaff0097d897d429df2cd7485effa43e1d1",
+        "build.zig": "6fe4b4bd720444f351e599ba861508b3f03af24b99d58e374519ce5fcab9404a",
+        "build.zig.zon": "41c678351a179c47292c71ed9fb8133dad0ba800841828e073e223b47cd53cf3",
+        "module.R4MF": "858b4643e9af935bd672b2583fb89399b69c02444b8df3c05394066e577f04ab",
+        "src/irq_policy.zig": "b9d7abd3450cf24d20c1b48b3d5282314be1589900179dae5f8a928a9a5e58b1",
+        "src/main.zig": "705f0418007d2e670071129e148724c4ea5ac578dacef3c039fd31ea1ea3b943",
+        "src/rtl8168_contract.zig": "be8403073d9b1281d23b9af12f92a58a8d337de010fdca778808ddbf62c4f871",
+        "src/rtl8168_firmware.zig": "6a6f80d55275b6f65b28d0a163ab1b750c436ec686e552100c7f2468c0460a92",
+        "src/rtl8168_firmware_tables.zig": "956b12c6f83a2db1a7727f763e188ad39d4a79026208eb6716a2b78f4e952de1",
+        "src/rtl8168_host_model.zig": "a1d6d7c943716fde1c4f5db59f8f3d680b9d0a50d76756746ddc784812d082bc",
+        "src/rtl8168_warmfix.zig": "901f6faace203c421b00461c01f382b392f8e99297885d7e8417b65490ce084d"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "41c678351a179c47292c71ed9fb8133dad0ba800841828e073e223b47cd53cf3",
+          "after": "3da8d679494384c15b9edd405993f41fc093bf7dfc99fdf48b346a85f8daae63"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "858b4643e9af935bd672b2583fb89399b69c02444b8df3c05394066e577f04ab",
+          "after": "93e022cd6721d4aef7a116239a893dec844767a19aa444dfc999e727c988e2e7"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "705f0418007d2e670071129e148724c4ea5ac578dacef3c039fd31ea1ea3b943",
+          "after": "ee0137f1d0e9d143d7964065f3d92aa4f7e4b3c66d595dfa194072ad45a741d7"
+        }
+      ],
+      "original_artifact_sha256": "3d6556ef78d88b0b323dd59cd2e4599aacd2e15dac2bf39db20faddd107f553d"
+    },
+    {
+      "name": "VIRTNET",
+      "kind": 3,
+      "original_source": "Drivers-VirtioNet",
+      "original_archive": "Legal/Sources/Drivers-VirtioNet.zip",
+      "original_archive_sha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96",
+      "original_version": "0.1.4",
+      "source": "RecoveryTools/Embedded/Drivers-VirtioNet",
+      "version": "0.1.5",
+      "target": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "861006177a2111db999b7a6c87aa56365f76831971f338d9e778127b22b9b637",
+        "build.zig.zon": "ebbb5b396678a0fe3c6ec7ae6e3d2f5188513e159f3bb587657d9998b83ea43d",
+        "module.R4MF": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895",
+        "src/checksum_policy.zig": "005591da06adb9e9343b1c17649684b621d22bccecb5bb89f9fbf78984b2ef55",
+        "src/irq_policy.zig": "efc4d71476ba4116d99f6dd7ae4782651c6f995e37cdde614db38b6758d45485",
+        "src/main.zig": "5573f113aa4d85975e7c4d68e6ed84dad89a025ba6874164cc42ff626b1e20d0"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "ebbb5b396678a0fe3c6ec7ae6e3d2f5188513e159f3bb587657d9998b83ea43d",
+          "after": "ed9b4f36680fd93c59a48c1134be67ed9bfe814e0affc363b0e2a564b5194d70"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895",
+          "after": "34c22f12bd12e0a61c3755aab590ca0c6846fc74a11078b1bc845dba69909b41"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "5573f113aa4d85975e7c4d68e6ed84dad89a025ba6874164cc42ff626b1e20d0",
+          "after": "b4723266ec785acd5857baaedf9dac81472d607f8560bc980a2be58323626eef"
+        }
+      ],
+      "original_artifact_sha256": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee"
+    },
+    {
+      "name": "USBHID",
+      "kind": 4,
+      "original_source": "Protocols-UsbHidBoot",
+      "original_archive": "Legal/Sources/Protocols-UsbHidBoot.zip",
+      "original_archive_sha256": "941b825a2d4320ca3384823d5589de86acc5d0668bc3a49f535384b583179730",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-UsbHidBoot",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/USBHID.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "36ba8c83cfbad74972a36832459310c8170ae682012b6442869b0a6c9b0b4d73",
+        "module.R4MF": "9e9c683ada4f2df7df0e4d1db9ff549cb54d06d3d06ac6df2c467570bbc89716",
+        "src/main.zig": "1e6d0686e64db95874116998137807c0a699961075466445e68890cd90761883"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "36ba8c83cfbad74972a36832459310c8170ae682012b6442869b0a6c9b0b4d73",
+          "after": "7c642b6463c08d91e9105e564e6369cfab54364d199539590e82bf6e34aecd6e"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "9e9c683ada4f2df7df0e4d1db9ff549cb54d06d3d06ac6df2c467570bbc89716",
+          "after": "aef173103c52ce589beb8de3f7335941194c8c0538f2b7689b07215b2842bfe3"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "1e6d0686e64db95874116998137807c0a699961075466445e68890cd90761883",
+          "after": "c041a4a7edac30040f3e4f93b547cd7e3caba23177730aabdc8c814089b194b9"
+        }
+      ],
+      "original_artifact_sha256": "a80667dd3506622687f79b7de1b0856ae775cfa9806feb257a6b4e0aab2774ae"
+    },
+    {
+      "name": "HIDREPORT",
+      "kind": 4,
+      "original_source": "Protocols-UsbHidReport",
+      "original_archive": "Legal/Sources/Protocols-UsbHidReport.zip",
+      "original_archive_sha256": "45f9a0ba7c0f2b4ddb8ce74f030c794c80937b410568e5d3d5024a4b8750b61e",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-UsbHidReport",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/HIDREPORT.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "18bbb3d0cb07718b0317eeaf83cb6bc8e4483445e145faa942b27f568d21d20e",
+        "module.R4MF": "5bcaf3981f0ae556f759ed9a1a1e5498f5ef3a7a76837719204ae2d4e80014d0",
+        "src/main.zig": "020fd1697b85715e84c81db4563063ee749bbef337cdc7da3548e271157017bc"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "18bbb3d0cb07718b0317eeaf83cb6bc8e4483445e145faa942b27f568d21d20e",
+          "after": "ea2cd60b6ff7d5a01d3b11661f500c4fef4c7abbbabcaf4b274ee0054ac37dc2"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "5bcaf3981f0ae556f759ed9a1a1e5498f5ef3a7a76837719204ae2d4e80014d0",
+          "after": "bc438f0677ad307124da974a87d7e8ec58ecbbcbe7de676b9dbc5e97aa9abbbc"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "020fd1697b85715e84c81db4563063ee749bbef337cdc7da3548e271157017bc",
+          "after": "2d8fd584d076b294a9542a6dba2e2145c455dab5ed734d73f0855ff9bf07a651"
+        }
+      ],
+      "original_artifact_sha256": "2c2258a74c9a0e622ca86634dc308bc2f387d6b0d84ee8fbb49ed0ca9536aec6"
+    },
+    {
+      "name": "USBBOT",
+      "kind": 4,
+      "original_source": "Protocols-UsbMscBot",
+      "original_archive": "Legal/Sources/Protocols-UsbMscBot.zip",
+      "original_archive_sha256": "9983d0120ad70106abbf3e92fce03756cc3a44087042c11f1597e1a2e0a97405",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-UsbMscBot",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/USBBOT.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "299a119764d6faf797af32123aa838def54f69ec1b4d231f8a044ca9ee3b7d26",
+        "module.R4MF": "ef664cee4798d869ca165f26b896feca8aaf4a9ec9c547df6c7c60a80e5b4ca2",
+        "src/main.zig": "4e2dcdd16a3fc84aa3e0fd91eda67dc09bdbc9011433ec63bed2482f70179862"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "299a119764d6faf797af32123aa838def54f69ec1b4d231f8a044ca9ee3b7d26",
+          "after": "5d0f455a18b8b1ccb7bc302a82252788d24339d6aa932a00b0d74161126cef43"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "ef664cee4798d869ca165f26b896feca8aaf4a9ec9c547df6c7c60a80e5b4ca2",
+          "after": "37a5bcce8e9c658db436e21c341fc47098f3e16a9e7324b81295188c16483731"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "4e2dcdd16a3fc84aa3e0fd91eda67dc09bdbc9011433ec63bed2482f70179862",
+          "after": "2234ba37a2c9507df8c30e8d50baf7da54431da856f391fc47a2a5f17db4cdc0"
+        }
+      ],
+      "original_artifact_sha256": "3972cd1970975f48e6a2cd5a8cf9e4b3e54015a72e8c62648f42406d137f6d12"
+    },
+    {
+      "name": "USBSCSI",
+      "kind": 4,
+      "original_source": "Protocols-UsbScsiBlock",
+      "original_archive": "Legal/Sources/Protocols-UsbScsiBlock.zip",
+      "original_archive_sha256": "d64184cd0d16e51bc964cd941f8c6cb9ce713c165759560db07f9f9cebcfb3bc",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Protocols-UsbScsiBlock",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/PROTOCOLS/USBSCSI.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "ed39f5d0cbf935d7059914e63a90c64f188bbf8dc9f30332385e005f9b4ca797",
+        "module.R4MF": "01f5ff542f30b3f9d1a5307d8d1748417a82c5eef3b69348a3974a2412446e71",
+        "src/main.zig": "bd9ea9488d285db96513766b12f8c2b873c68e5ebfe5e7ac00ad345d597c2aed"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "ed39f5d0cbf935d7059914e63a90c64f188bbf8dc9f30332385e005f9b4ca797",
+          "after": "602a6e3cef4cf93672322372b8ded1efbeea9b7634758df06e98c4570be7a6a4"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "01f5ff542f30b3f9d1a5307d8d1748417a82c5eef3b69348a3974a2412446e71",
+          "after": "d2387b2b5363c53fa0ca9e544431a05389749964b9e66464129da87bc37ec838"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "bd9ea9488d285db96513766b12f8c2b873c68e5ebfe5e7ac00ad345d597c2aed",
+          "after": "7b242e2fe7eac7817cc696d13db46a7915d1bf0765b6b5cb0c77a89a208a8a2e"
+        }
+      ],
+      "original_artifact_sha256": "6d2059e4c0c046b53db8a54f523bf92064ab8d62c7872c84f48ad517169e62f5"
+    },
+    {
+      "name": "NETETH",
+      "kind": 4,
+      "original_source": "Protocols-NetEthernet",
+      "original_archive": "Legal/Sources/Protocols-NetEthernet.zip",
+      "original_archive_sha256": "5774c1252c78b099fe64084851c77b7680136f7a306ae5bd6e2715c6da4f8906",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-NetEthernet",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/NETETH.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "f512235cdc7030a7ba1088aded8665c50d5dddd41b87075b23e9133c3f3839a9",
+        "module.R4MF": "4f6718110a4991842d5ebd2b3cfeffa077110bd21e0671bc160c089678a5236a",
+        "src/main.zig": "3fa343995cfa0a0b3cbeea3cca84416ff4a0705627341de5dd1a4ad77e2cf4db"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "f512235cdc7030a7ba1088aded8665c50d5dddd41b87075b23e9133c3f3839a9",
+          "after": "036b6a61632ef57e3fa0a8b43d836f1de3f584bff26cd106a5f0b8501d56a348"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "4f6718110a4991842d5ebd2b3cfeffa077110bd21e0671bc160c089678a5236a",
+          "after": "2af486c878a9ac0c601c21e4cb855984199c6c76649643eb965193a4135ecbc4"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "3fa343995cfa0a0b3cbeea3cca84416ff4a0705627341de5dd1a4ad77e2cf4db",
+          "after": "e39940a0c017a529e8ef245aa5a055332119f721f3b19a57e8cf5d3986f33a9b"
+        }
+      ],
+      "original_artifact_sha256": "fba3dbd8154b239945d40b5a25ecefe10befb8e0d8e4ad9bb2ff00e0dc84e22b"
+    },
+    {
+      "name": "NETARP",
+      "kind": 4,
+      "original_source": "Protocols-NetArp",
+      "original_archive": "Legal/Sources/Protocols-NetArp.zip",
+      "original_archive_sha256": "950bb82d78676a52a90f858bdf23f192b26368dabafb7d2d15d7b3b850758991",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-NetArp",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/NETARP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "afe71ff09520433dbe88000aa61ce558d4d7e57d276306006c4579798566a2e4",
+        "module.R4MF": "6616ae74d24af2fa125b11c8077fda4dc57adda49c1ad5bf3657dd8caf736f08",
+        "src/main.zig": "de1c77d6c6ba7c3cfbd5759c5c1ca986d8a00a673e4df579fef8c65400f72530"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "afe71ff09520433dbe88000aa61ce558d4d7e57d276306006c4579798566a2e4",
+          "after": "2c9b04b7e700b393ced5145d6a771a3139166d1c8524ac845371b7916512142b"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "6616ae74d24af2fa125b11c8077fda4dc57adda49c1ad5bf3657dd8caf736f08",
+          "after": "c7c11ba5668541142137b1451c71f394fdb452bc465bdc4423674b15d2e1ad2f"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "de1c77d6c6ba7c3cfbd5759c5c1ca986d8a00a673e4df579fef8c65400f72530",
+          "after": "7b6e390d5b8a62fc29624e4618ba44b7804147a503777e367ee394697fb028ec"
+        }
+      ],
+      "original_artifact_sha256": "069bc221bbe172ff7bd0d794bb00b1fc9011a8b0bc0b9028f2b17d763c947bc6"
+    },
+    {
+      "name": "NETIPV4",
+      "kind": 4,
+      "original_source": "Protocols-NetIpv4",
+      "original_archive": "Legal/Sources/Protocols-NetIpv4.zip",
+      "original_archive_sha256": "a1ab247cb4a860683e7f5516daa84be63ba29e3bd5f61669d63e6582b894480f",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-NetIpv4",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/NETIPV4.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "73a9440fe5a08a8cc0f5f98b895bd084fd31c49f2989c93507792204f85608d1",
+        "module.R4MF": "c61626dde4e8e01c3fecb16ea8e63173f074b5566e7b9f5cb968ee0a9a4509eb",
+        "src/main.zig": "50a4b8a97cc07462cba1dfb500d2bde26f53d919421f8367203005a19db5b7cc"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "73a9440fe5a08a8cc0f5f98b895bd084fd31c49f2989c93507792204f85608d1",
+          "after": "a7e004652cb28927896061eefe9bd22b271fbc63305f86aae25bf9bad9bf9baf"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "c61626dde4e8e01c3fecb16ea8e63173f074b5566e7b9f5cb968ee0a9a4509eb",
+          "after": "d1f6d59d805e0c8247cf021b112e2104a4952eb09a049758334fdc0d08f4bcee"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "50a4b8a97cc07462cba1dfb500d2bde26f53d919421f8367203005a19db5b7cc",
+          "after": "1c1223ea2203fd8c1704d617b1fe0ae30e59760c2fdc977b0295d638fa7956d6"
+        }
+      ],
+      "original_artifact_sha256": "c8722898a07fe4a1448f26dd00f0cab4c3efe52b5178bca7fe9741c1133b6bc4"
+    },
+    {
+      "name": "NETICMP",
+      "kind": 4,
+      "original_source": "Protocols-NetIcmp",
+      "original_archive": "Legal/Sources/Protocols-NetIcmp.zip",
+      "original_archive_sha256": "de654cd65062eefa97b7416e1486d4d1ee0e7b98c19e600134d8583dc28e09f9",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-NetIcmp",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/NETICMP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "836bbf7c5524d8257bb193af4752692bc31fef2543fe3f692758983aa6e3543e",
+        "module.R4MF": "7d5f0750c1ba8719f31bc008d50514a7f794c0df96bf67789bcafacb916dc29b",
+        "src/main.zig": "a2d0517ba802679ff3b2ff643badc45662f7ef595574476d9ea6b94f7bac9c12"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "836bbf7c5524d8257bb193af4752692bc31fef2543fe3f692758983aa6e3543e",
+          "after": "7bf7e132a1592ca0a750b26665b97e5409cda3cc68ae4fd5ddd7b4118822c2f8"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "7d5f0750c1ba8719f31bc008d50514a7f794c0df96bf67789bcafacb916dc29b",
+          "after": "44e50f0b8214a4d78e0e57725fd43d76e18a0a8767a6c78a1159077a33e3bd07"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "a2d0517ba802679ff3b2ff643badc45662f7ef595574476d9ea6b94f7bac9c12",
+          "after": "bebe9a42bc85c59784d0b3afe1d048ebba5735f5453bdf4e34f5c9c59488c120"
+        }
+      ],
+      "original_artifact_sha256": "1212203cc1deee375d1650d6908ca90cf4fd516a0bff97668a10998136f71952"
+    },
+    {
+      "name": "NETUDP",
+      "kind": 4,
+      "original_source": "Protocols-NetUdp",
+      "original_archive": "Legal/Sources/Protocols-NetUdp.zip",
+      "original_archive_sha256": "ff9bc7b45f3c98e6a090a6dd9a2f7fdf7010a43a7781c31d77b94cc3e4e61c9f",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Protocols-NetUdp",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/PROTOCOLS/NETUDP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "4a486b3657d475508f8b2cd80cd49c01791678e0c3211f335ca0180a78b27955",
+        "module.R4MF": "65589423cd59db4e9ba23d00c7fb76628a3089835a4d3d9eb330c1221b1d4d5c",
+        "src/main.zig": "56f2fcafb27d76b7a3d9e2dc659aa29c7a68ce47d611386f522f1126a47689f8"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "4a486b3657d475508f8b2cd80cd49c01791678e0c3211f335ca0180a78b27955",
+          "after": "787881a110b9245573de5bca76b891c0e75471532c2a52c583c342989653c3de"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "65589423cd59db4e9ba23d00c7fb76628a3089835a4d3d9eb330c1221b1d4d5c",
+          "after": "aec871fc5ae5dc372bde9a9e126fb944d251bb59ef187f0c75c975201bcee8cc"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "56f2fcafb27d76b7a3d9e2dc659aa29c7a68ce47d611386f522f1126a47689f8",
+          "after": "302f69df7119328a7525cb4a3b02f0af90b8b49b3c75dcc94df4c28131b6c72a"
+        }
+      ],
+      "original_artifact_sha256": "5cdae4ff1db9cc92dd05c14da65c7045ad17fc13285a60a2d7363d6f726739ed"
+    },
+    {
+      "name": "NETTCP",
+      "kind": 4,
+      "original_source": "Protocols-NetTcp",
+      "original_archive": "Legal/Sources/Protocols-NetTcp.zip",
+      "original_archive_sha256": "bca1914a93f97e3089bc3ab50e773698dc08fb30003c14547a1c012209754a23",
+      "original_version": "0.1.3",
+      "source": "RecoveryTools/Embedded/Protocols-NetTcp",
+      "version": "0.1.4",
+      "target": "Runtime/R4OS/PROTOCOLS/NETTCP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "c0c278896a41fe149f49b6d30edb910a6caef234c60f3a9dfadc9559a0adc11a",
+        "module.R4MF": "4dd2f6831ae2e9d8385412fd042e456eaf4b56ee384e76cbbb487932bc8f6a2e",
+        "src/main.zig": "42615f0adf547f8624357fac3925738bbfd6964f8e796690dbab36a061742740"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "c0c278896a41fe149f49b6d30edb910a6caef234c60f3a9dfadc9559a0adc11a",
+          "after": "dc3cde646ffd60d3cf7fffc07ca09d0853f5216ad094e0a2549d5711aaf6aeb1"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "4dd2f6831ae2e9d8385412fd042e456eaf4b56ee384e76cbbb487932bc8f6a2e",
+          "after": "bf2a88625b24db846fe51cb83143f5634636b33b67f4fa0962329d60fdfbbb8b"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "42615f0adf547f8624357fac3925738bbfd6964f8e796690dbab36a061742740",
+          "after": "f15ad5952efb1d721c820aa68cd4b99f91d0ab688b055da61d04f689ec10267d"
+        }
+      ],
+      "original_artifact_sha256": "a3c083c6681324794951aaca1121278066a746068185bb6cb7d7695d8c95ab0f"
+    },
+    {
+      "name": "NETDNS",
+      "kind": 4,
+      "original_source": "Protocols-NetDns",
+      "original_archive": "Legal/Sources/Protocols-NetDns.zip",
+      "original_archive_sha256": "f3870e04cf77659990f758cc4cc4e62661b6238e3b484041769ec34f9e7edc36",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-NetDns",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/NETDNS.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "bd612b4fc2fa10c56d624d1e243982adf413aec79659b826bc97ef4d67ba3d59",
+        "module.R4MF": "fa7bd94d6ee576a482c4e028c83109f72205991dc43dac7a103d0d4ce2d7757b",
+        "src/main.zig": "0a439adb605fff770b9ea21b25a1afa0a0057ef03e4ae31d4b6dbbf34610d661"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "bd612b4fc2fa10c56d624d1e243982adf413aec79659b826bc97ef4d67ba3d59",
+          "after": "8ab41997f6ddafa1a65c8c0ee5a9283bdb5f8abe962ac02a1cadcd5027bc06b4"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "fa7bd94d6ee576a482c4e028c83109f72205991dc43dac7a103d0d4ce2d7757b",
+          "after": "3b51a7fd2695d25019e06eee5a0de2f9f6c2090a8410d30e6b2a4d02e2ac025f"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "0a439adb605fff770b9ea21b25a1afa0a0057ef03e4ae31d4b6dbbf34610d661",
+          "after": "3637c3487a33a7d334516183094ace9c85cbf74e02c1b349721e656426f43a21"
+        }
+      ],
+      "original_artifact_sha256": "6578c827ab03a51b9b2cb2a8898eab1fd5688fb178af42d7786d0275679f7332"
+    },
+    {
+      "name": "NETDHCP",
+      "kind": 4,
+      "original_source": "Protocols-NetDhcp",
+      "original_archive": "Legal/Sources/Protocols-NetDhcp.zip",
+      "original_archive_sha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Protocols-NetDhcp",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "7e2deca2aa966f27f8b90a4e5893dd6d5287f1157d6c0d6079d1f421595f9deb",
+        "module.R4MF": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804",
+        "src/main.zig": "fea26ef985ca4b383426f4ba17bf5846566531c6066f2f949bf53288e3c2659b"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "7e2deca2aa966f27f8b90a4e5893dd6d5287f1157d6c0d6079d1f421595f9deb",
+          "after": "341a8d3ea4801f0064d8c027d94e4226414df2f3ac2cfa2a7000bda6118fa7e4"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804",
+          "after": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "fea26ef985ca4b383426f4ba17bf5846566531c6066f2f949bf53288e3c2659b",
+          "after": "f9f32bc1362eff1214d534173df7bc11694e02bcf8d1fa5aabf5df8ea702f238"
+        }
+      ],
+      "original_artifact_sha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35"
+    },
+    {
+      "name": "R4HTTP",
+      "kind": 4,
+      "original_source": "Protocols-R4Http",
+      "original_archive": "Legal/Sources/Protocols-R4Http.zip",
+      "original_archive_sha256": "a8a7c224692089227a24a9e42fdfc50d7ca6e0bd4703192abb659d3a0f9dd790",
+      "original_version": "0.1.4",
+      "source": "RecoveryTools/Embedded/Protocols-R4Http",
+      "version": "0.1.5",
+      "target": "Runtime/R4OS/PROTOCOLS/R4HTTP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "e6888a259297d32ab065a4c7155eb52fbf7ad97879f0ae5fab261b20b87f002a",
+        "build.zig.zon": "be96f6b67f3865f4660fbff4232e9d41105d3c5efb010682d2c2ddc6392fea21",
+        "module.R4MF": "fa2b7ddf5620a6a1a39fdb0e59a0255d7c6f6a0439c8abd28e81f0fcfbcc9d21",
+        "src/main.zig": "8bcdf400254ffc2fd8a9ce7eaf0928f885be0f438aec2e8e39c2267bb14c1f30"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "be96f6b67f3865f4660fbff4232e9d41105d3c5efb010682d2c2ddc6392fea21",
+          "after": "984562e365db5364b7af59726cfd93df6628452bfb46ce0814e9d8933baf3ad0"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "fa2b7ddf5620a6a1a39fdb0e59a0255d7c6f6a0439c8abd28e81f0fcfbcc9d21",
+          "after": "a7fd8b30d151f81e79a841346dfe31aefd779e03a78cc217e916fa66a1725636"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "8bcdf400254ffc2fd8a9ce7eaf0928f885be0f438aec2e8e39c2267bb14c1f30",
+          "after": "0ce7094d445cd67dac542a39f7195b9e61e813ae9d2f20eb7fe0bf539d542ac4"
+        }
+      ],
+      "original_artifact_sha256": "1c0eacbadced2c4f64999e0cb30ec82101ec031f7482f6a944885c2a59743630"
+    },
+    {
+      "name": "R4TLS",
+      "kind": 4,
+      "original_source": "Protocols-R4Tls",
+      "original_archive": "Legal/Sources/Protocols-R4Tls.zip",
+      "original_archive_sha256": "71077cb633acf52f228584178dd4b9c377d1cd83cdede38adabf2b7125264250",
+      "original_version": "0.2.7",
+      "source": "RecoveryTools/Embedded/Protocols-R4Tls",
+      "version": "0.2.8",
+      "target": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a5fdbef020b9df5a6b85536bd802a2ea2de60d95ceeea6312a72ca95c9d17963",
+        "build.zig.zon": "ef49e73670ad1febe7a273c546346f0db57b1f808f8630669540a74aa68a2f0d",
+        "module.R4MF": "fea067158022065dc418494d78546f8367862e79bd90aeac8522c43a9da1eb90",
+        "src/main.zig": "24f20d3f09b9aadfe7584d14a23bdde829999106f9f6e058938bc51002f63520"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "ef49e73670ad1febe7a273c546346f0db57b1f808f8630669540a74aa68a2f0d",
+          "after": "6623c2efe7704b7fd2ef6fc0ba389bf82aa4704117d6cd145570d10db7d2381c"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "fea067158022065dc418494d78546f8367862e79bd90aeac8522c43a9da1eb90",
+          "after": "8c33ffcf0713afe6da3fba4aa41870101ea7915fc0ea38ce2b21493a8ee352e0"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "24f20d3f09b9aadfe7584d14a23bdde829999106f9f6e058938bc51002f63520",
+          "after": "e60b338da380e4dbdfe64a150f72a415c93d9120d56703794df6dd9fc5a2f91f"
+        }
+      ],
+      "original_artifact_sha256": "d89f879664214968ac71c682161977562ed7a8b0495390ed635de45945f84cf0"
+    },
+    {
+      "name": "JSON",
+      "kind": 4,
+      "original_source": "Protocols-JSON",
+      "original_archive": "Legal/Sources/Protocols-JSON.zip",
+      "original_archive_sha256": "655e98f475eb09d346183e74dd7642d9f8349a005be7f0bccc68cf5030665528",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Protocols-JSON",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/PROTOCOLS/JSON.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "Tests/Conformance/CheckJsonAbi.zig": "ebb6f853bbdbcb32bffc5e2d6fbc838f9b0f48615c3aa66e95f1497b148fe2e8",
+        "build.zig": "c199ea92d58fdce807945b64509b466347bf5440013b7cb733dd92506637a354",
+        "build.zig.zon": "f2776cff8a8de2f42943ce6ee633e816b148ef7673e4b7de394b1823bb1c6798",
+        "module.R4MF": "b3eba570ee137acb300c9879221c18ecc6f993fe049d44e931ecf85ebdee0a2d",
+        "src/json_core.zig": "cb90b825d98d120d6892530acc3afecccd37c96fb5f8bb714ab0e10e17918ab1",
+        "src/main.zig": "a6ba1c7ee2d8f88fa92d1b3dc898a961b157139b0413c5626a9e791ac4c7ddfd"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "f2776cff8a8de2f42943ce6ee633e816b148ef7673e4b7de394b1823bb1c6798",
+          "after": "23cc30c22430d4bc16cdcbc8c3b99b79c11bc8fb458bb3630d7d69434ca2252b"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "b3eba570ee137acb300c9879221c18ecc6f993fe049d44e931ecf85ebdee0a2d",
+          "after": "1703500d227173e455d74a7f82119314a6976d6cd58965ca095d3412801d58d2"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "a6ba1c7ee2d8f88fa92d1b3dc898a961b157139b0413c5626a9e791ac4c7ddfd",
+          "after": "be0ef8591280d16dcd62790f3a07179836478ea5b05c710765d5007264b25dae"
+        }
+      ],
+      "original_artifact_sha256": "81652e2a9d2f9fdbdcf20fca6441cd81b9edf30e9381e8c4dcf2ed8f05f0be40"
+    },
+    {
+      "name": "DHCPSVC",
+      "kind": 1,
+      "original_source": "Services-DhcpService",
+      "original_archive": "Legal/Sources/Services-DhcpService.zip",
+      "original_archive_sha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08",
+      "original_version": "0.1.5",
+      "source": "RecoveryTools/Embedded/Services-DhcpService",
+      "version": "0.1.6",
+      "target": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "8e564106accdb47571a35cb0e86ae6085067fb279a674d5baa4263bc3ab3389d",
+        "module.R4MF": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1",
+        "src/main.zig": "b4fea44da3e18a1c8df4c8a182fb29d7351eefc001168c2c5d8deb740fcf3086"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "8e564106accdb47571a35cb0e86ae6085067fb279a674d5baa4263bc3ab3389d",
+          "after": "006de0e47d4253f6959b795faead84220b933ccdc8449478a5029beceb030b2d"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1",
+          "after": "ee9fb61ca874966dfa46426f8f282e3783468fe5bd438df66a1872d658bcc345"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "b4fea44da3e18a1c8df4c8a182fb29d7351eefc001168c2c5d8deb740fcf3086",
+          "after": "be4e26c034e958ad33c7d309f4031bee5e83da3ed86e5cc09525314049bafa85"
+        }
+      ],
+      "original_artifact_sha256": "f9fb5baca65814b7033bbf937972d7e7366428ee39d9f7f8d2ad6418923c78d7"
+    },
+    {
+      "name": "DNSSVC",
+      "kind": 1,
+      "original_source": "Services-DnsService",
+      "original_archive": "Legal/Sources/Services-DnsService.zip",
+      "original_archive_sha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
+      "original_version": "0.1.3",
+      "source": "RecoveryTools/Embedded/Services-DnsService",
+      "version": "0.1.4",
+      "target": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "7d11576a1e9cd03a792cb5d4e112ca2689441b3fdecf29732ed7181c84cf8e26",
+        "module.R4MF": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca",
+        "src/main.zig": "96b0eb523766b8eb417ab511a06dda235f53d2506e7ee8d3e7d49a51526dc020"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "7d11576a1e9cd03a792cb5d4e112ca2689441b3fdecf29732ed7181c84cf8e26",
+          "after": "14c19e7f3eb3fdc9d616f198e1f2c6f2fd30434442752597e260e3fe7b45ad82"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca",
+          "after": "a5b91016568a6bd797ea57ca049c69a2144bde2762410b349b988b39756851b4"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "96b0eb523766b8eb417ab511a06dda235f53d2506e7ee8d3e7d49a51526dc020",
+          "after": "0152ec19faebecb567e52e938571f21794348c918ade82b2f83663d9fab51439"
+        }
+      ],
+      "original_artifact_sha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f"
+    },
+    {
+      "name": "TCPSVC",
+      "kind": 1,
+      "original_source": "Services-TcpService",
+      "original_archive": "Legal/Sources/Services-TcpService.zip",
+      "original_archive_sha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682",
+      "original_version": "0.1.6",
+      "source": "RecoveryTools/Embedded/Services-TcpService",
+      "version": "0.1.7",
+      "target": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "e54698a2523219a6cbb6b16e3e45f00f29fccb12d5eb92e20bcebe6e45b982c1",
+        "module.R4MF": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c",
+        "src/main.zig": "279b4add9086d0309d9c0b206d864f28050f9aec7d18d16e25f436e77737ac88"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "e54698a2523219a6cbb6b16e3e45f00f29fccb12d5eb92e20bcebe6e45b982c1",
+          "after": "a1307630fcd60ef04f1aa040e1c62c77d7a97a5bfbdb28abfb00efd27465fc48"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c",
+          "after": "9140c4b9b37ea611aa4f5c653bd9eed9cb699822ea124d77d7446b3c5296a67c"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "279b4add9086d0309d9c0b206d864f28050f9aec7d18d16e25f436e77737ac88",
+          "after": "dd8cd2d614558a4f964367a6679deaa560bdae2789d5a16236e4b1ad7539db81"
+        }
+      ],
+      "original_artifact_sha256": "b3f352e613ab2270d1090a1e50692c557d0741227149a9b2be032aa0ae46d77f"
+    },
+    {
+      "name": "UDPSVC",
+      "kind": 1,
+      "original_source": "Services-UdpService",
+      "original_archive": "Legal/Sources/Services-UdpService.zip",
+      "original_archive_sha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce",
+      "original_version": "0.1.3",
+      "source": "RecoveryTools/Embedded/Services-UdpService",
+      "version": "0.1.4",
+      "target": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "c9c24dd772e9feae8a82243437347261eea5ba930d0e22915b32434c303e8e63",
+        "module.R4MF": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a",
+        "src/main.zig": "896d72f05f43fd1812aa8bf2ade17e8d933b10061d3fcd5ac1cfa43bcdb783d3"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "c9c24dd772e9feae8a82243437347261eea5ba930d0e22915b32434c303e8e63",
+          "after": "bd640ad70eea0d56869330e6dd6f70780409eefd9ecf9cdb56d7ec142549072c"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a",
+          "after": "121029d3fdf495da28bb6c74a60492a88bed55fadc9f4183b2c2f27bd1f40e76"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "896d72f05f43fd1812aa8bf2ade17e8d933b10061d3fcd5ac1cfa43bcdb783d3",
+          "after": "808d142a6cd8dab4a84b705dc729a72aa6f6a1d1fc0177bf172d7822b5afd5b3"
+        }
+      ],
+      "original_artifact_sha256": "b2e2566e7ac6dc580bb468f905ca0eddcd5bc16c3c7f8f5310daba0e254c2096"
+    },
+    {
+      "name": "SSHD",
+      "kind": 1,
+      "original_source": "Services-SshService",
+      "original_archive": "Legal/Sources/Services-SshService.zip",
+      "original_archive_sha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba",
+      "original_version": "0.1.9",
+      "source": "RecoveryTools/Embedded/Services-SshService",
+      "version": "0.1.10",
+      "target": "Runtime/R4OS/SERVICES/SSHD.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "a2f8828a6a9e38999bddd07f76792cc0557239134ed00a0f708a94fd2cabfd8a",
+        "build.zig.zon": "7f33fd114f59a36a416122f9708129a025188ac45ae0dba99608cbeae4027470",
+        "module.R4MF": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2",
+        "src/channel_flow.zig": "deb3bdc97e8a022d8dae8a45c9fb816eabaa6100751f555374e092ffe712a928",
+        "src/main.zig": "10ae28581b555b6d2ccd19ab2ab0a50e3b63e0c2428949bba469a54d03ee533e",
+        "src/sftp_write_policy.zig": "c7cac3713540825033255f9d02c1c28f5fe262e0b910c1965aae6a7ed2577224",
+        "src/ssh_chacha.zig": "1e9c92d5075a80614f12f7d973ad4261d5b82eb6ae4300281fc93ae08de2af15"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "7f33fd114f59a36a416122f9708129a025188ac45ae0dba99608cbeae4027470",
+          "after": "a584d647acf60c2752efba9bebe9fa6e1bff73a35974890d1444fba4f4549bc1"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2",
+          "after": "3b3b5f16bbfc8d51af31627e5082880b7e2277cc95a26af7f179ba8176fea38a"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "10ae28581b555b6d2ccd19ab2ab0a50e3b63e0c2428949bba469a54d03ee533e",
+          "after": "44c6cdb2ce30034617e8b8a3b149cf52f38f00945e4e123734d6ab196b02f23d"
+        }
+      ],
+      "original_artifact_sha256": "63cfb3727e8bf74e3295fb524bff0e184152e9c2c37a7843ee84115683ab4a1e"
+    },
+    {
+      "name": "FTPSVC",
+      "kind": 1,
+      "original_source": "Services-FtpService",
+      "original_archive": "Legal/Sources/Services-FtpService.zip",
+      "original_archive_sha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
+      "original_version": "0.1.7",
+      "source": "RecoveryTools/Embedded/Services-FtpService",
+      "version": "0.1.8",
+      "target": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "7747728af8ff4bf85e6a20bd4d06cb8c618b4b995652d4c98e7d30b8dbcbaf9b",
+        "module.R4MF": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846",
+        "src/main.zig": "3fbf1cd3854149b7f38947f3ea735b7a896dd293d19fe86116e8271b2abad19d"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "7747728af8ff4bf85e6a20bd4d06cb8c618b4b995652d4c98e7d30b8dbcbaf9b",
+          "after": "aca494b99f9a11c57f830dcb724eb65ffda42c94210165709cf56484fada2cf3"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846",
+          "after": "41a98e344a36cbf31fa6917b0a7e89aeb23444b5a627b415c71823a0f1925a43"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "3fbf1cd3854149b7f38947f3ea735b7a896dd293d19fe86116e8271b2abad19d",
+          "after": "6e7ae565096af0a64aa0e4af7d888525e1019f207c3ee052619dccfe2469ba69"
+        }
+      ],
+      "original_artifact_sha256": "7164483e247d08b9e633adbde697db8eb130f39feac34ed84b5944040222d4e2"
+    },
+    {
+      "name": "TERMINAL",
+      "kind": 1,
+      "original_source": "Apps-Terminal",
+      "original_archive": "Legal/Sources/Apps-Terminal.zip",
+      "original_archive_sha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd",
+      "original_version": "0.1.12",
+      "source": "RecoveryTools/Embedded/Apps-Terminal",
+      "version": "0.1.13",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "Assets/Desktop.ico": "1f61dcfeb76e0722fede0a58f5cf2cfbceaede326f41915d879ab780948a9066",
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "76e08bfbb9a58b78320cdf3205d774daa2cdad20bb5a02795755d39adc03ca47",
+        "build.zig.zon": "680366234af3def61f7f620732cc79edd33beb4eb7edc9dd496ab694a314cf86",
+        "module.R4MF": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5",
+        "src/main.zig": "38f5143697f20fb318c0f4a2587dd41e0ecc47507cd4728f69f876c330ddeaec"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "680366234af3def61f7f620732cc79edd33beb4eb7edc9dd496ab694a314cf86",
+          "after": "7520c8f7829e8dae1fd483a974202a69f9b5e48b00e332a71e46fdabdc8e4a90"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5",
+          "after": "630059b8f4ee704831dc2b8d12e8426dff1ed8a2da8df7c3d9323d8425183b13"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "38f5143697f20fb318c0f4a2587dd41e0ecc47507cd4728f69f876c330ddeaec",
+          "after": "40cb19b153a0ae12c89354c52ddf535afcbfb92411a6d020ea367df70fee90b7"
+        }
+      ],
+      "original_artifact_sha256": "88f27b812331f65b3ef0ddcd62767aebfecd227e2f81797e5945893818453571"
+    },
+    {
+      "name": "SERVMAN",
+      "kind": 1,
+      "original_source": "Apps-ServiceManager",
+      "original_archive": "Legal/Sources/Apps-ServiceManager.zip",
+      "original_archive_sha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Apps-ServiceManager",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "0fe03370d5ee6a5d4cbd295f09f77c016198dde8202381456ba31abd60de8822",
+        "module.R4MF": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6",
+        "src/main.zig": "b4796e4311defda28ca96b3b1a8e1d755cf0f12751e7d826744638ad0a91d5f1"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "0fe03370d5ee6a5d4cbd295f09f77c016198dde8202381456ba31abd60de8822",
+          "after": "bc1ec282d4d5379b58769e7a2ad4a1203e66cda1ccb649b79df1129911a82a9a"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6",
+          "after": "f92a7b3e09dc29b9e198bcefe7ff5783a9e7c55d1fc6e6ec57a22e6ebf7a726d"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "b4796e4311defda28ca96b3b1a8e1d755cf0f12751e7d826744638ad0a91d5f1",
+          "after": "41d9d08ef1f367c789c8a6331b9c00b0ae23a8854a0909f5b82a0d03b9d1bd03"
+        }
+      ],
+      "original_artifact_sha256": "d667cac55be9cd6a188224f7a76b0d0883455d53fdc73a4a0b295a152e059ad6"
+    },
+    {
+      "name": "HELP",
+      "kind": 1,
+      "original_source": "Apps-Help",
+      "original_archive": "Legal/Sources/Apps-Help.zip",
+      "original_archive_sha256": "eea0ae3e087f97c9ce3a55319bde66d6a0812f032cef2af4cd31fe6ea5e9c66e",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Apps-Help",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/HELP.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "c07d47d31010c5766b62b1052ae86c522b48cd3331ca5a87a2953fcd59338299",
+        "module.R4MF": "993c3bd08df299aec9ddc6041567a71344e69c3102010dbf6e352be59a08839f",
+        "src/main.zig": "857432a1279df26d2f6f6120912cf8c40c4eb3dae152cdb9e13c56d3837fc532"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "c07d47d31010c5766b62b1052ae86c522b48cd3331ca5a87a2953fcd59338299",
+          "after": "c8dff06118607bfdd78baeb29416f987456379adcdb64ed81bb7b7d045a5e828"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "993c3bd08df299aec9ddc6041567a71344e69c3102010dbf6e352be59a08839f",
+          "after": "fe62f8eb3af97a64127cf436195150651edccde2eb28ca248807866893bbf632"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "857432a1279df26d2f6f6120912cf8c40c4eb3dae152cdb9e13c56d3837fc532",
+          "after": "5b109c5fa402ea09712ce06bda094f59e0409f515d8e7321328da01def9a23a6"
+        }
+      ],
+      "original_artifact_sha256": "b28b79664411936a3b31d3acfe8e0c42f2ddde0712731442955f1d6b0d74476a"
+    },
+    {
+      "name": "IPCONFIG",
+      "kind": 1,
+      "original_source": "Apps-IpConfig",
+      "original_archive": "Legal/Sources/Apps-IpConfig.zip",
+      "original_archive_sha256": "191799a172d39bde2e357e97a19094abad2772ea2f68d27ad6224ccc2f113b09",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Apps-IpConfig",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/IPCONFIG.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "0c5d3ecf07c22da85d840026600d1772be1fed63f5090f574302af51031eec3a",
+        "module.R4MF": "7b53a3e44f25848c6a4abaeb62063d7748bf4f6bf29ee9e3573843d733d6f573",
+        "src/main.zig": "389c37737aab7af13e311b654262aaf88acfc275c68631f8b676ded227454ef1"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "0c5d3ecf07c22da85d840026600d1772be1fed63f5090f574302af51031eec3a",
+          "after": "43d744bd202f326ae33db29264e5b1aa9ddfaf921d9f92ee1317790d918ae105"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "7b53a3e44f25848c6a4abaeb62063d7748bf4f6bf29ee9e3573843d733d6f573",
+          "after": "92a8b4f2a120251db076c2be6070523fc1b77fbe70b9171565ed2927029969a3"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "389c37737aab7af13e311b654262aaf88acfc275c68631f8b676ded227454ef1",
+          "after": "91091d7cfabd956bbe9a85733fec1e6ed9087300ea88f3c92a93b2c66301c8ec"
+        }
+      ],
+      "original_artifact_sha256": "0d21eb1d63bf6c3497a56740f62b38b016f50109ab51ac8fce6f899f0f1f5dbe"
+    },
+    {
+      "name": "SYSINFO",
+      "kind": 1,
+      "original_source": "Apps-SysInfo",
+      "original_archive": "Legal/Sources/Apps-SysInfo.zip",
+      "original_archive_sha256": "96b07272db1dfe754be506f2f9a3895c3f30b6cc7d2b6f334553998fa310a761",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Apps-SysInfo",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/SYSINFO.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "6912843f883b486d1bb3031aa5e64121cd5bd44c60f82ffa6acd3a3ca484e4c6",
+        "module.R4MF": "ddfe5a582f45a3c8a3791084e272536c510de793e81fbc6e8303341f9f6f496f",
+        "src/main.zig": "fd51750961cc8fbc07630bafd6bd47e92ec659c34e0afad2d076b23bb6e99513"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "6912843f883b486d1bb3031aa5e64121cd5bd44c60f82ffa6acd3a3ca484e4c6",
+          "after": "170fb719ae72ea3f0e1012e408a3654948d389b4256e74e725f572cd017d5bc8"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "ddfe5a582f45a3c8a3791084e272536c510de793e81fbc6e8303341f9f6f496f",
+          "after": "c359e95d719c7d86eb79be8003809cbb3fc3657f2b7fe49c266559364bad206e"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "fd51750961cc8fbc07630bafd6bd47e92ec659c34e0afad2d076b23bb6e99513",
+          "after": "8db145e4bae99975f6d8d21af6addf43b0a7166db025c295c0a4f0f53e864a47"
+        }
+      ],
+      "original_artifact_sha256": "0a550c3b3ba4df83eb8af2c39cadd6c1a0b5f15b95cf17dfc4343efca307fdff"
+    },
+    {
+      "name": "HTTPGET",
+      "kind": 1,
+      "original_source": "Apps-HttpGet",
+      "original_archive": "Legal/Sources/Apps-HttpGet.zip",
+      "original_archive_sha256": "f98f7229cf79d9e14200e4314de2a9e83f67bc48f8ae6d14b2ecb01fd2640057",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Apps-HttpGet",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/HTTPGET.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "a9179fdbc2c871fb5578dee9d4463a1d32a2f8dd8b37d031c7149c0ab4fec652",
+        "module.R4MF": "86d80cbd8e3455322f857e8a5076d007964bae16c9b5f36d4f05119e40e45577",
+        "src/main.zig": "8dc13a8f5e2934d8bbcf9910a353b5c6d44264b5cfb7d7556b340d57f3c6bd0e"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "a9179fdbc2c871fb5578dee9d4463a1d32a2f8dd8b37d031c7149c0ab4fec652",
+          "after": "3feb819d9d476710781cb2f25b7fea1aad4dc96f1a1f3f3e2547f94d56d4ca22"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "86d80cbd8e3455322f857e8a5076d007964bae16c9b5f36d4f05119e40e45577",
+          "after": "c6151a152d5d90ec3b35b32b4114f45436741957c8eaff0c7494647201d79e99"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "8dc13a8f5e2934d8bbcf9910a353b5c6d44264b5cfb7d7556b340d57f3c6bd0e",
+          "after": "b0617dfb2a8c69a3e481f298fd153c52ab722493b5f5a0d28e63d6a969504ae7"
+        }
+      ],
+      "original_artifact_sha256": "8c80d0a455c9565ba50f03bf2f075e493ab6b1a92246320796003b91baca852b"
+    },
+    {
+      "name": "NETCAT",
+      "kind": 1,
+      "original_source": "Apps-NetCat",
+      "original_archive": "Legal/Sources/Apps-NetCat.zip",
+      "original_archive_sha256": "ccca7ff9c4022c74ebc8ca6d15272a49ddb511b86b650f6fe48502a67a165bf6",
+      "original_version": "0.1.1",
+      "source": "RecoveryTools/Embedded/Apps-NetCat",
+      "version": "0.1.2",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/NETCAT.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+        "build.zig": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+        "build.zig.zon": "06fec5c2c40745138657158bcc5323b34ed7cb99a7d5addc90d67b8ec2167a8e",
+        "module.R4MF": "518479fbd63438258ce1f6d7cbb6d156df7e1b3afff59a6fa61b65b8ed9f33ea",
+        "src/main.zig": "183885db4d865ac31a3232f8ad1fe333257528e40ca83dc71a8285de9ac73587"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "06fec5c2c40745138657158bcc5323b34ed7cb99a7d5addc90d67b8ec2167a8e",
+          "after": "558af48dbd8efd954f515f536adaf55dd6cfa442478b49bc2a03c98807f414c3"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "518479fbd63438258ce1f6d7cbb6d156df7e1b3afff59a6fa61b65b8ed9f33ea",
+          "after": "5b8152f4ae3b33e2403222b98dd58834bcb3b0c7159f756591a4b4b623d80ee9"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "183885db4d865ac31a3232f8ad1fe333257528e40ca83dc71a8285de9ac73587",
+          "after": "47a1717900cea4e56d850138fcb8796c7cb1ad58fe77c1381c6d27d6430ff9ec"
+        }
+      ],
+      "original_artifact_sha256": "4f9a40d6febdfa6497570395538dd1cff5fc2f1cbf915e7978365901c4a232cd"
+    },
+    {
+      "name": "R4STD",
+      "kind": 2,
+      "original_source": "Libraries",
+      "original_version": "0.2.2",
+      "source": "Platform/Libraries/R4STD",
+      "source_owner": "Libraries-0.90.85",
+      "original_manifest": "R4STD/module.R4MF",
+      "canonical_reuse": true,
+      "version": "0.2.9",
+      "target": "Runtime/R4OS/LIBS/R4STD.R4L",
+      "original_artifact_sha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b"
+    },
+    {
+      "name": "R4PART",
+      "kind": 1,
+      "original_source": "Apps-R4Part",
+      "original_archive": "Legal/Sources/Apps-R4Part.zip",
+      "original_archive_sha256": "5592fd1bdbb958a33031bbc2350cd5491d1ba86973b47d86628e71a242748345",
+      "original_version": "0.1.5",
+      "source": "RecoveryTools/Embedded/Apps-R4Part",
+      "version": "0.1.6",
+      "target": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "741520d1bc764fe5df7a2cb5ef51f609d04d0e990f1fcff5966db78d3a2a66b1",
+        "build.zig": "eadcdf59fdf0e2f69d4a70740143270db70c36761adb53b1d223a3538315b27c",
+        "build.zig.zon": "8d52083289374c98ac1b9a0c065493774b3a7358dbbbbc99cd867281ae451dd0",
+        "module.R4MF": "8f8d49adc801aa06230bf062c95909ad35870cd78687e03e39ee16cecad0d9b0",
+        "src/command.zig": "74c46b5c10f69a445112104d9107c5849e4b7c081525914e04c6cce9dc4d705d",
+        "src/help.txt": "7b4ac2b12b16668ceaa01a20cbafc4fcb8b12997bbcbc824b4c9c91fc63b5fea",
+        "src/input.zig": "ff1c4f56848ec4201990563fff90fa9e95127cee53a35b4914991f4970a66f66",
+        "src/main.zig": "6b292a71a3a5c088fc938074568a451a213f627b1eac5aa95aa2219a2a19f4a1",
+        "src/script.zig": "cecb0f7db5c0d816995394e5277e023be0369dd28043ffa2579181cde5d67ce0"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "8d52083289374c98ac1b9a0c065493774b3a7358dbbbbc99cd867281ae451dd0",
+          "after": "9abbb238782e076a39f32ac81943b67bae7094c6790ab1a60a0aa011af92d11b"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "8f8d49adc801aa06230bf062c95909ad35870cd78687e03e39ee16cecad0d9b0",
+          "after": "230d02891333f7a9a637dfa8c894a61689c06b6fe6670531c6fb5cef14da546f"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "6b292a71a3a5c088fc938074568a451a213f627b1eac5aa95aa2219a2a19f4a1",
+          "after": "19a3326a3151e833a580ff9279b5374120f12e81846777bf605139c66be47b2c"
+        }
+      ],
+      "original_artifact_sha256": "59b709f50ef87f141ebb2833635d9ff23f37b3caa82a273efbe8800a2e385cd5"
+    },
+    {
+      "name": "R4ZIP",
+      "kind": 4,
+      "original_source": "Protocols-R4Zip",
+      "original_archive": "Legal/Sources/Protocols-R4Zip.zip",
+      "original_archive_sha256": "0be624f5e4390381b1d8a0205fe1b3d1cce218ad1ecefb4a42b9b708420d18c7",
+      "original_version": "0.1.2",
+      "source": "RecoveryTools/Embedded/Protocols-R4Zip",
+      "version": "0.1.3",
+      "target": "Runtime/R4OS/PROTOCOLS/R4ZIP.R4P",
+      "canonical_reuse": false,
+      "source_original_sha256": {
+        "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "NOTICE": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+        "THIRD_PARTY_NOTICES.md": "9c03c4e50073dc8c26312f7c6ece14597af26204447e46c561107942eaac008e",
+        "Tests/Fixtures/central64.zip": "36445f4f36c7c7082caf224ad0d616b5f276f1850e6f8c087da8f0701b98ad27",
+        "Tests/Fixtures/collision.zip": "35c70bf323ccc3686ec2fe221390a2a7b9d8e21def731848aee6bca66e28489b",
+        "Tests/Fixtures/deflate.zip": "47b8d4d9a8f3f266a8c79b63078b412547eb2a20ff504429834472630521915d",
+        "Tests/Fixtures/descriptor.zip": "785339550e08a46f6e5902e41d34e2728100ab4280e06c5b475c47d349987215",
+        "Tests/Fixtures/descriptor64.zip": "e9b66f7a8d5abadf62d4141e497034b084342761bc3f362cf9b5e17064fd94e5",
+        "Tests/Fixtures/directories.zip": "2a10f7ef4133b247a3147d8832e7117c36e8fe23d718262729d9cdae746c6caa",
+        "Tests/Fixtures/dotnet.zip": "1bdc2d2ad3cd2d840c276a5a6328376ef901c2d0ba55eff004d91535789d0609",
+        "Tests/Fixtures/empty-stored-block.zip": "91c26353a6ee78f2de5df43d29a6e1c97e13f023477d95821e127d6b915e1248",
+        "Tests/Fixtures/end64.zip": "b0bf7c680504c8d842546b3073f05ceb8341840ea5af40ff7acd59551f1c0af5",
+        "Tests/Fixtures/final-empty-block.zip": "bc4e01b337b44e35b3ec3cc9a9f169be8a7f0be11ac17ce8d15ff99dedff1d37",
+        "Tests/Fixtures/local64.zip": "f10bbb3fee3eea1a97e68b04a3c374a1f5376ad164c46c82e89b47bcf6001f48",
+        "Tests/Fixtures/mixed-blocks.bin": "e04979357609f0642c814953c985f54be3339df23b98ca08d6fec990929d1494",
+        "Tests/Fixtures/mixed-blocks.zip": "1cc32cb0ac964cfc4264707af42315d757c22f065e1bd871cbb8a242f9406fa2",
+        "Tests/Fixtures/overlap.zip": "b61b40f03d87c4341f1a56f0aaa8c136b3a946636b741874ac1c9566189bae4c",
+        "Tests/Fixtures/parent-file.zip": "c2ecb7b2f87c31c352af7452cde2e7b5f3ac1074fd4528efa0e4bfbc020687ee",
+        "Tests/Fixtures/payload.bin": "411419f53f73c9068930485dfbebabc040652210f5319182cdcf25c856f4f8fe",
+        "Tests/Fixtures/stored.zip": "4ef52f8215d211b6acc7d70ce576a3f6f59ae1379c59db06cf24fee3dae76421",
+        "Tests/Fixtures/symlink.zip": "86cdbeb52e9a86be7bd7d4397148f7bf7e7646e0f833a9f3d08dd6a435b0b6df",
+        "Tests/Fixtures/traversal.zip": "9812075b1e2231e2c4f419d885e28cb80046522e3213a775f1b32522d55dfe45",
+        "Tests/Fixtures/unsigned-descriptor.zip": "d93c05164a639f4ce35d89b8c363e74f89a71ab2c3aaf9112eb46f867197ffdd",
+        "Tests/Fixtures/wrong-output-size.zip": "c88069d0ed0c770b1e95466c97a6eafba00870a465bb2209e4dfba54491d0cbe",
+        "Tests/main.zig": "37ce3fcab38f61719e6cafee0a77346697a2f4a3d1594230939cbb4e54d35d6d",
+        "build.zig": "d3c3ce48a719eef181a0d4d73514fae2b0691d205766729047ea751dcf3f1e90",
+        "build.zig.zon": "4884e750c879b6e650c9f80cc06f8edfac0eb8369a1661f0e04a1f8967370a43",
+        "module.R4MF": "ffc6181e7ca4037492dde5d2e391755e77abf2176e68a03fbf7bb78f7b9a6953",
+        "src/flate/Decompress.zig": "3297f3edf06858e98ecda46dcfb013134954298020dc974b4f34ea8e947b9fc4",
+        "src/flate/token.zig": "ad5f8826c41687ff6272c7e1f42f6425efe72f20414d38716112d8f0248ef60b",
+        "src/main.zig": "b1a5d969231a64e37c09e8b255aecf931189c1387c6914a622318b111c2d1644",
+        "src/zip_core.zig": "847f70e517f07aae8eda40a1a9be191b9c6efb5087b4fee2f8b073a0fb55daa5"
+      },
+      "initial_technical_projection": [
+        {
+          "path": "build.zig.zon",
+          "before": "4884e750c879b6e650c9f80cc06f8edfac0eb8369a1661f0e04a1f8967370a43",
+          "after": "a60830fea8bee661a07078b20559885dfa0f9e055ce0635fc8d93c4621881349"
+        },
+        {
+          "path": "module.R4MF",
+          "before": "ffc6181e7ca4037492dde5d2e391755e77abf2176e68a03fbf7bb78f7b9a6953",
+          "after": "5f7537554fcf69da3719c25714c96326bb6e7b6cb72822bdc969e1db023a2d99"
+        },
+        {
+          "path": "src/main.zig",
+          "before": "b1a5d969231a64e37c09e8b255aecf931189c1387c6914a622318b111c2d1644",
+          "after": "825c6958af7ff5a4285b9ef3691f4f38ca53b3e36488df7a7150ba2bfaca1b57"
+        }
+      ],
+      "original_artifact_sha256": "045d4ac5e539fbe630ecc3c69d4fb8647c49b1ae05a1ccddbe6e3d2b5471ff5e"
+    }
+  ]
+}

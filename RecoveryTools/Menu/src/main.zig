@@ -718,7 +718,7 @@ const State = struct {
     }
 };
 
-pub fn r4_app_main(app: *r4os.App) i32 {
+pub fn r4_app_main(app: *r4os.App2) i32 {
     const result = run(app);
     if (result != 0) {
         var text: [80]u8 = undefined;
@@ -727,7 +727,7 @@ pub fn r4_app_main(app: *r4os.App) i32 {
     return result;
 }
 
-fn run(app: *r4os.App) i32 {
+fn run(app: *r4os.App2) i32 {
     const sys = app.system();
     const args = std.mem.span(sys.argsRaw());
     const download_prefix = "/DOWNLOADSMOKE ";

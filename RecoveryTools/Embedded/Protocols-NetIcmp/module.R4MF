@@ -1,0 +1,19 @@
+# R4OS 0.58.35 protocol project manifest.
+R4OS_MODULE_MANIFEST=2
+KIND=R4P
+NAME=NETICMP
+VERSION=0.1.2
+LANGUAGE=Zig
+SDK_PROFILE=r4os-zig-r4p-generation2
+SOURCE=src/main.zig
+TARGET=/R4OS/PROTOCOLS/NETICMP.R4P
+IMAGE_SCOPE=slim
+IMPORT=R4DEV:Query2:2
+META=r4p.name=NETICMP
+META=r4p.role=net.icmp
+META=r4p.category=net
+META=module.name=R4P_NETICMP
+META=r4p.dep=net.ipv4
+META=description=ICMP echo parser and builder
+META=feature=dispatch
+META=dependency=net.ipv4
