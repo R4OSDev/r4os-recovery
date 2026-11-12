@@ -40,3 +40,15 @@ source archive in `Legal/Sources/Apps-R4Part.zip` and original notices in
 `Legal/Notices/Apps-R4Part`. Its common formatter includes the same documented
 NTFS metadata templates described above. The owner build, source revision,
 SDK revision and binary hash are recorded in `Provenance/owner-update-0.76.10.json`.
+
+## Canonical platform source adoption (0.90.84)
+
+The complete Contract93 and SDK210 owner archives are preserved separately
+as `Legal/Sources/Contract-0.90.84.zip` and `SDK-0.90.84.zip`; historical
+archives and notices remain intact. Current extracted notices are under
+`Legal/Notices/Contract-0.90.84` and `Legal/Notices/SDK-0.90.84`.
+The latter also retains the complete Unicode License v3 and R4STD license
+for the canonical SDK's static grapheme snapshot, and the BSD-2-Clause
+license for its Limine BIOS adapter. The SDK archive retains the original
+MIT notice for the SHA256 compression leaf and all original source
+provenance. This source adoption does not relicense imported material.

@@ -13,16 +13,20 @@ function Get-RecoveryImageCreator([string]$Root, [string]$Zig) {
     return $program
 }
 
-function Build-RecoveryRuntime([string]$Root, [string]$Zig) {
+function Build-RecoveryRuntime([string]$Root, [string]$Zig, [bool]$Api2Probe=$false) {
     . (Join-Path $Root 'Tools/RecoveryTools.ps1')
     $applications = @(Build-RecoveryTools $Root $Zig)
+    if($Api2Probe) {
+        . (Join-Path $Root 'Tools/Api2Fixtures.ps1')
+        $applications += @(Build-RecoveryApi2Fixtures $Root $Zig)
+    }
     $release = Get-RecoveryFields (Join-Path $Root 'VERSION.R4S')
     $identity = Get-RecoveryFields (Join-Path $Root 'Runtime/R4OS/CONFIG/RECOVERY.R4S')
     $shellVersion = Get-RecoveryFields (Join-Path $Root 'Runtime/R4OS/CONFIG/VERSION.R4S')
     if ($identity.RECOVERY_FORMAT[0] -cne '1' -or $identity.RECOVERY_VERSION[0] -cne $release.RECOVERY_VERSION[0] -or
         $shellVersion.RELEASE_VERSION[0] -cne $release.RECOVERY_VERSION[0]) { throw 'Runtime identity/version does not match the Recovery release.' }
     $program = Get-RecoveryImageCreator $Root $Zig
-    $output = Join-Path $Root 'Artifacts/Runtime'
+    $output = Join-Path $Root $(if($Api2Probe){'Artifacts/RuntimeApi2'}else{'Artifacts/Runtime'})
     [IO.Directory]::CreateDirectory($output) | Out-Null
     $list = Join-Path $output 'runtime.list'
     $image = Join-Path $output 'runtime.img'
@@ -42,7 +46,7 @@ function Build-RecoveryRuntime([string]$Root, [string]$Zig) {
     [IO.File]::WriteAllText($list, ($entries -join "`n")+"`n", [Text.UTF8Encoding]::new($false))
     & $program --output $image --size 64 --volume-only --add-list $list
     if ($LASTEXITCODE -ne 0) { throw 'Recovery runtime volume build failed.' }
-    $result = [ordered]@{schema=1; filesystem='FAT32'; partitionStart=0; files=$entries.Count; ownedApplications=$applications;
+    $result = [ordered]@{schema=1; diagnosticApi2=$Api2Probe; filesystem='FAT32'; partitionStart=0; files=$entries.Count; ownedApplications=$applications;
         image=$image; bytes=([IO.FileInfo]::new($image)).Length; sha256=Get-RecoveryHash $image}
     Write-RecoveryJson (Join-Path $output 'runtime.json') $result
     Write-Host "Recovery runtime: $image ($($result.bytes) bytes, SHA-256 $($result.sha256))"

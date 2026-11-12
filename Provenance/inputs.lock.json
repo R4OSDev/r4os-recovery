@@ -2663,8 +2663,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_runtime.zig",
-      "bytes": 11318,
-      "sha256": "01157cb1ebcea27f2bb256e48674251502a53c3ee2a92bd2e7b31ce4671bc47c",
+      "bytes": 13018,
+      "sha256": "79ff9c64c11ce08194d961fee66aaee4ed963d77396cd1d163732576c5851f48",
       "originalSha256": null,
       "origin": null
     },
@@ -3811,6 +3811,90 @@
         "path": "Tests/Fixture/ProviderWrongSignatureNegative.zig",
         "source": "Kernel"
       }
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/App/build.zig",
+      "bytes": 240,
+      "sha256": "5bbbcf2f7b4322e698d5ee383968a8499465e35a1c54c34c8334028eac4d73ef",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/App/build.zig.zon",
+      "bytes": 275,
+      "sha256": "29872cbaa8cdc33a2260911be54e04161aa0be085d69702d775ecc70ca825466",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/App/module.R4MF",
+      "bytes": 1145,
+      "sha256": "8d092468efa332ab07a5952e01ce21431513c0facb17024ae7fdd6b558d4e9da",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/App/src/main.zig",
+      "bytes": 5747,
+      "sha256": "a84b48d1cc98a6a8567c80719d42cefbdec7b24fa80673b945c4d89afb975554",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/build.zig",
+      "bytes": 240,
+      "sha256": "5bbbcf2f7b4322e698d5ee383968a8499465e35a1c54c34c8334028eac4d73ef",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/build.zig.zon",
+      "bytes": 278,
+      "sha256": "2c04723364a6624dcaf6417c8254f1c83a7fd0aa2fed13b51a8189b6b0652dcf",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/module.R4MF",
+      "bytes": 271,
+      "sha256": "0fb8c43175d98538408c12ecacee3ea64570cc8ebc17af8e0160cccc2e25e8f3",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/src/main.zig",
+      "bytes": 1210,
+      "sha256": "2deafee4e8faadb808754469038efd56ec6be279f613c8e74fd82a3e42472344",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/build.zig",
+      "bytes": 240,
+      "sha256": "5bbbcf2f7b4322e698d5ee383968a8499465e35a1c54c34c8334028eac4d73ef",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/build.zig.zon",
+      "bytes": 280,
+      "sha256": "2ce1cecfa7cbc03fef3acec78ac04354562cbb4d857fad929634468f52e4fe14",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/module.R4MF",
+      "bytes": 322,
+      "sha256": "b6d6415e717874673d1571b47a2782986e5a9216a7fcc125184a67c857b0c890",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/src/main.zig",
+      "bytes": 1545,
+      "sha256": "439368653d5f49914a13e3a3cc5aa8da9fa03574e8765168f9bc24fff0d9ea19",
+      "originalSha256": null,
+      "origin": null
     },
     {
       "path": "Kernel/THIRD_PARTY_NOTICES.md",
@@ -5075,6 +5159,36 @@
       "origin": null
     },
     {
+      "path": "Legal/Notices/Contract-0.90.84/LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "originalSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "origin": {
+        "source": "Contract-0.90.84",
+        "path": "LICENSE"
+      }
+    },
+    {
+      "path": "Legal/Notices/Contract-0.90.84/NOTICE",
+      "bytes": 211,
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "originalSha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "origin": {
+        "source": "Contract-0.90.84",
+        "path": "NOTICE"
+      }
+    },
+    {
+      "path": "Legal/Notices/Contract-0.90.84/THIRD_PARTY_NOTICES.md",
+      "bytes": 277,
+      "sha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+      "originalSha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+      "origin": {
+        "source": "Contract-0.90.84",
+        "path": "THIRD_PARTY_NOTICES.md"
+      }
+    },
+    {
       "path": "Legal/Notices/Contract/LICENSE",
       "bytes": 11358,
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
@@ -5689,6 +5803,66 @@
       "origin": null
     },
     {
+      "path": "Legal/Notices/SDK-0.90.84/LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "originalSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "LICENSE"
+      }
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/NOTICE",
+      "bytes": 211,
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "originalSha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "NOTICE"
+      }
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/r4os/storage_tools/limine/LICENSE",
+      "bytes": 1297,
+      "sha256": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8",
+      "originalSha256": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "r4os/storage_tools/limine/LICENSE"
+      }
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/Shared/Generated/R4STD_Grapheme/R4STD-LICENSE.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "originalSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "Shared/Generated/R4STD_Grapheme/R4STD-LICENSE.txt"
+      }
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/Shared/Generated/R4STD_Grapheme/UNICODE-LICENSE.txt",
+      "bytes": 1995,
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "originalSha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "Shared/Generated/R4STD_Grapheme/UNICODE-LICENSE.txt"
+      }
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/THIRD_PARTY_NOTICES.md",
+      "bytes": 2773,
+      "sha256": "c67b4afaf4402cc97a3c065c6344a21c6cc9c0749b1b8f4073197f18925e37c3",
+      "originalSha256": "c67b4afaf4402cc97a3c065c6344a21c6cc9c0749b1b8f4073197f18925e37c3",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "THIRD_PARTY_NOTICES.md"
+      }
+    },
+    {
       "path": "Legal/Notices/SDK/LICENSE",
       "bytes": 11358,
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
@@ -6158,8 +6332,8 @@
     },
     {
       "path": "Platform/Contract/.gitattributes",
-      "bytes": 378,
-      "sha256": "92e8cd2524c220b2f659bc094b1739fe0e0ab32faeceff72a50a6ba7722ec444",
+      "bytes": 206,
+      "sha256": "15afdff956b928ee27ab38d771c2d47087e5c6c4f8715a6b6005b90ec389d997",
       "originalSha256": "92e8cd2524c220b2f659bc094b1739fe0e0ab32faeceff72a50a6ba7722ec444",
       "origin": {
         "path": ".gitattributes",
@@ -7059,8 +7233,8 @@
     },
     {
       "path": "Platform/SDK/.gitattributes",
-      "bytes": 445,
-      "sha256": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5",
+      "bytes": 201,
+      "sha256": "9350f73fa19e008088a1c3593e57ced6d933c10ccbd3078ac7776cd4207bb843",
       "originalSha256": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5",
       "origin": {
         "path": ".gitattributes",
@@ -18736,8 +18910,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/download.zig",
-      "bytes": 13194,
-      "sha256": "aa33ea2b3b1927224496b0105d645dd8bf1388e9a7d23aa96fd229b850475ac3",
+      "bytes": 13837,
+      "sha256": "67078d123e5ece85306535a31eb4654ceb7bcbd1372c95badbe967b35f961170",
       "originalSha256": null,
       "origin": null
     },
@@ -31160,6 +31334,186 @@
           "after": "841e7e783ee92dea1ddb5021fe2adc1b390fcd270bd6e1a59bd7e98a4644d498"
         }
       ]
+    },
+    {
+      "reason": "0.90.84 explicit diagnostic API2 sources and current SDK response-head progress binding; imported runtime39 unchanged.",
+      "changes": [
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/build.zig",
+          "before": null,
+          "after": "5bbbcf2f7b4322e698d5ee383968a8499465e35a1c54c34c8334028eac4d73ef"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/build.zig.zon",
+          "before": null,
+          "after": "5138edfff521e0d906de4c0b66f9c5a3ce9de8f48807843b1c3d8acad1b854e7"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/module.R4MF",
+          "before": null,
+          "after": "8d092468efa332ab07a5952e01ce21431513c0facb17024ae7fdd6b558d4e9da"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/src/main.zig",
+          "before": null,
+          "after": "1a77b5d5203d20270a84d7217ebb5f1208b644aa2cc97013523f350057b8234a"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/build.zig",
+          "before": null,
+          "after": "5bbbcf2f7b4322e698d5ee383968a8499465e35a1c54c34c8334028eac4d73ef"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/build.zig.zon",
+          "before": null,
+          "after": "687ddbc88c1a4a18aad582df4019d8264900e9949d771aff2250caded4f7f546"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/module.R4MF",
+          "before": null,
+          "after": "609529a2a5b805ce3e62eab5656e75fc5fe494c29ce41ea033a864841b258d7f"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/src/main.zig",
+          "before": null,
+          "after": "2deafee4e8faadb808754469038efd56ec6be279f613c8e74fd82a3e42472344"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/build.zig",
+          "before": null,
+          "after": "5bbbcf2f7b4322e698d5ee383968a8499465e35a1c54c34c8334028eac4d73ef"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/build.zig.zon",
+          "before": null,
+          "after": "568db791fbe72db9287c1636405120456fbc20ceabcc3e02af3e7b6bb4431147"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/module.R4MF",
+          "before": null,
+          "after": "b6d6415e717874673d1571b47a2782986e5a9216a7fcc125184a67c857b0c890"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/src/main.zig",
+          "before": null,
+          "after": "439368653d5f49914a13e3a3cc5aa8da9fa03574e8765168f9bc24fff0d9ea19"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": "aa33ea2b3b1927224496b0105d645dd8bf1388e9a7d23aa96fd229b850475ac3",
+          "after": "67078d123e5ece85306535a31eb4654ceb7bcbd1372c95badbe967b35f961170"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.84 extend existing RAM acceptance with separate diagnostic image and genuine generation2 App/Driver/Protocol calls; production runtime excludes probes.",
+      "changes": [
+        {
+          "after": "79ff9c64c11ce08194d961fee66aaee4ed963d77396cd1d163732576c5851f48",
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "before": "01157cb1ebcea27f2bb256e48674251502a53c3ee2a92bd2e7b31ce4671bc47c"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.84 diagnostic fixture package identities generated by Zig; use canonical checked time budget and explicit optional import comparison.",
+      "changes": [
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/build.zig.zon",
+          "after": "29872cbaa8cdc33a2260911be54e04161aa0be085d69702d775ecc70ca825466",
+          "before": "5138edfff521e0d906de4c0b66f9c5a3ce9de8f48807843b1c3d8acad1b854e7"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/src/main.zig",
+          "after": "a84b48d1cc98a6a8567c80719d42cefbdec7b24fa80673b945c4d89afb975554",
+          "before": "1a77b5d5203d20270a84d7217ebb5f1208b644aa2cc97013523f350057b8234a"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/build.zig.zon",
+          "after": "2c04723364a6624dcaf6417c8254f1c83a7fd0aa2fed13b51a8189b6b0652dcf",
+          "before": "687ddbc88c1a4a18aad582df4019d8264900e9949d771aff2250caded4f7f546"
+        },
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Protocol/build.zig.zon",
+          "after": "2ce1cecfa7cbc03fef3acec78ac04354562cbb4d857fad929634468f52e4fe14",
+          "before": "568db791fbe72db9287c1636405120456fbc20ceabcc3e02af3e7b6bb4431147"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.84 declare diagnostic driver identity/type required by canonical manifest parser.",
+      "changes": [
+        {
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/Driver/module.R4MF",
+          "before": "609529a2a5b805ce3e62eab5656e75fc5fe494c29ce41ea033a864841b258d7f",
+          "after": "0fb8c43175d98538408c12ecacee3ea64570cc8ebc17af8e0160cccc2e25e8f3"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.84 explicit canonical-source legal notices retained beside historical originals, including Unicode and Limine texts.",
+      "changes": [
+        {
+          "after": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "before": null,
+          "path": "Legal/Notices/Contract-0.90.84/LICENSE"
+        },
+        {
+          "after": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+          "before": null,
+          "path": "Legal/Notices/Contract-0.90.84/NOTICE"
+        },
+        {
+          "after": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+          "before": null,
+          "path": "Legal/Notices/Contract-0.90.84/THIRD_PARTY_NOTICES.md"
+        },
+        {
+          "after": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "before": null,
+          "path": "Legal/Notices/SDK-0.90.84/LICENSE"
+        },
+        {
+          "after": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+          "before": null,
+          "path": "Legal/Notices/SDK-0.90.84/NOTICE"
+        },
+        {
+          "after": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8",
+          "before": null,
+          "path": "Legal/Notices/SDK-0.90.84/r4os/storage_tools/limine/LICENSE"
+        },
+        {
+          "after": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "before": null,
+          "path": "Legal/Notices/SDK-0.90.84/Shared/Generated/R4STD_Grapheme/R4STD-LICENSE.txt"
+        },
+        {
+          "after": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+          "before": null,
+          "path": "Legal/Notices/SDK-0.90.84/Shared/Generated/R4STD_Grapheme/UNICODE-LICENSE.txt"
+        },
+        {
+          "after": "c67b4afaf4402cc97a3c065c6344a21c6cc9c0749b1b8f4073197f18925e37c3",
+          "before": null,
+          "path": "Legal/Notices/SDK-0.90.84/THIRD_PARTY_NOTICES.md"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Platform/Contract/.gitattributes",
+          "before": "92e8cd2524c220b2f659bc094b1739fe0e0ab32faeceff72a50a6ba7722ec444",
+          "after": "15afdff956b928ee27ab38d771c2d47087e5c6c4f8715a6b6005b90ec389d997"
+        },
+        {
+          "path": "Platform/SDK/.gitattributes",
+          "before": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5",
+          "after": "9350f73fa19e008088a1c3593e57ced6d933c10ccbd3078ac7776cd4207bb843"
+        }
+      ],
+      "reason": "0.90.84 Recovery-owned Git attribute overlay preserves exact frozen source bytes across Linux/Windows/archive; canonical code/schema remain byte-identical."
     }
   ],
   "sdkProfile": {

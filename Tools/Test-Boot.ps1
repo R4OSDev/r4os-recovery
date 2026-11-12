@@ -4,6 +4,7 @@ param(
     [ValidateSet(1,3)][int]$Controllers = 1,
     [string]$Zig = '', [string]$Qemu = '', [string]$LimineRoot = '',
     [string]$OvmfCode = '', [string]$OvmfVars = '',
+    [string]$RuntimeImage='', [bool]$RequireApi2=$false,
     [ValidateRange(10, 300)][int]$TimeoutSeconds = 120
 )
 
@@ -31,7 +32,8 @@ $output = Join-Path $recoveryRoot "Artifacts/BootProbe/$Action"
 $kernel = Join-Path $output 'bin/recovery.elf'
 if ($Action -eq 'terminal') { $kernel = Join-Path $recoveryRoot 'Artifacts/Kernel/bin/recovery.elf' }
 $usesRuntime = $Action -in @('ram','terminal')
-$runtime = Join-Path $recoveryRoot 'Artifacts/Runtime/runtime.img'
+$runtime = if($RuntimeImage){[IO.Path]::GetFullPath($RuntimeImage)}else{Join-Path $recoveryRoot 'Artifacts/Runtime/runtime.img'}
+if($RequireApi2 -and $Action -ne 'ram'){throw 'API2 diagnostics require the RAM acceptance.'}
 $sourceRoot = Join-Path $recoveryRoot 'Artifacts/HostSources/Distribution'
 
 function Invoke-Checked([string]$Program, [string[]]$Arguments) {
@@ -226,11 +228,12 @@ try {
                     default {'\[RECOVERYPROBE\] result=OK cpus=4 workers=4 mask=0xf module_bytes=4096 system=absent'}
                 }
                 if ($exitCode -ne 0 -or $text -notmatch $marker -or $text -match '\[CRASH\]|result=FAILED' -or ($usesRuntime -and !$removed)) { throw "Recovery $mode/$Action/$case failed; inspect $serialLog and $errorLog" }
+                if ($RequireApi2 -and $text -notmatch '\[RECOVERYAPI2\] result=OK query=2 start=2 driver_init=2 protocol_init=2 cleanup=OK') {throw 'Recovery API2 diagnostic witness missing.'}
                 if ($Action -eq 'terminal' -and $text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0') { throw 'Production terminal did not retain SMP4.' }
                 if ($Controllers -eq 3 -and $text -notmatch '\[RECOVERYINPUT\] ready=1 keyboard_usb=1 mouse=0') { throw 'Production Recovery input policy differs from its keyboard-only contract.' }
                 if ($Action -eq 'reboot' -and $text -notmatch '\[RESET\]') { throw 'QEMU exited without a Recovery reset witness.' }
             }
-            $run = [ordered]@{firmware=$mode; action=$Action; case=$case; result='ok'; cpus=4; controllers=$Controllers; accelerator=$profile.Name;
+            $run = [ordered]@{firmware=$mode; action=$Action; case=$case; result='ok'; api2Required=$RequireApi2; cpus=4; controllers=$Controllers; accelerator=$profile.Name;
                 seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3); qemuExitCode=$exitCode; kernelSha256=Get-RecoveryHash $kernel;
                 fixtureSha256=Get-RecoveryHash $fixture; systemPartition=$false; serialLog=$serialLog;
                 bootMediumRemoved=$removed; expectedReject=$expectedReject; rejectionObserved=$rejected;

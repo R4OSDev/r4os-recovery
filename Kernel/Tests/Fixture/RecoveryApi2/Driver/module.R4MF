@@ -1,0 +1,13 @@
+R4OS_MODULE_MANIFEST=2
+KIND=R4D
+NAME=AP2DRV
+VERSION=0.1.0
+LANGUAGE=Zig
+SOURCE=src/main.zig
+SDK_PROFILE=r4os-zig-r4d-generation2
+IMAGE_SCOPE=none
+TARGET=/R4OS/DRIVERS/AP2DRV.R4D
+IMPORT=R4DEV:Query2:2
+META=test.fixture=recovery-api2
+META=r4d.name=AP2DRV
+META=r4d.type=misc

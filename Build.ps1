@@ -33,7 +33,7 @@ try {
         $runtimeArguments = @()
         if ($BootProbe -in @('none', 'ram', 'storage', 'input', 'ui') -or $Mode -eq 'Runtime') {
             . (Join-Path $PSScriptRoot 'Tools/Runtime.ps1')
-            $runtime = Build-RecoveryRuntime $PSScriptRoot $Zig
+            $runtime = Build-RecoveryRuntime $PSScriptRoot $Zig ($Mode -eq 'RuntimeTest')
             $runtimeArguments = @("-Druntime-sha256=$($runtime.sha256)", "-Druntime-bytes=$($runtime.bytes)")
         }
         if ($Mode -eq 'Runtime') { exit 0 }
@@ -48,7 +48,9 @@ try {
             Write-Host "Recovery kernel: $(Join-Path $prefix 'bin/recovery.elf')"
         }
         if ($Mode -in @('BootTest', 'RuntimeTest')) {
-            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Boot.ps1') -Firmware $Firmware -Action $BootProbe -Zig $Zig
+            $pairArguments=@{}
+            if($Mode -eq 'RuntimeTest'){$pairArguments.RuntimeImage=$runtime.image;$pairArguments.RequireApi2=$true}
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Boot.ps1') -Firmware $Firmware -Action $BootProbe -Zig $Zig @pairArguments
             if ($LASTEXITCODE -ne 0) { throw 'Recovery boot acceptance failed.' }
         }
         if ($Mode -eq 'StorageTest') {

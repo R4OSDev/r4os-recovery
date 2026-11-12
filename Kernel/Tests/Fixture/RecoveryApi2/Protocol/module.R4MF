@@ -1,0 +1,14 @@
+R4OS_MODULE_MANIFEST=2
+KIND=R4P
+NAME=AP2PROTO
+VERSION=0.1.0
+LANGUAGE=Zig
+SOURCE=src/main.zig
+SDK_PROFILE=r4os-zig-r4p-generation2
+IMAGE_SCOPE=none
+TARGET=/R4OS/PROTOCOLS/AP2PROTO.R4P
+IMPORT=R4DEV:Query2:2
+META=r4p.name=AP2PROTO
+META=r4p.role=misc.recovery_api2_probe
+META=r4p.category=misc
+META=test.fixture=recovery-api2

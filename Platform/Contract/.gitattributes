@@ -1,18 +1,4 @@
-* text=auto
-
-.gitattributes text eol=lf
-.gitignore text eol=lf
-
-# Generatorausgaben und Quellcode werden bytegenau mit LF geprueft.
-*.c text eol=lf
-*.h text eol=lf
-*.md text eol=lf
-*.zig text eol=lf
-*.rs text eol=lf
-*.toml text eol=lf
-*.lock text eol=lf
-*.zon text eol=lf
-
-# Der uebernommene Contract bleibt bytegenau; Diffs bleiben textuell.
-*.txt -text diff
-*.json -text diff
+# Recovery snapshot host policy. Original owner attributes remain in the
+# exact Legal/Sources/Contract-0.90.84.zip archive. Preserve source bytes
+# across Git archives and Windows/Linux checkouts.
+* -text

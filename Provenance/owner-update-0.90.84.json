@@ -10,7 +10,12 @@
       "archive": "Legal/Sources/Contract-0.90.84.zip",
       "sha256": "9e18169fc9f6020ae7cc42acd935b42b77410bed59dc699a1682d3aff5c6f0d7",
       "target": "Platform/Contract",
-      "byte_identical_canonical_snapshot": true
+      "byte_identical_canonical_snapshot": false,
+      "sourceCommit": "ebd4588477aa509383ee4448b0615948512def51",
+      "snapshotMetadataOverlay": [
+        ".gitattributes"
+      ],
+      "canonicalCodeByteIdentical": true
     },
     {
       "owner": "SDK",
@@ -18,7 +23,12 @@
       "archive": "Legal/Sources/SDK-0.90.84.zip",
       "sha256": "1e8348d1a6794cb87c1fa297e222d668d8154ca39bf892d26b346ec151b3590c",
       "target": "Platform/SDK",
-      "byte_identical_canonical_snapshot": true
+      "byte_identical_canonical_snapshot": false,
+      "sourceCommit": "f3fa008ceeed9c9c7f1d88a059d662171580c700",
+      "snapshotMetadataOverlay": [
+        ".gitattributes"
+      ],
+      "canonicalCodeByteIdentical": true
     }
   ],
   "original_runtime39_unchanged": true,
@@ -51,5 +61,95 @@
   },
   "provider_scope": "Actual compact contexts/tables with common native mechanism and owner callbacks. Separate physical context union, full32 import/name/code-binding records, exact ordered absent optional R4L records, no mixed technical generations. Canonical metadata2 identity/namespace and shared256-step FAT/NTFS budget. Optional unsupported facilities stay absent; no compact audio descriptor is passed to old callbacks.",
   "historical_archives_retained": true,
-  "old_runtime39_unchanged": true
+  "old_runtime39_unchanged": true,
+  "legalNotices": [
+    {
+      "path": "Legal/Notices/Contract-0.90.84/LICENSE",
+      "origin": {
+        "source": "Contract-0.90.84",
+        "path": "LICENSE"
+      },
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "Legal/Notices/Contract-0.90.84/NOTICE",
+      "origin": {
+        "source": "Contract-0.90.84",
+        "path": "NOTICE"
+      },
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998"
+    },
+    {
+      "path": "Legal/Notices/Contract-0.90.84/THIRD_PARTY_NOTICES.md",
+      "origin": {
+        "source": "Contract-0.90.84",
+        "path": "THIRD_PARTY_NOTICES.md"
+      },
+      "sha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab"
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/LICENSE",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "LICENSE"
+      },
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/NOTICE",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "NOTICE"
+      },
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998"
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/THIRD_PARTY_NOTICES.md",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "THIRD_PARTY_NOTICES.md"
+      },
+      "sha256": "c67b4afaf4402cc97a3c065c6344a21c6cc9c0749b1b8f4073197f18925e37c3"
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/Shared/Generated/R4STD_Grapheme/UNICODE-LICENSE.txt",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "Shared/Generated/R4STD_Grapheme/UNICODE-LICENSE.txt"
+      },
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/Shared/Generated/R4STD_Grapheme/R4STD-LICENSE.txt",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "Shared/Generated/R4STD_Grapheme/R4STD-LICENSE.txt"
+      },
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "Legal/Notices/SDK-0.90.84/r4os/storage_tools/limine/LICENSE",
+      "origin": {
+        "source": "SDK-0.90.84",
+        "path": "r4os/storage_tools/limine/LICENSE"
+      },
+      "sha256": "f174b8ff78f6f8982a1fc992668f8486eb8cf598f6938923c22e9bb50f8338a8"
+    }
+  ],
+  "snapshotHostPolicy": {
+    "scope": "Only two snapshot Git metadata files differ from exact owner archives; all1246 other Contract/SDK files remain byte-identical. No API/schema/code fork.",
+    "overlays": [
+      {
+        "path": "Platform/Contract/.gitattributes",
+        "original_sha256": "92e8cd2524c220b2f659bc094b1739fe0e0ab32faeceff72a50a6ba7722ec444",
+        "sha256": "15afdff956b928ee27ab38d771c2d47087e5c6c4f8715a6b6005b90ec389d997"
+      },
+      {
+        "path": "Platform/SDK/.gitattributes",
+        "original_sha256": "f1944e387fb0ac5660f330fc379246cf1305491c4547c671df21881018b144f5",
+        "sha256": "9350f73fa19e008088a1c3593e57ced6d933c10ccbd3078ac7776cd4207bb843"
+      }
+    ],
+    "reason": "Nested upstream attributes overrode Recovery frozen-byte policy; historical SDK CRLF blobs normalized on staging and Contract BAT would convert on checkout. Immutable imports require exact bytes on both hosts."
+  }
 }

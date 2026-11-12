@@ -1,0 +1,1 @@
+.{ .name = .recovery_api2_driver, .version = "0.1.0", .fingerprint = 0x4736de811c2744a8, .minimum_zig_version = "0.16.0", .dependencies = .{ .r4os_sdk = .{ .path = "../../../../../Artifacts/SDKProfile/SDK" } }, .paths = .{ "build.zig", "build.zig.zon", "module.R4MF", "src" } }

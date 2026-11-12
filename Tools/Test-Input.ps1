@@ -84,7 +84,16 @@ try{
                 '-blockdev',(@{driver='raw';file='raw-file';'node-name'='raw-node'}|ConvertTo-Json -Compress),
                 '-device','usb-storage,drive=raw-node,id=multi-raw,bus=mouse-xhci.0,port=2')
         }else{
-            $arguments+=@('-device','qemu-xhci,id=input-xhci','-device','usb-mouse,id=ignored-mouse', '-device',"usb-storage,drive=usb-media,bootindex=$usbOrder")
+            $arguments+=@('-device','qemu-xhci,id=input-xhci')
+            if($inputDevice -eq 'Usb'){
+                # Reserve port1 for the explicit keyboard added below. QEMU's
+                # automatic mouse placement used it first and rejected the
+                # whole fixture before guest boot. PS/2 cases stay unchanged.
+                $arguments+=@('-device','usb-mouse,id=ignored-mouse,bus=input-xhci.0,port=2',
+                    '-device',"usb-storage,drive=usb-media,bus=input-xhci.0,port=3,bootindex=$usbOrder")
+            }else{
+                $arguments+=@('-device','usb-mouse,id=ignored-mouse','-device',"usb-storage,drive=usb-media,bootindex=$usbOrder")
+            }
         }
         if($inputDevice -eq 'Usb'){$arguments+=@('-device','usb-kbd,id=recovery-keyboard,bus=input-xhci.0,port=1')}
         if($mode -eq 'Uefi'){

@@ -184,6 +184,7 @@ pub fn runRamProbe() bool {
     if (!runCommand("/C SERVMAN /?", "SERVMAN - R4OS Service Manager")) return false;
     if (!runCommand("/C DATE", "")) return false;
     if (!runCommand("/C DEL C:\\TEMP\\LATE.TXT", "")) return false;
+    if (!runApi2Probe()) return false;
     const reap_deadline = timer.deadlineAfter(timer.tickCount(), @as(u64, timer.frequency()) * 5);
     while (timer.tickCount() < reap_deadline) {
         const after = r4x.programRegistryStats();
@@ -232,4 +233,33 @@ fn checkLateMedia() bool {
     _ = std.fmt.hexToBytes(&expected, "be7137ab201586fb805ab3b1c7a648224cad32210b14e0985c1256edecb40e16") catch return false;
     ok = std.mem.eql(u8, &digest, &expected);
     return ok;
+}
+
+// Only the explicit RAM fixture contains these modules. Production Recovery
+// never installs or invokes the diagnostic source projects.
+fn runApi2Probe() bool {
+    if (!r4d.runtimeLoadSucceeded(r4d.loadRuntimeNameResult("AP2DRV"))) return false;
+    if (!r4d.unloadRuntimeName("AP2DRV")) return false;
+    if (!r4d.runtimeLoadSucceeded(r4d.loadRuntimeNameResult("AP2DRV"))) return false;
+    if (!r4d.unloadRuntimeName("AP2DRV")) return false;
+    const protocol_api = @import("protocol_api.zig");
+    var response: [4]u8 = undefined;
+    const input: protocol_api.ProtocolBuffer = .{};
+    var output: protocol_api.ProtocolBuffer = .{ .data = &response, .capacity = response.len };
+    if (r4p.dispatch("misc.recovery_api2_probe", 0x90084, &input, &output) != 0 or output.len != 4 or !std.mem.eql(u8, &response, "API2")) return false;
+    const d = drive.get('C') orelse return false;
+    var capture: [4096]u8 = undefined;
+    r4x.beginOutputCapture(&capture);
+    const ran = r4x.runPath(d, "/R4OS/SOFTWARE/API2PROBE/API2PROBE.R4X", "", d);
+    const captured = r4x.endOutputCapture();
+    const expected = "[RECOVERYAPI2] app=OK imports=32 query=6 metadata=OK batch=OK clock=OK close_kill_wait_reap=OK";
+    if (ran != .ran or r4x.lastExitCode() != 0 or captured.truncated or std.mem.indexOf(u8, capture[0..captured.len], expected) == null) {
+        log.puts("[RECOVERYAPI2] app=FAILED capture=");
+        log.puts(capture[0..captured.len]);
+        log.puts("\r\n");
+        return false;
+    }
+    log.puts(expected ++ "\r\n");
+    log.puts("[RECOVERYAPI2] result=OK query=2 start=2 driver_init=2 protocol_init=2 cleanup=OK\r\n");
+    return true;
 }

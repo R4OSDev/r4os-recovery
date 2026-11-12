@@ -21,6 +21,7 @@ pub const Client = struct {
     cancelled: bool = false,
     meter: download_progress.Meter = .{},
     retry_attempts: u8 = 0,
+    response_heads: u8 = 0,
     progress_text: [160]u8 = undefined,
 
     fn showProgress(self: *Client, done: u64, total: u64) bool {
@@ -37,11 +38,19 @@ pub const Client = struct {
         const self: *Client = @ptrCast(@alignCast(raw.?));
         return self.showProgress(done, total);
     }
-    fn retry(raw: ?*anyopaque, attempt: u8, _: r4os.app_web.Error, done: u64, total: ?u64) bool {
+    // Current WebTransport reports admitted response heads. Its bounded
+    // retry loop and single deadline remain the transport owner's policy;
+    // the UI counts only real accepted GET/resume responses, never guessed
+    // attempts or a freshly reset transaction budget.
+    fn downloadHead(raw: ?*anyopaque, observation: r4os.app_web.DownloadHeadObservation) bool {
         const self: *Client = @ptrCast(@alignCast(raw.?));
-        self.retry_attempts = attempt;
-        self.meter.reset(self.sys.ticks(), done);
-        return self.showProgress(done, total orelse 0);
+        if (observation.response.status != 200 and observation.response.status != 206) return true;
+        if (self.response_heads != 0) {
+            self.retry_attempts += 1;
+            self.meter.reset(self.sys.ticks(), observation.requested_offset);
+        }
+        self.response_heads += 1;
+        return self.showProgress(observation.requested_offset, observation.response.content_length);
     }
     fn apiProgress(raw: ?*anyopaque) callconv(.c) bool {
         const self: *Client = @ptrCast(@alignCast(raw.?));
@@ -112,6 +121,7 @@ pub const Client = struct {
         defer _ = self.sys.fileStreamAbort(path);
         const io = try allocator.alloc(u8, 64 * 1024);
         self.retry_attempts = 0;
+        self.response_heads = 0;
         self.meter.reset(self.sys.ticks(), 0);
         if (!self.showProgress(0, asset.bytes)) return error.Cancelled;
         const downloaded = self.web.download(fixture_url orelse asset.url, raw, io, scratch, .{ .context = self, .write_fn = write }, .{
@@ -121,7 +131,8 @@ pub const Client = struct {
             .progress = progress,
             .progress_context = self,
             .max_retries = 3,
-            .retry = retry,
+            .head_observer = downloadHead,
+            .head_context = self,
             .target_authorizer = if (fixture_url != null) allowFixture else github.allowTarget,
         });
         const result = switch (downloaded) {
