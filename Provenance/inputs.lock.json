@@ -565,7 +565,7 @@
         "source": "RecoveryTools/Embedded/Drivers-RTL8168",
         "owner": "Recovery",
         "original_artifact_sha256": "3d6556ef78d88b0b323dd59cd2e4599aacd2e15dac2bf39db20faddd107f553d",
-        "source_tree_sha256": "33838e9f37c9079f76b5dd0e892c78933ba045b032cf7ad3221c39c76280a337"
+        "source_tree_sha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40"
       }
     },
     {
@@ -5470,7 +5470,7 @@
         "source": "Drivers-RTL8168",
         "path": "RecoveryTools/Embedded/Drivers-RTL8168",
         "derivativeOwner": "Recovery",
-        "sourceTreeSha256": "33838e9f37c9079f76b5dd0e892c78933ba045b032cf7ad3221c39c76280a337",
+        "sourceTreeSha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40",
         "controllerSdk": "0.64.212"
       }
     },
@@ -45276,8 +45276,8 @@
         "path": "src/rtl8168_host_model.zig",
         "derivativeOwner": "Recovery"
       },
-      "bytes": 52697,
-      "sha256": "a1d6d7c943716fde1c4f5db59f8f3d680b9d0a50d76756746ddc784812d082bc"
+      "bytes": 53438,
+      "sha256": "5195d4b729d8eb83c1e8d5c4689472b1b7ffdc5a9f2d095f8a0642df736985a4"
     },
     {
       "path": "RecoveryTools/Embedded/Drivers-RTL8168/src/rtl8168_warmfix.zig",
@@ -48009,7 +48009,7 @@
         "source": "Drivers-RTL8168",
         "path": "RecoveryTools/Embedded/Drivers-RTL8168",
         "derivativeOwner": "Recovery",
-        "sourceTreeSha256": "33838e9f37c9079f76b5dd0e892c78933ba045b032cf7ad3221c39c76280a337",
+        "sourceTreeSha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40",
         "controllerSdk": "0.64.212"
       }
     },
@@ -74783,6 +74783,16 @@
           "path": "Legal/Manifests/USBHID/module.R4MF",
           "before": "9e9c683ada4f2df7df0e4d1db9ff549cb54d06d3d06ac6df2c467570bbc89716",
           "after": "aef173103c52ce589beb8de3f7335941194c8c0538f2b7689b07215b2842bfe3"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 RTL8168 existing host mock uses DriverApi2 including modern receive packet and audio2 callbacks; all original test bodies exact. Passed actual test, no production implementation change.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Embedded/Drivers-RTL8168/src/rtl8168_host_model.zig",
+          "before": "a1d6d7c943716fde1c4f5db59f8f3d680b9d0a50d76756746ddc784812d082bc",
+          "after": "5195d4b729d8eb83c1e8d5c4689472b1b7ffdc5a9f2d095f8a0642df736985a4"
         }
       ]
     }

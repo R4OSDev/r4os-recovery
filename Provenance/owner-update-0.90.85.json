@@ -16,7 +16,7 @@
       "canonicalFiles": 2455
     }
   ],
-  "original_runtime39_unchanged": true,
+  "original_runtime39_unchanged": false,
   "versions": {
     "recovery": "0.1.70",
     "recovery_kernel": "0.1.67",
@@ -178,7 +178,7 @@
       "bytes": 37615,
       "source": "Drivers-RTL8168",
       "source_path": "RecoveryTools/Embedded/Drivers-RTL8168",
-      "source_tree_sha256": "33838e9f37c9079f76b5dd0e892c78933ba045b032cf7ad3221c39c76280a337",
+      "source_tree_sha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40",
       "imports": [
         "R4DEV:Query2:2"
       ],
@@ -839,5 +839,7 @@
     "runtime_codegen_unchanged": true
   },
   "native_status": "pending",
-  "public_binary_release": "not published; Distribution still pins68 until coherent release work."
+  "public_binary_release": "not published; Distribution still pins68 until coherent release work.",
+  "original_source_archives_unchanged": true,
+  "runtime39_source_rebuilt_generation2": true
 }

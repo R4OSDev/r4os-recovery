@@ -17,6 +17,8 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'Guest-NetClients.ps1')
 if($StorageAccess -or $StorageTools -or $R4Part){. (Join-Path $PSScriptRoot 'Storage-Access.Tests.ps1')}
 if($R4Part){. (Join-Path $PSScriptRoot 'R4Part.Tests.ps1')}
+if(!$R4Part){Add-Type -Path (Join-Path $PSScriptRoot 'Guest-Console.cs')}
+Add-Type -Path (Join-Path $PSScriptRoot 'Download-FixtureServer.cs')
 Add-Type -Path (Join-Path $PSScriptRoot 'UI-Framebuffer.cs')
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
@@ -115,6 +117,36 @@ try{
                 Wait-Marker 'DHCP05913 state=bound';Wait-Marker '\[RECOVERYNET\] autostart=RETURNED'
                 $ip=Ssh 'IPCONFIG /ALL';if($ip -notmatch '10\.0\.2\.15' -or $ip -notmatch 'dhcp=2'){throw 'Missing actual DHCP/network configuration.'}
                 $services=Ssh 'SERVMAN LIST';foreach($service in @('DNSSVC','DHCPSVC','TCPSVC','UDPSVC','SSHD','FTPSVC')){if($services -notmatch $service){throw "Missing service: $service"}}
+                # Execute the remaining small console consumers against real
+                # borrowed App2 groups, using bounded local host fixtures.
+                $info=Ssh 'SYSINFO';if($info -notmatch 'Kernel'){throw 'Missing SYSINFO kernel information.'}
+                $help=Ssh 'HELP';if($help -notmatch 'Type HELP /S'){throw 'Missing actual HELP output.'}
+                $httpRoot=Join-Path $output 'http-consumer';[IO.Directory]::CreateDirectory($httpRoot)|Out-Null
+                $httpBody='RECOVERY-HTTPGET-G2';$httpFile=Join-Path $httpRoot 'good.zip'
+                [IO.File]::WriteAllText($httpFile,$httpBody,[Text.UTF8Encoding]::new($false))
+                $httpFixture=[RecoveryDownloadFixtureServer]::new($httpRoot)
+                try{
+                    $http=Ssh ("HTTPGET http://10.0.2.2:$($httpFixture.Port)/redirect.zip C:\TEMP\HTTP-G2.TXT")
+                    if($http -notmatch 'HTTPGET redirect:' -or !$http.Contains($httpBody) -or $http -notmatch 'HTTPGET saved: 19'){throw 'HTTPGET redirect/body/save failed.'}
+                    if((Ssh 'TYPE C:\TEMP\HTTP-G2.TXT').Trim() -cne $httpBody){throw 'HTTPGET saved bytes differ.'}
+                    if($httpFixture.Requests.Count -ne 2){throw 'Missing real HTTP redirect requests.'}
+                    $null=Ssh 'DEL C:\TEMP\HTTP-G2.TXT'
+                }finally{$httpFixture.Dispose()}
+                $echoListener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0)
+                $echoListener.Start();$echoPort=$echoListener.LocalEndpoint.Port;$echoClient=$null;$netcat=$null
+                try{
+                    $echoText='RECOVERY-NETCAT-G2';$echoBytes=[Text.Encoding]::ASCII.GetBytes($echoText)
+                    $netcat=[RecoveryConsole]::new($ssh,(@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"NETCAT 10.0.2.2 $echoPort $echoText")),$askpass)
+                    $accept=$echoListener.AcceptTcpClientAsync();if(!$accept.Wait(10000)){throw 'NETCAT never connected to the host fixture.'}
+                    $echoClient=$accept.GetAwaiter().GetResult();$stream=$echoClient.GetStream();$stream.ReadTimeout=10000;$stream.WriteTimeout=10000
+                    $receivedEcho=[byte[]]::new($echoBytes.Length);$stream.ReadExactly($receivedEcho)
+                    if([Convert]::ToHexString($receivedEcho) -cne [Convert]::ToHexString($echoBytes)){throw 'NETCAT host payload differs.'}
+                    $stream.Write($echoBytes);$stream.Flush()
+                    if($netcat.Finish(10000) -ne 0 -or $netcat.Output -notmatch 'NETCAT result: ok'){throw 'NETCAT echo/read/close failed.'}
+                }finally{
+                    if($null -ne $netcat){[IO.File]::AppendAllText($clientLog,$netcat.Output,$utf8);$netcat.Dispose()}
+                    if($null -ne $echoClient){$echoClient.Dispose()};$echoListener.Stop()
+                }
                 Start-Sleep -Milliseconds 1200
                 $before=Capture 'before';([RecoveryFrame]::new($before)).RequireArtwork((Join-Path $root 'Runtime/R4OS/MEDIA/RECOVERY.BMP'))
                 $banner=Client $ssh (@('-tt','-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1')) "ECHO SSH-ISOLATED`nEXIT`n"
@@ -186,7 +218,7 @@ try{
         [string]$text=Get-Content -Raw $serialLog
         if($text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0' -or $text -notmatch '\[RESET\]' -or $text -match '\[CRASH\]'){throw 'Incomplete SMP4 network acceptance.'}
         $run=[ordered]@{firmware=$case.mode;adapter=$case.nic;result='ok';cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog;clients=$clientLog;
-            coverage=$(if($online){'SSH shell/exec; SFTP/SCP; active/passive FTP; offline FAT32/NTFS read/create/copy/replace/rename/delete; hashes; executable admission; unchanged menu'}else{'no network; damaged SYSTEM; local Terminal; return and restart'})}
+            coverage=$(if($online){'SSH shell/exec; SFTP/SCP; active/passive FTP; SYSINFO/HELP; HTTPGET redirect/body/save; NETCAT host echo/read/close; offline FAT32/NTFS read/create/copy/replace/rename/delete; hashes; executable admission; unchanged menu'}else{'no network; damaged SYSTEM; local Terminal; return and restart'})}
         if($StorageAccess -and $online){$run.storageAccess=$true;$run.coverage+='; local/remote volume uses; raw bounds; exclusive/foreign owner denial; abandoned-claim cleanup; stale generations; real remount/flush failures'}
         if($StorageTools -and $online){$run.storageTools=$true;$run.coverage+='; shared MBR/GPT creation/readback; FAT32 quick and NTFS full; partition claims; mount/read/write/unmount'}
         if($R4Part -and $online){$run.r4part=$true;$run.coverage+='; same imported R4PART binary: GPT primary-header/backup-array repair, scripts/first-error/EOF/exit codes, confirmations, MBR/GPT, create/delete/convert/clean, FAT32/NTFS format, mount/letter/online/offline, identity changes, NTFS EXTEND/SHRINK, actual QUERYMAX and 40-MB hash/space witness, no-space/unsupported/busy refusals, unrelated volumes and menu/Terminal EXIT'}

@@ -640,6 +640,9 @@ fn mockGetOption(_: [*:0]const u8, key: [*:0]const u8) callconv(.c) [*:0]const u
     return empty_option.ptr;
 }
 
+fn mockRegisterAudio2(_: [*:0]const u8, _: *const r4os.technical2.abi.AudioBackend2) callconv(.c) i32 {
+    return -1;
+}
 fn mockRegisterStub(_: [*:0]const u8, _: *const anyopaque) callconv(.c) i32 {
     return -1;
 }
@@ -875,14 +878,24 @@ fn mockActivateUsbHost(_: [*:0]const u8, _: u32) callconv(.c) i32 {
 fn mockRegisterDisplayBlit(_: [*:0]const u8, _: *const abi.DisplayBlitBackend) callconv(.c) i32 {
     return -1;
 }
+fn mockNetBackendQuery(_: i32, out: *abi.NetBackendNegotiation) callconv(.c) i32 {
+    out.* = .{};
+    return 0;
+}
+fn mockNetReceivePacket(index: i32, packet: *const abi.NetPacket) callconv(.c) i32 {
+    if (packet.version != abi.net_packet_version or packet.size < @sizeOf(abi.NetPacket) or
+        packet.ownership != abi.net_buffer_ownership_borrowed_until_return or
+        packet.fallback_addr == 0 or packet.fallback_bytes == 0 or packet.segment_count != 0) return -1;
+    return mockNetReceiveFrame(index, @ptrFromInt(packet.fallback_addr), packet.fallback_bytes);
+}
 fn mockNetScheduleRx(_: i32) callconv(.c) i32 {
     return abi.net_rx_handoff_ok;
 }
 
-const mock_api = abi.DriverApi{
-    .magic = abi.driver_magic,
-    .version = abi.driver_api_version,
-    .size = @sizeOf(abi.DriverApi),
+const mock_api = r4os.r4dev.DriverApi2{
+    .magic = r4os.technical2.abi.driver_magic,
+    .version = r4os.technical2.abi.driver_version,
+    .size = @sizeOf(r4os.r4dev.DriverApi2),
     .reserved = 0,
     .log_info = mockLogInfo,
     .log_warn = mockLogWarn,
@@ -894,10 +907,8 @@ const mock_api = abi.DriverApi{
     .request_irq = mockRequestIrq,
     .release_irq = mockReleaseIrq,
     .get_option = mockGetOption,
-    .register_audio_backend = mockRegisterStub,
     .register_storage_backend = mockRegisterStub,
     .register_input_backend = mockRegisterStub,
-    .register_synth_engine = mockRegisterStub,
     .register_mixer_backend = mockRegisterStub,
     .register_net_backend = mockRegisterNetBackend,
     .alloc_dma_region = mockAllocDmaRegion,
@@ -918,7 +929,7 @@ const mock_api = abi.DriverApi{
     .port_inl = mockPortInl,
     .port_outl = mockPortOutl,
     .net_receive_frame = mockNetReceiveFrame,
-    .register_audio_output_backend = mockRegisterStub,
+    .register_audio_output_backend = mockRegisterAudio2,
     .unregister_audio_backend = mockUnregisterStub,
     .tick_count = mockTickCount,
     .timer_frequency = mockTimerFrequency,
@@ -950,6 +961,8 @@ const mock_api = abi.DriverApi{
     .register_display_blit_backend = mockRegisterDisplayBlit,
     .unregister_display_blit_backend = mockUnregisterStub,
     .net_schedule_rx = mockNetScheduleRx,
+    .net_backend_query = mockNetBackendQuery,
+    .net_receive_packet = mockNetReceivePacket,
 };
 
 // ---------------------------------------------------------------------------

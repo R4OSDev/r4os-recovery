@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "scope": "Explicit Recovery-owned derivatives of all38 original module archives plus canonical R4STD9/Libraries58. Real source ports/rebuilds/native qualification pending; no claim that a metadata rename completes migration. Original43 archives remain untouched. Module targets and39 roles unchanged.",
+  "scope": "Explicit Recovery-owned derivatives of all38 original module archives plus canonical R4STD9/Libraries58. All39 source builds and target-generation containers verified against admitted Runtime; native qualification tracked separately. Original43 archives remain untouched. Module targets and39 roles unchanged.",
   "snapshot_sdk": "0.64.210",
   "snapshot_contract": "0.64.93",
   "snapshot_libraries": "0.64.58",
