@@ -2251,8 +2251,8 @@
     },
     {
       "path": "Kernel/kernel/cpu_boot.zig",
-      "bytes": 928,
-      "sha256": "206610a7ae603347c0c5561c70ac6bc849b7c10dcc9c2c0317f30c5919e6f9b0",
+      "bytes": 997,
+      "sha256": "84d78e0e46f24ab6f6c00b2ca15cf1368689d82e94baf310b820dfe18ac7ba83",
       "originalSha256": "206610a7ae603347c0c5561c70ac6bc849b7c10dcc9c2c0317f30c5919e6f9b0",
       "origin": {
         "path": "kernel/cpu_boot.zig",
@@ -2611,8 +2611,8 @@
     },
     {
       "path": "Kernel/kernel/protocol_api.zig",
-      "bytes": 4489,
-      "sha256": "be1b2fde94875aadc33c1a6af0e0c08308ceb29876b571b5a7ada9206dbf3117",
+      "bytes": 4923,
+      "sha256": "b42e0c64db2201860e0e3b8f0e9585f53732bb54b16cf058c46e10f4a5159ba7",
       "originalSha256": "2c806bb863392bdec5d753f473d524589f86dc93ece4c7dbc9e0a022bd331731",
       "origin": {
         "path": "kernel/protocol_api.zig",
@@ -2663,8 +2663,8 @@
     },
     {
       "path": "Kernel/kernel/recovery_runtime.zig",
-      "bytes": 13018,
-      "sha256": "79ff9c64c11ce08194d961fee66aaee4ed963d77396cd1d163732576c5851f48",
+      "bytes": 13025,
+      "sha256": "10548ad1efece0449fa7459c119573c3b0f5acd3ce7028a5eb4dae761c9337c5",
       "originalSha256": null,
       "origin": null
     },
@@ -2757,8 +2757,8 @@
     },
     {
       "path": "Kernel/kernel/smp.zig",
-      "bytes": 41342,
-      "sha256": "c5d122a8b03a0c9de29397ebb448f1776b6847c6fb3a4609d70e0add492d9835",
+      "bytes": 41411,
+      "sha256": "07072a0345de865cc3b40a497b5e184c9b4e22eef75644f8d89dd9242a73c321",
       "originalSha256": "c71280ffeec15fab160665d26dcb495336d9c6c28bda2492d2e7fc6259a56049",
       "origin": {
         "path": "kernel/smp.zig",
@@ -2867,8 +2867,8 @@
     },
     {
       "path": "Kernel/loader_tests.zig",
-      "bytes": 1619,
-      "sha256": "cf121531adc9f96896618abd10d304a9b15282e4a4801cd7e883f7dfb2ea77d2",
+      "bytes": 4034,
+      "sha256": "d9da7a2fea6f9699675c501766c3b1bd46c9c55215a4c081b6dea6007164f1a1",
       "originalSha256": "cd85931a53396a1cc7046c09ffbaf989bd014ed3340d906873af04fb78a78e20",
       "origin": {
         "path": "loader_tests.zig",
@@ -3256,6 +3256,20 @@
       }
     },
     {
+      "path": "Kernel/platform/cpu_acceleration_window.zig",
+      "bytes": 1853,
+      "sha256": "fa7d90fbde380a11fa0b4208c1166af648a216d75bfe7ad344a0283b947ef7c2",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
+      "path": "Kernel/platform/cpu_acceleration.zig",
+      "bytes": 8202,
+      "sha256": "040266172006008421e74d1189c120c6d53dad97872cf0c3327de8de53f6cd8c",
+      "originalSha256": null,
+      "origin": null
+    },
+    {
       "path": "Kernel/platform/cpu.zig",
       "bytes": 10786,
       "sha256": "4708696f86d37c6e7bfac0b0986bf25967e46d3ac71ab8c1100c5ce7c966be93",
@@ -3494,8 +3508,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 823280,
-      "sha256": "69448d0757aecd1663f28c7b0d6132f6715dcf4cf4d517acd464cf60df28b46c",
+      "bytes": 823602,
+      "sha256": "4958d7fee7e5e890ce70cdce7cce8cdd7720d77bca5bb532d9aa23e3e176fea3",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -3835,8 +3849,8 @@
     },
     {
       "path": "Kernel/Tests/Fixture/RecoveryApi2/App/src/main.zig",
-      "bytes": 5747,
-      "sha256": "a84b48d1cc98a6a8567c80719d42cefbdec7b24fa80673b945c4d89afb975554",
+      "bytes": 6124,
+      "sha256": "0f07af291897252c3a272db6996c398e7569f3f51081b51cc55ac852eaba3b6b",
       "originalSha256": null,
       "origin": null
     },
@@ -18910,8 +18924,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/download.zig",
-      "bytes": 13837,
-      "sha256": "67078d123e5ece85306535a31eb4654ceb7bcbd1372c95badbe967b35f961170",
+      "bytes": 14074,
+      "sha256": "58023dce7b4b2ad9ee93914cf93229c171db7bfce36d991308cd0f297eea193f",
       "originalSha256": null,
       "origin": null
     },
@@ -31514,6 +31528,111 @@
         }
       ],
       "reason": "0.90.84 Recovery-owned Git attribute overlay preserves exact frozen source bytes across Linux/Windows/archive; canonical code/schema remain byte-identical."
+    },
+    {
+      "changes": [
+        {
+          "after": "58023dce7b4b2ad9ee93914cf93229c171db7bfce36d991308cd0f297eea193f",
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": "67078d123e5ece85306535a31eb4654ceb7bcbd1372c95badbe967b35f961170"
+        }
+      ],
+      "reason": "0.90.84 retain full download size from Content-Range in resumed progress; underlying transport retry/deadline and package data unchanged."
+    },
+    {
+      "reason": "0.90.84 current SDK TLS requires genuine CPU RDRAND leaf admission; port canonical receipt policy, per-initialized-CPU snapshots, local IF and unwind owner, optional R4DEV and Protocol2 callbacks. No fake entropy device or clock seed.",
+      "changes": [
+        {
+          "before": "206610a7ae603347c0c5561c70ac6bc849b7c10dcc9c2c0317f30c5919e6f9b0",
+          "path": "Kernel/kernel/cpu_boot.zig",
+          "after": "84d78e0e46f24ab6f6c00b2ca15cf1368689d82e94baf310b820dfe18ac7ba83"
+        },
+        {
+          "before": "be1b2fde94875aadc33c1a6af0e0c08308ceb29876b571b5a7ada9206dbf3117",
+          "path": "Kernel/kernel/protocol_api.zig",
+          "after": "b77f019ece7c19bac599ae7fc1769dd7783d374c27997ad777ed76c9fc58d79e"
+        },
+        {
+          "before": "79ff9c64c11ce08194d961fee66aaee4ed963d77396cd1d163732576c5851f48",
+          "path": "Kernel/kernel/recovery_runtime.zig",
+          "after": "10548ad1efece0449fa7459c119573c3b0f5acd3ce7028a5eb4dae761c9337c5"
+        },
+        {
+          "before": "c5d122a8b03a0c9de29397ebb448f1776b6847c6fb3a4609d70e0add492d9835",
+          "path": "Kernel/kernel/smp.zig",
+          "after": "07072a0345de865cc3b40a497b5e184c9b4e22eef75644f8d89dd9242a73c321"
+        },
+        {
+          "before": "cf121531adc9f96896618abd10d304a9b15282e4a4801cd7e883f7dfb2ea77d2",
+          "path": "Kernel/loader_tests.zig",
+          "after": "d9da7a2fea6f9699675c501766c3b1bd46c9c55215a4c081b6dea6007164f1a1"
+        },
+        {
+          "before": null,
+          "path": "Kernel/platform/cpu_acceleration_window.zig",
+          "after": "f4c5aaacd6f0672893e7357d512a4191d0132a4c68428705cb2b4d3dd69b8736"
+        },
+        {
+          "before": null,
+          "path": "Kernel/platform/cpu_acceleration.zig",
+          "after": "30759c69e5b953ee51286339246a1ef83c853767733bdd0b7010504991321b13"
+        },
+        {
+          "before": "69448d0757aecd1663f28c7b0d6132f6715dcf4cf4d517acd464cf60df28b46c",
+          "path": "Kernel/program/r4x.zig",
+          "after": "902cdf7ce83a7c861d11e80ba0e5b5c334b27541a98d457449561b61d8b666c7"
+        },
+        {
+          "before": "a84b48d1cc98a6a8567c80719d42cefbdec7b24fa80673b945c4d89afb975554",
+          "path": "Kernel/Tests/Fixture/RecoveryApi2/App/src/main.zig",
+          "after": "0f07af291897252c3a272db6996c398e7569f3f51081b51cc55ac852eaba3b6b"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.84 structurally checked canonical Kernel/SDK CPU-record callback binding and online-only cached peer hints.",
+      "changes": [
+        {
+          "after": "b42e0c64db2201860e0e3b8f0e9585f53732bb54b16cf058c46e10f4a5159ba7",
+          "path": "Kernel/kernel/protocol_api.zig",
+          "before": "b77f019ece7c19bac599ae7fc1769dd7783d374c27997ad777ed76c9fc58d79e"
+        },
+        {
+          "after": "fb637244892a9439ed5df395df355c1ebbecfb0807959e237d9d90a9eb41cc34",
+          "path": "Kernel/platform/cpu_acceleration.zig",
+          "before": "30759c69e5b953ee51286339246a1ef83c853767733bdd0b7010504991321b13"
+        },
+        {
+          "after": "4958d7fee7e5e890ce70cdce7cce8cdd7720d77bca5bb532d9aa23e3e176fea3",
+          "path": "Kernel/program/r4x.zig",
+          "before": "902cdf7ce83a7c861d11e80ba0e5b5c334b27541a98d457449561b61d8b666c7"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.84 CPU leaf uses exact canonical nullable callback-slot contract; reject absent slot before reading it.",
+      "changes": [
+        {
+          "before": "fb637244892a9439ed5df395df355c1ebbecfb0807959e237d9d90a9eb41cc34",
+          "after": "7c70f87d57fb2d824ce80a5181ac0355847067c9e1feb92103500928ce7d6c17",
+          "path": "Kernel/platform/cpu_acceleration.zig"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "after": "fa7d90fbde380a11fa0b4208c1166af648a216d75bfe7ad344a0283b947ef7c2",
+          "before": "f4c5aaacd6f0672893e7357d512a4191d0132a4c68428705cb2b4d3dd69b8736",
+          "path": "Kernel/platform/cpu_acceleration_window.zig"
+        },
+        {
+          "after": "040266172006008421e74d1189c120c6d53dad97872cf0c3327de8de53f6cd8c",
+          "before": "7c70f87d57fb2d824ce80a5181ac0355847067c9e1feb92103500928ce7d6c17",
+          "path": "Kernel/platform/cpu_acceleration.zig"
+        }
+      ],
+      "reason": "0.90.84 format Recovery-owned CPU admission sources with pinned Zig; no schema or semantic change."
     }
   ],
   "sdkProfile": {

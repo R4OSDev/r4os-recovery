@@ -1,3 +1,4 @@
+const std = @import("std");
 const r4x_api = @import("../program/r4x_api.zig");
 const heap = @import("../memory/heap.zig");
 const log_event = @import("log_event.zig");
@@ -124,7 +125,11 @@ fn initTable2() api2.abi.ProtocolApi2 {
     var result: api2.abi.ProtocolApi2 = undefined;
     inline for (@typeInfo(api2.abi.ProtocolApi2).@"struct".fields) |field| {
         if (comptime @offsetOf(api2.abi.ProtocolApi2, field.name) < 16) continue;
-        if (comptime @hasField(Table, field.name)) {
+        if (comptime std.mem.eql(u8, field.name, "cpu_acceleration_info")) {
+            @field(result, field.name) = api2.callback(field.type, &@import("../platform/cpu_acceleration.zig").info);
+        } else if (comptime std.mem.eql(u8, field.name, "cpu_acceleration_work")) {
+            @field(result, field.name) = api2.callback(field.type, &@import("../platform/cpu_acceleration.zig").work);
+        } else if (comptime @hasField(Table, field.name)) {
             @field(result, field.name) = api2.callback(field.type, @field(source, field.name));
         } else if (comptime @typeInfo(field.type) == .optional) {
             @field(result, field.name) = null;

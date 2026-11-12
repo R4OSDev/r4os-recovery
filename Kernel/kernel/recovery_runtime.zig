@@ -252,7 +252,7 @@ fn runApi2Probe() bool {
     r4x.beginOutputCapture(&capture);
     const ran = r4x.runPath(d, "/R4OS/SOFTWARE/API2PROBE/API2PROBE.R4X", "", d);
     const captured = r4x.endOutputCapture();
-    const expected = "[RECOVERYAPI2] app=OK imports=32 query=6 metadata=OK batch=OK clock=OK close_kill_wait_reap=OK";
+    const expected = "[RECOVERYAPI2] app=OK imports=32 query=6 metadata=OK batch=OK clock=OK rng=OK close_kill_wait_reap=OK";
     if (ran != .ran or r4x.lastExitCode() != 0 or captured.truncated or std.mem.indexOf(u8, capture[0..captured.len], expected) == null) {
         log.puts("[RECOVERYAPI2] app=FAILED capture=");
         log.puts(capture[0..captured.len]);

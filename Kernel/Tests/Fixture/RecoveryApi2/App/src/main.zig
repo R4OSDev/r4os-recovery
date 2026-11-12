@@ -21,7 +21,7 @@ pub fn r4_app_main(app: *r4os.App2) i32 {
         console.line(std.fmt.bufPrint(&buf, "[RECOVERYAPI2] app=FAILED code={d}", .{code}) catch "app=FAILED");
         return code;
     }
-    console.line("[RECOVERYAPI2] app=OK imports=32 query=6 metadata=OK batch=OK clock=OK close_kill_wait_reap=OK");
+    console.line("[RECOVERYAPI2] app=OK imports=32 query=6 metadata=OK batch=OK clock=OK rng=OK close_kill_wait_reap=OK");
     return 0;
 }
 
@@ -59,6 +59,12 @@ fn probe(app: *r4os.App2) i32 {
     if (batch(null, &cursor, null, 0) != 0 or !std.mem.eql(u8, std.mem.asBytes(&cursor), std.mem.asBytes(&saved_cursor))) return -118;
     if (sys.fileWrite("C:\\TEMP\\R2C.TXT", "THREE") != 5) return -119;
     if (batch(null, &cursor, null, 0) != a.file_metadata2_error_restart or !std.mem.eql(u8, std.mem.asBytes(&cursor), std.mem.asBytes(&saved_cursor))) return -120;
+    const dev = app.devicesLowLevel() orelse return -128;
+    var cpu: a.CpuAccelerationInfo = .{};
+    if (dev.cpuAccelerationInfo(&cpu) != 0 or cpu.epoch == 0 or cpu.capture_sequence == 0 or cpu.os_mask & a.cpu_accel_feature_rdrand == 0) return -129;
+    var random: [64]u8 = undefined;
+    if (!r4os.secure_random.fill(&random)) return -130;
+    @memset(&random, 0);
     for ([_][*:0]const u8{ "/EXIT37", "/CLOSE", "/KILL" }, 0..) |args, mode| {
         var child: a.ProgramProcessHandle = .{};
         if (sys.programSpawnHandle(executable, args, .console, &child) != 0 or child.instance_id == 0 or child.generation == 0) return -121;

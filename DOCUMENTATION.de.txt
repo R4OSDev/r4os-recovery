@@ -1,6 +1,27 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
+Stand 0.90.84: Recovery0.1.69 / eigener Kernel0.1.66 / Menue0.1.27
+----------------------------------------------------------------
+Der Anbieter besitzt echte kanonische Query2-/Start2-/Init2-Einstiege,
+32 geordnete Imports, breite Metadaten, bounded DirectoryMetadataBatch2 und
+den fuer aktuelle SDK-HTTPS-Aufrufe benoetigten echten RDRAND-CPUanschluss.
+CPU- und Dateibesitzer, Uhrenbudgets und Quittungen bleiben massgeblich.
+Contract93/SDK210 sind gepinnte Besitzerquellen; ausschliesslich zwei
+.gitattributes sichern die eingefrorenen Bytes hostuebergreifend. SDK211
+steuert den Build und erzeugt seinen modernen JSON-Profileoverlay.
+
+Linux/KVM: vorhandener Hosttarget und echte BIOS/UEFI-RAM2-Module mit allen
+32 Imports, Clock/RDRAND, Metadaten, Exit37/Close/Kill/Wait/Reap, DMA4096,
+Treiber-Unload/Reload und Protokolldispatch sowie originale Volumenfehler.
+Finales Produktionspaar: HTTPS/Redirect/Digest, drei Wiederholungen und
+Cache-/Paketpruefungen. Fruehere7 Storage-/8 Eingabe-/3 Netzbelege behalten
+ihre wirklichen Kandidatenhashes; keine Umetikettierung nach RDRAND-Port.
+Windows-/Hardwareausfuehrung und ein oeffentliches Binaerrelease folgen
+hieraus nicht.39 Runtimebinaere bleiben bytegleich, Menue App1 bis85.
+Projektweite Details und normaler Pflicht-STANDARD: Docs/API/ConsumerMigration.txt
+und Docs/Deployment/Recovery.txt im koordinierenden Workspace.
+
 Stand 0.89.58: Recovery 0.1.68 / eigener Kernel 0.1.65
 ----------------------------------------------------
 

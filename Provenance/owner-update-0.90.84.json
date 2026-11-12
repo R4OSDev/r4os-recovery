@@ -2,7 +2,7 @@
   "schema": 1,
   "release": "0.90.84",
   "base_recovery_commit": "4ea28f4254d0a1ae3455c285a40a1b6cfb8a4bbc",
-  "scope": "Complete canonical source adoption into the existing independent Recovery owner. Legacy runtime39 stays byte-identical until85; new technical providers and actual native qualification still pending.",
+  "scope": "Recovery provider transition to canonical Query2/Start2/Init2 with original39 runtime binaries retained through84. Current Menu27/SDK210 technical connection remains App1 until85. Genuine Linux/KVM host/native evidence is separate from source/layout checks; no public binary release, physical hardware or Windows execution is implied.",
   "owners": [
     {
       "owner": "Contract",
@@ -151,5 +151,29 @@
       }
     ],
     "reason": "Nested upstream attributes overrode Recovery frozen-byte policy; historical SDK CRLF blobs normalized on staging and Contract BAT would convert on checkout. Immutable imports require exact bytes on both hosts."
+  },
+  "versions": {
+    "recovery": "0.1.69",
+    "recovery_kernel": "0.1.66",
+    "menu": "0.1.27",
+    "snapshot_sdk": "0.64.210",
+    "snapshot_contract": "0.64.93",
+    "controller_sdk": "0.64.211"
+  },
+  "production_pair": {
+    "runtime_modules_unchanged": 39,
+    "original_archives_unchanged": 43,
+    "normal_kernel477_sha256": "384997f1ff809fe0ea16a6b21734fd1054ac7eac53e6fb8da859d7c11d47a7ee",
+    "production_kernel66_sha256": "600a54ddf341658dbde3a151943867cd40b115c8ec299a477ec30fab292f3f32",
+    "production_runtime69_sha256": "7f282cb2dd0b98ea2cf7f7aeb169ad1610a27b81ad5611d2b749f944bf2df2c1",
+    "menu27_sha256": "dbdffab23bcc32edf9a23ec4efe1ff6189005c715b69e8955fddc4b2407c115e"
+  },
+  "qualification": {
+    "host": "Complete existing Kernel host target and Menu view-test; canonical required callback/optional absence/namespace/CPU receipt boundaries.",
+    "native": "Actual BIOS/UEFI API2 RAM pair, full32 ordered imports, real CPU RDRAND/clock/wide metadata/Close/Kill/Wait/Reap/DMA/unload and protocol dispatch; four original invalid-volume rejections. Separate foundation and final production HTTPS/range/retry/cache witnesses.",
+    "prior_candidate_scopes": "Original7 storage/8 input/3 network scopes retain their exact earlier candidate hashes; additional CPU provider is qualified by final RAM, foundation and production download pair. No relabeling.",
+    "normal_standard": "R4OS0.90.84 tracks exactly one final normal Suite3/KVM4 and local server exception separately; no Recovery or isolated performance score.",
+    "records": "Docs/API/ConsumerMigration.txt; Docs/Deployment/Recovery.txt; local Research/API-ABI/Migration/0.90.84",
+    "remaining": "Embedded39 and Menu App2 migration85, shared profiles86 and final cutover89 remain separate roadmap steps."
   }
 }

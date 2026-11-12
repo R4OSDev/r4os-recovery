@@ -767,6 +767,7 @@ pub export fn r4os_ap_entry(index_raw: u64) callconv(.c) noreturn {
         _ = percpu.rejectStart(index);
         interrupts.haltForever();
     }
+    @import("../platform/cpu_acceleration.zig").captureCurrentCpu();
     _ = monotonic.registerCurrentCpu(index);
     if (!percpu.transition(index, .starting, .parked)) interrupts.haltForever();
     while (!@atomicLoad(bool, &release_aps, .acquire)) {

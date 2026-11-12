@@ -24,6 +24,7 @@ pub fn init() void {
     smp.initBsp();
     monotonic.configureCpuClock();
     if (!fpu.init()) fatal.kernelFatal(.cpu, "FPU/SSE task-state init failed");
+    @import("../platform/cpu_acceleration.zig").captureCurrentCpu();
 
     initialized = true;
 }

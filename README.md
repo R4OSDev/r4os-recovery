@@ -4,13 +4,19 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.69 / its own Zig Kernel0.1.66 adopts the canonical Contract0.64.93
-and SDK0.64.210 as exact, independently pinned source snapshots. Its source
-candidate implements separate Query2/Start2/DriverInit2/ProtocolInit2 bindings;
-original runtime modules keep their old generation during the controlled
-transition. New missing capabilities stay unavailable. Full native acceptance
-and release evidence are recorded separately in Provenance; a source/layout
-or host-test result alone is not a guest qualification.
+Recovery0.1.69 / its own Zig Kernel0.1.66 implements separate canonical
+Query2/Start2/DriverInit2/ProtocolInit2 bindings. Contract0.64.93 and SDK0.64.210
+are pinned at their owners; only the snapshots' Git attributes use Recovery's
+byte-preserving host policy. All other canonical source bytes and the complete
+upstream archives remain exact. SDK0.64.211 controls the shared build.
+
+The provider is qualified on Linux/KVM using real BIOS/UEFI API2 RAM modules,
+CPU RDRAND, lifetime and storage/clock calls, the original image refusals and
+production HTTPS/retry/cache checks. Current source and artifact identities are
+recorded in Provenance; earlier storage/input/network candidate hashes keep
+their original scope. This does not publish a binary release or qualify Windows
+or physical hardware. The original39 runtime modules and Menu27's App1 entry
+remain until the separately planned embedded consumer migration.
 
 The current baseline contains pinned kernel, platform contract and SDK sources,
 39 precompiled console, service, driver, protocol and library modules, and
@@ -32,9 +38,11 @@ from the normal workspace or fetch dependencies. Results are written to
 Add `-Mode Kernel` to build `Artifacts/Kernel/bin/recovery.elf` using the
 recorded Zig version and the paired `Artifacts/Runtime/runtime.img`.
 `-Mode Runtime` builds that volume and the Recovery-owned console tools.
-`-Mode RuntimeTest` checks late
-module/media access after removing the USB boot medium, normal console
-commands, RAM writes and rejection of invalid boot payloads. After the normal
+`-Mode RuntimeTest` uses a separate `Artifacts/RuntimeApi2/runtime.img` and
+real App2/DriverInit2/ProtocolInit2 diagnostic fixtures. It checks late module
+and media access after actual USB removal,32 imports, metadata/clock/RDRAND,
+process lifetime, DMA/unload, normal console commands, RAM writes and the
+original invalid boot payloads. Production runtime images exclude these probes. After the normal
 kernel build, `pwsh -File Tools/Test-Boot.ps1 -Action terminal` exercises the
 production menu's Terminal with keyboard input and regular shutdown after
 removing the boot medium.

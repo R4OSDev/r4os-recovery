@@ -38,9 +38,9 @@ pub const Client = struct {
         const self: *Client = @ptrCast(@alignCast(raw.?));
         return self.showProgress(done, total);
     }
-    // Current WebTransport reports admitted response heads. Its bounded
+    // Current WebTransport reports response heads. Its bounded
     // retry loop and single deadline remain the transport owner's policy;
-    // the UI counts only real accepted GET/resume responses, never guessed
+    // the UI counts only real received GET/resume responses, never guessed
     // attempts or a freshly reset transaction budget.
     fn downloadHead(raw: ?*anyopaque, observation: r4os.app_web.DownloadHeadObservation) bool {
         const self: *Client = @ptrCast(@alignCast(raw.?));
@@ -50,7 +50,10 @@ pub const Client = struct {
             self.meter.reset(self.sys.ticks(), observation.requested_offset);
         }
         self.response_heads += 1;
-        return self.showProgress(observation.requested_offset, observation.response.content_length);
+        // A resumed response Content-Length names only the remaining range;
+        // the progress display continues to use the complete object size.
+        const total = if (observation.response.content_range) |range| range.total else observation.response.content_length;
+        return self.showProgress(observation.requested_offset, total);
     }
     fn apiProgress(raw: ?*anyopaque) callconv(.c) bool {
         const self: *Client = @ptrCast(@alignCast(raw.?));

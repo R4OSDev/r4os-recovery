@@ -7877,6 +7877,8 @@ fn configureR4XStartR4DevTable() void {
     r4api.r4dev.setExecutionInventorySummaryProvider(&fillExecutionInventorySummaryProvider);
     r4api.r4dev.setInputPerformanceProvider(&fillInputPerformanceInfo);
     r4xstart_r4dev_table = r4x_api.buildR4DevTable(.{
+        .cpu_acceleration_info = @import("generation2.zig").callback(r4x_api.R4DevFns.cpu_acceleration_info, &@import("../platform/cpu_acceleration.zig").info),
+        .cpu_acceleration_work = @import("generation2.zig").callback(r4x_api.R4DevFns.cpu_acceleration_work, &@import("../platform/cpu_acceleration.zig").work),
         .device_inventory_summary = &r4api.r4dev.deviceInventorySummary,
         .device_inventory_record = &r4api.r4dev.deviceInventoryRecord,
         .memory_summary = &r4api.r4dev.memorySummary,
