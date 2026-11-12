@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "module_name": "{ProjectName}",
+  "zig_client": "{ProjectName}",
+  "c_prefix": "{ProjectNameLower}",
+  "c_header": "{ProjectNameLower}.h",
+  "description": "{Description}",
+  "interfaces": [
+    {
+      "export_name": "API_V1",
+      "symbol": "{ProjectNameLower}_api_v1",
+      "zig_name": "api_v1",
+      "zig_type": "ApiV1",
+      "c_type": "{ProjectName}ApiV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": {InterfaceIdLow},
+      "interface_id_hi": {InterfaceIdHigh},
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "add",
+          "c_name": "{ProjectNameLower}_add",
+          "symbol": "{ProjectNameLower}_add_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "left",
+              "type": {
+                "name": "i64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Linker Summand."
+            },
+            {
+              "name": "right",
+              "type": {
+                "name": "i64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Rechter Summand."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer und kein Besitztransfer."
+          },
+          "description": "Addiert zwei vorzeichenbehaftete 64-Bit-Werte mit Wrapping-Semantik."
+        }
+      ],
+      "description": "Erste append-only Funktionstabelle der Library."
+    }
+  ],
+  "types": [],
+  "constants": [],
+  "errors": [],
+  "ownership_rules": [
+    {
+      "name": "Providergeneration",
+      "text": "Tabellen- und Funktionspointer bleiben bis zum Ende der geladenen Providergeneration gueltig."
+    },
+    {
+      "name": "Caller-Speicher",
+      "text": "Die Library behaelt ohne ausdruecklichen API-Vertrag keinen Speicher des Callers."
+    }
+  ]
+}

@@ -13,10 +13,24 @@ pub const provider_repository = "Repositories/Kernel";
 pub const c_header = "Repositories/SDK/Shared/C/include/r4os/r4dev.h";
 pub const query_contract = "Repositories/Contract/ABI/R4LQuery.txt";
 pub const DriverApi = abi.DriverApi;
+pub const DriverApi2 = @import("technical2.zig").abi.DriverApi2;
 pub const ProtocolApi = abi.ProtocolApi;
+pub const ProtocolApi2 = @import("technical2.zig").abi.ProtocolApi2;
 pub const DriverContext = driver.Context;
+pub const DriverContext2 = @import("driver2.zig").Context;
+pub const DriverSerialContext = @import("driver_serial.zig").Context;
+pub const DriverResourceContext = @import("driver_resources.zig").Context;
+pub const DriverCpuPowerContext = @import("driver_cpu_power.zig").Context;
+pub const DriverPlatformContext = @import("driver_resources.zig").Platform;
+pub const DriverHeapContext = @import("driver_heap.zig").Context;
+pub const DriverThreadContext = @import("driver_threads.zig").Context;
+pub const DriverSemaphoreContext = @import("driver_semaphores.zig").Context;
 pub const SharedDmaBuffer = driver.SharedDmaBuffer;
+pub const AudioOutputBackend = driver.AudioOutputBackend;
+pub const AudioOutputIdleBackend = driver.AudioOutputIdleBackend;
+pub const AudioOutputPlaybackBackend = driver.AudioOutputPlaybackBackend;
 pub const ProtocolContext = protocol.Context;
+pub const ProtocolContext2 = @import("protocol2.zig").Context;
 pub const r4d_shutdown_entry_offset = driver.r4d_shutdown_entry_offset;
 pub const r4p_shutdown_entry_offset = protocol.r4p_shutdown_entry_offset;
 pub const r4p_query_entry_offset = protocol.r4p_query_entry_offset;
@@ -36,7 +50,24 @@ pub fn protocolEntriesAsm(
 }
 
 pub const Context = struct {
+    pub fn serial(self: *const Context) ?@import("serial.zig").Context {
+        const bundle = self.base.bundle orelse return null;
+        return @import("serial.zig").Context.init(bundle.dev orelse return null);
+    }
+
     base: program.Context,
+
+    pub fn displayState(self: *const Context) ?abi.DisplayStateInfo {
+        return self.base.displayState();
+    }
+
+    pub fn driverModuleInfo(self: *const Context, owner: u32) ?abi.DriverModuleInfo {
+        return self.base.driverModuleInfo(owner);
+    }
+
+    pub fn driverModuleInfoRaw(self: *const Context, owner: u32, out: *abi.DriverModuleInfo) i32 {
+        return self.base.driverModuleInfoRaw(owner, out);
+    }
 
     pub fn init(bundle: *const program.Bundle) Context {
         return .{ .base = program.Context.initBundle(bundle) };
@@ -77,6 +108,124 @@ pub const Context = struct {
 
     pub fn memoryReclaimProbe(self: *const Context, requested_frames: u32) ?abi.ProgramMemoryReclaimProbe {
         return self.base.memoryReclaimProbe(requested_frames);
+    }
+
+    pub fn kernelHeapCheck(self: *const Context, out: *abi.ProgramKernelHeapCheck) i32 {
+        return self.base.kernelHeapCheck(out);
+    }
+
+    pub fn kernelSchedulerCheck(self: *const Context, selection: u32, out: *abi.ProgramKernelSchedulerCheck) i32 {
+        return self.base.kernelSchedulerCheck(selection, out);
+    }
+
+    /// Existing bounded local USB ring/router cases; no live controller work.
+    pub fn kernelUsbCheck(self: *const Context, out: *abi.ProgramKernelUsbCheck) i32 {
+        return self.base.kernelUsbCheck(out);
+    }
+
+    /// Explicit one-request read-only NVMe IRQ proof. Missing capabilities are
+    /// unavailable; passive counter progress is not an own completion receipt.
+    pub fn kernelNvmeCheck(self: *const Context, out: *abi.ProgramKernelNvmeCheck) i32 {
+        return self.base.kernelNvmeCheck(out);
+    }
+
+    /// Explicit owned synthetic blockqueue work; raw status leaves unavailable
+    /// distinct from a passing check. This never selects a physical disk.
+    pub fn kernelBlockQueueCheck(self: *const Context, out: *abi.ProgramKernelBlockQueueCheck) i32 {
+        return self.base.kernelBlockQueueCheck(out);
+    }
+
+    /// Passive capture/feature queries; register work is always explicit.
+    pub fn cpuCapabilities(self: *const Context, cpu: u32, out: *abi.CpuCapabilitiesInfo) i32 {
+        return self.base.cpuCapabilities(cpu, out);
+    }
+    pub fn cpuFeature(self: *const Context, cpu: u32, epoch: u64, index: u32, out: *abi.CpuFeatureInfo) i32 {
+        return self.base.cpuFeature(cpu, epoch, index, out);
+    }
+    pub fn cpuRegisterRead(self: *const Context, cpu: u32, epoch: u64, id: u32, out: *abi.CpuRegisterInfo) i32 {
+        return self.base.cpuRegisterRead(cpu, epoch, id, out);
+    }
+    pub fn cpuPowerInfo(self: *const Context, cpu: u32, epoch: u64, out: *abi.CpuPowerInfo) i32 {
+        return self.base.cpuPowerInfo(cpu, epoch, out);
+    }
+    pub fn cpuPerformance(self: *const Context, request: *const abi.CpuPerformanceRequest, out: *abi.CpuPerformanceInfo) i32 {
+        return self.base.cpuPerformance(request, out);
+    }
+
+    pub fn cpuCppc(self: *const Context, request: *const abi.CpuPerformanceRequest, out: *abi.CpuCppcInfo) i32 {
+        return self.base.cpuCppc(request, out);
+    }
+    pub fn cpuFirmwarePerformance(self: *const Context, request: *const abi.CpuPerformanceRequest, out: *abi.CpuFirmwareInfo) i32 {
+        return self.base.cpuFirmwarePerformance(request, out);
+    }
+    pub fn cpuIdleInfo(self: *const Context, cpu: u32, out: *abi.CpuIdleInfo) i32 {
+        return self.base.cpuIdleInfo(cpu, out);
+    }
+    pub fn cpuMachineInfo(self: *const Context, cpu: u32, out: *abi.CpuMachineInfo) i32 {
+        return self.base.cpuMachineInfo(cpu, out);
+    }
+    pub fn cpuMicrocodeInfo(self: *const Context, cpu: u32, out: *abi.CpuMicrocodeInfo) i32 {
+        return self.base.cpuMicrocodeInfo(cpu, out);
+    }
+
+    pub fn fpuObservation(self: *const Context, request: *const abi.FpuObservationRequest, out: *abi.FpuObservationInfo) i32 {
+        return self.base.fpuObservation(request, out);
+    }
+
+    pub fn cpuAccelerationInfo(self: *const Context, out: *abi.CpuAccelerationInfo) i32 {
+        return self.base.cpuAccelerationInfo(out);
+    }
+    pub fn cpuAccelerationWorkFunction(self: *const Context) ?abi.R4DevFns.cpu_acceleration_work {
+        return self.base.cpuAccelerationWorkFunction();
+    }
+    pub fn cpuAccelerationWork(self: *const Context, kind: u32, iterations: u32, work: ?abi.CpuPureWorkFn, context: u64, out: *abi.CpuAccelerationWork) i32 {
+        return self.base.cpuAccelerationWork(kind, iterations, work, context, out);
+    }
+    pub fn cpuPmuInfo(self: *const Context, cpu: u32, out: *abi.CpuPmuInfo) i32 {
+        return self.base.cpuPmuInfo(cpu, out);
+    }
+    pub fn cpuPmuMeasure(self: *const Context, cpu: u32, epoch: u64, event: u32, iterations: u32, work: ?abi.PmuWorkFn, context: u64, out: *abi.CpuPmuResult) i32 {
+        return self.base.cpuPmuMeasure(cpu, epoch, event, iterations, work, context, out);
+    }
+    pub fn cpuPmuResult(self: *const Context, cpu: u32, epoch: u64, generation: u64, out: *abi.CpuPmuResult) i32 {
+        return self.base.cpuPmuResult(cpu, epoch, generation, out);
+    }
+    pub fn cpuMachineBank(self: *const Context, cpu: u32, epoch: u64, sequence: u64, index: u32, out: *abi.CpuMachineBank) i32 {
+        return self.base.cpuMachineBank(cpu, epoch, sequence, index, out);
+    }
+
+    pub fn cpuPerformanceHint(self: *const Context, cpu: u32, epoch: u64, out: *abi.CpuPerformanceHintInfo) i32 {
+        return self.base.cpuPerformanceHint(cpu, epoch, out);
+    }
+
+    pub fn cpuPowerCapture(self: *const Context, cpu: u32, epoch: u64, out: *abi.CpuPowerInfo) i32 {
+        return self.base.cpuPowerCapture(cpu, epoch, out);
+    }
+    pub fn kernelCpuRegisterCheck(self: *const Context, cpu: u32, epoch: u64, out: *abi.ProgramKernelCpuRegisterCheck) i32 {
+        return self.base.kernelCpuRegisterCheck(cpu, epoch, out);
+    }
+
+    pub fn cpuLifecycle(self: *const Context, operation: u32, cpu: u32, expected_epoch: u64, out: *abi.CpuLifecycleInfo) i32 {
+        return self.base.cpuLifecycle(operation, cpu, expected_epoch, out);
+    }
+    pub fn kernelCpuLifecycleCheck(self: *const Context, out: *abi.ProgramKernelCpuLifecycleCheck) i32 {
+        return self.base.kernelCpuLifecycleCheck(out);
+    }
+
+    pub fn kernelSmpCheck(self: *const Context, out: *abi.ProgramKernelSmpCheck) i32 {
+        return self.base.kernelSmpCheck(out);
+    }
+
+    pub fn smpTlbSnapshot(self: *const Context, out: *abi.ProgramSmpTlbSnapshot) i32 {
+        return self.base.smpTlbSnapshot(out);
+    }
+
+    pub fn cpuTopology(self: *const Context, index: u32, out: *abi.CpuTopologyInfo) i32 {
+        return self.base.cpuTopology(index, out);
+    }
+
+    pub fn cpuCacheTopology(self: *const Context, index: u32, ordinal: u32, out: *abi.CpuCacheTopologyInfo) i32 {
+        return self.base.cpuCacheTopology(index, ordinal, out);
     }
 
     pub fn memoryBackingStoreProbe(self: *const Context, path: [*:0]const u8, requested_bytes: u64, flags: u32) ?abi.ProgramMemoryBackingStoreProbe {
@@ -165,6 +314,22 @@ pub const Context = struct {
         return self.base.performanceInput();
     }
 
+    pub fn performanceInstrumentation(self: *const Context) ?abi.ProgramInstrumentationInfo {
+        return self.base.performanceInstrumentation();
+    }
+
+    pub fn performanceLock(self: *const Context, index: u32) ?abi.ProgramLockPerformanceInfo {
+        return self.base.performanceLock(index);
+    }
+
+    pub fn performanceStack(self: *const Context, index: u32) ?abi.ProgramStackPerformanceInfo {
+        return self.base.performanceStack(index);
+    }
+
+    pub fn stackFault(self: *const Context, index: u32, out: *abi.ProgramStackFaultInfo) i32 {
+        return self.base.stackFault(index, out);
+    }
+
     pub fn performanceIrqTiming(self: *const Context, irq: u32) ?abi.ProgramIrqTimingInfo {
         return self.base.performanceIrqTiming(irq);
     }
@@ -183,6 +348,10 @@ pub const Context = struct {
 
     pub fn hardwareSummary(self: *const Context) ?abi.HardwareSummary {
         return self.base.hardwareSummary();
+    }
+
+    pub fn firmwareSystemUuid(self: *const Context) ?abi.FirmwareSystemUuidInfo {
+        return self.base.firmwareSystemUuid();
     }
 
     pub fn bootInfoSummary(self: *const Context) ?abi.BootInfoSummary {

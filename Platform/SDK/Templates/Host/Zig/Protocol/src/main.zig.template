@@ -1,0 +1,19 @@
+const r4os=@import("r4os");
+var owner:?r4os.technical2.Protocol=null;
+var active=false;
+comptime {asm(r4os.technical2.protocolEntriesAsm("protocol_init","protocol_shutdown","protocol_query","protocol_dispatch"));}
+export fn protocol_init(api:*const r4os.platform2.abi.ProtocolApi2)callconv(.c)i32{
+ const p=r4os.technical2.Protocol.init(api) orelse return -1;
+ const registered=p.table.register_role("misc.{ProjectNameLower}",@intFromEnum(r4os.abi.ProtocolCategory.misc),0);if(registered!=0)return registered;
+ const status=p.table.set_status(@intFromEnum(r4os.abi.ProtocolState.active),"{ProjectName}");if(status!=0)return status;owner=p;active=true;return 0;
+}
+// Synchronous shell: no retained callback/backing. Asynchronous implementations
+// need exact logical leases and real completion before freeing state.
+export fn protocol_shutdown()callconv(.c)i32{
+ const p=owner orelse return 0;const rc=p.table.set_status(@intFromEnum(r4os.abi.ProtocolState.disabled),"closed");if(rc==0)active=false;return rc;
+}
+export fn protocol_query(out:*r4os.abi.ProtocolStatus)callconv(.c)i32{out.*=.{.state=@intFromEnum(if(active) r4os.abi.ProtocolState.active else .disabled)};return 0;}
+export fn protocol_dispatch(op:u32,_:*const r4os.abi.ProtocolBuffer,out:*r4os.abi.ProtocolBuffer)callconv(.c)i32{
+ if(op==1)return protocol_shutdown();if(op!=0 or !active)return -2;
+ const data=out.data orelse return -3;if(out.capacity<2)return -3;const bytes:[*]u8=@ptrCast(data);bytes[0]='O';bytes[1]='K';out.len=2;return 0;
+}

@@ -13,5 +13,7 @@ export fn R4XStart(raw: *const r4os.lowlevel.abi.R4XStartContext) callconv(.c) i
         .value => |value| value,
         .failure => |failure| return failure.raw_code,
     };
+    const context = app.lowLevel();
+    r4os.secure_random.bindProgram(&context);
     return app_source.r4_app_main(&app);
 }

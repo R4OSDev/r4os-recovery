@@ -13,7 +13,37 @@ const r4os = R4os;
 
 pub const digest_bytes: usize = 32;
 pub const digest_hex_bytes: usize = digest_bytes * 2;
-pub const FileKind = enum { sram, rtc };
+pub const FileKind = enum { sram, rtc, sram_delta };
+
+// Save/recovery needs only size and type. Generation2 identities and hash-
+// based filenames must never be narrowed into the legacy FileInfo shape.
+const PathShape = union(enum) {
+    value: struct { size: u64, is_dir: u8 },
+    missing,
+    failure: i32,
+};
+fn pathShape(files: *const storage.Files, path: storage.PathZ) PathShape {
+    if (files.sys.base.generation2 != null) {
+        return switch (files.metadata(path)) {
+            .found => |info| blk: {
+                if (info.version != 1 or info.size < @sizeOf(r4os.abi.FileMetadata2) or
+                    info.flags & r4os.abi.file_metadata2_flag_exists == 0)
+                    break :blk .{ .failure = r4os.abi.file_metadata2_error_unsupported };
+                const directory = info.flags & r4os.abi.file_metadata2_flag_directory != 0;
+                if (!directory and info.flags & r4os.abi.file_metadata2_flag_byte_size_valid == 0)
+                    break :blk .{ .failure = r4os.abi.file_metadata2_error_unsupported };
+                break :blk .{ .value = .{ .size = if (directory) 0 else info.byte_size, .is_dir = @intFromBool(directory) } };
+            },
+            .missing => .missing,
+            .failure => |code| .{ .failure = code },
+        };
+    }
+    return switch (files.info(path)) {
+        .value => |info| .{ .value = .{ .size = info.size, .is_dir = info.is_dir } },
+        .missing => .missing,
+        .failure => |code| .{ .failure = code },
+    };
+}
 
 pub fn digestHex(digest: *const [digest_bytes]u8, out: *[digest_hex_bytes]u8) []const u8 {
     const alphabet = "0123456789ABCDEF";
@@ -48,6 +78,8 @@ pub const Backend = struct {
     read_exact_fn: *const fn (*anyopaque, *const [digest_bytes]u8, FileKind, []u8) ReadResult,
     write_atomic_fn: *const fn (*anyopaque, *const [digest_bytes]u8, FileKind, []const u8) BackendError!void,
     poll_fn: ?*const fn (*anyopaque) BackendError!void = null,
+    drain_fn: ?*const fn (*anyopaque) BackendError!void = null,
+    pending_fn: ?*const fn (*anyopaque) bool = null,
 
     pub fn acquire(self: Backend, digest: *const [digest_bytes]u8, generation: u64) BackendError!void {
         return self.acquire_fn(self.context, digest, generation);
@@ -65,8 +97,42 @@ pub const Backend = struct {
         return self.write_atomic_fn(self.context, digest, kind, bytes);
     }
 
+    /// A baseline checkpoint must follow all older deltas. Async backends
+    /// provide both callbacks; synchronous stores are already drained.
+    pub fn drain(self: Backend) BackendError!void {
+        if (self.drain_fn) |callback| try callback(self.context) else try self.poll();
+    }
+
+    pub fn pending(self: Backend) bool {
+        return if (self.pending_fn) |callback| callback(self.context) else false;
+    }
+
     pub fn poll(self: Backend) BackendError!void {
         if (self.poll_fn) |callback| try callback(self.context);
+    }
+};
+
+/// Runtime form of the same store configuration for non-Zig consumers.
+/// Keep paths, validation context and scratch stable through the last backend
+/// release/drain. Only the serialized writer may use record_scratch.
+pub const Configuration = struct {
+    save_root: []const u8,
+    root_directories: []const []const u8,
+    rtc_record_bytes: usize = 0,
+    delta_record_bytes: usize = 0,
+    record_scratch: []u8 = &.{},
+    context: ?*anyopaque = null,
+    validate_rtc: ?*const fn (?*anyopaque, []const u8) bool = null,
+    validate_delta: ?*const fn (?*anyopaque, []const u8) bool = null,
+
+    pub fn valid(self: *const Configuration) bool {
+        _ = storage.AbsoluteFilePath.parse(self.save_root) catch return false;
+        if (self.save_root.len == 0 or self.save_root[self.save_root.len - 1] != '\\') return false;
+        if (self.record_scratch.len < @max(self.rtc_record_bytes, self.delta_record_bytes)) return false;
+        if (self.rtc_record_bytes != 0 and self.validate_rtc == null) return false;
+        if (self.delta_record_bytes != 0 and self.validate_delta == null) return false;
+        for (self.root_directories) |path| _ = storage.AbsoluteFilePath.parse(path) catch return false;
+        return true;
     }
 };
 
@@ -74,17 +140,19 @@ pub const Backend = struct {
 /// cartridge enablement, dirty policy, record codecs and clocks stay with the
 /// consuming subsystem.
 pub fn R4osStore(comptime Config: type) type {
+    const dynamic = Config == Configuration;
+    const ConfigView = if (dynamic) *const Configuration else void;
     comptime {
-        if (!@hasDecl(Config, "save_root") or
+        if (!dynamic and (!@hasDecl(Config, "save_root") or
             !@hasDecl(Config, "root_directories") or
             !@hasDecl(Config, "rtc_record_bytes") or
-            !@hasDecl(Config, "validateRtc"))
+            !@hasDecl(Config, "validateRtc")))
         {
             @compileError("subsystem persistence config is incomplete");
         }
     }
     return struct {
-        const PathRole = enum { sram, rtc, lock, atomic_lock, sram_stage, rtc_stage, sram_backup, rtc_backup };
+        const PathRole = enum { sram, rtc, lock, atomic_lock, sram_stage, rtc_stage, sram_backup, rtc_backup, sram_delta, delta_stage, delta_backup };
         const create_retry_attempts: usize = 8;
         const create_retry_delay_ms: u64 = 25;
 
@@ -133,8 +201,13 @@ pub fn R4osStore(comptime Config: type) type {
             failure_stage: FailureStage = .none,
             failure_code: i32 = 0,
 
-            pub fn init(files: r4os.app_storage.Files) Store {
+            configuration: ConfigView = if (dynamic) undefined else {},
+            pub const init = if (dynamic) initConfigured else initStatic;
+            fn initStatic(files: r4os.app_storage.Files) Store {
                 return .{ .files = files };
+            }
+            fn initConfigured(files: r4os.app_storage.Files, configuration: *const Configuration) Store {
+                return .{ .files = files, .configuration = configuration };
             }
 
             pub fn backend(self: *Store) Backend {
@@ -160,7 +233,7 @@ pub fn R4osStore(comptime Config: type) type {
                 // exist yet. Avoid delete operations through a missing parent chain;
                 // production Session.open creates the same hierarchy before acquiring
                 // its lease.
-                ensureSaveRoot(&self.files) catch return;
+                ensureSaveRoot(self.configuration, &self.files) catch return;
                 for ([_]PathRole{
                     PathRole.sram,
                     PathRole.rtc,
@@ -170,8 +243,11 @@ pub fn R4osStore(comptime Config: type) type {
                     PathRole.rtc_stage,
                     PathRole.sram_backup,
                     PathRole.rtc_backup,
+                    PathRole.sram_delta,
+                    PathRole.delta_stage,
+                    PathRole.delta_backup,
                 }) |role| {
-                    const path = makePath(digest, role) catch continue;
+                    const path = makePath(self.configuration, digest, role) catch continue;
                     _ = self.files.delete(path.asZ());
                 }
             }
@@ -186,11 +262,23 @@ pub fn R4osStore(comptime Config: type) type {
                 bytes: []const u8,
             ) BackendError!void {
                 if (self.lock_writer != null) return error.Busy;
-                try ensureSaveRoot(&self.files);
-                const transaction = makePath(digest, .atomic_lock) catch return error.Io;
-                const target = makePath(digest, if (kind == .sram) .sram else .rtc) catch return error.Io;
-                const stage = makePath(digest, if (kind == .sram) .sram_stage else .rtc_stage) catch return error.Io;
-                const backup = makePath(digest, if (kind == .sram) .sram_backup else .rtc_backup) catch return error.Io;
+                try ensureSaveRoot(self.configuration, &self.files);
+                const transaction = makePath(self.configuration, digest, .atomic_lock) catch return error.Io;
+                const target = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram,
+                    .rtc => .rtc,
+                    .sram_delta => .sram_delta,
+                }) catch return error.Io;
+                const stage = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram_stage,
+                    .rtc => .rtc_stage,
+                    .sram_delta => .delta_stage,
+                }) catch return error.Io;
+                const backup = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram_backup,
+                    .rtc => .rtc_backup,
+                    .sram_delta => .delta_backup,
+                }) catch return error.Io;
                 try removeAtomicScratch(self, &transaction);
                 try removeAtomicScratch(self, &stage);
                 try removeAtomicScratch(self, &backup);
@@ -286,9 +374,21 @@ pub fn R4osStore(comptime Config: type) type {
                 digest: *const [digest_bytes]u8,
                 kind: FileKind,
             ) BackendError!RecoveryTestState {
-                const target = makePath(digest, if (kind == .sram) .sram else .rtc) catch return error.Io;
-                const stage = makePath(digest, if (kind == .sram) .sram_stage else .rtc_stage) catch return error.Io;
-                const backup = makePath(digest, if (kind == .sram) .sram_backup else .rtc_backup) catch return error.Io;
+                const target = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram,
+                    .rtc => .rtc,
+                    .sram_delta => .sram_delta,
+                }) catch return error.Io;
+                const stage = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram_stage,
+                    .rtc => .rtc_stage,
+                    .sram_delta => .delta_stage,
+                }) catch return error.Io;
+                const backup = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram_backup,
+                    .rtc => .rtc_backup,
+                    .sram_delta => .delta_backup,
+                }) catch return error.Io;
                 return .{
                     .target_size = try pathSizeWithRetry(self, &target, .atomic_recover),
                     .stage_size = try pathSizeWithRetry(self, &stage, .atomic_recover),
@@ -301,11 +401,11 @@ pub fn R4osStore(comptime Config: type) type {
                 if (self.lock_writer != null) return error.Busy;
                 self.failure_stage = .none;
                 self.failure_code = 0;
-                ensureSaveRoot(&self.files) catch |fault| {
+                ensureSaveRoot(self.configuration, &self.files) catch |fault| {
                     self.recordFailure(.save_root, 0);
                     return fault;
                 };
-                const path = makePath(digest, .lock) catch return error.Io;
+                const path = makePath(self.configuration, digest, .lock) catch return error.Io;
                 for (0..create_retry_attempts) |attempt| {
                     const writer = createOwnedLock(self, &path, generation) catch |fault| {
                         if (fault != error.Io or self.failure_stage == .lock_abort or attempt + 1 == create_retry_attempts) return fault;
@@ -326,7 +426,7 @@ pub fn R4osStore(comptime Config: type) type {
                 const self: *Store = @ptrCast(@alignCast(context));
                 if (self.lock_writer == null) return;
                 if (self.lock_generation != generation or !std.mem.eql(u8, self.lock_digest[0..], digest[0..])) return error.Io;
-                const path = makePath(digest, .lock) catch return error.Io;
+                const path = makePath(self.configuration, digest, .lock) catch return error.Io;
                 if (!abortOwnedPathWithRetry(self, &path)) return error.Io;
                 self.lock_writer = null;
                 self.lock_generation = 0;
@@ -344,10 +444,14 @@ pub fn R4osStore(comptime Config: type) type {
                     return .io;
                 }
                 recoverPendingKind(self, digest, kind, out.len) catch return .io;
-                const path = makePath(digest, if (kind == .sram) .sram else .rtc) catch return .io;
+                const path = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram,
+                    .rtc => .rtc,
+                    .sram_delta => .sram_delta,
+                }) catch return .io;
                 const info = info_retry: {
                     for (0..create_retry_attempts) |attempt| {
-                        switch (self.files.info(path.asZ())) {
+                        switch (pathShape(&self.files, path.asZ())) {
                             .value => |value| break :info_retry value,
                             .missing => return .missing,
                             .failure => |fault| {
@@ -386,10 +490,22 @@ pub fn R4osStore(comptime Config: type) type {
             ) BackendError!void {
                 const self: *Store = @ptrCast(@alignCast(context));
                 if (self.lock_writer == null or !std.mem.eql(u8, self.lock_digest[0..], digest[0..])) return error.Busy;
-                const transaction = makePath(digest, .atomic_lock) catch return error.Io;
-                const target = makePath(digest, if (kind == .sram) .sram else .rtc) catch return error.Io;
-                const stage = makePath(digest, if (kind == .sram) .sram_stage else .rtc_stage) catch return error.Io;
-                const backup = makePath(digest, if (kind == .sram) .sram_backup else .rtc_backup) catch return error.Io;
+                const transaction = makePath(self.configuration, digest, .atomic_lock) catch return error.Io;
+                const target = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram,
+                    .rtc => .rtc,
+                    .sram_delta => .sram_delta,
+                }) catch return error.Io;
+                const stage = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram_stage,
+                    .rtc => .rtc_stage,
+                    .sram_delta => .delta_stage,
+                }) catch return error.Io;
+                const backup = makePath(self.configuration, digest, switch (kind) {
+                    .sram => .sram_backup,
+                    .rtc => .rtc_backup,
+                    .sram_delta => .delta_backup,
+                }) catch return error.Io;
                 try beginAtomicTransaction(self, &transaction);
                 var transaction_held = true;
                 defer if (transaction_held) {
@@ -410,7 +526,7 @@ pub fn R4osStore(comptime Config: type) type {
                     self.recordFailure(.atomic_publish, r4os.abi.file_stream_error_size_mismatch);
                     return error.Io;
                 }
-                if (kind == .rtc) try validateRtcRecordAt(self, &target, .atomic_publish);
+                if (kind != .sram) try validateRecordAt(self, kind, &target, .atomic_publish);
                 try removeAtomicScratch(self, &backup);
                 if (!abortOwnedPathWithRetryAtStage(self, &transaction, .atomic_release)) return error.Io;
                 transaction_held = false;
@@ -458,7 +574,7 @@ pub fn R4osStore(comptime Config: type) type {
                     self.recordFailure(.atomic_stage_verify, r4os.abi.file_stream_error_size_mismatch);
                     return error.Io;
                 }
-                if (kind == .rtc) try validateRtcRecordAt(self, stage, .atomic_stage_verify);
+                if (kind != .sram) try validateRecordAt(self, kind, stage, .atomic_stage_verify);
                 return;
             }
             unreachable;
@@ -546,24 +662,30 @@ pub fn R4osStore(comptime Config: type) type {
             coalesced: u64 = 0,
             errors: u64 = 0,
             maximum_queued: u8 = 0,
+            snapshot_bytes: u64 = 0,
+            written_bytes: u64 = 0,
         };
 
         /// Product persistence wrapper. The emulation thread only copies an immutable
-        /// SRAM/RTC snapshot; a joinable app thread performs the slow atomic namespace
-        /// transaction. One worker serializes both file kinds so Store and its writer
+        /// SRAM/RTC or bounded delta snapshot; a joinable app thread performs the
+        /// atomic namespace transaction. One worker serializes all kinds so the writer
         /// lease never need cross-thread locking. New snapshots are coalesced per kind,
         /// while close drains every accepted write before releasing the cartridge.
         pub const AsyncStore = struct {
             allocator: std.mem.Allocator,
             store: Store,
             active: ?ActiveWrite = null,
-            pending: [2]?*AsyncWriteJob = .{ null, null },
+            pending: [3]?*AsyncWriteJob = .{ null, null, null },
             next_sequence: u64 = 1,
             latched_failure: ?BackendError = null,
             stats: AsyncStats = .{},
 
-            pub fn init(files: r4os.app_storage.Files, allocator: std.mem.Allocator) AsyncStore {
+            pub const init = if (dynamic) initConfigured else initStatic;
+            fn initStatic(files: r4os.app_storage.Files, allocator: std.mem.Allocator) AsyncStore {
                 return .{ .allocator = allocator, .store = Store.init(files) };
+            }
+            fn initConfigured(files: r4os.app_storage.Files, allocator: std.mem.Allocator, configuration: *const Configuration) AsyncStore {
+                return .{ .allocator = allocator, .store = Store.init(files, configuration) };
             }
 
             pub fn backend(self: *AsyncStore) Backend {
@@ -574,6 +696,8 @@ pub fn R4osStore(comptime Config: type) type {
                     .read_exact_fn = readExact,
                     .write_atomic_fn = writeAtomic,
                     .poll_fn = poll,
+                    .drain_fn = drainBackend,
+                    .pending_fn = pendingBackend,
                 };
             }
 
@@ -640,6 +764,7 @@ pub fn R4osStore(comptime Config: type) type {
 
                 const job = try self.createJob(digest, kind, bytes);
                 self.stats.enqueued +%= 1;
+                self.stats.snapshot_bytes +%= bytes.len;
                 if (self.active == null) {
                     self.startJob(job) catch |fault| {
                         self.destroyJob(job);
@@ -710,6 +835,7 @@ pub fn R4osStore(comptime Config: type) type {
                     self.stats.completed +%= 1;
                     const job = active.job;
                     const result = if (rc == r4os.abi.thread_ok and exit_code == 0) job.result else AsyncWriteResult.io;
+                    if (result == .ok) self.stats.written_bytes +%= job.bytes.len;
                     if (rc != r4os.abi.thread_ok or exit_code != 0) self.store.recordFailure(.async_join, if (rc != r4os.abi.thread_ok) rc else exit_code);
                     self.destroyJob(job);
                     if (asyncResultFault(result)) |fault| {
@@ -730,6 +856,16 @@ pub fn R4osStore(comptime Config: type) type {
                     };
                 };
                 if (self.latched_failure) |fault| return fault;
+            }
+
+            fn drainBackend(context: *anyopaque) BackendError!void {
+                const self: *AsyncStore = @ptrCast(@alignCast(context));
+                try self.drain();
+            }
+
+            fn pendingBackend(context: *anyopaque) bool {
+                const self: *AsyncStore = @ptrCast(@alignCast(context));
+                return self.active != null or self.pendingCount() != 0;
             }
 
             fn drain(self: *AsyncStore) BackendError!void {
@@ -799,6 +935,7 @@ pub fn R4osStore(comptime Config: type) type {
             return switch (kind) {
                 .sram => 0,
                 .rtc => 1,
+                .sram_delta => 2,
             };
         }
 
@@ -864,16 +1001,28 @@ pub fn R4osStore(comptime Config: type) type {
             kind: FileKind,
             expected_size: usize,
         ) BackendError!void {
-            const transaction = makePath(digest, .atomic_lock) catch return error.Io;
+            const transaction = makePath(self.configuration, digest, .atomic_lock) catch return error.Io;
             try beginAtomicTransaction(self, &transaction);
             var transaction_held = true;
             defer if (transaction_held) {
                 _ = abortOwnedPathWithRetryAtStage(self, &transaction, .atomic_release);
             };
 
-            const target = makePath(digest, if (kind == .sram) .sram else .rtc) catch return error.Io;
-            const stage = makePath(digest, if (kind == .sram) .sram_stage else .rtc_stage) catch return error.Io;
-            const backup = makePath(digest, if (kind == .sram) .sram_backup else .rtc_backup) catch return error.Io;
+            const target = makePath(self.configuration, digest, switch (kind) {
+                .sram => .sram,
+                .rtc => .rtc,
+                .sram_delta => .sram_delta,
+            }) catch return error.Io;
+            const stage = makePath(self.configuration, digest, switch (kind) {
+                .sram => .sram_stage,
+                .rtc => .rtc_stage,
+                .sram_delta => .delta_stage,
+            }) catch return error.Io;
+            const backup = makePath(self.configuration, digest, switch (kind) {
+                .sram => .sram_backup,
+                .rtc => .rtc_backup,
+                .sram_delta => .delta_backup,
+            }) catch return error.Io;
             try recoverAtomicKind(self, kind, expected_size, &target, &stage, &backup);
             if (!abortOwnedPathWithRetryAtStage(self, &transaction, .atomic_release)) return error.Io;
             transaction_held = false;
@@ -903,7 +1052,7 @@ pub fn R4osStore(comptime Config: type) type {
                         self.recordFailure(.atomic_recover, r4os.abi.file_stream_error_size_mismatch);
                         return error.Io;
                     }
-                    if (kind == .rtc) try validateRtcRecordAt(self, stage, .atomic_recover);
+                    if (kind != .sram) try validateRecordAt(self, kind, stage, .atomic_recover);
                     try replaceAtomicWithRetry(self, target, stage, backup, .atomic_recover);
                     const target_size = try pathSizeVisibleWithRetry(self, target, .atomic_recover);
                     if (target_size == null) {
@@ -914,7 +1063,7 @@ pub fn R4osStore(comptime Config: type) type {
                         self.recordFailure(.atomic_recover, r4os.abi.file_stream_error_size_mismatch);
                         return error.Io;
                     }
-                    if (kind == .rtc) try validateRtcRecordAt(self, target, .atomic_recover);
+                    if (kind != .sram) try validateRecordAt(self, kind, target, .atomic_recover);
                     try removeAtomicScratch(self, backup);
                 },
                 .cleanup_backup => {
@@ -922,7 +1071,7 @@ pub fn R4osStore(comptime Config: type) type {
                         self.recordFailure(.atomic_recover, r4os.abi.file_stream_error_size_mismatch);
                         return error.Io;
                     }
-                    if (kind == .rtc) try validateRtcRecordAt(self, target, .atomic_recover);
+                    if (kind != .sram) try validateRecordAt(self, kind, target, .atomic_recover);
                     try removeAtomicScratch(self, backup);
                 },
                 .orphan_backup => {
@@ -941,7 +1090,7 @@ pub fn R4osStore(comptime Config: type) type {
             failure_stage: FailureStage,
         ) BackendError!?u64 {
             for (0..create_retry_attempts) |attempt| {
-                switch (self.files.info(path.asZ())) {
+                switch (pathShape(&self.files, path.asZ())) {
                     .value => |info| {
                         if (info.is_dir == 0) return info.size;
                         self.recordFailure(failure_stage, r4os.r4sys.file_replace_atomic_error_conflict);
@@ -970,7 +1119,7 @@ pub fn R4osStore(comptime Config: type) type {
             failure_stage: FailureStage,
         ) BackendError!?u64 {
             for (0..create_retry_attempts) |attempt| {
-                switch (self.files.info(path.asZ())) {
+                switch (pathShape(&self.files, path.asZ())) {
                     .value => |info| {
                         if (info.is_dir == 0) return info.size;
                         self.recordFailure(failure_stage, r4os.r4sys.file_replace_atomic_error_conflict);
@@ -992,12 +1141,19 @@ pub fn R4osStore(comptime Config: type) type {
             unreachable;
         }
 
-        fn validateRtcRecordAt(
+        fn validateRecordAt(
             self: *Store,
+            kind: FileKind,
             path: *const r4os.AbsoluteFilePath,
             failure_stage: FailureStage,
         ) BackendError!void {
-            var encoded: [Config.rtc_record_bytes]u8 = undefined;
+            const delta_bytes = if (dynamic) self.configuration.delta_record_bytes else if (@hasDecl(Config, "delta_record_bytes")) Config.delta_record_bytes else 0;
+            const rtc_bytes = if (dynamic) self.configuration.rtc_record_bytes else Config.rtc_record_bytes;
+            var buffer: [if (dynamic) 0 else @max(Config.rtc_record_bytes, if (@hasDecl(Config, "delta_record_bytes")) Config.delta_record_bytes else 0)]u8 = undefined;
+            const length = if (kind == .rtc) rtc_bytes else delta_bytes;
+            if (length == 0) return error.Unsupported;
+            if (dynamic and self.configuration.record_scratch.len < length) return error.Unsupported;
+            const encoded = if (dynamic) self.configuration.record_scratch[0..length] else buffer[0..length];
             var offset: usize = 0;
             while (offset < encoded.len) {
                 const transferred = read_retry: {
@@ -1025,7 +1181,11 @@ pub fn R4osStore(comptime Config: type) type {
                 }
                 offset += transferred;
             }
-            if (!Config.validateRtc(encoded[0..])) {
+            const valid = if (dynamic) blk: {
+                const validator = (if (kind == .rtc) self.configuration.validate_rtc else self.configuration.validate_delta) orelse break :blk false;
+                break :blk validator(self.configuration.context, encoded);
+            } else if (kind == .rtc) Config.validateRtc(encoded) else if (@hasDecl(Config, "validateDelta")) Config.validateDelta(encoded) else false;
+            if (!valid) {
                 self.recordFailure(failure_stage, r4os.abi.file_stream_error_invalid);
                 return error.Io;
             }
@@ -1093,7 +1253,7 @@ pub fn R4osStore(comptime Config: type) type {
             failure_stage: FailureStage,
         ) BackendError!bool {
             for (0..create_retry_attempts) |attempt| {
-                switch (self.files.info(path.asZ())) {
+                switch (pathShape(&self.files, path.asZ())) {
                     .value => |info| {
                         if (info.is_dir == 0) return true;
                         self.recordFailure(failure_stage, r4os.r4sys.file_replace_atomic_error_conflict);
@@ -1152,17 +1312,29 @@ pub fn R4osStore(comptime Config: type) type {
 
         /// Exposes only the two durable data names for product diagnostics. Atomic
         /// staging, backups and writer leases remain private implementation details.
-        pub fn dataPath(digest: *const [digest_bytes]u8, kind: FileKind) !r4os.AbsoluteFilePath {
-            return makePath(digest, if (kind == .sram) .sram else .rtc);
+        pub const dataPath = if (dynamic) dataPathConfigured else dataPathStatic;
+        fn dataPathStatic(digest: *const [digest_bytes]u8, kind: FileKind) !r4os.AbsoluteFilePath {
+            return dataPathWithConfig({}, digest, kind);
+        }
+        fn dataPathConfigured(configuration: *const Configuration, digest: *const [digest_bytes]u8, kind: FileKind) !r4os.AbsoluteFilePath {
+            return dataPathWithConfig(configuration, digest, kind);
+        }
+        fn dataPathWithConfig(configuration: ConfigView, digest: *const [digest_bytes]u8, kind: FileKind) !r4os.AbsoluteFilePath {
+            return makePath(configuration, digest, switch (kind) {
+                .sram => .sram,
+                .rtc => .rtc,
+                .sram_delta => .sram_delta,
+            });
         }
 
-        fn ensureSaveRoot(files: *const r4os.app_storage.Files) BackendError!void {
-            for (Config.root_directories) |raw| {
+        fn ensureSaveRoot(configuration: ConfigView, files: *const r4os.app_storage.Files) BackendError!void {
+            if (dynamic and !configuration.valid()) return error.Unsupported;
+            for (if (dynamic) configuration.root_directories else Config.root_directories) |raw| {
                 const path = r4os.AbsoluteFilePath.parse(raw) catch return error.Io;
                 var visible = false;
                 for (0..create_retry_attempts) |attempt| {
                     _ = files.createDirectory(path.asZ());
-                    visible = switch (files.info(path.asZ())) {
+                    visible = switch (pathShape(files, path.asZ())) {
                         .value => |info| info.is_dir != 0,
                         .missing, .failure => false,
                     };
@@ -1251,8 +1423,10 @@ pub fn R4osStore(comptime Config: type) type {
             files.sys.sleepTicks(delay);
         }
 
-        fn makePath(digest: *const [digest_bytes]u8, role: PathRole) !r4os.AbsoluteFilePath {
-            if (role == .atomic_lock or role == .sram_stage or role == .rtc_stage or role == .sram_backup or role == .rtc_backup) {
+        fn makePath(configuration: ConfigView, digest: *const [digest_bytes]u8, role: PathRole) !r4os.AbsoluteFilePath {
+            if (dynamic and !configuration.valid()) return error.Unsupported;
+            const save_root = if (dynamic) configuration.save_root else Config.save_root;
+            if (role == .atomic_lock or role == .sram_stage or role == .rtc_stage or role == .sram_backup or role == .rtc_backup or role == .delta_stage or role == .delta_backup) {
                 var token: [10]u8 = undefined;
                 makeAtomicToken(digest, &token);
                 const discriminator: u8 = switch (role) {
@@ -1261,11 +1435,13 @@ pub fn R4osStore(comptime Config: type) type {
                     .sram_backup => 'B',
                     .rtc_stage => 'T',
                     .rtc_backup => 'R',
+                    .delta_stage => 'D',
+                    .delta_backup => 'E',
                     else => unreachable,
                 };
                 var short_raw: [160]u8 = undefined;
                 const rendered = try std.fmt.bufPrint(short_raw[0..], "{s}{s}.{c}{s}", .{
-                    Config.save_root,
+                    save_root,
                     token[0..8],
                     discriminator,
                     token[8..10],
@@ -1278,6 +1454,9 @@ pub fn R4osStore(comptime Config: type) type {
             const suffix = switch (role) {
                 .sram => ".SAV",
                 .rtc => ".RTC",
+                .sram_delta => ".SDJ",
+                .delta_stage => unreachable,
+                .delta_backup => unreachable,
                 .lock => ".LCK",
                 .atomic_lock => unreachable,
                 .sram_stage => ".SAV.NEW",
@@ -1286,7 +1465,7 @@ pub fn R4osStore(comptime Config: type) type {
                 .rtc_backup => ".RTC.BAK",
             };
             var raw: [192]u8 = undefined;
-            const rendered = try std.fmt.bufPrint(raw[0..], "{s}{s}{s}", .{ Config.save_root, hash, suffix });
+            const rendered = try std.fmt.bufPrint(raw[0..], "{s}{s}{s}", .{ save_root, hash, suffix });
             return r4os.AbsoluteFilePath.parse(rendered);
         }
 
@@ -1337,12 +1516,41 @@ pub fn R4osStore(comptime Config: type) type {
         }
 
         test "canonical save path stays below the installed subsystem" {
+            if (dynamic) return;
             const digest = [_]u8{0xAB} ** digest_bytes;
             const canonical = try dataPath(&digest, .sram);
 
             try std.testing.expect(std.mem.startsWith(u8, canonical.bytes(), Config.save_root));
             try std.testing.expect(std.mem.endsWith(u8, canonical.bytes(), ".SAV"));
             try std.testing.expect(std.mem.indexOf(u8, canonical.bytes(), "\\APPDATA\\") == null);
+
+            // Exercise the real recovery size lookup, not a shortened name:
+            // 64hex+.SAV and a wide backend node cannot become FileInfo.
+            const p2 = @import("platform2.zig");
+            const Peer = struct {
+                var flags: u32 = 0;
+                fn metadata(_: [*:0]const u8, out: *r4os.abi.FileMetadata2) callconv(.c) i32 {
+                    out.* = .{ .flags = flags, .byte_size = 4, .backend_node = @as(u64, 1) << 40 };
+                    return 1;
+                }
+            };
+            Peer.flags = r4os.abi.file_metadata2_flag_exists | r4os.abi.file_metadata2_flag_byte_size_valid |
+                r4os.abi.file_metadata2_flag_backend_node_valid;
+            var sys: p2.abi.R4XStartR4Sys2 = .{};
+            sys.file_metadata2 = @intFromPtr(&Peer.metadata);
+            var imports = [_]r4os.abi.R4XStartImport{.{ .group_id = 1, .resolved_version = 2, .table = @intFromPtr(&sys) }};
+            var start: p2.abi.R4XStartContext2 = .{ .imports = @intFromPtr(&imports), .import_count = imports.len };
+            const context = try p2.Context.init(&start);
+            const files = storage.Files{ .sys = system.Context.fromProgram(.{ .generation2 = &context }) };
+            try std.testing.expectEqual(r4os.abi.file_metadata2_error_unsupported, files.info(canonical.asZ()).failure);
+            var store = Store.init(files);
+            try std.testing.expectEqual(@as(?u64, 4), try pathSizeWithRetry(&store, &canonical, .sram_info));
+            Peer.flags = r4os.abi.file_metadata2_flag_exists;
+            if (pathSizeWithRetry(&store, &canonical, .sram_info)) |_| {
+                return error.UnknownSizeAccepted;
+            } else |_| {}
+            try std.testing.expectEqual(FailureStage.sram_info, store.failure_stage);
+            try std.testing.expectEqual(r4os.abi.file_metadata2_error_unsupported, store.failure_code);
         }
 
         test "atomic recovery never removes an orphaned last-good backup" {

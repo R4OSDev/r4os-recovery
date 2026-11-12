@@ -1,0 +1,21 @@
+#include <r4os/technical2.h>
+static R4OS2Protocol owner;
+static uint32_t active;
+static int32_t protocol_init(const R4ProtocolApi2 *api){
+ if(R4OS2ProtocolInit(api,&owner))return -1;
+ int32_t rc=owner.api->register_role((const uint8_t *)"misc.{ProjectNameLower}",R4ABI_PROTOCOL_CATEGORY_MISC,0);if(rc)return rc;
+ rc=owner.api->set_status(R4ABI_PROTOCOL_STATE_ACTIVE,(const uint8_t *)"{ProjectName}");if(rc)return rc;active=1;return 0;
+}
+static int32_t protocol_shutdown(void){
+ if(!owner.api)return 0;
+ /* This synchronous shell has no retained callbacks/backing to drain. Add
+  * exact Gate/lease receipts before freeing state in an asynchronous owner. */
+ int32_t rc=owner.api->set_status(R4ABI_PROTOCOL_STATE_DISABLED,(const uint8_t *)"closed");if(!rc)active=0;return rc;
+}
+static int32_t protocol_query(R4ProtocolStatus *out){if(!out)return -1;*out=(R4ProtocolStatus){.state=active?R4ABI_PROTOCOL_STATE_ACTIVE:R4ABI_PROTOCOL_STATE_DISABLED};return 0;}
+static int32_t protocol_dispatch(uint32_t op,const R4ProtocolBuffer *in,R4ProtocolBuffer *out){
+ (void)in;if(op==1)return protocol_shutdown();if(op || !active)return -2;
+ if(!out || !out->data || out->capacity<2)return -3;
+ ((uint8_t *)out->data)[0]='O';((uint8_t *)out->data)[1]='K';out->len=2;return 0;
+}
+R4OS_PROTOCOL_ENTRY2(protocol_init,protocol_shutdown,protocol_query,protocol_dispatch);

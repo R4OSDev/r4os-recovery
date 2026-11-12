@@ -1,0 +1,57 @@
+﻿DeviceInventorySnapshotInfo und device_inventory_capture
+=======================================================
+
+Contract0.64.80, R4DEV37 / Query2-R4DEV-Tabellenrevision2, 0.90.21.
+Der Query-/Startsymbolvertrag selbst bleibt Query:1 bzw. Query2:2.
+
+Der neue optionale Slot folgt dem unveraenderten 736-Byte-Praefix der
+bisherigen R4DEV-Tabelle. Die kompakte Query2-Tabelle erhaelt ihn nach ihrem
+712-Byte-Praefix. Die urspruengliche Source-Revision 36 in Generation2.json
+bleibt fest; der vorhandene Generator berechnet die neue Tabellenrevision 2.
+Alle frueheren Slots, Null-Tombstones und DeviceInventoryRecord224 bleiben.
+
+Ein synchroner Capture schreibt in einem vorhandenen collect-Durchlauf
+feste Records in Callerspeicher. Jede angebotene Zeile kopiert ihren Text,
+bevor weitere Provider dessen temporaeren Speicher verwenden. Es gibt keine
+neuen Hardware-/PCI-Scans, kein neues I/O, keine Kernelallokation und keine
+persistent gehaltene Kernel-Snapshotregistry. Aufruferpuffer und Callbackcode
+bleiben bis zur wirklichen Rueckkehr gueltig. Kein Inventar-/Registrylock
+ueberspannt fremde Callbacks, Warten, Alloc oder Freigabe.
+
+Die 64-Byte-Quittung hat Version 1, size64 und record_size224. Erfolg 0 setzt
+complete und independent_copies sowie eine eindeutige bootlokale nicht-null
+Capturegeneration. Diese Identitaet bezeichnet die danach festgehaltene
+Kopie, keine Hardwareidentitaet und keine gemeinsame Live-Ownerrevision.
+Verschiedene Metadatenbesitzer werden in ihrer bisherigen Folge gelesen;
+eine globale atomare Hardware-/Hotplugaufnahme wird nicht versprochen.
+Die Kopie ist kein Retain und kein Beleg heutiger Geraetepraesenz.
+
+count/required_count/capacity sind ganze Records. Zu kleine Kapazitaet
+liefert -2 mit required_count, Klassifikationssummen, count=min(total,capacity)
+und generation0 ohne complete. Die Teilzeilen sind unbenutzbar und zu
+verwerfen. Ein neuer Versuch ist eine ausdrueckliche neue Sammlung, kein
+versteckter Retry. Overflow liefert -3 ohne complete; Identitaetserschoepfung
+-4 vor der Sammlung. Ein Provider-OOM-Status -8 bleibt Fehler; der aktuelle
+Kernelpfad selbst allokiert nicht. Fehlende Slots bleiben err_no_fn/-group.
+
+Rows duerfen nur bei capacity0 null sein. Die ganze angegebene Recordspanne
+und out_info sind gemappt, ausgerichtet, exklusiv und zueinander sowie zu
+Owner-/Code-/Scratchspeicher disjunkt. Offensichtliche Null-/Alignment-/
+Adressueberlauf-/Outputaliasfehler werden vor Sammlung mit -1 abgewiesen;
+dies validiert keine Adressraummappings in diesem vertrauenswuerdigen System.
+Die Quittung ist nur bei Erfolg und den dokumentierten Capacity-/Overflow-
+Fehlern ausgefuellt. Andere Fehler lassen sie unveraendert. Kein Callback
+haelt die Aufruferpuffer nach seiner Rueckkehr.
+
+source_mask enthaelt Bits der im bestehenden Record-bus-Feld beobachteten
+Busarten. with_driver/without_driver/unknown sind Summen des ganzen
+Durchlaufs, auch bei zu kleiner Kapazitaet. Gleich benannte oder veraenderte
+Providerkopien erhalten dadurch keine neue atomare oder aktuelle Bedeutung.
+
+Seiten und Cursor gehoeren zum SDK-Besitzer ueber der fertigen Caller-Kopie.
+Sie fuehren keinen neuen Kernelaufruf aus. Eine neue Capturegeneration
+erzwingt Restart fuer alte Cursor; alle Teilseiten einer solchen Traversierung
+sind dann zu verwerfen. Close beendet die SDK-Sicht, keine Hardware- oder
+Kernelressource. Stop waehrend des synchronen Callbacks endet den aktiven
+Loan erst nach wirklicher Rueckkehr. Bestehende Indexverbraucher werden in
+dieser Anbieterphase nicht umgestellt.

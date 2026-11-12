@@ -31,6 +31,9 @@ pub const op_cancel: u16 = 6;
 pub const op_results: u16 = 7;
 pub const op_components: u16 = 8;
 pub const op_restart: u16 = 9;
+pub const op_results_bundle: u16 = 10;
+pub const op_component_batch: u16 = 11;
+pub const component_batch_capacity: usize = 8;
 
 pub const result_ok: i32 = 0;
 pub const result_busy: i32 = -7;
@@ -161,6 +164,16 @@ pub const ResultsRequest = extern struct {
 pub const ComponentRequest = extern struct {
     header: RequestHeader = RequestHeader.init(ComponentRequest),
     job_id: u32 = 0,
+    result_index: u32 = 0,
+    component_index: u32 = 0,
+};
+
+/// Generation zero starts a read; subsequent requests echo the returned
+/// generation. A changed snapshot must be loaded again from index zero.
+pub const PageRequest = extern struct {
+    header: RequestHeader = RequestHeader.init(PageRequest),
+    job_id: u32 = 0,
+    generation: u32 = 0,
     result_index: u32 = 0,
     component_index: u32 = 0,
 };
@@ -331,6 +344,41 @@ pub const ComponentPage = extern struct {
             self.has_component <= 1 and self.component.valid();
     }
 };
+
+/// The complete offer plus its first component fits in one IPC response.
+/// Existing single-row operations remain available to older clients.
+pub const ResultsBundle = extern struct {
+    page: ResultsPage = .{},
+    first_component: OfferComponent = .{},
+
+    pub fn valid(self: *const ResultsBundle) bool {
+        return self.page.valid() and self.first_component.valid();
+    }
+};
+
+pub const ComponentBatch = extern struct {
+    header: RequestHeader = RequestHeader.init(ComponentBatch),
+    job_id: u32 = 0,
+    generation: u32 = 0,
+    result_index: u32 = 0,
+    component_index: u32 = 0,
+    total: u32 = 0,
+    count: u32 = 0,
+    components: [component_batch_capacity]OfferComponent = .{OfferComponent{}} ** component_batch_capacity,
+
+    pub fn valid(self: *const ComponentBatch) bool {
+        if (!self.header.valid(@sizeOf(ComponentBatch)) or self.count == 0 or
+            self.count > self.components.len or self.component_index > self.total or
+            self.count > self.total - self.component_index) return false;
+        for (self.components[0..self.count]) |*component| if (!component.valid()) return false;
+        return true;
+    }
+};
+
+comptime {
+    if (@sizeOf(ResultsBundle) > 4096 or @sizeOf(ComponentBatch) > 4096)
+        @compileError("update result batches exceed the service payload limit");
+}
 
 pub fn operationFromWire(raw: u16) ?Operation {
     return switch (raw) {

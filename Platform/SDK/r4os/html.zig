@@ -1094,8 +1094,9 @@ fn appendCodepoint(out: []u8, len: *usize, codepoint_input: u21) Error!void {
 
 fn decodeReference(value: []const u8, start: usize) ?DecodedReference {
     if (start >= value.len or value[start] != '&') return null;
-    const semicolon = std.mem.indexOfScalarPos(u8, value, start + 1, ';') orelse return null;
-    if (semicolon - start > 32) return null;
+    // The existing 32-byte candidate limit also bounds the search itself.
+    const candidate = value[start + 1 ..][0..@min(@as(usize, 32), value.len - start - 1)];
+    const semicolon = start + 1 + (std.mem.indexOfScalar(u8, candidate, ';') orelse return null);
     const token = value[start + 1 .. semicolon];
     if (token.len == 0) return null;
     var codepoint: ?u21 = null;
@@ -1275,6 +1276,30 @@ test "HTML parser decodes soft hyphen references into the DOM" {
     var text_buffer: [16]u8 = undefined;
     const value = try document.textContent(paragraph, text_buffer[0..]);
     try std.testing.expectEqualSlices(u8, &.{ '2', 0xC2, 0xAD, '0' }, value);
+}
+
+test "HTML references preserve the inclusive candidate boundary and literal progress" {
+    const boundary = "&#" ++ "0" ** 28 ++ "65;";
+    const overlong = "&#" ++ "0" ** 29 ++ "65;";
+    try std.testing.expectEqual(@as(u21, 'A'), decodeReference(boundary, 0).?.codepoint);
+    try std.testing.expectEqual(@as(usize, 33), decodeReference(boundary, 0).?.consumed);
+    try std.testing.expect(decodeReference(overlong, 0) == null);
+    try std.testing.expect(decodeReference("&", 0) == null);
+    try std.testing.expect(decodeReference("&amp", 0) == null);
+    try std.testing.expect(decodeReference("&unknown;", 0) == null);
+    try std.testing.expect(decodeReference("&#x;", 0) == null);
+    try std.testing.expect(decodeReference("text", 4) == null);
+    var document = Document{};
+    _ = try document.parse("<p title='&quot;&#65;&#x41;'>&&amp;" ++ boundary ++ overlong ++ "&#0;&#xD800;&#x110000;</p>", .{});
+    const paragraph = document.findFirstElement("p").?;
+    try std.testing.expectEqualStrings("\"AA", document.attribute(paragraph, "title").?);
+    var output: [128]u8 = undefined;
+    try std.testing.expectEqualStrings("&&A" ++ overlong ++ "\xef\xbf\xbd" ** 3, try document.textContent(paragraph, &output));
+    document.reset();
+    var ampersands: [4096]u8 = undefined;
+    @memset(&ampersands, '&');
+    const stored = try document.storeEntityDecoded(&ampersands);
+    try std.testing.expectEqualSlices(u8, &ampersands, stored.bytes(&document.strings));
 }
 
 test "malformed HTML closes paragraphs and ignores unmatched end tags" {

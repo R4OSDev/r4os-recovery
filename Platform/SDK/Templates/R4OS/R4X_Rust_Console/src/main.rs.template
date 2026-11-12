@@ -1,0 +1,9 @@
+#![no_std]
+use r4os_sdk::App2;
+
+fn main(app: &mut App2<'_>) -> i32 {
+    if app.write("[RUST] {ProjectName}: console OK\n") < 0 { return 1; }
+    0
+}
+
+r4os_sdk::app2!(main);

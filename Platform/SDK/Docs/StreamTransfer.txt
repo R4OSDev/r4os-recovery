@@ -1,0 +1,233 @@
+﻿StreamTransfer (SDK0.64.162)
+===========================
+
+Besitzer und Umfang
+-------------------
+r4os/stream_transfer.zig besitzt den gemeinsamen Zustand; stream_adapters.zig
+enthaelt kleine Adapter ueber die vorhandenen Datei-/TCPSVC-/Servicebesitzer.
+Zig: r4os.stream_transfer. C: stream_transfer.h/stream_platform2.h. Rust:
+r4os_sdk::transfer. Alle Sprachen verwenden denselben statischen SDK-Besitzer
+im vorhandenen Fassadenobjekt. Keine neue R4L, kein Kernel-/Netz-/IPCstack,
+keine erfundenen Dateihandles und keine Umstellung bestehender Verbraucher.
+
+Eine Gesamtoperation
+--------------------
+Transfer.init(read_exact|write_all,total,initial_clock,timeout) erstellt genau
+ein DeadlineBudget. initAbsolute beziehungsweise with_deadline uebernimmt
+eine bereits vor Discovery begonnene Gesamtfrist ohne Neustart. Total und
+bestaetigter Gesamtpraefix sind u64-Bytes, Einzeloperationen bleiben auf
+INT32_MAX begrenzt. Ein Schritt bietet min(Rest,Callerbereich,Einzellimit) an.
+Der rohe Zustand kann mehrere aufeinanderfolgende Callerbereiche verarbeiten;
+Rust ReadExact/WriteAll binden einen vollstaendigen geliehenen Bereich und
+geben jedem Callback nur dessen unbestaetigten Rest. Keine verborgene Loop.
+
+Der Clockowner liefert eine validierte ClockSample vor und nach jedem
+tatsaechlichen Callback. Identitaet/Epoche, Regression und Ablauf werden
+geprueft, niemals still rebased. Ohne gueltige Clockquelle wird nicht geraten.
+Die Callbackfrist ist eine absolute Kopie derselben Frist, kein neues Budget
+je kurzem Write/Read. Vor einer nach Discovery begonnenen Teiloperation muss
+deren Adapter die Frist erneut pruefen. Ein Uhrfehler nach Wirkung behaelt
+den schon bestaetigten Praefix und beendet weitere Arbeit.
+
+Poll erlaubt genau einen unmittelbaren Owner-Schritt, auch wenn nur ein
+Teilpraefix bestaetigt wird. Der Rest wird nicht durch neue Pollaufrufe
+abgearbeitet: ein kurzer Erfolg wird terminales WouldBlock. Finite Ablauf
+liefert Timeout ohne weitere Teiloperation; Forever bleibt ausdruecklich.
+Zero-Total ist nach gueltiger Initialisierung bereits Complete ohne I/O.
+Nullfortschritt eines nichtleeren Callbacks bedeutet WouldBlock, niemals EOF.
+
+Progress liefert bytes,total,last_bytes,outcome,error_code sowie Flags:
+goal_met,terminal,in_call,effect_uncertain. Bestaetigter Praefix und terminale
+Ursache bleiben getrennt: Auch Timeout/Cancelled/Failure/Closed koennen Bytes
+bis zum gesamten Ziel bestaetigen. GoalMet ist keine Persistenz-/Peerzusage.
+EOF ist nur ein ausdrueckliches Readresultat, verschieden von WouldBlock,
+Timeout, Closed und Fehler. EOF mit ganz erfuelltem Readziel ist Complete.
+
+Der Callback quittiert ein bestimmtes Bytepraefix neben Progress/EOF/
+WouldBlock/TimedOut/Closed/Failed/Uncertain. Bestimmte Bytes werden auch bei
+Fehlern gezaehlt. Ueberannahme, ungueltiger Tag/Reserved oder unbekannte Wirkung
+beendet den Zustand ohne automatische Wiederholung. InvalidProgress erfindet
+keine Annahmezahl. Bei Uncertain darf ein schon bekanntes Praefix erhalten
+bleiben; der unbekannte Rest wird nicht als bestaetigt null ausgegeben.
+
+Lebensdauer und Abbruch
+----------------------
+Ein Schritt fuehrt hoechstens einen synchronen I/O-Callback aus. Dessen echte
+Rueckkehr beendet seine lokale Bereichsleihe, auch wenn eine entfernte
+Wirkung unbekannt ist. Keine Callbackimplementierung darf heimlich einen
+asynchronen Request mit geliehenen Bytes zuruecklassen. Dafuer bleibt der
+bestehende I/O-/Pufferbesitzer zustaendig, bis dessen wirkliche Quittung gilt.
+Ein bereits zugelassener blockierender Owner kann die Rueckkehr ueber die
+Frist hinaus verzoegern. Die Frist verhindert neue Arbeit; sie entlaedt weder
+einen aktiven Borrower noch Hardware. Kein erfundenes hartes Zeitlimit.
+
+cancel vor einem Schritt beendet neue Arbeit mit Cancelled und behaltener
+Bytezahl. Reentrantes cancel waehrend eines Callbacks setzt nur eine
+Stopanforderung: in_call bleibt gesetzt, keine terminale Leihfreigabe. Der
+aeussere Schritt wertet erst dessen reale Rueckkehr samt Praefix aus und
+quittiert dann Cancelled. Sonstige reentrante Mutation ist Busy. Caller-
+Sessionbesitz bleibt exklusiv; keine neue globale Mutation/Synchronisation.
+
+Zig/C verlangen gueltigen gemappten Speicher sowie separate State-, Daten-,
+Request-, Scratch- und Ausgabebereiche. Zahlenpruefung ersetzt keine
+Seitentabellen-/Darstellungs-/Lebensdauerpruefung. Rust bindet Eingang und
+exklusiven Ausgang typisiert; hoehergerankte Callbackleihen koennen nicht
+entweichen. Abbruch/Timeout bestaetigt keine Peer-Cancel-, Socketclose-,
+Dateipublish- oder DMAstopoperation. Zustandsabschluss schliesst keinen Owner.
+
+Dateiadapter
+------------
+FileRead nutzt den tatsaechlichen synchronen file_read_at mit32-Bit-Offset.
+Base+Transferoffset wird geprueft; ein absoluter Wert ueber UINT32_MAX meldet
+OffsetUnavailable vor Zugriff, niemals einen abgeschnittenen Offset. Die
+vorhandene breite asynchrone io_file_read_at-Schnittstelle bleibt mit ihrem
+eigenen Request-/Leihvertrag nutzbar und wird hier nicht in einen falschen
+synchronen Borrower umgedeutet. U64-Gesamtfortschritt ist keine pauschale
+Zusicherung jedes Dateisystem-/Adapterbereichs.
+
+FileAppend verwendet den bestehenden pfadbasierten file_append. FileStream
+leiht einen bereits begonnenen Stream mit echtem u64-Offset; Begin/Finish/
+Abort und Publish gehoeren weiter dessen Besitzer. Positive Resultate sind
+Praefixe, Read0 ist EOF und Write0 ist WouldBlock. Negative Resultate nach
+Aufruf werden konservativ Uncertain, weil die alte Zahl keine verifizierte
+Teilannahme nennt. Dateianlage, Inhaltsschutz und Resume werden nicht erfunden.
+
+TCP und Services
+----------------
+Tcp leiht einen wirklichen TCPSVC-Endpoint- und Socketbesitzer in derselben
+Clientidentitaet. Query2-Factories loesen kanonische R4SYS-Callbacks auf;
+keine synthetischen Legacytabellen oder zweite Discovery-/TCPschicht.
+ServiceDeadlineFooter, NetServiceTcpResult und der bestehende Readinessowner
+bleiben massgeblich. Die absolute Nanosekundenfrist wird am Aufruf mit der
+bekannten logischen Tickfrequenz in das vorhandene RPC-/Serverbudget
+uebersetzt; die alte logische Tickaufloesung bleibt dessen Grenze. Kein
+erfundener100Hz-Wert, endlicher Ueberlauf wird nicht Forever.
+
+Ein vollstaendiger passender Serverreply bestaetigt einen Praefix auch neben
+Timeout/Terminalstatus. Der originale TCPSVC-Admissiontimeout hat vor Lookup
+absichtlich Handle0/Bytes0 und bestaetigt null Wirkung; fehlender/fehlerhafter
+Reply nach Einreichung bleibt Uncertain. Peerclosed mit positivem Read oder
+weiteren Pufferdaten ist nicht sofort EOF: Daten werden weiter geliefert,
+bis ein ausdruecklicher leerer abgeschlossener Read EOF bestaetigt. Reset/
+lokales Close behalten den bekannten Praefix. Kein TCP-Peer-ACK wird erfunden.
+
+Der bisherige TCPSVC-/Backendpfad garantiert nach dem Leeren des letzten
+Empfangspraefixes keine erhaltene Schliessursache: Ein weiterer Read kann
+NoConnection/BadHandle melden, obwohl der externe Peer geordnet geschlossen
+hat. Dieser Reply bleibt Failed mit dem bereits bestaetigten Bytepraefix;
+der Adapter deutet ihn nicht in EOF um. EOF ist nur bei einer tatsaechlich
+ausgewiesenen geschlossenen und leeren Quelle qualifiziert. Der Streamhelfer
+fuegt keine zweite Socketregistry oder erratene Schliesshistorie hinzu. Ein
+durchgaengig eindeutiger TCP-Endebeleg benoetigt den spaeteren neuen
+Netzwerk-Anbietervertrag; die vorhandene Grenze ist ausdruecklich erhalten.
+
+ServiceSink leiht einen bestehenden Endpoint fuer genau die gewaehlte
+Operation. Deren ausdruecklicher Decoder interpretiert Antwortheader und
+Antwortbytes und bestaetigt eine Requestpraefixzahl. Die Antwortlaenge ist
+niemals automatisch eine Annahmezahl des Requests. Fehlender Decoder wird
+vor RPC abgewiesen; Timeout ohne gueltigen Reply bleibt ungewisse Wirkung.
+Protokoll-ACK, Crypto, Resume und Publish bleiben bei deren Verbrauchern.
+
+ServiceReply ist ausdruecklich eine einzelne begrenzte RPC-Antwort. Sie leiht
+Callerrequest und exklusiven Scratch, ruft hoechstens einmal auf und liefert
+danach den gespeicherten Antwortbereich schrittweise bis EOF. Kein zweiter
+RPC bei einem kurzen Read, kein vorgetaeuschter unbegrenzter Bytestream.
+Der Scratch bleibt bis zum Ende der lokalen Ansicht geliehen; der wirkliche
+Servicecall behaelt nach seiner Rueckkehr keine Callerbytes. Adapter schliessen
+keine Endpoints/Sockets: deren echte Besitzer bleiben bis zur Closequittung.
+Rustkonstruktoren fuer rohe geliehene Handles sind ausdruecklich unsafe.
+
+API-Beispiele
+-------------
+Zig (ein Write-Schritt):
+  const t = r4os.stream_transfer;
+  var clock = try t.adapters.PlatformClock.fromContext2(context2);
+  var initial: r4os.time_contract.checked.ClockSample = .{};
+  if (t.adapters.PlatformClock.sample(&clock, &initial) != 0) return error.NoClock;
+  var state = try t.Transfer.init(.write_all, text.len, initial,
+      .{ .kind = r4os.abi.timeout_kind_finite, .nanoseconds = 2_000_000_000 });
+  var file = try t.adapters.FileAppend.fromContext2(context2, "C:\\Temp\\TRACE.TXT");
+  const step = try state.writeStep(text, 1024, false,
+      t.adapters.PlatformClock.sample, &clock, t.adapters.FileAppend.step, &file);
+  // Nur ein Owner-Aufruf: step.outcome/Praefix auswerten, WouldBlock dem
+  // aufrufenden Ablauf melden. Nicht automatisch unbekannte Wirkung senden.
+
+C:
+  #include <r4os/stream_platform2.h>
+  R4SdkTransferPlatformClock clock; R4SdkClockSample initial;
+  R4SdkTransferFileAppend file; R4SdkTransfer state; R4SdkTransferProgress step;
+  if (R4SdkTransferClock2(context2,&clock) || R4SdkTransferReadClock(&clock,&initial) ||
+      R4SdkTransferAppend2(context2,(const uint8_t*)"C:\\Temp\\TRACE.TXT",&file)) return -1;
+  if (R4SdkTransferInit(R4_STREAM_XFER_WRITE_ALL,size,initial,
+      (R4Timeout){.kind=1,.nanoseconds=2000000000},&state)) return -1;
+  if (R4SdkTransferWriteStep(&state,data,size,1024,0,
+      R4SdkTransferReadClock,&clock,R4SdkTransferAppendFile,&file,&step)) return -1;
+  // step.bytes/outcome/flags enthalten den bestaetigten Gesamtpraefix.
+
+Rust:
+  use r4os_sdk::{transfer::{PlatformClock,WriteAll,FileAppender},resources::Timeout};
+  let mut clock = PlatformClock::new(context2)?;
+  let initial = clock.sample()?;
+  let mut transfer = WriteAll::new(text,initial,Timeout::AfterNanos(2_000_000_000))?;
+  let mut file = FileAppender::new(context2,c"C:\\Temp\\TRACE.TXT")?;
+  let step = transfer.step(1024,false,&mut ||clock.sample(),|chunk|file.write(chunk))?;
+  // Die Eingabe bleibt bis zur Rueckkehr geliehen. Kein impliziter Retry.
+
+
+Normale Transferprogramme mit SDK0.64.203
+--------------------------------------
+Migration0.90.70 verwendet network_stream.Session/Socket/Reader im normalen
+App2-Verbraucher. Session liest wirkliche TCPSVC-Faehigkeiten und bindet
+Provider, Socket und Generation. Resolverlisten werden ueber resolveAll
+vollstaendig gepinnt gelesen und freigegeben. IPv4 und IPv6 samt numerischem
+linklokalem Scope verwenden bestehende kopierte Records. Ein fuehrendes
+-4 beziehungsweise -6 waehlt die Familie. Hostnamen verwenden standardmaessig
+A-Abfragen. Der vollstaendige Argumenttext wird vor Effekten validiert.
+
+stream_adapters.Driver behaelt eine bestehende finite absolute Clockfrist
+ueber alle Schritte und gibt den zuletzt beobachteten Clockstand zurueck.
+ReadSome beendet sich nach einem bestimmten positiven Praefix. ReadExact
+und WriteAll laufen bis zum Ziel oder einem terminalen Ergebnis. Bekannte
+WouldBlock-Replies erlauben Wiederaufnahme innerhalb derselben Frist.
+Ein unklarer RPC-/Recordabschluss beendet den Transfer als Uncertain und
+bewahrt den zuvor bestaetigten Praefix. Es gibt genau einen eingereichten
+RPC je Stream-Schritt. Eine Socketantwort bestimmt Byteannahme und Endgrund.
+
+Reader behaelt bereits empfangene Bytes ueber eine CRLF-Steuerzeile hinaus
+fuer die anschliessende Lesephase. Ein ausdrueckliches EOF erlaubt einen
+letzten ungerahmten Rest. Weitere terminale Ergebnisse beenden den Aufruf.
+Protokollbedeutung, Laenge, Pruefsumme und Dateipublish bleiben beim App-Owner.
+
+Socket-Close besitzt eine getrennte250-ms-Bereinigungsfrist. Bestaetigtes
+WouldBlock darf innerhalb dieser Frist fortgesetzt werden. Eine fehlende
+Closequittung behaelt die genaue Identitaet und setzt cleanup_failed.
+Session.close meldet verbleibende Socketbesitzer und die Dienstquittung.
+Die normale Prozessbereinigung behaelt ihre eigene Besitzerverantwortung.
+
+launch_io.Output bindet das wirkliche Stdio-Snapshot des App2-Starts.
+Jeder logische Ausgabestring hat eine gemeinsame finite2-s-Frist. Kurze
+Annahmen werden mit StreamTransfer weitergefuehrt. Ein fehlender oder
+ungueltiger Reply beendet den Sink. last erhaelt dessen letzten bestimmten
+Praefix, und weitere Ausgaben werden unterdrueckt. Consoleausgabe behaelt
+ihren bestehenden Handoff-Vertrag. Pipeausgabe verwendet die eigenen
+nativen BytePipe-Endpunkte. close quittiert jede uebernommene Pipereferenz.
+Input wird ueber Stdio mit seinen ausdruecklichen EOF-/Cancel-Zustaenden
+behandelt. Eine leere Console-Pollantwort liefert WouldBlock.
+
+Diese synchronen Komfortkompositionen sind Zig-Quellfassaden. Die bisher
+qualifizierten C-/Rust-StreamTransfer-Kerne, kopierten Netzwerkrecords,
+Service- und Stdio-Aufrufe behalten ihren dokumentierten Pruefumfang.
+Fuenf gezielte Zig-Faelle pruefen kurze Praefixe, verlorene Replies, Cancel,
+gepufferte Steuer-/Bodygrenzen, EOF, fehlerhafte Recordidentitaet, komplette
+Argumentgrammatik und den kurz schreibenden beziehungsweise defekten Sink.
+Normale App-Artefakte und ihre Gastqualifikation folgen als eigener Beleg.
+
+readChecked/writeChecked komponieren die bestehenden Stdio-Aufrufe mit einer
+privaten Ergebnispruefung. Version1, Recordgroesse, Flags0, Zustandsbereich
+und angebotene Bytezahl werden vor Veroeffentlichung validiert. ReadChecked
+verwendet einen privaten Puffer fuer hoechstens einen4-KB-Schritt. Ungueltige
+Ergebnisse lassen Callerbytes und Fortschrittsrecord unveraendert. Output
+und der normale interaktive NETCAT-Eingang verwenden diese Zig-Komposition.
+Der zusaetzliche praezise Fall verletzt einzeln Version, Groesse, Flags und
+Bytegrenze. Der rohe Stdio-Ausgangsaufruf nimmt diese Replies zuvor an.
+Der neue gepruefte Aufruf weist sie mit erhaltenem Callerzustand zurueck.

@@ -1,0 +1,38 @@
+{
+  "schema": 4,
+  "profile": "test",
+  "count": 2,
+  "entries": [
+    {
+      "name": "KERNEL",
+      "kind": "KERNEL",
+      "version": "0.1.381",
+      "target": "/boot/r4os.elf",
+      "module_role": null,
+      "subsystem_id": null,
+      "subsystem_display_name": null,
+      "guest_formats": [],
+      "guest_extensions": [],
+      "guest_features": []
+    },
+    {
+      "name": "R4BASIC",
+      "kind": "R4X",
+      "version": "1.2.39",
+      "target": "/R4OS/SUBSYSTEMS/r4os.basic/R4BASIC.R4X",
+      "module_role": "subsystem",
+      "subsystem_id": "r4os.basic",
+      "subsystem_display_name": "R4BASIC",
+      "guest_formats": [
+        "basic.qbasic-source"
+      ],
+      "guest_extensions": [
+        "basic.qbasic-source:.bas"
+      ],
+      "guest_features": [
+        "basic.qbasic-source:text.source",
+        "basic.qbasic-source:probe.text-token-v1.7072696e74"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 const std = @import("std");
+const web_url = @import("web_url.zig");
 
 pub const url_capacity: usize = 767;
 pub const history_capacity: usize = 32;
@@ -71,28 +72,11 @@ pub fn resolve(base: *const Url, raw_reference: []const u8) UrlError!Url {
     if (authority_end <= authority_start) return error.MissingHost;
 
     var candidate: [url_capacity + 1]u8 = .{0} ** (url_capacity + 1);
-    var len: usize = 0;
-    if (std.mem.startsWith(u8, reference, "//")) {
-        try append(&candidate, &len, base_bytes[0 .. colon + 1]);
-        try append(&candidate, &len, reference);
-    } else if (reference[0] == '/') {
-        try append(&candidate, &len, base_bytes[0..authority_end]);
-        try append(&candidate, &len, reference);
-    } else if (reference[0] == '?') {
-        const end = findFirstOf(base_bytes, authority_end, "?#");
-        try append(&candidate, &len, base_bytes[0..end]);
-        try append(&candidate, &len, reference);
-    } else if (reference[0] == '#') {
-        const end = std.mem.indexOfScalar(u8, base_bytes, '#') orelse base_bytes.len;
-        try append(&candidate, &len, base_bytes[0..end]);
-        try append(&candidate, &len, reference);
-    } else {
-        const clean_end = findFirstOf(base_bytes, authority_end, "?#");
-        const slash = std.mem.lastIndexOfScalar(u8, base_bytes[0..clean_end], '/') orelse authority_end;
-        try append(&candidate, &len, base_bytes[0 .. slash + 1]);
-        try append(&candidate, &len, reference);
-    }
-    return parse(candidate[0..len]);
+    const resolved = web_url.resolveReference(base_bytes[0..authority_end], base_bytes[authority_end..], reference, candidate[0..url_capacity]) catch |err| return switch (err) {
+        error.TooLong => error.TooLong,
+        else => error.UnsupportedRelativeBase,
+    };
+    return parse(resolved);
 }
 
 fn parseAbout(input: []const u8) UrlError!Url {
@@ -177,38 +161,8 @@ fn normalizeHttp(input: []const u8, scheme: Scheme) UrlError!Url {
 }
 
 fn appendNormalizedPath(out: *[url_capacity + 1]u8, len: *usize, path: []const u8) UrlError!void {
-    if (path.len == 0) {
-        try append(out, len, "/");
-        return;
-    }
-    var segment_starts: [96]usize = .{0} ** 96;
-    var depth: usize = 0;
-    var cursor: usize = if (path[0] == '/') 1 else 0;
-    const keep_trailing = path[path.len - 1] == '/' or std.mem.endsWith(u8, path, "/.") or std.mem.endsWith(u8, path, "/..");
-    while (cursor <= path.len) {
-        const rest = path[cursor..];
-        const relative_end = std.mem.indexOfScalar(u8, rest, '/') orelse rest.len;
-        const segment = rest[0..relative_end];
-        if (segment.len == 0 or std.mem.eql(u8, segment, ".")) {
-            // Empty and current-directory segments do not affect the path.
-        } else if (std.mem.eql(u8, segment, "..")) {
-            if (depth > 0) {
-                depth -= 1;
-                len.* = segment_starts[depth];
-                out[len.*] = 0;
-            }
-        } else {
-            if (depth >= segment_starts.len) return error.TooLong;
-            segment_starts[depth] = len.*;
-            depth += 1;
-            try append(out, len, "/");
-            try append(out, len, segment);
-        }
-        if (relative_end == rest.len) break;
-        cursor += relative_end + 1;
-    }
-    if (depth == 0) try append(out, len, "/");
-    if (keep_trailing and len.* > 0 and out[len.* - 1] != '/') try append(out, len, "/");
+    web_url.appendNormalizedPath(out[0..url_capacity], len, path) catch return error.TooLong;
+    out[len.*] = 0;
 }
 
 pub const History = struct {
@@ -368,6 +322,10 @@ fn toLower(ch: u8) u8 {
 }
 
 test "URL parsing normalization and relative resolution" {
+    const repeated = try parse("https://example.test/a//b/index?old#fragment?data");
+    const target = try resolve(&repeated, "../next?q=/../#fragment?data");
+    try std.testing.expectEqualStrings("https://example.test/a//next?q=/../#fragment?data", target.bytes());
+
     const base = try parse(" Example.COM/a/b/index.html?old=1#top ");
     try std.testing.expectEqualStrings("https://example.com/a/b/index.html?old=1#top", base.bytes());
     const path = try resolve(&base, "../next?q=2");

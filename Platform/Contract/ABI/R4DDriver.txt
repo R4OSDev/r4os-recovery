@@ -4,16 +4,279 @@
 Scope
 -----
 
+Audio detail duration retirement (Contract0.64.61 / R4OS0.88.59)
+-------------------------------------------------------------
+AudioBackendStatus remains fixed128 bytes. Its last/max/total_write_ticks
+and last/max/total_refill_ticks fields are retained ABI slots. Current HDA
+and AC97 providers return audio_duration_ticks_unavailable (UINT64_MAX);
+new default records use the same unavailable value. These fields are not
+measured and must never be added, subtracted, scored or displayed as latency.
+The nine corresponding ProgramPerformanceSummary fields use that same
+sentinel, and performance_flag_audio_latency_ready is clear. Ordinary work,
+accepted bytes, IRQ/DMA/worker counters, functional clocks, deadlines and
+generation-bound playback/Close receipts remain available independently.
+No timing session is introduced. Unmodified historical reports retain their
+original measured values and original contract identity.
+
 This document defines the owner and lifetime rules for the technical R4D
 types that accompany the generated R4DEV platform contract. The target is
 trusted little-endian x86_64. DriverApi version 19 appends segment-DMA
 operations; version 20 appends deadline-isolated audio work; version 21
 appends canonical USB-host activation; version 22 appends the display-blit
 backend; version 23 appends network RX-work publication; version 24 appends
-network capability selection and metadata intake. StorageBackend version 2
+network capability selection and metadata intake. Versions 25 through 28
+append the optional graphics memory, queue, output and display queries;
+version 29 appends the loaded-container resource query; version 30 appends
+resident CPU heap access; version 31 appends the common monotonic snapshot;
+version 32 appends dedicated driver tasks; version 33 appends resident
+counting semaphores. Version 34 appends byte-range DMA synchronization;
+version 35 preserves the complete 648-byte layout and adds owned normal-work
+submission from dedicated tasks plus terminal display shutdown semantics.
+Version 36 appends driver_work_submit_owned at offset 648 (size 656); the
+complete v35 prefix and ordinary Work semantics remain unchanged.
+Version 37 appends serial_query at offset 656 (size 664); the serial owner
+negotiates DriverSerialApi independently. New C/Rust R4D contexts require
+the current complete DriverApi; optional inner tables still negotiate their
+actual size and non-null capabilities. The two entry jumps and loader owner
+admission are unchanged.
+StorageBackend version 2
 appends asynchronous block callbacks, UsbHostController version 2 appends
 capability, activity and completion status, and NetBackend version 2 appends
 its offer. None of these extensions changes an older prefix.
+
+Bounded lifecycle-owner Work (Kernel 0.1.212)
+-------------------------------------------
+driver_work_submit_owned(handler, context, completion*) queues one bounded
+task-class callback on the existing normal BSP Work lane. Init/Shutdown or
+a live dedicated driver task supplies the authenticated owner. IRQ and
+storage callbacks cannot use this entrypoint. Dedicated tasks retain their
+existing CPU/thread/heap services; direct BO, PCI/MMIO and display admission
+is not broadened. Older kernels are detected by version, size and callback.
+
+The Work callback obtains the preemptible lifecycle guard without waiting.
+When another task owns it, completion result driver_work_owner_busy (-32000)
+means no callback ran. The caller releases that completion before retrying.
+This prevents a shared worker waiting behind Shutdown while Shutdown checks
+the worker. Under the guard, the normal live driver/heap epoch is checked;
+closing or stale owners cannot start new work. Ordinary Work still lacks
+legacy MMIO/display admission and remains suitable for its existing uses.
+
+A callback is one bounded step: no driver-task join, completion wait or
+pacing loop may span it. Slow device sequences run in their separate driver
+task and submit copied metadata or bounded owner operations as needed.
+The usual completion, cancellation and owner-cleanup rules apply. Context
+storage remains resident until a terminal completion is released, including
+after timeout, failed wait or a late result. A timeout proves neither that
+the callback stopped nor that its hardware/resources can be freed.
+
+The existing EXAMPLE fixture has an optional mode=owned-work-test probe.
+It checks dedicated/ordinary admission refusal, BUSY while Init owns the
+guard, then an owned memory/display query and balanced CPU BO lifecycle
+after Init returns. It performs no device MMIO or GPU submission.
+
+Asynchronous primary mode ownership (Kernel 0.1.161)
+--------------------------------------------------
+GfxDriverOutputApi v1 keeps its 24/48-byte prefixes and appends mode_enable,
+mode_take and mode_complete at 48/56/64 (72 bytes). DriverApi35/648 is
+unchanged. R4DRAW ABI13 separately appends atomic submit/status/resolve;
+the older nonblocking atomic test/commit slots retain their behavior.
+
+Only the actual ready native backend may enable jobs and publish modeset
+capability. Jobs bind the full driver-start identity, backend/reset epoch,
+transaction ticket and distinct operation sequence. A borrowed full BO
+reference belongs to the driver for this transaction; the kernel retains
+it before caller release and retires it after physical ownership permits.
+Drivers must not release that reference themselves. Their own mappings and
+device resources must be quiesced before the corresponding completion.
+
+The separate gfx-mode worker holds DisplayExecution across each operation,
+never a no-sleep owner. Normal graphics work notifies the driver without
+waiting on that same worker. apply/confirm require applied with quiesced=1
+(old inactive); rollback or rejected apply require old_preserved with
+quiesced=2 (new inactive). lost permits 0..3 and conservatively retains both
+surfaces. Invalid/duplicate/stale completions never release resources.
+An operation deadline is 30 seconds. Confirmation is caller-selected
+1..60 seconds; expiry or explicit rollback requests the retained old mode.
+An in-flight timeout preserves receipt identity and sends no competing
+rollback. A late apply receipt schedules rollback through a fresh sequence.
+
+The common bridge supports one unscaled linear SYSTEM XRGB8888 primary
+shadow with RGB8 timings. Hardware allocations, commands and actual
+quiescence belong to the R4D. Geometry changes only after its receipt;
+the original boot capture stays immutable. Confirmation UI is app policy.
+See Docs/Drivers/GrafikScanout07913.txt for integration status and limits.
+
+Held boot display to native ownership (Kernel 0.1.159)
+------------------------------------------------------
+GfxDriverDisplayApi v1 appends prepare_held at offset 56, total 64 bytes.
+Its existing 40/56-byte prefixes, DriverApi 35/648 and v28 query slot stay
+binary-compatible. Query writes only complete slots within caller capacity;
+Zig/C helpers require size >= 64 and a nonzero callback.
+
+prepare_held(registration*, held_generation:u64, state*) authenticates the
+same live R4D owner/adapter, captured immutable boot RAM and effects-latched
+hold. It reuses the exact pending generation with firmware writers closed.
+Ordinary prepare cannot bypass that hold. Initial shadow rows come from the
+RAM snapshot, never a potentially repurposed post-firmware VRAM mapping.
+
+Kernel 0.1.160 permits a native publication to replace the same driver's
+receiver-only entry for that connector. Receiver refresh/close cannot
+overwrite the native binding; other receiver ports remain visible. An
+UNKNOWN connection may publish one geometry-only mode. Only prepare_held
+admits it against the captured boot geometry; ordinary prepare rejects it
+before display ownership changes. Active scanout does not imply CONNECTED.
+
+Abort/old-preserved removes only the native candidate; the original boot
+hold remains preparing/retained. Old-preserved is returned only after native
+cleanup; output-lost retains cleanup and requires another abort with the
+returned generation. A failed preparation may return retained cleanup state
+alongside its error; token zero means display admission was never reached.
+After old-preserved the caller may prepare again or recover the original
+hold through boot_finish. Retained=1 alone does not distinguish these phases.
+
+Confirmed/lost commits retain the boot snapshot until native recovery proves
+device quiescence AND original scanout mapping. The kernel then restores
+pixels including pitch padding and releases queue, shadow and boot handles.
+The old boot recovery callback is not replayed. Native hardware confirmation
+is latched across subsequent cleanup failures, including failure after the
+native bridge itself was released. Retry restore with the current display
+generation. Terminal system transitions never reopen framebuffer writers.
+
+Common graphics BOs in Driver Work (Kernel 0.1.154)
+---------------------------------------------------
+DriverApi 35/648 and the original GfxDriverMemoryApi 1/112 prefix keep their layouts.
+The optional memory query now admits ordinary Driver Work as well as
+Init/Shutdown task contexts. Every BO operation authenticates the current
+R4D start; cached tables do not capture an identity. IRQ, storage callbacks,
+dedicated tasks and pre-Task boot callbacks receive no BO admission.
+Early preloaded drivers bind their lifecycle metadata before Task/SMP start.
+
+Create, import, CPU map and device acquire close before DriverShutdown.
+Describe, segment, unmap, release, collect and stats remain usable from an
+already obtained table until owner retirement. A new query is closed too.
+Work queries return zero MMIO slots. Cached MMIO callbacks still require
+Init/Shutdown. Work collect never enters the legacy MMIO manager: it returns
+Busy for in-progress or failed MMIO retirement, but accepts healthy live
+windows. Only Init/Shutdown retries those MMIO releases.
+
+Device reservations hold both a busy record and the actual BO lease across
+DMA page validation. Close does not discard an admitted operation; cleanup
+rechecks retention after Work quiescence before freeing DMA/heap/module
+resources. No GPU quiescence is inferred from callback return or timeout.
+CPU WB map/unmap and device lease transitions provide the existing visibility
+boundary. Residency access 4 (DMA) and access 3 (GPU VA) retain backing without
+claiming execution. Drivers separately confirm their hardware mapping and
+cache/TLB completion. BO success is 1; ordinary Work callback success is 0.
+Evidence: Docs/Drivers/GrafikSpeicher07911.json / bo_work_checkpoint.
+
+Driver-owned graphics backing (Kernel 0.1.157)
+---------------------------------------------
+GfxDriverMemoryApi v1 appends five optional slots after byte 112: reserve,
+commit, abort, take_release and finish_release, for a total of 152 bytes.
+Query returns complete supported slots within caller capacity; SDKs accept
+the original 112-byte table. DriverApi itself remains 35/648.
+
+buffer_reserve(descriptor*, cookie:u64, GfxOwnedBufferReservation*) reserves
+budget, object and reference before hardware I/O. Device-local backing must
+have an adapter and device generation, no CPU usage, and a nonzero opaque
+cookie unique within that driver's start/adapter/device incarnation. Input
+driver_owner may be zero or the actual owner; the kernel supplies identity.
+The 88-byte reservation includes exact object/reference, allocated bytes,
+cookie, adapter, device generation and actual driver-start generation.
+buffer_commit(reservation*, GfxBufferReference*) publishes only after the
+driver confirms backing and mappings. Neither pointer is accessed under the
+metadata lock. Reserve/commit recheck admission under that lock. Unpublished
+references cannot be shared; allocating backing also retains the driver.
+
++Kernel 0.1.158: this authenticated reserve path also accepts opaque nonzero
+storage modifiers for shaped formats. Ordinary buffer_create remains linear.
+The driver validates vendor layout, pitch, tiling and physical padding.
+The common owner checks format/dimensions, logical row spans, alignment,
+strictly ordered non-overlapping plane offsets and total backing bounds.
+For opaque layouts a plane owns storage through the next plane offset, or
+the declared byte_length. Padding is part of that extent. Native backing
+has no CPU map; describe/import preserves the exact descriptor and identity.
+Modifier support alone never grants engine or scanout capability.
+
+buffer_abort(reservation*, quiesced:u32) ends a failed allocation only after
+confirmed unwind. Unknown hardware effects keep the reservation charged.
+buffer_take_release(adapter:u32, device_generation:u64, GfxOwnedBufferRelease*)
+claims one matching resource only after every reference and device/queue
+lease ends; Busy means none is ready. The 80-byte ticket binds object,
+cookie, byte extent, attempt and both generations to the actual caller.
+buffer_finish_release(ticket*, quiesced:u32) releases common ownership only
+after native mappings and physical backing are unreachable. Zero returns
+Busy and keeps the same claimed ticket; modified/stale/foreign tickets fail.
+Abort/take/finish remain available through cached tables during closing.
+
+The system collector skips driver backing and continues releasing VM-owned
+buffers. Driver I/O, callbacks, placement and GPU page tables stay outside
+the common metadata owner. Opaque cookies are never VM IDs or CPU/GPU
+addresses. A backing's own native mapping must not hold a permanent common
+lease that prevents its last-reference release. Evidence: owned_vram_checkpoint
+in Docs/Drivers/GrafikSpeicher07911.json.
+
+Native queue backing references (Kernel 0.1.155)
+------------------------------------------------
+GfxDriverQueueApi v1 accepts its original 56-byte prefix and appends the
+optional retain_resource slot at 56 (total 64). Query publishes only complete
+slots within caller capacity. DriverApi remains 35/648. Query and retention
+accept actual ordinary Work; backend registration still requires Init.
+
+retain_resource(fence, which, GfxBufferReference*) uses source=0/target=1.
+The exact active job and backend/start/reset generation must still exist;
+closed admission is rechecked under the shared BO metadata owner. IRQ and
+dedicated/storage contexts are rejected. The queued backing may outlive its
+producer; bare diagnostic BO IDs never become importable references.
+
+Reference flag 2 grants mapping retention only: describe, residency access
+3/4 and release. CPU maps, sharing, queue submission and execution acquire
+through it are rejected. Since Kernel 0.1.156, residency may also retain
+the allocated backing padding (including alignment) of the BO. CPU/execution/queue ranges
+remain bounded by the logical descriptor length; validated job extents
+and execution leases remain mandatory for every hardware command.
+This reference does not freeze mutable sources against later ordered writes.
+Queue completion, reference lifetime and actual mapping/TLB retirement are
+separate; only confirmed quiescence permits device release. Pageable output
+is written outside the metadata owner. See queue_resource_checkpoint in
+Docs/Drivers/GrafikSpeicher07911.json for compatibility and actual SMP4 proof.
+
+Audio output extension (0.78.16)
+-------------------------------
+An AudioBackend descriptor with version 3 has the unchanged 72-byte version-2
+prefix followed by the canonical 24-byte AudioOutputExtension. Its total size
+is at least 96 bytes. Version 2 remains accepted with its original 72 bytes;
+the kernel never reads the extension from an older descriptor. The extension
+is generated from API/ApiContract.json and provides query/select/active
+callbacks. The context is the original prefix context pointer represented as
+a 64-bit value. All callbacks and descriptor storage live until unregister.
+
+Query returns 1 for an AudioOutputInfo, 0 at the local catalog end, or a
+negative error. There are at most 32 records per controller backend. Records
+include unavailable connectors and use stable physical IDs instead of local
+indices for persistence. Select is task-context and serialized with PCM;
+zero reports activation, a negative result reports failure and attempts to
+retain or restore the previous route. Active returns a local index or -1.
+The kernel serializes global selection with its existing PCM stream owner,
+preserves queued application PCM and retains the R4D callback owner across
+waits and work-completion operations. R4AUDIO version 2 appends catalog and
+selection slots for AUDSVC and diagnostics. User preference belongs to AUDSVC.
+
+AudioBackend version 4 (Kernel 0.1.259) appends one optional C-calling-
+convention callback at byte 96, for a minimum size of 104 bytes:
+`idle(context: ?*anyopaque) i32`. Versions 2 and 3 retain their exact prefixes.
+The context remains the original prefix context; Idle uses the same guarded
+R4D callback lifetime and PCM/output serialization as Stop. It completes
+ordinary last-client or synthesizer PCM, draining all accepted caller frames,
+while permitting a driver-owned silent output carrier. A null Idle falls
+back to Stop. Negative results, including Busy, remain failures to finish;
+they are never converted into a physical-stop acknowledgement.
+
+Route replacement, unregister and terminal owner shutdown require the
+existing physical Stop/DriverShutdown path. No caller stream or completion
+may own the retained carrier. A kernel unaware of descriptor version 4 must
+reject it; a driver requiring v4 and its supporting kernel must be deployed
+atomically. The public R4AUDIO and AUDSVC tables are unchanged.
 
 Pinned buffers and DMA mappings
 -------------------------------
@@ -21,8 +284,9 @@ Pinned buffers and DMA mappings
 `dma_pin_buffer` creates an owner-bound lease over an already resident and
 mapped driver buffer. It does not allocate or copy the buffer. The caller must
 not free it, replace its virtual mapping, or unpin it while a mapping exists.
-Pinning is limited to 16 MiB per buffer and to the fixed kernel capacity of 32
-simultaneous pins. Calls from IRQ context are rejected. Flags are zero in
+Pinning is limited to 16 MiB per buffer and to the fixed kernel capacity of 128
+simultaneous pins. The mapping and legacy contiguous-allocation tables also
+have 128 entries each. Calls from IRQ context are rejected. Flags are zero in
 version 1.
 
 `dma_map_pinned` resolves the pinned pages and returns at most 64 ordered
@@ -191,10 +455,18 @@ plus-handoff tail latency remain diagnostically visible.
 Negotiated network queues and offloads
 ---------------------------------------
 
+Since Kernel 0.1.304, register_net_backend accepts only NetBackend version2
+with size at least120bytes. Version and size are read before any later
+field. Unsupported/short records return-1 before registry/topology mutation
+or callback execution; the old72-byte v1 prefix is no longer accepted.
+The v2 layout and DriverApi slot positions are unchanged. Flat transmit,
+optional transmit_packet, single queues/segments and necessary poll callbacks
+retain their v2 meaning; no optional capability becomes mandatory.
+
 NetBackend version 2 appends an offered and required 64-bit capability set,
 RX/TX queue and segment maxima, RX/TX ownership modes, an interrupt-moderation
-offer and the optional packet TX callback after the complete version-1
-descriptor. A version-1 descriptor remains the flat single-queue backend.
+offer and the optional packet TX callback after the preserved72-byte
+prefix. Flat single-queue callbacks remain valid within the complete v2 record.
 Unknown and unsupported optional bits appear in `rejected`; a required bit
 which is absent, unknown or unsupported rejects registration. No partial
 required selection is possible.
@@ -302,3 +574,565 @@ module memory release.
 
 This contract provides the shared foundation only. It does not make an AHCI,
 NVMe, USB, audio, or network driver asynchronous by itself.
+
+Loaded R4D resources (DriverApi 29, roadmap 0.79.10)
+--------------------------------------------------
+The unchanged 592-byte DriverApi28 prefix is followed by resource_query;
+DriverApi29 is 600 bytes. Query negotiates DriverResourceApi version 1,
+32 bytes. Its stat/read_at/now_ns signatures, DriverResourceInfo (32 bytes),
+result codes and maximum read size are generated from ApiContract.json.
+Zig uses DriverContext.resources(); C uses r4os/driver_resources.h.
+
+Before DriverInit the R4D owner is bound to its published module slot and
+generation, with a distinct monotonic start epoch. Stat returns a non-owning
+opaque catalog reference; it is neither a file handle nor a mount lease.
+No open/close operation or caller-supplied path/owner exists. Named file
+resources use the bounded case-insensitive R4M0 component syntax. Catalog
+metadata and blob offsets are captured before module publication. Parsing
+validates ordering, unique names, lengths, alignment and zero padding while
+skipping blob contents. Resources remain outside the executable image.
+
+Stat and read authenticate init/task or actual driver-work ownership. IRQ
+and storage callbacks cannot enter. Work calls try the lifecycle guard
+without waiting; BUSY can be handled by bounded rescheduling. The guard
+spans the complete synchronous read, so shutdown cannot free its backing
+while a read is active. beginOwnerShutdown invalidates every resource
+reference; successful cleanup retires the binding only after work quiesces.
+Failed cleanup retains the closed binding. Restart uses a new epoch even
+when the same resident module is reused; exhaustion never wraps handles.
+
+The retained FileSource carries the original Volume/MountRef and node
+snapshot. Every read acquires a real filesystem request use, rejects stale
+mount generations and never reopens a pathname. NTFS additionally validates
+the captured MFT sequence. FAT has no equivalent generation for cluster
+reuse; neither filesystem contract promises immutable file contents. A
+firmware consumer must verify its exact pinned size/hash/ABI after reading.
+No permanent lease prevents unmount between calls. Byte/preload module
+loads do not retain caller memory and return source-unavailable; NVIDIA's
+current supported resource route is the ordinary disk R4D loader.
+
+read_at transfers an exact 1..65536-byte range into caller-owned resident
+memory. An invalid range or already expired deadline performs no file I/O.
+now_ns reads the canonical monotonic clock (UINT64_MAX if unavailable).
+Clock availability/backward movement and the absolute deadline are checked
+before and after synchronous I/O. These checks do not forcibly interrupt
+storage hardware; safe I/O completion and cleanup can exceed the deadline.
+Negative results may leave partial bytes in output, which must be discarded.
+No firmware parsing, package selection, download or GPU command belongs here.
+
+Resident R4D CPU heap (DriverApi 30, roadmap 0.79.10)
+---------------------------------------------------
+The unchanged 600-byte DriverApi29 prefix is followed by heap_query;
+DriverApi30 is 608 bytes. DriverHeapApi v1/32 bytes exposes allocate,
+release and stats. DriverHeapAllocation is 40 bytes, DriverHeapStats 104.
+All payloads, result codes and C/Zig bindings come from ApiContract.json.
+The baseline change preserves every existing field, type and constant except
+the explicit DriverApi version increment. DriverContext keeps its v24 minimum
+and negotiates heap() independently; C uses the table in r4os/driver_heap.h.
+
+The loader binds one CPU owner to the exact monotonic R4D start epoch before
+DriverInit. Query and calls authenticate init/shutdown and actual Driver Work
+callbacks. IRQ and storage callbacks are rejected. Worker calls take no global
+R4D lifecycle guard, so an initializer or finalizer can wait for their result.
+The cached function table does not transfer ownership to an unrelated caller.
+
+allocate takes a nonzero u64 byte length and power-of-two u32 alignment;
+alignment is normalized to at least 16 bytes. Checked overhead/padding addition
+rejects overflow. Success publishes a stable resident WB CPU virtual address,
+an exact payload length and an opaque nonzero handle. Contents are uninitialized.
+The kernel heap's real capacity controls admission; there is no separate fixed
+allocation-slot limit and no R4X VM/program owner. CPU addresses are neither DMA
+nor GPU addresses. A separate pin/map contract still requires the caller to
+retain backing until every hardware borrower has physically stopped.
+
+One intrusive record shares the actual allocation with its payload. Per-owner
+treaps provide expected logarithmic handle lookup without recursive traversal
+or a second allocated index. A narrow runtime-owner section protects metadata;
+real heap allocation/free and payload access happen outside it. Split operations
+hold an enrolled task unwind token so hard kill cannot lose unpublished backing
+or a detached release. A close racing with allocation retains the result under
+the owner without publishing it. A release in progress remains fully charged.
+
+Successful release invalidates the handle; failed heap release retains the
+whole record, payload and accounting for retry. A duplicate/foreign/stale
+handle fails before dereferencing payload. Opaque IDs never wrap, including
+after owner restart. stats is a bounded coherent snapshot and remains available
+through shutdown; new queries and allocations reject after close admission.
+
+After successful DriverShutdown, backend finalizers and IRQ/work/DMA teardown,
+generic cleanup frees remaining CPU allocations outside metadata ownership.
+The finite pass stops on a failed free; pending operations or failed release
+retain the closed binding and veto module unload. Only an empty owner retires
+its epoch. Kernel-heap VM tail capacity retained internally after a successful
+logical free remains kernel ownership and does not retain an R4D image.
+
+Common monotonic clock (0.79.10)
+--------------------------------
+DriverApi31 appends monotonic_clock at offset 608, total 616 bytes. All prior
+fields, the minimum accepted driver version and the heap slot are unchanged.
+The optional SDK field is checked by version, size and nullability. Its ABI is
+int32_t monotonic_clock(MonotonicClockInfo*): exactly the existing fixed 80-byte
+payload and the R4SYS result convention, 1 available or 0 unavailable. A caller
+supplies a nonnull writable full payload; this entry has no variable output
+capacity negotiation. The SDK resets output before an unavailable-slot error.
+
+This read-only entry and R4SYS share kernel/monotonic_api.zig. instant_ns has
+the canonical nanosecond origin, frequency_hz is 1000000000, resolution_ns is
+the ceiling of the active source quantum. Source/quality/generation fields
+must be inspected; a periodic fallback is degraded, not high resolution or
+IRQ-independent. These are neither calendar time nor CPU frequency. Existing
+tick_count/timer_frequency/wait_ticks semantics remain unchanged. The resource
+table's cached now_ns callback reads the same source efficiently for deadlines.
+
+No driver lifecycle guard, allocation, scheduling or GPU operation occurs.
+Init, driver work and shutdown can read the snapshot independently of resource
+admission. This adds no delay function, cancellation guarantee or permission
+to spin until a degraded clock advances with interrupts disabled.
+
+Dedicated driver Task ownership (0.79.10)
+-----------------------------------------
+DriverApi32 adds thread_query at 616, total 624 bytes. Earlier offsets and
+the accepted minimum version remain unchanged. The optional version-1 query
+returns DriverThreadApi72. New request/status/stats payloads are 32/64/96 bytes;
+canonical fields, result codes and slot signatures are in the generated ABI.
+
+Start binds real R4D owner/start epoch to dynamically allocated resident
+metadata, a guarded 64-KB kernel stack and the normal full module FPU state.
+There is no fixed thread slot pool. The callback and argument remain owned
+until completion/release; the callback may execute before start returns.
+Default tasks stay on the BSP. Parallel is an explicit request for SMP-safe
+module code, subject to internal scheduler placement and qualified CPUs.
+
+The execution context and initial hard-kill protection exist before Task
+registry publication. A close racing construction keeps failed backing
+private. A returned callback publishes completion while its kernel epilogue
+still owns the Task; release must retire that exact ID/generation and stack
+before freeing the record. Busy or failed free retains the same identity.
+
+Join uses finite logical ticks: zero polls, UINT64_MAX is rejected. It retains
+the target across wait and returns the callback result only after completion.
+Stopping a dedicated caller cancels only that caller's service-owned join;
+it never cancels the target. Self join/release returns self_join. sleep_ticks
+is dedicated-task-only: zero yields, finite ticks wait, UINT64_MAX waits for
+cooperative stop. These are not minimum nanosecond delays. Stop cannot abort
+arbitrary module code, kernel I/O, lock ownership or physical hardware work.
+
+New queries/starts close with parent shutdown; cached status/stop/join/release
+remain usable by the real owner. IRQ and storage callbacks are excluded.
+Allocate/join/release/sleep require a current task with interrupts enabled,
+no runtime/preemption critical section and no tracked held lock. Task unwind
+tokens are lifetime guards, not locks, and may span waits. The thread service
+never acquires the global R4D lifecycle guard; a waiting init/shutdown caller
+may retain its existing guard while dedicated callbacks progress independently.
+
+All module callbacks and pending creation must quiesce before backend/IRQ/work
+destruction. After shared work quiesces, generic thread cleanup retires exact
+Task generations before DMA and CPU-heap cleanup. One 1000-logical-tick budget
+bounds retries of returned Task retirement; actual backing-free failure stops
+cleanup immediately. A retained callback, wait lease, Task or record vetoes
+unload and preserves the closed owner/module. Normal kernel exit invariants
+still reject callbacks that return with synchronization or unwind state leaked.
+
+Initially only CPU heap/thread/log ownership has this execution path; legacy PCI,
+DMA, graphics/backend and resource-file APIs require separate audits before
+dedicated callers may use them. Storage identity tracking uses a short runtime
+section to preserve exclusion. The existing cached monotonic read is usable
+without acquiring a driver lifecycle guard. No RM semaphore or IRQ contract
+is implied by introducing a generic scheduler service.
+
+Dedicated Task to normal Work (DriverApi35, 0.79.10)
+--------------------------------------------------
+The unchanged driver_work_submit slot accepts a live dedicated driver Task
+with flags=0. Admission derives the owner from its exact Task identity and
+requires the current owner epoch, open parent and no cooperative stop request.
+Stopped/closing tasks return driver_thread_error_closed and a zero handle;
+nonzero flags return -3 and a zero handle. A dedicated task is never an IRQ
+producer. The existing deadline/audio submit slot is not extended.
+Actual IRQ and storage callbacks retain precedence over an interrupted
+dedicated Task's identity and continue through their existing Work admission.
+
+The normal FIFO executes the callback on its single serialized worker with
+the original R4D owner. This admits the worker's existing MMIO/DMA services;
+the dedicated caller itself gains no direct device or resource-file access.
+The callback and all arguments remain resident until completion, cancellation
+and release. A task admitted immediately before parent close retains its
+in-flight enqueue; shutdown must stop/join it, then drain its queued work
+before cleanup. A callback completion still requires exact Task retirement.
+
+driver_api_thread_work_version=35 also requires the terminal display handoff:
+warm reset closes/drains display execution before driver shutdown, preserves
+held recovery resources and refuses unproven display/device quiescence.
+Failure enters poweroff or halt. Firmware teardown alone grants no DMA reuse
+or boot framebuffer access. These are semantic requirements; all version-34
+fields, offsets and the 648-byte table remain unchanged.
+
+Resident driver semaphores (0.79.10)
+-----------------------------------
+DriverApi33 appends semaphore_query at offset 624, total 632 bytes. The
+accepted minimum and all previous fields/constants are unchanged except the
+API version. DriverSemaphoreApi64 returns create/acquire/release/destroy,
+status40, stats80 and per-call context_flags. Generated ABI owns exact layouts,
+flags, signatures and error codes; Zig and C SDK facades validate each slot.
+
+Creation requires a nonzero maximum and initial <= maximum. All handles are
+non-reused u64 identities bound to an authenticated driver-start epoch. Real
+resident metadata is dynamically indexed without a fixed semaphore pool.
+Short runtime sections protect counters, indexing and wait enrollment. Heap
+allocation/free and parking run outside them. An acquire lease and a task
+unwind token protect the record across every blocking operation; woken calls
+remain retained until their wait returns. Failed free reinserts the same live
+identity; success updates copied accounting without dereferencing freed data.
+
+Zero timeout is a nonblocking try; finite logical ticks impose one deadline;
+UINT64_MAX waits for an actual permit. release grants exactly one permit to
+the first waiter or increments the stored count, with checked overflow. FIFO
+handoff uses the existing scheduler semaphore and its task handoff lifetime
+guard. The guard's eventual decrement also uses the runtime owner. There is
+no tick-polling semaphore emulation and no global R4D lifecycle guard in this
+service. Acquire failure never reports a permit.
+
+Context resolves real init/shutdown, Driver Work, dedicated Task and actual
+IRQ/storage callback ownership. Try/release/status/stats are resident and
+nonblocking. Creation, destruction and nonzero waits require a task with IF
+enabled, no runtime/preemption critical section and no tracked held lock;
+IRQ/storage callbacks are excluded from those operations. context_flags is
+computed on each invocation, never cached from init. CPU task integration
+is verified separately from future real IRQ/hardware acceptance.
+
+Parent close rejects new queries/creation but leaves existing operations
+usable. It does not close semaphore queues. Dedicated-thread stop cannot
+cancel such a wait or fabricate acquisition. Drivers must complete their
+protocol and signal actual permits during shutdown. A bounded outer join
+can report failed quiescence and retain the module; it cannot force arbitrary
+native code to return. Especially upstream void-returning down callbacks need
+an explicit faithful failure contract before native integration.
+
+A semaphore is a counting object, not a task-owned/recursive mutex. The driver
+must quiesce all users, including holders of already returned permits, before
+destroy. The kernel additionally rejects active acquire leases. Generic
+cleanup follows actual callback/IRQ/work/task quiescence, then frees retained
+semaphores before DMA/CPU heap. Any pending operation or failed backing free
+retains the closed owner and module. Legacy device APIs retain their separate
+admission rules; this service does not imply RM/GSP or hardware support.
+
+Cross-CPU finite waits also notify the BSP when they become the earliest
+scheduler deadline. The shared timed queue is published before notification;
+the BSP rechecks its idle one-shot via the existing IPI/HLT path. This is an
+internal scheduler correction, not a new API or a minimum-delay promise.
+
+Byte-range DMA synchronization (DriverApi34, 0.79.10)
+----------------------------------------------------
+The unchanged v33 prefix is 632 bytes. Two optional C-call slots follow:
+dma_sync_range_for_device at 632 and dma_sync_range_for_cpu at 640; total 648.
+Both take (*const DmaMapping, u32 offset, u32 bytes) and return i32. Existing
+whole-mapping slots, DMA payloads, Query import and minimum version stay fixed.
+The SDK checks version, size and each callback; unavailable returns -9002.
+
+Offset and nonzero length select bytes within the retained mapping's actual
+requested_bytes. Byte alignment is sufficient on this x86_64 provider. The
+caller descriptor must have version 1, a full size and a nonzero handle;
+its other fields cannot replace backing, direction or bounds. Return codes
+are 0 success, -1 inadmissible context, -2 invalid header/range, -3 stale or
+foreign mapping. Validation completes before any copy or ordering boundary.
+
+Real init/shutdown and Driver Work ownership is required. IRQ and storage
+callbacks are rejected; dedicated driver threads do not gain access to the
+legacy DMA tables. Range synchronization allocates, waits and releases
+nothing. Existing pin/map/unmap lifetime and owner serialization still apply.
+
+For bounced mappings, only the requested range is copied outward for
+to-device/bidirectional or inward for from-device/bidirectional. The device
+phase fences after the copy, the CPU phase before it; the opposite direction
+only fences. Direct coherent mappings validate the range and fence without
+copying. Bytes outside the range are untouched. Partial transfers do not
+change the whole-mapping ownership flag. The legacy sync slots use the same
+implementation over the full request, preserving their previous semantics.
+
+Drivers must exclusively own the selected bytes and order payload before
+publishing a producer cursor, then synchronize a completed payload before
+consuming and acknowledging it. This API is not an atomic queue transaction
+or evidence of firmware completion. Whole-mapping synchronization can still
+overwrite independently updated peer fields in a bidirectional bounce buffer.
+Initial map and final unmap still synchronize the whole mapping; the device
+must be quiescent before teardown. Live GSP dispatch is a separate owner.
+
+GPU reset and retained display ownership (0.79.30)
+-------------------------------------------------
+GfxDriverMemoryApi remains wire1; optional device_lost at200 extends it to208.
+Arguments are (u32 adapter, u64 memory_generation, u32 quiesced), result i32.
+Only the exact driver owner may invalidate its native BO generation. Logical
+loss (quiesced0) closes new use and preserves DMA. quiesced1 requires an
+independent whole-device stop proof; backing becomes releasable after all
+device/queue users retire. Invalid application references may remain as
+closeable stubs. CPU BOs and newer generations are unaffected.
+
+GfxDriverDisplayApi remains wire1, with its original120-byte prefix unchanged.
+The optional reset capability requires BOTH new slots and a136-byte table:
+  device_reset at120: (const GfxBackendBinding*, u64 generation,
+                       u32 quiesced, GfxNativeState*) -> i32
+  prepare_reset at128: (const GfxNativeRegistration*, u64 held_generation,
+                        u64 reset_generation, GfxNativeState*) -> i32
+Call these from the serialized driver worker; never from an IRQ or while an
+unrelated owner lock is held. Busy is retryable within the driver's deadline.
+
+device_reset quiesced0 names the original display generation and exact
+adapter/backend. It closes submissions and returns a fresh recovering/lost
+generation. Retry the original arguments if Busy. Before queue registration,
+both backend device/reset generations may be zero, but the adapter and device
+execution milestone must still match. quiesced1 names the returned recovering
+generation and requires a physical stop proved by the driver. It retires old
+queues, mode/cursor work and additional-output consumers before removing the
+native bridge. It does not free or restore the original boot-display hold.
+A deferred console-restore request can name the current unavailable/
+restore_failed generation with the same exact retained native binding.
+This permits the worker to perform physical recovery after a failed callback;
+it does not admit another owner, binding or arbitrary stale generation.
+
+After successful retirement, a GPU may rebuild before preparing scanout,
+including while receiver discovery waits. Optional resume_headless at144 (layout revision8, size152, wire1)
+accepts (const GfxBackendBinding*, u64 reset_generation, GfxNativeState*).
+It verifies a strictly newer live queue of the same driver/start epoch and
+adapter and records that exact binding while display stays recovering/lost,
+retained=1. Earlier144bytes, slots and wire1 remain binary compatible.
+Exact repeats are idempotent. Old device_reset, prepare_reset and terminal
+release arguments cannot use the obsolete quiescence receipt afterward.
+prepare_reset may consume the recorded rebuilt binding to prepare native
+scanout later; a different newer binding is rejected. This does not reuse
+the old physical stop proof for the rebuilt GPU.
+A later quiesced0 must name the recorded rebuilt binding and recovering
+generation. It creates a fresh stop identity and needs its own physical stop
+and quiesced1 retirement. The queue may already have been logically closed;
+its earlier checked binding remains resident. No output or framebuffer writer
+is opened. Busy/failed admission preserves the previous receipt.
+
+prepare_reset requires successful retirement, the immutable original boot
+hold ID and the exact recovering generation. Its registration must identify
+a strictly newer queue device generation. Success creates another native
+display generation for prepare/commit; abort leaves the display unavailable.
+Stale generations cannot retire or replace that candidate. The held boot ID
+is never reused as a reset/native display generation.
+
+Neither metadata API is hardware reset evidence. Firmware teardown alone
+cannot retire arbitrary DMA. Only the held physical restore callback followed
+by successful release of its consumers may reopen bootfb. A reset without a
+native bridge can still use that original held callback; failure keeps the
+firmware framebuffer sealed and permits the independent software-graphics
+selection on a subsequent boot.
+
+
+Terminal display release (0.82.1, Kernel 0.1.232)
+------------------------------------------------
+The optional terminal_release slot at136 extends GfxDriverDisplayApi to144
+bytes, layout revision7 and unchanged wire1. Signature:
+  (const GfxBackendBinding*, u64 reset_generation, GfxNativeState*) -> i32
+Every earlier field and offset remains unchanged. Query writes only complete
+slots within caller capacity; consumers check size and a nonzero slot. The
+controlled baseline update changes only this extensible type, its size
+default136->144, appended slot and explanatory description.
+
+Call through the already-bound display table from the actual R4D lifecycle
+owner. New table queries remain closed after shutdown admission. This call
+requires terminal system transition and the exact successful quiesced
+device_reset receipt: same driver/start epoch, backend and returned reset
+generation, with all queue/mode/cursor/output and native-bridge cleanup
+acknowledged. It accepts no additional assertion of physical GPU quiescence.
+
+After those checks, release the immutable boot RAM snapshot through its
+existing CPU cleanup owner. Never invoke a hardware restore callback, copy
+pixels to the old mapping or reopen framebuffer writers. The display becomes
+unavailable with no retained owner; output-lost/retained0 and the exact reset
+generation acknowledge cleanup, not image restoration. Busy preserves the
+same cleanup identity for retry, including partially released CPU resources.
+Exact successful retries return the same receipt. Foreign/stale/unretired
+identities fail; ordinary reset/reprepare cannot reuse a completed terminal
+receipt. Generation exhaustion is checked before CPU release.
+
+This releases only display ownership. Remaining driver DMA/MMIO/IRQ, heap,
+work and task resources still veto warm reset through the existing system
+transition checks. Native-driver shutdown must explicitly reach this API;
+the presence of this slot alone cannot make a retained NVIDIA driver safe.
+
+
+Monitor power ownership (0.79.31)
+--------------------------------
+GfxDriverOutputApi remains wire1. Its original 144-byte prefix is unchanged;
+the complete power capability requires BOTH power_publish at144 and power_read
+at152, with size160. R4DRAW ABI31 appends gfx_output_power at816 and
+gfx_power_request at824 (size832); Query:1 remains unchanged.
+
+GfxOutputPower is fixed96 and carries the exact GfxOutputId, capabilities,
+phase, sequence/request_sequence, since_ns, control_receipt and Core/Window
+points. Signal retirement and sink power are distinct capabilities. On/Off
+require completed image/retirement points. Sink-capable Off also requires an
+acknowledged monitor control. Publication is driver-owned, outside IRQ, and
+must name its current native output. Metadata never proves physical retirement.
+
+GfxPowerRequest is fixed64. Callers set identity and off0/1; input sequence,
+deadline and reserved fields are zero. Successful requests return the copied
+kernel sequence and lease deadline. One program owns Off for30 seconds;
+renewal retains its sequence. A fresh On always receives a new sequence and
+may cancel any program's Off. Close/expiry wakes only that exact program
+generation. Connection/device replacement discards prior requests and proofs.
+Driver read expires a lease and returns On without blocking. The driver worker
+must continue polling while the output sleeps; screen sleep is not device idle.
+
+The kernel synthesizes gfx_output_flag_sleeping=1024 for stopping/off/waking.
+It keeps logical Desktop placement without admitting native presents. Kernel
+catalog and queue owner locks never span hardware callbacks or wake delivery.
+Full platform S3/S4/S0ix suspend is not supplied by these display APIs.
+
+Opaque native queue submission (Kernel 0.1.191)
+----------------------------------------------
+R4DRAW ABI35/888 appends gfx_queue_submit_native at880. Operation10 requires
+explicit backend advertisement and an exact nonempty profile UUID/revision.
+GfxNativeSubmission56 supplies command bytes and GfxNativeResource32 entries.
+The common queue copies both; it never parses vendor commands or Linux ioctls.
+Every entry names a producer-owned, acknowledged gfx_virtual mapping on the
+same driver/adapter/memory generation, with read or read/write access. The
+mapping's entire extent is retained; the declared set must cover all GPU use.
+Aliases deduplicate to canonical BO execution leases with unioned access and
+extents. Queue dependencies, normal-copy hazards and CPU-map exclusion apply.
+Closing mappings/references, cancelling or exiting the producer cannot retire
+active execution. Only completed work or proven device quiescence releases the
+leases; a worker subsequently permits unmap and frees resident metadata.
+
+GfxDriverQueueApi remains wire-version1; its optional extent is now160 bytes.
+Existing fields and the legacy128 default remain unchanged. New callbacks:
+  read_native_info at136: (GfxFence*, GfxNativeJobInfo40*) -> i32
+  read_native_data at144: (GfxFence*, u32 offset, u8* output, u32 count) -> i32
+  read_native_binding at152: (GfxFence*, u32 index, GfxNativeBinding72*) -> i32
+All require the actual bound driver and exact active native fence. Metadata
+remains readable after logical cancellation/loss until physical retirement.
+Data reads are atomic, nonempty and at most1024 bytes; this bounds each copy,
+not total job size. Binding output preserves submitted order and access and
+contains the exact held provider token/address/length. No kernel pointer is
+exported. Failure preserves outputs. A native-capable backend requires the
+complete296-byte GfxDriverJob, including producer identity; removing capability
+does not shrink this requirement for already admitted jobs. Generic submit
+cannot accept native jobs without the separate payload/ownership admission.
+The native operation is transport only, not a Vulkan or hardware-ready claim.
+
+Logical queue lifetime (Kernel 0.1.192)
+--------------------------------------
+The optional queue table grows to168 bytes with queue_owner_info at160:
+  (const GfxBackendBinding*, u64 timeline, GfxQueueOwnerInfo48*) -> i32
+Outer DriverApi, R4DRAW35 and every preceding queue slot remain unchanged.
+Only the actual driver of the exact backend incarnation may query a timeline.
+Return1 supplies its producer kind/id/generation, closing state and inflight/
+retained job counts. Return0 means its never-reused timeline metadata no longer
+exists. Absence and errors preserve all output fields. Stale/foreign/lost
+backend identities return errors, never a false successful absence.
+
+Closing an idle queue or stopping its producer coalesces a lifecycle hint for
+the live backend's normal worker notification. The driver rechecks its owned
+contexts; no caller callback, kernel pointer or context destructor is retained.
+The shared BO owner only marks resident state; callback submission/wakeup
+follows outside it. Existing retry and callback coalescing still apply.
+
+Inflight includes cancelled active jobs until their physical acknowledgement.
+Closing, zero inflight jobs and even absent queue metadata are LOGICAL facts.
+They never prove physical GPU quiescence or authorize an unproved RM/channel
+release. The driver must retain active execution independently until actual
+completion/reset proof. Context disposal and Vulkan integration remain driver
+and library responsibilities; this operation itself creates no GPU context.
+
+0.80.7: reserved physical device storage
+--------------------------------------
+GfxDriverMemoryApi v1 appends reserved_span at240, total248. It returns
+gfx_buffer_result_ok only for complete page-aligned immutable boot-map
+coverage by reserved/framebuffer entries, with no overlap with any other
+memory kind. Unknown gaps and malformed/conflicting entries fail. The
+query neither allocates nor maps pages, and changes no physical RAM totals.
+It requires the actual bound driver Init/Work owner. Existing 112..240-byte
+callers receive exactly their negotiated prefix. No outer DriverApi change.
+CPU maps remain a separate cache-policy and lifetime decision. The proof
+means storage is outside the PMM, not that another device cannot use it.
+
+0.80.39: independently measured storage omitted from UEFI memory maps
+-------------------------------------------------------------------
+GfxDriverMemoryApi wire v1 appends unmanaged_span at248, total256 (schema
+type revision8). The original248-byte prefix and reserved_span semantics
+are unchanged. Only the default caller capacity grows to256. Kernel211
+returns the negotiated prefix; older kernels leave the optional slot absent.
+The new query rejects invalid/incomplete maps and every overlap with usable,
+reclaimable, kernel/module, ACPI, bad or unknown memory. It permits gaps and
+reserved/framebuffer entries. This is a negative system-memory proof only:
+the driver must independently measure the existence and extent of its device
+storage. It neither adds RAM nor allocates, maps or transfers ownership.
+This handles the Lenovo Raven2 UMA extent omitted from its complete UEFI map.
+Actual Init/Work ownership and gfx-buffer errors match reserved_span.
+The controlled baseline update compares every existing field's offset, type,
+size, alignment and semantics; only size.default changes248->256. Existing
+C/Zig facade probes cover every truncated tail and unchanged64-bit arguments.
+
+
+Terminal display cleanup tasks (Kernel 0.1.213, DriverApi36)
+---------------------------------------------------------
+Ordinary driver close/unload still closes new thread queries and starts.
+During terminal system-transition shutdown only, the synchronous display
+lifecycle owner may query/start a dedicated cleanup task after existing
+tasks receive stop/wakeup. Calls from existing or cleanup child tasks do not
+inherit that permission. Heap, resources, semaphores, GPU BOs and work
+admissions remain closed; cleanup uses retained ownership and mappings.
+After the shutdown callback, including failure, thread admission closes
+before the existing callback/task/display/GPU quiescence checks. A retained
+task or unacknowledged hardware state still vetoes warm reset and backing
+release. This is a lifecycle semantic clarification; DriverApi36 remains
+656 bytes and adds no further slot or public payload.
+
+Reserved untyped audio/synth registration (Kernel0.1.305)
+-------------------------------------------------------
+DriverApi.register_audio_backend and register_synth_engine remain at their
+frozen96/120-byte offsets in the unchanged36/656-byte table. Both mandatory
+function pointers return-1 unconditionally, without reading either argument,
+registering/replacing records, allocating resources or invoking callbacks.
+These slots are reserved and must not be reused. Old helper success is no
+longer available; use register_audio_output_backend with AudioBackend v2/v3/v4
+or register_synth_engine_v2 with SynthEngine. No structured version is retired.
+Mixer registration, exact callback ownership, output selection, Idle versus
+physical Stop, closing and confirmed driver cleanup keep their existing rules.
+The SDK exposes only the structured synth helper registerSynthEngineEx.
+
+Explicit technical generation2 (0.90.15)
+----------------------------------------
+API/Generation2.json owns the initial source revisions, removal sets and
+independent identities. Its generator derives DriverApi2 from DriverApi39
+and ProtocolApi2 from ProtocolApi1; retained callback signatures are shared.
+DriverInit2:2 receives DriverApi2 (DPI2/0x32495044, revision1,656bytes).
+Only the two reserved untyped registration slots above are absent. The
+retained structured audio registration instead takes const AudioBackend2*.
+ProtocolInit2:2 receives the separate ProtocolApi2 (PPI2/0x32495050,
+revision1,120bytes). It must never be interpreted as a DriverApi table.
+Exactly one Init or Init2 with its exact export revision is permitted.
+The export must resolve to its actual loaded executable section and offset.
+DriverShutdown and ProtocolShutdown/Query/Dispatch keep their shared symbols.
+
+AudioBackend2 begins with AUB2/0x32425541, version3, size136 and flags0.
+It is not compatible with any old AudioBackend descriptor. Old versions
+2/3/4/5 (72/96/104/128bytes) remain live; version3 alone would be ambiguous.
+The full header and reserved0 precede use of the typed callbacks. PCM write,
+stop and status are mandatory. Output query/select/active are an optional
+complete triplet; Idle requires that triplet. Tracked write/playback/flow
+form another optional complete triplet. Nonzero known formats, bounded
+channels and consistent rate bounds are required before any record is stored.
+
+The new status callback writes AudioBackendStatus2,80bytes. It retains real
+operating/error counters and removes exactly the six retired duration u64s.
+Generated field-wise expansion into the shared private legacy core status
+sets those six fields to the unchanged unavailable UINT64_MAX defaults.
+No status callback pointer cast or reinterpretation is allowed. A callback
+error or nonzero reserved does not publish a partial status output.
+
+The existing registry, lifecycle identity, IRQ/task/DMA resource owners and
+audio core remain shared. New registration requires real Init/Owned-Work
+admission and refuses IRQ, dedicated-task and backend-callback contexts.
+Descriptors and callback/context backing remain resident through partial
+registration failure until actual unregister or terminal cleanup succeeds.
+Busy, callback error and shutdown veto retain backing and exact identity.
+No language destructor or timer return constitutes DMA/callback retirement.
+
+SDK Profiles/Build.json binds each explicit r4os-{zig,c,rust}-{r4d,r4p}-
+generation2 profile to its language/kind; manifests use R4DEV:Query2:2.
+Existing profiles, Init1 tables, old descriptors and consumer artifacts keep
+their existing layouts. Consumer migration and retirement of old providers
+are a later, separately planned cutover.

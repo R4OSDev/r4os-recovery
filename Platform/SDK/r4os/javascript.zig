@@ -1300,6 +1300,8 @@ pub const Program = struct {
         }
         current = first;
         while (current != none) : (current = self.nodes[current].next) {
+            // Already instantiated by this list's declaration pass.
+            if (self.nodes[current].kind == .function_declaration) continue;
             try self.emitBytecode(.block, current, 0, try self.segmentForNode(current), none);
         }
     }
@@ -5675,8 +5677,10 @@ pub const Property = struct {
 };
 
 const initial_accessor_capacity: usize = 128;
+const accessor_none = std.math.maxInt(usize);
 
 pub const Accessor = struct {
+    next: usize = accessor_none,
     occupied: bool = false,
     owner: u16 = none,
     key: StringRef = .{},
@@ -5734,10 +5738,39 @@ const PromiseCapability = struct {
     reject: Value,
 };
 
-// Environments, arrays and promises use mutually exclusive payloads. Keeping
-// all three arrays in every Cell made the fixed 256-cell runtime several MB
-// larger than necessary and penalized even an empty browser process.
+const collection_none = std.math.maxInt(u32);
+
+const CollectionCursor = struct {
+    last_slot: u32 = collection_none,
+    last_serial: u64 = 0,
+};
+
+const CollectionEntry = struct {
+    hash: u64 = 0,
+    serial: u64 = 0,
+    previous: u32 = collection_none,
+    next: u32 = collection_none,
+    bucket_next: u32 = collection_none,
+};
+
+// Native collection tags exclusively own this host_context payload. Values
+// remain in Cell item storage so strong/weak GC tracing keeps one source.
+const CollectionStorage = struct {
+    entries: ?[*]CollectionEntry = null,
+    buckets: ?[*]u32 = null,
+    capacity: usize = 0,
+    entry_count: usize = 0,
+    live_count: usize = 0,
+    head: u32 = collection_none,
+    tail: u32 = collection_none,
+    free_head: u32 = collection_none,
+    serial: u64 = 0,
+};
+
+// Environments, arrays, promises and collection iterators share mutually
+// exclusive inline storage to keep the per-cell footprint bounded.
 const CellStorage = union {
+    collection_cursor: CollectionCursor,
     bindings: [max_inline_bindings]Binding,
     items: [max_inline_items]Value,
 };
@@ -5766,6 +5799,7 @@ pub const Cell = struct {
     sealed: bool = false,
     extensible: bool = true,
     object_environment: bool = false,
+    strict_environment: ?bool = null,
     kind: CellKind = .object,
     parent: u16 = none,
     prototype: u16 = none,
@@ -5783,6 +5817,7 @@ pub const Cell = struct {
     receiver: Value = .undefined,
     regex_source: StringRef = .{},
     regex_flags: StringRef = .{},
+    first_accessor: usize = accessor_none,
     property_count: usize = 0,
     binding_count: usize = 0,
     item_count: usize = 0,
@@ -5860,6 +5895,11 @@ pub const ProgramAllocator = struct {
 pub const ExternalRootMarker = struct {
     context: ?*anyopaque = null,
     mark: ?*const fn (runtime: *Runtime, context: ?*anyopaque) void = null,
+    // Conditional host edges participate in the same fixed point as WeakMap.
+    // These callbacks may inspect/mark/reset metadata, never allocate, call
+    // JavaScript or recursively collect. Sweep runs before cell-ID reuse.
+    mark_weak: ?*const fn (runtime: *Runtime, context: ?*anyopaque) void = null,
+    sweep: ?*const fn (runtime: *Runtime, context: ?*anyopaque) void = null,
 };
 
 pub const Module = struct {
@@ -6277,11 +6317,14 @@ pub const Runtime = struct {
     cells: [max_cells]Cell = undefined,
     accessor_memory: ?[*]Accessor = null,
     accessor_capacity: usize = 0,
+    free_accessor: usize = accessor_none,
     modules: [max_modules]Module = undefined,
     module_count: usize = 0,
     dynamic_programs: [max_dynamic_programs]?*Program = [_]?*Program{null} ** max_dynamic_programs,
     dynamic_program_count: usize = 0,
     global_env: u16 = none,
+    global_object_env: u16 = none,
+    global_object: u16 = none,
     object_prototype: u16 = none,
     function_prototype: u16 = none,
     array_prototype: u16 = none,
@@ -6397,6 +6440,7 @@ pub const Runtime = struct {
         self.string_len = 0;
         self.accessor_memory = null;
         self.accessor_capacity = 0;
+        self.free_accessor = accessor_none;
         for (&self.cells) |*cell| {
             cell.occupied = false;
             cell.generation = 0;
@@ -6449,6 +6493,8 @@ pub const Runtime = struct {
         for (&self.cells) |*cell| cell.occupied = false;
         self.module_count = 0;
         self.global_env = none;
+        self.global_object_env = none;
+        self.global_object = none;
         self.object_prototype = none;
         self.function_prototype = none;
         self.array_prototype = none;
@@ -6539,7 +6585,13 @@ pub const Runtime = struct {
         self.stats = .{};
         self.global_env = try self.allocateCell(.environment);
         self.active_env = self.global_env;
+        self.global_object_env = try self.allocateCell(.environment);
+        self.cells[self.global_env].parent = self.global_object_env;
+        self.global_object = try self.allocateCell(.object);
+        self.cells[self.global_object_env].object_environment = true;
+        self.cells[self.global_object_env].receiver = self.globalObject();
         try self.installIntrinsics();
+        self.cells[self.global_object].prototype = self.object_prototype;
         self.stats.live_cells = self.countLiveCells();
         self.scheduleNextCollection();
     }
@@ -6682,6 +6734,11 @@ pub const Runtime = struct {
         self.markValue(value);
     }
 
+    /// Only meaningful in the external GC callbacks, before cell reuse.
+    pub fn externalMarked(self: *const Runtime, value: Value) bool {
+        return value == .cell and value.cell < self.cells.len and self.cells[value.cell].occupied and self.cells[value.cell].marked;
+    }
+
     pub fn evaluate(self: *Runtime, program: *const Program) Error!Value {
         self.clearSuccessfulDiagnostic();
         if (!program.bytecodeReady()) {
@@ -6762,7 +6819,100 @@ pub const Runtime = struct {
     }
 
     pub fn defineGlobal(self: *Runtime, name: []const u8, value: Value, constant: bool) Error!void {
-        try self.defineBinding(self.global_env, name, value, constant);
+        try self.defineOwnDataProperty(self.globalObject(), name, value);
+        for (self.propertyStorage(self.global_object)[0..self.cells[self.global_object].property_count]) |*property| {
+            if (!equals(self.stringBytes(property.key), name)) continue;
+            property.writable = !constant;
+            property.enumerable = false;
+            property.configurable = !constant;
+            return;
+        }
+        return error.TypeError;
+    }
+
+    fn defineBuiltinGlobal(self: *Runtime, name: []const u8, value: Value, _: bool) Error!void {
+        const readonly = equals(name, "undefined") or equals(name, "NaN") or equals(name, "Infinity");
+        try self.defineGlobal(name, value, readonly);
+    }
+
+    fn globalObject(self: *const Runtime) Value {
+        return .{ .cell = self.global_object };
+    }
+
+    // The object environment's name list records var/function declarations
+    // only. It is never consulted as a second store of their values.
+    fn recordGlobalDeclaration(self: *Runtime, name: []const u8) Error!void {
+        if (self.lookupOwn(self.global_object_env, name) != null) return;
+        const index = self.global_object_env;
+        const count = self.cells[index].binding_count;
+        try self.ensureBindingCapacity(index, count + 1);
+        self.bindingStorage(index)[count] = .{ .name = try self.storeString(name) };
+        self.cells[index].binding_count += 1;
+    }
+
+    fn declareGlobal(self: *Runtime, name: []const u8, value: Value, function: bool) Error!void {
+        if (self.lookupOwn(self.global_env, name) != null) return error.SyntaxError;
+        const object = self.globalObject();
+        const exists = try self.hasOwnProperty(object, name);
+        const root_base = self.root_count;
+        defer self.root_count = root_base;
+        try self.pushRoot(value);
+        if (function or !exists) {
+            if (function and exists) {
+                if (self.findAccessor(self.global_object, name)) |accessor| {
+                    if (!accessor.configurable) return error.SyntaxError;
+                } else for (self.propertyStorageConst(self.global_object)[0..self.cells[self.global_object].property_count]) |property| {
+                    if (equals(self.stringBytes(property.key), name) and !property.configurable and (!property.writable or !property.enumerable)) return error.SyntaxError;
+                }
+            }
+            const descriptor = try self.createObject();
+            try self.pushRoot(descriptor);
+            try self.defineOwnDataProperty(descriptor, "value", value);
+            try self.defineOwnDataProperty(descriptor, "writable", .{ .boolean = true });
+            try self.defineOwnDataProperty(descriptor, "enumerable", .{ .boolean = true });
+            try self.defineOwnDataProperty(descriptor, "configurable", .{ .boolean = false });
+            try self.defineDescriptor(object, name, descriptor);
+        }
+        try self.recordGlobalDeclaration(name);
+    }
+
+    fn hoistVariable(self: *Runtime, environment: u16, name: []const u8) Error!void {
+        if (environment == self.global_env) return self.declareGlobal(name, .undefined, false);
+        if (self.lookupOwn(environment, name) == null) try self.defineBinding(environment, name, .undefined, false);
+    }
+
+    fn strictExecution(self: *const Runtime) bool {
+        var current = self.active_env;
+        while (current != none) {
+            if (self.cells[current].strict_environment) |strict| return strict;
+            current = self.cells[current].parent;
+        }
+        return if (self.active_program) |program| program.strict_mode else false;
+    }
+
+    fn checkGlobalWrite(self: *Runtime, name: []const u8) Error!void {
+        if (self.strictExecution()) {
+            var index = self.global_object;
+            while (index != none) : (index = self.cells[index].prototype) {
+                if (self.findAccessor(index, name)) |accessor| {
+                    if (accessor.setter == .undefined) return error.TypeError;
+                    return;
+                }
+                var found = false;
+                for (self.propertyStorageConst(index)[0..self.cells[index].property_count]) |property| {
+                    if (!equals(self.stringBytes(property.key), name)) continue;
+                    if (!property.writable) return error.TypeError;
+                    found = true;
+                    break;
+                }
+                if (found) break;
+            }
+            if (!self.cells[self.global_object].extensible and !try self.hasOwnProperty(self.globalObject(), name)) return error.TypeError;
+        }
+    }
+
+    fn assignGlobal(self: *Runtime, name: []const u8, value: Value) Error!void {
+        try self.setProperty(self.globalObject(), name, value);
     }
 
     pub fn registerModule(self: *Runtime, name: []const u8, source: []const u8) Error!void {
@@ -7041,9 +7191,10 @@ pub const Runtime = struct {
         self.drainMarkQueue();
         self.markWeakMapValues();
         self.clearDeadWeakEntries();
+        if (self.external_root_marker.sweep) |sweep| sweep(self, self.external_root_marker.context);
 
         var collected: usize = 0;
-        for (&self.cells) |*cell| {
+        for (&self.cells, 0..) |*cell, cell_index| {
             if (cell.occupied and !cell.marked) {
                 if (cell.kind == .generator) self.releaseGeneratorState(cell);
                 if (cell.kind == .promise and cell.host_context != null) self.releaseAsyncState(cell);
@@ -7052,12 +7203,10 @@ pub const Runtime = struct {
                 self.releaseBindingStorage(cell);
                 self.releaseItemStorage(cell);
                 self.releasePropertyStorage(cell);
+                self.releaseOwnedAccessors(@intCast(cell_index));
                 cell.occupied = false;
                 collected += 1;
             }
-        }
-        for (self.accessorStorage()) |*accessor| {
-            if (accessor.occupied and (accessor.owner >= self.cells.len or !self.cells[accessor.owner].occupied)) accessor.occupied = false;
         }
         self.stats.collections += 1;
         self.stats.collected_cells += collected;
@@ -7086,11 +7235,13 @@ pub const Runtime = struct {
                 self.markSymbolRef(property.key);
                 self.markValue(property.value);
             }
-            for (self.accessorStorage()) |*accessor| if (accessor.occupied and accessor.owner == index) {
+            var accessors = self.ownedAccessorIndices(index);
+            while (accessors.next()) |slot| {
+                const accessor = &self.accessorStorage()[slot];
                 self.markSymbolRef(accessor.key);
                 self.markValue(accessor.getter);
                 self.markValue(accessor.setter);
-            };
+            }
             switch (cell.kind) {
                 .environment => {
                     for (self.bindingStorageConst(index)[0..cell.binding_count]) |binding| self.markValue(binding.value);
@@ -7126,6 +7277,7 @@ pub const Runtime = struct {
                         self.markValue(self.itemStorageConst(@intCast(index))[slot + 1]);
                 }
             }
+            if (self.external_root_marker.mark_weak) |mark| mark(self, self.external_root_marker.context);
             self.drainMarkQueue();
             if (self.gc_mark_progress == progress) break;
         }
@@ -7497,7 +7649,7 @@ pub const Runtime = struct {
             switch (instruction.op) {
                 .hoist_var => {
                     const name = program.text(node.text);
-                    if (self.lookupOwn(environment, name) == null) try self.defineBinding(environment, name, .undefined, false);
+                    try self.hoistVariable(environment, name);
                 },
                 .function_declaration => {
                     const value = try self.bytecodeFunctionDeclaration(program, instruction.a, environment);
@@ -7724,9 +7876,14 @@ pub const Runtime = struct {
     fn bytecodeFunctionDeclaration(self: *Runtime, program: *const Program, index: u16, environment: u16) Error!Value {
         const node = program.nodes[index];
         const name = program.text(node.text);
-        if (self.lookupOwn(environment, name)) |existing| return existing;
+        if (environment != self.global_env) {
+            if (self.lookupOwn(environment, name)) |existing| return existing;
+        }
         const function = try self.createFunction(program, index, environment, node.flags);
-        try self.defineBinding(environment, name, function, true);
+        if (environment == self.global_env)
+            try self.declareGlobal(name, function, true)
+        else
+            try self.defineBinding(environment, name, function, true);
         if (node.flags & flag_exported != 0 and self.active_exports != none)
             try self.registerModuleExport(name, name, none, .local, true);
         return function;
@@ -8443,7 +8600,7 @@ pub const Runtime = struct {
             .identifier => {
                 const name = program.text(pattern.text);
                 if (options.binding) {
-                    if (options.var_binding and self.lookup(environment, name) != null)
+                    if (options.var_binding)
                         try self.assignLexicalBinding(environment, name, value)
                     else
                         try self.defineBinding(environment, name, value, options.constant);
@@ -9692,7 +9849,7 @@ pub const Runtime = struct {
         const pattern = program.nodes[index];
         if (pattern.kind == .identifier) {
             const name = program.text(pattern.text);
-            if (self.lookupOwn(environment, name) == null) try self.defineBinding(environment, name, .undefined, false);
+            try self.hoistVariable(environment, name);
             return;
         }
         if (!isPatternKind(pattern.kind)) return error.BytecodeInvalid;
@@ -10059,6 +10216,8 @@ pub const Runtime = struct {
         self.cells[module.exports].sealed = true;
         module.environment = try self.allocateCell(.environment);
         self.cells[module.environment].parent = self.global_env;
+        self.cells[module.environment].strict_environment = true;
+        try self.defineBinding(module.environment, "this", .undefined, true);
         module.state = .evaluating;
         const environment = module.environment;
         const previous_env = self.active_env;
@@ -11180,6 +11339,7 @@ pub const Runtime = struct {
         const environment = try self.allocateCell(.environment);
         self.call_environments[frame_index] = environment;
         self.cells[environment].parent = function.parent;
+        self.cells[environment].strict_environment = strict_function;
         const previous_active_env = self.active_env;
         self.active_env = environment;
         defer self.active_env = previous_active_env;
@@ -11188,7 +11348,7 @@ pub const Runtime = struct {
         else if (construct)
             Value.undefined
         else if (!strict_function and receiver.isNullish())
-            self.global("globalThis") orelse receiver
+            self.globalObject()
         else
             receiver;
         if (!arrow) {
@@ -11379,11 +11539,17 @@ pub const Runtime = struct {
 
     fn nativeFunctionToString(self: *Runtime, receiver: Value) Error!Value {
         if (!self.isCallableValue(receiver)) return error.TypeError;
-        if (receiver == .cell and self.cells[receiver.cell].kind == .proxy)
-            return .{ .string = try self.storeString("function () { [native code] }") };
-        const primitive = try self.toPrimitive(receiver, .string);
-        if (primitive != .string) return error.TypeError;
-        return primitive;
+        const function = &self.cells[receiver.cell];
+        if (function.kind == .function) {
+            if (function.program_ref) |program| {
+                if (function.node < program.node_count) {
+                    const source = program.nodes[function.node].source.bytes(program.source[0..program.source_len]);
+                    if (source.len > 0) return .{ .string = try self.storeString(source) };
+                }
+            }
+            return .{ .string = try self.storeString("function(){}") };
+        }
+        return .{ .string = try self.storeString("function () { [native code] }") };
     }
 
     fn finishNativeConstruction(self: *Runtime, id: NativeId, result: Value, new_target: Value) Error!Value {
@@ -12748,9 +12914,11 @@ pub const Runtime = struct {
             property.writable = false;
             property.configurable = false;
         }
-        for (self.accessorStorage()) |*accessor| if (accessor.occupied and accessor.owner == index) {
+        var accessors = self.ownedAccessorIndices(index);
+        while (accessors.next()) |slot| {
+            const accessor = &self.accessorStorage()[slot];
             accessor.configurable = false;
-        };
+        }
         return arguments[0];
     }
 
@@ -12778,9 +12946,11 @@ pub const Runtime = struct {
         if (!prevent_only) {
             self.cells[index].sealed = true;
             for (self.propertyStorage(index)[0..self.cells[index].property_count]) |*property| property.configurable = false;
-            for (self.accessorStorage()) |*accessor| if (accessor.occupied and accessor.owner == index) {
+            var accessors = self.ownedAccessorIndices(index);
+            while (accessors.next()) |slot| {
+                const accessor = &self.accessorStorage()[slot];
                 accessor.configurable = false;
-            };
+            }
         }
         return arguments[0];
     }
@@ -12807,8 +12977,10 @@ pub const Runtime = struct {
             if (property.configurable) return .{ .boolean = false };
             if (property.writable) frozen = false;
         }
-        for (self.accessorStorage()) |*accessor| if (accessor.occupied and accessor.owner == index and accessor.configurable)
-            return .{ .boolean = false };
+        var accessors = self.ownedAccessorIndices(index);
+        while (accessors.next()) |slot| {
+            if (self.accessorStorageConst()[slot].configurable) return .{ .boolean = false };
+        }
         return .{ .boolean = query == .sealed or frozen or self.cells[index].frozen };
     }
 
@@ -14170,44 +14342,195 @@ pub const Runtime = struct {
         try self.pushRoot(values);
         var value_count: usize = 0;
         for (0..length) |item_index| {
+            try self.checkpoint();
             if (!try self.arrayLikeHas(receiver, item_index)) continue;
             try self.setSparseArrayItem(values, value_count, try self.arrayLikeGet(receiver, item_index));
             value_count += 1;
         }
         try self.sortDenseArray(program, values.cell, comparator);
-        for (0..value_count) |item_index| try self.arrayLikeSet(receiver, item_index, self.itemStorageConst(values.cell)[item_index]);
-        for (value_count..length) |item_index| try self.arrayLikeDelete(receiver, item_index);
+        for (0..value_count) |item_index| {
+            try self.checkpoint();
+            try self.arrayLikeSet(receiver, item_index, self.itemStorageConst(values.cell)[item_index]);
+        }
+        for (value_count..length) |item_index| {
+            try self.checkpoint();
+            try self.arrayLikeDelete(receiver, item_index);
+        }
         try self.arrayLikeSetLength(receiver, length);
         return receiver;
     }
 
-    fn sortDenseArray(self: *Runtime, program: *const Program, index: u16, comparator: Value) Error!void {
-        var outer: usize = 1;
-        while (outer < self.cells[index].item_count) : (outer += 1) {
-            var inner = outer;
-            while (inner > 0) {
-                const left = self.itemStorageConst(index)[inner - 1];
-                const right = self.itemStorageConst(index)[inner];
-                const order = if (left == .undefined)
-                    if (right == .undefined) @as(f64, 0) else @as(f64, 1)
-                else if (right == .undefined)
-                    @as(f64, -1)
-                else if (comparator != .undefined)
-                    try self.toNumber(try self.call(program, comparator, .undefined, &.{ left, right }, false))
-                else blk: {
-                    const left_text = (try self.toString(left)).bytes(self.strings[0..self.string_len]);
-                    const right_text = (try self.toString(right)).bytes(self.strings[0..self.string_len]);
-                    break :blk switch (std.mem.order(u8, left_text, right_text)) {
-                        .lt => @as(f64, -1),
-                        .eq => @as(f64, 0),
-                        .gt => @as(f64, 1),
-                    };
+    const SortSource = union(enum) {
+        array: u16,
+        typed: struct { bytes: []const u8, element: TypedArrayElement },
+    };
+
+    const SortOrder = struct {
+        memory: []u16 = &.{},
+        indices: []u16 = &.{},
+
+        fn deinit(self: SortOrder, runtime: *Runtime) void {
+            if (self.memory.len != 0) runtime.program_allocator.free(runtime.program_allocator.context, @ptrCast(self.memory.ptr), self.memory.len * @sizeOf(u16), @alignOf(u16));
+        }
+    };
+
+    fn sortOrderAfter(self: *Runtime, program: *const Program, source: SortSource, comparator: Value, left_index: usize, right_index: usize) Error!bool {
+        const root_base = self.root_count;
+        defer self.root_count = root_base;
+        var left: Value = undefined;
+        var right: Value = undefined;
+        switch (source) {
+            .array => |index| {
+                left = self.itemStorageConst(index)[left_index];
+                right = self.itemStorageConst(index)[right_index];
+                // Undefined never reaches the user comparator; holes were
+                // skipped when gathering sort() and read by toSorted().
+                if (left == .undefined) return right != .undefined;
+                if (right == .undefined) return false;
+            },
+            .typed => |typed| {
+                const size = typed.element.byteSize();
+                const left_bits = readDataViewBits(typed.bytes, left_index * size, size, true);
+                const right_bits = readDataViewBits(typed.bytes, right_index * size, size, true);
+                if (comparator == .undefined) switch (typed.element) {
+                    .bigint64 => return @as(i64, @bitCast(left_bits)) > @as(i64, @bitCast(right_bits)),
+                    .biguint64 => return left_bits > right_bits,
+                    else => {},
                 };
-                if (!(order > 0)) break;
-                self.itemStorage(index)[inner - 1] = right;
-                self.itemStorage(index)[inner] = left;
-                inner -= 1;
+                left = try self.typedArrayValueFromBits(typed.element, left_bits);
+                try self.pushRoot(left);
+                right = try self.typedArrayValueFromBits(typed.element, right_bits);
+                try self.pushRoot(right);
+                if (comparator == .undefined) return (try self.typedArrayDefaultOrder(left, right)) == .gt;
+            },
+        }
+        if (comparator != .undefined)
+            return (try self.toNumber(try self.call(program, comparator, .undefined, &.{ left, right }, false))) > 0;
+        // String conversion may grow the arena. Resolve both byte slices only
+        // after both conversions have finished.
+        const left_text = try self.toString(left);
+        const right_text = try self.toString(right);
+        return std.mem.order(u8, self.stringBytes(left_text), self.stringBytes(right_text)) == .gt;
+    }
+
+    fn stableSortOrder(self: *Runtime, program: *const Program, source: SortSource, length: usize, comparator: Value) Error!SortOrder {
+        if (length == 0) return .{};
+        if (length > max_items) {
+            self.diagnostic_limit_required = length;
+            self.diagnostic_limit_available = max_items;
+            return error.ItemLimit;
+        }
+        // At the existing 65,536-element limit every original index fits u16.
+        // Both merge runs together occupy at most 256 KB; no Value copies.
+        const bytes = length * 2 * @sizeOf(u16);
+        const raw = self.program_allocator.allocate(self.program_allocator.context, bytes, @alignOf(u16)) orelse return error.ProgramAllocation;
+        errdefer self.program_allocator.free(self.program_allocator.context, raw, bytes, @alignOf(u16));
+        const memory = @as([*]u16, @ptrCast(@alignCast(raw)))[0 .. length * 2];
+        var input = memory[0..length];
+        var output = memory[length..];
+        for (input, 0..) |*index, position| {
+            try self.checkpoint();
+            index.* = @intCast(position);
+        }
+        var ordered = true;
+        for (1..length) |position| {
+            try self.checkpoint();
+            if (try self.sortOrderAfter(program, source, comparator, position - 1, position)) {
+                ordered = false;
+                break;
             }
+        }
+        if (ordered) return .{ .memory = memory, .indices = input };
+        var width: usize = 1;
+        while (width < length) : (width *= 2) {
+            var start: usize = 0;
+            while (start < length) : (start += width * 2) {
+                const middle = @min(start + width, length);
+                const end = @min(start + width * 2, length);
+                var left = start;
+                var right = middle;
+                for (start..end) |destination| {
+                    try self.checkpoint();
+                    if (left < middle and (right == end or !try self.sortOrderAfter(program, source, comparator, input[left], input[right]))) {
+                        // Taking the left run on equality preserves stability,
+                        // including comparator NaN and equal signed zeros.
+                        output[destination] = input[left];
+                        left += 1;
+                    } else {
+                        output[destination] = input[right];
+                        right += 1;
+                    }
+                }
+            }
+            std.mem.swap([]u16, &input, &output);
+        }
+        return .{ .memory = memory, .indices = input };
+    }
+
+    fn sortDenseArray(self: *Runtime, program: *const Program, index: u16, comparator: Value) Error!void {
+        const order = try self.stableSortOrder(program, .{ .array = index }, self.cells[index].item_count, comparator);
+        defer order.deinit(self);
+        const root_base = self.root_count;
+        defer self.root_count = root_base;
+        // Apply the permutation in place after all comparisons. The saved
+        // cycle value stays rooted if a checkpoint performs collection.
+        for (order.indices, 0..) |_, start| {
+            try self.checkpoint();
+            if (order.indices[start] == start) continue;
+            self.root_count = root_base;
+            const saved = self.itemStorageConst(index)[start];
+            try self.pushRoot(saved);
+            var current = start;
+            while (true) {
+                try self.checkpoint();
+                const next = order.indices[current];
+                order.indices[current] = @intCast(current);
+                if (next == start) {
+                    self.itemStorage(index)[current] = saved;
+                    break;
+                }
+                self.itemStorage(index)[current] = self.itemStorageConst(index)[next];
+                current = next;
+            }
+        }
+    }
+
+    fn sortTypedArray(self: *Runtime, program: *const Program, index: u16, comparator: Value) Error!void {
+        const captured = try self.typedArrayRange(index);
+        const length = captured.length;
+        if (length > max_items) {
+            self.diagnostic_limit_required = length;
+            self.diagnostic_limit_available = max_items;
+            return error.ItemLimit;
+        }
+        if (length == 0) return;
+        const size = captured.element.byteSize();
+        const byte_length = length * size;
+        const raw = self.program_allocator.allocate(self.program_allocator.context, byte_length, @alignOf(u8)) orelse return error.ProgramAllocation;
+        defer self.program_allocator.free(self.program_allocator.context, raw, byte_length, @alignOf(u8));
+        const snapshot = raw[0..byte_length];
+        // Keep original values independent of comparator mutations, resizing
+        // or detachment without materializing a complete JavaScript array.
+        for (0..length) |item| {
+            try self.checkpoint();
+            const offset = item * size;
+            @memcpy(snapshot[offset .. offset + size], arrayBufferBytes(captured.storage)[captured.offset + offset .. captured.offset + offset + size]);
+        }
+        const order = try self.stableSortOrder(program, .{ .typed = .{ .bytes = snapshot, .element = captured.element } }, length, comparator);
+        defer order.deinit(self);
+        for (order.indices, 0..) |original, destination| {
+            try self.checkpoint();
+            // Match integer-indexed writes after comparator side effects:
+            // detached/out-of-bounds views ignore writes; immutable ones fail.
+            const current = self.typedArrayRange(index) catch |err| switch (err) {
+                error.TypeError => continue,
+                else => return err,
+            };
+            if (destination >= current.length) continue;
+            if (current.storage.immutable) return error.TypeError;
+            const from = @as(usize, original) * size;
+            const to = current.offset + destination * size;
+            @memcpy(arrayBufferBytes(current.storage)[to .. to + size], snapshot[from .. from + size]);
         }
     }
 
@@ -14273,7 +14596,10 @@ pub const Runtime = struct {
         try self.pushRoot(receiver);
         try self.pushRoot(comparator);
         try self.pushRoot(result);
-        for (0..length) |item_index| try self.setSparseArrayItem(result, item_index, try self.arrayLikeGet(receiver, item_index));
+        for (0..length) |item_index| {
+            try self.checkpoint();
+            try self.setSparseArrayItem(result, item_index, try self.arrayLikeGet(receiver, item_index));
+        }
         try self.sortDenseArray(program, result.cell, comparator);
         return result;
     }
@@ -14373,14 +14699,131 @@ pub const Runtime = struct {
         return self.strictEqual(left, right) or (left == .number and right == .number and std.math.isNan(left.number) and std.math.isNan(right.number));
     }
 
+    fn collectionStorage(self: *const Runtime, index: u16) ?*const CollectionStorage {
+        return @ptrCast(@alignCast(self.cells[index].host_context orelse return null));
+    }
+
+    fn ensureCollectionStorage(self: *Runtime, index: u16) Error!*CollectionStorage {
+        if (self.cells[index].host_context) |raw| return @ptrCast(@alignCast(raw));
+        const raw = self.program_allocator.allocate(self.program_allocator.context, @sizeOf(CollectionStorage), @alignOf(CollectionStorage)) orelse return error.ProgramAllocation;
+        const storage: *CollectionStorage = @ptrCast(@alignCast(raw));
+        storage.* = .{};
+        self.cells[index].host_context = raw;
+        return storage;
+    }
+
+    fn collectionKeyHash(self: *const Runtime, key: Value) u64 {
+        var hash = std.hash.Wyhash.init(0);
+        const tag: u8 = @intFromEnum(std.meta.activeTag(key));
+        hash.update(&.{tag});
+        switch (key) {
+            .undefined, .null_value => {},
+            .boolean => |value| hash.update(&.{@intFromBool(value)}),
+            .number => |value| {
+                const bits: u64 = if (std.math.isNan(value)) 0x7ff8000000000000 else if (value == 0) 0 else @bitCast(value);
+                hash.update(std.mem.asBytes(&bits));
+            },
+            .string => |value| hash.update(self.stringBytes(value)),
+            .cell => |value| hash.update(std.mem.asBytes(&value)),
+            .bigint => {
+                const value = self.bigIntConst(key) catch return hash.final();
+                var length = value.limbs.len;
+                while (length > 0 and value.limbs[length - 1] == 0) length -= 1;
+                hash.update(&.{@intFromBool(length == 0 or value.positive)});
+                hash.update(std.mem.sliceAsBytes(value.limbs[0..length]));
+            },
+        }
+        return hash.final();
+    }
+
+    fn growCollectionStorage(self: *Runtime, storage: *CollectionStorage, required: usize, limit: usize) Error!void {
+        if (required <= storage.capacity) return;
+        if (required > limit) return error.RangeError;
+        var capacity = @max(storage.capacity, 8);
+        while (capacity < required) capacity = @min(limit, capacity * 2);
+        const entry_bytes = capacity * @sizeOf(CollectionEntry);
+        const entry_raw = self.program_allocator.allocate(self.program_allocator.context, entry_bytes, @alignOf(CollectionEntry)) orelse return error.ProgramAllocation;
+        errdefer self.program_allocator.free(self.program_allocator.context, entry_raw, entry_bytes, @alignOf(CollectionEntry));
+        const entries: [*]CollectionEntry = @ptrCast(@alignCast(entry_raw));
+        const bucket_bytes = capacity * 2 * @sizeOf(u32);
+        const bucket_raw = self.program_allocator.allocate(self.program_allocator.context, bucket_bytes, @alignOf(u32)) orelse return error.ProgramAllocation;
+        const buckets: [*]u32 = @ptrCast(@alignCast(bucket_raw));
+        @memset(entries[0..capacity], .{});
+        @memset(buckets[0 .. capacity * 2], collection_none);
+        if (storage.entries) |old| @memcpy(entries[0..storage.entry_count], old[0..storage.entry_count]);
+        var entry = storage.head;
+        while (entry != collection_none) {
+            const bucket: usize = @intCast(entries[entry].hash & (capacity * 2 - 1));
+            entries[entry].bucket_next = buckets[bucket];
+            buckets[bucket] = entry;
+            entry = entries[entry].next;
+        }
+        if (storage.entries) |old| self.program_allocator.free(self.program_allocator.context, @ptrCast(old), storage.capacity * @sizeOf(CollectionEntry), @alignOf(CollectionEntry));
+        if (storage.buckets) |old| self.program_allocator.free(self.program_allocator.context, @ptrCast(old), storage.capacity * 2 * @sizeOf(u32), @alignOf(u32));
+        storage.entries = entries;
+        storage.buckets = buckets;
+        storage.capacity = capacity;
+    }
+
+    fn releaseCollectionStorage(self: *Runtime, cell: *Cell) void {
+        const raw = cell.host_context orelse return;
+        const storage: *CollectionStorage = @ptrCast(@alignCast(raw));
+        if (storage.entries) |entries| self.program_allocator.free(self.program_allocator.context, @ptrCast(entries), storage.capacity * @sizeOf(CollectionEntry), @alignOf(CollectionEntry));
+        if (storage.buckets) |buckets| self.program_allocator.free(self.program_allocator.context, @ptrCast(buckets), storage.capacity * 2 * @sizeOf(u32), @alignOf(u32));
+        self.program_allocator.free(self.program_allocator.context, @ptrCast(raw), @sizeOf(CollectionStorage), @alignOf(CollectionStorage));
+        cell.host_context = null;
+    }
+
     fn collectionFind(self: *const Runtime, index: u16, key: Value) ?usize {
+        const storage = self.collectionStorage(index) orelse return null;
+        if (storage.live_count == 0) return null;
+        const hash = self.collectionKeyHash(key);
+        var entry = storage.buckets.?[@intCast(hash & (storage.capacity * 2 - 1))];
         const stride: usize = if (isMapCollectionTag(self.cells[index].host_tag)) 2 else 1;
-        var slot: usize = 0;
-        while (slot < self.cells[index].item_count) : (slot += stride) {
-            if (!self.arrayItemPresent(index, slot)) continue;
-            if (self.sameValueZero(self.itemStorageConst(index)[slot], key)) return slot;
+        while (entry != collection_none) {
+            const item = storage.entries.?[entry];
+            const slot = @as(usize, entry) * stride;
+            if (item.hash == hash and self.sameValueZero(self.itemStorageConst(index)[slot], key)) return slot;
+            entry = item.bucket_next;
         }
         return null;
+    }
+
+    fn removeCollectionEntry(self: *Runtime, index: u16, slot: usize) void {
+        const storage: *CollectionStorage = @ptrCast(@alignCast(self.cells[index].host_context.?));
+        const stride: usize = if (isMapCollectionTag(self.cells[index].host_tag)) 2 else 1;
+        const entry: u32 = @intCast(slot / stride);
+        const item = storage.entries.?[entry];
+        var bucket_link = &storage.buckets.?[@intCast(item.hash & (storage.capacity * 2 - 1))];
+        while (bucket_link.* != entry) bucket_link = &storage.entries.?[bucket_link.*].bucket_next;
+        bucket_link.* = item.bucket_next;
+        if (item.previous == collection_none) storage.head = item.next else storage.entries.?[item.previous].next = item.next;
+        if (item.next == collection_none) storage.tail = item.previous else storage.entries.?[item.next].previous = item.previous;
+        storage.entries.?[entry] = .{ .next = storage.free_head };
+        storage.free_head = entry;
+        storage.live_count -= 1;
+        for (slot..slot + stride) |position| {
+            self.itemStorage(index)[position] = .undefined;
+            self.setArrayItemPresent(index, position, false);
+        }
+    }
+
+    fn nextCollectionEntry(self: *const Runtime, index: u16, cursor: *CollectionCursor) ?usize {
+        const storage = self.collectionStorage(index) orelse return null;
+        const stride: usize = if (isMapCollectionTag(self.cells[index].host_tag)) 2 else 1;
+        var next = storage.head;
+        if (cursor.last_slot < storage.entry_count and cursor.last_serial != 0 and
+            storage.entries.?[cursor.last_slot].serial == cursor.last_serial)
+        {
+            next = storage.entries.?[cursor.last_slot].next;
+        } else {
+            // Deletion/reuse or clear invalidates the old position. Only live
+            // entries are considered; a new insertion always has a later serial.
+            while (next != collection_none and storage.entries.?[next].serial <= cursor.last_serial) next = storage.entries.?[next].next;
+        }
+        if (next == collection_none) return null;
+        cursor.* = .{ .last_slot = next, .last_serial = storage.entries.?[next].serial };
+        return @as(usize, next) * stride;
     }
 
     fn createCollection(self: *Runtime, prototype: Value, map: bool) Error!Value {
@@ -14397,13 +14840,32 @@ pub const Runtime = struct {
             return;
         }
         const stride: usize = if (isMapCollectionTag(self.cells[index].host_tag)) 2 else 1;
-        const start = self.cells[index].item_count;
-        try self.extendArrayItems(index, start + stride);
-        self.itemStorage(index)[start] = key;
-        self.setArrayItemPresent(index, start, true);
+        const storage = try self.ensureCollectionStorage(index);
+        if (storage.live_count >= max_items / stride) {
+            self.diagnostic_limit_required = (storage.live_count + 1) * stride;
+            self.diagnostic_limit_available = max_items;
+            return error.RangeError;
+        }
+        const serial = std.math.add(u64, storage.serial, 1) catch return error.RangeError;
+        const entry: u32 = if (storage.free_head != collection_none) storage.free_head else @intCast(storage.entry_count);
+        try self.growCollectionStorage(storage, @as(usize, entry) + 1, max_items / stride);
+        const slot = @as(usize, entry) * stride;
+        try self.ensureItemCapacity(index, slot + stride);
+        const hash = self.collectionKeyHash(key);
+        const bucket: usize = @intCast(hash & (storage.capacity * 2 - 1));
+        if (storage.free_head != collection_none) storage.free_head = storage.entries.?[entry].next else storage.entry_count += 1;
+        storage.entries.?[entry] = .{ .hash = hash, .serial = serial, .previous = storage.tail, .bucket_next = storage.buckets.?[bucket] };
+        if (storage.tail == collection_none) storage.head = entry else storage.entries.?[storage.tail].next = entry;
+        storage.tail = entry;
+        storage.buckets.?[bucket] = entry;
+        storage.serial = serial;
+        storage.live_count += 1;
+        self.cells[index].item_count = @max(self.cells[index].item_count, slot + stride);
+        self.itemStorage(index)[slot] = key;
+        self.setArrayItemPresent(index, slot, true);
         if (stride == 2) {
-            self.itemStorage(index)[start + 1] = map_value;
-            self.setArrayItemPresent(index, start + 1, true);
+            self.itemStorage(index)[slot + 1] = map_value;
+            self.setArrayItemPresent(index, slot + 1, true);
         }
     }
 
@@ -14463,12 +14925,7 @@ pub const Runtime = struct {
     fn nativeCollectionDelete(self: *Runtime, receiver: Value, arguments: []const Value) Error!Value {
         const index = try self.collectionIndex(receiver, null);
         const slot = self.collectionFind(index, canonicalCollectionKey(if (arguments.len > 0) arguments[0] else .undefined)) orelse return .{ .boolean = false };
-        self.itemStorage(index)[slot] = .undefined;
-        self.setArrayItemPresent(index, slot, false);
-        if (self.cells[index].host_tag == map_tag) {
-            self.itemStorage(index)[slot + 1] = .undefined;
-            self.setArrayItemPresent(index, slot + 1, false);
-        }
+        self.removeCollectionEntry(index, slot);
         return .{ .boolean = true };
     }
 
@@ -14478,18 +14935,23 @@ pub const Runtime = struct {
             self.itemStorage(index)[slot] = .undefined;
             self.setArrayItemPresent(index, slot, false);
         }
+        self.cells[index].item_count = 0;
+        if (self.cells[index].host_context) |raw| {
+            const storage: *CollectionStorage = @ptrCast(@alignCast(raw));
+            if (storage.buckets) |buckets| @memset(buckets[0 .. storage.capacity * 2], collection_none);
+            storage.entry_count = 0;
+            storage.live_count = 0;
+            storage.head = collection_none;
+            storage.tail = collection_none;
+            storage.free_head = collection_none;
+            // Keep the serial: an active iterator must see entries added after clear.
+        }
         return .undefined;
     }
 
     fn nativeCollectionSize(self: *Runtime, receiver: Value) Error!Value {
         const index = try self.collectionIndex(receiver, null);
-        const stride: usize = if (self.cells[index].host_tag == map_tag) 2 else 1;
-        var size: usize = 0;
-        var slot: usize = 0;
-        while (slot < self.cells[index].item_count) : (slot += stride) if (self.arrayItemPresent(index, slot)) {
-            size += 1;
-        };
-        return .{ .number = @floatFromInt(size) };
+        return .{ .number = @floatFromInt(if (self.collectionStorage(index)) |storage| storage.live_count else @as(usize, 0)) };
     }
 
     fn nativeMapGetOrInsert(self: *Runtime, receiver: Value, arguments: []const Value, computed: bool, program: *const Program) Error!Value {
@@ -14608,12 +15070,7 @@ pub const Runtime = struct {
     }
 
     fn clearWeakCollectionEntry(self: *Runtime, index: u16, slot: usize) void {
-        self.itemStorage(index)[slot] = .undefined;
-        self.setArrayItemPresent(index, slot, false);
-        if (self.cells[index].host_tag == weak_map_tag) {
-            self.itemStorage(index)[slot + 1] = .undefined;
-            self.setArrayItemPresent(index, slot + 1, false);
-        }
+        self.removeCollectionEntry(index, slot);
     }
 
     fn nativeCollectionForEach(self: *Runtime, program: *const Program, receiver: Value, arguments: []const Value) Error!Value {
@@ -14621,9 +15078,8 @@ pub const Runtime = struct {
         if (arguments.len == 0 or !self.isCallableValue(arguments[0])) return error.TypeError;
         const this_arg = if (arguments.len > 1) arguments[1] else Value.undefined;
         const stride: usize = if (self.cells[index].host_tag == map_tag) 2 else 1;
-        var slot: usize = 0;
-        while (slot < self.cells[index].item_count) : (slot += stride) {
-            if (!self.arrayItemPresent(index, slot)) continue;
+        var cursor = CollectionCursor{};
+        while (self.nextCollectionEntry(index, &cursor)) |slot| {
             const key = self.itemStorageConst(index)[slot];
             const value = if (stride == 2) self.itemStorageConst(index)[slot + 1] else key;
             _ = try self.call(program, arguments[0], this_arg, &.{ value, key, receiver }, false);
@@ -14638,7 +15094,7 @@ pub const Runtime = struct {
         self.cells[iterator.cell].prototype = if (self.cells[index].host_tag == map_tag) self.map_iterator_prototype else self.set_iterator_prototype;
         self.cells[iterator.cell].receiver = receiver;
         self.cells[iterator.cell].node = kind;
-        self.cells[iterator.cell].array_length = 0;
+        self.cells[iterator.cell].storage = .{ .collection_cursor = .{} };
         return iterator;
     }
 
@@ -14649,13 +15105,10 @@ pub const Runtime = struct {
         if (source == .undefined) return self.createIteratorResult(.undefined, true);
         const collection = try self.collectionIndex(source, self.cells[iterator].host_tag == map_iterator_tag);
         const stride: usize = if (self.cells[collection].host_tag == map_tag) 2 else 1;
-        var slot = self.cells[iterator].array_length;
-        while (slot < self.cells[collection].item_count and !self.arrayItemPresent(collection, slot)) slot += stride;
-        if (slot >= self.cells[collection].item_count) {
+        const slot = self.nextCollectionEntry(collection, &self.cells[iterator].storage.collection_cursor) orelse {
             self.cells[iterator].receiver = .undefined;
             return self.createIteratorResult(.undefined, true);
-        }
-        self.cells[iterator].array_length = slot + stride;
+        };
         const key = self.itemStorageConst(collection)[slot];
         const value = if (stride == 2) self.itemStorageConst(collection)[slot + 1] else key;
         const result = switch (self.cells[iterator].node) {
@@ -14719,9 +15172,9 @@ pub const Runtime = struct {
     }
 
     fn copySetEntries(self: *Runtime, source: u16, destination: u16) Error!void {
-        var slot: usize = 0;
-        while (slot < self.cells[source].item_count) : (slot += 1)
-            if (self.arrayItemPresent(source, slot)) try self.appendCollectionEntry(destination, self.itemStorageConst(source)[slot], .undefined);
+        var entries = CollectionCursor{};
+        while (self.nextCollectionEntry(source, &entries)) |slot|
+            try self.appendCollectionEntry(destination, self.itemStorageConst(source)[slot], .undefined);
     }
 
     fn nativeSetComposition(self: *Runtime, program: *const Program, receiver: Value, arguments: []const Value, operation: SetComposition) Error!Value {
@@ -14734,10 +15187,12 @@ pub const Runtime = struct {
         try self.pushRoot(result);
         if (operation == .union_set or operation == .symmetric_difference) try self.copySetEntries(source, result.cell);
         if (operation == .difference or operation == .intersection) {
-            var slot: usize = 0;
-            while (slot < self.cells[source].item_count) : (slot += 1) {
-                if (!self.arrayItemPresent(source, slot)) continue;
+            var entries = CollectionCursor{};
+            const entry_roots = self.root_count;
+            while (self.nextCollectionEntry(source, &entries)) |slot| {
+                self.root_count = entry_roots;
                 const value = self.itemStorageConst(source)[slot];
+                try self.pushRoot(value);
                 const present = self.truthy(try self.call(program, other.has, other.object, &.{value}, false));
                 if ((operation == .difference and !present) or (operation == .intersection and present)) try self.appendCollectionEntry(result.cell, value, .undefined);
             }
@@ -14766,9 +15221,8 @@ pub const Runtime = struct {
         if (arguments.len == 0) return error.TypeError;
         const other = try self.getSetRecord(arguments[0]);
         if (relation == .subset or relation == .disjoint) {
-            var slot: usize = 0;
-            while (slot < self.cells[source].item_count) : (slot += 1) {
-                if (!self.arrayItemPresent(source, slot)) continue;
+            var entries = CollectionCursor{};
+            while (self.nextCollectionEntry(source, &entries)) |slot| {
                 const present = self.truthy(try self.call(program, other.has, other.object, &.{self.itemStorageConst(source)[slot]}, false));
                 if ((relation == .subset and !present) or (relation == .disjoint and present)) return .{ .boolean = false };
             }
@@ -17685,19 +18139,44 @@ pub const Runtime = struct {
 
     fn nativeTypedArraySet(self: *Runtime, receiver: Value, arguments: []const Value) Error!Value {
         const target = try self.typedArrayIndex(receiver);
-        const target_range = try self.typedArrayRange(target);
-        if (target_range.storage.immutable) return error.TypeError;
+        if ((try self.typedArrayRange(target)).storage.immutable) return error.TypeError;
         const source = if (arguments.len > 0) arguments[0] else Value.undefined;
         if (source.isNullish()) return error.TypeError;
-        const offset = try self.toIndex(if (arguments.len > 1) arguments[1] else .undefined);
-        const source_length = try self.arrayLikeLength(source);
-        if (offset > target_range.length or source_length > target_range.length - offset) return error.RangeError;
-        if (self.typedArrayElement(source)) |source_element|
-            if (source_element.isBigInt() != target_range.element.isBigInt()) return error.TypeError;
         const root_base = self.root_count;
         defer self.root_count = root_base;
         try self.pushRoot(receiver);
         try self.pushRoot(source);
+        const offset = try self.toIndex(if (arguments.len > 1) arguments[1] else .undefined);
+        // Offset coercion can detach or resize either buffer. Resolve ranges
+        // afterwards, and avoid a Value array for an identical element kind.
+        const target_range = try self.typedArrayRange(target);
+        if (target_range.storage.immutable) return error.TypeError;
+        if (self.typedArrayElement(source)) |source_element| {
+            const source_range = try self.typedArrayRange(source.cell);
+            if (source_element.isBigInt() != target_range.element.isBigInt()) return error.TypeError;
+            if (offset > target_range.length or source_range.length > target_range.length - offset) return error.RangeError;
+            if (source_element == target_range.element) {
+                const size = source_element.byteSize();
+                const count = source_range.length * size;
+                const target_offset = target_range.offset + offset * size;
+                const backwards = source_range.storage == target_range.storage and
+                    target_offset > source_range.offset and target_offset - source_range.offset < count;
+                const destination = arrayBufferBytes(target_range.storage)[target_offset .. target_offset + count];
+                const bytes = arrayBufferBytes(source_range.storage)[source_range.offset .. source_range.offset + count];
+                var remaining = count;
+                while (remaining > 0) {
+                    try self.checkpoint();
+                    const chunk = @min(remaining, 4096);
+                    const start = if (backwards) remaining - chunk else count - remaining;
+                    if (backwards) std.mem.copyBackwards(u8, destination[start .. start + chunk], bytes[start .. start + chunk]) else std.mem.copyForwards(u8, destination[start .. start + chunk], bytes[start .. start + chunk]);
+                    remaining -= chunk;
+                }
+                return .undefined;
+            }
+        }
+        const source_length = try self.arrayLikeLength(source);
+        const current = try self.typedArrayRange(target);
+        if (offset > current.length or source_length > current.length - offset) return error.RangeError;
         const values = try self.createSparseArray(source_length);
         try self.pushRoot(values);
         for (0..source_length) |item_index| try self.setSparseArrayItem(values, item_index, try self.arrayLikeGet(source, item_index));
@@ -17721,46 +18200,16 @@ pub const Runtime = struct {
         return std.math.order(a, b);
     }
 
-    fn sortTypedValues(self: *Runtime, program: *const Program, values: u16, comparator: Value) Error!void {
-        var outer: usize = 1;
-        while (outer < self.cells[values].item_count) : (outer += 1) {
-            var inner = outer;
-            while (inner > 0) {
-                const left = self.itemStorageConst(values)[inner - 1];
-                const right = self.itemStorageConst(values)[inner];
-                const order = if (comparator == .undefined)
-                    try self.typedArrayDefaultOrder(left, right)
-                else blk: {
-                    const number = try self.toNumber(try self.call(program, comparator, .undefined, &.{ left, right }, false));
-                    break :blk if (std.math.isNan(number) or number == 0)
-                        std.math.Order.eq
-                    else if (number < 0)
-                        std.math.Order.lt
-                    else
-                        std.math.Order.gt;
-                };
-                if (order != .gt) break;
-                self.itemStorage(values)[inner - 1] = right;
-                self.itemStorage(values)[inner] = left;
-                inner -= 1;
-            }
-        }
-    }
-
     fn nativeTypedArraySort(self: *Runtime, program: *const Program, receiver: Value, arguments: []const Value) Error!Value {
         const source = try self.typedArrayIndex(receiver);
-        const length = (try self.typedArrayRange(source)).length;
+        _ = try self.typedArrayRange(source);
         const comparator = if (arguments.len > 0) arguments[0] else Value.undefined;
         if (comparator != .undefined and !self.isCallableValue(comparator)) return error.TypeError;
         const root_base = self.root_count;
         defer self.root_count = root_base;
         try self.pushRoot(receiver);
         try self.pushRoot(comparator);
-        const values = try self.createSparseArray(length);
-        try self.pushRoot(values);
-        for (0..length) |item_index| try self.setSparseArrayItem(values, item_index, try self.typedArrayRead(source, item_index));
-        try self.sortTypedValues(program, values.cell, comparator);
-        for (0..length) |item_index| _ = try self.typedArrayWrite(source, item_index, self.itemStorageConst(values.cell)[item_index]);
+        try self.sortTypedArray(program, source, comparator);
         return receiver;
     }
 
@@ -17803,6 +18252,11 @@ pub const Runtime = struct {
         }
         const comparator = if (method == .sorted and arguments.len > 0) arguments[0] else Value.undefined;
         if (comparator != .undefined and !self.isCallableValue(comparator)) return error.TypeError;
+        if (method == .sorted and length > max_items) {
+            self.diagnostic_limit_required = length;
+            self.diagnostic_limit_available = max_items;
+            return error.ItemLimit;
+        }
         const root_base = self.root_count;
         defer self.root_count = root_base;
         try self.pushRoot(receiver);
@@ -17810,17 +18264,21 @@ pub const Runtime = struct {
         try self.pushRoot(comparator);
         const result = try self.createTypedArrayLength(range.element, length);
         try self.pushRoot(result);
+        if (method == .sorted) {
+            const target = try self.typedArrayRange(result.cell);
+            const size = range.element.byteSize();
+            for (0..length) |item_index| {
+                try self.checkpoint();
+                const offset = item_index * size;
+                @memcpy(arrayBufferBytes(target.storage)[offset .. offset + size], arrayBufferBytes(range.storage)[range.offset + offset .. range.offset + offset + size]);
+            }
+            try self.sortTypedArray(program, result.cell, comparator);
+            return result;
+        }
         for (0..length) |item_index| {
             const source_index = if (method == .reversed) length - item_index - 1 else item_index;
             const value = if (method == .with_value and item_index == replace_index) replacement else try self.arrayLikeGet(receiver, source_index);
             if (!try self.typedArrayWrite(result.cell, item_index, value)) return error.TypeError;
-        }
-        if (method == .sorted) {
-            const values = try self.createSparseArray(length);
-            try self.pushRoot(values);
-            for (0..length) |item_index| try self.setSparseArrayItem(values, item_index, try self.typedArrayRead(result.cell, item_index));
-            try self.sortTypedValues(program, values.cell, comparator);
-            for (0..length) |item_index| _ = try self.typedArrayWrite(result.cell, item_index, self.itemStorageConst(values.cell)[item_index]);
         }
         return result;
     }
@@ -19658,9 +20116,9 @@ pub const Runtime = struct {
     }
 
     fn installIntrinsics(self: *Runtime) Error!void {
-        try self.defineGlobal("undefined", .undefined, true);
-        try self.defineGlobal("NaN", .{ .number = std.math.nan(f64) }, true);
-        try self.defineGlobal("Infinity", .{ .number = std.math.inf(f64) }, true);
+        try self.defineBuiltinGlobal("undefined", .undefined, true);
+        try self.defineBuiltinGlobal("NaN", .{ .number = std.math.nan(f64) }, true);
+        try self.defineBuiltinGlobal("Infinity", .{ .number = std.math.inf(f64) }, true);
         const object = try self.createNative(.object_constructor, .undefined);
         try self.setProperty(object, "assign", try self.createNative(.object_assign, .undefined));
         try self.setProperty(object, "keys", try self.createNative(.object_keys, .undefined));
@@ -19701,7 +20159,7 @@ pub const Runtime = struct {
         try self.defineOwnAccessor(object_prototype, "__proto__", try self.createNative(.object_proto_getter, .undefined), true);
         try self.defineOwnAccessor(object_prototype, "__proto__", try self.createNative(.object_proto_setter, .undefined), false);
         try self.setProperty(object, "prototype", object_prototype);
-        try self.defineGlobal("Object", object, true);
+        try self.defineBuiltinGlobal("Object", object, true);
 
         const function_prototype = try self.createNative(.function_prototype, .undefined);
         self.function_prototype = function_prototype.cell;
@@ -19745,7 +20203,7 @@ pub const Runtime = struct {
             if (self.findAccessorMutable(function_prototype.cell, name)) |accessor| accessor.configurable = false;
         }
         try self.setProperty(function, "prototype", function_prototype);
-        try self.defineGlobal("Function", function, true);
+        try self.defineBuiltinGlobal("Function", function, true);
 
         const proxy_constructor = try self.createNative(.proxy_constructor, .undefined);
         try self.defineFunctionMetadata(proxy_constructor, "length", .{ .number = 2 });
@@ -19755,7 +20213,7 @@ pub const Runtime = struct {
         try self.defineFunctionMetadata(proxy_revocable, "name", .{ .string = try self.storeString("revocable") });
         try self.setProperty(proxy_constructor, "revocable", proxy_revocable);
         try self.makeOwnPropertyNonEnumerable(proxy_constructor, "revocable");
-        try self.defineGlobal("Proxy", proxy_constructor, true);
+        try self.defineBuiltinGlobal("Proxy", proxy_constructor, true);
 
         const reflect: Value = .{ .cell = try self.allocateCell(.object) };
         self.cells[reflect.cell].prototype = self.object_prototype;
@@ -19778,7 +20236,7 @@ pub const Runtime = struct {
             try self.setProperty(reflect, method.name, try self.createNative(method.id, .undefined));
             try self.finalizeBuiltinMethod(reflect, method.name, method.length);
         }
-        try self.defineGlobal("Reflect", reflect, true);
+        try self.defineBuiltinGlobal("Reflect", reflect, true);
 
         const array = try self.createNative(.array_constructor, .undefined);
         try self.setProperty(array, "isArray", try self.createNative(.array_is_array, .undefined));
@@ -19881,7 +20339,7 @@ pub const Runtime = struct {
         for (array_prototype_methods) |method| try self.finalizeBuiltinMethod(array_prototype, method.name, method.length);
         try self.makeOwnPropertyNonEnumerable(array_prototype, "constructor");
         try self.makeOwnPropertyNonEnumerable(array, "prototype");
-        try self.defineGlobal("Array", array, true);
+        try self.defineBuiltinGlobal("Array", array, true);
 
         const iterator_prototype: Value = .{ .cell = try self.allocateCell(.object) };
         self.iterator_prototype = iterator_prototype.cell;
@@ -19934,7 +20392,7 @@ pub const Runtime = struct {
         try self.setProperty(iterator_wrapper_prototype, "return", try self.createNative(.iterator_wrapper_return, .undefined));
         try self.finalizeBuiltinMethod(iterator_wrapper_prototype, "next", 0);
         try self.finalizeBuiltinMethod(iterator_wrapper_prototype, "return", 0);
-        try self.defineGlobal("Iterator", iterator, true);
+        try self.defineBuiltinGlobal("Iterator", iterator, true);
 
         const array_iterator_prototype: Value = .{ .cell = try self.allocateCell(.object) };
         self.array_iterator_prototype = array_iterator_prototype.cell;
@@ -19970,7 +20428,7 @@ pub const Runtime = struct {
         };
         for (map_methods) |method| try self.finalizeBuiltinMethod(map_prototype, method.name, method.length);
         try self.makeOwnPropertyNonEnumerable(map_prototype, "constructor");
-        try self.defineGlobal("Map", map, true);
+        try self.defineBuiltinGlobal("Map", map, true);
         const map_iterator_prototype: Value = .{ .cell = try self.allocateCell(.object) };
         self.map_iterator_prototype = map_iterator_prototype.cell;
         self.cells[map_iterator_prototype.cell].prototype = iterator_prototype.cell;
@@ -20011,7 +20469,7 @@ pub const Runtime = struct {
         for (set_methods) |method| try self.finalizeBuiltinMethod(set_prototype, method.name, method.length);
         try self.makeOwnPropertyNonEnumerable(set_prototype, "keys");
         try self.makeOwnPropertyNonEnumerable(set_prototype, "constructor");
-        try self.defineGlobal("Set", set_constructor_value, true);
+        try self.defineBuiltinGlobal("Set", set_constructor_value, true);
         const set_iterator_prototype: Value = .{ .cell = try self.allocateCell(.object) };
         self.set_iterator_prototype = set_iterator_prototype.cell;
         self.cells[set_iterator_prototype.cell].prototype = iterator_prototype.cell;
@@ -20037,7 +20495,7 @@ pub const Runtime = struct {
         };
         for (weak_map_methods) |method| try self.finalizeBuiltinMethod(weak_map_prototype, method.name, method.length);
         try self.makeOwnPropertyNonEnumerable(weak_map_prototype, "constructor");
-        try self.defineGlobal("WeakMap", weak_map, true);
+        try self.defineBuiltinGlobal("WeakMap", weak_map, true);
 
         const weak_set_prototype: Value = .{ .cell = try self.allocateCell(.object) };
         const weak_set = try self.createNative(.weak_set_constructor, weak_set_prototype);
@@ -20054,7 +20512,7 @@ pub const Runtime = struct {
         };
         for (weak_set_methods) |method| try self.finalizeBuiltinMethod(weak_set_prototype, method.name, method.length);
         try self.makeOwnPropertyNonEnumerable(weak_set_prototype, "constructor");
-        try self.defineGlobal("WeakSet", weak_set, true);
+        try self.defineBuiltinGlobal("WeakSet", weak_set, true);
         const string = try self.createNative(.string_constructor, .undefined);
         try self.defineFunctionMetadata(string, "name", .{ .string = try self.storeString("String") });
         try self.defineFunctionMetadata(string, "length", .{ .number = 1 });
@@ -20152,7 +20610,7 @@ pub const Runtime = struct {
         try self.makeOwnPropertyNonEnumerable(string_prototype, "trimRight");
         try self.makeOwnPropertyNonEnumerable(string_prototype, "constructor");
         try self.makeOwnPropertyNonEnumerable(string, "prototype");
-        try self.defineGlobal("String", string, true);
+        try self.defineBuiltinGlobal("String", string, true);
         const regex = try self.createNative(.regex_constructor, .undefined);
         try self.defineFunctionMetadata(regex, "name", .{ .string = try self.storeString("RegExp") });
         try self.defineFunctionMetadata(regex, "length", .{ .number = 2 });
@@ -20180,7 +20638,7 @@ pub const Runtime = struct {
         try self.finalizeBuiltinMethod(regex_prototype, "toString", 0);
         try self.makeOwnPropertyNonEnumerable(regex_prototype, "constructor");
         try self.makeOwnPropertyNonEnumerable(regex, "prototype");
-        try self.defineGlobal("RegExp", regex, true);
+        try self.defineBuiltinGlobal("RegExp", regex, true);
         const number = try self.createNative(.number_constructor, .undefined);
         try self.setProperty(number, "isFinite", try self.createNative(.number_is_finite, .undefined));
         try self.setProperty(number, "isInteger", try self.createNative(.number_is_integer, .undefined));
@@ -20208,7 +20666,7 @@ pub const Runtime = struct {
         try self.setProperty(number_prototype, "toString", try self.createNative(.number_to_string, .undefined));
         try self.setProperty(number_prototype, "valueOf", try self.createNative(.number_value_of, .undefined));
         try self.setProperty(number, "prototype", number_prototype);
-        try self.defineGlobal("Number", number, true);
+        try self.defineBuiltinGlobal("Number", number, true);
         const bigint = try self.createNative(.bigint_constructor, .undefined);
         try self.defineFunctionMetadata(bigint, "name", .{ .string = try self.storeString("BigInt") });
         try self.defineFunctionMetadata(bigint, "length", .{ .number = 1 });
@@ -20230,7 +20688,7 @@ pub const Runtime = struct {
         try self.makeOwnPropertyNonEnumerable(bigint_prototype, "constructor");
         try self.setProperty(bigint, "prototype", bigint_prototype);
         try self.finalizeBuiltinConstant(bigint, "prototype");
-        try self.defineGlobal("BigInt", bigint, true);
+        try self.defineBuiltinGlobal("BigInt", bigint, true);
         const array_buffer = try self.createNative(.array_buffer_constructor, .undefined);
         try self.defineFunctionMetadata(array_buffer, "name", .{ .string = try self.storeString("ArrayBuffer") });
         try self.defineFunctionMetadata(array_buffer, "length", .{ .number = 1 });
@@ -20259,7 +20717,7 @@ pub const Runtime = struct {
         try self.makeOwnPropertyNonEnumerable(array_buffer_prototype, "constructor");
         try self.setProperty(array_buffer, "prototype", array_buffer_prototype);
         try self.finalizeBuiltinConstant(array_buffer, "prototype");
-        try self.defineGlobal("ArrayBuffer", array_buffer, true);
+        try self.defineBuiltinGlobal("ArrayBuffer", array_buffer, true);
         const shared_array_buffer = try self.createNative(.shared_array_buffer_constructor, .undefined);
         try self.defineFunctionMetadata(shared_array_buffer, "name", .{ .string = try self.storeString("SharedArrayBuffer") });
         try self.defineFunctionMetadata(shared_array_buffer, "length", .{ .number = 1 });
@@ -20276,7 +20734,7 @@ pub const Runtime = struct {
         try self.makeOwnPropertyNonEnumerable(shared_array_buffer_prototype, "constructor");
         try self.setProperty(shared_array_buffer, "prototype", shared_array_buffer_prototype);
         try self.finalizeBuiltinConstant(shared_array_buffer, "prototype");
-        try self.defineGlobal("SharedArrayBuffer", shared_array_buffer, true);
+        try self.defineBuiltinGlobal("SharedArrayBuffer", shared_array_buffer, true);
         const atomics: Value = .{ .cell = try self.allocateCell(.object) };
         const atomics_methods = [_]struct { name: []const u8, id: NativeId, length: usize }{
             .{ .name = "add", .id = .atomics_add, .length = 3 },
@@ -20298,7 +20756,7 @@ pub const Runtime = struct {
             try self.setProperty(atomics, method.name, try self.createNative(method.id, .undefined));
             try self.finalizeBuiltinMethod(atomics, method.name, method.length);
         }
-        try self.defineGlobal("Atomics", atomics, true);
+        try self.defineBuiltinGlobal("Atomics", atomics, true);
         const data_view = try self.createNative(.data_view_constructor, .undefined);
         try self.defineFunctionMetadata(data_view, "name", .{ .string = try self.storeString("DataView") });
         try self.defineFunctionMetadata(data_view, "length", .{ .number = 1 });
@@ -20339,7 +20797,7 @@ pub const Runtime = struct {
         try self.makeOwnPropertyNonEnumerable(data_view_prototype, "constructor");
         try self.setProperty(data_view, "prototype", data_view_prototype);
         try self.finalizeBuiltinConstant(data_view, "prototype");
-        try self.defineGlobal("DataView", data_view, true);
+        try self.defineBuiltinGlobal("DataView", data_view, true);
         const typed_array_constructor = try self.createNative(.typed_array_constructor, .undefined);
         try self.defineFunctionMetadata(typed_array_constructor, "name", .{ .string = try self.storeString("TypedArray") });
         try self.defineFunctionMetadata(typed_array_constructor, "length", .{ .number = 0 });
@@ -20421,7 +20879,7 @@ pub const Runtime = struct {
             try self.makeOwnPropertyNonEnumerable(prototype, "constructor");
             try self.defineOwnDataProperty(constructor, "prototype", prototype);
             try self.finalizeBuiltinConstant(constructor, "prototype");
-            try self.defineGlobal(element.name(), constructor, true);
+            try self.defineBuiltinGlobal(element.name(), constructor, true);
         }
         const boolean = try self.createNative(.boolean_constructor, .undefined);
         const boolean_prototype: Value = .{ .cell = try self.allocateCell(.object) };
@@ -20432,7 +20890,7 @@ pub const Runtime = struct {
         try self.setProperty(boolean_prototype, "toString", try self.createNative(.boolean_to_string, .undefined));
         try self.setProperty(boolean_prototype, "valueOf", try self.createNative(.boolean_value_of, .undefined));
         try self.setProperty(boolean, "prototype", boolean_prototype);
-        try self.defineGlobal("Boolean", boolean, true);
+        try self.defineBuiltinGlobal("Boolean", boolean, true);
         const error_prototype = try self.installErrorConstructor("Error", .error_constructor, .{ .cell = self.object_prototype }, 1, true);
         _ = try self.installErrorConstructor("EvalError", .error_constructor, error_prototype, 1, false);
         _ = try self.installErrorConstructor("RangeError", .error_constructor, error_prototype, 1, false);
@@ -20511,7 +20969,7 @@ pub const Runtime = struct {
         try self.setProperty(date_prototype, "toGMTString", to_gmt_string);
         try self.makeOwnPropertyNonEnumerable(date_prototype, "toGMTString");
         try self.makeOwnPropertyNonEnumerable(date_prototype, "constructor");
-        try self.defineGlobal("Date", date_constructor_value, true);
+        try self.defineBuiltinGlobal("Date", date_constructor_value, true);
         const symbol = try self.createNative(.symbol_constructor, .undefined);
         try self.defineFunctionMetadata(symbol, "name", .{ .string = try self.storeString("Symbol") });
         try self.defineFunctionMetadata(symbol, "length", .{ .number = 0 });
@@ -20716,15 +21174,15 @@ pub const Runtime = struct {
         try self.makeOwnPropertyNonEnumerable(regex, self.stringBytes(self.symbol_species));
         for ([_][]const u8{ "iterator", "asyncIterator", "hasInstance", "isConcatSpreadable", "match", "matchAll", "replace", "search", "split", "species", "toPrimitive", "toStringTag", "unscopables", "dispose", "asyncDispose" }) |name|
             try self.finalizeBuiltinConstant(symbol, name);
-        try self.defineGlobal("Symbol", symbol, true);
-        try self.defineGlobal("atob", try self.createNative(.base64_decode, .undefined), true);
-        try self.defineGlobal("btoa", try self.createNative(.base64_encode, .undefined), true);
-        try self.defineGlobal("parseInt", try self.createNative(.parse_int, .undefined), true);
-        try self.defineGlobal("parseFloat", try self.createNative(.number_parse_float, .undefined), true);
-        try self.defineGlobal("isNaN", try self.createNative(.is_nan, .undefined), true);
-        try self.defineGlobal("eval", try self.createNative(.dynamic_eval, .undefined), true);
-        try self.defineGlobal("queueMicrotask", try self.createNative(.queue_microtask, .undefined), true);
-        try self.defineGlobal("queueTask", try self.createNative(.queue_task, .undefined), true);
+        try self.defineBuiltinGlobal("Symbol", symbol, true);
+        try self.defineBuiltinGlobal("atob", try self.createNative(.base64_decode, .undefined), true);
+        try self.defineBuiltinGlobal("btoa", try self.createNative(.base64_encode, .undefined), true);
+        try self.defineBuiltinGlobal("parseInt", try self.createNative(.parse_int, .undefined), true);
+        try self.defineBuiltinGlobal("parseFloat", try self.createNative(.number_parse_float, .undefined), true);
+        try self.defineBuiltinGlobal("isNaN", try self.createNative(.is_nan, .undefined), true);
+        try self.defineBuiltinGlobal("eval", try self.createNative(.dynamic_eval, .undefined), true);
+        try self.defineBuiltinGlobal("queueMicrotask", try self.createNative(.queue_microtask, .undefined), true);
+        try self.defineBuiltinGlobal("queueTask", try self.createNative(.queue_task, .undefined), true);
 
         const math: Value = .{ .cell = try self.allocateCell(.object) };
         try self.setProperty(math, "abs", try self.createNative(.math_abs, .undefined));
@@ -20751,14 +21209,14 @@ pub const Runtime = struct {
         try self.setProperty(math, "PI", .{ .number = std.math.pi });
         try self.setProperty(math, "SQRT1_2", .{ .number = 1.0 / std.math.sqrt2 });
         try self.setProperty(math, "SQRT2", .{ .number = std.math.sqrt2 });
-        try self.defineGlobal("Math", math, true);
+        try self.defineBuiltinGlobal("Math", math, true);
 
         const json: Value = .{ .cell = try self.allocateCell(.object) };
         try self.setProperty(json, "parse", try self.createNative(.json_parse, .undefined));
         try self.setProperty(json, "stringify", try self.createNative(.json_stringify, .undefined));
         try self.setProperty(json, "rawJSON", try self.createNative(.json_raw, .undefined));
         try self.setProperty(json, "isRawJSON", try self.createNative(.json_is_raw, .undefined));
-        try self.defineGlobal("JSON", json, true);
+        try self.defineBuiltinGlobal("JSON", json, true);
 
         const promise = try self.createNative(.promise_constructor, .undefined);
         try self.defineFunctionMetadata(promise, "name", .{ .string = try self.storeString("Promise") });
@@ -20796,11 +21254,9 @@ pub const Runtime = struct {
         try self.defineFunctionMetadata(promise_species_getter, "length", .{ .number = 0 });
         try self.defineOwnAccessor(promise, self.stringBytes(self.symbol_species), promise_species_getter, true);
         try self.makeOwnPropertyNonEnumerable(promise, self.stringBytes(self.symbol_species));
-        try self.defineGlobal("Promise", promise, true);
+        try self.defineBuiltinGlobal("Promise", promise, true);
 
-        const global_object: Value = .{ .cell = try self.allocateCell(.object) };
-        try self.setProperty(global_object, "globalThis", global_object);
-        try self.defineGlobal("globalThis", global_object, true);
+        try self.defineBuiltinGlobal("globalThis", self.globalObject(), false);
     }
 
     fn installErrorConstructor(self: *Runtime, name: []const u8, id: NativeId, parent: Value, length: usize, install_to_string: bool) Error!Value {
@@ -20826,7 +21282,7 @@ pub const Runtime = struct {
         }
         try self.defineOwnDataProperty(constructor, "prototype", prototype);
         try self.finalizeBuiltinConstant(constructor, "prototype");
-        try self.defineGlobal(name, constructor, true);
+        try self.defineBuiltinGlobal(name, constructor, true);
         return prototype;
     }
 
@@ -20985,6 +21441,7 @@ pub const Runtime = struct {
                     cell.receiver = .undefined;
                     cell.regex_source = .{};
                     cell.regex_flags = .{};
+                    cell.first_accessor = accessor_none;
                     cell.property_count = 0;
                     cell.binding_count = 0;
                     cell.item_count = 0;
@@ -21643,11 +22100,36 @@ pub const Runtime = struct {
         return if (self.accessor_memory) |memory| memory[0..self.accessor_capacity] else &.{};
     }
 
-    fn allocateAccessor(self: *Runtime) Error!*Accessor {
-        for (self.accessorStorage()) |*accessor| {
-            if (!accessor.occupied) return accessor;
-        }
+    // Indices survive pool relocation. Property markers retain enumeration
+    // order; this owner list serves lookup, integrity changes and GC marking.
+    const AccessorIterator = struct {
+        runtime: *const Runtime,
+        cursor: usize,
 
+        fn next(self: *AccessorIterator) ?usize {
+            const index = self.cursor;
+            if (index == accessor_none) return null;
+            self.cursor = self.runtime.accessorStorageConst()[index].next;
+            return index;
+        }
+    };
+
+    fn ownedAccessorIndices(self: *const Runtime, owner: u16) AccessorIterator {
+        return .{ .runtime = self, .cursor = if (owner < self.cells.len and self.cells[owner].occupied) self.cells[owner].first_accessor else accessor_none };
+    }
+
+    fn allocateAccessor(self: *Runtime, definition: Accessor) Error!void {
+        if (self.free_accessor == accessor_none) try self.growAccessorStorage();
+        const slot = self.free_accessor;
+        self.free_accessor = self.accessorStorage()[slot].next;
+        var stored = definition;
+        stored.occupied = true;
+        stored.next = self.cells[stored.owner].first_accessor;
+        self.accessorStorage()[slot] = stored;
+        self.cells[stored.owner].first_accessor = slot;
+    }
+
+    fn growAccessorStorage(self: *Runtime) Error!void {
         const old_capacity = self.accessor_capacity;
         if (old_capacity == std.math.maxInt(usize)) return error.ProgramAllocation;
         const required = old_capacity + 1;
@@ -21669,7 +22151,9 @@ pub const Runtime = struct {
         const memory: [*]Accessor = @ptrCast(@alignCast(raw));
         const old_accessors = self.accessorStorageConst();
         if (old_accessors.len > 0) @memcpy(memory[0..old_accessors.len], old_accessors);
-        for (memory[old_capacity..capacity]) |*accessor| accessor.* = .{};
+        for (memory[old_capacity..capacity], old_capacity..) |*accessor, index| {
+            accessor.* = .{ .next = if (index + 1 < capacity) index + 1 else accessor_none };
+        }
         if (self.accessor_memory) |old_memory| {
             self.program_allocator.free(
                 self.program_allocator.context,
@@ -21680,7 +22164,22 @@ pub const Runtime = struct {
         }
         self.accessor_memory = memory;
         self.accessor_capacity = capacity;
-        return &memory[old_capacity];
+        self.free_accessor = old_capacity;
+    }
+
+    fn releaseAccessor(self: *Runtime, accessor: *Accessor) void {
+        const slot = (@intFromPtr(accessor) - @intFromPtr(self.accessor_memory.?)) / @sizeOf(Accessor);
+        var link = &self.cells[accessor.owner].first_accessor;
+        while (link.* != slot) link = &self.accessorStorage()[link.*].next;
+        link.* = accessor.next;
+        accessor.* = .{ .next = self.free_accessor };
+        self.free_accessor = slot;
+    }
+
+    fn releaseOwnedAccessors(self: *Runtime, owner: u16) void {
+        while (self.cells[owner].first_accessor != accessor_none) {
+            self.releaseAccessor(&self.accessorStorage()[self.cells[owner].first_accessor]);
+        }
     }
 
     fn releaseAccessorStorage(self: *Runtime) void {
@@ -21693,6 +22192,7 @@ pub const Runtime = struct {
         );
         self.accessor_memory = null;
         self.accessor_capacity = 0;
+        self.free_accessor = accessor_none;
     }
 
     fn bindingStorage(self: *Runtime, index: u16) []Binding {
@@ -21881,6 +22381,7 @@ pub const Runtime = struct {
     }
 
     fn releaseItemStorage(self: *Runtime, cell: *Cell) void {
+        if (isPresenceCollectionTag(cell.host_tag)) self.releaseCollectionStorage(cell);
         if (cell.item_memory) |memory| {
             self.program_allocator.free(
                 self.program_allocator.context,
@@ -21915,6 +22416,14 @@ pub const Runtime = struct {
         while (target != none and target < self.cells.len and self.cells[target].kind == .environment and self.cells[target].object_environment)
             target = self.cells[target].parent;
         if (target == none or target >= self.cells.len or self.cells[target].kind != .environment) return error.TypeError;
+        if (target == self.global_env) {
+            if (self.lookupOwn(target, name) != null or self.lookupOwn(self.global_object_env, name) != null) return error.SyntaxError;
+            if (self.findAccessor(self.global_object, name)) |accessor| {
+                if (!accessor.configurable) return error.SyntaxError;
+            } else for (self.propertyStorageConst(self.global_object)[0..self.cells[self.global_object].property_count]) |property| {
+                if (equals(self.stringBytes(property.key), name) and !property.configurable) return error.SyntaxError;
+            }
+        }
         var cell = &self.cells[target];
         for (self.bindingStorage(target)[0..cell.binding_count]) |*binding| {
             if (equals(self.stringBytes(binding.name), name)) {
@@ -21958,6 +22467,10 @@ pub const Runtime = struct {
         var current = environment;
         while (current != none) {
             const cell = &self.cells[current];
+            if (current == self.global_object_env) {
+                if (!try self.hasProperty(self.globalObject(), name) and self.strictExecution()) return error.UnknownIdentifier;
+                return self.assignGlobal(name, value);
+            }
             if (cell.object_environment and try self.objectEnvironmentHasBinding(cell.receiver, name)) {
                 if (cell.receiver == .cell) try self.setProperty(cell.receiver, name, value);
                 return;
@@ -21977,6 +22490,7 @@ pub const Runtime = struct {
     fn assignLexicalBinding(self: *Runtime, environment: u16, name: []const u8, value: Value) Error!void {
         var current = environment;
         while (current != none) {
+            if (current == self.global_object_env) return self.assignGlobal(name, value);
             const cell = &self.cells[current];
             for (self.bindingStorage(current)[0..cell.binding_count]) |*binding| {
                 if (equals(self.stringBytes(binding.name), name)) {
@@ -21993,6 +22507,10 @@ pub const Runtime = struct {
     fn resolveBinding(self: *Runtime, environment: u16, name: []const u8) Error!?ResolvedBinding {
         var current = environment;
         while (current != none) {
+            if (current == self.global_object_env) {
+                if (!try self.hasProperty(self.globalObject(), name)) return null;
+                return .{ .value = try self.getProperty(self.globalObject(), name) };
+            }
             const cell = &self.cells[current];
             if (cell.object_environment and try self.objectEnvironmentHasBinding(cell.receiver, name)) {
                 return .{ .value = try self.getProperty(cell.receiver, name), .receiver = cell.receiver, .object = true };
@@ -22018,6 +22536,10 @@ pub const Runtime = struct {
     fn lookup(self: *Runtime, environment: u16, name: []const u8) ?Value {
         var current = environment;
         while (current != none) {
+            if (current == self.global_object_env) {
+                if (!(self.hasProperty(self.globalObject(), name) catch return null)) return null;
+                return self.getProperty(self.globalObject(), name) catch null;
+            }
             const cell = &self.cells[current];
             for (self.bindingStorageConst(current)[0..cell.binding_count]) |binding| {
                 if (equals(self.stringBytes(binding.name), name)) return self.bindingValue(binding);
@@ -22040,7 +22562,7 @@ pub const Runtime = struct {
             if (function_environment) return error.TypeError;
             current = cell.parent;
         }
-        return if (self.active_module != none) .undefined else self.global("globalThis") orelse .undefined;
+        return self.globalObject();
     }
 
     fn lookupRequired(self: *Runtime, program: *const Program, ref: StringRef, environment: u16) Error!Value {
@@ -22320,9 +22842,7 @@ pub const Runtime = struct {
                 self.clearArgumentMapping(cell_index, item_index);
             }
         }
-        for (self.accessorStorage()) |*accessor| {
-            if (accessor.occupied and accessor.owner == cell_index and equals(self.stringBytes(accessor.key), name)) accessor.occupied = false;
-        }
+        if (self.findAccessorMutable(cell_index, name)) |accessor| self.releaseAccessor(accessor);
         var property_index: usize = 0;
         while (property_index < cell.property_count) : (property_index += 1) {
             if (!equals(self.stringBytes(self.propertyStorageConst(cell_index)[property_index].key), name)) continue;
@@ -22369,7 +22889,7 @@ pub const Runtime = struct {
                 if (!self.cells[index].array_length_writable and item_index >= self.effectiveArrayLength(index)) return error.TypeError;
                 if (self.findAccessorMutable(index, name)) |accessor| {
                     if (!accessor.configurable) return error.TypeError;
-                    accessor.occupied = false;
+                    self.releaseAccessor(accessor);
                     for (self.propertyStorage(index)[0..self.cells[index].property_count]) |*property| {
                         if (!equals(self.stringBytes(property.key), name)) continue;
                         property.value = value;
@@ -22395,7 +22915,7 @@ pub const Runtime = struct {
                 return;
             }
         }
-        if (self.findAccessorMutable(index, name)) |accessor| accessor.occupied = false;
+        if (self.findAccessorMutable(index, name)) |accessor| self.releaseAccessor(accessor);
         var cell = &self.cells[index];
         for (self.propertyStorage(index)[0..cell.property_count]) |*property| {
             if (!equals(self.stringBytes(property.key), name)) continue;
@@ -22458,18 +22978,18 @@ pub const Runtime = struct {
                 accessor.setter = callable;
             return;
         }
-        const accessor = try self.allocateAccessor();
-        accessor.* = .{
+        try self.allocateAccessor(.{
             .occupied = true,
             .owner = index,
             .key = try self.storeString(name),
             .getter = if (getter) callable else .undefined,
             .setter = if (getter) .undefined else callable,
-        };
+        });
     }
 
     fn setProperty(self: *Runtime, object: Value, name: []const u8, value: Value) Error!void {
         const index = try self.expectObject(object);
+        if (index == self.global_object) try self.checkGlobalWrite(name);
         if (self.cells[index].kind == .proxy) {
             _ = try self.proxySet(object, name, value, object);
             return;
@@ -22708,8 +23228,7 @@ pub const Runtime = struct {
                 if (has_configurable) accessor.configurable = configurable;
                 return;
             }
-            const accessor = try self.allocateAccessor();
-            accessor.* = .{
+            try self.allocateAccessor(.{
                 .occupied = true,
                 .owner = index,
                 .key = try self.storeString(name),
@@ -22717,11 +23236,11 @@ pub const Runtime = struct {
                 .setter = setter,
                 .enumerable = enumerable,
                 .configurable = configurable,
-            };
+            });
             return;
         }
 
-        if (existing_accessor) |accessor| accessor.occupied = false;
+        if (existing_accessor) |accessor| self.releaseAccessor(accessor);
         if (property_index) |existing_index| {
             var property = &self.propertyStorage(index)[existing_index];
             if (has_value) property.value = value;
@@ -22741,18 +23260,23 @@ pub const Runtime = struct {
         cell.property_count += 1;
     }
 
-    fn findAccessor(self: *const Runtime, owner: u16, name: []const u8) ?*const Accessor {
-        for (self.accessorStorageConst()) |*accessor| {
-            if (accessor.occupied and accessor.owner == owner and equals(self.stringBytes(accessor.key), name)) return accessor;
+    fn findAccessorIndex(self: *const Runtime, owner: u16, name: []const u8) ?usize {
+        var accessors = self.ownedAccessorIndices(owner);
+        while (accessors.next()) |slot| {
+            const accessor = self.accessorStorageConst()[slot];
+            if (equals(self.stringBytes(accessor.key), name)) return slot;
         }
         return null;
     }
 
+    fn findAccessor(self: *const Runtime, owner: u16, name: []const u8) ?*const Accessor {
+        const slot = self.findAccessorIndex(owner, name) orelse return null;
+        return &self.accessorStorageConst()[slot];
+    }
+
     fn findAccessorMutable(self: *Runtime, owner: u16, name: []const u8) ?*Accessor {
-        for (self.accessorStorage()) |*accessor| {
-            if (accessor.occupied and accessor.owner == owner and equals(self.stringBytes(accessor.key), name)) return accessor;
-        }
-        return null;
+        const slot = self.findAccessorIndex(owner, name) orelse return null;
+        return &self.accessorStorage()[slot];
     }
 
     fn hasProperty(self: *Runtime, object: Value, name: []const u8) Error!bool {
@@ -23223,6 +23747,8 @@ pub const Runtime = struct {
         if (a == .string and b == .string and !self.isSymbolValue(a) and !self.isSymbolValue(b))
             return self.compareRuntimeStrings(a.string, b.string);
         if (self.isSymbolValue(a) or self.isSymbolValue(b)) return error.TypeError;
+        if (a == .bigint and b == .bigint)
+            return BigIntCore.Const.order(try self.bigIntConst(a), try self.bigIntConst(b));
         if (a == .bigint) {
             if (b == .string) {
                 const parsed = self.createBigIntFromString(self.stringBytes(b.string)) catch |err| switch (err) {
@@ -23293,10 +23819,14 @@ pub const Runtime = struct {
             else => return value,
         };
         if (index >= self.cells.len or !self.cells[index].occupied) return error.NotObject;
+        const root_base = self.root_count;
+        defer self.root_count = root_base;
+        try self.pushRoot(value);
         if (self.symbol_to_primitive.len != 0) {
             const exotic = try self.getProperty(value, self.stringBytes(self.symbol_to_primitive));
-            if (exotic != .undefined) {
+            if (!exotic.isNullish()) {
                 if (!self.isCallableValue(exotic)) return error.TypeError;
+                try self.pushRoot(exotic);
                 const program = self.diagnostic_program orelse return error.TypeError;
                 const hint_value: Value = .{ .string = try self.storeString(switch (hint) {
                     .default => "default",
@@ -23308,26 +23838,7 @@ pub const Runtime = struct {
                 return result;
             }
         }
-        if (self.cells[index].kind == .array) return .{ .string = try self.arrayToString(index, 0) };
-        if (self.cells[index].kind == .function) {
-            const function = &self.cells[index];
-            if (function.program_ref) |function_program| {
-                if (function.node < function_program.node_count) {
-                    const source = function_program.nodes[function.node].source.bytes(function_program.source[0..function_program.source_len]);
-                    if (source.len > 0) return .{ .string = try self.storeString(source) };
-                }
-            }
-            return .{ .string = try self.storeString("function(){}") };
-        }
-        if (switch (self.cells[index].kind) {
-            .bound_function, .native_function, .host_function => true,
-            else => false,
-        }) return .{ .string = try self.storeString("function () { [native code] }") };
-
         const program = self.diagnostic_program orelse return .{ .string = try self.storeString("[object Object]") };
-        const root_base = self.root_count;
-        defer self.root_count = root_base;
-        try self.pushRoot(value);
         const prefer_string = hint == .string;
         const first = if (prefer_string) "toString" else "valueOf";
         const second = if (prefer_string) "valueOf" else "toString";
@@ -30905,4 +31416,363 @@ test "runtime workspaces remain compact" {
     try std.testing.expect(@sizeOf(Program) < 6 * 1024 * 1024);
     try std.testing.expect(@sizeOf(Cell) < 12 * 1024);
     try std.testing.expect(@sizeOf(Runtime) < 64 * 1024 * 1024);
+}
+
+test "indexed collections reuse small live storage and keep mutation order" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program = Program{};
+    var value = try runtime.evaluateSource(&program, "var churnMap=new Map([['held',1]]);var churnSet=new Set(['held']);" ++
+        "for(let i=0;i<512;i++){churnMap.set(i,i);churnSet.add(i);churnMap.delete(i);churnSet.delete(i);}" ++
+        "const m=new Map([['a',1],['b',2],['c',3]]);const it=m.keys();let trace=it.next().value;" ++
+        "m.delete('a');m.set('a',4);m.delete('b');trace+=it.next().value+it.next().value;" ++
+        "m.clear();m.set('d',5);trace+=it.next().value;const done=it.next().done;m.set('e',6);" ++
+        "const s=new Set(['a','b']);let seen='';s.forEach(function(key){seen+=key;if(key==='a'){s.clear();s.add('c');}});" ++
+        "const order=new Set([1,2,3]);order.delete(1);order.add(1);" ++
+        "const keys=new Map();keys.set(42n,'big');keys.set('ab','text');keys.set(-0,'zero');keys.set(NaN,'nan');" ++
+        "return trace==='acad'&&done&&it.next().done&&seen==='ac'&&[...order.union(new Set([4]))].join(',')==='2,3,1,4'&&" ++
+        "keys.get(40n+2n)==='big'&&keys.get('a'+'b')==='text'&&keys.get(+0)==='zero'&&keys.get(Number('bad'))==='nan';");
+    try std.testing.expect(runtime.valueBoolean(value));
+    for ([_][]const u8{ "churnMap", "churnSet" }) |name| {
+        const index = runtime.global(name).?.cell;
+        try std.testing.expectEqual(@as(usize, 1), runtime.collectionStorage(index).?.live_count);
+        try std.testing.expect(runtime.cells[index].item_count <= 4);
+        try std.testing.expect(runtime.collectionStorage(index).?.capacity <= 8);
+    }
+    const map = runtime.global("churnMap").?;
+    const nan1: Value = .{ .number = @bitCast(@as(u64, 0x7ff8000000000001)) };
+    const nan2: Value = .{ .number = @bitCast(@as(u64, 0xfff8000000000002)) };
+    _ = try runtime.nativeMapSet(map, &.{ nan1, .{ .number = 7 } });
+    _ = try runtime.nativeMapSet(map, &.{ nan2, .{ .number = 9 } });
+    value = try runtime.nativeMapGet(map, &.{nan1});
+    try std.testing.expectEqual(@as(f64, 9), try runtime.valueNumber(value));
+    try std.testing.expectEqual(@as(usize, 2), runtime.collectionStorage(map.cell).?.live_count);
+}
+
+test "collection live limit is catchable and deleting an entry makes room" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program = Program{};
+    _ = try runtime.evaluateSource(&program, "var fullMap=new Map();");
+    const map = runtime.global("fullMap").?;
+    for (0..max_items / 2) |key| try runtime.appendCollectionEntry(map.cell, .{ .number = @floatFromInt(key) }, .{ .number = @floatFromInt(key) });
+    var value = try runtime.evaluateSource(&program, "let caught=false;try{fullMap.set(999999,1);}catch(e){caught=e instanceof RangeError;}return caught&&fullMap.size===32768&&fullMap.get(32767)===32767&&!fullMap.has(999999);");
+    try std.testing.expect(runtime.valueBoolean(value));
+    _ = try runtime.nativeCollectionDelete(map, &.{.{ .number = 0 }});
+    _ = try runtime.nativeMapSet(map, &.{ .{ .number = 999999 }, .{ .number = 4 } });
+    value = try runtime.evaluateSource(&program, "return fullMap.size===32768&&fullMap.get(999999)===4&&fullMap.keys().next().value===1;");
+    try std.testing.expect(runtime.valueBoolean(value));
+    try std.testing.expectEqual(max_items, runtime.cells[map.cell].item_count);
+}
+
+test "collection index and items survive each growth allocation failure" {
+    const Fault = struct {
+        base: ProgramAllocator,
+        fail_at: usize,
+        calls: usize = 0,
+        fn create(raw: *anyopaque) ?*Program {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            return self.base.create(self.base.context);
+        }
+        fn destroy(raw: *anyopaque, program: *Program) void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            self.base.destroy(self.base.context, program);
+        }
+        fn allocate(raw: *anyopaque, length: usize, alignment: usize) ?[*]u8 {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            const fail = self.calls == self.fail_at;
+            self.calls += 1;
+            if (fail) return null;
+            return self.base.allocate(self.base.context, length, alignment);
+        }
+        fn free(raw: *anyopaque, memory: [*]u8, length: usize, alignment: usize) void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            self.base.free(self.base.context, memory, length, alignment);
+        }
+    };
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    const base = runtime.program_allocator;
+    const prototype = try runtime.getProperty(runtime.global("Map").?, "prototype");
+    for (0..4) |failure| {
+        const map = try runtime.createCollection(prototype, true);
+        for (0..8) |key| try runtime.appendCollectionEntry(map.cell, .{ .number = @floatFromInt(key) }, .{ .number = @floatFromInt(key + 10) });
+        var fault = Fault{ .base = base, .fail_at = failure };
+        runtime.program_allocator = .{ .context = &fault, .create = Fault.create, .destroy = Fault.destroy, .allocate = Fault.allocate, .free = Fault.free };
+        const result = runtime.appendCollectionEntry(map.cell, .{ .number = 8 }, .{ .number = 18 });
+        runtime.program_allocator = base;
+        try std.testing.expectError(error.ProgramAllocation, result);
+        try std.testing.expectEqual(@as(usize, 8), runtime.collectionStorage(map.cell).?.live_count);
+        try std.testing.expectEqual(@as(usize, 16), runtime.cells[map.cell].item_count);
+        try std.testing.expect(runtime.collectionFind(map.cell, .{ .number = 8 }) == null);
+        for (0..8) |key| {
+            const value = try runtime.nativeMapGet(map, &.{.{ .number = @floatFromInt(key) }});
+            try std.testing.expectEqual(@as(f64, @floatFromInt(key + 10)), try runtime.valueNumber(value));
+        }
+        try runtime.appendCollectionEntry(map.cell, .{ .number = 8 }, .{ .number = 18 });
+        try std.testing.expectEqual(@as(usize, 9), runtime.collectionStorage(map.cell).?.live_count);
+    }
+}
+
+test "accessor owners release and reuse slots through GC and property changes" {
+    // Keep defining programs alive while their getter functions remain live.
+    const setup = try std.testing.allocator.create(Program);
+    setup.* = .{};
+    defer std.testing.allocator.destroy(setup);
+    const actions = try std.testing.allocator.create(Program);
+    actions.* = .{};
+    defer std.testing.allocator.destroy(actions);
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program = Program{};
+    _ = try runtime.evaluateSource(setup, "var ordinary={value:3};var kept={get alive(){return 17;}};var abandoned=[];" ++
+        "for(let i=0;i<256;i++){const o={};Object.defineProperty(o,'value',{get:function(){return 1;},configurable:true});abandoned.push(o);}");
+    const capacity = runtime.accessor_capacity;
+    try std.testing.expect(capacity > initial_accessor_capacity);
+    _ = try runtime.evaluateSource(&program, "abandoned=null;");
+    runtime.collectGarbage();
+    var value = try runtime.evaluateSource(actions, "var replacements=[];for(let i=0;i<128;i++)replacements.push({get value(){return 2;}});" ++
+        "const p={get x(){return 5;}};const q={get x(){return 9;}};const o=Object.create(p);let trace=o.x;Object.setPrototypeOf(o,q);trace+=o.x;" ++
+        "Object.defineProperty(o,'x',{get:function(){return 11;},configurable:true});trace+=o.x;" ++
+        "Object.defineProperty(o,'x',{value:13,configurable:true,writable:true});trace+=o.x;delete o.x;trace+=o.x;" ++
+        "const a=[];Object.defineProperty(a,'0',{get:function(){return 6;},configurable:true});const first=a[0];" ++
+        "Object.defineProperty(a,'0',{value:8,configurable:true,writable:true});" ++
+        "return ordinary.value===3&&kept.alive===17&&replacements[127].value===2&&trace===47&&first===6&&a[0]===8;");
+    try std.testing.expect(runtime.valueBoolean(value));
+    try std.testing.expectEqual(capacity, runtime.accessor_capacity);
+    runtime.collectGarbage();
+    value = try runtime.evaluateSource(&program, "return kept.alive+replacements[0].value;");
+    try std.testing.expectEqual(@as(f64, 19), try runtime.valueNumber(value));
+}
+
+test "stable native sorting preserves holes ties errors and typed snapshots" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    const Collect = struct {
+        fn call(owner: *Runtime, _: ?*anyopaque, _: u16, _: Value, _: []const Value) Error!Value {
+            owner.collectGarbage();
+            return .undefined;
+        }
+    };
+    try runtime.defineGlobal("collectDuringSort", try runtime.createHostFunction(0, null, Collect.call), true);
+    var program: Program = .{};
+    const value = try runtime.evaluateSource(&program, "const records=[{k:2,id:'a'},{k:1,id:'b'},{k:2,id:'c'},{k:1,id:'d'}];records.sort(function(a,b){collectDuringSort();return a.k-b.k;});" ++
+        "const sparse=[3,,undefined,1,2,,undefined];let undefinedCompared=false;sparse.sort(function(a,b){undefinedCompared=undefinedCompared||a===undefined||b===undefined;return a-b;});" ++
+        "const copied=[3,,1].toSorted();const words=[20,3,100].sort();const equal=[3,2,1].sort(function(){return NaN;});" ++
+        "const failed=[3,2,1];let thrown=false;try{failed.sort(function(){throw 'sort-failed';});}catch(reason){thrown=reason==='sort-failed';}" ++
+        "const typed=new Uint16Array([3,1,2]);typed.sort(function(a,b){typed.fill(99);return a-b;});" ++
+        "const typedFailed=new Uint8Array([3,2,1]);let typedThrown=false;try{typedFailed.sort(function(){typedFailed[0]=9;throw 'typed-failed';});}catch(reason){typedThrown=reason==='typed-failed';}" ++
+        "const ties=new Uint8Array([21,12,22,11]);ties.sort(function(a,b){return Math.floor(a/10)-Math.floor(b/10);});" ++
+        "const floats=new Float64Array([NaN,0,-0,Infinity,-Infinity,2,-1]).sort();const same=new Float32Array([3,2,1]).sort(function(){return NaN;});" ++
+        "const signed=new BigInt64Array([9223372036854775807n,-1n,-9223372036854775808n,0n]).sort();" ++
+        "const unsigned=new BigUint64Array([18446744073709551615n,0n,9223372036854775808n]).sort();" ++
+        "const bigCustom=new BigInt64Array([3n,1n,2n]).sort(function(a,b){collectDuringSort();return a<b?-1:a>b?1:0;});" ++
+        "const original=new Uint8Array([3,1,2]);const sortedCopy=original.toSorted(function(a,b){original.fill(9);return a-b;});" ++
+        "return records.map(function(x){return x.id;}).join('')==='bdac'&&!undefinedCompared&&sparse.length===7&&sparse.slice(0,3).join(',')==='1,2,3'&&Object.hasOwn(sparse,3)&&Object.hasOwn(sparse,4)&&!Object.hasOwn(sparse,5)&&!Object.hasOwn(sparse,6)&&" ++
+        "copied.length===3&&copied[0]===1&&copied[1]===3&&Object.hasOwn(copied,2)&&copied[2]===undefined&&words.join(',')==='100,20,3'&&equal.join(',')==='3,2,1'&&thrown&&failed.join(',')==='3,2,1'&&" ++
+        "typed.join(',')==='1,2,3'&&typedThrown&&typedFailed.join(',')==='9,2,1'&&ties.join(',')==='12,11,21,22'&&floats[0]===-Infinity&&floats[1]===-1&&1/floats[2]===-Infinity&&1/floats[3]===Infinity&&floats[4]===2&&floats[5]===Infinity&&Number.isNaN(floats[6])&&same.join(',')==='3,2,1'&&" ++
+        "signed.join(',')==='-9223372036854775808,-1,0,9223372036854775807'&&unsigned.join(',')==='0,9223372036854775808,18446744073709551615'&&bigCustom.join(',')==='1,2,3'&&original.join(',')==='9,9,9'&&sortedCopy.join(',')==='1,2,3';");
+    try std.testing.expectEqual(true, runtime.valueBoolean(value));
+
+    const nan_values = try runtime.createTypedArrayLength(.float64, 3);
+    try runtime.pushRoot(nan_values);
+    const range = try runtime.typedArrayRange(nan_values.cell);
+    const first_nan: u64 = 0x7ff8000000000001;
+    const second_nan: u64 = 0xfff8000000000042;
+    Runtime.writeDataViewBits(Runtime.arrayBufferBytes(range.storage), 0, 8, true, first_nan);
+    Runtime.writeDataViewBits(Runtime.arrayBufferBytes(range.storage), 8, 8, true, @bitCast(@as(f64, 1)));
+    Runtime.writeDataViewBits(Runtime.arrayBufferBytes(range.storage), 16, 8, true, second_nan);
+    _ = try runtime.nativeTypedArraySort(&program, nan_values, &.{});
+    try std.testing.expectEqual(first_nan, Runtime.readDataViewBits(Runtime.arrayBufferBytes(range.storage), 8, 8, true));
+    try std.testing.expectEqual(second_nan, Runtime.readDataViewBits(Runtime.arrayBufferBytes(range.storage), 16, 8, true));
+}
+
+test "native merge sorting bounds comparisons for reverse and ordered inputs" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    const Counter = struct {
+        fn call(_: *Runtime, context: ?*anyopaque, _: u16, _: Value, arguments: []const Value) Error!Value {
+            const count: *usize = @ptrCast(@alignCast(context.?));
+            count.* += 1;
+            return .{ .number = arguments[0].number - arguments[1].number };
+        }
+    };
+    var comparisons: usize = 0;
+    const comparator = try runtime.createHostFunction(0, &comparisons, Counter.call);
+    try runtime.pushRoot(comparator);
+    var program: Program = .{};
+    for ([_]usize{ 256, 512 }) |length| {
+        const root_base = runtime.root_count;
+        defer runtime.root_count = root_base;
+        const array = try runtime.createSparseArray(length);
+        try runtime.pushRoot(array);
+        const typed = try runtime.createTypedArrayLength(.int16, length);
+        try runtime.pushRoot(typed);
+        for (0..length) |index| {
+            const value = Value{ .number = @floatFromInt(length - index - 1) };
+            try runtime.setSparseArrayItem(array, index, value);
+            _ = try runtime.typedArrayWrite(typed.cell, index, value);
+        }
+        for ([_]Value{ array, typed }) |input| {
+            for (0..2) |ordered| {
+                comparisons = 0;
+                if (input.cell == array.cell) {
+                    _ = try runtime.nativeArraySort(&program, input, &.{comparator});
+                } else {
+                    _ = try runtime.nativeTypedArraySort(&program, input, &.{comparator});
+                }
+                try std.testing.expect(comparisons > 0 and comparisons <= length * std.math.log2_int(usize, length));
+                if (ordered == 1) try std.testing.expectEqual(length - 1, comparisons);
+                for (0..length) |index| {
+                    const value = if (input.cell == array.cell) runtime.itemStorageConst(array.cell)[index] else try runtime.typedArrayRead(typed.cell, index);
+                    try std.testing.expectEqual(@as(f64, @floatFromInt(index)), value.number);
+                }
+            }
+        }
+    }
+}
+
+test "native sorting budget abort releases scratch and runtime remains usable" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    const Counter = struct {
+        fn call(_: *Runtime, context: ?*anyopaque, _: u16, _: Value, arguments: []const Value) Error!Value {
+            const count: *usize = @ptrCast(@alignCast(context.?));
+            count.* += 1;
+            return .{ .number = arguments[0].number - arguments[1].number };
+        }
+    };
+    var comparisons: usize = 0;
+    const comparator = try runtime.createHostFunction(0, &comparisons, Counter.call);
+    try runtime.pushRoot(comparator);
+    const array = try runtime.createTypedArrayLength(.int16, 128);
+    try runtime.pushRoot(array);
+    for (0..128) |index| _ = try runtime.typedArrayWrite(array.cell, index, .{ .number = @floatFromInt(127 - index) });
+    var program: Program = .{};
+    const roots = runtime.root_count;
+    runtime.setStepBudget(runtime.stats.steps + 128 * 2 + 32);
+    try std.testing.expectError(error.StepLimit, runtime.nativeTypedArraySort(&program, array, &.{comparator}));
+    try std.testing.expect(comparisons > 0);
+    try std.testing.expectEqual(roots, runtime.root_count);
+    for (0..128) |index| try std.testing.expectEqual(@as(f64, @floatFromInt(127 - index)), (try runtime.typedArrayRead(array.cell, index)).number);
+    runtime.setStepBudget(default_step_budget);
+    try std.testing.expectEqual(@as(f64, 42), (try runtime.evaluateSource(&program, "return 6*7;")).number);
+}
+
+test "typed array block set preserves overlap bits bounds and coercion lifetime" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program: Program = .{};
+    const value = try runtime.evaluateSource(&program, "const x=new Uint8Array([1,2,3,4,5,6]);x.set(x.subarray(0,4),2);const backward=x.join(',');x.set(x.subarray(2),0);" ++
+        "const bits=new Uint32Array([0x7fc00023,0x80000000]),floats=new Float32Array(bits.buffer),copy=new Float32Array(2);copy.set(floats);" ++
+        "const target=new Uint8Array(4),source=new Uint8Array([7,8]);let detached=false,shrunk=false,mixed=false,bounds=false;" ++
+        "try{target.set(source,{valueOf(){source.buffer.transfer();return 0;}});}catch(e){detached=e instanceof TypeError;}" ++
+        "const b=new ArrayBuffer(4,{maxByteLength:8}),tracked=new Uint8Array(b);try{tracked.set(new Uint8Array(3),{valueOf(){b.resize(2);return 0;}});}catch(e){shrunk=e instanceof RangeError;}" ++
+        "try{target.set(new BigInt64Array(1));}catch(e){mixed=e instanceof TypeError;}try{target.set(new Uint8Array(2),3);}catch(e){bounds=e instanceof RangeError;}" ++
+        "const big=new BigUint64Array([9007199254740993n,18446744073709551615n]),bigCopy=new BigUint64Array(2);bigCopy.set(big);" ++
+        "const converted=new Uint16Array(2);converted.set(new Uint8Array([8,9]));" ++
+        "return backward==='1,2,1,2,3,4'&&x.join(',')==='1,2,3,4,3,4'&&new Uint32Array(copy.buffer).join(',')==='2143289379,2147483648'&&detached&&shrunk&&mixed&&bounds&&bigCopy[0]===9007199254740993n&&bigCopy[1]===18446744073709551615n&&converted.join(',')==='8,9';");
+    try std.testing.expect(runtime.valueBoolean(value));
+}
+
+test "typed array block set exceeds Value array capacity with bounded copy work" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    const length = 128 * 1024;
+    const source = try runtime.createTypedArrayLength(.uint8, length);
+    try runtime.pushRoot(source);
+    const target = try runtime.createTypedArrayLength(.uint8, length + 16);
+    try runtime.pushRoot(target);
+    const bytes = Runtime.arrayBufferBytes((try runtime.typedArrayRange(source.cell)).storage)[0..length];
+    for (bytes, 0..) |*byte, index| byte.* = @truncate(index * 13 + 7);
+    const before = runtime.stats;
+    _ = try runtime.nativeTypedArraySet(target, &.{ source, .{ .number = 8 } });
+    const actual = Runtime.arrayBufferBytes((try runtime.typedArrayRange(target.cell)).storage);
+    try std.testing.expectEqualSlices(u8, bytes, actual[8 .. length + 8]);
+    try std.testing.expectEqual(@as(u8, 0), actual[7]);
+    try std.testing.expectEqual(@as(u8, 0), actual[length + 8]);
+    try std.testing.expectEqual(before.allocations, runtime.stats.allocations);
+    try std.testing.expectEqual(@as(usize, 32), runtime.stats.steps - before.steps);
+    // Cross-page overlap uses the direction of the whole span, not each page.
+    const overlap = try runtime.createTypedArrayView(.uint8, runtime.cells[target.cell].receiver, 8, length, false);
+    try runtime.pushRoot(overlap);
+    _ = try runtime.nativeTypedArraySet(target, &.{ overlap, .{ .number = 9 } });
+    try std.testing.expectEqualSlices(u8, bytes, actual[9 .. length + 9]);
+    const roots = runtime.root_count;
+    runtime.setStepBudget(runtime.stats.steps + 1);
+    try std.testing.expectError(error.StepLimit, runtime.nativeTypedArraySet(target, &.{source}));
+    try std.testing.expectEqual(roots, runtime.root_count);
+    runtime.setStepBudget(default_step_budget);
+    std.debug.print("STREAMCOPY bytes=131072 blocks=32 temporary_value_cells=0 overlap_preserved budget_stop_valid\n", .{});
+}
+
+test "global script bindings share object properties and standard descriptors" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program: Program = .{};
+    const value = try runtime.evaluateSource(&program, "var declaredVar=7;function declaredFunction(){return 9;}let lexical=11;const constant=12;replacement=30;function replacement(){return 1;}" ++
+        "const nativeObject=Object,realm=globalThis;" ++
+        "const same=replacement===30&&globalThis.declaredVar===declaredVar&&globalThis.declaredFunction===declaredFunction&&globalThis.Object===Object&&this===globalThis;" ++
+        "globalThis.declaredVar=8;const byProperty=declaredVar;declaredVar=10;const byName=globalThis.declaredVar;" ++
+        "globalThis.added=15;const addedByName=added;added=16;globalThis.lexical=99;" ++
+        "const variable=nativeObject.getOwnPropertyDescriptor(globalThis,'declaredVar'),intrinsic=nativeObject.getOwnPropertyDescriptor(globalThis,'Object'),immutable=nativeObject.getOwnPropertyDescriptor(globalThis,'undefined'),global=nativeObject.getOwnPropertyDescriptor(globalThis,'globalThis');" ++
+        "undefined=4;NaN=1;Infinity=2;Object=23;const replaced=globalThis.Object===23;globalThis.Object=nativeObject;" ++
+        "globalThis.strictReceiver=function(){'use strict';return this;};const receiver=strictReceiver()===undefined;" ++
+        "globalThis[Symbol.unscopables]={added:true};const visible=added===16;" ++
+        "globalThis={};const stable=this===realm&&this!==globalThis;realm.globalThis=realm;" ++
+        "return [same,byProperty,byName,addedByName,added,lexical,constant,globalThis.lexical,typeof globalThis.constant,variable.writable,variable.enumerable,variable.configurable,intrinsic.writable,intrinsic.enumerable,intrinsic.configurable,immutable.value===undefined,immutable.writable,immutable.enumerable,immutable.configurable,global.writable,global.enumerable,global.configurable,replaced,receiver,visible,stable,undefined===void 0,Number.isNaN(NaN),Infinity>1].join(':');");
+    try std.testing.expectEqualStrings("true:8:10:15:16:11:12:99:undefined:true:true:false:true:false:true:true:false:false:false:true:false:true:true:true:true:true:true:true:true", runtime.valueString(value));
+}
+
+test "global declarations persist while script module and function this remain distinct" {
+    const programs = try std.testing.allocator.alloc(Program, 4);
+    defer std.testing.allocator.free(programs);
+    for (programs) |*program| program.* = .{};
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    const first = &programs[0];
+    const second = &programs[1];
+    _ = try runtime.evaluateNamedScriptSource(first, "first.js", "var shared=3;function redeclared(){return 1;}let privateName=4;globalThis.savedRealm=this;globalThis.scriptArrow=()=>this;let accessorCalls=0;Object.defineProperty(globalThis,'accessorVar',{get(){accessorCalls++;return 9;},set(v){accessorCalls+=v;},configurable:true});");
+    const value = try runtime.evaluateNamedScriptSource(second, "second.js", "var shared;function redeclared(){return 2;}shared=5;var accessorVar=3;[accessorCalls,shared,globalThis.shared,redeclared(),globalThis.redeclared===redeclared,privateName,typeof globalThis.privateName,this===savedRealm].join(':');");
+    try std.testing.expectEqualStrings("3:5:5:2:true:4:undefined:true", runtime.valueString(value));
+    try runtime.registerModule("realm-module", "export const top=this;export const arrow=()=>this;export const scriptRealm=scriptArrow()===savedRealm;export var localOnly=7;");
+    const module = try runtime.evaluateModule("realm-module");
+    try std.testing.expect((try runtime.get(module, "top")) == .undefined);
+    try std.testing.expect((try runtime.get(module, "scriptRealm")).boolean);
+    try runtime.defineGlobal("fromModule", try runtime.get(module, "arrow"), true);
+    const third = &programs[2];
+    const distinct = try runtime.evaluateNamedScriptSource(third, "third.js", "fromModule()===undefined&&typeof localOnly==='undefined'&&this===savedRealm;");
+    try std.testing.expect(distinct == .boolean and distinct.boolean);
+    const conflict = &programs[3];
+    try std.testing.expectError(error.SyntaxError, runtime.evaluateNamedScriptSource(conflict, "conflict.js", "let shared=9;"));
+}
+
+test "immutable global assignment follows strict and sloppy script rules" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program: Program = .{};
+    const value = try runtime.evaluateSource(&program, "let strictName=false,strictProperty=false;" ++
+        "function strictWrite(){'use strict';undefined=4;}" ++
+        "function strictPropertyWrite(){'use strict';globalThis.Infinity=0;}" ++
+        "try{strictWrite();}catch(error){strictName=error instanceof TypeError;}" ++
+        "try{strictPropertyWrite();}catch(error){strictProperty=error instanceof TypeError;}" ++
+        "return [strictName,strictProperty,undefined===void 0,Infinity>1].join(':');");
+    try std.testing.expectEqualStrings("true:true:true:true", runtime.valueString(value));
+}
+
+test "array and function primitive conversion observes hints order and failures" {
+    const runtime = try createTestingRuntime();
+    defer destroyTestingRuntime(runtime);
+    var program: Program = .{};
+    const value = try runtime.evaluateSource(&program, "let order='';const array=[1,2];function callable(){}" ++
+        "array.valueOf=function(){order+='av';return 41;};array.toString=function(){order+='as';return 'array-custom';};" ++
+        "callable.valueOf=function(){order+='fv';return 42;};callable.toString=function(){order+='fs';return 'function-custom';};" ++
+        "const results=[array+1,String(array),callable+1,String(callable),order];" ++
+        "order='';array.valueOf=function(){order+='v';return {};};array.toString=function(){order+='s';return 17;};const fallback=+array;" ++
+        "array[Symbol.toPrimitive]=function(hint){order+=hint;return 6;};const exotic=array+1;" ++
+        "array[Symbol.toPrimitive]=null;const ordinary=+array;" ++
+        "let nonprimitive=false,thrown=false;array.valueOf=function(){return {};};array.toString=function(){return {};};try{String(array);}catch(e){nonprimitive=e instanceof TypeError;}" ++
+        "callable.valueOf=function(){throw 'observed';};try{callable+1;}catch(e){thrown=e==='observed';}" ++
+        "return results.join('|')+':'+[fallback,exotic,ordinary,order,nonprimitive,thrown,String([3,4]),String(function plain(){}).indexOf('function plain')===0].join(':');");
+    try std.testing.expectEqualStrings("42|array-custom|43|function-custom|avasfvfs:17:7:17:vsdefaultvs:true:true:3,4:true", runtime.valueString(value));
 }

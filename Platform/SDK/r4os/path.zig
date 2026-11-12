@@ -16,9 +16,9 @@ pub const file_path_max: usize = abi.file_path_max_bytes;
 pub const component_max: usize = abi.fat_path_component_max_bytes;
 pub const registry_path_max: usize = abi.registry_path_max_bytes;
 /// Windows-parity character limits (0.60.19): paths count at most 260
-/// characters including the drive root, components at most 255 characters.
-/// The byte limits above are the UTF-8 (BMP) worst case of these character
-/// limits; both are enforced, neither truncates.  NT long paths (\\?\) are
+/// UTF-16 units including the drive root, components at most 255 units.
+/// The byte limits cover the UTF-8 worst case of these unit limits.
+/// Both limits are enforced. NT long paths (\\?\) are
 /// deliberately out of contract.
 pub const file_path_max_chars: usize = abi.file_path_max_chars;
 pub const component_max_chars: usize = abi.path_component_max_chars;
@@ -226,45 +226,21 @@ fn validateFileByte(byte: u8) Error!void {
     if (byte == '<' or byte == '>' or byte == '"' or byte == '|' or byte == '?' or byte == '*' or byte == ':') return Error.InvalidCharacter;
 }
 
-/// Component validation since 0.60.18: UTF-8 restricted to the BMP.
-/// ASCII keeps the reserved-character rules; multi-byte sequences must be
-/// well-formed 2- or 3-byte UTF-8 without overlong forms or surrogates.
-/// 4-byte sequences (non-BMP) and malformed bytes are visible errors, no
-/// silent replacement.  Returns the CHARACTER count of the segment for the
-/// Windows-parity character limits (0.60.19).
+/// Validate complete Unicode scalars with the established ASCII filename
+/// rules. Supplementary scalars consume two UTF-16 units. Filesystem-specific
+/// repertoire and admission remain with the selected provider.
 fn validateFileSegment(segment: []const u8) Error!usize {
     var i: usize = 0;
-    var chars: usize = 0;
+    var units: usize = 0;
     while (i < segment.len) {
-        const byte = segment[i];
-        if (byte < 0x80) {
-            try validateFileByte(byte);
-            i += 1;
-            chars += 1;
-            continue;
-        }
-        if (byte & 0xE0 == 0xC0) {
-            if (byte < 0xC2) return Error.InvalidCharacter; // overlong
-            if (i + 1 >= segment.len or segment[i + 1] & 0xC0 != 0x80) return Error.InvalidCharacter;
-            i += 2;
-            chars += 1;
-            continue;
-        }
-        if (byte & 0xF0 == 0xE0) {
-            if (i + 2 >= segment.len) return Error.InvalidCharacter;
-            const b1 = segment[i + 1];
-            const b2 = segment[i + 2];
-            if (b1 & 0xC0 != 0x80 or b2 & 0xC0 != 0x80) return Error.InvalidCharacter;
-            if (byte == 0xE0 and b1 < 0xA0) return Error.InvalidCharacter; // overlong
-            if (byte == 0xED and b1 >= 0xA0) return Error.InvalidCharacter; // surrogate
-            i += 3;
-            chars += 1;
-            continue;
-        }
-        // Stray continuation byte or 4-byte lead (outside the BMP).
-        return Error.InvalidCharacter;
+        const count = std.unicode.utf8ByteSequenceLength(segment[i]) catch return Error.InvalidCharacter;
+        if (count > segment.len - i) return Error.InvalidCharacter;
+        const scalar = std.unicode.utf8Decode(segment[i..][0..count]) catch return Error.InvalidCharacter;
+        if (scalar < 0x80) try validateFileByte(@intCast(scalar));
+        units += if (scalar > 0xFFFF) @as(usize, 2) else 1;
+        i += count;
     }
-    return chars;
+    return units;
 }
 
 fn isSeparator(byte: u8) bool {
@@ -339,16 +315,24 @@ test "windows-parity character boundaries reject without truncation" {
     try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A?B"));
 }
 
-test "utf8 bmp components pass while malformed and non-bmp stay errors" {
+test "utf8 components retain supplementary pairs and reject malformed scalars" {
     const umlaut = try FilePath.parse("C:\\Gr\xC3\xBCn.txt");
     try std.testing.expectEqualStrings("C:\\Gr\xC3\xBCn.txt", umlaut.bytes());
     const nested = try RelativeFilePath.parse("Namen mit Umlauten/\xC3\x84rger.md");
     try std.testing.expectEqualStrings("Namen mit Umlauten\\\xC3\x84rger.md", nested.bytes());
-    // Malformed continuation, overlong form, surrogate half, non-BMP emoji.
+    const supplementary = try FilePath.parse("C:\\A\xF0\x9F\x98\x80.txt");
+    try std.testing.expectEqualStrings("C:\\A\xF0\x9F\x98\x80.txt", supplementary.bytes());
+    _ = try RelativeFilePath.parse("🙂" ** 127 ++ "x");
+    try std.testing.expectError(Error.ComponentTooLong, RelativeFilePath.parse("🙂" ** 128));
+    const maximum = try FilePath.parse("C:\\A\xF4\x8F\xBF\xBF.txt");
+    try std.testing.expectEqualStrings("C:\\A\xF4\x8F\xBF\xBF.txt", maximum.bytes());
+    // Malformed continuation, overlong forms, surrogate half and >U+10FFFF.
     try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\Gr\xC3\x28.txt"));
     try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xC0\xAF.txt"));
     try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xED\xA0\x80.txt"));
-    try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xF0\x9F\x98\x80.txt"));
+    try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xF0\x80\x80\x80.txt"));
+    try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xF4\x90\x80\x80.txt"));
+    try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xF0\x9F\x98.txt"));
     // A stray continuation byte alone is malformed.
     try std.testing.expectError(Error.InvalidCharacter, FilePath.parse("C:\\A\xBFB.txt"));
 }

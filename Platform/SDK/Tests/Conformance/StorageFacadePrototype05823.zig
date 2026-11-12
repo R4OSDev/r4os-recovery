@@ -1,7 +1,86 @@
 const std = @import("std");
 const r4os = @import("r4os");
 
+test "normal App2 file facade preserves wide metadata and restarts buffered directory observations" {
+    const a = r4os.abi;
+    const a2 = r4os.platform2.abi;
+    const Provider = struct {
+        var changed = false;
+        fn open(_: *const a2.R4XStartContext2) callconv(.c) u32 {
+            return 0;
+        }
+        fn info(_: [*:0]const u8, out: *a.FileMetadata2) callconv(.c) i32 {
+            out.* = .{ .flags = a.file_metadata2_flag_exists | a.file_metadata2_flag_byte_size_valid | a.file_metadata2_flag_backend_node_valid, .byte_size = 0x100000003, .backend_node = 0x100000007, .drive_letter = 'C' };
+            return 1;
+        }
+        fn batch(path: ?[*:0]const u8, cursor: *a.DirectoryMetadataCursor2, rows: ?[*]a.DirectoryMetadataEntry2, capacity: u32) callconv(.c) i32 {
+            if (capacity == 0) {
+                std.debug.assert(path == null and rows == null);
+                return if (changed) -10 else 0;
+            }
+            if (cursor.namespace_generation != 0) return -5;
+            std.debug.assert(path != null and rows != null and capacity == 4);
+            cursor.namespace_generation = 9;
+            rows.?[0] = .{};
+            _ = info("C:\\WIDE.TXT", &rows.?[0].info);
+            @memcpy(rows.?[0].path[0..11], "C:\\WIDE.TXT");
+            rows.?[1] = rows.?[0];
+            return 2;
+        }
+    };
+    const table: a2.R4XStartR4Sys2 = .{
+        .file_read = @intFromPtr(&fakeFileRead),
+        .file_read_at = @intFromPtr(&fakeFileReadAt),
+        .file_write = @intFromPtr(&fakeFileWrite),
+        .file_append = @intFromPtr(&fakeFileAppend),
+        .file_metadata2 = @intFromPtr(&Provider.info),
+        .directory_metadata_batch2 = @intFromPtr(&Provider.batch),
+    };
+    const imported: a.R4XStartImport = .{ .group_id = 1, .min_version = 2, .resolved_version = 2, .flags = a.r4xstart_import_flag_group_interface, .module_name = @intFromPtr("R4SYS"), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&table) };
+    const raw: a2.R4XStartContext2 = .{ .app_class = 1, .instance_id = 42, .flags = a.r4xstart_flag_imports_valid | a.r4xstart_flag_close_supported, .should_close = @intFromPtr(&Provider.open), .imports = @intFromPtr(&imported), .import_count = 1 };
+    const app = switch (r4os.App2.init(&raw, .console)) {
+        .value => |v| v,
+        .failure => return error.App2Init,
+    };
+    const files = app.files() orelse return error.NoFiles;
+    const path = try r4os.path.FilePath.parse("C:\\WIDE.TXT");
+    switch (files.metadata(path.asZ())) {
+        .found => |v| {
+            try std.testing.expectEqual(@as(u64, 0x100000003), v.byte_size);
+            try std.testing.expectEqual(@as(u64, 0x100000007), v.backend_node);
+        },
+        else => return error.Metadata,
+    }
+    try std.testing.expectEqual(a.file_metadata2_error_unsupported, files.info(path.asZ()).failure);
+    Provider.changed = false;
+    var scan = files.iterate(path.asZ());
+    var name: [64]u8 = undefined;
+    const row = scan.next(&name).entry;
+    try std.testing.expectEqual(@as(u64, 0x100000007), row.metadata.?.backend_node);
+    try std.testing.expect(row.info == null);
+    Provider.changed = true;
+    try std.testing.expectEqual(a.file_metadata2_error_restart, scan.next(&name).failure);
+    Provider.changed = false;
+    var next = files.iterate(path.asZ());
+    _ = next.next(&name).entry;
+    next.revisitAfterRemoval();
+    try std.testing.expectEqual(a.file_metadata2_error_restart, next.next(&name).failure);
+}
+
+test "storage parity includes the path recent registry and bounded text owners" {
+    std.testing.refAllDecls(r4os.path);
+    std.testing.refAllDecls(r4os.recent_documents);
+    std.testing.refAllDecls(r4os.registry);
+    std.testing.refAllDecls(r4os.bounded_text);
+}
+
 const file_bytes = "hello";
+var name_limits_result: i32 = 0;
+fn fakeNameLimits(_: [*:0]const u8, out: *r4os.abi.FileNameLimits) callconv(.c) i32 {
+    if (name_limits_result != 0) return name_limits_result;
+    out.* = .{ .size = 56, .flags = 3, .provider = 2, .drive_letter = 'C', .mount_slot = 7, .mount_generation = 99, .max_path_bytes = 1023, .max_component_bytes = 765, .max_component_utf16_units = 255, .short_base_bytes = 8, .short_extension_bytes = 3, .name_rules = 7, .atomic_rules = 7 };
+    return 0;
+}
 const config_bytes = "\xEF\xBB\xBFR4S_FORMAT=1\r\nSCHEMA=TEST\r\nTITLE=Configured\r\nCOUNT=27\r\n";
 var written: [64]u8 = .{0} ** 64;
 var written_len: usize = 0;
@@ -203,6 +282,20 @@ fn fakeRegistrySet(key: [*:0]const u8, name: [*:0]const u8, value_type: u16, dat
     return r4os.abi.registry_api_result_ok;
 }
 
+fn fakeDirectoryBatch(_: ?[*:0]const u8, cursor: *r4os.abi.DirectoryBatchCursor, out: ?[*]r4os.abi.DirectoryBatchEntry, capacity: u32) callconv(.c) i32 {
+    if (capacity == 0) return 0;
+    if (cursor.backend[0] != 0) return -5;
+    cursor.change.mount_generation = 1;
+    cursor.backend[0] = 1;
+    const count = @min(capacity, 2);
+    for (0..count) |i| {
+        out.?[i] = .{};
+        const raw = fakeDirEntry("C:\\", @intCast(i + 2), &out.?[i].path, out.?[i].path.len);
+        out.?[i].info = .{ .exists = 1, .is_dir = @intFromBool(raw == 1) };
+    }
+    return @intCast(count);
+}
+
 fn makeSys(full: bool) r4os.abi.R4XStartR4Sys {
     var table: r4os.abi.R4XStartR4Sys = .{};
     table.write = @intFromPtr(&fakeWrite);
@@ -218,6 +311,7 @@ fn makeSys(full: bool) r4os.abi.R4XStartR4Sys {
     table.dir_create = @intFromPtr(&fakeDirCreate);
     table.dir_delete = @intFromPtr(&fakeDelete);
     table.dir_entry = @intFromPtr(&fakeDirEntry);
+    table.directory_batch = @intFromPtr(&fakeDirectoryBatch);
     table.file_stream_begin = @intFromPtr(&fakeStreamBegin);
     table.file_stream_write = @intFromPtr(&fakeStreamWrite);
     table.file_stream_finish = @intFromPtr(&fakeStreamFinish);
@@ -249,6 +343,17 @@ test "files directory streams and registry use caller owned state" {
     var app = try makeApp(&table, &imports, &context);
     var files = app.files() orelse return error.FilesMissing;
     var file_path = try r4os.FilePath.parse("C:/TEMP/FILE.TXT");
+    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
+    table.file_name_limits = @intFromPtr(&fakeNameLimits);
+    name_limits_result = 0;
+    const limits = files.nameLimits(file_path.asZ()).value;
+    try std.testing.expectEqual(@as(u64, 99), limits.mount_generation);
+    try std.testing.expectEqual(@as(u32, 255), limits.max_component_utf16_units);
+    for ([_]i32{ r4os.abi.file_stream_error_name_not_supported, r4os.abi.file_stream_error_name_too_long, r4os.abi.file_stream_error_unsupported }) |code| {
+        name_limits_result = code;
+        try std.testing.expectEqual(code, files.nameLimits(file_path.asZ()).failure);
+    }
+    name_limits_result = 0;
     var out: [16]u8 = undefined;
     switch (files.read(file_path.asZ(), out[0..])) {
         .bytes => |count| try std.testing.expectEqualStrings(file_bytes, out[0..count]),
@@ -337,4 +442,75 @@ test "missing capability and long paths fail before hidden fallback" {
     try std.testing.expect(app.registry() == null);
     var too_long: [r4os.path.file_path_max + 1]u8 = .{'A'} ** (r4os.path.file_path_max + 1);
     try std.testing.expectError(error.TooLong, r4os.FilePath.parse(too_long[0..]));
+}
+
+var resume_calls: usize = 0;
+var resume_stale = false;
+fn fakeBoundBatch(_: ?[*:0]const u8, cursor: *r4os.abi.DirectoryBatchCursor, out: ?[*]r4os.abi.DirectoryBatchEntry, capacity: u32) callconv(.c) i32 {
+    resume_calls += 1;
+    if (resume_stale) return -10;
+    if (capacity == 0) return 0;
+    if (cursor.backend[0] == 0) {
+        cursor.backend[0] = 1;
+        cursor.change.mount_generation = 1;
+        return 0;
+    }
+    if (cursor.backend[0] > 1) return -5;
+    for (0..2) |i| {
+        out.?[i] = .{};
+        _ = copyOut(if (i == 0) "C:\\ONE.TXT\x00" else "C:\\TWO.TXT\x00", &out.?[i].path, out.?[i].path.len);
+        out.?[i].info = .{ .exists = 1, .size = 123 };
+    }
+    cursor.backend[0] = 2;
+    return 2;
+}
+
+fn snapshotLess(_: void, a: u32, b: u32) bool {
+    return a < b;
+}
+test "directory continuation carries metadata preserves restart and bounds complete snapshots" {
+    var table = makeSys(true);
+    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
+    table.directory_batch = @intFromPtr(&fakeBoundBatch);
+    var imports: [1]r4os.abi.R4XStartImport = undefined;
+    var context: r4os.abi.R4XStartContext = undefined;
+    const app = try makeApp(&table, &imports, &context);
+    const files = r4os.Files{ .sys = app.system() };
+    var it = files.iterate(.{ .ptr = "C:\\", .len = 3 });
+    var path: [128]u8 = undefined;
+    resume_calls = 0;
+    resume_stale = false;
+    var too_small: [4]u8 = undefined;
+    try std.testing.expectEqual(@as(i32, -7), it.next(&too_small).failure);
+    try std.testing.expectEqual(@as(u32, 0), it.buffer_index);
+    const item = it.next(&path).entry;
+    try std.testing.expectEqual(@as(u64, 123), item.info.?.size);
+    try std.testing.expectEqualStrings("C:\\ONE.TXT", item.path);
+    try std.testing.expectEqual(@as(usize, 4), resume_calls);
+    resume_stale = true;
+    try std.testing.expectEqual(@as(i32, -10), it.next(&path).failure);
+    resume_stale = false;
+    try std.testing.expectEqualStrings("C:\\TWO.TXT", it.next(&path).entry.path);
+    try std.testing.expect(it.next(&path) == .end);
+    const calls = resume_calls;
+    try std.testing.expect(it.next(&path) == .end);
+    try std.testing.expectEqual(calls, resume_calls);
+    // Current live-index deletion traversal discards the private batch.
+    it.revisitAfterRemoval();
+    try std.testing.expect(it.next(&path) == .entry);
+    try std.testing.expectEqual(calls, resume_calls);
+    const allocator = std.testing.allocator;
+    var snapshot = r4os.directory_page.Snapshot(u32, 257 * 4){};
+    defer snapshot.deinit(allocator);
+    for (0..257) |i| try snapshot.append(allocator, @intCast(256 - i));
+    snapshot.sort({}, snapshotLess);
+    for (snapshot.values.items, 0..) |value, i| try std.testing.expectEqual(i, value);
+    try std.testing.expectError(error.OutOfMemory, snapshot.append(allocator, 999));
+    try std.testing.expectEqual(@as(usize, 257), snapshot.values.items.len);
+    var no_memory = std.heap.FixedBufferAllocator.init(&.{});
+    var candidate = r4os.directory_page.Snapshot(u32, 4096){};
+    defer candidate.deinit(no_memory.allocator());
+    try std.testing.expectError(error.OutOfMemory, candidate.append(no_memory.allocator(), 1));
+    try std.testing.expectEqual(@as(usize, 0), candidate.values.items.len);
+    try std.testing.expectEqual(@as(u32, 256), snapshot.values.items[256]);
 }

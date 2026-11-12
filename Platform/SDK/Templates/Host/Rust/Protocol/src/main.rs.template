@@ -1,0 +1,27 @@
+#![no_std]
+use core::sync::atomic::{AtomicBool,AtomicPtr,Ordering};
+use r4os_sdk::{abi,technical2::Protocol};
+static API:AtomicPtr<abi::ProtocolApi2>=AtomicPtr::new(core::ptr::null_mut());
+static ACTIVE:AtomicBool=AtomicBool::new(false);
+unsafe extern "C" fn init(api:*const abi::ProtocolApi2)->i32{
+ let p=match unsafe{Protocol::from_raw(api)}{Ok(v)=>v,Err(n)=>return n};
+ let rc=unsafe{(p.raw().register_role)(c"misc.{ProjectNameLower}".as_ptr().cast(),u32::from(abi::ProtocolCategory::misc.0),0)};if rc!=0{return rc;}
+ let rc=unsafe{(p.raw().set_status)(abi::ProtocolState::active.0,c"{ProjectName}".as_ptr().cast())};if rc!=0{return rc;}
+ API.store(api.cast_mut(),Ordering::Release);ACTIVE.store(true,Ordering::Release);0
+}
+unsafe extern "C" fn shutdown()->i32{
+ let api=API.load(Ordering::Acquire);if api.is_null(){return 0;}
+ // The synchronous shell has no retained callbacks/backing. Real asynchronous
+ // work must retain exact Gate/lease/backing until actual completion first.
+ let p=match unsafe{Protocol::from_raw(api)}{Ok(v)=>v,Err(n)=>return n};
+ let rc=unsafe{(p.raw().set_status)(abi::ProtocolState::disabled.0,c"closed".as_ptr().cast())};if rc==0{ACTIVE.store(false,Ordering::Release);}rc
+}
+unsafe extern "C" fn query(out:*mut abi::ProtocolStatus)->i32{
+ if out.is_null(){return -1;}unsafe{out.write(abi::ProtocolStatus{state:if ACTIVE.load(Ordering::Acquire){abi::ProtocolState::active.0}else{abi::ProtocolState::disabled.0},..Default::default()})};0
+}
+unsafe extern "C" fn dispatch(op:u32,_:*const abi::ProtocolBuffer,out:*mut abi::ProtocolBuffer)->i32{
+ if op==1{return unsafe{shutdown()};}if op!=0 || !ACTIVE.load(Ordering::Acquire){return -2;}
+ if out.is_null(){return -3;}let buffer=unsafe{out.read()};if buffer.data.is_null() || buffer.capacity<2{return -3;}
+ unsafe{buffer.data.cast::<u8>().write(b'O');buffer.data.cast::<u8>().add(1).write(b'K');(*out).len=2;};0
+}
+r4os_sdk::protocol_entry2!(init,shutdown,query,dispatch);

@@ -1,0 +1,31 @@
+#include <r4os/app2.h>
+#include <r4os/r4os.h>
+#include <r4os/service_helpers.h>
+typedef struct {R4App *app;R4ServiceEndpoint *endpoint;} RequestContext;
+static int32_t handle_request(void *opaque){
+ RequestContext *context=(RequestContext *)opaque;R4ServiceEndpoint *ep=context->endpoint;
+ uint8_t payload[R4OS_SERVICE_API_MAX_PAYLOAD];
+ R4EndpointReceiveResult got=r4_service_endpoint_recv(ep,payload,sizeof(payload));
+ if(got.kind==R4_ENDPOINT_RECEIVE_WOULD_BLOCK)return 0;
+ if(got.kind==R4_ENDPOINT_RECEIVE_FAILED)return got.raw_code;
+ const char *text=got.header.op==1?"OK":"BADOP";uint32_t length=got.header.op==1?2:5;
+ return got.header.request_id?r4_service_endpoint_reply(ep,got.header.request_id,got.header.op==1?R4OS_SERVICE_API_RESULT_OK:R4OS_SERVICE_API_RESULT_BAD_OP,text,length):0;
+}
+static int32_t work(R4App *app){
+ R4Services services=r4_app_services(app);R4ServiceEndpoint ep={0};
+ int32_t result=r4_services_register(&services,"{ProjectName}",0,&ep);if(result<0)return result;
+ R4SdkServiceLoop owner;result=R4SdkServiceLoopInit2(app->system.generation2,ep.raw,200,16,&owner);
+ if(result==0){RequestContext context={app,&ep};while(!r4sys_program_should_close(&app->system)){
+  R4SdkServiceStep wake=R4SdkServiceLoopWait2(app->system.generation2,&owner,0,0);
+  if(wake.kind==3)break;
+  if(wake.kind==4){if(!r4sys_program_should_close(&app->system))result=wake.value;break;}
+  if(wake.kind==0){int32_t rc=R4SdkServiceLoopDrain2(app->system.generation2,&owner,(uint32_t)wake.value,handle_request,&context);
+   if(rc<0){if(!r4sys_program_should_close(&app->system))result=rc;break;}}
+ }}
+ int32_t closed=r4_service_endpoint_unregister(&ep);return closed<0 && closed!=R4OS_ERR_CLOSED?closed:result;
+}
+
+int32_t r4_main2(const R4OS2Context *context){
+ R4App2Memory memory;int32_t rc=R4SdkApp2InitRaw(context->raw,&memory);if(rc<0)return rc;
+ R4App app;rc=r4_app_init2(context,&memory,&app);if(rc<0)return rc;return work(&app);
+}

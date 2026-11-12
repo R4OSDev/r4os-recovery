@@ -1,11 +1,9 @@
-const api = @import("kernel_api");
+const api = @import("contract2");
 
-fn write(_: [*]const u8, _: u32) callconv(.c) i32 {
-    return 0;
-}
-
+// Group providers deliberately allow absent optional slots in the current
+// canonical Contract. Technical DriverApi2 still requires its real prefix
+// callbacks: a header alone must never compile as a usable driver provider.
 comptime {
-    _ = api.buildR4SysTable(.{
-        .write = &write,
-    });
+    const provider: api.DriverApi2 = .{ .magic = api.driver_magic, .version = api.driver_version, .size = @sizeOf(api.DriverApi2), .reserved = 0 };
+    _ = provider;
 }

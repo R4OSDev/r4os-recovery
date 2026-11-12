@@ -1,0 +1,43 @@
+#![no_std]
+use r4os_sdk::{App2, abi, services::{Receive, Wake}};
+
+fn work(app: &mut App2<'_>) -> i32 {
+    let services=match app.services(){Ok(value)=>value,Err(_)=>return 1};
+    let mut service=match services.register(app.name(),0){Ok(value)=>value,Err(_)=>return 2};
+    let mut owner=match service.service_loop(200,abi::service_api_endpoint_queue_depth as u32){Ok(value)=>value,Err(_)=>return 3};
+    let _=app.write("[RUST] {ProjectName}: service ready\n");
+    loop {
+        match owner.wait(None) {
+            Ok(Wake::Requests(n))=>{
+                let rc=owner.drain(n,|| {
+                    let mut payload=[0u8;abi::service_api_max_payload];
+                    match service.receive(&mut payload) {
+                        Ok(Receive::Message{header,..})=>{
+                            let (status,response):(i32,&[u8])=if header.op==1 {
+                                (abi::service_api_result_ok,b"{ProjectName} OK")
+                            } else {(abi::service_api_result_bad_op,b"BADOP")};
+                            service.reply_if_pending(header.request_id,status,response)
+                        },
+                        Ok(Receive::WouldBlock)=>0,Err(_)=>-1,
+                    }
+                });
+                if rc<0&&!app.should_close(){return 4;}
+            },
+            Ok(Wake::Stop)=>break,
+            Ok(Wake::Idle|Wake::Deadline)=>{},
+            Err(_) if app.should_close()=>break,
+            Err(_)=>return 5,
+        }
+    }
+    drop(owner);
+    if service.close().is_err(){return 6;}
+    let _=app.write("[RUST] {ProjectName}: service stopped\n");
+    0
+}
+
+fn raw(context:&r4os_sdk::platform2::Context<'_>)->i32{
+ let mut app=match r4os_sdk::lowlevel_context2!(context){Ok(v)=>v,Err(n)=>return n};
+ if let Err(n)=r4os_sdk::lowlevel::initialize_runtime2(&app){return n;}
+ work(&mut app)
+}
+r4os_sdk::lowlevel_entry2!(raw);

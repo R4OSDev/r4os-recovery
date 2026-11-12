@@ -1,0 +1,21 @@
+[package]
+name = "rust-library-consumer"
+version = "1.2.3"
+edition = "2024"
+build = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "src/main.rs"
+crate-type = ["staticlib"]
+
+[dependencies]
+r4os-sdk = { version = "=0.1.0" }
+r4os-r4std = { version = "=0.1.0", path = "{R4StdRoot}" }
+r4os-r4font = { version = "=0.1.0", path = "{R4FontRoot}" }
+r4os-r4img = { version = "=0.1.0", path = "{R4ImgRoot}" }
+
+[workspace]

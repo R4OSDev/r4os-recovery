@@ -1,0 +1,35 @@
+﻿Copied clipboard client
+========================
+
+Normative wire/format/expiry rules: Contract/API/ClipboardOffers.txt.
+Zig: r4os.clipboard_offer.Client.connect(&query2_context,&client).
+C: include r4os/clipboard_offer_platform2.h; R4SdkClipboardOffersConnect.
+Rust: clipboard_offer::Client::connect(&query2_context).
+Use the actual Context/table lifetime, one exclusive synchronous channel.
+Caller metadata and data output buffers must be disjoint and valid through
+return. Rust's borrowed Client is neither Send nor Sync. No global binding.
+
+Info returns the real provider/revision and budgets. Begin uses that exact
+revision plus a byte budget; Declare identifies item/format/exact total.
+Put copies contiguous chunks at most4048bytes. Commit checks completeness,
+format and current revision atomically. Release the resulting receipt when
+no longer needed; Abort ends only a writing stage. Read-only Status and
+idempotent Commit on the same stage resolve uncertainty until fixed expiry.
+Never create/replay a new offer automatically after a transport error.
+
+Snapshot pins the current immutable offer. Enumerate pages, Read chunks of
+at most4040bytes, then Release. Metadata includes exact total/prefix/EOF and
+provider/offer/snapshot identity; zero-byte reads are metadata probes, not
+implicit EOF. The adapters validate replies before publishing caller output.
+Old/released/expired/wrong-provider tokens report their explicit errors.
+Release also drops a committed stage receipt, preserving current clipboard.
+
+Zig/C return0 for typed success and negative provider/transport errors.
+Rust uses Result with the same i32 Error. NoEndpoint is an absent actual
+service. Old-service BadOp maps to typed Unsupported; no implicit text-only
+emulation or image/file conversion. Close only clears the local handle after
+actual successful provider close; all resource failures stay observable.
+
+Existing clipboard helpers, Query1 profiles and application calls remain.
+New functionality is provider rollout only; select Query2 explicitly for
+new consumers after their later migration has been authorized.

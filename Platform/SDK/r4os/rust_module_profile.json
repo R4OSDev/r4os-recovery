@@ -1,0 +1,98 @@
+{
+  "schema": 2,
+  "id": "r4os-rust-r4x-v2",
+  "target": "x86_64-unknown-none",
+  "backend_features": {
+    "selection": "target-defaults",
+    "reason": "Pinned Rust1.99 softfloat bare-metal aggregate copies omit alternating bytes when SIMD features are enabled (SSE2 at56bytes, AVX at72bytes). Keep the verified built-in integer codegen until a qualified compiler/target correction. Canonical required hardware and full-ISA Zig/C runtime objects are unchanged; direct Rust SIMD is not qualified."
+  },
+  "code_model": "kernel",
+  "relocation_model": "pie",
+  "lto": "fat",
+  "codegen_units": 1,
+  "red_zone": false,
+  "panic": "abort",
+  "stack_probes": "pinned target inline, 4096-byte steps",
+  "linker_script": "r4os/linker/r4os_module.ld",
+  "dependencies": {
+    "resolution": "locked offline Cargo metadata",
+    "sources": "explicit local/path or vendored crates only",
+    "external_roots": "caller-selected DependencyRoot",
+    "features": "Cargo manifest and explicit Features/NoDefaultFeatures arguments",
+    "host_build_steps": false,
+    "technical_bindings": [
+      "r4os-contract",
+      "r4os-sdk"
+    ]
+  },
+  "native_c": {
+    "source": "R4MF SOURCE entries after Rust root",
+    "compiler": "SDK Profiles/Tools.json tools.zig at an explicit matching installation root",
+    "headers": "real compiler dep-info",
+    "c_build_rs": false,
+    "flags": [
+      "-target",
+      "x86_64-freestanding-none",
+      "-std=c11",
+      "-ffreestanding",
+      "-fno-builtin",
+      "-fno-stack-protector",
+      "-Xclang",
+      "-fstack-clash-protection",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+      "-mno-red-zone",
+      "-fPIC",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-g0"
+    ],
+    "optimization": {
+      "size": "-Oz",
+      "speed": "-O3"
+    }
+  },
+  "allocation": {
+    "optional_sdk_feature": "alloc",
+    "core_owner": "r4os/vm_allocator.zig",
+    "runtime_object": "Runtime/r4sdk_heap.o",
+    "sysroot": "precompiled target liballoc from rust-std",
+    "root_return_cleanup": "kernel instance owner after all tasks retire"
+  },
+  "allowed_runtime_relocations": [
+    "R_X86_64_64",
+    "R_X86_64_PC32",
+    "R_X86_64_PLT32"
+  ],
+  "closed_elf_forms": {
+    "R_X86_64_GOTPCREL": "Final EXEC/DYN only: bound module-owned GOT slot, exact symbol value and -4 addend; emitted as R4M0 REL32 plus ABS64. Nonzero GOT entries must all have definitions. Relaxed GOTPCRELX and ABS32 remain rejected."
+  },
+  "optimization": {
+    "size": "z",
+    "speed": "3"
+  },
+  "embed_bitcode": true,
+  "cargo_release": {
+    "PANIC": "abort",
+    "OVERFLOW_CHECKS": "true",
+    "DEBUG_ASSERTIONS": "false",
+    "DEBUG": "0",
+    "STRIP": "none"
+  },
+  "linker_flags": [
+    "-flavor",
+    "gnu",
+    "--emit-relocs",
+    "--gc-sections",
+    "--no-undefined",
+    "--strip-debug"
+  ],
+  "profile_ids": {
+    "app": "r4os-rust-r4x-v2",
+    "lowlevel": "r4os-rust-r4x-lowlevel-v1",
+    "library": "r4os-rust-r4l-v1",
+    "driver": "r4os-rust-r4d-v1",
+    "protocol": "r4os-rust-r4p-v1"
+  },
+  "edition": "2024"
+}

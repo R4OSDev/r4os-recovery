@@ -1,0 +1,46 @@
+﻿Optional R4X title appearance, version1
+======================================
+
+R4M0's existing NUL-separated metadata channel accepts these optional keys:
+    gui.title.background=RRGGBB
+    gui.title.foreground=RRGGBB
+In module.R4MF prefix each entry with META=. Keys are exact lower-case ASCII.
+Values are exactly six ASCII hex digits, upper/lower-case accepted, no #,
+alpha, whitespace or braces. Each key occurs at most once, even if its two
+values would agree. Missing keys use Desktop defaults independently; 000000
+is supplied black, not absence. Invalid/duplicate values reject admission.
+These are R4X presentation metadata, not SDK build profiles or API imports.
+The host manifest parser and R4M0 packer share the SDK's syntax implementation;
+the actual runtime loader validates again before publishing the process.
+The in-guest simple R4PACK exposes no arbitrary metadata/color option.
+
+The actual loader's bytes determine a copied immutable appearance. The
+retained process runtime owns that small value until exact retirement.
+No pathname is reopened to discover colors after admission. Only an actual
+hosted App window receives them; a console process cannot recolor its host
+terminal. Subsequent file edits affect only subsequent process admissions.
+
+R4DESK21 appends optional gui_window_appearance at offset624, slot76, size632.
+All earlier offsets and the fixed40-byte GuiWindowInfo remain unchanged.
+The registered exact Desktop host first resolves GuiHostInputRequest QUERY
+for a process generation/window ID, then passes its returned nonzero window
+epoch to gui_window_appearance. The provider checks the same exact process,
+window epoch, host generation and host epoch under registry then metadata
+admission. There is no global controller grant, setter, file I/O or focus
+change. Success0 writes all48 bytes of GuiWindowAppearance; any error leaves
+output untouched and uses the existing gui_host_input_error domain.
+
+GuiWindowAppearance contains the exact32-byte window identity, then four u32:
+flags, title_background, title_foreground, reserved. Flag mask1 supplies the
+background and mask2 supplies foreground; no other bits. RGB values occupy
+the lower24 bits, absent values and reserved are zero. Matching Zig/C/Rust
+bindings are generated from API/ApiContract.json. Capability checking uses
+the actual optional table field/size, never a guessed version matrix.
+
+The Desktop applies supplied colors only to the active title surface/text.
+It owns inactive appearance, frame/title geometry, controls, system menu,
+focus policy and input routing. System buttons retain contrasting native
+surfaces/glyphs. App authors choose a readable pair for their title text.
+Missing/unsupported appearance uses defaults. On bind, unbind, retirement or
+window-slot reuse the old binding is cleared; another generation inherits
+no appearance. This version introduces no runtime color setter.

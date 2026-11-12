@@ -1,0 +1,18 @@
+const r4os=@import("r4os");
+fn paint(window:*r4os.Window)i32 {
+ var p=switch(window.beginPaint()){.paint=>|v|v,.failure=>|n|return n};
+ _=p.canvas.clear(0x0024384c);_=p.canvas.text(16,20,"{ProjectName}",0xffffff,0x0024384c);return p.present();
+}
+fn work(app:*r4os.App2)i32 {
+ 
+ var timers:[1]r4os.Timer=.{.{}};
+ var window=r4os.Window.init(app.system(),app.desktop() orelse return -1,app.drawing() orelse return -1,&timers) orelse return -2;
+ _=window.setTitle("{ProjectName}");if(paint(&window)<0)return -3;
+ while(!app.shouldClose())switch(window.waitMessage(r4os.time_contract.timeoutForever())){
+  .message=>|m|switch(m){.close=>break,.resize=>{if(paint(&window)<0)return -4;},else=>{}},
+  .failure=>|n|return n,else=>{},
+ };
+ return 0;
+}
+
+pub fn r4_app_main(app:*r4os.App2)i32{return work(app);}

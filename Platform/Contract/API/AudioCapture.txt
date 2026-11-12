@@ -1,0 +1,107 @@
+﻿Optional copied PCM capture
+===========================
+
+Normative wire types/status/limits are in API/ApiContract.json. This additional
+input contract preserves every previous table/type prefix and the136byte
+AudioBackend2. DriverApi2 appends one optional pointer at656 (size664); the
+full original656byte prefix remains readable on old/new providers. Negotiate
+the whole optional slot and nonnull callback. R4AUDIO appends capture_io at232
+(raw5/240; Query2 AUDIO2/240). Normal clients use AUDSVC service operation6100,
+not driver callbacks or the kernel infrastructure adapter directly.
+
+Source identity and capability
+-------------------------------
+AudioCaptureSourceId24 binds a nonreused registration epoch, provider-local
+source number and source generation. AudioCaptureHandle56 additionally binds
+the full AUDSVC process, stream and nonwrapping stream generation. Client
+ownership stays in the original service manager, paired with the full actual
+request sender generation. AudioCaptureRequest104 carries client_generation
+beside the existing transport client ID; stale queued requests never acquire
+a replacement process incarnation. Backend requests use0 in this field and
+the exact handle.service identity. Copies retain no resources; none persist
+as valid identities across reboot. Catalog rows are live copied observations,
+not a retained inventory or future device lease; Open rechecks exact identity.
+
+SourceInfo112 explicitly distinguishes qualified ADC input from CONTROLLED
+virtual test input. Playback, HDA input-stream counts, sound at an output,
+encoders/decoders and hda-duplex emulation do not establish a microphone source.
+Without a qualified registered input extension: UnsupportedCapture and no
+source flag/identity. Current shipped HDA/AC97 output backends register no
+qualified input; this API does not program an ADC or install a recorder.
+
+The first input adapter attaches its separate immutable AudioCaptureBackend2
+40byte descriptor to an existing exact named R4D audio registration. This uses
+the original8record registry, module admission and output permit. Standalone
+capture-only hardware is outside this first adapter. io and shutdown are
+mandatory; malformed/duplicate/wrong-owner attachments fail before publication.
+No old AudioBackend2 callback/header is reinterpreted as the input extension.
+
+PCM, queue and timestamps
+-------------------------
+Initial format is interleaved S16LE,1..8channels,1..192000frames/second.
+frame_bytes equals2*channels. Service queues are bounded by requested whole
+frames and64KB per session, at most4sessions. One read copies at most2048bytes
+and complete frames. Partial frames or malformed provider metadata publish no
+accepted caller bytes; source scratch may be discarded on failure. No resampler,
+codec, playback loopback, inserted silence or zero-copy DMA promise exists.
+
+Request.buffer_bytes at92 carries the final Read caller capacity, not the
+larger RPC staging buffer. Other operations require0. Before activation or
+dequeue, frames*frame_bytes must fit both this bound and actual output storage.
+An input failure remains observable after a later physical Stop ACK; it never
+turns a lost source or changed clock into successful empty EOF.
+
+Per-session frame indices start at0 and never wrap. Overrun discards whole old
+frames and reports cumulative dropped frames and an exact gap before the next
+delivered first_frame. A discontinuous incoming block replaces an incompatible
+queued prefix; no false contiguous range spans a source gap. Frame/overrun/
+clock identity changes or exhaustion are explicit. Same source ID with a changed
+clock identity invalidates active acquisition before publishing new bytes.
+
+first_timestamp is in source clock ticks with explicit clock_id, generation
+and frequency (ticks/second), only when the hardware-valid flag is present.
+Unknown hardware time remains0 with that flag clear. The service retains a
+known measured block-start timestamp only while that exact first frame heads
+the queue; a subrange/prefix drop does not fabricate interpolated hardware time.
+Timeout clock observations and hardware sample timestamps are distinct.
+
+Lifecycle and unknown outcomes
+-------------------------------
+Ops: Catalog0, Open1, Read2, Query3, Stop4, Close5. Copied Reply248 separates
+result from successful transport and precedes its exact bytes PCM payload.
+Open initially returns a logical queue reservation, with no DMA start. First
+Read activates the known exact handle. An unused reservation expires after5s
+of the original service clock; no physical resource is released by that expiry.
+Backend Open on the same full handle is idempotent. An unknown activation
+retains that handle for Query/Stop/Close, never blind replacement or replay.
+
+Read-step budgets use the existing checked Clock/DeadlineBudget owner:
+Poll attempts once, Finite retains its original absolute budget, Forever stays
+explicit. A cancelled/expired/changed-clock read performs no implicit Stop,
+Close or resource release. Each synchronous RPC has a bounded timeout under
+the remaining finite budget. Caller waits outside GUI/text/IRQ locks. A complete
+returned block is real progress; an uncertain read is not automatically replayed
+or claimed delivered. A later explicit read reports its true frame index/gap.
+
+Stop request is not hardware completion. Only the genuine input-provider ACK
+sets hardware-stopped; stopped queued PCM may drain to EOF. Close discards the
+remaining queue only after confirmed physical Stop/Close. Busy/error/unknown
+outcome retains exact descriptor, handle, backing and pins. An absent old
+registration is quiesced only because unregister/terminal cleanup removes it
+after the real shutdown ACK; registration epochs are never reused.
+
+The existing R4D module/record owner serializes callbacks and retirement under
+its wait-spanning output permit, without a Stream/Runtime/IRQ spinlock across
+foreign code. R4D owns DMA, pins, IRQ producer and hardware shutdown. AUDSVC
+owns copied client queues and policy. The kernel stores only necessary exact
+input leases in that same driver record, with a zero-live-lease fast path.
+Original process reaper stage9 retries exact capture Stop/Close before releasing
+its program reservation; driver shutdown failures likewise retain its module.
+Service stop and dead-client cleanup retain active queues until those ACKs.
+A copied service channel Disconnect closes no capture stream; no implicit Drop.
+
+Qualification
+--------------
+Controlled original-owner, language/ABI, guest transport and real ADC/physical
+hardware are separate evidence. The provider phase does not change an editor,
+recorder, media application, existing import/profile or playback behavior.

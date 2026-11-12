@@ -1,0 +1,18 @@
+[package]
+name = "r4os-sdk"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "Apache-2.0"
+description = "R4OS normal R4X startup and bounded console, hosted GUI and service helpers"
+build = false
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = []
+alloc = []
+
+[dependencies]
+r4os-contract = { version = "=0.1.0" }

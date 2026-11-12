@@ -1,0 +1,21 @@
+[package]
+name = "r4os-contract-interop"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+r4os-contract = { path = "../../Generated/SDK/Rust" }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+opt-level = 3
+panic = "abort"
+overflow-checks = true
+debug-assertions = true
+lto = false

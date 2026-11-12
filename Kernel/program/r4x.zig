@@ -62,7 +62,7 @@ const R4X_MODULE_LINK_BASE: u64 = 0x00000004_00000000;
 const R4X_SIGNED_LINK_BASE: u64 = 0xFFFF_FFFF_00000000;
 const R4M_SECTION_FLAG_EXEC: u32 = 0x00000002;
 const MAX_R4M_SECTIONS: usize = 16;
-const MAX_R4M_IMPORTS: usize = 16;
+const MAX_R4M_IMPORTS: usize = 32;
 const MAX_R4M_EXPORTS: usize = 16;
 const MAX_R4M_METADATA_PROBE: usize = 2048;
 const MAX_R4M_SYMBOL_PROBE: usize = 64;
@@ -491,6 +491,7 @@ const R4XStartImportSeed = struct {
     symbol_name_len: usize = 0,
 };
 
+const generation2 = @import("generation2.zig");
 const R4XStartContext = r4x_api.R4XStartContext;
 const R4XStartImport = r4x_api.R4XStartImport;
 const R4XStartR4Sys = r4x_api.R4XStartR4Sys;
@@ -506,6 +507,7 @@ const LoadedProgram = struct {
     memory_contract: ProgramMemoryContract = .{},
     imports: [MAX_R4M_IMPORTS]R4XStartImportSeed = .{R4XStartImportSeed{}} ** MAX_R4M_IMPORTS,
     import_count: u32 = 0,
+    start_generation: u8 = 1,
     loader_section_count: u32 = 0,
     loader_relocation_count: u32 = 0,
     /// Aufgeloester Startpfad aus ProgramFile.origin, siehe dort.
@@ -789,9 +791,14 @@ const ProgramPayloadHeader = struct {
     reserved: u16 = 0,
 };
 
+const StartContextStorage = extern union {
+    legacy: R4XStartContext,
+    current: generation2.abi.R4XStartContext2,
+};
 const ProgramRuntimePayload = struct {
     header: ProgramPayloadHeader = .{},
-    r4xstart_context: R4XStartContext = .{},
+    start_generation: u8 = 1,
+    start_context: StartContextStorage = .{ .legacy = .{} },
     r4xstart_imports: [MAX_R4M_IMPORTS]R4XStartImport = .{R4XStartImport{}} ** MAX_R4M_IMPORTS,
     r4xstart_import_count: u32 = 0,
     r4xstart_import_module_names: [MAX_R4M_IMPORTS][R4XSTART_IMPORT_NAME_BYTES]u8 = .{.{0} ** R4XSTART_IMPORT_NAME_BYTES} ** MAX_R4M_IMPORTS,
@@ -1164,7 +1171,11 @@ const PROGRAM_PAYLOAD_HEADER_BYTES: usize = 16;
 // Der Pfad IST Instanzzustand - ein Programm liest damit seine eigenen
 // eingebetteten Ressourcen, ohne den Installationsort zu raten. Bewusste
 // Budgeterhoehung, keine stille: pro laufender Instanz 132 Nutzbytes mehr.
-const PROGRAM_RUNTIME_PAYLOAD_MAX_BYTES: usize = 2112;
+// The original2112-byte cap plus exactly the16 additional complete import,
+// name and code-binding records. Start generations share one physical record;
+// no second context allocation or unexplained byte tolerance is admitted.
+const PROGRAM_RUNTIME_PAYLOAD_MAX_BYTES: usize = 2112 + (MAX_R4M_IMPORTS - 16) *
+    (@sizeOf(R4XStartImport) + 2 * R4XSTART_IMPORT_NAME_BYTES + @sizeOf(R4LCodeBinding));
 // 0.59.7 sized this at 448 bytes with a 128-byte CWD; the 0.60.19
 // Windows-parity path limits grow the per-instance CWD buffer to
 // drive.MAX_PATH (1024).  The payload stays a single heap allocation per
@@ -1188,7 +1199,7 @@ const PROGRAM_GUI_RESOURCE_NODE_MAX_BYTES: usize = @sizeOf(ProgramGuiResourcePay
 comptime {
     if (@sizeOf(ProgramInstance) > PROGRAM_INSTANCE_CORE_MAX_BYTES) @compileError("ProgramInstance core exceeds 256-byte 0.59.7 budget");
     if (@sizeOf(ProgramPayloadHeader) != PROGRAM_PAYLOAD_HEADER_BYTES) @compileError("ProgramPayloadHeader must stay exactly 16 bytes");
-    if (@sizeOf(ProgramRuntimePayload) > PROGRAM_RUNTIME_PAYLOAD_MAX_BYTES) @compileError("ProgramRuntimePayload exceeds 2112-byte 0.61.13 budget");
+    if (@sizeOf(ProgramRuntimePayload) > PROGRAM_RUNTIME_PAYLOAD_MAX_BYTES) @compileError("ProgramRuntimePayload exceeds original budget plus exact additional complete imports");
     if (@sizeOf(ProgramProcessPayload) > PROGRAM_PROCESS_PAYLOAD_MAX_BYTES) @compileError("ProgramProcessPayload exceeds the 0.59.7 budget (448 base + 0.60.19 CWD growth)");
     if (@sizeOf(ProgramEnvironmentPayload) > PROGRAM_ENVIRONMENT_PAYLOAD_MAX_BYTES) @compileError("ProgramEnvironmentPayload exceeds 2112-byte 0.59.7 budget");
     if (@sizeOf(ProgramConsolePayload) > PROGRAM_CONSOLE_PAYLOAD_MAX_BYTES) @compileError("ProgramConsolePayload exceeds the 8-KB 0.69.18 budget");
@@ -7170,6 +7181,7 @@ fn configureApiGroups() void {
     configureR4XStartR4NetTable();
     configureR4XStartR4AudioTable();
     configureR4XStartR4DevTable();
+    generation2.configure(r4xstart_r4sys_table, r4xstart_r4desk_table, r4xstart_r4draw_table, r4xstart_r4net_table, r4xstart_r4audio_table, r4xstart_r4dev_table);
 }
 
 fn configureR4XStartR4SysTable() void {
@@ -7890,10 +7902,7 @@ fn configureR4XStartR4DevTable() void {
         .boot_info_summary = &r4api.r4dev.bootInfoSummary,
         .boot_info_memory_count = &r4api.r4dev.bootInfoMemoryCount,
         .boot_info_memory_entry = &r4api.r4dev.bootInfoMemoryEntry,
-        .program_instance_storage_summary = null, // Retired prefix in this Recovery profile; slot remains.
         .program_instance_storage_self_test = &r4api.r4dev.programInstanceStorageSelfTest,
-        .program_registry_summary = null, // Retired prefix in this Recovery profile; slot remains.
-        .program_registry_self_test = null, // Retired prefix in this Recovery profile; slot remains.
         .program_registry_summary_v2 = &r4api.r4dev.programRegistrySummaryV2,
         .program_registry_self_test_v2 = &r4api.r4dev.programRegistrySelfTestV2,
         .execution_inventory_summary = &r4api.r4dev.executionInventorySummary,
@@ -8506,18 +8515,25 @@ fn rejectHeader(message: []const u8, verbose: bool) bool {
 
 const R4XExportContract = struct {
     has_start_v1: bool = false,
-    has_start_v2_or_newer: bool = false,
+    has_start_v2: bool = false,
+    start_section: u32 = 0,
+    start_offset: u32 = 0,
 
-    fn hasExactStartV1(self: R4XExportContract) bool {
-        return self.has_start_v1 and !self.has_start_v2_or_newer;
+    fn record(self: *R4XExportContract, name: []const u8, revision: u32, section: u32, offset: u32) bool {
+        if (!r4x_start.recordExport(&self.has_start_v1, &self.has_start_v2, name, revision)) return false;
+        if (stdMemEql(name, "R4XStart") or stdMemEql(name, "R4XStart2")) {
+            self.start_section = section;
+            self.start_offset = offset;
+        }
+        return true;
     }
 };
-
-fn readValidatedProgramMemoryContractFromReader(reader: *module_r4m.Reader, r4m: module_r4m.Header, app_class: AppClass, export_contract: R4XExportContract, verbose: bool) ?ProgramMemoryContract {
+const ParsedProgramContract = struct { memory: ProgramMemoryContract, generation: u8 };
+fn readValidatedProgramMemoryContractFromReader(reader: *module_r4m.Reader, r4m: module_r4m.Header, app_class: AppClass, export_contract: R4XExportContract, verbose: bool) ?ParsedProgramContract {
     var meta_buf: [MAX_R4M_METADATA_PROBE]u8 = .{0} ** MAX_R4M_METADATA_PROBE;
     const meta = reader.readMetadata(r4m, meta_buf[0..], "r4x-metadata-probe", verbose) orelse return null;
-    if (!r4x_start.accepts(meta, export_contract.hasExactStartV1(), r4m.export_count)) return null;
-    return resolveProgramMemoryContractMetadata(meta, app_class);
+    const selected = r4x_start.generation(meta, export_contract.has_start_v1, export_contract.has_start_v2, r4m.export_count) orelse return null;
+    return .{ .memory = resolveProgramMemoryContractMetadata(meta, app_class) orelse return null, .generation = selected };
 }
 
 fn readR4MProgramHeaderFromReader(reader: *module_r4m.Reader, name: []const u8, verbose: bool) ?module_r4m.Header {
@@ -8537,9 +8553,7 @@ fn scanR4XStartExports(reader: *module_r4m.Reader, header: module_r4m.Header, ve
         const exp = reader.readExportRecord(header, i, "r4x-export-table", verbose) orelse return null;
         var name_buf: [MAX_R4M_SYMBOL_PROBE]u8 = .{0} ** MAX_R4M_SYMBOL_PROBE;
         const name = reader.readZString(exp.name_offset, name_buf[0..], "r4x-export-name", verbose) orelse return null;
-        if (!stdMemEql(name, "R4XStart")) continue;
-        if (exp.version >= 1) contract.has_start_v1 = true;
-        if (exp.version >= 2) contract.has_start_v2_or_newer = true;
+        if (!contract.record(name, exp.version, exp.section, exp.offset)) return null;
     }
     return contract;
 }
@@ -8559,7 +8573,8 @@ fn loadR4MProgramImage(file: ProgramFile, owner_id: u32, app_class: AppClass, re
         k.puts("Invalid R4M0 exports\r\n");
         return null;
     }
-    const memory_contract = readValidatedProgramMemoryContractFromReader(reader, r4m, app_class, export_contract, true) orelse return null;
+    const parsed_contract = readValidatedProgramMemoryContractFromReader(reader, r4m, app_class, export_contract, true) orelse return null;
+    const memory_contract = parsed_contract.memory;
     var section_offsets: [MAX_R4M_SECTIONS]usize = .{0} ** MAX_R4M_SECTIONS;
     const image_size = layoutR4MSections(sections[0..section_count], section_offsets[0..]) orelse {
         k.puts("Invalid R4M0 image layout\r\n");
@@ -8579,7 +8594,7 @@ fn loadR4MProgramImage(file: ProgramFile, owner_id: u32, app_class: AppClass, re
     var resolved_imports: [MAX_R4M_IMPORTS]ResolvedR4MImport = .{ResolvedR4MImport{}} ** MAX_R4M_IMPORTS;
     var r4xstart_imports: [MAX_R4M_IMPORTS]R4XStartImportSeed = .{R4XStartImportSeed{}} ** MAX_R4M_IMPORTS;
     const import_count: usize = @intCast(r4m.import_count);
-    if (!resolveR4MImportsFromReader(reader, r4m, resolved_imports[0..], r4xstart_imports[0..])) {
+    if (!resolveR4MImportsFromReader(reader, r4m, resolved_imports[0..], r4xstart_imports[0..], parsed_contract.generation)) {
         _ = freeProgramImage(image);
         return null;
     }
@@ -8600,7 +8615,10 @@ fn loadR4MProgramImage(file: ProgramFile, owner_id: u32, app_class: AppClass, re
         return null;
     }
     const entry_section: usize = @intCast(entry_record.section);
-    if (entry_section >= section_count or !r4mSectionLoadable(sections[entry_section])) {
+    if (entry_section >= section_count or !r4mSectionLoadable(sections[entry_section]) or
+        (sections[entry_section].flags & R4M_SECTION_FLAG_EXEC) == 0 or
+        entry_record.section != export_contract.start_section or entry_record.offset != export_contract.start_offset)
+    {
         k.puts("Invalid R4M0 entry section\r\n");
         _ = freeProgramImage(image);
         return null;
@@ -8618,6 +8636,7 @@ fn loadR4MProgramImage(file: ProgramFile, owner_id: u32, app_class: AppClass, re
         .memory_contract = memory_contract,
         .imports = r4xstart_imports,
         .import_count = r4xstart_import_count,
+        .start_generation = parsed_contract.generation,
         .loader_section_count = r4m.section_count,
         .loader_relocation_count = r4m.reloc_count,
     };
@@ -8681,10 +8700,7 @@ fn validateR4MExportsFromReader(reader: *module_r4m.Reader, header: module_r4m.H
         const exp = reader.readExportRecord(header, i, "r4x-export-table", true) orelse return false;
         var name_buf: [MAX_R4M_NAME_PROBE]u8 = .{0} ** MAX_R4M_NAME_PROBE;
         const name = reader.readZString(exp.name_offset, name_buf[0..], "r4x-export-name", true) orelse return false;
-        if (stdMemEql(name, "R4XStart")) {
-            if (exp.version >= 1) contract.has_start_v1 = true;
-            if (exp.version >= 2) contract.has_start_v2_or_newer = true;
-        }
+        if (!contract.record(name, exp.version, exp.section, exp.offset)) return false;
         const section_index: usize = @intCast(exp.section);
         const section_offset = exp.offset;
         if (section_index >= sections.len) return false;
@@ -8900,8 +8916,9 @@ fn readR4MSectionsIntoImage(source: module_file.FileSource, sections: []const R4
     return true;
 }
 
-fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.Header, resolved_out: []ResolvedR4MImport, start_out: []R4XStartImportSeed) bool {
+fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.Header, resolved_out: []ResolvedR4MImport, start_out: []R4XStartImportSeed, selected_generation: u8) bool {
     if (header.import_count > resolved_out.len or header.import_count > start_out.len) return false;
+    var groups: u32 = 0;
     var i: usize = 0;
     while (i < header.import_count) : (i += 1) {
         var module_buf: [MAX_R4M_NAME_PROBE]u8 = .{0} ** MAX_R4M_NAME_PROBE;
@@ -8915,7 +8932,20 @@ fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.He
             .min_version = record.min_version,
             .flags = record.flags,
         };
+        const is_query = stdMemEql(import.symbol, "Query") or stdMemEql(import.symbol, "Query2");
+        const platform = modules.platformApiGroupId(import.module);
+        if (!r4x_start.importAllowed(selected_generation, platform != null, import.symbol, import.min_version, import.flags)) return false;
         const resolved = modules.resolveExportInfo(import.module, import.symbol, import.min_version) orelse {
+            // Missing optional independent R4Ls retain their complete ordered
+            // identity with an explicit zero table; never shorten the context.
+            if (import.flags & 1 != 0) {
+                var absent: R4XStartImportSeed = .{ .min_version = import.min_version };
+                if (!copyR4XStartName(import.module, &absent.module_name, &absent.module_name_len) or
+                    !copyR4XStartName(import.symbol, &absent.symbol_name, &absent.symbol_name_len)) return false;
+                resolved_out[i] = .{};
+                start_out[i] = absent;
+                continue;
+            }
             k.puts("Unresolved R4M0 import ");
             k.puts(import.module);
             k.puts(":");
@@ -8927,8 +8957,14 @@ fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.He
         // Gruppen-IDs gehoeren ausschliesslich zu den sechs fest eingebauten
         // Plattform-APIs. Jeder Runtime-R4L-Export wird als benanntes
         // Interface mit group_id=0 transportiert.
-        const platform_group_id = if (stdMemEql(import.symbol, "Query")) modules.platformApiGroupId(import.module) else null;
-        const group_id = platform_group_id orelse 0;
+        const expected_query = if (selected_generation == 2) "Query2" else "Query";
+        if ((platform != null or is_query) and (!stdMemEql(import.symbol, expected_query) or import.min_version != selected_generation or resolved.version != selected_generation)) return false;
+        const group_id = if (is_query) platform orelse 0 else 0;
+        if (group_id != 0) {
+            const bit = @as(u32, 1) << @as(u5, @intCast(group_id - 1));
+            if ((groups & bit) != 0) return false;
+            groups |= bit;
+        }
         var seed = R4XStartImportSeed{
             .group_id = group_id,
             .min_version = import.min_version,
@@ -8941,13 +8977,14 @@ fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.He
         };
         if (!copyR4XStartName(import.module, seed.module_name[0..], &seed.module_name_len)) return false;
         if (!copyR4XStartName(import.symbol, seed.symbol_name[0..], &seed.symbol_name_len)) return false;
-        if (stdMemEql(import.symbol, "Query")) {
-            if (r4xstartGroupInterface(group_id)) |table| {
+        if (is_query) {
+            const interface = if (selected_generation == 2) generation2.group(group_id) else r4xstartGroupInterface(group_id);
+            if (interface) |table| {
                 seed.flags |= R4XSTART_IMPORT_FLAG_GROUP_INTERFACE;
                 seed.table = table;
             }
         }
-        if (group_id == 0 and !stdMemEql(import.symbol, "Query")) {
+        if (group_id == 0 and !is_query) {
             k.puts("[R4X] named import module=");
             k.puts(import.module);
             k.puts(" symbol=");
@@ -8962,7 +8999,7 @@ fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.He
         }
         start_out[i] = seed;
     }
-    return true;
+    return selected_generation == 1 or (groups & 1) != 0;
 }
 
 fn r4xstartGroupInterface(group_id: u32) ?u64 {
@@ -10375,7 +10412,9 @@ fn callInstanceEntry(run: *ProgramInstance) i32 {
         logSubsystemTracePhase(trace, "r4xstart", traceNowNanoseconds());
     }
     program_entries_started +%= 1;
-    const exit_code = r4os_call_program(entry, @intFromPtr(&runtimePayload(run).r4xstart_context), run.stack_top);
+    const runtime = runtimePayload(run);
+    const context_address = if (runtime.start_generation == 2) @intFromPtr(&runtime.start_context.current) else @intFromPtr(&runtime.start_context.legacy);
+    const exit_code = r4os_call_program(entry, context_address, run.stack_top);
     if (stackFromInstance(run)) |initial_stack| {
         var measured_stack = initial_stack;
         measureProgramStackHighWater(&measured_stack);
@@ -17114,6 +17153,7 @@ fn createInstance(
             @memcpy(runtime.module_path[0..n], module_origin[0..n]);
             runtime.module_path_len = @intCast(n);
         }
+        runtimePayload(instance).start_generation = loaded.start_generation;
         copyR4XStartImportsInto(instance, loaded.imports[0..@intCast(loaded.import_count)]);
         prepareR4XStartContext(instance);
         return instance;
@@ -17172,7 +17212,21 @@ fn prepareR4XStartContext(instance: *ProgramInstance) void {
     var flags: u32 = R4XSTART_FLAG_CLOSE_SUPPORTED | R4XSTART_FLAG_YIELD_SUPPORTED;
     if (runtime.r4xstart_import_count > 0) flags |= R4XSTART_FLAG_IMPORTS_VALID;
     const arg_len = cStringLen(process.args[0..]);
-    runtime.r4xstart_context = .{
+    if (runtime.start_generation == 2) {
+        runtime.start_context.current = .{
+            .flags = flags,
+            .instance_id = instance.id,
+            .app_class = r4xstartAppClass(instance.app_class),
+            .args = @intFromPtr(&process.args),
+            .args_len = arg_len,
+            .imports = if (runtime.r4xstart_import_count > 0) @intFromPtr(&runtime.r4xstart_imports) else 0,
+            .import_count = runtime.r4xstart_import_count,
+            .should_close = @intFromPtr(&r4xstartShouldClose2),
+            .yield = @intFromPtr(&r4xstartYield2),
+        };
+        return;
+    }
+    runtime.start_context.legacy = .{
         .magic = R4XSTART_MAGIC,
         .abi_major = R4XSTART_ABI_MAJOR,
         .abi_minor = R4XSTART_ABI_MINOR,
@@ -17213,6 +17267,15 @@ fn cStringLen(bytes: []const u8) u64 {
     return @intCast(len);
 }
 
+fn r4xstartShouldClose2(ctx: *const generation2.abi.R4XStartContext2) callconv(.c) u32 {
+    _ = ctx;
+    const instance = currentInstance() orelse return 1;
+    return if (instance.close_requested) 1 else 0;
+}
+fn r4xstartYield2(ctx: *const generation2.abi.R4XStartContext2) callconv(.c) void {
+    _ = ctx;
+    scheduler.yield();
+}
 fn r4xstartShouldClose(ctx: *const R4XStartContext) callconv(.c) u32 {
     _ = ctx;
     const instance = currentInstance() orelse return 1;

@@ -12,6 +12,7 @@ const std = @import("std");
 const ntfs = @import("ntfs_format");
 const vol = @import("ntfs_volume");
 const mkfs = @import("ntfs_mkfs");
+pub const ntfs_work_counters = true;
 
 const CLUSTER: usize = 4096;
 
@@ -22,9 +23,16 @@ const RamDevice = struct {
     flushes: u32 = 0,
     write_attempts: u64 = 0,
     fail_write_at: ?u64 = null,
+    reads: u64 = 0,
+    read_bytes: u64 = 0,
+    write_bytes: u64 = 0,
+    maximum_sectors: u32 = 0,
 
     fn read(ctx: *anyopaque, lba: u64, count: u32, out: []u8) bool {
         const self: *RamDevice = @ptrCast(@alignCast(ctx));
+        self.reads += 1;
+        self.read_bytes += @as(u64, count) * 512;
+        self.maximum_sectors = @max(self.maximum_sectors, count);
         const start: usize = @intCast(lba * 512);
         const len: usize = @intCast(@as(u64, count) * 512);
         if (start + len > self.image.len or out.len < len) return false;
@@ -35,6 +43,8 @@ const RamDevice = struct {
     fn write(ctx: *anyopaque, lba: u64, count: u32, data: []const u8) bool {
         const self: *RamDevice = @ptrCast(@alignCast(ctx));
         self.write_attempts += 1;
+        self.write_bytes += @as(u64, count) * 512;
+        self.maximum_sectors = @max(self.maximum_sectors, count);
         if (self.fail_write_at == self.write_attempts) {
             self.fail_write_at = null;
             return false;
@@ -58,7 +68,7 @@ const RamDevice = struct {
     }
 
     fn device(self: *RamDevice) vol.Device {
-        return .{ .ctx = self, .read_sectors = read, .write_sectors = write, .flush = flush };
+        return .{ .ctx = self, .read_sectors = read, .write_sectors = write, .flush = flush, .max_transfer_sectors = 0 };
     }
 };
 
@@ -181,6 +191,10 @@ pub fn main(init: std.process.Init) !void {
     var meta_dir = try cwd.openDir(io, args[1], .{});
     defer meta_dir.close(io);
     const meta = try loadMeta(allocator, io, meta_dir);
+    if (out_path) |arg| if (std.mem.eql(u8, arg, "--work-count")) {
+        try workCount(allocator, meta);
+        return;
+    };
 
     // --- Functional tests ---------------------------------------------------
     {
@@ -275,6 +289,9 @@ pub fn main(init: std.process.Init) !void {
             return finish();
         };
         vol.flush_budget = null;
+        if (vol.createFile(&v, ntfs.MFT_RECORD_ROOT, "MOVE.BIN", "metadata only") != .ok) {
+            fail("full-volume rename setup failed", .{});
+        }
         const initial_free = vol.freeClusterCount(&v) orelse {
             fail("transaction free-cluster baseline unavailable", .{});
             return finish();
@@ -288,6 +305,9 @@ pub fn main(init: std.process.Init) !void {
         if (all.status != .ok) {
             fail("transaction full allocation failed: {s}", .{@tagName(all.status)});
         } else {
+            if (vol.renameEntry(&v, ntfs.MFT_RECORD_ROOT, "MOVE.BIN", ntfs.MFT_RECORD_ROOT, "MOVED.BIN") != .ok or
+                !readAndCheck(&v, ntfs.MFT_RECORD_ROOT, "MOVED.BIN", "metadata only"))
+                fail("metadata rename on full volume failed", .{});
             var long_run: ?ntfs.Run = null;
             for (all_runs[0..all.produced]) |run| {
                 if (run.lcn != null and run.length_clusters >= 7) {
@@ -313,7 +333,22 @@ pub fn main(init: std.process.Init) !void {
                     if (rejected.status != .record_full or rejected.produced != 0 or before != 4 or after != before) {
                         fail("transaction run-capacity rollback mismatch status={s} before={d} after={d}", .{ @tagName(rejected.status), before, after });
                     }
+                    // A stale high hint must wrap and still find earlier holes.
+                    scratch.cluster_search_start = v.totalClusters() - 1;
+                    var wrapped_runs: [4]ntfs.Run = undefined;
+                    const wrapped = vol.allocateClustersForTest(&v, 4, &wrapped_runs);
+                    if (wrapped.status != .ok or (vol.freeClusterCount(&v) orelse 1) != 0)
+                        fail("cluster hint wrap lost earlier holes", .{});
                 }
+                // A hint through the middle of one free extent must not
+                // require two run slots or claim that the volume is full.
+                const contiguous = [_]ntfs.Run{.{ .lcn = base, .length_clusters = 7 }};
+                if (!vol.freeClustersForTest(&v, &contiguous)) fail("hint boundary setup", .{});
+                scratch.cluster_search_start = base + 3;
+                var single: [1]ntfs.Run = undefined;
+                const joined = vol.allocateClustersForTest(&v, 7, &single);
+                if (joined.status != .ok or joined.produced != 1 or single[0].lcn != base or single[0].length_clusters != 7)
+                    fail("hint boundary fragmented a contiguous allocation", .{});
             } else {
                 fail("transaction fixture has no long free run", .{});
             }
@@ -419,4 +454,65 @@ fn finish() void {
         std.process.exit(1);
     }
     std.debug.print("NTFSWRITE result: OK\n", .{});
+}
+
+fn workCount(allocator: std.mem.Allocator, meta: mkfs.Meta) !void {
+    const image = try formatFresh(allocator, meta);
+    var dev = RamDevice{ .image = image };
+    var v = openVolume(&dev) orelse return error.Mount;
+    const root = ntfs.MFT_RECORD_ROOT;
+    dev = .{ .image = image };
+    scratch.work = .{};
+    for (0..128) |i| {
+        var name: [32]u8 = undefined;
+        const path = try std.fmt.bufPrint(&name, "COUNT{d:0>3}.BIN", .{i});
+        if (vol.createFile(&v, root, path, "x") != .ok) return error.Create;
+    }
+    reportWork("create-128", &dev);
+    const data = try allocator.alloc(u8, 1024 * 1024);
+    patternFill(78, data);
+    if (vol.createFile(&v, root, "BULK.BIN", data) != .ok) return error.CreateBulk;
+    const entry = vol.lookupInDirectory(&v, root, "BULK.BIN") orelse return error.Lookup;
+    const output = try allocator.alloc(u8, data.len);
+    dev = .{ .image = image };
+    scratch.work = .{};
+    const read = vol.readFileRange(&v, entry.record, 0, output) orelse return error.Read;
+    if (read != data.len or !std.mem.eql(u8, data, output)) return error.Content;
+    reportWork("read-1mb", &dev);
+    dev = .{ .image = image };
+    scratch.work = .{};
+    if (vol.writeFileAt(&v, entry.record, 0, data) != .ok) return error.Write;
+    reportWork("write-1mb", &dev);
+    dev = .{ .image = image };
+    scratch.work = .{};
+    if (vol.renameEntry(&v, root, "BULK.BIN", root, "RENAMED.BIN") != .ok) return error.Rename;
+    const renamed = vol.lookupInDirectory(&v, root, "RENAMED.BIN") orelse return error.Lookup;
+    if (renamed.record != entry.record or renamed.sequence != entry.sequence) return error.Identity;
+    reportWork("rename-1mb", &dev);
+    if (renamed.entry.size != entry.entry.size or renamed.entry.created_time_nt != entry.entry.created_time_nt)
+        return error.Metadata;
+    // Reuse an earlier MFT slot, despite a deliberately stale high hint.
+    const old = vol.lookupInDirectory(&v, root, "COUNT001.BIN") orelse return error.Lookup;
+    if (vol.deleteFile(&v, root, "COUNT001.BIN") != .ok) return error.Delete;
+    const mft = vol.collectAttributeForTest(&v, ntfs.MFT_RECORD_MFT) orelse return error.Mft;
+    const record_limit = mft.data_size / v.record_bytes;
+    scratch.record_search_start = record_limit - 1;
+    // Occupy every remaining formatted slot before forcing wrap.
+    for (128..256) |i| {
+        var name: [32]u8 = undefined;
+        const path = try std.fmt.bufPrint(&name, "COUNT{d:0>3}.BIN", .{i});
+        if (vol.createFile(&v, root, path, "x") != .ok) return error.Create;
+        const made = vol.lookupInDirectory(&v, root, path) orelse return error.Lookup;
+        if (made.record == old.record) return; // earlier slot was found before MFT growth
+        if (made.record >= record_limit) return error.MissedRecordHole;
+    }
+    return error.MissedRecordHole;
+}
+
+fn reportWork(name: []const u8, dev: *const RamDevice) void {
+    std.debug.print("NTFSWORK case={s} cluster_probes={d} record_probes={d} zero_bytes={d} reads={d} read_bytes={d} writes={d} write_bytes={d} max_sectors={d}\n", .{
+        name,                scratch.work.cluster_bitmap_probes, scratch.work.record_bitmap_probes, scratch.work.read_zero_bytes,
+        dev.reads,           dev.read_bytes,                     dev.write_attempts,                dev.write_bytes,
+        dev.maximum_sectors,
+    });
 }

@@ -1,0 +1,367 @@
+{
+  "schema_version": 1,
+  "module_name": "L66R",
+  "zig_client": "R4L66",
+  "c_prefix": "l66r",
+  "c_header": "l66r.h",
+  "description": "Own synthetic genuine Rust R4L implementation; uses explicit caller memory/callbacks.",
+  "interfaces": [
+    {
+      "export_name": "API_V1",
+      "symbol": "l66r_api_v1",
+      "zig_name": "api_v1",
+      "zig_type": "ApiV1",
+      "c_type": "R4L66ApiV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 1278621233,
+      "interface_id_hi": 1396984630,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "open",
+          "c_name": "l66r_open",
+          "symbol": "l66r_open_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4L66State",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "owner",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "generation",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "allocate",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "release",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "notify",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "reentrant",
+            "error_domain": "provider status:0 success,-1 invalid,-2 busy,-3 stale/callback,-4 allocation/release",
+            "ownership": "caller_session"
+          },
+          "description": "Caller serializes work. Callback close returns Busy while work owns the session. Failed release retains the exact active allocation."
+        },
+        {
+          "name": "work",
+          "c_name": "l66r_work",
+          "symbol": "l66r_work_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4L66State",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "generation",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "value",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "reentrant",
+            "error_domain": "provider status:0 success,-1 invalid,-2 busy,-3 stale/callback,-4 allocation/release",
+            "ownership": "caller_session"
+          },
+          "description": "Caller serializes work. Callback close returns Busy while work owns the session. Failed release retains the exact active allocation."
+        },
+        {
+          "name": "close",
+          "c_name": "l66r_close",
+          "symbol": "l66r_close_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4L66State",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            },
+            {
+              "name": "generation",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact caller-owned state/buffer; callbacks use declared caller context and remain resident through close."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "reentrant",
+            "error_domain": "provider status:0 success,-1 invalid,-2 busy,-3 stale/callback,-4 allocation/release",
+            "ownership": "caller_session"
+          },
+          "description": "Caller serializes work. Callback close returns Busy while work owns the session. Failed release retains the exact active allocation."
+        }
+      ],
+      "description": "Same interface in both language implementations; normal exact module identity remains distinct."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4L66State",
+      "size": 72,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "owner",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "operations",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "allocation",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "allocate",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "release",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "notify",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "active",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        },
+        {
+          "name": "in_callback",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned session field; no mutation during an admitted callback except through declared API."
+        }
+      ],
+      "description": "Caller-owned state, exact generation, owned allocation and resident callbacks. No library-global caller state."
+    }
+  ],
+  "constants": [],
+  "errors": [],
+  "ownership_rules": [
+    {
+      "name": "caller_session",
+      "text": "Caller allocates state and supplies its own allocator/release/notify callbacks and owner context. Exact nonzero generation, callback addresses and state stay resident through real close. Library retains no caller-global state or R4X-global heap; failed release keeps admission/resource ownership. No Rust mutable reference crosses callbacks."
+    }
+  ]
+}

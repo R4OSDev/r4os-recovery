@@ -1,0 +1,99 @@
+﻿Additional bounded text composition
+===================================
+
+This is a new SDK editor-owner and copied WINSVC observation protocol. It
+installs no languageIME, candidate database/UI or application integration.
+R4STD's pinned extended-grapheme owner remains the sole segmentation source.
+Old Key, GuiEvent, DesktopFocusSnapshot, Start and Query records keep their
+exact meaning and layout. The canonical new wire records/status/limits are
+in API/ApiContract.json; the shared SDK state is private, never a wire payload.
+
+CompositionId binds the full original window/service/desktop/owner identity,
+view generation, separate focus incarnation, caller editor-owner generation,
+nonwrapping session generation and full inputmethod process/provider epoch.
+The caller supplies a nonzero never-reused editor-owner generation within
+that full window lifetime. Reinitializing replacement state needs a NEW
+owner generation; copying state is not a new owning session. SDK allocations
+of session IDs never wrap. No copied handle or record retains a resource.
+
+The session owner is one editor thread. It copies bounded preedit text into
+its own state; no document, provider, event or caller pointer survives return.
+A preedit view borrows only initialized state bytes until its next mutation.
+C and Rust use the same original Zig SDK owner through the typed shared
+runtime object; Rust excludes safe Send/Sync and ties views to its borrow.
+New C runtime entries pass records through borrowed const pointers, copy
+them before transition and retain no pointer. Mutable state/document/output
+loans must be disjoint from metadata. Layout equality alone does not prove
+argument passing; the executed C ABI regression exercises the real runtime
+under mixed-size record/register pressure. Existing value APIs are unchanged.
+It does no I/O, allocation, wait, callback or implicit Drop. C/Zig callers
+must serialize transitions and honor the documented mapped/disjoint loans.
+
+Begin validates complete strict UTF8/noNUL document bytes, whole grapheme
+replacement boundaries, copied current focused view/provider and caret.
+Initial whole document bound is65536bytes (64KB); complete event/preedit/
+Commit/surrounding text is at most1024bytes and the provider's smaller bound.
+Larger inputs report Capacity, without an accepted/truncated text prefix.
+All ranges are half-open UTF8 BYTE offsets in the named document or event
+text; they must lie at whole pinned extended-grapheme boundaries. Scalar
+boundaries alone are insufficient, including combining/ZWJ sequences.
+No UTF16/NSRange conversion, normalization, shaping, bidi, language or glyph
+availability follows from composition support.
+
+Events have copied fixed header plus complete bounded UTF8 payload: Preedit1,
+Commit2, Cancel3. Each needs the exact current Id, positive strictly increasing
+sequence and expected original-owner text revision. Selection is in event
+text, replacement is in the original document. A foreign/old event is rejected
+BEFORE its supplied scope can invalidate an unrelated newer session. Cancel
+contains no text or ranges. Preedit changes only local temporary state.
+
+Only a valid synchronous Commit, executed by the original editor owner,
+replaces complete document bytes and increments that exact text revision.
+Event/text are staged before writes. Invalid encoding/range/capacity/identity
+or exhausted revision never partially changes document, length or revision.
+Scope loss invalidates the old local session without changing document.
+Caller text changes must advance its nonwrapping revision and Refresh/Cancel
+before later events. This protocol detects revision identity, not unreported
+writes or content hashes. Empty Commit may delete a selected whole range.
+
+Current focus/provider acquisition is a separate operation OUTSIDE GUI/text
+locks. Apply/Refresh/Cancel then operate purely at the editor event boundary.
+The actual local owner must cancel on focus loss, view end/replacement or
+provider loss BEFORE processing later events, including focus loss/regain.
+No wait on an inputservice occurs under editor/GUI locks. Stale view/focus,
+provider or text revision cancels only the exact old local session; replayed
+or superseded events cannot change a replacement session's document.
+
+WINSVC operations4920/4921 use original service transport: empty capability
+request -> CompositionCapabilityReply; exact WindowModeIdentity request ->
+CompositionFocusReply. Their explicit result is separate from service-call
+success. Current WINSVC has NO qualified inputmethod: result NoProvider,
+feature0 and zero provider identity/epoch. A keyboard, successful endpoint
+or controlled test fixture never enables an installed languageIME capability.
+An optional old/missing operation reports Unsupported; transport failure
+stays an explicit failure, never an empty successful capability.
+
+The original WINSVC window/focus broker derives one acknowledged composition
+focus from its admitted Desktop publications. A separate nonwrapping focus
+epoch changes on focus/window/view incarnation changes, not ordinary input
+revision advances. A newly acknowledged focused window invalidates the old
+one before its delayed unfocused publication. Older global Desktop input
+revisions cannot restore a superseded focus. A saturated old input-ordering
+revision refuses new composition focus authority; full service/Desktop/owner and
+window serial prevent reuse. Invalid publication, view end, unknown/expired
+acknowledgement or exhausted identity is NoFocus/StaleView, never focus success.
+An acknowledged observation is NOT a future focus lease or proof of an
+unpublished physical transition. Freshness remains the original clock/tick
+contract, and the actual editor's local loss/cancel rule remains mandatory.
+
+Caret is a copied rectangle in logical view pixels with explicit positive
+rational physical-pixel scale, bound to current exact session/view/revision.
+Query does not call an inputservice or promise a future render. Explicit
+surrounding reads copy only a requested complete bounded grapheme range;
+their output is disjoint from document and never edits source/revision.
+There is no implicit whole-document publication or retained foreign pointer.
+
+Controlled positive SDK owner probes qualify Preedit/Commit/Cancel semantics;
+real WINSVC focus/availability transport and active languageIME/hardware are
+separate qualifications. Existing editors, Desktop, browser and applications
+remain on their old APIs; consumer migration is outside this provider phase.

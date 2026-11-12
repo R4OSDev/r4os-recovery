@@ -9,7 +9,7 @@
 //! gebaut werden.
 //!
 //! Die Struktur Cursor ist die ABI-Seite des Protokolls und muss zu
-//! Code/System/Protocols/Json/src/json_core.zig passen. Der Conformance-Test
+//! Repositories/Protocols/JSON/src/json_core.zig passen. Der Conformance-Test
 //! unter Tests/Conformance haelt beide Seiten aneinander.
 
 const std = @import("std");
@@ -176,7 +176,8 @@ pub const Document = struct {
         if (bytes.len == 0) return Error.BadDocument;
         for (bytes) |ch| {
             if (ch < '0' or ch > '9') return Error.BadDocument;
-            result = result * 10 + (ch - '0');
+            result = std.math.mul(u64, result, 10) catch return Error.BadDocument;
+            result = std.math.add(u64, result, ch - '0') catch return Error.BadDocument;
         }
         return result;
     }
@@ -236,7 +237,7 @@ pub const Document = struct {
 // Das Layout gegen den Protokollkern zu halten waere hier ein Test gegen
 // selbstgeschriebene Zahlen. Er steht deshalb als Conformance-Test bei dem
 // Modul, das beide Seiten importieren kann:
-// Code/System/Protocols/Json/Tests/Conformance/CheckJsonAbi.zig
+// Repositories/Protocols/JSON/Tests/Conformance/CheckJsonAbi.zig
 
 test "protocol status codes map onto named errors" {
     try std.testing.expectError(Error.NotFound, statusToError(-7));

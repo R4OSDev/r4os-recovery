@@ -1902,6 +1902,11 @@ pub const DirectoryCursor = extern struct {
 pub const DirectoryNextStatus = enum { found, not_found, again, io };
 
 pub fn nextDirectoryEntry(volume: Volume, start: u32, cursor: *DirectoryCursor, out: *Entry) DirectoryNextStatus {
+    var remaining: u32 = 256;
+    return nextDirectoryEntryBudget(volume, start, cursor, out, &remaining);
+}
+
+pub fn nextDirectoryEntryBudget(volume: Volume, start: u32, cursor: *DirectoryCursor, out: *Entry, remaining: *u32) DirectoryNextStatus {
     if (cursor.state > 2 or cursor.lfn_active > 1 or cursor.lfn_len > NAME_UNITS_MAX or
         cursor.lfn_total > MAX_LFN_ENTRIES or cursor.lfn_expected > cursor.lfn_total) return .io;
     if (cursor.state == 2) return .not_found;
@@ -1924,9 +1929,8 @@ pub fn nextDirectoryEntry(volume: Volume, start: u32, cursor: *DirectoryCursor, 
         cursor.lfn_expected = lfn.expected;
         cursor.lfn_checksum = lfn.checksum;
     }
-    var examined: u32 = 0;
     var sector: [SECTOR_SIZE]u8 = undefined;
-    while (examined < 256) {
+    while (remaining.* != 0) {
         if (cursor.offset == cluster_bytes and cluster_bytes != 0) {
             cursor.cluster = cursor.successor;
             cursor.offset = 0;
@@ -1947,8 +1951,8 @@ pub fn nextDirectoryEntry(volume: Volume, start: u32, cursor: *DirectoryCursor, 
         const lba = volume.clusterLba(cursor.cluster) + cursor.offset / SECTOR_SIZE;
         if (!readSector(volume.device_index, lba, 1, &sector)) return .io;
         var off: usize = cursor.offset % SECTOR_SIZE;
-        while (off < SECTOR_SIZE and examined < 256) : (off += 32) {
-            examined += 1;
+        while (off < SECTOR_SIZE and remaining.* != 0) : (off += 32) {
+            remaining.* -= 1;
             stats.dir_entries_scanned +%= 1;
             cursor.offset += 32;
             const raw = sector[off..][0..32];

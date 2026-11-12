@@ -1,12 +1,14 @@
 // Shared, allocation-free SYSUPD journal and terminal-recovery core.
 //
-// This module deliberately imports only `std`.  The R4X updater and the
+// This module uses only std and the shared, allocation-free path policy.
+// The R4X updater and the
 // pre-runtime kernel recovery seam compile it for different execution
 // environments and provide thin I/O adapters.  Durable format parsing,
 // validation, slot ordering, rollback and cleanup policy must never diverge
 // between those two consumers.
 
 const std = @import("std");
+const update_paths = @import("system_update_paths.zig");
 
 pub const journal_max: usize = 192 * 1024;
 pub const max_package_payloads: usize = 32;
@@ -571,16 +573,46 @@ pub fn parseJournalInto(data: []const u8, slot: u8, journal: *TransactionJournal
     return journalValid(journal);
 }
 
-/// Replays an interrupted transaction back to its pre-update state.  `io`
-/// supplies these methods:
-///
-///   rollbackPayload(entry) MutationStatus
-///   persist(journal) bool
-///
-/// rollbackPayload is a purpose-specific kernel primitive: it validates the
-/// complete T/S/B fingerprint and filesystem-identity state and performs the
-/// ownership transition under one filesystem-request gate.  The shared
-/// engine never authorizes a by-name mutation.
+/// Checks whether the latest completed set still has an exact pre-update
+/// restore path. This is a read-only preflight; boot recovery revalidates
+/// filesystem identity when it performs each checked rollback mutation.
+pub fn checkLastGood(io: anytype, journal: *const TransactionJournal) ReplayStatus {
+    if (!journalValid(journal) or (journal.phase != .post_boot and journal.phase != .applied and journal.phase != .cleanup)) return .invalid;
+    var changed = false;
+    for (journal.payloads[0..journal.payload_count]) |*entry| {
+        if (!entry.committed or entry.rolled_back) return .invalid;
+        switch (io.pathState(entry.targetText(), entry.size, entry.checksum)) {
+            .match => {},
+            .io => return .io,
+            else => return .conflict,
+        }
+        if (!entry.replace_required) continue;
+        changed = true;
+        if (entry.target_existed and !entry.old_known) return .invalid;
+        switch (io.presence(entry.stageText())) {
+            .not_found => {},
+            .io => return .io,
+            else => return .conflict,
+        }
+        if (entry.target_existed) {
+            switch (io.pathState(entry.backupText(), entry.old_size, entry.old_checksum)) {
+                .match => {},
+                .io => return .io,
+                else => return .conflict,
+            }
+        } else switch (io.presence(entry.backupText())) {
+            .not_found => {},
+            .io => return .io,
+            else => return .conflict,
+        }
+    }
+    return if (changed) .ok else .invalid;
+}
+
+/// Replays an interrupted transaction back to its pre-update state. `io`
+/// supplies rollbackPayload(entry) MutationStatus and persist(journal) bool.
+/// The kernel primitive validates the complete target/stage/backup identity
+/// under one filesystem gate; the shared engine never mutates by name alone.
 pub fn rollbackToTerminal(io: anytype, journal: *TransactionJournal) ReplayStatus {
     if (!journalValid(journal) or
         journal.phase == .applied or
@@ -1091,6 +1123,8 @@ fn parsePhase(value: []const u8) ?JournalPhase {
 /// structural sanity check - it can only ever report FEWER collisions than
 /// the backend, never more - so non-ASCII targets are installable again.
 fn validTarget(path: []const u8) bool {
+    if (update_paths.applicationTarget(path)) return true;
+    if (update_paths.companionKind(path) != null) return true;
     if (pathEqualsIgnoreCase(path, "\\boot\\r4os.elf")) return true;
     if (pathEqualsIgnoreCase(path, "C:\\CONFIG.R4S")) return true;
     if (startsWithIgnoreCase(path, "C:\\R4OS\\LIBS\\") and endsWithIgnoreCase(path, ".R4L")) return true;
@@ -1238,13 +1272,19 @@ fn componentFieldsKnown(line: []const u8) bool {
     return true;
 }
 
+fn foreignComponentTarget(value: []const u8) bool {
+    return value.len >= 4 and std.ascii.isAlphabetic(value[0]) and
+        std.ascii.toUpper(value[0]) != 'C' and value[1] == ':' and value[2] == '/';
+}
+
 fn componentValid(component: *const JournalComponent) bool {
     if (!componentTokenValid(component.nameText()) or
         !versionTextValid(component.versionText()) or
         component.target_len == 0 or component.target_len >= max_path or
-        component.targetText()[0] != '/') return false;
+        !(component.targetText()[0] == '/' or foreignComponentTarget(component.targetText()))) return false;
+    if (!std.unicode.utf8ValidateSlice(component.targetText())) return false;
     for (component.targetText()) |byte| {
-        if (byte < 0x20 or byte >= 0x7f or byte == ';' or byte == '=' or byte == '|' or byte == '\\') return false;
+        if (byte < 0x20 or byte == 0x7f or byte == ';' or byte == '=' or byte == '|' or byte == '\\') return false;
     }
     return switch (component.kind) {
         .kernel => equalsIgnoreCase(component.nameText(), "KERNEL") and pathEqualsIgnoreCase(component.targetText(), "/boot/r4os.elf"),
@@ -1573,6 +1613,9 @@ test "restart batch recovery commits every bound payload before post boot" {
         rollback_count: usize = 0,
         fail_persist: usize = 0,
         persist_count: usize = 0,
+        reads: usize = 0,
+        fail_read: usize = 0,
+        stage_present: bool = false,
 
         pub fn persist(self: *@This(), _: *TransactionJournal) bool {
             self.persist_count += 1;
@@ -1589,8 +1632,12 @@ test "restart batch recovery commits every bound payload before post boot" {
             return .ok;
         }
 
-        pub fn pathState(_: *@This(), _: []const u8, _: u64, _: u32) PathState {
-            return .match;
+        pub fn pathState(self: *@This(), _: []const u8, _: u64, _: u32) PathState {
+            self.reads += 1;
+            return if (self.reads == self.fail_read) .other else .match;
+        }
+        pub fn presence(self: *@This(), _: []const u8) PresenceState {
+            return if (self.stage_present) .file else .not_found;
         }
     };
     var io: MockIo = .{};
@@ -1599,6 +1646,23 @@ test "restart batch recovery commits every bound payload before post boot" {
     try testing.expectEqual(@as(u32, 1), journal.committed_count);
     try testing.expectEqual(@as(usize, 1), io.commit_count);
     try testing.expect(io.persist_count >= 3);
+    const persisted = io.persist_count;
+    try testing.expectEqual(ReplayStatus.ok, checkLastGood(&io, &journal));
+    journal.phase = .cleanup;
+    try testing.expectEqual(ReplayStatus.ok, checkLastGood(&io, &journal));
+    for ([_]usize{ 1, 2 }) |fault| {
+        io.reads = 0;
+        io.fail_read = fault;
+        try testing.expectEqual(ReplayStatus.conflict, checkLastGood(&io, &journal));
+        try testing.expectEqual(JournalPhase.cleanup, journal.phase);
+    }
+    io.fail_read = 0;
+    io.stage_present = true;
+    try testing.expectEqual(ReplayStatus.conflict, checkLastGood(&io, &journal));
+    io.stage_present = false;
+    journal.payloads[0].old_known = false;
+    try testing.expectEqual(ReplayStatus.invalid, checkLastGood(&io, &journal));
+    try testing.expectEqual(persisted, io.persist_count);
 
     journal.payloads[0].old_known = true;
     journal.phase = .post_boot;
@@ -1626,6 +1690,20 @@ test "an ASCII target set stays acceptable" {
     var journal: TransactionJournal = undefined;
     testJournalWithTarget(&journal, "C:\\R4OS\\SERVICES\\SSHD.R4X");
     try testing.expect(journalPathsValid(&journal));
+    for ([_][]const u8{ "C:\\R4OS\\LICENSES\\GFX\\NOTICE.TXT", "C:\\R4OS\\SOURCES\\R4VIDEO\\SOURCE.ZIP" }) |target| {
+        testJournalWithTarget(&journal, target);
+        try testing.expect(journalPathsValid(&journal));
+    }
+    for ([_][]const u8{ "\\boot\\preload.r4i", "\\boot\\preload\\hidreport.r4p", "\\boot\\preload\\usbhid.r4p", "\\boot\\preload\\usbbot.r4p", "\\boot\\preload\\usbscsi.r4p" }) |target| {
+        testJournalWithTarget(&journal, target);
+        try testing.expect(journalPathsValid(&journal));
+    }
+    for ([_][]const u8{ "\\boot\\limine.conf", "\\boot\\preload\\other.r4p", "C:\\boot\\preload.r4i" }) |target| {
+        testJournalWithTarget(&journal, target);
+        try testing.expect(!journalPathsValid(&journal));
+    }
+    testJournalWithTarget(&journal, "C:\\R4OS\\LICENSES-OTHER\\NOTICE.TXT");
+    try testing.expect(!journalPathsValid(&journal));
 }
 
 test "a subsystem R4X target is durable recovery state but subsystem data is not" {

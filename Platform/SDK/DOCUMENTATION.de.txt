@@ -5,6 +5,232 @@ Dieses Repository enthaelt das hostneutrale Kern-SDK von R4OS: Zig- und
 C-Fassaden, Buildprofile, Templates, Smokeprojekte sowie die generischen
 Werkzeuge R4XBuilder, R4LContractGen und ModuleCatalog.
 
+Subsystem-Speichermetadaten ab0.64.209
+------------------------------------
+Die gemeinsame Cartridge-Speicherhilfe liest Groesse und Typ unter App2
+direkt aus Metadata2. SHA256-SAV/RTC-/Stage-/Backupnamen und breite
+Backendknoten werden nicht in das alte FileInfo-Namensfeld projiziert.
+Unbekannte Dateigroesse bleibt ein Fehler. Formate, exklusive Schreiblease,
+atomare Wiederaufnahme und der bis zum Join gehaltene Worker bleiben
+erhalten; Generation1 verwendet weiterhin ihren bisherigen Anbieter.
+Die bestehende Savepfadpruefung enthaelt den konkreten Namens-/Knotenfall.
+
+Startklasse normaler App2-Module ab0.64.200
+------------------------------------------
+Das Manifest bestimmt Profil, benoetigte Gruppen und geordnete Imports.
+Die Startpolicy kann fuer Anwendungen die effektive Klasse Konsole oder
+GUI waehlen. Eine GUI-Anwendung kann damit ihre vorhandenen Befehlszeilen-
+aktionen auch in der Konsole ausfuehren. Die fachlichen APIs richten sich
+nach dem tatsaechlichen Startkontext. Der Dienststart erfordert auf beiden
+Seiten die Dienstrolle. Zig, C und Rust verwenden dieselbe App2-Pruefung.
+
+Native WaitSets ab0.64.171
+--------------------------
+Docs/WaitSets.txt beschreibt die Query2-Fassaden fuer begrenztes wait-any
+ueber Kernelnotifications und Timer. Zig/C/Rust teilen denselben nativen
+Besitzer, absolute Clockbudgets und explizite Revisionsbestaetigung. Der
+Erzeugertask besitzt Konfiguration/Wait; Rust bindet Context und ist weder
+Send noch Sync. SourceReady/Timeout/Cancel gibt keine Arbeits-/DMAquittung.
+
+Leihe veroeffentlichter Frames ab0.64.169
+----------------------------------------
+Docs/PublishedFrame.txt beschreibt generation-/revisionsgebundene ganze
+Quellleihen ueber den vorhandenen Presenter. Zig/C/Rust teilen Damage,
+Palette/Geometrie, scoped Tickets und echtes Return-Ende. Synchrone
+Kopierbackends; keine physische Fencequittung oder Verbrauchermigration.
+
+Geraeteinventarkopie ab0.64.164
+------------------------------
+Docs/DeviceInventorySnapshot.txt beschreibt eine passive Sammlung in ganzen
+Callerspeicher und danach geliehene Seiten ohne erneute Providerarbeit.
+Neue Capturegenerationen erzwingen Restart alter Cursor. Keine atomare
+Hardwareaufnahme, kein Retain, keine Kernel-Snapshotregistry und keine
+automatische Umstellung bestehender Anwendungen.
+
+ProgramInventoryReader ab0.64.163
+--------------------------------
+Docs/ProgramInventoryReader.txt beschreibt explizite Full-/Lifecycle-Modi,
+privaten Aufbau, Cursorrollback und Restart unter einer Gesamtfrist.
+Found/Missing gilt erst fuer ganze genaue ID/Generation-Sichten; Unknown
+bleibt von Abwesenheit verschieden. Zig/C/Rust teilen einen statischen
+Besitzer, ohne Registrykopie oder automatische Verbrauchermigration.
+
+StreamTransfer ab0.64.162
+------------------------
+Docs/StreamTransfer.txt beschreibt ReadExact/WriteAll-Schritte mit einem
+einzigen aeusseren DeadlineBudget, bekanntem U64-Praefix und getrennten EOF-/
+WouldBlock-/Timeout-/Cancel-/Uncertain-Zustaenden. Zig/C/Rust nutzen denselben
+statischen SDK-Besitzer und echte Datei-/TCPSVC-/Serviceadapter. Keine neue
+Ressourcenregistry, kein automatisches Replay und keine Verbrauchermigration.
+
+Argumentcursor und begrenzte Diagnosepuffer ab0.64.161
+--------------------------------------------------
+Die gemeinsame SDK-Implementierung und ihre Zig-/C-/Rust-Zugaenge stehen in
+Docs/CliDiagnostics.txt. Sie definieren die R4OS-Quote-/Restargumentgrammatik,
+ganze UTF8-Records, exakte Teilannahme und Uncertain/Poison ohne automatisches
+Replay. Kleine Adapter nutzen echte Console-/Datei-/LogServicebesitzer.
+Bestehende Anwendungen und Parser werden nicht umgestellt.
+
+Reine Binaer-/Native-/Checksum-/Blockhelfer ab0.64.160
+----------------------------------------------------
+binary_cursor, native_protocol_view, internet_checksum und block_transfer
+besitzen die gemeinsame Freestanding-Mechanik. C wire_helpers.h und Rust
+wire verwenden denselben originalen Zig-Besitzer im bestehenden statischen
+SDK-Fassadenobjekt. Es gibt weder eine zusaetzliche Runtime-R4L noch eine
+Kernelregistry oder neue I/O-, Mapping-, Pinning- oder Geraetehoheit.
+Manifestbasierte C-Generation2-Builds fuer R4D/R4P und Programme binden die
+vorhandenen statischen Fassadenobjekte ein; dafuer wird kein IMPORT ergaenzt.
+
+Reader/Writer verarbeiten ausschliesslich Wirebytes mit ausdruecklichem
+Little-/Big-Endian. Ganze Felder werden vor Mutation geprueft; Fehler lassen
+Position, Ergebnis und Ausgabebytes unveraendert. C-Integerbreiten sind1/2/4/8
+Bytes; Werte oberhalb der gewaehlten Breite ergeben ValueOverflow. put hat
+Memmove-Semantik bei ueberlappenden Bytebereichen. Checkpoints binden exakten
+geliehenen Span samt Richtung, nicht eine globale Cursor-/Allokations-ID.
+Gleiche Spans/Richtungen duerfen Marks innerhalb derselben gueltigen Leihe
+teilen. Restore setzt nur die Position zurueck, niemals geschriebene Bytes.
+Zustand und geliehene Speicherbereiche bleiben getrennt und caller-eigen.
+
+Native Aufnahme ist ein anderer Vertrag. ProtocolBuffer.len/capacity,
+Alignment, explizites Exact/Prefix, native u32-Version-/Sizefelder und
+In-/Out-/InOut-Richtung werden geprueft. UINT32_MAX als Feldoffset bedeutet
+ausdruecklich keinen Headercheck; nicht Null als Ersatz fuer eine Version.
+Flags sind keine Richtung und keine Offloadberechtigung; erlaubt sind nur
+die vom fachlichen Aufrufer ausdruecklich benannten Bits. Groessere Praefixe
+brauchen dieselbe erwartete Version und eine passende initialisierte Laenge.
+Outputaufnahme liest keinen Payload; Kandidatenheader werden vor Write
+geprueft, len erst nach der wirklichen Initialisierung veroeffentlicht.
+Die rohe Publish-API erwartet tatsaechlich initialisierte written_bytes und
+aendert bei Fehler die Transportmetadaten nicht. Zuvor vom Caller selbst
+geschriebene Payloadbytes werden dabei nicht zurueckgerollt.
+
+Keine Bereichspruefung beweist Mapping, Objektgueltigkeit oder Lebensdauer.
+Native Pointeransichten setzen wirkliche initialisierte native POD-Records
+voraus, keine beliebigen Wirebytes. Rust-Input/InOut/Output-Konstruktoren
+sind unsafe: gueltiges natives Layout und Bitrepraesentation, keine Rust-
+Referenzen/Ownership, stabile getrennte Metadaten sowie gueltige immutable
+Input- oder exklusive Outputspeicherleihen fuer den Dispatch. Outputpayload
+darf anfangs uninitialisiert sein. Sichere Reader/Writer halten dagegen die
+urspruenglichen Rust-Sliceleihen; eine Ansicht verlaengert keine Modulleihe.
+Headeroffsets bezeichnen echte initialisierte native u32-Felder des Typs,
+keine Padding- oder unbekannten Repraesentationsbytes.
+
+InternetChecksum16 haelt gefaltete16Bit-Summe, ausstehenden hohen Oddbyte
+und geprueften64Bit-Bytezaehler ueber Chunkgrenzen. Finish ist ein lesender
+Snapshot; Wiederholung und anschliessendes Add sind erlaubt. Leere Eingabe
+ergibtffff, eine echte rohe Null wird nicht fuer UDP umgeschrieben. Der
+Protokollbesitzer liefert seine ausdruecklichen Pseudoheaderbytes zuerst
+und behaelt Nullchecksum-, Paket- und qualifizierte Offloadpolitik. Referenz
+fuer Paarung/Carry: RFC1071 (informational),
+https://www.rfc-editor.org/info/rfc1071/ . Keine API fuer den dort erwaehnten
+separaten nachtraeglichen Austausch eines Headerworts wird eingefuehrt.
+
+BlockTransfer prueft positive bekannte Blockgroesse/Kapazitaet, Count,
+checked Bytezahl/letzteLBA, Backend-Maxima und LBA-Bits. Exact und AtLeast
+fuer Pufferlaengen sind explizit; kein fester512Byte-Sektor, kein unbekanntes
+Limit als verifizierter unendlicher Bereich. LBA-Bits sind keine DMA-Bits.
+Flush, unbekannte Discovery und Geraete-/Pufferhoheit verbleiben beim
+Backend. Eine gueltige Shape ist kein Nachweis erfolgreicher I/O oder DMA.
+Bestehende Protokolle, Treiber und ihre unabhaengigen Orakel bleiben erhalten;
+die Verbraucherumstellung erfolgt spaeter gesondert.
+
+Gepruefte Zeit- und Pollbudgets ab0.64.159
+---------------------------------------
+time_contract.checked und driver_poll_budget besitzen die neue reine SDK-
+Mechanik. C/Rust rufen ueber poll_budget.h beziehungsweise time::checked
+denselben Zig-Besitzer im Fassadenobjekt auf; keine neue Kernelregistry.
+scaleCeil rechnet mit u128 und Quotient/Rest; alte saettigende Umrechnungen
+benutzen diese Rechnung mit unveraenderter Saettigung. Die neue Fassade
+meldet BudgetOverflow, statt endliche Werte in Forever umzudeuten.
+0ms ergibt0Ticks; positive Dauern werden aufgerundet. Frequenz0 ist
+UnknownFrequency. Tags trennen Poll, positive endliche Werte und Forever,
+auch bei endlichem max(u64). finite0 wird zu Poll normalisiert. Ungueltige
+Tags, Reservedbytes und Nutzlast an Poll/Forever werden abgewiesen.
+Eine Tickumrechnung mit unbekannter Frequenz scheitert auch fuer0ms.
+Fertig getaggte Poll-/Forever-Budgets brauchen keine Tickumrechnung.
+Rohe Dauer-/Millisekundenumrechnungen liefern arithmetische Tickwerte;
+diese sind kein alter Wait-Sentinelvertrag. Endliches max(u64) darf nicht
+als roher Timeout an einen alten Forever-Slot weitergegeben werden.
+Fuer Wartebudgets die getaggte timeoutTicks-Fassade verwenden.
+
+ClockSample.fromInfo prueft den wirklichen MonotonicClockInfo-Vertrag;
+Quelle, Generation, Ereignisbackend und logische Tickfrequenz bilden eine
+Identitaet. tick_hz kommt aus event_requested_hz, nicht der gerundeten
+physischen Ereignisrate oder Hardwarequellfrequenz. Eine gueltige precise
+Uhr darf unbekannte Tickfrequenz haben; erst ihre Tickumrechnung scheitert.
+DeadlineBudget bindet genau eine solche Identitaet und einen absoluten
+Nanosekundenendpunkt. Additionsoverflow, Clockwechsel und Ruecklauf sind
+sichtbare Fehler. Ein Fehler verschiebt oder erneuert keine Deadline.
+Die Identitaet ist ein kopierter Uhrkontext, keine Systemressourcenleihe.
+
+DriverPollBudget unterscheidet Task, NoSleep und IRQ sowie reine Iterationen
+von Zeit UND Iterationen. Timed verlangt ein endliches Timeout und ein
+positives hartes Schrittlimit; Forever wird dort abgewiesen. step vor jedem
+autorisierten Retry verbraucht bei Proceed genau einen Schritt. Abgelaufene,
+gestoppte oder fehlerhafte Budgets bleiben terminal. Eine stehende Uhr kann
+dadurch das Iterationslimit nicht umgehen. remaining weist beide Grenzen
+aus. Kontext ist die ausdrueckliche Callerbeschreibung, keine Berechtigung.
+Es gibt weder Register-/PCI-/MMIO-Zugriffe noch automatische Pause, Sleep,
+Yield oder Allokation. Timeout/Stop quittieren weder Geraet noch Callback,
+Mapping oder DMA; die echte Quieszenz bleibt beim bisherigen Besitzer.
+
+Neue clockSampleChecked-/ticksFromMillisecondsChecked-Zugaenge und
+Driver1-/Driver2-Adapter lesen den vorhandenen Uhrprovider. Bisherige
+ticksFromMilliseconds-, Wait- und Timeoutpfade behalten ihre Semantik.
+Vorhandene Anwendungen und Treiberschleifen werden damit nicht umgestellt.
+
+Download-Metadaten ab0.64.149
+----------------------------
+DownloadOptions.head_observer sieht den vollstaendigen Antwortkopf vor dem
+ersten Sink-Schreibzugriff. false weist die Antwort zurueck; danach wird Stop
+nochmals geprueft. Header und Observation sind ausschliesslich waehrend des
+synchronen Callbacks geliehen. Der Sink behaelt die bisherige Ownership.
+max_retries bleibt standardmaessig 1; 0 ueberlaesst das gesamte Budget einem
+aeusseren Auftrag. C und Rust verwenden denselben nativen Besitzer und den
+angehaengten Callback download_head (40), ohne bestehende IDs umzunummerieren.
+
+Moderne Controls ab0.64.147
+--------------------------
+Canvas.withStyle(Style.light/dark) gestaltet nur den eigenen Canvas modern.
+Button, TextField, List, TabBar und ModalDialog behalten ihre bestehenden
+Eingabebesitzer; Card/TileGrid, Paragraph und Progress liefern gemeinsame
+Darstellungs-/Layouthelfer. Fonts kommen aus dem tatsächlichen R4Sans-Katalog;
+Canvas.layoutTabs verwendet dieselben Schriftmetriken für Paint und Hit-Test.
+Zig, C und Rust führen dieselbe Fachimplementierung aus. Ohne Opt-in bleibt
+der klassische Pfad unverändert. Modern.zig zeigt Tastatur, Unicode, echte
+Pointercapture, Dialoge und Hell/Dunkel; außen zeichnet weiterhin der Desktop.
+Vertrag und Migration: Docs/SDK/GuiControls.txt im Workspace.
+
+Native Zeichenbasis ab0.64.146
+-----------------------------
+gui_shapes.gradientRoundedRect erweitert die bisherigen Rundungen, Rahmen
+und Schatten um lineare und elliptisch-radiale Farbverläufe. Ein unveränderter
+v1-Shapeheader wird durch einen getrennten Paintheader und zwei bis acht
+geordnete Stopps ergänzt. Die gemeinsame compiler-typisierte Bridge bindet
+denselben Builder für Zig, C und Rust; es gibt keine zweite Rasterengine.
+gradientsSupported fragt die optionale R4DRAW39-Grammatik ab. Der passende
+Desktoprenderer muss mit ausgeliefert werden. Bestehende Aufrufe und
+klassische Controls ändern dadurch ihr Aussehen nicht. Canvas.zig zeigt den
+nativen Gebrauch. Fachvertrag: Docs/API/GuiShapeContract.txt im Workspace.
+
+SYSUPD-Journale
+---------------
+
+Update-Engine und Recovery lesen und schreiben ausschliesslich R4U_JOURNAL=5.
+V2-v4 werden ohne Dateiaustausch abgelehnt. V5 behaelt Checksummen, genaue
+Dateiidentitaeten, Kopienauswahl, Wiederaufnahme und Rueckrollen einschliesslich
+neuer Zieldateien mit old_known=false. COMPONENT_BINDING=legacy bleibt ein
+gueltiger v5-Zustand; der Name ist keine alte Formatversion.
+
+C-Module und Relokationen
+------------------------
+
+Auch positionsunabhaengiger C-Code kann absolute Zeiger in konstanten
+Strukturen oder Tabellen enthalten. Der gemeinsame C-Build bewahrt daher
+Symbole und ELF-Relokationen bis zur R4M0-Konvertierung, genau wie Zig.
+Erst R4XBuilder erzeugt daraus die verbindlichen Loader-Patchrecords;
+ein vorzeitiges Strippen wuerde solche Zeiger unbrauchbar machen.
+
 Pfade
 -----
 
@@ -166,6 +392,11 @@ die kanonischen Flat-Bytes sind stets vorhanden und bis zur Rueckkehr nur
 geliehen. Rueckgabe 0 bedeutet normale Annahme, 1 Annahme mit Software-
 Fallback und -4 unveraenderten Treiberbesitz wegen Queue-Backpressure. Die
 aktuelle Ein-Queue-Auswahl akzeptiert nur validierte RX-TCP-/UDP-Pruefsummen.
+Seit Kernel0.1.304 wird ausschliesslich der vollstaendige120-Byte-NetBackend
+mit version=2 angenommen. Alte v1-/Kurzdeskriptoren werden vor Registrierung
+und Callbacks abgelehnt. Einfache Flat-Callbacks, fehlendes transmit_packet,
+einzelne Queues und benoetigte Pollpfade bleiben gueltige v2-Ausfuehrungen;
+oeffentliche Tabellenfelder und Slots sind unveraendert.
 
 `r4os.subsystem_host` ist die einkompilierte Userland-Schicht fuer das
 Fenster-, Video- und Eingabehosting eines solchen R4X. Sie ist weder Dienst
@@ -199,20 +430,20 @@ abfragen koennen. Paletten-, Modus- und Viewportaenderungen erzwingen einen
 Vollframe; nach einer Vollbasis und hoechstens 31 Deltas wird die Kette durch
 einen neuen Vollframe verdichtet.
 
-R4DRAW-v6 liefert mit `font_glyph_bitmap` eine komplette, auf 40 Zeilen
-begrenzte Glyph-Bitmap samt Layoutmetriken in einem Aufruf. Dadurch entfallen
-bei aktuellen Kerneln die wiederholte Glyphsuche und ein ABI-Aufruf je Zeile.
-Der alte `font_glyph_row`-Slot bleibt erhalten. Fehlt der neue optionale Slot,
-setzt das SDK die Bitmap daraus zusammen; die Pixel bleiben exakt, waehrend
-proportionale Einzelglyphmetriken auf Face-Breite und maximalen Advance
-zurueckfallen.
+`font_glyph_bitmap` liefert eine komplette, auf 40 Zeilen begrenzte
+Glyph-Bitmap samt Layoutmetriken in einem Aufruf. Das aktuelle SDK verlangt
+dafuer diesen Callback und meldet bei fehlender/zu kurzer Tabelle NoFn;
+der Ausgabepuffer bleibt unberuehrt. Der eigenstaendige `font_glyph_row`-
+Aufruf bleibt erhalten, wird aber nicht zum Nachbilden einer Bitmap genutzt.
+`font_info`, `font_measure` und `text_font` verwenden ebenfalls nur ihre
+jeweiligen echten Callbacks, ohne erfundene Builtin-Metriken oder Fonts.
 
-R4DRAW-v7 haengt `font_revision` an. Der von `fontRevision()` gelieferte
-Wert ist ungleich null und aendert sich nach jedem erfolgreich abgeschlossenen
-Reload des Fontkatalogs. Caches duerfen damit Font-ID, Revision und Codepoint
-als Schluessel verwenden und muessen bei einem Revisionswechsel ihre alten
-Layouts und Abdeckungen verwerfen. Fehlt der optionale Slot in einer aelteren
-Tabelle, liefert die SDK-Fassade die stabile Kompatibilitaetsrevision 1.
+`fontRevision()` gibt die wirkliche Kataloggeneration zurueck. Null bedeutet
+unbekannt/nicht verfuegbar und wird nicht durch eine erfundene Generation
+ersetzt. Ein erfolgreicher Fontreload aendert die echte Revision; Caches
+verwerfen dann ihre alten Layouts und Abdeckungen. Die C-/Rust-Bruecke
+meldet einen fehlenden Callback ausdruecklich als NoFn. Alle Sprachen nutzen
+bei vorhandenem Callback denselben Zig-Besitzer und dessen wirklichen Wert.
 
 R4DRAW-v8 ergaenzt vollstaendig ersetzende GUI-Generationen und native
 XRGB32-Quelltiles. Fuer einen geaenderten XRGB32-Frame publiziert der
@@ -222,18 +453,21 @@ ueberdeckte Damagegenerationen erneut abspielen. `GuiXrgb32Resource` erhaelt
 Gast- und Viewportgeometrie bis zum Desktop; Kacheln bleiben hoechstens
 128x128 Pixel gross und werden weder in Farblaeufe noch in `fillRect`-Aufrufe
 zerlegt. `gui_frame_stream_info` weist Live-, Freigabe-, Koaleszenz-, XRGB32-
-und Speicherzaehler aus. Fehlen die optionalen Slots, bleiben der bestehende
-Damagevertrag und der begrenzte Rasterfallback unveraendert nutzbar.
+und Speicherzaehler aus. Der R4OS-Subsystemadapter verlangt den aktuellen
+Replacement-/Shared-Rastervertrag; fehlende Pflichtcallbacks werden vor
+Framebeginn mit NoFn/UnsupportedDrawContract abgewiesen.
 
 R4DRAW-v9 transportiert XRGB32-, Indexed8- und Alpha8-Raster ueber
 generationengebundene Shared-Ressourcen. Der Producer beschreibt den Inhalt
 einmal; die hoechstens 128x128 Pixel grossen Zielbloecke verweisen danach nur
 noch ueber feste 80-Byte-Deskriptoren darauf. Drei begrenzte Puffer verhindern
-unbeschraenkte Retention. Backpressure oder ein fehlender optionaler Slot
-fallen fuer genau diesen Frame auf den kopierenden Pfad zurueck. Manuell
+unbeschraenkte Retention. Aktuelle Ring-Backpressure darf fuer genau diesen
+Frame den begrenzten kopierenden Pfad verwenden. Fehlende aktuelle
+Pflichtcallbacks werden nicht nachgebildet. Manuell
 erzeugte `subsystem_host.Backend`-Werte muessen die optionalen v8/v9-Callbacks
 nicht mit Platzhaltern fuellen: Deren Defaults liefern `err_no_fn`, waehrend
-die zugehoerigen Capability-Flags false bleiben.
+die zugehoerigen Capability-Flags false bleiben. Dies sind eigenstaendige
+aktuelle Callbackbackends, keine Nachbildung frueherer R4OS-Versionen.
 
 `Host.pollInput` uebersetzt Close, Resize, Fokus, Tastencode, Text und Maus in
 eine gastneutrale Ereignisunion. Jedes rohe GUI-Ereignis erhaelt dabei eine
@@ -717,10 +951,15 @@ teilweise belegte Region hinterlassen; Aufrufer geben sie kontrolliert frei.
 --------------------------------------------
 
 storage_tools.installation besitzt das gemeinsame 512-Byte-GPT-Layout mit
-1-MB-Ausrichtung: BIOSBOOT 1 MB, BOOT 128 MB, SYSTEM 1024 MB, RECOVERY 512 MB
+1-MB-Ausrichtung: BIOSBOOT 1 MB, BOOT 128 MB, SYSTEM 10240 MB, RECOVERY 5120 MB
 und DATA bis vor die echte Sicherungstabelle am Geraeteende. Mindestens
 16 MB DATA muessen passen. Identifiers.fromEntropy benoetigt sieben frische
 16-Byte-Werte vom Host bzw. Gast, setzt UUIDv4-Bits und prueft Eindeutigkeit.
+Das Standardimage ist 16384 MB gross. sourceRanges/prepareSource lesen
+die alten 2048-MB-Releaseimages weiterhin mit ihrer 1024-MB-SYSTEM-Geometrie;
+Neuinstallation und USB benutzen immer den neuen Standard. Updateziele
+behalten ihre eigene Geometrie. sparse_image erlaubt bis 16 GB logischen
+Umfang und speichert weiterhin nur nichtleere 64-KB-Bloecke.
 Layout.bind akzeptiert nur einen frisch gelesenen leeren Plan; dessen
 Fingerprint bleibt fuer commit erhalten. manifest und limineConfig binden
 alle Rollen und Eintraege an dieselben IDs. Das Menue hat fuenf Sekunden und
@@ -794,3 +1033,933 @@ installierten Stage-1/Stage-2-Code mit realem BIOSBOOT-Verweis. Nur die vom
 Installer erhaltenen Zeitstempel-/Signatur-/MBR-Tabellenfelder sind variabel.
 Das erlaubt vor einem Austausch des passenden Stage-3-Begleiters die
 Kompatibilitaetspruefung, ohne MBR oder BIOSBOOT zu aendern.
+
+0.78.28: Zusammenhaengende Dateikopien
+--------------------------------------
+Files.copy/file_stream.copy und C r4_files_copy verwenden den optionalen
+R4SYS-Slot file_copy_buffered. Eine gepaarte Dateisystem-Anfrage haelt
+Quellidentitaet, Zielpruefung und alle Chunks zusammen. Der Aufrufer besitzt
+den nichtleeren Puffer exklusiv bis zur Rueckkehr. Alte Provider melden
+fehlende Funktion; es gibt keinen getrennten Truncate-/Read-Ersatzablauf.
+Bytefortschritt, Quellgroesse, Chunkanzahl und groesster Chunk stammen aus
+tatsaechlich abgeschlossenen Appends. Erfolg umfasst den finalen Flush.
+Bei Fehler wird die unvollstaendige Zieldatei unter derselben Anfrage zu
+entfernen versucht; auch Cleanup kann scheitern. Fortschritt ist kein
+dauerhaft gespeicherter Wiederaufnahmeoffset. Identische Dateiobjekte
+einschliesslich FAT-Kurzname und Fallvarianten bleiben unveraendert.
+
+Atomarer Dokument-Save ab 0.78.69
+--------------------------------
+Notepad 0.1.11 und Paint 0.1.7 schreiben Dokumente zuerst vollstaendig in
+eine eigens angelegte gleichgeordnete DSxxxxxx.TMP-Datei und bestaetigen den
+Streamabschluss. Erst danach erfolgt Files.replaceAtomic ohne direkten
+Ueberschreibfallback. Pfad, Dirty und Recent-Historie wechseln nur bei
+bestaetigtem Ersatz. Bei gekuerztem Notepad-Inhalt muss das neue Ziel auch
+innerhalb der atomaren Operation noch fehlen.
+
+Vor dem Ersatz wird bei Fehlern ausschliesslich der eigene Stream
+abgebrochen. Ein unklarer Ersatz laesst Zwischenstand und Backup bestehen;
+das bearbeitete Dokument bleibt Dirty. Ein bestaetigter Save mit spaeterem
+Backup-Loeschfehler gilt weiter als gespeichert und meldet das behaltene
+Backup. Die vorhandene FAT-Fassade ersetzt bestehende lange Namen, kann
+aber keine neuen langen Namen atomar anlegen. Dieser Fall wird ohne
+Direktfallback abgewiesen; die vollstaendige Zwischenkopie bleibt erhalten.
+Ein kurzer Hostfall mit genau einem absichtlich unvollstaendigen Schreiben
+sowie ein SMP4-Gastfall fuer Save/Save As beider Apps pruefen den Vertrag.
+
+
+HTTP-/URL-Grenzen ab 0.78.70
+---------------------------
+Pfad und Query duerfen weder rohe Steuerbytes noch Leerzeichen in die
+HTTP-Anfragezeile uebertragen. Parse und Build pruefen diesen Vertrag;
+vorhandene Prozentkodierung bleibt erhalten, UTF-8 und weitere nicht direkt
+zulaessige URI-Bytes werden beim Serialisieren kodiert. Zusaetzlich werden
+direkt erzeugte Hostfelder und Namen eigener Requestheader geprueft.
+
+Ein Fragezeichen nach dem Fragmentanfang gehoert zum Fragment. Die bereits
+gemeinsam angebundenen URL-/Location-/Origin-Verbraucher verwenden die
+korrigierte Zerlegung. Navigation und Redirects nutzen einen gemeinsamen
+Aufloeser; nur ganze Punktsegmente verschwinden, doppelte Slashes, kodierte
+Punkte sowie Query-/Fragmentinhalt bleiben erhalten. HTTP behaelt seine
+caller-eigene Ausgabekapazitaet statt das Browserlimit zu uebernehmen.
+
+Vollstaendige ungueltige Antwortkoepfe melden ihren konkreten Grund:
+Status, Version, Headerform/-zahl, Content-Length, widerspruechliche Laenge
+oder Transfer-Encoding. Ein spaeteres EOF verdeckt den Fehler nicht.
+Unvollstaendige Koepfe bleiben davon unterscheidbar. Auch eine gueltige
+Antwort ohne Headerfelder wird akzeptiert; dieser Randfall war vorher
+irrtuemlich abgewiesen beziehungsweise hatte einen ungueltigen Ausschnitt.
+
+Sechs kurze Hostfaelle fuer echte Parser/Serializer sind ausreichend.
+Kein zusaetzlicher Netzwerk-, QEMU- oder Browser-Gesamtprofiltest. R4HTTP
+0.1.4, R4JS 0.54.11, Klickifax 0.29.19, KlickifaxLive 0.2.20 und UpdateService
+0.2.19 werden mit der Korrektur gebaut. Recovery 0.1.54 / Menue 0.1.19 erhaelt
+den gleichen bestaetigten HTTP-/URL-Quellstand und das R4HTTP-Artefakt.
+
+
+Globale Bindungen und Objektkonvertierung ab 0.78.71
+--------------------------------------------------
+Ein stabiles globales Objekt traegt Script-var/Funktionen und die Intrinsics.
+Namenszugriff und globalThis-Eigenschaften verwenden denselben Wert.
+let/const bleiben getrennte lexikalische Bindungen. Standardglobals sind
+nicht aufzaehlbar und normalerweise schreib-/konfigurierbar; undefined,
+NaN und Infinity sind unveraenderlich. Der Host behält sein explizites
+constant-Argument fuer defineGlobal.
+
+Script-this bleibt das Realmobjekt auch nach Neuzuweisung von globalThis.
+Modul-this ist undefined; Pfeilfunktionen behalten ihr lexikalisches this
+ueber Script-/Modulgrenzen. Ein globaler Funktionsaufruf bindet keinen
+Objektempfaenger. Strikte Schreibversuche auf konstante Globals scheitern,
+nichtstrikte lassen deren Wert unveraendert. Funktionsdeklarationen werden
+pro Anweisungsliste nur einmal instanziiert und koennen in einem spaeteren
+Script neu deklariert werden.
+
+Arrays und Funktionen durchlaufen nach Symbol.toPrimitive die normale
+valueOf-/toString-Reihenfolge des jeweiligen Hints. Eigene Methoden,
+nichtprimitive Rueckgaben und Ausnahmen bleiben sichtbar; null/undefined
+bedeuten einen fehlenden exotischen Konverter. Die Quelltextdarstellung
+gehoert direkt in Function.prototype.toString, nicht in ToPrimitive.
+Keine pauschale Zusage vollstaendiger ECMAScript-Unterstuetzung.
+
+
+NTFS-Werkzeuggrenzen ab 0.78.73
+-----------------------------
+Die gemeinsame R4OS-Pfadgrenze betraegt 24 Komponenten einschliesslich der
+Dateikomponente. Der Builder prueft vor Aufnahme eines Kindes, ImageCreator
+vor Anlage der Eltern und NtfsVerify fuer Dateien wie Verzeichnisse. Der
+oeffentliche Laufzeitpfad verwendet dieselbe Konstante; sein bisheriges
+24-Komponenten-Verhalten bleibt erhalten. Der Kernel-Support wurde
+abgeglichen. Ein Build mit unveraenderter Kernelversion ergab denselben
+SHA256 des Kernelartefakts, daher bleibt Kernel 0.1.130 bestehen.
+
+Die Indexbitmap deckt alle 4096 erlaubten Indexbloecke ab; die Blockerzeugung
+prueft dasselbe Limit vor Allokation. Nicht passende residente MFT-Records
+scheitern weiterhin kontrolliert in prepare vor Oeffnung eines Schreibziels.
+Die gezielte 3500-Dateien-Fixture benoetigt 587 Bloecke und 80 Bitmapbytes.
+Verifier und Laufzeit finden auch den letzten 255-Zeichen-Namen.
+
+NtfsVerify prueft zusammenhaengende nichtresidente Extents, physische
+Runbereiche, logische Deckung und initialized_size<=data_size. Gewoehnliche
+Attribute verlangen data_size<=allocated_size und eine vollstaendig durch
+Runs gedeckte Allokation ohne Loecher. Sparse-/komprimierte Attribute und
+der spezielle $BadClus:$Bad-Strom sind getrennt behandelt; deren logische
+Deckung wird ohne gewoehnliche physische Allokationsgleichheit geprueft.
+readRunsInto erzeugt Sparse-Nullen, verweigert rohe komprimierte/verschluesselte
+Inhalte und bestaetigt keine Bytes hinter dem Ende der tatsaechlichen Runs.
+Keine Zusage einer Pruefung dekomprimierter oder entschluesselter Dateiinhalte.
+
+Kurze Nachweise: Windows-Referenz unveraendert gueltig; ein zusaetzliches
+Byte ohne Runlistdeckung wird abgewiesen. Datei im 24. Segment gueltig und
+mit exakt sechs Nutzbytes lesbar, alte Datei im 25. Segment von Verifier und
+Laufzeit abgewiesen. ImageCreator laesst bei zu tiefem Ziel eine vorhandene
+Zieldatei unveraendert. Grosse Indexbitmap und letzter Dateizugriff bestehen.
+Die temporaere Hostlesehilfe brauchte 64 MB + 1 als exklusive Leseschranke;
+das war eine Fixturegrenze, keine Aenderung am Dateisystem.
+
+R4PART 0.1.5 und Recovery 0.1.55/Menue 0.1.20 uebernehmen den Formatter.
+Keine neue Gast-, Hardware- oder Release-Gesamtpruefung fuer diese Grenzen.
+
+FAT-Selbstupdates grosser Recovery-Volumes (0.79.9):
+fat32_update.Backing und prepareBacking verwenden dieselbe Belegungspruefung
+und Schreibreihenfolge wie prepareDelta. Bis 8 GB Quellumfang, nur
+Metadaten und benoetigte Datencluster resident. Der SHA256 bindet die
+Metadaten und alle belegten Cluster samt ihren Positionen; freie Bereiche
+werden weder gelesen noch pauschal geschrieben. Auch unbekannte Dateien
+und INSTALL-Inhalte bleiben Teil der blockweisen Vorpruefung. Die Quelle bleibt bis Planabschluss geborgt,
+Schreibplaene sind unabhaengig. Der bestehende Delta-Fall vergleicht beide
+Wege samt falscher Generation und Schreibfehler; eine 5-GB-Quelle mit
+Datei jenseits 4 GB bleibt im festen 64-MB-Vorbereitungsbudget.
+
+Stackfehler (0.84.1)
+--------------------
+devices.performance().stackFault(cpu, &info) liest den letzten residenten
+Kernel-Stackfehler je CPU. info mit Defaultheader initialisieren. Status 1
+liefert einen kohaerenten Datensatz, sequence=0 bedeutet bisher keinen Fehler;
+0 beendet die CPU-Slotliste, negative Statuswerte lassen die Ausgabe intakt.
+Verfuegbarkeitsflags beachten: Commit ist kein Hochwasser. Die C-Fassade
+r4_performance_stack_fault verwendet denselben caller-initialisierten Header.
+R4DEV v14 ergaenzt nur den optionalen Slot; alte Tabellen bleiben erkennbar.
+
+Stackprobes fuer Freestanding-Module (0.84.3)
+-------------------------------------------
+Alle Zig-Modulwurzeln einschliesslich eingebetteter SDK-/Libraryquellen
+verwenden stack_check=true. Der vorhandene R4XBuilder liest das optimierte
+LLVM-IR stromweise und ersetzt ausschliesslich das bekannte probe-stack-
+Funktionsattribut durch inline-asm. Andere IR-, Ziel- und ABI-Angaben bleiben
+erhalten. Derselbe installierte Zig/Clang erzeugt daraus ohne erneute LLVM-
+Optimierungspipeline den Objektcode; C-Begleitobjekte und native Archive
+werden wie bisher mit dem Modul verlinkt.
+Die Inline-Probes decken 4096-Byte-Schritte vor grossen Frames, dynamischer
+Allokation und grosser Stackausrichtung ab. Ein blosser __zig_probe_stack-
+Aufruf nach einer Ausrichtung ueber 4096 Bytes wuerde deren Luecke auslassen.
+Der Clang-Frontend-Schalter -Xclang -fstack-clash-protection schuetzt C/C++;
+das normale Treiberargument wird fuer Freestanding ignoriert. Die nativen
+Bibliotheksprofile verwenden dieselbe Frontend-Option. Probes erhalten den
+jeweiligen Register-/SIMD-/Alignmentvertrag ohne neue Runtime-API-Imports.
+Probes aendern keine Reserve-/Commitbudgets und umgehen keine Ownerregel.
+Kernel-VM und Faultpfad bleiben zustaendig; vor no-sleep-/Runtime-Ownern muss
+der Aufrufer weiterhin ausreichend residenten Spielraum vorbereiten.
+
+Getrennte Konsoleneingabe (SDK 0.64.53)
+-------------------------------------
+R4DESK16 haengt consoleReadEvents/consolePushEvents an den bestehenden536-Byte-
+Praefix an. ConsoleInputEvent ist ein16-Byte-Datensatz: version=1, kind,
+value, flags=0. kind=1 transportiert einen Unicode-Skalar, kind=2 eine
+logische Taste und kind=3 ein Byte eines UTF-8-Streams. Bytes80/81 sind
+damit keine Navigationstasten. Der Codec bleibt beim externen Textbesitzer.
+Aufrufe transportieren hoechstens64 Ereignisse; Rueckgaben zaehlen ganze
+Ereignisse. Ein nicht angenommener Rest bleibt beim Caller. Push verwendet
+den genauen ProgramProcessHandle einschliesslich Generation. Ungueltige
+Batches werden vor der Queueaenderung abgelehnt. Negative Rueckgaben sind
+Fehler,0 bedeutet leer/voll. Alte Tabellen liefern err_no_fn; alte
+Bytefunktionen bleiben verfuegbar. input_events.Queue ist eine optionale
+Callerqueue; ihr Besitzer muss sie an seine genaue Zielgeneration binden.
+
+Gemeinsame Entropie (SDK 0.64.52)
+--------------------------------
+secure_random bindet optionale residente Funktionen vor App-Workern bzw.
+Protokollcallbacks. RDRAND braucht eine frische genaue CPU-Freigabe und CF;
+zehn Fehlversuche pro Wort beenden den Hardwareversuch. Ein angemeldeter
+Treiber ist die Alternative. Sein Maximum begrenzt jeden Teilaufruf; bei
+unvollstaendigem Ergebnis wird die gesamte Ausgabe geloescht. WebCrypto
+verwendet denselben Pfad. Kein Pool, Zeitwert oder Identifikator als Ersatz.
+Neue Verbraucher brauchen die passenden Kernelfunktionen. Alte Binaermodule
+behalten ihren eingebetteten SDK-Stand. Alte ProtocolApi-Praefixe werden ohne
+Zugriff auf fehlende Erweiterungen sicher abgelehnt.
+driver_resources.Context.entropy() wird im R4D-Init zwischengespeichert.
+Unregister schliesst nur die Aufnahme; physischer DMA-Stillstand und echte
+Ressourcenquittungen bleiben Pflicht des Treibers. Gezielte Pruefung:
+Build.sh entropy-test bzw. Build.bat entropy-test; Linux prueft alte Tabellen
+zusaetzlich an einer echten unzugreifbaren Seitengrenze.
+
+Seit SDK 0.64.196 bindet ProtocolContext2.bindEntropy ausschliesslich die echte
+ProtocolApi2 mit ihrer eigenen Kennung. Die aktuelle Tabellenrevision ist1;
+Query2/ProtocolInit2 und Datensatzrevisionen sind getrennte Identitaeten.
+Groesse und Nullwert werden pro Callback geprueft. Ungueltiges Neubinden und
+secure_random.Provider.bind(.{}) loeschen die gespeicherten Funktionen.
+Fehlgeschlagener Start und
+terminaler Shutdown des Protokolls muessen diese Bindung beenden.
+r4dev.ProtocolContext2 prueft denselben echten Tabellenkopf und benoetigte
+Slots vor Allokation oder Veroeffentlichung. Er erzeugt keine alte Tabelle.
+Optionale CPU-Arbeit braucht unveraendert eine echte Freigabe pro Aufruf;
+Zeitwerte, gespeicherte CPU-Masken und Callbacknamen ersetzen diese nicht.
+Die compilerabgeleiteten Datenhelfer werden bei neuen oeffentlichen
+Entropiehelfern gemeinsam neu erzeugt; ihr Fingerprint wird nicht umgangen.
+
+Seit Kernel0.1.305 sind die alten untypisierten Audio-/Synth-Anmeldeslots
+reserviert: immer-1, ohne Argumentzugriff oder Seiteneffekt. Der SDK-Helper
+registerSynthEngine entfaellt; registerSynthEngineEx und die typisierten
+AudioBackend-v2/v3/v4-Helper bleiben. DriverApi36/656 samt Slotpositionen
+96/120 und alle bestehenden Idle-/Stop-/Besitz-/Abbauvertraege bleiben stabil.
+
+
+Aktueller SDK-Mindestvertrag seit 0.64.91 / Produkt 0.86.78
+---------------------------------------------------------
+Technische Contract-/SDK-/Toolchainbindungen bleiben exakt; Versionsauswahl
+und Projektpins gehoeren zum externen Verbraucher. Die Plattformtabellen
+bleiben slotweise groessen-/nullgeprueft: eine optionale Gruppe oder ein
+Offscreenkontext muss nicht alle fachfremden GUI-/Hardwarefunktionen besitzen.
+Der jeweils verwendete aktuelle Callback ist der Mindestvertrag der Operation:
+- Fonts: font_info/font_measure/text_font bzw. font_glyph_bitmap/font_revision.
+- Unicode: read_key_codepoint; fehlend liefert 0, ohne read_key zu verbrauchen.
+- Netzwerk: net_service_request mit generationengebundener Kernelzuordnung;
+  fehlend NoFn/NoGroup, kein selbstgebauter Raw-IPC-Request/Response-Ersatz.
+- Generische Programmspeicheransicht: program_instance_storage_summary_v2;
+  fehlend NoFn/NoGroup, unveraenderter Ausgabepuffer. SDK92/Contract45/R4DEV35
+  legt die V1-Diagnoseslots27/29/30 dauerhaft als Null-Tombstones still.
+  Registry-V2-Aufrufer initialisieren Version2 und volle224/136Byte;
+  ungueltige Header werden ohne Ausgabemutation abgewiesen.
+- Grafikpayloads: volle aktuelle Records fuer Registrierung48/Backend152/
+  Submission512/Driverjob296/Color192/Statistik136Byte; kurze Daten werden
+  ohne Aufnahme/Jobentnahme/Publikation oder Ausgabemutation abgewiesen.
+- beginPaint: alle sechs bestehenden Frame-Callbacks begin/append/commit/
+  cancel/gui_frame_info/gui_frame_read; fehlend keine Paint-Transaktion.
+  Direkte CLEAR-/Rasteroperationen innerhalb einer echten aktuellen
+  Transaktion, optionale GPU-/Formatwege und genaue Ressourcenquittungen bleiben.
+Es werden keine Slots umnummeriert und keine Layouts oder CPUprofile geaendert.
+
+0.87.49 — Asynchroner R4AudioSink, SDK0.64.100
+-------------------------------------------
+R4AudioSink nutzt eine native R4SYS Async-Service-Anfrage statt synchroner
+RPCs im interaktiven Runtimezyklus. Eine Anfrage, stabiler Payload-/Header-/
+Antwortbesitzer, kein zusaetzlicher PCM-Rueckstau oder Feederthread. Queuekopf
+bleibt bis zu valider Teilquittung und echter IO-Freigabe eingefroren. BUSY
+bewahrt den Rest; uneindeutiger Timeout wird nicht blind erneut geschrieben.
+Runtime verarbeitet Input, Gastscheiben und Bild weiter. Pause/Reset/Mute
+trennen noch ausstehende alte PCM-Quittungen von der neuen Gastgeneration.
+Terminales finish drainiert den genauen Besitzer und bestaetigt Close;
+ein Fehler bleibt resources_closed=false. Custom-Sinks duerfen synchron
+bleiben; ein asynchroner poll-Callback braucht einen finish-Callback.
+
+Die C-/Rust-Helpergrenze fuegt zwei Callbackkinds an (insgesamt40, alte38
+nummerngleich), Fingerprint2210870889783679946. Generierte Header/Fassaden
+und getypte Adapter sind aktualisiert, die Plattform-ABI bleibt Contract49.
+Pruefen: Build.sh subsystem-runtime-test (Windows Build.bat);48Zig-Ownerfaelle,
+urspruengliche C/Rust-Subsystem-Interop mit5Negativen und SDK113Buildschritte.
+Kanonische Runtime-, Host-, Persistenz- und Gastbesitzer bleiben getrennt.
+Native Zig-Produktfalle/KVM4 und Grenzen: Docs/SDK/LanguageParity.txt.49.
+Keine SDK-Paketpublikation oder neue C/Rust-Gast-/Hardwarequalifikation.
+
+
+Prozessbeobachtung und Retention (0.88.75)
+----------------------------------------
+
+program_observation_retain bindet einen eigenen Beobachter an den exakten
+Prozesshandle samt Generation. Entscheidend ist, dass dessen Completionrecord
+noch vorhanden ist. Vor dem konsumierenden Owner-Reap ist eine Erstbindung
+moeglich; danach kann eine bestehende Referenz den Record weiter erhalten
+und ein neuer unabhaengiger Beobachter mit erneutem retain gebunden werden.
+Eine Kopie desselben Tokens ist dieselbe Referenz und erhoeht keinen Refcount.
+Unabhaengige Beobachter benoetigen jeweils einen eigenen retain-Aufruf.
+
+Nach letzter Freigabe und Entfernung des konsumierten Records scheitert
+erneutes retain. Es rekonstruiert weder Abschluss noch verlorene Ausgabe.
+flags0 bindet die Bereinigung an die erzeugende Prozessgeneration; PORTABLE
+ueberlebt diesen Creator ausdruecklich bis zur Freigabe oder zum Bootende.
+Beobachter erhalten dadurch kein Recht zum Reapen oder Beenden des Ziels.
+ProgramObservationHandle behaelt seinen bestehenden24-Byte-Vertrag.
+
+Grundlage sind die vorhandene Implementierung und die oeffentlichen C-Belege
+aus0.88.26: fruehe/unabhaengige Bindungen, spaete Erstbindung nach echtem
+Desktop-Reap bei bestehender Retention sowie Ablehnung nach letzter Freigabe
+und bei falscher Generation. Details und Grenzen: Docs/Desktop/DeskRun.txt.
+Die direkte Rust-GUI-Ausgabe mit externem Rust-Beobachter ist der getrennte
+Qualifikationsumfang0.88.76; diese Textkorrektur behauptet keinen neuen
+Sprach-, Gast-, Hardware- oder Performancebeleg.
+
+
+Rust-GUI-Ausgabe nach Desktop-Reap (0.88.76)
+------------------------------------------
+
+GUI-Text aus App::write wird ueber die generationengebundene Prozessbeobachtung
+gelesen. Der externe Rust-Verbraucher bindet rechtzeitig mit
+Resources::observe_process(&handle, false) eine eigene Referenz. Danach liefern
+Observation::wait_ready und read auch nach dem konsumierenden Desktop-Reap
+den echten Abschluss samt Ausgabe. Wiederholtes Lesen konsumiert ihn nicht.
+Eine alte Process::status-Abfrage liefert dann None; console_output am bereits
+gereapten Ziel ersetzt keine Beobachtungsreferenz. Jede eigene Referenz wird
+mit close quittiert. Tokenkopien erhoehen keinen Refcount.
+
+Der oeffentliche Reproducer aus SDK120/Contract64 (Rust/Cargo1.99.0) schreibt
+RUST76 BEGIN/END mit nicht-ASCII-UTF8, wartet auf einen privaten File-Handshake
+nach Bindung zweier Rust-Referenzen und kehrt selbst mit37 zurueck.
+Ein kombinierter KVM4-Nachweis auf normalem Kernel445, Desktop197, WINSVC27
+und DESKRUN2 besteht: Handle45/Generation45, Completionsequenz32,
+Exit37,56Bytes, flags27. Available gesetzt, Truncated/Incomplete nicht gesetzt.
+Die Bytefolge enthaelt normalisiertes CRLF und unveraenderte gueltige UTF8.
+Zweimaliges Lesen und die zweite unabhaengige Referenz behalten Sequenz und
+Bytes; beide Freigaben sind quittiert, der geschlossene Token liefert-2.
+
+Das oeffentliche paginierte Taskinventar verwendet program_inventory_page_max.
+Task115/Generation115 ist nach echtem Owner-Reap abgebaut. Gleiche Desktop-/
+Broker-Generationen und0Fenster/0Captureleases/0Livebytes vor/nach.
+Startkontext-GUI ist Code2, waehrend hier die vorhandenen ProgramInstanceInfo-
+und Completionfelder GUI mit1 ausweisen; diese unterschiedlichen Felder
+duerfen nicht ueber einen unbegruendeten gemeinsamen Zahlencheck vermischt werden.
+
+Es gab vier Starts desselben kleinen Qualifikationsfalls im selben Gast:
+erster privater Frame-/Handshakeaufbau unqualifiziert, exakter Exit nach
+Retentionablauf unbekannt; zweiter Beobachter mit zu grosser Inventarseite
+abgewiesen; dritter mit unberechtigtem Klassencode2-Zusatzcheck abgebrochen;
+vierter besteht den gesamten geforderten Umfang. Alle Originale bleiben
+erhalten, all_native_runs_pass=False/required_scope_pass=True.
+Ein fehlgeschlagener gleichnamiger Hot-Upload lieferte den alten Dateistand
+zurueck; genaue Ursache unbewiesen, keine SFTP-Put-Quittung daraus. Die
+neuen Artefakte wurden unter frischen8.3-Namen vollstaendig zurueckgelesen.
+
+Die urspruengliche externe Solitaire-Rust-App und deren Cargo-/SDK-/Contract-
+Identitaeten fehlen weiterhin. Dieser aktuelle Nachweis rekonstruiert weder
+jene Ausgabe noch eine damalige Reapkonkurrenz. History65s/letzter globaler
+Close bleiben die vorhandenen0.88.26-Belege; hier nur letzte eigene Freigabe.
+Keine physische Sicht-/Windows-/PID-Umlauf- oder Performanceabnahme.
+Details/Quellpins/Artefakthashes: Docs/Desktop/DeskRun.txt und
+ExFiles/Reports/Core/0.88.76-rust-gui-evidence/.
+SDK121 ergaenzt ausschliesslich diese Dokumentation/Quellpaketidentitaet;
+Rust-/C-Fassaden, Runtime und oeffentliche ABI unveraendert. Kein STANDARD76.
+
+TCP-Operationsfrist und Bytefortschritt (SDK0.64.122, R4OS0.88.79)
+--------------------------------------------------------------
+
+Die hoeheren TCP-Fassaden fuer C/Rust und Zig verwenden einen end-to-end
+Timeout: Nach der aktuellen monotonen Taktmetadatenabfrage, vor Discovery,
+wird genau eine Frist festgelegt. Dienstsuche und Warteschlange verbrauchen
+dieses Budget. Der native Aufruf erhaelt nur die restlichen Ticks.
+Finite0 fuehrt keinen TCP-Aufruf aus; Overflow darf kein Forever erzeugen.
+
+Lieferpaar: SDK0.64.122 / Contract0.64.65 und TCPSVC ab0.1.9.
+Footer v1 bleibt24Bytes, alle bisherigen festen Typen/Tabellen/Slots gleich.
+Die benannten Konstanten entsprechen dem bisherigen R4DL-Magic/Version1.
+Im TCPSVC-Footer bedeutet deadline_tick0 einen nicht blockierenden Versuch
+ohne Deferred-Wiederholung; Connect liefert WouldBlock ohne blockierenden
+Handshake. MAXu64 bedeutet Forever, sonst gilt die absolute Systemtickfrist.
+TCPSVC prueft vor Aufnahme und vor jedem Deferred-Read/Write/Acceptversuch.
+Eine bereits begonnene Wirkung wird dadurch nicht transaktional rueckgaengig.
+
+Ein bestaetigter Service-Bytezaehler ist ein vom Provider akzeptierter
+Praefix. Kernelwrite zaehlt erfolgreich zum Senden angenommene Segmente;
+weder Remote-TCP-ACK noch Empfang durch die Peeranwendung sind dadurch belegt.
+Bei einem strukturierten Timeout oder Terminalzustand bleiben bestaetigte
+Teilbytes erhalten; Read kopiert sie erst nach Laengenpruefung.
+TLS-Recordbytes und HTTP-Nutzbytes sind andere Zaehler.
+
+Fehlt nach Submission eine gueltige Operationsantwort, liefert C
+R4_NET_RESULT_OUTCOME_UNKNOWN (9). bytes ist dann nicht verfuegbar;
+dessen0 ist KEIN bestaetigter Nullfortschritt.
+r4_net_progress_known(result) prueft diese Gueltigkeit.
+Rust verwendet SocketState::OutcomeUnknown; confirmed_bytes() liefert None.
+Bei gueltiger Antwort liefert es Some(bytes), auch bei Timeout/Terminalstatus.
+bytes bleibt zur Quellkompatibilitaet vorhanden, ist aber nur bei bestaetigtem
+Fortschritt verwendbar. Weder Read noch Write werden automatisch wiederholt.
+
+Zigs bestehende SocketIo-Union hat bei fehlender/ungueltiger TCP-Antwort
+.failure ohne Bytezaehler; ein natives Client-Warteende traegt darin
+service_api_result_timeout. Ein strukturierter Servertimeout ohne Daten
+bleibt .timed_out. Ein validierter positiver Praefix hat im bisherigen
+Ergebnis mit Bytezaehler .bytes Vorrang; wer gleichzeitig alle Statusfelder
+benoetigt, nutzt das vorhandene strukturierte technische Resultat.
+Diese unterschiedliche Ergebnisform fuehrt dieselbe Operationsfrist aus.
+UDP und DNS behalten ihre bisherigen eigenen Vertraege.
+
+Die technische Generated-API tcp*ServiceResultWait/NetSocketRequest bleibt
+ein ausdruecklicher Vertrag mit getrenntem Serverbudget, Completion-Warten
+und nativer Drain-/Closequittung. Dort ist Wait kein hoeherer end-to-end
+Timeout; bisherige Defaults und Completion-Gnadenfrist bleiben erhalten.
+Ein lokales Warteende bestaetigt weder Ressourcenfreigabe noch ausgebliebene
+Serverwirkung. Nach unbekanntem Read-/Writeeffekt nicht blind erneut senden.
+
+Die Namespace-/ABI-Ergaenzung benoetigt keinen neuen Kernel-API-Slot.
+Kernel446 bleibt unveraendert; das genaue neue Runtime-Lieferpaar wird bei
+0.88.79 separat qualifiziert. Das gepinnte Nexus-SDK92/Contract45 wird durch
+diese Quellenlieferung nicht umgestellt. Eine Nexus-Migration und die
+Ursache seines TLS-Recordfehlers bleiben getrennte Verbraucherauftraege.
+
+TCP-Fassaden seit0.88.80 / SDK0.64.123
+------------------------------------
+C r4_tcp_socket_readiness und Rust TcpSocket::readiness liefern eine
+validierte Readiness zusammen mit dem Operationsausgang. Zig benutzt die
+freie Funktion app_network.tcpReadiness(&socket, timeout). Der bestehende
+R4SdkTcpReadiness-/r4net.TcpReadiness-Typ bleibt die Snapshotform: readable
+und peer_closed duerfen gleichzeitig wahr sein; pending_rx zaehlt gepufferte
+Verfuegbarkeit, keine durch Poll uebertragenen Bytes. Die bisherige poll-
+Funktion bleibt als Zustandssicht erhalten, ihr Transferzaehler ist jetzt0.
+Bestehende Nutzer mit poll.bytes als Verfuegbarkeit auf readiness umstellen.
+R4TcpPollResult ergaenzt nur eine neue hohe SDK-Form; fixe Socket-/Result-/
+Wiretypen, Plattformslots und die GUI-Wertmethodengrenze bleiben gleich.
+
+Read/Write/Poll verwerfen den lokalen Frontendhandle weder bei Peer-FIN noch
+Reset/Closed/BackendBadHandle. valid() bezeichnet den vorhandenen lokalen
+Token, keine laufende Providerprobe. Backendretirement beweist nicht, dass
+TCPSVC seine Frontreferenz freigegeben hat. Strukturierte Readpraefixe werden
+validiert/kopiert, bevor der Aufrufer den Transfer auswertet. Erst expliziter
+bestaetigter Close beziehungsweise dessen bestaetigte Invaliditaet loescht
+den lokalen Token. Unknown/Timeout beim Close erfindet keine Freigabe.
+Borrowed owned0-Objekte besitzen keine Closepflicht; Rust-Drop versucht
+weiter best-effort Poll-Close fuer owned/raw!=0. Wer die Quittung benoetigt,
+muss vor Drop explizit close auswerten; Drop allein ist kein ACK-Nachweis.
+
+Der vorhandene Kernel beendet FIN aktuell als Closed mit drainbarem RX-
+Restpuffer; dadurch entsteht keine neue volle Halfclose-Sendefaehigkeit.
+Nach Drain darf der Backendhandle bereits retiret sein; der lokale TCPSVC-
+Frontendhandle braucht dennoch Close. Transport-Closed/PeerClosed und
+Providerinvaliditaet bleiben benannte Endgruende, keine Zusage ueber
+TLS-close_notify, HTTPbody-/SSE-Vollstaendigkeit oder Nexus-Datenverlust.
+SDK123 nutzt Contract65 und die in0.88.79 qualifizierte TCPSVC9-/Kernel446-
+Basis, kein neuer Provider-/Kernelbuild fuer diese Fassadenkorrektur.
+
+TCP-CloseReceipt und Heap-Gesamtpeak fuer 0.89.X
+-----------------------------------------------
+Zig TcpSocket.closeReceipt, C r4_tcp_socket_close_receipt und Rust
+TcpSocket::close_receipt liefern den urspruenglichen Close-Opcode, die
+gemeldete Aktion, den TCP-ACK-Stand und den Lifecycle zusammen mit dem
+Operationsausgang. `accepted` bedeutet: TCPSVC hat den Close-Auftrag
+quittiert und seinen Frontendhandle freigegeben. `pending_shutdown` bei
+Lifecycle `pending_close` bedeutet, dass das TCP-Shutdown noch laeuft;
+`frontend_released` behauptet keine vollstaendige Netzwerkfreigabe. Ein
+positiver Receipt loescht den SDK-Handle, auch wenn das Shutdown aussteht.
+Die bisherigen close-Methoden bleiben als kompatible Zustandssicht erhalten;
+deren `closed` beschreibt keine bestaetigte Beendigung des TCP-Shutdowns.
+Ein abgesandter Close ohne gueltige Antwort ist ungewiss und wird von der
+neuen Receipt-Fassade auf demselben Socket nicht erneut gesendet. Nach
+ungueltiger oder negativer Antwort bleibt der lokale Token zur Diagnose
+erhalten, ohne eine Freigabe oder gefahrlose Wiederholung zu behaupten.
+
+vm_allocator.Stats.peak_active_bytes ist jetzt der historische Hoechstwert
+gleichzeitig aktiver Bytes je Heapowner. Die bisherige groesste einzelne
+Region beziehungsweise der direkte Aggregatpeak bleibt getrennt als
+peak_region_active_bytes sichtbar. Jeder erfolgreiche Allokations- und
+Resize-Schritt aktualisiert den Gesamtpeak unter der vorhandenen
+Owner-Sperre; Free senkt nur den aktuellen Gesamtwert. Zwischen Abfragen
+auftretende Spitzen bleiben erfasst. Ein frischer Prozess-Defaultheap oder
+eine frische explizite Heap-Struktur beginnt bei null; trim und shutdown
+setzen den historischen Peak nicht zurueck. Eine explizite Heap-Struktur
+darf erst nach Ende aller Nutzer neu initialisiert werden.
+
+GUI TextField kann mit setPasswordMode(true) beziehungsweise Rust
+TextField::new_password/set_mode(TextFieldMode::Password) maskiert werden.
+Die Standardeinstellung bleibt normal. Maximal4096 UTF-8-Bytes werden im
+Passwortmodus angenommen, zusaetzlich zur kleineren Pufferkapazitaet.
+Zeichen, Auswahl und Cursor bewegen sich weiter an Graphemgrenzen;
+der Renderer sieht nur ein Sternchen je Graphem und legt keinen Klartext
+in den Canvas-Scratch oder Draw-Befehl. Copy, Cut und Reveal sind gesperrt;
+Paste bleibt moeglich. Das explizite value() liefert weiter Klartext an
+den Besitzer des Editors und darf nicht protokolliert werden.
+clear() nullt den gesamten eigenen/geborgten Editorpuffer inklusive Rest;
+gekuerzte Ersetzungen nullen den alten Rest im Passwortmodus. Zig- und
+C-Aufrufer muessen clear vor Freigabe eines vertraulichen Puffers selbst
+aufrufen. Der Rust-Wrapper nullt einen jemals als Passwortfeld genutzten
+geborgten Puffer zusaetzlich bei Drop, auch nach Rueckschalten auf Normal.
+Die finalen 0.89.X-Stufen sind 0.89.16 (SDK) und 0.89.17 (R4OS);
+SDK-Komponentenversionen bleiben davon unabhaengig.
+
+Desktop-Pointer und eigener FocusSnapshot fuer 0.89.X
+----------------------------------------------------
+Der originale Launcher vergibt nach Fensteranbindung einen gesonderten
+Pointer-Grant (Recht 8) nur an die benannte Prozessgeneration. WINSVC bindet
+ihn an die aktuelle Fensterinkarnation, Ansicht und Inputrevision des
+beobachteten fokussierten Fensters. Ein Grant gilt hoechstens 2000ms und fuer
+eine linke Down/Move/Up-Geste mit maximal 32 Schritten und 1024 Pixeln
+Abstand vom Down. Down liegt im Client; ausserhalb gefuehrte Move/Up-Schritte
+benutzen den Desktop-Router und die native Drag-Capture der Ziel-App. Die App
+muss fuer einen Drag ausserhalb ihres Clients MouseCapture anfordern. Ein
+verlorener oder abgebrochener Ablauf wird per gezieltem Input-Reset geloest,
+ohne einen zusaetzlichen Drop auszufuehren. Ein fremder Eingabevorgang beendet
+die delegierte Geste. Es gibt keinen globalen Controllerwechsel.
+
+Zig: desktop_actions.prepare/pointerStep/status/release. C:
+r4_desktop_action_prepare/pointer_step/status/release. Rust:
+services::prepare_pointer_grant und Services::pointer_grant/step/status/
+release. Vor jedem Befehl die unveraenderliche Operation samt Deadline
+sichern; nach ungewisser Antwort denselben Status abfragen. Nach Up den Grant
+freigeben. Ein erneuter Grant verwendet eine neue kanonische Token-ID.
+
+Der Desktop veroeffentlicht einen eigenen FocusSnapshot mit Prozessgeneration,
+Fensterinkarnation, Sichtbar-/Minimiert-Flags, Ansichts- und Inputrevision
+sowie dem beobachteten Tick ueber die neue 752-Byte-Desktop-Exchange-V2;
+die alte 640-Byte-Exchange bleibt als kompatibler Dienstaufruf erhalten.
+WINSVC gibt den Snapshot nur dem Besitzer dieses Fensters zurueck;
+verschwundene, veraltete und noch unbekannte
+Beobachtungen sind getrennte Ergebnisse. Eine mehr als 1000ms alte
+Beobachtung ist unbekannt, keine aktuelle Fokuszusage. Zig
+Client.focusSnapshot, C r4_desktop_focus_snapshot und Rust
+Services::focus_snapshot sind schreibfrei. Nach einem verlorenen Fokusereignis
+koennen Anwendungen ihren eigenen Zustand erneut lesen; die gewoehnliche
+Loss-/Gain-Zustellung bleibt der primaere Ereignispfad.
+
+
+Begrenztes inkrementelles POST seit0.88.81 / SDK0.64.124
+------------------------------------------------------
+app_web.PostStream ist ein separater, ortsfester SDK-Library-Owner. Die
+bisherigen Fetch-/Download-Typen und der CL-only StreamDecoder bleiben
+unveraendert. PayloadStreamDecoder verwendet denselben Headerparser und
+liefert geliehene Bodyteile fuer CL, chunked (inklusive Extensions/Trailer)
+und explizit erlaubtes EOF. Requestheader und Body werden getrennt gesendet;
+ein Body ueber12KB benoetigt keinen entsprechend grossen Headerpuffer.
+
+Bekannte Slice-/Readerlaenge: Content-Length; unbekannte Readerlaenge:
+chunked. Reader produziert maximal8KB pro Aufruf in einen Aufruferpuffer,
+mit0=EOF/-1=Pause/-2=Cancel/-3=Fehler. Sink akzeptiert den geliehenen Chunk
+vollstaendig oder pausiert mit0 uebernommenen Bytes. Beim naechsten run
+bleibt derselbe Chunk erhalten. Zeitbudget ist eine gemeinsame absolute
+Frist; Pausen und Callbacks starten sie nicht neu. Callbacks muessen begrenzt
+zurueckkehren. Kein automatisches POST-/TLSrecord-Replay bei Teilfortschritt
+oder unbekannter Wirkung. Manueller Redirect oder Fehler, kein automatisches
+Credentialweiterreichen; bestehende Target-/Cookie-/CORS-/TLS-Trustregeln.
+
+Defaults: je64MB Request-/Responsebody, URL1024B, Requestheader12KB,
+Responseheader16KB/64Felder, Chunk-/Trailerzeile1024B, Trailer16KB/64Felder,
+maximal8Zwischenantworten. TLSscratch54KB, Responseheader16KB sowie kleine
+nichtleere IO-/Uploadpuffer beim Aufrufer. 1MB=1024KB. Speicherbedarf bleibt
+unabhaengig von der gesamten Antwortlaenge. Eigene Reader/Sinks begrenzen
+zusaetzlich ihre Arbeit. Kein Requesttrailer; Framing-/Expect-/Connection-
+Header bleiben Transportbesitz. Eine unbekannte Antwortgesamtgroesse ist
+null, nicht0. Bestaetigter Requestpraefix, Application-Wirebytes (bei TLS
+inklusive Recordoverhead, ohneHandshake), decodierte und vom Sink uebernommene
+Bytes bleiben getrennt. Bei teilweise gesendetem TLSrecord zaehlt nur der
+vorher bestaetigte Plaintextpraefix; unbestaetigte Wirkung bleibt markiert.
+
+Nur gueltiges explizites CloseACK gibt den lokalen Socketbesitz frei.
+Unknown/Timeout behaelt Socket und Kontext; mit eigenem begrenztem
+Cleanupbudget close auswerten. HTTPvollstaendigkeit, TCP-EOF und
+TLS-close_notify werden unabhaengig berichtet. TLS-TCP-EOF ohne close_notify
+vervollstaendigt keinen EOF-Body. Rust-Drop ist nur best-effort Poll-Close.
+
+C: transport_helpers.h mit generierten postStreamInit/Run/Report/Response/
+Cancel/Close/CanRelease und Callbackadaptern. Zig: app_web.PostStream.
+Rust: web::transport::{PostRequest,PostBuffers,PostStream,StreamReport}.
+Die komplette lokale web-/transport-Bridge wird regulaer neu projiziert;
+Headers, Rustdeklarationen und SDKbareruntime nicht aus Revisionen mischen.
+Beispiel und Callbacksignaturen stehen in Examples/README.md. SSE-Zeilen,
+UTF8-Zustaende, id/mehrzeilige data und LLM-Endmarker bleiben Anwendungscode.
+Nexus bleibt auf seinen eigenen SDK92-/Contract45-Pins; keine Migration oder
+Behauptung zu seiner TLS-Ursache. Contract65/TCPSVC9/Kernel446 unveraendert.
+
+AUDSVC-Requestdauern ab SDK0.64.125 / Contract0.64.66
+----------------------------------------------------
+AUDSVC ab0.1.22 erhebt keine reinen Request-/WriteRequest-Dauern mehr.
+AudioServiceStatus.flags und AudioServiceStreamResult.flags setzen
+audio_service_flag_duration_unavailable. Alle sechs Statusdauerfelder und
+request_ticks/write_ticks im StreamResult enthalten dann
+audio_duration_ticks_unavailable (UINT64_MAX), niemals eine gemessene Null.
+Diese Werte weder verrechnen noch als Latenz oder Score darstellen.
+C: R4OS_AUDIO_SERVICE_FLAG_DURATION_UNAVAILABLE; Zig/Rust verwenden den
+kanonischen Kleinschreibungsnamen. Binaere Layouts, Wireversionen und alte
+Flagwerte bleiben erhalten. Historische Provider ohne dieses Flag behalten
+ihre damaligen Messwerte. Funktionale Closefristen, PCM-Annahme, Fortschritt,
+Client-/Streamgeneration, Auswahl-Join und Fehlerzaehler bleiben wirksam.
+
+SDK0.64.126-Kandidat: Desktop-Belege ueber WINSVC29/Contract67/DESKRUN3.
+Oeffentliche C/Rust/Zig-Fassade: desktop_evidence.Client,
+r4_desktop_evidence_*, Services::evidence_*. Originalen Launch-Schluessel
+mitsamt vor Submit erfasster evidence_epoch speichern. LegacySTATUS ohne
+Originalepoche ist kein Bootnachweis. Intent vor Reserve, zurueckgegebene
+Serial vor Offer und kanonischen vollen Prozesstoken vor ACK bestaetigt
+speichern. Verlorene Antworten ueber Status derselben Identitaet abgleichen.
+Kein neuer Spawn/Retain bei Unknown/Expired/Stale. ACK-Beleglease bleibt
+beim Service bis Release/Serviceende; unbestaetigte Reservation5Minuten,
+insgesamt16aktiveSlots. Unterschiedliche Beobachter verwenden eigeneIntents;
+Tokenkopien teilen dieselbe Freigabe. Desktop behaelt den konsumierenden Reap.
+Beispiel mit atomarem Persistenzcallback: Examples/DesktopEvidence.c.
+Ein frischer192bitServiceNonce aus echter Entropie plus Broker-Vollgeneration
+verhindert Service-/Bootverwechslung; kein erfundener globaler BootUUID.
+Vier gezielte Broker-Hostfaelle plus14bestehende Launchfaelle und aktuelle
+Compiler-/ABI-/Modulbauten bestehen. Native97: normalKernel452/SMP4,
+Desktop197/WINSVC29/DESKRUN3, zwei echte Belegreferenzen nach Desktop-Reap,
+Original22:22/Sequenz7/Exit37/76Bytes mit4Markern. Status nach echten
+Helferenden mit absichtlich nicht exportierten Offer-/ACK-Ergebnissen;
+17neue Starts gegen16Historyslots, C/Rust/Zig-Zugriff, leer/abgeschnitten,
+5fremdeToken, reale300000ms-Frist, letzterRelease und Service-Orphan bestehen.
+Beim frischen Boot desselben Images wiederholen sich alle numerischen Token-
+Identitaeten; nur die192bitEpoche unterscheidet sich, alt wird Stale(-3).
+WINSVC29 importiert fuer vorhandenen Hardwarezufall R4DEV; ohne brauchbare
+Entropie ScopeUnavailable, kein Zeit-/ID-Ersatz. OriginalCompletion128 samt
+Incomplete-Flag unveraendert; kein neuer erzwungener Incomplete-/Desktoprestart-
+Gastfall und keine native16Slot-Erschoepfung. Alle3Gaeste normal beendet,
+rote/unqualifizierte Originale erhalten. Docs/Desktop/DeskRun.txt.
+SDK126/Contract67 sind Quellkandidaten. Veroeffentlichte kompatible SDK-/OS-
+Kombination erst in99/100 nach allen Functional, keine Studio-Gastfreigabe.
+
+0.88.98: SDK127/Contract68 als Quellkandidaten
+------------------------------------------------
+Oeffentliche Desktopaktionen: r4os.desktop_actions (Zig),
+<r4os/desktop_actions.h> (C), services::Services::action_* (Rust).
+Originaler DESKRUN delegiert explizit an /CONTROLLER:pid:generation;
+control_result/Grant getrennt pruefen, kanonischen Token per Status lesen.
+Nur der benannte volle Caller darf Resize/Min/Restore fuer dieses originale
+Kind/Fenster ausfuehren. Gleiche Operation mit unveraenderten Daten liest
+die Originalquittung; bei Ergebnisverlust Status statt neuem WM-Auftrag.
+applied bleibt unveraendert, current ist eine eigene aktuelle Kopie. Erst
+frameReady bestaetigt die passende wirkliche Komposition; Min hat Frame0.
+Neue Ansichten/Frames/Koordinaten bleiben an die gleichen Revisionen gebunden.
+Grant nach Benutzung freigeben, keine fremden Caller-/Reaprechte.
+Der normale C/Zig-Paintpfad meldet nur markierte Ansichten, nicht jeden FPS-
+Frame. Bestehende Mode-RPCs werden1:1 ersetzt. KVM4 mit originaler C-App,
+echten Pixeln/PS2, gespeicherten Token in C/Rust/Zig, Close37 und Slotreuse
+abgenommen; erster Bindungsfehler bleibt erhalten. Docs/Desktop/DeskRun.txt.
+Publiziert bleiben SDK125/Contract66; passendes finales SDK/OS in99/100.
+Keine Studio0.8.3-/GPU-/Windows-/Hardware-/STANDARD-Freigabe.
+
+Matched0.88 SDK delivery (01.11.2026)
+------------------------------------------
+SDK0.64.127 is matched to Contract0.64.68 and Libraries0.64.40 for the final
+R4OS0.88.107 runtime. The source Contract pin is immutable. Public delivery
+also requires the separately matched technical=false Linux/Windows host-tool
+profile and the exact bare runtime objects; a source commit alone is not a
+complete standalone SDK release. Brokered desktop evidence requires the
+current WINSVC service; delegated window actions require WINSVC0.1.31 and
+Desktop0.1.198. A missing/restarted broker or desktop yields the documented
+unavailable/stale results, not an implicit platform ABI extension.
+C, Zig and host Rust share the public observation/action contracts. Retain
+an original launch token and epoch before submission, use status to resolve
+an unknown result, and release independent evidence references explicitly.
+See desktop_evidence, desktop_actions and Examples/DesktopEvidence.c.
+The historical SNES Write and placement-wake investigations0.88.88/101 were
+explicitly discarded by the user01.11.2026; their causes remain unknown.
+Package validation does not imply a fix for these historical findings,
+Windows execution, native Rust compilation or physical GPU/audio hardware.
+
+Paketanschluss ab SDK0.64.144
+----------------------------
+Tools/Package.ps1 Describe erzeugt den compilerfreien Schema1-Paketanschluss
+aus den drei Originaldateien. Manifest bindet saubere Quellen und Assethashes
+ohne Selbsthashkreis; Verify prueft den heruntergeladenen/entpackten Satz.
+RootsFile/Assetzuordnung nennen Orte und Transport, keine eigene Politik.
+Schema3-capabilities enthaelt build_profiles/component_sets/profile_sources.
+Anleitung: Docs/SDK/Profiles.txt; finale Studio-/Server-Uebergabe in 0.89.37.
+
+Optionale App-Titelfarben ab SDK0.64.148
+--------------------------------------
+META=gui.title.background=341F4A und META=gui.title.foreground=F7F0FF
+schlagen Farben fuer die aktive eigene Titelleiste vor. Je exakt sechs
+Hexziffern und hoechstens ein Wert; fehlende Angaben verwenden Desktopfarben.
+Manifest und Hostpacker teilen die Syntaxpruefung. Der Loader speichert die
+validierten Angaben aus dem tatsaechlichen R4X unveraenderlich. Die optionale
+R4DESK-Abfrage guiWindowAppearance liefert nur dem exakten Desktop-Host die
+an Prozessgeneration und Fensterinkarnation gebundenen Werte. Frame, Knopfe,
+inaktive Darstellung und Fokus gehoeren dem Desktop; kein Laufzeitsetter.
+Normativer Vertrag: Contract/ABI/R4M0TitleAppearance.txt; Anschluss und
+Abnahme: Docs/API/GuiWindowAppearance.txt. Zig/C/Rust verwenden dieselben
+generierten Typen und die gemeinsame SDK-Fassade.
+
+Breite File-/Directorymetadaten ab SDK0.64.165
+-------------------------------------------
+metadata2.zig, r4os/metadata2.h und Rust metadata2 rufen die neuen optionalen
+Query2-Anbieter fuer FileMetadata2 und begrenzte Directoryseiten auf. Volle
+Knoten, explizite Feldgueltigkeit und globale Namespace-/Mountidentitaet;
+kein First-Cluster-Handle oder erfundene Inhaltsrevision. Neue Cursor werden
+bei Namespacewechsel explizit neu gestartet. Rust leiht ganze Seitenpuffer.
+Normativer Vertrag: Docs/FileMetadata2.txt und Contract/API/FileMetadata2.txt.
+
+Vorbereitete Textmetriken ab SDK0.64.166
+--------------------------------------
+text_metrics nutzt einen optionalen DRAW-Query2-Prefixanbieter unter einer
+genauen Fontbank-Leihe. Danach treffen Zig/C/Rust ueber denselben SDK-Besitzer
+Graphemgrenzen ohne erneute Fontmessung oder Prefixkopie. Quellen-/Text- und
+Fontrevision binden die feste Sicht; eine Leerstamp-Pruefung invalidiert sie
+bei spaeterer Veroeffentlichung. Alte Canvas-/Apppfade bleiben unveraendert.
+Normativ: Docs/TextMetrics.txt und Contract/API/FontPrefixMetrics2.txt.
+
+Audio-Gesamtfrist ab SDK0.64.168
+-----------------------------
+audio_write und pcm_source teilen statische Zig-Besitzer mit C/Rust. Neue
+Writes verwenden eine Gesamtfrist; bestaetigte PCMframes bleiben erhalten.
+Der reine Source-Pacer behauptet keine Hardwarewiedergabe. Vertrag, Leihen
+und native Query2-Grenze: Docs/AudioWrite.txt. Anwendungen werden spaeter
+umgestellt; bestehendes AudioStream.write behaelt seine bisherige Semantik.
+
+Gemeinsame FilePickerSession ab SDK0.64.167
+-----------------------------------------
+file_picker verbindet die vorhandenen Metadaten-/Directoryanbieter und den
+FileDialog mit einem begrenzten gemeinsamen Controller. Zwei Caller-Puffer,
+schrittweiser Kandidat bis echtem EOF, ganze Pfade und erneut gepruefte
+Identitaeten erhalten alte Sicht und Auswahl bei Fehler. Open/Save, Name,
+Fokus/Paging/Cancel und ausdrueckliche Overwriteentscheidung sind gemeinsam
+fuer Zig/C/Rust nutzbar; Schreiben und Anwendungsformat bleiben beim Caller.
+Normativer Vertrag: Docs/FilePicker.txt. Keine Anwendung wird umgestellt.
+
+Optionale PCM-Aufnahme ab SDK0.64.180
+-----------------------------------
+audio_capture (Zig/Rust) und audio_capture_platform2.h (C) sprechen den
+kopierten AUDSVC-Vertrag6100 an. Catalog/Open/Read/Query/Stop/Close verwenden
+ganze S16LE-Frames und volle Dienst-/Quell-/Client-/Streamgenerationen. Die
+finale Caller-Kapazitaet begrenzt die Entnahme bereits beim Dienst.
+Read verwendet die vorhandenen Poll-/Finite-/Forever-Budgets. Cancel,
+Timeout und Disconnect geben keinen Stream frei; Close bleibt explizit.
+Rust trennt Transport-/Validierungsfehler von Reply.result. Unbekannte
+schreibende/lesende Ausgaenge werden niemals automatisch wiederholt.
+
+Der begrenzte Backend-Adapter ist Infrastruktur fuer AUDSVC. Die optionale
+DriverApi2-Tailfunktion wird nur nach ganzer Groessen-/Nullzeigerpruefung
+benutzt; der alte656-Byte-Praefix bleibt zugaenglich. Normativer Draht-/
+Lebenszeitvertrag: Contract/API/AudioCapture.txt. Ein CONTROLLED-Testeingang
+ist kein ADC. Ohne qualifizierten Inputanbieter ist Aufnahme nicht verfuegbar;
+die ausgelieferten HDA-/AC97-Backends liefern hier keinen Audioeingang.
+
+Netzdienstverbraucher ab0.64.197 (Migration0.90.60)
+--------------------------------------------------
+network_common.provider und network_transport.broker beziehen ihre eigene
+Prozess-ID aus dem wirklichen Startkontext. App2 verwendet ausschliesslich
+R4XStartContext2; der kontrollierte alte Verbraucher behaelt sein Bundle.
+Provider benoetigen eine passende ID, gueltige Generation und reserved0.
+network_family.Client.connectProvider verwendet bei App2 die wirklichen
+Query2-Servicefunktionen. Fehlende Funktionen oder Fehler wechseln weder
+die Startgeneration noch den Anbieter. Tabellen werden nicht umgegossen.
+Die eigentlichen Netzwerk-, Socket-, Resolver- und Leihbesitzer bleiben
+beim jeweiligen Dienst beziehungsweise Protokoll. Kein neuer Transport-
+oder asynchroner Rueckgabevertrag entsteht durch diese Anschlusskorrektur.
+
+Storage-Fassade ab0.64.198 (Migration0.90.61)
+--------------------------------------------------
+Die physische Storage-Fassade liest bei App2 den wirklichen R4SYS-Query2-
+Slot. Sie darf nach einer Verfuegbarkeitspruefung nicht auf ein altes
+Bundle zugreifen. Der an SFTP reproduzierte Nullzugriff entfällt damit
+auch bei den anderen Funktionen derselben Fassade. App2-Volume-Leihen
+benoetigen Begin und End vor der Anmeldung. Nur der kontrollierte alte
+Kernel ohne Storage-Leihvertrag behaelt den bisherigen Transferpfad ohne
+Leihe; fehlende Query2-Slots werden als nicht unterstuetzt gemeldet.
+
+Serverzugang und Update-Engine ab0.64.199 (Migration0.90.62)
+---------------------------------------------------------
+Registrierung, einzelne HTTP-Abrufe und Downloads beziehen bei Start2 den
+TCP-Anbieter ueber den Familienvertrag von TCPSVC. Read, Write und Close
+verwenden Anbieter, Socket und Generation der Verbindung. Der HTTP-Client
+wertet vom Anbieter bestaetigte Bytes
+als Praefix aus. Ein RPC-Abbruch ohne Bestaetigung beendet den Transfer.
+Start1 verwendet den eigenen bestehenden IPv4-Transport.
+
+RpcBudget liefert die Restzeit fuer zeitbasierte Fassaden. R4SRV teilt
+sein Budget auf Erstzugang und Registrierung auf. UPDSVC verwendet ein
+Budget fuer Registrierung, Katalog, autorisierten Wiederholungsabruf
+und Pakettransfer des jeweiligen Auftrags. Der Update-Engine werden
+System- und Dateifassaden aus dem jeweiligen echten Startkontext geliehen.
+Dateioperationen und Journale nutzen den gemeinsamen Engine-Besitzer.
+Der Erstzugang veroeffentlicht sein Secret aus einem eigenen 8.3-Temporaernamen.
+Der Name bleibt auch bei lang laufenden Systemen fuer den atomaren Austausch
+gueltig.
+
+Rust-Desktopanschluss ab0.64.201 (Migration0.90.65)
+------------------------------------------------
+Graphics::open2 bindet die echten Query2-Zeichen- und Geraetefassaden an
+gepinnten GraphicsStorage. App2::sleep verwendet den aufgeloesten SYS2-Slot.
+Unveraenderliche ImportSpec-Metadaten koennen zwischen gejointen eigenen
+Workern geteilt werden. Jeder Worker konstruiert seinen tasklokalen App2.
+Die native Resources-Leihe bleibt synchron an Anwendung und Ressourcen
+gebunden. InventoryReader::cursor liefert kopierte Akquisitionsmetadaten
+fuer den UI-Epochencache. Neue Zeilen stammen aus der vollstaendigen view.
+Zeitbudget-Fehlercodes gehoeren dem reinen time_budget-Besitzer. Statische
+Library-Helfer binden dadurch ausschliesslich die benoetigten Funktionen ein.
+Die C-/Rust-Laufzeit stellt ihre fremdsprachigen Exporte bereit.
+
+Mit SDK201 aus Migration0.90.65 nimmt der Hostpackager32 technische und fachliche Imports auf. Der passende Kernel476 uebergibt alle32 Records und genaue Library-Codebindungen. R4M0-Header und16Byte-Importrecords bleiben im bisherigen Format. Die bestehenden Packagertests pruefen0/16/17/22/32 sowie die Ablehnung33 vor Dateiersetzung.
+
+
+Familienfaehige Netzwerkprogramme ab SDK0.64.202
+----------------------------------------------
+Migration0.90.69 verwendet network_family im normalen App2-Verbraucher.
+parseIpv4 erhaelt dezimale fuehrende Nullen der bisherigen Netzwerktools.
+parseAddress/parseEndpoint verlangen fuer linklokales IPv6 eine ausdrueckliche
+numerische Interfaceidentitaet. Systeminterfaces kommen aus dem IPv6-Owner.
+Globale Adressen besitzen Scope0. Gemappte IPv4-Adressen und Multicast werden
+von diesen Unicast-Kommandohelfern abgewiesen. addressText formatiert reine
+Adressdaten ohne Hostnetzaufruf.
+
+resolveAll sammelt bis32 Antworten ueber echte maximal16er-Pins privat.
+Provider, Query, Gesamtzahl und Ablaufzeit bleiben ueber alle Seiten gleich.
+Ein gemeinsames Clockbudget gilt fuer Info, Resolve, Seiten und Release.
+Erst eine bestaetigte Freigabe veroeffentlicht das komplette Ergebnis. Eine
+verlorene Release-Antwort wird einmal gemeldet. Das Ergebnis bleibt privat.
+Fehlerbereinigung versucht eine vorhandene Lease innerhalb des Restbudgets
+einmal freizugeben. Der bestehende DNS-Owner behaelt seine Ablauf- und
+Besitzerbereinigung. Service-Close ist gesondert zu quittieren.
+
+Ipv6 leiht R4DEV fuer exakte kopierte Protokollrecords. Interface, Provider
+und Linkgeneration binden Address/Route/Packet an den externen IPv6-Owner.
+Dhcp verwendet dessen bestehenden DHCPSVC-Recordvertrag mit gemeinsamem
+Budget und kanonischer absoluter Tickdeadline. Ein fehlender Dienst liefert
+einen Fehler. Das Statusziel bleibt dabei unveraendert.
+
+Diese Zig-Verbraucherhelfer komponieren die vorhandenen kopierten Vertrage.
+C und Rust behalten ihre bisherigen Record-/Dispatch-/Servicefassaden.
+Die neuen Komforthelfer besitzen hier eigene Zig-Faelle. Aussagen zur
+Sprachparitaet der bestehenden Transportfassaden behalten ihren Umfang.
+
+
+Familienfaehige Stream-Verbraucher ab SDK0.64.203
+-----------------------------------------------
+network_stream.Session bindet TCPSVC-Info, Provideridentitaet und wirkliche
+Socketgenerationen. Socket und Session besitzen ihre Ressourcen eindeutig.
+Reader erhaelt gepufferte Suffixe zwischen Steuerzeile und Dateikoerper.
+stream_transfer.adapters.Driver fuehrt die gemeinsamen Read-/Write-Schritte
+mit einer bestehenden Gesamtfrist aus. launch_io.Output verwendet die
+wirklichen Start2-stdio-Bindungen und merkt einen fehlgeschlagenen Sink.
+Der Besitzervertrag und die Grenzen stehen in Docs/StreamTransfer.txt.
+
+Terminalanschluss ab SDK0.64.204
+------------------------------
+system_update_engine.runTerminal nimmt die normalen App- und App2-Kontexte
+an. Engine bindet deren System-/Dateifassaden fuer die Transaktionsdauer.
+ArgCursor prueft UTF8 und die gesamte Quotegrammatik vor dem Dispatch.
+Ein ganzes gequotetes Pfadargument wird dekodiert. Der bisher zulaessige
+ungequotete ganze Pfadrest bleibt als Pfad verwendbar. Argumentlose Befehle
+pruefen das genaue Ende. Zwei spezifische Zig-Quellfaelle pruefen Pfad- und
+Grammatikgrenzen. Der vorhandene Status-/Journalwechseltest verwendet den
+aktuellen Engine-Konstruktor mit System- und Dateifassade und fuehrt seine
+bestehenden Vergleichsorakel aus. Native Portex-/SysUpdate-Belege stehen
+unter Research/API-ABI/Migration/0.90.71 im R4OS-Workspace.
+
+0.90.71 verwendet der Generation2-Originalassetadapter beim Anlegen seiner
+Elternverzeichnisse die vollstaendigen FileMetadata2-Verzeichnisflags.
+Dadurch sind vorhandene64-stellige SHA-Verzeichnisnamen im UPDATE-INBOX
+auch nach der Migration zulaessig. Der Erstgenerationpfad behaelt seinen
+eigenen Dateivertrag. API-Fehler im neuen Pfad bleiben sichtbar.
+
+Native Entwicklungswerkzeuge ab SDK0.64.205
+------------------------------------------
+Die native C-Teilmenge ist fuer Generation2 angeschlossen. Die SDK-Templates
+verwenden R4App2 und die Profile R4X_C2_Console beziehungsweise
+R4X_C2_Desktop_OK. Das Consoletemplate bindet R4SdkStdio2 und schreibt mit
+genauen Praefixzaehlern, WouldBlock und Close. R4CC.STATUS beschreibt diesen
+Stand fuer den nativen R4BUILD. Der Faehigkeitskatalog unterscheidet die
+Plattformgenerationen ausdruecklich.
+
+launch_io.Output.recordSink verbindet den vorhandenen begrenzten
+Diagnoserecordpuffer mit dem echten stdio-/StreamTransfer-Adapter. Bestaetigte
+Praefixe werden quittiert. Ein unbekannter Effekt vergiftet den Restrecord.
+Ein fehlgeschlagener Sink wird fuer weitere Records geschlossen gehalten.
+Die C-/Rust-Record- und Bytepipe-Primitiven besitzen ihre eigenen bestehenden
+Vertraege. Der zusaetzliche Sink ist eine Zig-Komposition dieser Besitzer.
+
+Der R4MF-Textplan verwendet ein explizit gewaehltes SDK-Profil. Der native
+Packer uebernimmt Name, Modulversion und deklarierte Metadaten aus dem
+Manifest. Host-/Quellpruefungen und native Verbraucherbelege stehen unter
+Research/API-ABI/Migration/0.90.72 im R4OS-Workspace.
+
+Fortschreibung 0.90.73 / SDK0.64.206
+----------------------------------
+Editoren erhalten einen privaten DocumentPrefix ueber weite Metadaten,
+StreamTransfer und eine gemeinsame Gesamtfrist. Ein Namespacewechsel
+verwirft den privaten Kandidaten. Groesse, zertifizierte Identitaet und
+Inhaltsrevision werden vor der Publikation erneut verglichen.
+DialogPage verwendet an Context2 die bestehende FilePickerSession und
+prueft Cursor und ganze Objektidentitaet vor einer Auswahlaktion.
+Der gemeinsame Pfadparser akzeptiert gueltige supplementary UTF8-Skalare.
+Sie zaehlen als zwei UTF16-Einheiten innerhalb der bestehenden Grenzen.
+Zig und C verwenden dieselben Regeln. Rust verwendet den C-Pfadbesitzer.
+TextClipboard kapselt den typisierten Angebotsbesitzer fuer Textcontrols.
+Unsichere Stages und unbestaetigte Snapshotfreigaben behalten ihre Token.
+Ein Copy-/Read-Vorgang verwendet eine gemeinsame Frist einschliesslich
+seiner Publikations- beziehungsweise Freigabequittung.
+TextArea bietet vollstaendig geprueftes Einfuegen und gemessene Treffer.
+Context2 zeichnet sichtbare Zeilen und Auswahl ueber FontPrefixMetrics2
+und laengengetragene Frame-Ressourcen. Die bestehenden C-/Rust-GUI-
+Projektionen verwenden den gemeinsamen nativen Controlbesitzer.
+
+Typisierte Bildangebote und Clipboardbelege ab SDK0.64.207
+---------------------------------------------------------
+Der gemeinsame gui.TextClipboard-Besitzer bietet copyFormat/readFormat fuer
+eine ausdrueckliche Standarddarstellung an. Paint verwendet XRGB32 mit
+Breite, Hoehe, Stride, Flags und vollstaendigen Pixelbytes. Der fachliche
+Formatbesitzer prueft die Daten, CLIPSVC prueft das komplette private Angebot
+vor Commit. copy/read behalten ihren UTF8-Vertrag. readFormat gibt die
+vollstaendigen Scratchbytes nach der bestaetigten Snapshotfreigabe zurueck.
+
+Nach Commit wird auch der Beleg explizit freigegeben. Eine fehlgeschlagene
+Belegfreigabe behaelt dessen genaue Identitaet fuer die naechste Aktion
+oder Close. Eine bereits bestaetigte Publikation bleibt erfolgreich.
+Ein ungewisser Commit behaelt weiterhin seinen Stage fuer Status/Abort.
+Die RPCs einer Publikation beziehungsweise eines Reads teilen ihre Frist.
+Die native Clipboardstruktur umfasst224Bytes. C-Header, Fingerprint und
+Rustprojektion sind compiler-generiert und verwenden dieselbe Implementierung.
+Die gezielte C/Rust-Probe ruft beide neuen Formatmethoden und den echten
+Defaultkonstruktor ohne Anbieter auf. Die echten Bildtransfers werden durch
+den Zig-Verbraucher im laufenden System geprueft.
+
+Beep und R4Synth verwenden audio_write.Writer mit einer Gesamtfrist je
+PCMblock sowie pcm_source.Pacer fuer angenommene ganze Frames. Ihre lokalen
+Pacingakkumulatoren entfallen. Sourcewartezeit, Streamclose, Synth-Stop und
+physische Wiedergabe behalten ihre eigenen Bedeutungen. Der zentrale
+Plattformvertrag und die unabhaengigen Libraryinterfaces bleiben beim
+jeweiligen Besitzer. Belege stehen in Research/API-ABI/Migration/0.90.74/.
+
+Fortschreibung 0.64.208 / R4OS0.90.75
+-------------------------------------
+Der private DocumentPrefix-Read transportiert seine validierte file_size.
+Browserprofil- und Fontcacheleser koennen dadurch volle Dateien von einem
+kapazitaetsbegrenzten Praefix unterscheiden. Der vorhandene SDK-Ownerfall
+enthaelt Restart-, Groessen- und Ablaufpruefungen. FileMetadata2.txt nennt
+den genauen Ergebnisvertrag und die Sprachreichweite.
+
+Der gemeinsame App2-Resolver hinter WebTransport verwendet die vorhandene
+network_family.resolveAll-Komposition fuer IPv4-Namen. Alle gepinnten Seiten
+werden privat validiert und vor der Publikation mit genau einem Release
+quittiert. Ein verlorenes Release-ACK liefert einen Fehler. DNS-Info,
+Abfrage, Seiten und Release teilen eine validierte Gesamtfrist. Der echte
+Service-Endpunkt wird danach geschlossen. Numerische IPv4-Ziele behalten
+ihren direkten Parsepfad. Name-/Timeout-/NotFound- und NoService-Ergebnisse
+werden den bestehenden Resolvervarianten zugeordnet.
+
+Der vorhandene Paginationfall prueft jetzt denselben produktiven App2-
+Resolver mit zwanzig Antworten, zwei Seiten, einer Releasequittung und
+einem echten Endpoint-Close. Identitaetswechsel, verlorenes Release-ACK und
+fehlende Uhr geben kein erfolgreiches Ergebnis frei. Alle134 bestehenden
+SDK-Datenfaelle bestehen am finalen Quellstand. Die gemeinsame C-/Rust-
+Service-/Netzfassade und der native ABI-Aufbau behalten ihre Schnittstellen.

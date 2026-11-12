@@ -1904,6 +1904,180 @@ pub fn fileInfo(path_ptr: [*:0]const u8, out: *FileInfo) callconv(.c) i32 {
     return 1;
 }
 
+const metadata_contract = @import("generation2.zig").abi.shared;
+
+// Copy genuine backend identity under the original volume request. Neither a
+// first cluster nor DOS time is a content epoch or infinite birth identity.
+fn projectMetadata2(volume: vfs.Volume, entry: vfs.Entry, letter: u8, namespace: u64, root: bool) ?metadata_contract.FileMetadata2 {
+    const c = metadata_contract;
+    const mount = volume.accessReference() orelse return null;
+    if (mount.generation == 0) return null;
+    const fat = volume == .fat32;
+    var value: c.FileMetadata2 = .{
+        .identity = .{
+            .mount_generation = mount.generation,
+            .namespace_generation = namespace,
+            .object_hi = entry.node,
+            .object_lo = if (!fat and !root) entry.node_generation else 0,
+            .mount_slot = mount.slot,
+            .provider = if (fat) c.file_name_provider_fat32 else c.file_name_provider_ntfs,
+            .flags = c.file_identity2_flag_namespace | if (root) c.file_identity2_flag_root else if (fat) c.file_identity2_flag_fat_slot else c.file_identity2_flag_ntfs_record,
+        },
+        .backend_node = entry.node,
+        .flags = c.file_metadata2_flag_exists | c.file_metadata2_flag_identity_valid | c.file_metadata2_flag_backend_node_valid,
+        .attributes = entry.attr,
+        .drive_letter = letter,
+    };
+    if (fat and !root) {
+        value.identity.object_hi = entry.fat_directory_lba orelse return null;
+        if (entry.fat_directory_offset % 32 != 0) return null;
+        value.identity.object_lo = entry.fat_directory_offset;
+    }
+    if (entry.isDir()) value.flags |= c.file_metadata2_flag_directory else {
+        value.byte_size = entry.size;
+        value.flags |= c.file_metadata2_flag_byte_size_valid;
+    }
+    if (entry.reparse) value.flags |= c.file_metadata2_flag_reparse;
+    if (!root) {
+        value.created_time = entry.created_time;
+        value.created_date = entry.created_date;
+        value.access_date = entry.access_date;
+        value.modified_time = entry.modified_time;
+        value.modified_date = entry.modified_date;
+        value.flags |= c.file_metadata2_flag_dos_time_valid;
+    }
+    return value;
+}
+
+fn metadataNamespaceUnchanged(namespace: u64) i32 {
+    const current = directory_changes.namespaceGeneration() orelse return metadata_contract.file_metadata2_error_namespace_exhausted;
+    return if (namespace == current) 0 else metadata_contract.file_metadata2_error_restart;
+}
+
+pub fn fileMetadata2(path_ptr: [*:0]const u8, out: *metadata_contract.FileMetadata2) callconv(.c) i32 {
+    const c = metadata_contract;
+    var raw_buf: [max_api_path]u8 = undefined;
+    const raw = copyZ(path_ptr, &raw_buf) orelse return c.file_metadata2_error_path_bounds;
+    var resolved: [max_api_path]u8 = undefined;
+    const target = resolveTarget(raw, &resolved) orelse return c.file_metadata2_error_invalid;
+    const volume = targetVolume(target) orelse return c.file_metadata2_error_no_mount;
+    var request = fs_request.beginVolume(.file_info, target.drive_ref.letter, volume) orelse return c.file_metadata2_error_io;
+    var ok = false;
+    defer fs_request.finish(&request, ok);
+    const namespace = directory_changes.namespaceGeneration() orelse return c.file_metadata2_error_namespace_exhausted;
+    const root = isRootPath(target.path);
+    var entry: vfs.Entry = .{};
+    if (root) entry = .{ .node = volume.rootNode(), .attr = vfs.ATTR_DIRECTORY } else {
+        switch (vfs.resolveEntryStatus(volume, target.path, &entry)) {
+            .found => {},
+            .not_found => {
+                const state = metadataNamespaceUnchanged(namespace);
+                if (state != 0) return state;
+                ok = true;
+                return c.file_metadata2_result_missing;
+            },
+            .io => return c.file_metadata2_error_io,
+        }
+    }
+    const result = projectMetadata2(volume, entry, target.drive_ref.letter, namespace, root) orelse return c.file_metadata2_error_unsupported;
+    const state = metadataNamespaceUnchanged(namespace);
+    if (state != 0) return state;
+    out.* = result;
+    ok = true;
+    return c.file_metadata2_result_found;
+}
+
+pub fn directoryMetadataBatch2(path_ptr: ?[*:0]const u8, cursor: *metadata_contract.DirectoryMetadataCursor2, out: ?[*]metadata_contract.DirectoryMetadataEntry2, capacity: u32) callconv(.c) i32 {
+    const c = metadata_contract;
+    if (capacity > c.directory_batch_max_entries or (capacity != 0 and out == null) or
+        cursor.version != c.file_metadata2_version or cursor.size != @sizeOf(c.DirectoryMetadataCursor2) or
+        cursor.flags & ~c.directory_metadata2_flag_bound != 0 or cursor.reserved0 != 0 or
+        cursor.scan.version != 1 or cursor.scan.size != @sizeOf(c.DirectoryBatchCursor)) return c.file_metadata2_error_invalid;
+    const owner = currentStreamOwner() orelse return c.file_metadata2_error_invalid;
+    const bound = cursor.flags & c.directory_metadata2_flag_bound != 0;
+    if (bound != (cursor.scan.change.mount_generation != 0) or (!bound and cursor.namespace_generation != 0)) return c.file_metadata2_error_invalid;
+    const namespace = directory_changes.namespaceGeneration() orelse return c.file_metadata2_error_namespace_exhausted;
+    if (bound) {
+        if (cursor.namespace_generation != namespace or cursor.scan.owner_id != owner.id or
+            cursor.scan.owner_generation != owner.generation or cursor.scan.owner_kind != @intFromEnum(owner.kind)) return c.file_metadata2_error_restart;
+        _ = storage_access.mountSnapshot(.{ .slot = cursor.scan.change.mount_slot, .generation = cursor.scan.change.mount_generation }) catch return c.file_metadata2_error_restart;
+        // Buffered-entry validation is entirely RAM-only and never advances
+        // the physical cursor or touches a caller output buffer.
+        if (capacity == 0) return metadataNamespaceUnchanged(namespace);
+    } else if (capacity == 0 or path_ptr == null) return c.file_metadata2_error_invalid;
+
+    var next = cursor.*;
+    var volume: vfs.Volume = undefined;
+    if (!bound) {
+        var raw_buf: [max_api_path]u8 = undefined;
+        const raw = copyZ(path_ptr.?, &raw_buf) orelse return c.file_metadata2_error_path_bounds;
+        var resolved: [max_api_path]u8 = undefined;
+        const target = resolveTarget(raw, &resolved) orelse return c.file_metadata2_error_invalid;
+        volume = targetVolume(target) orelse return c.file_metadata2_error_no_mount;
+        next = .{ .scan = .{ .owner_id = owner.id, .owner_kind = @intFromEnum(owner.kind), .owner_generation = owner.generation } };
+        if (!copyDrivePathZ(target.drive_ref.letter, target.path, &next.scan.path)) return c.file_metadata2_error_path_bounds;
+        next.scan.path_len = @intCast(std.mem.indexOfScalar(u8, &next.scan.path, 0) orelse return c.file_metadata2_error_path_bounds);
+    } else {
+        if (next.scan.path_len < 3 or next.scan.path_len >= next.scan.path.len or next.scan.path[next.scan.path_len] != 0 or
+            next.scan.path[1] != ':' or (next.scan.path[2] != '\\' and next.scan.path[2] != '/')) return c.file_metadata2_error_invalid;
+        volume = vfs.volumeForReference(.{ .slot = next.scan.change.mount_slot, .generation = next.scan.change.mount_generation }) orelse return c.file_metadata2_error_restart;
+    }
+    const letter = next.scan.path[0];
+    const relative = next.scan.path[2..next.scan.path_len];
+    var request = fs_request.beginVolume(.dir_entry, letter, volume) orelse return c.file_metadata2_error_io;
+    var ok = false;
+    defer fs_request.finish(&request, ok);
+    const state = metadataNamespaceUnchanged(namespace);
+    if (state != 0) return state;
+    if (!bound) {
+        const mount = volume.accessReference() orelse return c.file_metadata2_error_no_mount;
+        var node: vfs.NodeRef = volume.rootNode();
+        if (!isRootPath(relative)) {
+            var directory: vfs.Entry = undefined;
+            switch (vfs.resolveEntryStatus(volume, relative, &directory)) {
+                .found => {},
+                .not_found => return c.file_metadata2_error_no_mount,
+                .io => return c.file_metadata2_error_io,
+            }
+            if (!directory.isDir()) return c.file_metadata2_error_no_mount;
+            if (directory.reparse) return c.file_metadata2_error_unsupported;
+            node = directory.node;
+            next.scan.node_generation = directory.node_generation;
+        }
+        const change = directory_changes.begin(mount, node);
+        next.scan.change = .{ .sequence = change.sequence, .node = node, .mount_slot = mount.slot, .mount_generation = mount.generation };
+    }
+    var remaining: u32 = c.directory_batch_work_steps;
+    var count: u32 = 0;
+    var ended = false;
+    while (count < capacity and remaining != 0) {
+        var entry: vfs.Entry = undefined;
+        switch (vfs.nextDirectoryEntryBudget(volume, next.scan.change.node, &next.scan.backend, &entry, &remaining)) {
+            .io => return c.file_metadata2_error_io,
+            .again => break,
+            .not_found => {
+                ended = true;
+                break;
+            },
+            .found => {},
+        }
+        var joined: [max_api_path]u8 = undefined;
+        const joined_path = joinPathToBuffer(relative, entry.name[0..entry.name_len], &joined) orelse return c.file_metadata2_error_path_bounds;
+        var row: c.DirectoryMetadataEntry2 = .{};
+        if (!copyDrivePathZ(letter, joined_path, &row.path)) return c.file_metadata2_error_path_bounds;
+        row.info = projectMetadata2(volume, entry, letter, namespace, false) orelse return c.file_metadata2_error_unsupported;
+        out.?[count] = row;
+        count += 1;
+    }
+    const final = metadataNamespaceUnchanged(namespace);
+    if (final != 0) return final;
+    next.flags = c.directory_metadata2_flag_bound;
+    next.namespace_generation = namespace;
+    cursor.* = next;
+    ok = true;
+    return if (count != 0) @intCast(count) else if (ended) c.file_metadata2_result_end else 0;
+}
+
 pub fn fileDelete(path_ptr: [*:0]const u8) callconv(.c) i32 {
     var path_buf: [max_api_path]u8 = undefined;
     const raw_path = copyZ(path_ptr, path_buf[0..]) orelse return -1;

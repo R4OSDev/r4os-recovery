@@ -1,0 +1,23 @@
+[package]
+name = "rust-graph-fixture"
+version = "1.2.3"
+edition = "2024"
+build = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "src/main.rs"
+crate-type = ["staticlib"]
+
+[features]
+default = ["with-helper"]
+with-helper = ["dep:helper"]
+
+[dependencies]
+r4os-sdk = { version = "=0.1.0" }
+helper = { package = "r4os-build-helper", path = "../RustGraphDependency", optional = true, default-features = false, features = ["scaled"] }
+
+[workspace]

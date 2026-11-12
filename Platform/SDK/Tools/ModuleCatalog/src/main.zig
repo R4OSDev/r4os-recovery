@@ -4,7 +4,7 @@ const manifest_contract = contract_bundle.r4mf;
 const legacy_project = contract_bundle.legacy;
 const legacy_converter = contract_bundle;
 
-const Action = enum { catalog, image_inventory, inventories, validate, resolve, plan, contract_plan, image_plan, workspace_image_plan, convert_r4cp };
+const Action = enum { capabilities, catalog, image_inventory, inventories, validate, resolve, plan, contract_plan, startup_info, image_plan, workspace_image_plan, workspace_build_plan, convert_r4cp };
 // ImageMode describes a selection policy, not another IMAGE_SCOPE value.
 // Benchmark deliberately reuses slim/full and admits only explicitly named
 // test diagnostics, so manifests keep the canonical slim/full/test scopes.
@@ -32,6 +32,8 @@ const KernelComponent = struct {
 const Options = struct {
     action: Action,
     root: []const u8 = "Code",
+    json: bool = false,
+    capability_profile: ?[]const u8 = null,
     output: ?[]const u8 = null,
     image_output: ?[]const u8 = null,
     inventory_output: ?[]const u8 = null,
@@ -73,6 +75,10 @@ fn run(init: std.process.Init) !void {
     };
 
     switch (options.action) {
+        .capabilities => {
+            const rendered = try @import("capabilities.zig").render(allocator, io, cwd, options.capability_profile);
+            try writeOutput(io, cwd, options.output, rendered);
+        },
         .catalog => {
             const entries = try discoverCatalog(arena_allocator, io, cwd, options.root);
             const rendered = try renderCatalog(allocator, entries);
@@ -154,6 +160,19 @@ fn run(init: std.process.Init) !void {
         .plan => {
             const path = options.manifest_path orelse return error.MissingManifestPath;
             const value = try readManifest(arena_allocator, io, cwd, path);
+            try validateSourceFiles(arena_allocator, io, cwd, value);
+            if (value.kind == .r4l) {
+                const rendered = if (options.artifact_only) try std.fmt.allocPrint(allocator, "Code/zig-out/{s}.R4L\n", .{value.name}) else try renderLibraryPlan(allocator, value);
+                defer allocator.free(rendered);
+                try writeOutput(io, cwd, options.output, rendered);
+                return;
+            }
+            if (value.kind == .r4d or value.kind == .r4p) {
+                const rendered = if (options.artifact_only) try std.fmt.allocPrint(allocator, "Code/zig-out/{s}.{s}\n", .{ value.name, value.kind.text() }) else try renderOwnerPlan(allocator, value);
+                defer allocator.free(rendered);
+                try writeOutput(io, cwd, options.output, rendered);
+                return;
+            }
             const plan = try manifest_contract.derivePlan(arena_allocator, value);
             if (options.artifact_only) {
                 try std.Io.File.stdout().writeStreamingAll(io, plan.artifact);
@@ -174,6 +193,23 @@ fn run(init: std.process.Init) !void {
             if (!rendered.ok) return error.ContractPlanTooLarge;
             try writeOutput(io, cwd, options.output, rendered.bytes);
         },
+        .startup_info => {
+            const path = options.manifest_path orelse return error.MissingManifestPath;
+            const value = try readManifest(arena_allocator, io, cwd, path);
+            try validateSourceFiles(arena_allocator, io, cwd, value);
+            if (value.kind != .r4x) return error.StartupInfoRequiresR4X;
+            const profile = try manifest_contract.startup_metadata.profileForClass(value.app_class.?.text());
+            const rendered = switch (value.language.?) {
+                .rust => if (value.platform_generation == 2)
+                    (if (value.entry_mode.? == .app) try manifest_contract.startup_metadata.app2(allocator, .rust, profile, value.imports) else try manifest_contract.startup_metadata.rust2(allocator, profile, value.imports.len))
+                else
+                    try manifest_contract.startup_metadata.rust(allocator, profile, value.imports),
+                .c => if (value.platform_generation == 2) try manifest_contract.startup_metadata.app2(allocator, .c, profile, value.imports) else try manifest_contract.startup_metadata.c(allocator, profile, value.imports),
+                .zig => return error.StartupInfoRequiresRustOrC,
+            };
+            defer allocator.free(rendered);
+            try writeOutput(io, cwd, options.output, rendered);
+        },
         .image_plan => {
             const entries = try discoverCatalog(arena_allocator, io, cwd, options.root);
             const image_entries = try collectImageEntries(arena_allocator, io, cwd, entries, options);
@@ -185,7 +221,7 @@ fn run(init: std.process.Init) !void {
             try writeOutput(io, cwd, options.output, rendered);
             std.debug.print("ModuleCatalog image plan OK: mode={s}, entries={d}.\n", .{ @tagName(mode), countImageEntries(image_entries, mode, includes) });
         },
-        .workspace_image_plan => {
+        .workspace_image_plan, .workspace_build_plan => {
             const mode = options.image_mode orelse return error.MissingImageMode;
             const includes = options.image_include_targets[0..options.image_include_target_count];
             const entries = try loadWorkspaceImageEntries(
@@ -198,14 +234,18 @@ fn run(init: std.process.Init) !void {
             try validateCatalogCollisions(manifests);
             try validateImageIncludes(manifests, mode, includes);
             try validateImageDependencyClosure(manifests, mode, includes);
-            const rendered = try renderWorkspaceImagePlan(arena_allocator, io, cwd, entries, mode, includes);
+            const rendered = if (options.action == .workspace_build_plan)
+                try renderWorkspaceBuildPlan(arena_allocator, entries, mode, includes)
+            else
+                try renderWorkspaceImagePlan(arena_allocator, io, cwd, entries, mode, includes);
             try writeOutput(io, cwd, options.output, rendered);
             if (options.inventory_output) |inventory_output| {
                 const kernel = try loadOptionalKernelComponent(arena_allocator, io, cwd, options);
                 const inventory = try renderImageInventory(arena_allocator, manifests, mode, includes, kernel);
                 try writeOutput(io, cwd, inventory_output, inventory);
             }
-            std.debug.print("ModuleCatalog workspace image plan OK: mode={s}, entries={d}{s}.\n", .{
+            std.debug.print("ModuleCatalog workspace {s} plan OK: mode={s}, entries={d}{s}.\n", .{
+                if (options.action == .workspace_build_plan) "build" else "image",
                 @tagName(mode),
                 countImageEntries(manifests, mode, includes),
                 if (options.inventory_output != null) ", inventory generated" else "",
@@ -222,11 +262,17 @@ fn run(init: std.process.Init) !void {
 
 fn parseOptions(args: []const []const u8) !Options {
     if (args.len < 2) return error.MissingAction;
-    var options = Options{ .action = if (std.mem.eql(u8, args[1], "catalog")) .catalog else if (std.mem.eql(u8, args[1], "image-inventory")) .image_inventory else if (std.mem.eql(u8, args[1], "inventories")) .inventories else if (std.mem.eql(u8, args[1], "validate")) .validate else if (std.mem.eql(u8, args[1], "resolve")) .resolve else if (std.mem.eql(u8, args[1], "plan")) .plan else if (std.mem.eql(u8, args[1], "contract-plan")) .contract_plan else if (std.mem.eql(u8, args[1], "image-plan")) .image_plan else if (std.mem.eql(u8, args[1], "workspace-image-plan")) .workspace_image_plan else if (std.mem.eql(u8, args[1], "convert-r4cp")) .convert_r4cp else return error.UnknownAction };
+    var options = Options{ .action = if (std.mem.eql(u8, args[1], "capabilities")) .capabilities else if (std.mem.eql(u8, args[1], "catalog")) .catalog else if (std.mem.eql(u8, args[1], "image-inventory")) .image_inventory else if (std.mem.eql(u8, args[1], "inventories")) .inventories else if (std.mem.eql(u8, args[1], "validate")) .validate else if (std.mem.eql(u8, args[1], "resolve")) .resolve else if (std.mem.eql(u8, args[1], "plan")) .plan else if (std.mem.eql(u8, args[1], "contract-plan")) .contract_plan else if (std.mem.eql(u8, args[1], "startup-info")) .startup_info else if (std.mem.eql(u8, args[1], "image-plan")) .image_plan else if (std.mem.eql(u8, args[1], "workspace-image-plan")) .workspace_image_plan else if (std.mem.eql(u8, args[1], "workspace-build-plan")) .workspace_build_plan else if (std.mem.eql(u8, args[1], "convert-r4cp")) .convert_r4cp else return error.UnknownAction };
     var index: usize = 2;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
-        if (std.mem.eql(u8, arg, "--path-only")) {
+        if (std.mem.eql(u8, arg, "--json")) {
+            options.json = true;
+        } else if (std.mem.eql(u8, arg, "--profile")) {
+            index += 1;
+            if (index >= args.len) return error.MissingOptionValue;
+            options.capability_profile = args[index];
+        } else if (std.mem.eql(u8, arg, "--path-only")) {
             options.path_only = true;
         } else if (std.mem.eql(u8, arg, "--kind-only")) {
             options.kind_only = true;
@@ -302,6 +348,8 @@ fn parseOptions(args: []const []const u8) !Options {
             return error.UnknownOption;
         }
     }
+    if (options.action == .capabilities and !options.json) return error.CapabilitiesRequiresJson;
+    if (options.action != .capabilities and (options.json or options.capability_profile != null)) return error.InvalidCapabilityOption;
     const compact_modes = @intFromBool(options.path_only) + @intFromBool(options.kind_only) + @intFromBool(options.name_only) + @intFromBool(options.artifact_only);
     if (compact_modes > 1 or (options.output != null and compact_modes != 0)) return error.ConflictingOutputMode;
     if (options.path_only and options.action != .resolve) return error.InvalidOutputMode;
@@ -309,10 +357,11 @@ fn parseOptions(args: []const []const u8) !Options {
     if (options.name_only and options.action != .validate) return error.InvalidOutputMode;
     if (options.artifact_only and options.action != .plan) return error.InvalidOutputMode;
     if (options.action == .convert_r4cp and options.output == null) return error.MissingOutput;
-    const image_action = options.action == .image_plan or options.action == .workspace_image_plan or options.action == .image_inventory or options.action == .inventories;
+    const workspace_action = options.action == .workspace_image_plan or options.action == .workspace_build_plan;
+    const image_action = options.action == .image_plan or workspace_action or options.action == .image_inventory or options.action == .inventories;
     if ((options.image_mode != null or options.extra_manifest_count != 0 or options.image_include_target_count != 0) and !image_action) return error.InvalidImageOption;
     if (image_action and options.image_mode == null) return error.MissingImageMode;
-    if ((options.workspace_map != null) != (options.action == .workspace_image_plan)) return error.InvalidWorkspaceMapOption;
+    if ((options.workspace_map != null) != workspace_action) return error.InvalidWorkspaceMapOption;
     if (options.inventory_output != null and options.action != .workspace_image_plan) return error.InvalidWorkspaceInventoryOption;
     if ((options.kernel_version_source == null) != (options.kernel_artifact == null)) return error.IncompleteKernelComponent;
     if (options.kernel_version_source != null and options.action != .image_inventory and options.action != .inventories and
@@ -336,15 +385,18 @@ fn parseKindOption(value: []const u8) ?manifest_contract.Kind {
 fn printUsage() void {
     std.debug.print(
         \\ModuleCatalog usage:
+        \\  module-catalog capabilities --json [--profile RustToolsProfile.json] [--output FILE]
         \\  module-catalog catalog [--root Code] [--output FILE]
         \\  module-catalog validate --manifest FILE [--kind-only|--name-only]
         \\  module-catalog resolve --root Code --name NAME [--kind R4X] [--path-only|--kind-only]
         \\  module-catalog plan --manifest FILE [--output FILE|--artifact-only]
         \\  module-catalog contract-plan --manifest FILE [--output FILE]
+        \\  module-catalog startup-info --manifest FILE [--output FILE]
         \\  module-catalog image-inventory --root Code --image-mode slim|full|test|benchmark [--extra-manifest FILE] [--include-target TARGET] [--kernel-version-source FILE --kernel-artifact ELF] [--output FILE]
         \\  module-catalog inventories --root Code --image-mode slim|full|test|benchmark --output FILE --image-output FILE [--extra-manifest FILE] [--include-target TARGET] [--kernel-version-source FILE --kernel-artifact ELF] [--release-version-source FILE --release-output FILE]
         \\  module-catalog image-plan --root Code --image-mode slim|full|test|benchmark [--extra-manifest FILE] [--include-target TARGET] [--output FILE]
         \\  module-catalog workspace-image-plan --workspace-map FILE --image-mode slim|full|test|benchmark [--include-target TARGET] [--kernel-version-source FILE --kernel-artifact ELF --inventory-output FILE] [--output FILE]
+        \\  module-catalog workspace-build-plan --workspace-map FILE --image-mode slim|full|test|benchmark [--include-target TARGET] [--output FILE]
         \\  module-catalog convert-r4cp --manifest LEGACY.R4CP --output module.R4MF
         \\
     , .{});
@@ -441,6 +493,19 @@ fn workspaceManifests(allocator: std.mem.Allocator, entries: []const WorkspaceIm
     return manifests;
 }
 
+/// The same validated selection as the image plan, without requiring built
+/// artifacts. Every selected manifest is mapped to its source owner by the host.
+fn renderWorkspaceBuildPlan(allocator: std.mem.Allocator, entries: []const WorkspaceImageEntry, mode: ImageMode, includes: []const []const u8) ![]u8 {
+    var out: std.ArrayList(u8) = .empty;
+    for (entries) |entry| {
+        if (!imageEntryIncluded(entry.manifest, mode, includes)) continue;
+        if (entry.manifest.kind == .r4x) _ = try manifest_contract.derivePlan(allocator, entry.manifest);
+        try out.appendSlice(allocator, entry.manifest.path);
+        try out.append(allocator, '\n');
+    }
+    return out.toOwnedSlice(allocator);
+}
+
 fn renderWorkspaceImagePlan(
     allocator: std.mem.Allocator,
     io: std.Io,
@@ -492,14 +557,14 @@ fn imageEntryIncluded(entry: manifest_contract.Manifest, mode: ImageMode, includ
 
 fn imageScopeCanBeIncludedExplicitly(mode: ImageMode, scope: manifest_contract.ImageScope) bool {
     return switch (mode) {
+        .slim => scope == .full or scope == .@"test" or scope == .none,
+        .full => scope == .@"test" or scope == .none,
         .@"test" => scope == .full or scope == .none,
         .benchmark => scope == .@"test",
-        else => false,
     };
 }
 
 fn validateImageIncludes(entries: []const manifest_contract.Manifest, mode: ImageMode, include_targets: []const []const u8) !void {
-    if (include_targets.len != 0 and mode != .@"test" and mode != .benchmark) return error.ImageIncludesRequireExplicitMode;
     for (include_targets, 0..) |target, index| {
         if (target.len == 0 or target[0] != '/') return error.InvalidImageIncludeTarget;
         for (include_targets[0..index]) |previous| {
@@ -546,6 +611,7 @@ fn validateImageDependencyClosure(entries: []const manifest_contract.Manifest, m
     for (entries) |entry| {
         if (!imageEntryIncluded(entry, mode, include_targets)) continue;
         for (entry.imports) |import_spec| {
+            if (manifest_contract.importIsOptional(import_spec)) continue;
             const separator = std.mem.indexOfScalar(u8, import_spec, ':') orelse continue;
             const provider_name = import_spec[0..separator];
             if (manifest_contract.platformApiGroupId(provider_name) != null) continue;
@@ -602,7 +668,15 @@ fn discoverCatalog(
 
 fn readManifest(allocator: std.mem.Allocator, io: std.Io, cwd: std.Io.Dir, path: []const u8) !manifest_contract.Manifest {
     const bytes = try cwd.readFileAlloc(io, path, allocator, .limited(manifest_contract.max_manifest_bytes));
-    return manifest_contract.parse(allocator, path, bytes);
+    const manifest = try manifest_contract.parse(allocator, path, bytes);
+    if (manifest.language == .rust) {
+        const cargo_path = try std.fs.path.join(allocator, &.{ std.fs.path.dirname(path) orelse ".", "Cargo.toml" });
+        // Cargo owns its grammar, package identities and resolved features.
+        // Compiler-free planning checks presence; the locked/offline builder
+        // validates actual cargo metadata before any compilation.
+        cwd.access(io, cargo_path, .{}) catch return error.RustCargoManifestMissing;
+    }
+    return manifest;
 }
 
 fn validateSourceFiles(allocator: std.mem.Allocator, io: std.Io, cwd: std.Io.Dir, value: manifest_contract.Manifest) !void {
@@ -614,6 +688,18 @@ fn validateSourceFiles(allocator: std.mem.Allocator, io: std.Io, cwd: std.Io.Dir
             return error.ManifestSourceMissing;
         };
     }
+    if (value.language == .rust) {
+        const lock = try std.fs.path.join(allocator, &.{ project, "Cargo.lock" });
+        const lock_text = cwd.readFileAlloc(io, lock, allocator, .limited(1024 * 1024)) catch return error.RustCargoLockMissing;
+        if (lock_text.len == 0) return error.RustCargoLockMissing;
+        for (manifest_contract.rust_project.forbidden_inputs) |forbidden| {
+            // SOURCE may be src/main.rs as an explicit library root.
+            if (std.mem.eql(u8, forbidden, value.sources[0])) continue;
+            const path = try std.fs.path.join(allocator, &.{ project, forbidden });
+            if (cwd.access(io, path, .{})) |_| return error.RustProjectOverrideOrImplicitTarget else |err| if (err != error.FileNotFound) return err;
+        }
+    }
+
     for (value.zig_modules) |entry| {
         const colon = std.mem.indexOfScalar(u8, entry, ':') orelse unreachable;
         const path = try std.fs.path.join(allocator, &.{ project, entry[colon + 1 ..] });
@@ -1087,6 +1173,35 @@ fn renderPlanObject(allocator: std.mem.Allocator, entry: manifest_contract.Manif
     try appendJsonString(&out, allocator, entry.language.?.text());
     try out.appendSlice(allocator, ",\n    \"sources\": ");
     try appendStringArray(&out, allocator, entry.sources);
+    if (entry.language == .rust) {
+        const descriptor = .{
+            .schema = manifest_contract.capabilities.rust_build_plan_schema,
+            .profile = try manifest_contract.sdkBuildProfile(entry),
+            .tools = manifest_contract.capabilities.rust_tools,
+            .host_build_qualified = manifest_contract.capabilities.rust_host_builder,
+            .cargo_manifest = "Cargo.toml",
+            .cargo_lock = "Cargo.lock",
+            .target = "x86_64-unknown-none",
+            .declared_inputs = [_][]const u8{ "module.R4MF", "Cargo.toml", "Cargo.lock" },
+            .compiler_inputs = "observed at build time from rustc dep-info",
+            .native_rust_compiler = false,
+            .cargo_identity_source = "locked/offline cargo metadata at build time",
+            .source = entry.sources[0],
+            .c_sources = entry.sources[1..],
+            .c_includes = entry.c_includes,
+            .c_defines = entry.c_defines,
+            .c_flags = entry.c_flags,
+            .module_version = entry.module_version.text,
+            .icons = entry.icons,
+            .help = entry.help,
+            .resources = entry.resources,
+        };
+        const json = try std.json.Stringify.valueAlloc(allocator, descriptor, .{});
+        defer allocator.free(json);
+        try out.appendSlice(allocator, ",\n    \"rust_project\": ");
+        try out.appendSlice(allocator, json);
+    }
+
     try out.appendSlice(allocator, ",\n    \"zig_modules\": ");
     try appendStringArray(&out, allocator, entry.zig_modules);
     try out.appendSlice(allocator, ",\n    \"entry_mode\": ");
@@ -1113,6 +1228,12 @@ fn renderPlanObject(allocator: std.mem.Allocator, entry: manifest_contract.Manif
     try appendJsonString(&out, allocator, entry.image_scope.?.text());
     try out.appendSlice(allocator, ",\n    \"build_profile\": ");
     try appendJsonString(&out, allocator, plan.build_profile);
+    try out.appendSlice(allocator, ",\n    \"sdk_profile\": ");
+    try appendJsonString(&out, allocator, try manifest_contract.sdkBuildProfile(entry));
+    try out.appendSlice(allocator, ",\n    \"platform_generation\": ");
+    try appendFmt(&out, allocator, "{d}", .{entry.platform_generation});
+    try out.appendSlice(allocator, ",\n    \"exports\": ");
+    try appendStringArray(&out, allocator, try manifest_contract.moduleExports(allocator, entry));
     try out.appendSlice(allocator, ",\n    \"app_profile\": ");
     try appendJsonString(&out, allocator, plan.app_profile);
     try out.appendSlice(allocator, ",\n    \"app_class\": ");
@@ -1276,6 +1397,16 @@ test "catalog exposes common optimization for non-R4X modules" {
     const catalog = try renderCatalog(allocator, &.{driver});
     try std.testing.expect(std.mem.indexOf(u8, catalog, "\"kind\": \"R4D\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, catalog, "\"optimization\": \"speed\"") != null);
+    // A known but excluded optional library may be absent from this image.
+    var provider = driver;
+    provider.kind = .r4l;
+    provider.name = "R4NV";
+    provider.image_scope = .none;
+    var consumer = driver;
+    consumer.imports = &.{"R4NV:API_V1:1:1"};
+    try validateImageDependencyClosure(&.{ consumer, provider }, .slim, &.{});
+    consumer.imports = &.{"R4NV:API_V1:1"};
+    try std.testing.expectError(error.ImageDependencyMissing, validateImageDependencyClosure(&.{ consumer, provider }, .slim, &.{}));
 }
 
 test "benchmark selection is full plus explicit test diagnostics" {
@@ -1290,6 +1421,14 @@ test "benchmark selection is full plus explicit test diagnostics" {
     const test_entry = try manifest_contract.parse(allocator, "Test/module.R4MF", test_text);
     const none_entry = try manifest_contract.parse(allocator, "None/module.R4MF", none_text);
 
+    // Explicit product composition does not change ordinary profile membership.
+    for ([_]ImageMode{ .slim, .full }) |mode| {
+        try std.testing.expect(!imageEntryIncluded(none_entry, mode, &.{}));
+        try std.testing.expect(imageEntryIncluded(none_entry, mode, &.{none_entry.target}));
+        try validateImageIncludes(&.{none_entry}, mode, &.{none_entry.target});
+        try std.testing.expectError(error.UnknownImageIncludeTarget, validateImageIncludes(&.{none_entry}, mode, &.{"/UNKNOWN.R4X"}));
+        try std.testing.expectError(error.DuplicateImageIncludeTarget, validateImageIncludes(&.{none_entry}, mode, &.{ none_entry.target, none_entry.target }));
+    }
     try std.testing.expect(imageEntryIncluded(full_entry, .benchmark, &.{}));
     try std.testing.expect(!imageEntryIncluded(test_entry, .benchmark, &.{}));
     try std.testing.expect(imageEntryIncluded(test_entry, .benchmark, &.{test_entry.target}));
@@ -1318,4 +1457,57 @@ test "workspace image plan requires artifacts only for selected manifests" {
 
     const standard = try renderWorkspaceImagePlan(allocator, std.testing.io, std.Io.Dir.cwd(), &entries, .@"test", &.{});
     try std.testing.expectEqualStrings("", standard);
+    const build = try renderWorkspaceBuildPlan(allocator, &entries, .@"test", &.{none_entry.target});
+    try std.testing.expectEqualStrings("None/module.R4MF\n", build);
+    const excluded = try renderWorkspaceBuildPlan(allocator, &entries, .full, &.{});
+    try std.testing.expectEqualStrings("", excluded);
+}
+
+/// R4L plans retain the library-owned interface revisions and metadata.
+fn renderLibraryPlan(a: std.mem.Allocator, entry: manifest_contract.Manifest) ![]u8 {
+    if (entry.kind != .r4l) return error.LibraryPlanRequiresR4L;
+    const exports = try manifest_contract.moduleExports(a, entry);
+    var metadata: std.ArrayList([]const u8) = .empty;
+    try metadata.append(a, try manifest_contract.moduleVersionMeta(a, entry));
+    try metadata.appendSlice(a, entry.metadata);
+    const library_contract = .{ .contract = entry.contract, .baseline = entry.contract_baseline, .implementation_zig = entry.implementation_zig, .binding_zig = entry.binding_zig, .binding_c = entry.binding_c, .binding_rust = entry.binding_rust, .fixture_zig = entry.conformance_zig, .fixture_c = entry.conformance_c, .docs = entry.api_reference };
+    const rust_project = .{ .schema = manifest_contract.capabilities.rust_build_plan_schema, .profile = try manifest_contract.sdkBuildProfile(entry), .tools = manifest_contract.capabilities.rust_tools, .host_build_qualified = manifest_contract.capabilities.rust_host_builder, .cargo_manifest = "Cargo.toml", .cargo_lock = "Cargo.lock", .target = "x86_64-unknown-none", .source = entry.sources[0], .c_sources = entry.sources[1..], .c_includes = entry.c_includes, .c_defines = entry.c_defines, .c_flags = entry.c_flags, .module_version = entry.module_version.text, .icons = entry.icons, .help = entry.help, .resources = entry.resources };
+    return std.json.Stringify.valueAlloc(a, .{ .schema = @as(u32, 1), .manifest = entry.path, .plan = .{ .kind = "R4L", .sdk_profile = try manifest_contract.sdkBuildProfile(entry), .platform_generation = entry.platform_generation, .name = entry.name, .language = entry.language.?.text(), .sources = entry.sources, .entry_mode = @as(?[]const u8, null), .app_class = @as(?[]const u8, null), .target = entry.target, .optimization = entry.optimization.?.text(), .imports = entry.imports, .metadata = metadata.items, .exports = exports, .library_contract = library_contract, .rust_project = if (entry.language == .rust) rust_project else null } }, .{ .whitespace = .indent_2 });
+}
+
+fn ownerMeta(entry: manifest_contract.Manifest, key: []const u8) ![]const u8 {
+    var found: ?[]const u8 = null;
+    for (entry.metadata) |value| if (std.mem.startsWith(u8, value, key) and value.len > key.len and value[key.len] == '=') {
+        if (found != null or value.len == key.len + 1) return error.OwnerIdentityInvalid;
+        found = value[key.len + 1 ..];
+    };
+    return found orelse error.OwnerIdentityMissing;
+}
+
+fn renderOwnerPlan(a: std.mem.Allocator, entry: manifest_contract.Manifest) ![]u8 {
+    const driver = entry.kind == .r4d;
+    if (!driver and entry.kind != .r4p) return error.OwnerPlanRequiresDriverOrProtocol;
+    var metadata: std.ArrayList([]const u8) = .empty;
+    try metadata.append(a, try manifest_contract.moduleVersionMeta(a, entry));
+    try metadata.append(a, try std.fmt.allocPrint(a, "module.name={s}_{s}", .{ entry.kind.text(), entry.name }));
+    _ = try ownerMeta(entry, if (driver) "r4d.name" else "r4p.name");
+    _ = try ownerMeta(entry, if (driver) "r4d.type" else "r4p.role");
+    if (!driver) _ = try ownerMeta(entry, "r4p.category");
+    for (entry.metadata) |value| {
+        if (std.mem.startsWith(u8, value, "module.name=")) {
+            if (!std.mem.eql(u8, value, metadata.items[1])) return error.OwnerIdentityConflict;
+            continue;
+        }
+        if (std.mem.startsWith(u8, value, "module.version=")) {
+            if (!std.mem.eql(u8, value, metadata.items[0])) return error.OwnerIdentityConflict;
+            continue;
+        }
+        try metadata.append(a, value);
+    }
+    const next = entry.platform_generation == 2;
+    if (entry.imports.len != 1 or !std.mem.eql(u8, entry.imports[0], if (next) "R4DEV:Query2:2" else "R4DEV:Query:1")) return error.OwnerImportsMismatch;
+    const profile = try manifest_contract.sdkBuildProfile(entry);
+    const rust_project = .{ .schema = manifest_contract.capabilities.rust_build_plan_schema, .profile = profile, .tools = manifest_contract.capabilities.rust_tools, .host_build_qualified = manifest_contract.capabilities.rust_host_builder, .cargo_manifest = "Cargo.toml", .cargo_lock = "Cargo.lock", .target = "x86_64-unknown-none", .source = entry.sources[0], .c_sources = entry.sources[1..], .c_includes = entry.c_includes, .c_defines = entry.c_defines, .c_flags = entry.c_flags, .module_version = entry.module_version.text, .icons = entry.icons, .help = entry.help, .resources = entry.resources };
+    const exports = try manifest_contract.moduleExports(a, entry);
+    return std.json.Stringify.valueAlloc(a, .{ .schema = @as(u32, 1), .manifest = entry.path, .plan = .{ .kind = entry.kind.text(), .name = entry.name, .language = entry.language.?.text(), .sources = entry.sources, .build_profile = profile, .sdk_profile = try manifest_contract.sdkBuildProfile(entry), .platform_generation = entry.platform_generation, .entry_mode = @as(?[]const u8, null), .app_class = @as(?[]const u8, null), .target = entry.target, .optimization = entry.optimization.?.text(), .imports = entry.imports, .metadata = metadata.items, .exports = exports, .rust_project = if (entry.language == .rust) rust_project else null } }, .{ .whitespace = .indent_2 });
 }

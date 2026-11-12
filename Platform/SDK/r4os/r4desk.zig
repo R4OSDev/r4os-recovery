@@ -37,6 +37,21 @@ pub const Context = struct {
     pub fn mouseState(self: *const Context, out: *abi.Mouse) void {
         self.base.mouseState(out);
     }
+    pub fn mouseMotion(self: *const Context, out: *abi.MouseMotion) i32 {
+        return self.base.mouseMotion(out);
+    }
+    pub fn remoteFrameSnapshotAcquire(self: *const Context, expected: u32, info: *abi.RemoteFrameInfo, lease: *abi.RemoteFrameLease) i32 {
+        return self.base.remoteFrameSnapshotAcquire(expected, info, lease);
+    }
+    pub fn remoteFrameSnapshotRelease(self: *const Context, lease: *const abi.RemoteFrameLease) i32 {
+        return self.base.remoteFrameSnapshotRelease(lease);
+    }
+    pub fn remoteFrameSourceReset(self: *const Context) i32 {
+        return self.base.remoteFrameSourceReset();
+    }
+    pub fn remoteFrameCaptureStats(self: *const Context, out: *abi.RemoteFrameCaptureStats) i32 {
+        return self.base.remoteFrameCaptureStats(out);
+    }
 
     pub fn mouseShow(self: *const Context) void {
         self.base.mouseShow();
@@ -90,8 +105,31 @@ pub const Context = struct {
         return self.base.programWindowId();
     }
 
+    /// Exact ordinary host delivery and cancellation. Busy owns no suffix.
+    pub fn guiHostInput(self: *const Context, request: *const abi.GuiHostInputRequest, out: *abi.GuiPointerWindowIdentity) i32 {
+        return self.base.guiHostInput(request, out);
+    }
+
+    pub fn guiPointerCaptureInfo(self: *const Context, capture: ?*const abi.GuiPointerCaptureHandle, out: *abi.GuiPointerCaptureInfo) i32 {
+        return self.base.guiPointerCaptureInfo(capture, out);
+    }
+    pub fn guiPointerCaptureAcquire(self: *const Context, window: *const abi.GuiPointerWindowIdentity, mode: u32, out: *abi.GuiPointerCaptureHandle) i32 {
+        return self.base.guiPointerCaptureAcquire(window, mode, out);
+    }
+    pub fn guiPointerCaptureRelease(self: *const Context, capture: *const abi.GuiPointerCaptureHandle) i32 {
+        return self.base.guiPointerCaptureRelease(capture);
+    }
+    pub fn guiPointerCaptureHost(self: *const Context, request: *const abi.GuiPointerHostRequest, out: *abi.GuiPointerCaptureInfo) i32 {
+        return self.base.guiPointerCaptureHost(request, out);
+    }
+
     pub fn guiWindowInfo(self: *const Context, out: *abi.GuiWindowInfo) i32 {
         return self.base.guiWindowInfo(out);
+    }
+
+    /// Optional read-only exact-host projection of the loaded R4X title colors.
+    pub fn guiWindowAppearance(self: *const Context, window: *const abi.GuiPointerWindowIdentity, out: *abi.GuiWindowAppearance) i32 {
+        return self.base.guiWindowAppearance(window, out);
     }
 
     pub fn guiSetWindowInfo(self: *const Context, instance_id: u32, info: *const abi.GuiWindowInfo) i32 {
@@ -226,6 +264,16 @@ pub const Context = struct {
         return self.base.desktopActivityWait(last_seq, timeout_ticks, out_seq);
     }
 
+    pub fn desktopActivityNotify(self: *const Context) i32 {
+        return self.base.desktopActivityNotify();
+    }
+    pub fn guiActivityWait(self: *const Context, last_seq: u64, timeout_ticks: u64, subscriptions: u32, out_seq: *u64) i32 {
+        return self.base.guiActivityWait(last_seq, timeout_ticks, subscriptions, out_seq);
+    }
+    pub fn guiActivityNotify(self: *const Context, categories: u32) i32 {
+        return self.base.guiActivityNotify(categories);
+    }
+
     pub fn supportsRemoteFrameMap(self: *const Context) bool {
         return self.base.supportsRemoteFrameMap();
     }
@@ -285,7 +333,10 @@ test "r4desk exposes project and remote ABI metadata" {
     try std.testing.expectEqualStrings("R4DESK:Query:1", import_query);
     try std.testing.expectEqual(@as(u32, 2), @intFromEnum(group));
     try std.testing.expectEqual(abi.r4l_abi_version, abi_version);
-    try std.testing.expectEqual(abi.r4xstart_r4desk_version, (abi.R4XStartR4Desk{}).abi_version);
+    const header: abi.R4XStartR4Desk = .{};
+    try std.testing.expect(header.abi_version >= abi.r4xstart_r4desk_version);
+    try std.testing.expectEqual(abi.r4xstart_r4desk_magic, header.magic);
+    try std.testing.expectEqual(@as(u32, @sizeOf(abi.R4XStartR4Desk)), header.size);
     try std.testing.expectEqual(abi.remote_frame_version, (abi.RemoteFrameInfo{}).version);
     try std.testing.expectEqual(abi.remote_input_version, (abi.RemoteInputEvent{}).version);
     try std.testing.expectEqualStrings("Repositories/Kernel", provider_repository);

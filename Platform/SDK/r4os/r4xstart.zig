@@ -53,6 +53,7 @@ const ProgramInventoryThreadsFn = *const fn (*abi.ProgramInventoryCursor, [*]abi
 const ThreadCreateHandleFn = *const fn (abi.ThreadEntryFn, u64, u64, u32, *abi.ProgramJoinHandle) callconv(.c) i32;
 const ThreadHandleJoinFn = *const fn (*const abi.ProgramJoinHandle, u64, *i32) callconv(.c) i32;
 const ThreadHandleStatusFn = *const fn (*const abi.ProgramJoinHandle, *abi.ProgramThreadInfo) callconv(.c) i32;
+const ThreadCurrentHandleFn = *const fn (*abi.ProgramJoinHandle) callconv(.c) i32;
 const ServiceStatusFn = *const fn ([*:0]const u8, *abi.ServiceInfo) callconv(.c) i32;
 const ServiceOpenFn = *const fn ([*:0]const u8, *abi.ServiceInfo) callconv(.c) i32;
 const ServiceCloseFn = *const fn (u32) callconv(.c) i32;
@@ -63,6 +64,8 @@ const ServiceEndpointPollFn = *const fn (u32) callconv(.c) i32;
 const ServiceEndpointRecvFn = *const fn (u32, *abi.ServiceMessageHeader, [*]u8, u32) callconv(.c) i32;
 const ServiceEndpointReplyFn = *const fn (u32, u32, i32, [*]const u8, u32) callconv(.c) i32;
 const ServiceDetailByNameFn = *const fn ([*:0]const u8, *abi.ServiceDetail) callconv(.c) i32;
+const ServiceBoundDetailFn = *const fn ([*:0]const u8, *abi.ServiceDetail, *abi.ProgramProcessHandle) callconv(.c) i32;
+const ServiceStopBoundFn = *const fn ([*:0]const u8, *const abi.ProgramProcessHandle, *abi.ServiceInfo, u64) callconv(.c) i32;
 const ServiceStartFn = *const fn ([*:0]const u8, *abi.ServiceInfo) callconv(.c) i32;
 const ServiceStopFn = *const fn ([*:0]const u8, *abi.ServiceInfo, u64) callconv(.c) i32;
 const ServiceRestartFn = *const fn ([*:0]const u8, *abi.ServiceInfo) callconv(.c) i32;
@@ -166,8 +169,8 @@ comptime {
     if (@sizeOf(abi.R4XStartImport) != abi.r4xstart_import_size) {
         @compileError("R4XStartImport ABI size mismatch");
     }
-    // The frozen minimum prefix remains compatible with older providers;
-    // appended optional capabilities are checked individually by hasFn.
+    // Frozen public layouts and exact optional-slot bounds remain intact.
+    // Missing capabilities do not enable historical OS substitutions.
     if (@sizeOf(abi.R4XStartR4Sys) < abi.r4xstart_r4sys_size) {
         @compileError("R4XStartR4Sys ABI size mismatch");
     }
@@ -188,8 +191,8 @@ comptime {
     if (@sizeOf(abi.R4XStartR4Net) < abi.r4xstart_r4net_size) {
         @compileError("R4XStartR4Net ABI minimum size mismatch");
     }
-    if (@sizeOf(abi.R4XStartR4Audio) != abi.r4xstart_r4audio_size) {
-        @compileError("R4XStartR4Audio ABI size mismatch");
+    if (@sizeOf(abi.R4XStartR4Audio) < abi.r4xstart_r4audio_size) {
+        @compileError("R4XStartR4Audio ABI minimum size mismatch");
     }
     if (@sizeOf(abi.R4XStartR4Dev) < abi.r4xstart_r4dev_size) {
         @compileError("R4XStartR4Dev ABI minimum size mismatch");
@@ -282,20 +285,7 @@ pub const Context = struct {
     }
 };
 
-fn importNameEquals(raw: u64, expected: []const u8) bool {
-    if (raw == 0 or expected.len == 0 or expected.len >= 32) return false;
-    const value: [*]const u8 = @ptrFromInt(raw);
-    var index: usize = 0;
-    while (index < expected.len) : (index += 1) {
-        const actual = value[index];
-        if (actual == 0 or asciiUpper(actual) != asciiUpper(expected[index])) return false;
-    }
-    return value[expected.len] == 0;
-}
-
-fn asciiUpper(value: u8) u8 {
-    return if (value >= 'a' and value <= 'z') value - ('a' - 'A') else value;
-}
+const importNameEquals = @import("runtime_r4l.zig").importNameEquals;
 
 pub const R4Sys = struct {
     raw: *const abi.R4XStartContext,
@@ -420,6 +410,19 @@ pub const R4Sys = struct {
         return instance_fn(index, out);
     }
 
+    pub fn programLifecycleBegin(self: *const R4Sys, cursor: *abi.ProgramInventoryCursor) i32 {
+        if (!self.hasFn("program_lifecycle_begin")) return abi.err_no_fn;
+        const call: abi.R4SysFns.program_lifecycle_begin = @ptrFromInt(self.table.program_lifecycle_begin);
+        return call(cursor);
+    }
+
+    pub fn programLifecyclePrograms(self: *const R4Sys, cursor: *abi.ProgramInventoryCursor, out: []abi.ProgramLifecycleSnapshot, page: *abi.ProgramInventoryPageInfo) i32 {
+        if (out.len == 0 or out.len > @as(usize, abi.program_inventory_page_max)) return abi.program_handle_error_invalid;
+        if (!self.hasFn("program_lifecycle_programs")) return abi.err_no_fn;
+        const call: abi.R4SysFns.program_lifecycle_programs = @ptrFromInt(self.table.program_lifecycle_programs);
+        return call(cursor, out.ptr, @intCast(out.len), page);
+    }
+
     pub fn programInventoryBegin(self: *const R4Sys, cursor: *abi.ProgramInventoryCursor, out: *abi.ProgramInventorySummary) i32 {
         if (!self.hasFn("program_inventory_begin")) return abi.program_handle_error_invalid;
         const inventory_fn: ProgramInventoryBeginFn = @ptrFromInt(self.table.program_inventory_begin);
@@ -494,6 +497,39 @@ pub const R4Sys = struct {
         if (!self.supportsThreads()) return 0;
         const current_fn: ThreadCurrentFn = @ptrFromInt(self.table.thread_current);
         return current_fn();
+    }
+
+    pub fn threadCurrentHandle(self: *const R4Sys, out: *abi.ProgramJoinHandle) i32 {
+        if (!self.hasFn("thread_current_handle")) return abi.thread_error_unsupported;
+        const current_fn: ThreadCurrentHandleFn = @ptrFromInt(self.table.thread_current_handle);
+        return current_fn(out);
+    }
+
+    /// Query metadata with an empty vector; otherwise preserve unused tail words.
+    pub fn threadPlacementGet(self: *const R4Sys, handle: *const abi.ProgramJoinHandle, info: *abi.ThreadPlacementInfo, cpus: []u64) i32 {
+        if (cpus.len > std.math.maxInt(u32)) return abi.thread_placement_error_capacity;
+        if (!self.hasFn("thread_placement_get")) return abi.thread_error_unsupported;
+        const function: abi.R4SysFns.thread_placement_get = @ptrFromInt(self.table.thread_placement_get);
+        return function(handle, info, if (cpus.len == 0) null else cpus.ptr, @intCast(cpus.len));
+    }
+    /// CPU sets are hard admission; preferred CPU and bounded work class are hints.
+    pub fn threadPlacementSet(self: *const R4Sys, handle: *const abi.ProgramJoinHandle, request: *const abi.ThreadPlacementRequest, cpus: []const u64) i32 {
+        if (cpus.len > std.math.maxInt(u32)) return abi.thread_placement_error_capacity;
+        if (!self.hasFn("thread_placement_set")) return abi.thread_error_unsupported;
+        const function: abi.R4SysFns.thread_placement_set = @ptrFromInt(self.table.thread_placement_set);
+        return function(handle, request, if (cpus.len == 0) null else cpus.ptr, @intCast(cpus.len));
+    }
+
+    pub fn cpuCapacity(self: *const R4Sys, out: *abi.CpuCapacity) i32 {
+        if (!self.hasFn("cpu_capacity")) return abi.thread_error_unsupported;
+        const query: abi.R4SysFns.cpu_capacity = @ptrFromInt(self.table.cpu_capacity);
+        return query(out);
+    }
+
+    pub fn programExit(self: *const R4Sys, exit_code: i32, reason: u32) i32 {
+        if (!self.hasFn("program_exit")) return abi.thread_error_unsupported;
+        const terminate: abi.R4SysFns.program_exit = @ptrFromInt(self.table.program_exit);
+        return terminate(exit_code, reason);
     }
 
     pub fn threadStatus(self: *const R4Sys, thread_id: u32, out: *abi.ProgramThreadInfo) i32 {
@@ -741,6 +777,12 @@ pub const R4Sys = struct {
         return service_fn(name, out);
     }
 
+    pub fn serviceBoundDetail(self: *const R4Sys, name: [*:0]const u8, out: *abi.ServiceDetail, process: *abi.ProgramProcessHandle) i32 {
+        if (!self.hasFn("service_bound_detail")) return abi.err_no_fn;
+        const service_fn: ServiceBoundDetailFn = @ptrFromInt(self.table.service_bound_detail);
+        return service_fn(name, out, process);
+    }
+
     pub fn serviceStart(self: *const R4Sys, name: [*:0]const u8, out: *abi.ServiceInfo) i32 {
         if (!self.hasFn("service_start")) return abi.service_api_result_invalid;
         const service_fn: ServiceStartFn = @ptrFromInt(self.table.service_start);
@@ -751,6 +793,12 @@ pub const R4Sys = struct {
         if (!self.hasFn("service_stop")) return abi.service_api_result_invalid;
         const service_fn: ServiceStopFn = @ptrFromInt(self.table.service_stop);
         return service_fn(name, out, timeout_ticks);
+    }
+
+    pub fn serviceStopBound(self: *const R4Sys, name: [*:0]const u8, process: *const abi.ProgramProcessHandle, out: *abi.ServiceInfo, timeout_ticks: u64) i32 {
+        if (!self.hasFn("service_stop_bound")) return abi.err_no_fn;
+        const service_fn: ServiceStopBoundFn = @ptrFromInt(self.table.service_stop_bound);
+        return service_fn(name, process, out, timeout_ticks);
     }
 
     pub fn serviceRestart(self: *const R4Sys, name: [*:0]const u8, out: *abi.ServiceInfo) i32 {
@@ -800,6 +848,11 @@ pub const R4Desk = struct {
         }
         const mouse_fn: MouseStateFn = @ptrFromInt(self.table.mouse_state);
         mouse_fn(out);
+    }
+    pub fn mouseMotion(self: *const R4Desk, out: *abi.MouseMotion) i32 {
+        if (!self.hasFn("mouse_motion")) return abi.err_no_fn;
+        const function: abi.R4DeskFns.mouse_motion = @ptrFromInt(self.table.mouse_motion);
+        return function(out);
     }
 
     pub fn mouseShow(self: *const R4Desk) void {
@@ -1075,8 +1128,45 @@ pub const R4Desk = struct {
         return wait_fn(last_seq, timeout_ticks, out_seq);
     }
 
+    pub fn desktopActivityNotify(self: *const R4Desk) i32 {
+        if (!self.hasFn("desktop_activity_notify")) return abi.remote_frame_error_unsupported;
+        const function: abi.R4DeskFns.desktop_activity_notify = @ptrFromInt(self.table.desktop_activity_notify);
+        return function();
+    }
+    pub fn guiActivityWait(self: *const R4Desk, last_seq: u64, timeout_ticks: u64, subscriptions: u32, out_seq: *u64) i32 {
+        if (!self.hasFn("gui_activity_wait")) return abi.err_no_fn;
+        const function: abi.R4DeskFns.gui_activity_wait = @ptrFromInt(self.table.gui_activity_wait);
+        return function(last_seq, timeout_ticks, subscriptions, out_seq);
+    }
+    pub fn guiActivityNotify(self: *const R4Desk, categories: u32) i32 {
+        if (!self.hasFn("gui_activity_notify")) return abi.err_no_fn;
+        const function: abi.R4DeskFns.gui_activity_notify = @ptrFromInt(self.table.gui_activity_notify);
+        return function(categories);
+    }
+
     pub fn supportsRemoteFrameMap(self: *const R4Desk) bool {
         return self.hasFn("remote_frame_map");
+    }
+
+    pub fn remoteFrameSnapshotAcquire(self: *const R4Desk, expected: u32, info: *abi.RemoteFrameInfo, lease: *abi.RemoteFrameLease) i32 {
+        if (!self.hasFn("remote_frame_snapshot_acquire")) return abi.remote_frame_error_unsupported;
+        const function: abi.R4DeskFns.remote_frame_snapshot_acquire = @ptrFromInt(self.table.remote_frame_snapshot_acquire);
+        return function(expected, info, lease);
+    }
+    pub fn remoteFrameSnapshotRelease(self: *const R4Desk, lease: *const abi.RemoteFrameLease) i32 {
+        if (!self.hasFn("remote_frame_snapshot_release")) return abi.remote_frame_error_unsupported;
+        const function: abi.R4DeskFns.remote_frame_snapshot_release = @ptrFromInt(self.table.remote_frame_snapshot_release);
+        return function(lease);
+    }
+    pub fn remoteFrameSourceReset(self: *const R4Desk) i32 {
+        if (!self.hasFn("remote_frame_source_reset")) return abi.remote_frame_error_unsupported;
+        const function: abi.R4DeskFns.remote_frame_source_reset = @ptrFromInt(self.table.remote_frame_source_reset);
+        return function();
+    }
+    pub fn remoteFrameCaptureStats(self: *const R4Desk, out: *abi.RemoteFrameCaptureStats) i32 {
+        if (!self.hasFn("remote_frame_capture_stats")) return abi.remote_frame_error_unsupported;
+        const function: abi.R4DeskFns.remote_frame_capture_stats = @ptrFromInt(self.table.remote_frame_capture_stats);
+        return function(out);
     }
 
     pub fn remoteFrameMap(self: *const R4Desk, out: *abi.RemoteFrameMapInfo) i32 {
@@ -1249,6 +1339,70 @@ pub const R4Draw = struct {
         if (!self.hasFn("display_present_completion")) return abi.display_present_error_unavailable;
         const display_fn: DisplayPresentCompletionFn = @ptrFromInt(self.table.display_present_completion);
         return display_fn(fence, out);
+    }
+    pub fn supportsDisplayPresentationStats(self: *const R4Draw) bool {
+        return self.hasFn("display_presentation_stats");
+    }
+    pub fn supportsDisplayPresentationInfo(self: *const R4Draw) bool {
+        return self.hasFn("display_presentation_info");
+    }
+    pub fn displayPresentationInfo(self: *const R4Draw, head_id: u32, out: *abi.DisplayPresentationInfo) i32 {
+        if (!self.supportsDisplayPresentationInfo()) return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationInfo);
+        const callback: abi.R4DrawFns.display_presentation_info = @ptrFromInt(self.table.display_presentation_info);
+        return callback(head_id, out);
+    }
+    pub fn displayOutputTarget(self: *const R4Draw, adapter_id: u32, head_id: u32, out: *abi.GfxOutputTarget) i32 {
+        if (!self.hasFn("display_output_target")) return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.GfxOutputTarget);
+        const callback: abi.R4DrawFns.display_output_target = @ptrFromInt(self.table.display_output_target);
+        return callback(adapter_id, head_id, out);
+    }
+    pub fn displayOutputPresentationInfo(self: *const R4Draw, target: *const abi.GfxOutputTarget, out: *abi.DisplayPresentationInfo) i32 {
+        if (!self.hasFn("display_output_presentation_info")) return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationInfo);
+        const callback: abi.R4DrawFns.display_output_presentation_info = @ptrFromInt(self.table.display_output_presentation_info);
+        return callback(target, out);
+    }
+    pub fn displayOutputPresentationFeedback(self: *const R4Draw, target: *const abi.GfxOutputTarget, fence: *const abi.GfxFence, out: *abi.DisplayPresentationStats) i32 {
+        if (!self.hasFn("display_output_presentation_feedback")) return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationStats);
+        const callback: abi.R4DrawFns.display_output_presentation_feedback = @ptrFromInt(self.table.display_output_presentation_feedback);
+        return callback(target, fence, out);
+    }
+    pub fn displayPresentationFeedback(self: *const R4Draw, head_id: u32, fence: *const abi.GfxFence, out: *abi.DisplayPresentationStats) i32 {
+        if (!self.hasFn("display_presentation_feedback")) return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationStats);
+        const callback: abi.R4DrawFns.display_presentation_feedback = @ptrFromInt(self.table.display_presentation_feedback);
+        return callback(head_id, fence, out);
+    }
+    pub fn supportsDisplayCursor(self: *const R4Draw) bool {
+        return self.hasFn("display_cursor_info") and self.hasFn("display_cursor_submit") and self.hasFn("display_cursor_status");
+    }
+    pub fn displayCursorInfo(self: *const R4Draw, out: *abi.DisplayCursorInfo) i32 {
+        if (!self.supportsDisplayCursor()) return abi.err_no_fn;
+        const callback: abi.R4DrawFns.display_cursor_info = @ptrFromInt(self.table.display_cursor_info);
+        return callback(out);
+    }
+    pub fn displayCursorSubmit(self: *const R4Draw, input: *const abi.DisplayCursorRequest, out: *abi.DisplayCursorStatus) i32 {
+        if (!self.supportsDisplayCursor()) return abi.err_no_fn;
+        const callback: abi.R4DrawFns.display_cursor_submit = @ptrFromInt(self.table.display_cursor_submit);
+        return callback(input, out);
+    }
+    pub fn displayCursorStatus(self: *const R4Draw, out: *abi.DisplayCursorStatus) i32 {
+        if (!self.supportsDisplayCursor()) return abi.err_no_fn;
+        const callback: abi.R4DrawFns.display_cursor_status = @ptrFromInt(self.table.display_cursor_status);
+        return callback(out);
+    }
+    pub fn displayPresentationStats(self: *const R4Draw, head_id: u32, out: *abi.DisplayPresentationStats) i32 {
+        if (!self.supportsDisplayPresentationStats()) return abi.err_no_fn;
+        const callback: abi.R4DrawFns.display_presentation_stats = @ptrFromInt(self.table.display_presentation_stats);
+        return callback(head_id, out);
     }
 
     pub fn guiClear(self: *const R4Draw, rgb: u32) i32 {

@@ -1,9 +1,23 @@
 #include <r4os/r4os.h>
-
-R4OS_TEXT(hello_message, "HELLO from {ProjectName} via R4OS SDK");
-
-int32_t r4_app_main(R4App *app)
-{
-    R4Console console = r4_app_console(app);
-    return r4_console_line(&console, (const char *)hello_message);
+#include <r4os/app2.h>
+#include <r4os/launch_io_platform2.h>
+R4OS_TEXT(message, "HELLO from {ProjectName} via R4OS SDK\r\n");
+int32_t r4_app_main(R4App2 *app) {
+    R4Sys system;
+    R4SdkStdio io;
+    if (r4_app2_system(app, &system) != 0) return 1;
+    if (R4SdkStdio2(&app->context, &io) != 0) return 1;
+    R4WaitSetDeadline poll = { .version = 1, .size = sizeof(poll) };
+    uint64_t written = 0;
+    while (written < sizeof(message) - 1) {
+        R4BytePipeProgress progress = { .version = 1, .size = sizeof(progress) };
+        int32_t code = R4SdkStdioWrite(&io, 1, (const uint8_t *)message + written,
+            sizeof(message) - 1 - written, &poll, &progress);
+        if (code != 0) return code;
+        written += progress.bytes;
+        if (progress.state != R4OS_BYTE_PIPE_READY && progress.state != R4OS_BYTE_PIPE_WOULD_BLOCK) return 1;
+        if (r4_app2_should_close(app)) return 0;
+        if (written < sizeof(message) - 1) r4sys_sleep_ticks(&system, 1);
+    }
+    return 0;
 }

@@ -5,9 +5,16 @@ const r4u_manifest = r4os.r4u_manifest;
 const r4u_artifact = r4os.r4u_artifact;
 const system_update_inventory = r4os.system_update_inventory;
 const system_update_batch = r4os.system_update_batch;
+const system_update_backup = r4os.system_update_backup;
+pub const asset = @import("system_update_asset.zig");
+pub const removal = @import("system_update_remove.zig");
+// The engine is deliberately single-threaded, like its existing workspaces.
+// Only installAsset supplies this additional create/replace precondition.
+var asset_expectation: ?asset.Plan = null;
+var asset_batch_source: ?[]const u8 = null;
 
 const header_size: usize = r4u_manifest.header_size;
-const manifest_max: usize = 32 * 1024;
+const manifest_max: usize = r4u_manifest.manifest_max_bytes;
 // Worst case: 32 payloads x 4 paths x up to 1023 bytes (0.60.19 limits)
 // plus header lines. Only R4U_JOURNAL=5 is supported, binding release,
 // package, concrete components and durable restart-batch progress.
@@ -19,11 +26,13 @@ const journal_max: usize = system_update_recovery.journal_max;
 const io_chunk: usize = 65536;
 var stream_io_buf: [io_chunk]u8 = undefined;
 var checksum_io_buf: [io_chunk]u8 = undefined;
+var payload_passes: u32 = 0;
+var payload_read_bytes: u64 = 0;
 var inventory_source_buf: [system_update_inventory.max_bytes]u8 = undefined;
 var inventory_render_buf: [system_update_inventory.max_bytes]u8 = undefined;
 var inventory_workspace: system_update_inventory.Inventory = undefined;
 const checksum_seed: u32 = system_update_recovery.checksum_seed;
-const max_package_payloads: usize = system_update_recovery.max_package_payloads;
+const max_package_payloads: usize = r4u_manifest.max_package_payloads;
 const max_payloads: usize = system_update_recovery.max_payloads;
 const max_path: usize = system_update_recovery.max_path;
 comptime {
@@ -187,6 +196,10 @@ pub const Result = struct {
     batch_package_count: u32 = 0,
     batch_current_package: u32 = 0,
     restart_required: bool = false,
+
+    /// Actual payload stream attempts and bytes read by this engine call.
+    payload_passes: u32 = 0,
+    payload_read_bytes: u64 = 0,
 
     pub fn packageText(self: *const Result) []const u8 {
         return self.package[0..self.package_len];
@@ -382,12 +395,45 @@ var last_status_has_journal = false;
 var last_status_has_batch = false;
 
 pub const Engine = struct {
-    app: *r4os.App,
     ctx: r4os.r4sys.Context,
+    files: ?r4os.Files,
 
-    pub fn init(app: *r4os.App) Engine {
-        refreshActiveKernelVersion(app);
-        return .{ .app = app, .ctx = app.system() };
+    /// Both start contracts expose the same update operations. The borrowed
+    /// facades retain their original context through the transaction.
+    pub fn init(app: anytype) Engine {
+        refreshActiveKernelVersion(app.devicesLowLevel());
+        return .{ .ctx = app.system(), .files = app.files() };
+    }
+    /// The shared update owner removes one observed application. Running
+    /// images wait for their normal close; no force kill or reboot is hidden.
+    pub fn removeApplication(self: *Engine, plan: removal.Plan, stop: ?*const r4os.app_contract.StopFlag) !removal.Outcome {
+        if (!ensureUpdateDirectories(&self.ctx)) return error.RemoveDirectories;
+        switch (readNewestValidJournalInto(&self.ctx, &newest_journal_workspace)) {
+            .found => if (!phaseTerminal(newest_journal_workspace.phase)) return error.RemoveForeignTransaction,
+            .not_found => {},
+            .io => return error.RemoveJournalRead,
+        }
+        switch (readNewestValidBatchInto(&self.ctx, &batch_journal_workspace)) {
+            .found => if (!system_update_batch.phaseTerminal(batch_journal_workspace.phase)) return error.RemoveForeignTransaction,
+            .not_found => {},
+            .io => return error.RemoveJournalRead,
+        }
+        if (acquireUpdateLease(&self.ctx) != .acquired) return error.RemoveBusy;
+        defer releaseUpdateLock(&self.ctx);
+        // Recheck after acquiring the same native lease as every R4U writer.
+        switch (readNewestValidJournalInto(&self.ctx, &newest_journal_workspace)) {
+            .found => if (!phaseTerminal(newest_journal_workspace.phase)) return error.RemoveForeignTransaction,
+            .not_found => {},
+            .io => return error.RemoveJournalRead,
+        }
+        switch (readNewestValidBatchInto(&self.ctx, &batch_journal_workspace)) {
+            .found => if (!system_update_batch.phaseTerminal(batch_journal_workspace.phase)) return error.RemoveForeignTransaction,
+            .not_found => {},
+            .io => return error.RemoveJournalRead,
+        }
+        var io = removal.Native.init(&self.ctx, stop);
+        defer io.deinit();
+        return removal.execute(&io, plan);
     }
 
     pub fn verify(self: *Engine, path: []const u8) Result {
@@ -411,10 +457,98 @@ pub const Engine = struct {
         return typedResult(.apply, exit_code, &primary_info_workspace, &command_journal_workspace, null);
     }
 
+    /// Original artefact -> verified R4U envelope -> existing transaction.
+    /// Libraries, kernel and running applications enter the restart batch.
+    /// STAGE never authorizes COMMIT or a reboot on the caller's behalf.
+    pub fn installAsset(self: *Engine, plan: asset.Plan) !Result {
+        var release_buffer: [32]u8 = undefined;
+        const release = switch (readCurrentVersionStatus(&self.ctx, &release_buffer)) {
+            .found => |value| value,
+            else => return error.AssetRelease,
+        };
+        const prepared = try asset.prepareWithFiles(self.ctx, self.files, plan, release);
+        switch (readNewestValidBatchInto(&self.ctx, &batch_journal_workspace)) {
+            .found => {
+                if (assetBatchBound(&batch_journal_workspace, prepared.path.bytes()) and
+                    (!system_update_batch.phaseTerminal(batch_journal_workspace.phase) or batch_journal_workspace.phase == .installed)) return self.resumeAsset(plan);
+                if (!system_update_batch.phaseTerminal(batch_journal_workspace.phase)) return error.AssetForeignTransaction;
+            },
+            .not_found => {},
+            .io => return error.AssetJournalRead,
+        }
+        if (asset_expectation != null) return error.AssetEngineBusy;
+        asset_expectation = plan;
+        defer asset_expectation = null;
+        const files = self.files orelse return error.FilesUnavailable;
+        if (plan.kind != .kernel) {
+            const target = try r4os.AbsoluteFilePath.parse(plan.target);
+            const end = std.mem.lastIndexOfScalar(u8, target.bytes(), '\\') orelse return error.AssetTarget;
+            if (end > 2) try asset.ensureParents(&files, try r4os.AbsoluteFilePath.parse(target.bytes()[0..end]));
+        }
+        return self.stage(prepared.path.bytes());
+    }
+
+    /// Resume only the journal bound to this exact immutable wrapper. A
+    /// different caller's interrupted update is never adopted by Portex.
+    pub fn resumeAsset(self: *Engine, plan: asset.Plan) !Result {
+        var release_buffer: [32]u8 = undefined;
+        const release = switch (readCurrentVersionStatus(&self.ctx, &release_buffer)) {
+            .found => |value| value,
+            else => return error.AssetRelease,
+        };
+        const prepared = try asset.prepareWithFiles(self.ctx, self.files, plan, release);
+        switch (readNewestValidBatchInto(&self.ctx, &batch_journal_workspace)) {
+            .found => if (assetBatchBound(&batch_journal_workspace, prepared.path.bytes())) {
+                const observed = self.status();
+                if (observed.state == .installed and
+                    (!command_journal_workspace.batch or !lastGoodBatchMatches(&batch_journal_workspace, &command_journal_workspace))) return error.AssetForeignTransaction;
+                return observed;
+            },
+            .not_found => {},
+            .io => return error.AssetJournalRead,
+        }
+        switch (readNewestValidJournalInto(&self.ctx, &command_journal_workspace)) {
+            .found => {},
+            .not_found => return error.AssetNoPendingTransaction,
+            .io => return error.AssetJournalRead,
+        }
+        if (phaseTerminal(command_journal_workspace.phase) or
+            !pathEqualsIgnoreCase(command_journal_workspace.sourceText(), prepared.path.bytes())) return error.AssetForeignTransaction;
+        return self.resumeTransaction();
+    }
+
+    /// Explicit user-authorized activation/reboot, bound to this one asset.
+    /// Revalidate its original source, BOOT plan and old target before COMMIT.
+    /// A manual SYSUPD batch is never committed as a side effect of Portex.
+    pub fn commitAsset(self: *Engine, plan: asset.Plan) !Result {
+        var release_buffer: [32]u8 = undefined;
+        const release = switch (readCurrentVersionStatus(&self.ctx, &release_buffer)) {
+            .found => |value| value,
+            else => return error.AssetRelease,
+        };
+        const prepared = try asset.prepareWithFiles(self.ctx, self.files, plan, release);
+        if (asset_expectation != null or asset_batch_source != null) return error.AssetEngineBusy;
+        const observed = try self.resumeAsset(plan);
+        if (observed.state == .installed) return observed;
+        if (observed.state == .pending_restart or observed.state == .restart_required) self.ctx.systemReboot();
+        if (observed.state != .staged) return error.AssetNotRestartReady;
+        asset_expectation = plan;
+        asset_batch_source = prepared.path.bytes();
+        defer {
+            asset_expectation = null;
+            asset_batch_source = null;
+        }
+        return self.commitBatch();
+    }
+
     pub fn stage(self: *Engine, path: []const u8) Result {
         resetTypedResult();
         const exit_code = stageCommand(&self.ctx, path);
-        return typedResult(.stage, exit_code, &primary_info_workspace, null, &batch_journal_workspace);
+        const restart_staged = batch_journal_workspace.valid and !system_update_batch.phaseTerminal(batch_journal_workspace.phase);
+        const live = exit_code == 0 and !restart_staged and command_journal_workspace.valid and
+            !command_journal_workspace.batch and phaseTerminal(command_journal_workspace.phase) and
+            pathEqualsIgnoreCase(command_journal_workspace.sourceText(), path);
+        return typedResult(.stage, exit_code, &primary_info_workspace, if (live) &command_journal_workspace else null, if (live) null else &batch_journal_workspace);
     }
 
     pub fn commitBatch(self: *Engine) Result {
@@ -459,22 +593,61 @@ pub const Engine = struct {
     }
 };
 
-pub fn runTerminal(r4_app: *r4os.App) i32 {
+pub fn runTerminal(r4_app: anytype) i32 {
     var engine = Engine.init(r4_app);
     const ctx = engine.ctx;
+    defer printPayloadWork(&ctx);
     const args = trim(spanZ(ctx.argsRaw()));
     if (args.len == 0 or equalsIgnoreCase(args, "/?") or equalsIgnoreCase(args, "-?") or equalsIgnoreCase(args, "--help")) {
         printUsage(&ctx);
         return 0;
     }
 
-    var pos: usize = 0;
-    const command = nextToken(args, &pos) orelse {
-        printUsage(&ctx);
+    const parsed_args = parseTerminalArguments(args) catch {
+        fail(&ctx, "arguments", "invalid-command-line");
         return 1;
     };
+    const command = parsed_args.command;
+    const path_argument = parsed_args.argument;
+    const takes_path = equalsIgnoreCase(command, "VERIFY") or equalsIgnoreCase(command, "APPLY") or
+        equalsIgnoreCase(command, "STAGE") or equalsIgnoreCase(command, "REMOVE") or
+        equalsIgnoreCase(command, "ARCHIVE-BOOT-BACKUP");
+    if (!takes_path and path_argument.len != 0) {
+        fail(&ctx, "arguments", "unexpected-argument");
+        return 1;
+    }
+    if (equalsIgnoreCase(command, "REMOVE") or equalsIgnoreCase(command, "RESUME-REMOVE")) {
+        var io = removal.Native.init(&ctx, null);
+        defer io.deinit();
+        const path = path_argument;
+        var parsed: ?std.json.Parsed(removal.Plan) = null;
+        defer if (parsed) |value| value.deinit();
+        const plan: removal.Plan = if (equalsIgnoreCase(command, "RESUME-REMOVE")) blk: {
+            if (path.len != 0) return 1;
+            const current = (io.load() catch return 1) orelse return 1;
+            break :blk current.plan;
+        } else blk: {
+            const native = r4os.AbsoluteFilePath.parse(path) catch return 1;
+            const memory = ctx.allocator().alloc(u8, 16384) catch return 1;
+            defer ctx.allocator().free(memory);
+            const count = ctx.fileRead(native.asZ().ptr, memory);
+            if (count <= 0 or count >= memory.len) return 1;
+            parsed = std.json.parseFromSlice(removal.Plan, ctx.allocator(), memory[0..@intCast(count)], .{ .allocate = .alloc_always }) catch return 1;
+            break :blk parsed.?.value;
+        };
+        const outcome = engine.removeApplication(plan, null) catch |err| {
+            fail(&ctx, "REMOVE", @errorName(err));
+            return 1;
+        };
+        ctx.write("SYSUPD REMOVE state=");
+        ctx.write(@tagName(outcome.state));
+        ctx.write(" generation=");
+        ctx.printU64(outcome.generation);
+        ctx.println("");
+        return if (outcome.state == .removed) 0 else 2;
+    }
     if (equalsIgnoreCase(command, "VERIFY")) {
-        const path = trim(args[pos..]);
+        const path = path_argument;
         if (path.len == 0) {
             fail(&ctx, "VERIFY", "missing-path");
             return 1;
@@ -482,7 +655,7 @@ pub fn runTerminal(r4_app: *r4os.App) i32 {
         return engine.verify(path).exit_code;
     }
     if (equalsIgnoreCase(command, "APPLY")) {
-        const path = trim(args[pos..]);
+        const path = path_argument;
         if (path.len == 0) {
             fail(&ctx, "APPLY", "missing-path");
             return 1;
@@ -490,7 +663,7 @@ pub fn runTerminal(r4_app: *r4os.App) i32 {
         return engine.apply(path).exit_code;
     }
     if (equalsIgnoreCase(command, "STAGE")) {
-        const path = trim(args[pos..]);
+        const path = path_argument;
         if (path.len == 0) {
             fail(&ctx, "STAGE", "missing-path");
             return 1;
@@ -499,6 +672,13 @@ pub fn runTerminal(r4_app: *r4os.App) i32 {
     }
     if (equalsIgnoreCase(command, "COMMIT")) {
         return engine.commitBatch().exit_code;
+    }
+    if (equalsIgnoreCase(command, "ROLLBACK-LAST")) {
+        if (path_argument.len != 0) return 1;
+        return rollbackLastCommand(&ctx);
+    }
+    if (equalsIgnoreCase(command, "ARCHIVE-BOOT-BACKUP")) {
+        return archiveBootBackupCommand(&ctx, path_argument);
     }
     if (equalsIgnoreCase(command, "ABORT-BATCH")) {
         return abortPreparedBatchCommand(&ctx);
@@ -519,10 +699,10 @@ pub fn runTerminal(r4_app: *r4os.App) i32 {
     return 1;
 }
 
-fn refreshActiveKernelVersion(r4_app: *const r4os.App) void {
+fn refreshActiveKernelVersion(devices: ?r4os.r4dev.Context) void {
     active_kernel_version_len = 0;
     @memset(active_kernel_version[0..], 0);
-    const dev = r4_app.devicesLowLevel() orelse return;
+    const dev = devices orelse return;
     const version = dev.kernelVersion() orelse return;
     const rendered = r4os.version_info.formatKernelVersion(version, active_kernel_version[0 .. active_kernel_version.len - 1]) orelse return;
     active_kernel_version_len = rendered.len;
@@ -530,6 +710,17 @@ fn refreshActiveKernelVersion(r4_app: *const r4os.App) void {
 
 fn resetTypedResult() void {
     clearTypedReason();
+    payload_passes = 0;
+    payload_read_bytes = 0;
+}
+
+fn printPayloadWork(ctx: *const r4os.r4sys.Context) void {
+    if (payload_passes == 0) return;
+    ctx.write("SYSUPD I/O: payload-passes=");
+    ctx.printU64(payload_passes);
+    ctx.write(" payload-read-bytes=");
+    ctx.printU64(payload_read_bytes);
+    ctx.println("");
 }
 
 fn clearTypedReason() void {
@@ -548,6 +739,8 @@ fn typedResult(
         .operation = operation,
         .state = stateForResult(operation, exit_code, journal, batch),
         .exit_code = exit_code,
+        .payload_passes = payload_passes,
+        .payload_read_bytes = payload_read_bytes,
     };
     if (info) |package_info| {
         result.package_len = copyTypedText(result.package[0..], package_info.package);
@@ -569,9 +762,13 @@ fn typedResult(
         result.transaction_step_count = transaction.payload_count;
         if (result.component_count == 0) result.component_count = transaction.component_count;
         result.committed_count = transaction.committed_count;
+        // A restart batch can also bind the owner's release marker after
+        // post-boot verification. That third step does not invalidate its
+        // committed inventory. The parsed v5 journal validates both targets.
         result.inventory_consistent = transaction.component_count == 0 or
             ((transaction.phase == .inventory or transaction.phase == .applied or transaction.phase == .cleanup) and
-                transaction.payload_count == transaction.package_payload_count + 1 and
+                (transaction.payload_count == transaction.package_payload_count + 1 or
+                    (transaction.batch and transaction.payload_count == transaction.package_payload_count + 2)) and
                 transaction.committed_count == transaction.payload_count);
         if (result.transaction_generation == 0) result.transaction_generation = transaction.transaction_generation;
         result.activation = if (transaction.reboot) .restart else result.activation;
@@ -652,9 +849,13 @@ fn printUsage(ctx: *const r4os.r4sys.Context) void {
     ctx.println("  SYSUPD APPLY  C:\\R4OS\\UPDATE\\INBOX\\UPDATE.R4U");
     ctx.println("  SYSUPD STAGE  C:\\R4OS\\UPDATE\\INBOX\\UPDATE.R4U");
     ctx.println("  SYSUPD COMMIT");
+    ctx.println("  SYSUPD ROLLBACK-LAST  (verify backups, restore during next boot)");
     ctx.println("  SYSUPD ABORT-BATCH");
+    ctx.println("  SYSUPD ARCHIVE-BOOT-BACKUP Bxxxxxxx.R4U");
     ctx.println("  SYSUPD RESUME-BATCH");
     ctx.println("  SYSUPD RESUME");
+    ctx.println("  SYSUPD REMOVE C:\\TEMP\\REMOVE.JSON");
+    ctx.println("  SYSUPD RESUME-REMOVE  (waits for normal application close)");
     ctx.println("  SYSUPD STATUS");
     ctx.println("");
     ctx.println("APPLY stages payloads beside their targets, writes a journal, uses R4SYS replace and keeps SCP/SFTP as transport only.");
@@ -662,6 +863,102 @@ fn printUsage(ctx: *const r4os.r4sys.Context) void {
 
 fn verifyCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
     return verifyWithPolicy(ctx, path_raw, .current, "VERIFY");
+}
+
+fn rollbackLastCommand(ctx: *const r4os.r4sys.Context) i32 {
+    const command = "ROLLBACK-LAST";
+    switch (acquireUpdateLock(ctx, true)) {
+        .acquired => {},
+        .busy => {
+            fail(ctx, command, "transaction-active");
+            return 1;
+        },
+        .io => {
+            fail(ctx, command, "lock-io");
+            return 1;
+        },
+    }
+    defer releaseUpdateLock(ctx);
+    const journal = &command_journal_workspace;
+    switch (readNewestValidJournalInto(ctx, journal)) {
+        .found => {},
+        .not_found => {
+            fail(ctx, command, "journal-not-found");
+            return 1;
+        },
+        .io => {
+            fail(ctx, command, "journal-read");
+            return 1;
+        },
+    }
+    const batch = &batch_journal_workspace;
+    switch (readNewestValidBatchInto(ctx, batch)) {
+        .found => {
+            if (journal.batch) {
+                if ((batch.phase != .installed and batch.phase != .pending_restart and batch.phase != .rolling_back) or
+                    !lastGoodBatchMatches(batch, journal))
+                {
+                    fail(ctx, command, "batch-binding");
+                    return 1;
+                }
+            } else if (!system_update_batch.phaseTerminal(batch.phase)) {
+                fail(ctx, command, "restart-batch-pending");
+                return 1;
+            }
+        },
+        .not_found => if (journal.batch) {
+            fail(ctx, command, "batch-not-found");
+            return 1;
+        },
+        .io => {
+            fail(ctx, command, "batch-read");
+            return 1;
+        },
+    }
+    var io = SysUpdRecoveryIo{ .ctx = ctx };
+    const checked = system_update_recovery.checkLastGood(&io, journal);
+    if (checked != .ok) {
+        fail(ctx, command, system_update_recovery.replayStatusName(checked));
+        return 1;
+    }
+    // The normal boot recovery owns all file mutations. Never unload a live
+    // GPU or switch its resources underneath outstanding jobs. Batch intent
+    // precedes the decisive journal write: interruption before it changes no
+    // payload, and RESUME-BATCH can reconcile the unchanged applied journal.
+    if (journal.batch) {
+        batch.phase = .rolling_back;
+        setBatchReason(batch, "rollback-requested");
+        if (!writeInactiveBatchJournal(ctx, batch)) {
+            fail(ctx, command, "batch-intent-io");
+            return 1;
+        }
+    }
+    journal.phase = .rollback;
+    journal.rollback_markers_present = true;
+    if (!writeInactiveJournal(ctx, journal)) {
+        fail(ctx, command, "rollback-intent-io");
+        return 1;
+    }
+    ctx.println("SYSUPD ROLLBACK-LAST result: OK state=Pending rollback; rebooting");
+    ctx.systemReboot();
+}
+
+fn lastGoodBatchMatches(batch: *const system_update_batch.BatchJournal, journal: *const TransactionJournal) bool {
+    if (!std.mem.eql(u8, journal.sourceReleaseText(), batch.sourceReleaseText()) or
+        !std.mem.eql(u8, journal.releaseText(), batch.targetReleaseText())) return false;
+    var digest: u32 = 0;
+    var manifest: u32 = 0;
+    var components: u32 = checksum_seed;
+    var bytes: u64 = 0;
+    for (0..batch.package_count) |order| {
+        const entry = &batch.packages[packageIndexAtOrder(batch, order) orelse return false];
+        bytes = std.math.add(u64, bytes, entry.package_length) catch return false;
+        digest = checksumUpdate(digest, std.mem.asBytes(&entry.package_digest));
+        manifest = checksumUpdate(manifest, std.mem.asBytes(&entry.manifest_checksum));
+        components = checksumUpdate(components, std.mem.asBytes(&entry.component_digest));
+    }
+    return bytes == journal.package_length and digest == journal.package_digest and
+        manifest == journal.manifest_checksum and components == journal.component_digest;
 }
 
 fn verifyForBatchCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
@@ -721,6 +1018,19 @@ fn verifyWithPolicy(
     ctx.write(" staged=");
     ctx.println(staged_root);
     return 0;
+}
+
+fn assetTargetUnchanged(ctx: *const r4os.r4sys.Context, entry: *const PayloadEntry, plan: asset.Plan) bool {
+    const expected = plan.previous orelse return !entry.target_existed;
+    if (!entry.target_existed or !entry.old_known) return false;
+    const observed = asset.system.digest(ctx, entry.targetText(), &checksum_io_buf) catch return false;
+    return asset.matches(observed, expected.size, &expected.sha256) and
+        observed.checksum == expected.checksum and observed.size == entry.old_size and
+        observed.checksum == entry.old_checksum;
+}
+
+fn assetBatchBound(batch: *const system_update_batch.BatchJournal, source: []const u8) bool {
+    return batch.valid and batch.package_count == 1 and pathEqualsIgnoreCase(batch.packages[0].pathText(), source);
 }
 
 fn applyCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
@@ -792,7 +1102,7 @@ fn applyCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
         return 1;
     };
 
-    const verify_status = readAndVerifyPackage(ctx, path_raw, path_buf, manifest_buf, info, false, .current, "APPLY");
+    const verify_status = readPackageMetadata(ctx, path_raw, path_buf, manifest_buf, info, .current, "APPLY");
     if (verify_status != .ok) return packageVerifyExitCode(verify_status);
     if (!packageIsPureLiveR4x(info)) {
         fail(ctx, "APPLY", "restart-required");
@@ -853,6 +1163,14 @@ fn applyCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
             },
         }
         entry.already_applied = !entry.replace_required;
+    }
+    if (asset_expectation) |plan| {
+        if (info.payload_count != 1 or !r4u_manifest.targetEquals(info.payloads[0].targetText(), plan.target) or
+            !assetTargetUnchanged(ctx, &info.payloads[0], plan))
+        {
+            fail(ctx, "APPLY", "asset-target-changed");
+            return 1;
+        }
     }
     if (!bindPreviousBackups(ctx, info, previous)) {
         fail(ctx, "APPLY", "previous-backup-read");
@@ -1051,13 +1369,12 @@ fn stageCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
     command_path_workspace = .{0} ** max_path;
     primary_info_workspace = .{};
     const info = &primary_info_workspace;
-    const verify_status = readAndVerifyPackage(
+    const verify_status = readPackageMetadata(
         ctx,
         path_raw,
         command_path_workspace[0..],
         command_manifest_workspace[0..],
         info,
-        false,
         .deferred_batch,
         "STAGE",
     );
@@ -1076,7 +1393,7 @@ fn stageCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
     if (packageIsPureLiveR4x(info) and !pending_batch) {
         switch (allRequirementsCurrentlySatisfied(ctx, info)) {
             .satisfied => {},
-            .missing => return stageRestartPackage(ctx, info),
+            .missing => return verifyAndStageRestartPackage(ctx, info),
             .io => {
                 fail(ctx, "STAGE", "requirement-read");
                 return 1;
@@ -1084,13 +1401,21 @@ fn stageCommand(ctx: *const r4os.r4sys.Context, path_raw: []const u8) i32 {
         }
         switch (packageProgramRunningStatus(ctx, info)) {
             .satisfied => return applyCommand(ctx, path_raw),
-            .missing => return stageRestartPackage(ctx, info),
+            .missing => return verifyAndStageRestartPackage(ctx, info),
             .io => {
                 fail(ctx, "STAGE", "program-state");
                 return 1;
             },
         }
     }
+    return verifyAndStageRestartPackage(ctx, info);
+}
+
+// Restart journals retain a verified digest. Live APPLY verifies the same
+// bytes while writing its private stages, before any target replacement.
+fn verifyAndStageRestartPackage(ctx: *const r4os.r4sys.Context, info: *PackageInfo) i32 {
+    const status = streamPackagePayloadsWithTransientRetry(ctx, command_path_workspace[0..].ptr, info.header, command_manifest_workspace[0..@intCast(info.header.manifest_len)], info, false, "STAGE");
+    if (status != .ok) return packageVerifyExitCode(status);
     return stageRestartPackage(ctx, info);
 }
 
@@ -1211,6 +1536,8 @@ const BatchPlanSummary = struct {
     payload_count: usize = 0,
     component_count: usize = 0,
     requirement_count: usize = 0,
+    companions: bool = false,
+    preloads: bool = false,
 };
 
 fn batchEntryMatchesInfo(
@@ -1250,13 +1577,12 @@ fn preverifyBatch(
         primary_info_workspace = .{};
         command_path_workspace = .{0} ** max_path;
         const entry = &batch.packages[package_index];
-        const status = readAndVerifyPackage(
+        const status = readPackageMetadata(
             ctx,
             entry.pathText(),
             command_path_workspace[0..],
             command_manifest_workspace[0..],
             &primary_info_workspace,
-            false,
             .deferred_batch,
             "COMMIT",
         );
@@ -1264,6 +1590,8 @@ fn preverifyBatch(
             if (status == .ok) fail(ctx, "COMMIT", "package-binding-changed");
             return null;
         }
+        summary.companions = summary.companions or packageHasCompanions(&primary_info_workspace);
+        summary.preloads = summary.preloads or packageHasPreloads(&primary_info_workspace);
         if (summary.payload_count + primary_info_workspace.payload_count > max_package_payloads or
             summary.component_count + primary_info_workspace.component_count > system_update_batch.max_components or
             summary.requirement_count + primary_info_workspace.requirement_count > system_update_batch.max_requirements)
@@ -1306,11 +1634,22 @@ fn preverifyBatch(
                 .target = target,
                 .version = version,
                 .current_satisfied = current == .satisfied,
+                .state = source.state,
             };
         }
         summary.payload_count += primary_info_workspace.payload_count;
         summary.component_count += primary_info_workspace.component_count;
         summary.requirement_count += primary_info_workspace.requirement_count;
+    }
+    // A separate package must not replace the next boot's recovery owner
+    // with a kernel that cannot replay the companion paths in this batch.
+    if (summary.companions) {
+        for (batch_plan_components[0..summary.component_count]) |component| {
+            if (component.kind == .kernel and !r4u_manifest.kernelSupportsCompanionSet(component.version, summary.preloads)) {
+                fail(ctx, "COMMIT", "companion-recovery-kernel-downgrade");
+                return null;
+            }
+        }
     }
     const order = system_update_batch.planOrder(
         batch_plan_packages[0..batch.package_count],
@@ -1760,6 +2099,10 @@ fn commitBatchCommand(ctx: *const r4os.r4sys.Context) i32 {
         fail(ctx, "COMMIT", "batch-changed");
         return 1;
     }
+    if (asset_batch_source) |source| if (!assetBatchBound(&batch_journal_workspace, source)) {
+        fail(ctx, "COMMIT", "asset-batch-changed");
+        return 1;
+    };
     var index: usize = 0;
     while (index < batch_journal_workspace.package_count) : (index += 1)
         batch_journal_workspace.packages[index].order = batch_verify_journal_workspace.packages[index].order;
@@ -1859,13 +2202,12 @@ fn commitPreparedBatchLocked(
         primary_info_workspace = .{ .transaction_generation = transaction_generation };
         command_path_workspace = .{0} ** max_path;
         const package_info = &primary_info_workspace;
-        const status = readAndVerifyPackage(
+        const status = readPackageMetadata(
             ctx,
             binding.pathText(),
             command_path_workspace[0..],
             command_manifest_workspace[0..],
             package_info,
-            false,
             .deferred_batch,
             "COMMIT",
         );
@@ -1876,6 +2218,13 @@ fn commitPreparedBatchLocked(
         if (!assignInternalPathsAt(ctx, package_info, "COMMIT", payload_base) or
             !captureTargetStates(ctx, package_info, "COMMIT") or
             !validateTargetAliases(ctx, package_info, "COMMIT")) return 1;
+        if (asset_expectation) |plan| if (package_info.payload_count != 1 or
+            !r4u_manifest.targetEquals(package_info.payloads[0].targetText(), plan.target) or
+            !assetTargetUnchanged(ctx, &package_info.payloads[0], plan))
+        {
+            fail(ctx, "COMMIT", "asset-target-changed");
+            return 1;
+        };
         const stage_status = streamPackagePayloadsWithTransientRetry(
             ctx,
             command_path_workspace[0..].ptr,
@@ -1971,6 +2320,7 @@ fn commitPreparedBatchLocked(
     ctx.printU64(batch.package_count);
     ctx.write(" release=");
     ctx.println(batch.targetReleaseText());
+    printPayloadWork(ctx);
     ctx.systemReboot();
 }
 
@@ -2269,42 +2619,6 @@ fn resumeBatchCommand(ctx: *const r4os.r4sys.Context) i32 {
         return 0;
     }
 
-    switch (readNewestValidJournalInto(ctx, &command_journal_workspace)) {
-        .not_found => {
-            if (batch_journal_workspace.phase == .staged or
-                batch_journal_workspace.phase == .verifying or
-                batch_journal_workspace.phase == .staging)
-            {
-                batch_journal_workspace.phase = .staged;
-                batch_journal_workspace.current_package = 0;
-                if (!writeInactiveBatchJournal(ctx, &batch_journal_workspace)) return 1;
-                return commitBatchCommand(ctx);
-            }
-            fail(ctx, "RESUME-BATCH", "transaction-not-found");
-            return 1;
-        },
-        .found => {},
-        .io => {
-            fail(ctx, "RESUME-BATCH", "journal-read");
-            return 1;
-        },
-    }
-    if (!command_journal_workspace.batch and
-        phaseTerminal(command_journal_workspace.phase) and
-        (batch_journal_workspace.phase == .staged or
-            batch_journal_workspace.phase == .verifying or
-            batch_journal_workspace.phase == .staging))
-    {
-        batch_journal_workspace.phase = .staged;
-        batch_journal_workspace.current_package = 0;
-        setBatchReason(&batch_journal_workspace, "prepare-retry");
-        if (!writeInactiveBatchJournal(ctx, &batch_journal_workspace)) return 1;
-        return commitBatchCommand(ctx);
-    }
-    if (!command_journal_workspace.batch) {
-        fail(ctx, "RESUME-BATCH", "not-batch-transaction");
-        return 1;
-    }
     switch (acquireUpdateLock(ctx, true)) {
         .acquired => {},
         .busy => {
@@ -2316,17 +2630,66 @@ fn resumeBatchCommand(ctx: *const r4os.r4sys.Context) i32 {
             return 1;
         },
     }
-    defer releaseUpdateLock(ctx);
+    var lock_held = true;
+    defer if (lock_held) releaseUpdateLock(ctx);
     switch (readNewestValidBatchInto(ctx, &batch_journal_workspace)) {
         .found => {},
         .not_found, .io => return 1,
     }
+    if (system_update_batch.phaseTerminal(batch_journal_workspace.phase)) {
+        ctx.write("SYSUPD RESUME-BATCH result: OK state=");
+        ctx.println(batch_journal_workspace.phase.text());
+        return 0;
+    }
+
     switch (readNewestValidJournalInto(ctx, &command_journal_workspace)) {
+        .not_found => {
+            if (batch_journal_workspace.phase == .staged or
+                batch_journal_workspace.phase == .verifying or
+                batch_journal_workspace.phase == .staging)
+            {
+                batch_journal_workspace.phase = .staged;
+                batch_journal_workspace.current_package = 0;
+                if (!writeInactiveBatchJournal(ctx, &batch_journal_workspace)) return 1;
+                releaseUpdateLock(ctx);
+                lock_held = false;
+                return commitBatchCommand(ctx);
+            }
+            fail(ctx, "RESUME-BATCH", "transaction-not-found");
+            return 1;
+        },
         .found => {},
-        .not_found, .io => return 1,
+        .io => {
+            fail(ctx, "RESUME-BATCH", "journal-read");
+            return 1;
+        },
+    }
+    // A preparatory batch has not bound its own transaction yet. A previous
+    // terminal batch cannot certify it, even for the same package/release.
+    if (phaseTerminal(command_journal_workspace.phase) and
+        (batch_journal_workspace.phase == .staged or
+            batch_journal_workspace.phase == .verifying or
+            batch_journal_workspace.phase == .staging))
+    {
+        batch_journal_workspace.phase = .staged;
+        batch_journal_workspace.current_package = 0;
+        setBatchReason(&batch_journal_workspace, "prepare-retry");
+        if (!writeInactiveBatchJournal(ctx, &batch_journal_workspace)) return 1;
+        releaseUpdateLock(ctx);
+        lock_held = false;
+        return commitBatchCommand(ctx);
+    }
+    if (!command_journal_workspace.batch) {
+        fail(ctx, "RESUME-BATCH", "not-batch-transaction");
+        return 1;
     }
     const journal = &command_journal_workspace;
-    if (!journal.batch) return 1;
+    // Re-read under the update lease and bind all combined package digests
+    // before forward replay, post-boot verification, cleanup or rollback.
+    if (!lastGoodBatchMatches(&batch_journal_workspace, journal)) {
+        fail(ctx, "RESUME-BATCH", "transaction-binding");
+        return 1;
+    }
     if (journal.phase == .stage or journal.phase == .commit) {
         batch_journal_workspace.phase = .committing;
         if (!writeInactiveBatchJournal(ctx, &batch_journal_workspace)) return 1;
@@ -2550,52 +2913,71 @@ fn resumeTransaction(ctx: *const r4os.r4sys.Context) i32 {
     return 0;
 }
 
+fn readStatusSnapshot(ctx: *const r4os.r4sys.Context) ?[]const u8 {
+    last_status_has_batch = false;
+    last_status_has_journal = false;
+    const has_batch = switch (readNewestValidBatchInto(ctx, &batch_journal_workspace)) {
+        .found => true,
+        .not_found => false,
+        .io => return "batch-read",
+    };
+    const has_journal = switch (readNewestValidJournalInto(ctx, &command_journal_workspace)) {
+        .found => true,
+        .not_found => false,
+        .io => return "journal-read",
+    };
+    // Publish both flags only after a complete observation. Failed attempts
+    // must not leave partial batch metadata in the typed status result.
+    last_status_has_batch = has_batch;
+    last_status_has_journal = has_journal;
+    return null;
+}
+
 fn statusCommand(ctx: *const r4os.r4sys.Context) i32 {
     // STATUS is the documented first remote step: it materializes the
     // update tree and reports whether the directories really exist.
     const dirs_ok = ensureUpdateDirectories(ctx);
-    switch (readNewestValidBatchInto(ctx, &batch_journal_workspace)) {
-        .found => last_status_has_batch = true,
-        .not_found => {},
-        .io => {
-            fail(ctx, "STATUS", "batch-read");
-            return 1;
-        },
+    var failure: ?[]const u8 = null;
+    for (0..transient_read_attempt_limit) |attempt| {
+        failure = readStatusSnapshot(ctx);
+        if (failure == null) break;
+        // STATUS does not hold the writer lease. Replacement can shorten a
+        // journal between stat and read; retrying the old byte range cannot
+        // recover. Re-read metadata and both journal sets, with the existing
+        // finite read budget. Mutation/recovery readers stay unchanged.
+        if (attempt + 1 < transient_read_attempt_limit) ctx.sleepTicks(transient_io_retry_delay_ticks);
     }
-    switch (readNewestValidJournalInto(ctx, &command_journal_workspace)) {
-        .found => last_status_has_journal = true,
-        .not_found => {
-            ctx.write("SYSUPD STATUS: ");
-            if (last_status_has_batch) {
-                ctx.write("batch state=");
-                ctx.write(batch_journal_workspace.phase.text());
-                ctx.write(" batch=");
-                ctx.printU64(batch_journal_workspace.batch_generation);
-                ctx.write(" progress=");
-                ctx.printU64(batch_journal_workspace.current_package);
-                ctx.write("/");
-                ctx.printU64(batch_journal_workspace.package_count);
-                ctx.write(" release=");
-                ctx.write(batch_journal_workspace.targetReleaseText());
-                if (batch_journal_workspace.reason_len != 0) {
-                    ctx.write(" reason=");
-                    ctx.write(batch_journal_workspace.reasonText());
-                }
-            } else {
-                ctx.write("idle");
+    if (failure) |reason| {
+        fail(ctx, "STATUS", reason);
+        return 1;
+    }
+    if (!last_status_has_journal) {
+        ctx.write("SYSUPD STATUS: ");
+        if (last_status_has_batch) {
+            ctx.write("batch state=");
+            ctx.write(batch_journal_workspace.phase.text());
+            ctx.write(" batch=");
+            ctx.printU64(batch_journal_workspace.batch_generation);
+            ctx.write(" progress=");
+            ctx.printU64(batch_journal_workspace.current_package);
+            ctx.write("/");
+            ctx.printU64(batch_journal_workspace.package_count);
+            ctx.write(" release=");
+            ctx.write(batch_journal_workspace.targetReleaseText());
+            if (batch_journal_workspace.reason_len != 0) {
+                ctx.write(" reason=");
+                ctx.write(batch_journal_workspace.reasonText());
             }
-            ctx.write(" inbox=");
-            ctx.write(default_inbox);
-            ctx.write(" staged=");
-            ctx.write(staged_root);
-            ctx.write(" dirs=");
-            ctx.println(if (dirs_ok) "ok" else "missing");
-            return if (dirs_ok) 0 else 1;
-        },
-        .io => {
-            fail(ctx, "STATUS", "journal-read");
-            return 1;
-        },
+        } else {
+            ctx.write("idle");
+        }
+        ctx.write(" inbox=");
+        ctx.write(default_inbox);
+        ctx.write(" staged=");
+        ctx.write(staged_root);
+        ctx.write(" dirs=");
+        ctx.println(if (dirs_ok) "ok" else "missing");
+        return if (dirs_ok) 0 else 1;
     }
     const journal = &command_journal_workspace;
     ctx.write("SYSUPD STATUS: journal state=");
@@ -2646,6 +3028,20 @@ fn readAndVerifyPackage(
     manifest_buf: []u8,
     info: *PackageInfo,
     stage_payloads: bool,
+    requirement_policy: RequirementPolicy,
+    command: []const u8,
+) PackageVerifyStatus {
+    const status = readPackageMetadata(ctx, path_raw, path_buf, manifest_buf, info, requirement_policy, command);
+    if (status != .ok) return status;
+    return streamPackagePayloadsWithTransientRetry(ctx, @ptrCast(path_buf.ptr), info.header, manifest_buf[0..@intCast(info.header.manifest_len)], info, stage_payloads, command);
+}
+
+fn readPackageMetadata(
+    ctx: *const r4os.r4sys.Context,
+    path_raw: []const u8,
+    path_buf: []u8,
+    manifest_buf: []u8,
+    info: *PackageInfo,
     requirement_policy: RequirementPolicy,
     command: []const u8,
 ) PackageVerifyStatus {
@@ -2733,7 +3129,7 @@ fn readAndVerifyPackage(
         const requirement_status = validateRequirements(ctx, info, command);
         if (requirement_status != .ok) return requirement_status;
     }
-    return streamPackagePayloadsWithTransientRetry(ctx, package_path.ptr, header, manifest, info, stage_payloads, command);
+    return .ok;
 }
 
 fn packageVerifyExitCode(status: PackageVerifyStatus) i32 {
@@ -2943,6 +3339,7 @@ fn verifyManifest(
             }
         } else {
             has_unversioned_payload = true;
+            r4u_manifest.includeCompanion(&derived_class, payload.targetText());
             if (payload.component_index != null) {
                 fail(ctx, command, "component-unversioned");
                 return .invalid;
@@ -2965,8 +3362,37 @@ fn verifyManifest(
         fail(ctx, command, "unversioned-requirement");
         return .invalid;
     }
+    if (!validateCompanionRecovery(ctx, info, command)) return .invalid;
     info.reboot = info.activation == .restart;
     return .ok;
+}
+
+fn packageHasCompanions(info: *const PackageInfo) bool {
+    for (info.payloads[0..info.payload_count]) |*payload| {
+        if (r4u_manifest.paths.companionKind(payload.targetText()) != null) return true;
+    }
+    return false;
+}
+
+fn packageHasPreloads(info: *const PackageInfo) bool {
+    for (info.payloads[0..info.payload_count]) |*payload| if (r4u_manifest.paths.preloadTarget(payload.targetText())) return true;
+    return false;
+}
+
+fn validateCompanionRecovery(ctx: *const r4os.r4sys.Context, info: *const PackageInfo, command: []const u8) bool {
+    if (!packageHasCompanions(info)) return true;
+    const preload = packageHasPreloads(info);
+    for (info.components[0..info.component_count]) |*component| {
+        if (component.kind == .kernel and !r4u_manifest.kernelSupportsCompanionSet(component.version, preload)) {
+            fail(ctx, command, "companion-recovery-kernel-downgrade");
+            return false;
+        }
+    }
+    for (info.requirements[0..info.requirement_count]) |*requirement| {
+        if (r4u_manifest.companionSetRecoveryRequirement(requirement.kind, requirement.name, requirement.targetText(), requirement.version, requirement.state, preload)) return true;
+    }
+    fail(ctx, command, "companion-recovery-requirement");
+    return false;
 }
 
 fn verifyPayloadLine(ctx: *const r4os.r4sys.Context, line: []const u8, header: Header, info: *PackageInfo, command: []const u8) bool {
@@ -3101,8 +3527,11 @@ fn verifyComponentLine(ctx: *const r4os.r4sys.Context, line: []const u8, info: *
         fail(ctx, command, "component-target");
         return false;
     }).len;
+    // Applications retain their observed filename when adopted or updated.
+    // Their technical name/version is verified from the original R4M0 bytes,
+    // independently of the chosen leaf. System components keep fixed names.
     if (!componentTargetMatchesKind(kind, component.targetText()) or
-        !std.ascii.eqlIgnoreCase(name, componentNameFromTarget(component.targetText(), kind)))
+        (kind != .r4x and !std.ascii.eqlIgnoreCase(name, componentNameFromTarget(component.targetText(), kind))))
     {
         fail(ctx, command, "component-target-identity");
         return false;
@@ -3180,7 +3609,7 @@ fn verifyRequirementLine(ctx: *const r4os.r4sys.Context, line: []const u8, info:
     }).len;
     requirement.target_path[requirement.target_len] = 0;
     if (!componentTargetMatchesKind(kind, requirement.targetText()) or
-        !std.ascii.eqlIgnoreCase(name, componentNameFromTarget(requirement.targetText(), kind)))
+        (kind != .r4x and !std.ascii.eqlIgnoreCase(name, componentNameFromTarget(requirement.targetText(), kind))))
     {
         fail(ctx, command, "requirement-target-identity");
         return false;
@@ -3435,6 +3864,20 @@ fn streamPackagePayloads(
     stage_payloads: bool,
     command: []const u8,
 ) PackageVerifyStatus {
+    if (stage_payloads) {
+        // APPLY already owns its prepare journal; COMMIT owns the durable
+        // package-bound batch in staging. VERIFY never provisions parents.
+        // Complete the directory preflight before the first mkdir or stream.
+        for (info.payloads[0..info.payload_count]) |*entry| {
+            const status = targetParents(ctx, entry, false, command);
+            if (status != .ok) return status;
+        }
+        for (info.payloads[0..info.payload_count]) |*entry| {
+            const status = targetParents(ctx, entry, true, command);
+            if (status != .ok) return status;
+        }
+    }
+    payload_passes +|= 1;
     const payload_base = std.math.add(
         u64,
         @as(u64, @intCast(header_size)),
@@ -3508,7 +3951,9 @@ fn streamPackagePayloads(
                 fail(ctx, command, "payload-offset");
                 return .invalid;
             }
-            if (!readExactAt(ctx, package_path, absolute, buf[0..want]).ok) {
+            const read = readExactAt(ctx, package_path, absolute, buf[0..want]);
+            payload_read_bytes +|= read.completed;
+            if (!read.ok) {
                 if (write_stage and !settlePrivateStageOrFail(ctx, entry, command)) return .conflict;
                 fail(ctx, command, "payload-read");
                 return .io;
@@ -3560,6 +4005,53 @@ fn streamPackagePayloads(
     if (package_hash != header.package_checksum) {
         if (stage_payloads) _ = deleteStagedPayloads(ctx, info);
         fail(ctx, command, "package-checksum");
+        return .invalid;
+    }
+    return confirmPackageMetadata(ctx, package_path, header, manifest, info.package_length, command);
+}
+
+fn confirmPackageMetadata(
+    ctx: *const r4os.r4sys.Context,
+    path: [*:0]const u8,
+    header: Header,
+    manifest: []const u8,
+    expected_size: u64,
+    command: []const u8,
+) PackageVerifyStatus {
+    var bytes: [header_size]u8 = undefined;
+    if (!readExactAt(ctx, path, 0, &bytes).ok) {
+        fail(ctx, command, "header-read");
+        return .io;
+    }
+    const current = parseHeader(&bytes) orelse {
+        fail(ctx, command, "package-binding-changed");
+        return .invalid;
+    };
+    if (!std.meta.eql(current, header)) {
+        fail(ctx, command, "package-binding-changed");
+        return .invalid;
+    }
+    var offset: usize = 0;
+    while (offset < manifest.len) {
+        const count = @min(stream_io_buf.len, manifest.len - offset);
+        const chunk = stream_io_buf[0..count];
+        if (!readExactAt(ctx, path, header_size + offset, chunk).ok) {
+            fail(ctx, command, "manifest-read");
+            return .io;
+        }
+        if (!std.mem.eql(u8, chunk, manifest[offset..][0..count])) {
+            fail(ctx, command, "package-binding-changed");
+            return .invalid;
+        }
+        offset += count;
+    }
+    var file_info: r4os.abi.FileInfo = .{};
+    if (fileInfoStatus(ctx, path, &file_info) != .found) {
+        fail(ctx, command, "package-info");
+        return .io;
+    }
+    if (file_info.is_dir != 0 or file_info.size != expected_size) {
+        fail(ctx, command, "package-binding-changed");
         return .invalid;
     }
     return .ok;
@@ -4457,7 +4949,180 @@ fn bindPreviousBackups(ctx: *const r4os.r4sys.Context, info: *PackageInfo, previ
     return true;
 }
 
+const BootBackupArchiveIo = struct {
+    ctx: *const r4os.r4sys.Context,
+    name: []const u8,
+    source: [:0]const u8,
+    destination: [:0]const u8,
+    size: u64,
+    checksum: u32,
+    first_cluster: u32,
+
+    pub fn unreferenced(self: *const BootBackupArchiveIo) bool {
+        // Both durable slots must parse. A damaged older slot cannot be
+        // silently ignored when deciding whether one of its backups is free.
+        var found: usize = 0;
+        for (journal_paths, 0..) |path, slot| {
+            var info: r4os.abi.FileInfo = .{};
+            switch (fileInfoStatus(self.ctx, path, &info)) {
+                .not_found => continue,
+                .io => return false,
+                .found => {},
+            }
+            if (info.is_dir != 0 or info.size == 0 or info.size > journal_max) return false;
+            const bytes = journal_read_buffers[slot][0..@intCast(info.size)];
+            if (!readExactAt(self.ctx, path, 0, bytes).ok or !parseJournalInto(bytes, @intCast(slot), &previous_journal_workspace)) return false;
+            found += 1;
+            if (system_update_backup.referenced(&previous_journal_workspace, self.source)) return false;
+        }
+        if (found == 0) return false;
+        // A leftover ownership alias must not be deleted as an independent
+        // FAT chain. Inspect the real, internally mounted boot namespace.
+        var source_info: r4os.abi.FileInfo = .{};
+        if (fileInfoStatus(self.ctx, self.source.ptr, &source_info) != .found or source_info.first_cluster != self.first_cluster) return false;
+        var names: [max_path]u8 = undefined;
+        var complete = false;
+        for (2..1026) |index| {
+            @memset(&names, 0xff);
+            const kind = self.ctx.dirEntry("\\boot", @intCast(index), &names);
+            if (kind == r4os.r4sys.dir_entry_result_end) {
+                complete = true;
+                break;
+            }
+            if (kind != 0 and kind != 1) return false;
+            const length = std.mem.indexOfScalar(u8, &names, 0) orelse return false;
+            const path = names[0..length :0];
+            if (system_update_backup.samePath(path, self.source)) continue;
+            var sibling: r4os.abi.FileInfo = .{};
+            if (fileInfoStatus(self.ctx, path.ptr, &sibling) != .found or sibling.first_cluster == self.first_cluster) return false;
+        }
+        if (!complete) return false;
+        // Also retain explicitly configured boot targets, independently of
+        // journal lifetime. No automatic parsing or rewriting of boot policy.
+        var config: [4096]u8 = undefined;
+        var info: r4os.abi.FileInfo = .{};
+        if (fileInfoStatus(self.ctx, "\\boot\\limine.conf", &info) != .found or info.is_dir != 0 or info.size == 0 or info.size > config.len) return false;
+        const bytes = config[0..@intCast(info.size)];
+        if (!readExactAt(self.ctx, "\\boot\\limine.conf", 0, bytes).ok) return false;
+        if (bytes.len >= self.name.len) {
+            for (0..bytes.len - self.name.len + 1) |at| {
+                if (equalsIgnoreCase(bytes[at..][0..self.name.len], self.name)) return false;
+            }
+        }
+        return true;
+    }
+
+    pub fn copy(self: *const BootBackupArchiveIo) bool {
+        switch (payloadPathState(self.ctx, self.destination.ptr, self.size, self.checksum)) {
+            .match => return true,
+            .other, .io => return false,
+            .not_found => {},
+        }
+        var writer: r4os.file_stream.WriterState = undefined;
+        if (!r4os.file_stream.begin(self.ctx, &writer, self.destination.ptr, r4os.abi.file_stream_open_create)) return false;
+        var complete = false;
+        defer if (!complete) {
+            _ = r4os.file_stream.abort(self.ctx, &writer);
+        };
+        while (writer.offset < self.size) {
+            const bytes = stream_io_buf[0..@intCast(@min(self.size - writer.offset, stream_io_buf.len))];
+            if (!readExactAt(self.ctx, self.source.ptr, writer.offset, bytes).ok or !r4os.file_stream.write(self.ctx, &writer, bytes)) return false;
+        }
+        if (!r4os.file_stream.finish(self.ctx, &writer)) return false;
+        complete = true;
+        return true;
+    }
+    pub fn verify(self: *const BootBackupArchiveIo) bool {
+        if (payloadPathState(self.ctx, self.source.ptr, self.size, self.checksum) != .match or
+            payloadPathState(self.ctx, self.destination.ptr, self.size, self.checksum) != .match) return false;
+        var done: u64 = 0;
+        while (done < self.size) {
+            const count: usize = @intCast(@min(self.size - done, stream_io_buf.len));
+            if (!readExactAt(self.ctx, self.source.ptr, done, stream_io_buf[0..count]).ok or
+                !readExactAt(self.ctx, self.destination.ptr, done, checksum_io_buf[0..count]).ok or
+                !std.mem.eql(u8, stream_io_buf[0..count], checksum_io_buf[0..count])) return false;
+            done += count;
+        }
+        return true;
+    }
+    pub fn remove(self: *const BootBackupArchiveIo) bool {
+        return deleteFileIfMatching(self.ctx, self.source.ptr, self.size, self.checksum) == .ok;
+    }
+};
+
+fn archiveBootBackupCommand(ctx: *const r4os.r4sys.Context, name: []const u8) i32 {
+    const command = "ARCHIVE-BOOT-BACKUP";
+    if (!system_update_backup.validName(name)) {
+        fail(ctx, command, "backup-name");
+        return 1;
+    }
+    if (!ensureUpdateDirectories(ctx)) {
+        fail(ctx, command, "update-dirs");
+        return 1;
+    }
+    switch (acquireUpdateLock(ctx, true)) {
+        .acquired => {},
+        .busy => {
+            fail(ctx, command, "update-active");
+            return 1;
+        },
+        .io => {
+            fail(ctx, command, "lock-io");
+            return 1;
+        },
+    }
+    defer releaseUpdateLock(ctx);
+    const storage = r4os.storage.Context{ .sys = ctx };
+    var inventory: r4os.abi.StorageInventory = .{};
+    var boot: r4os.abi.StorageVolumeInfo = .{};
+    if (storage.inventory(&inventory) != 0 or storage.volume(inventory.generation, 26, &boot) != 1 or
+        boot.letter != 0 or boot.filesystem != r4os.abi.storage_filesystem_fat32)
+    {
+        fail(ctx, command, "boot-volume");
+        return 1;
+    }
+    var source_buffer: [64]u8 = undefined;
+    var destination_buffer: [96]u8 = undefined;
+    const source = std.fmt.bufPrintZ(&source_buffer, "\\boot\\{s}", .{name}) catch return 1;
+    const destination = std.fmt.bufPrintZ(&destination_buffer, "C:\\R4OS\\UPDATE\\ARCHIVE\\{s}", .{name}) catch return 1;
+    var info: r4os.abi.FileInfo = .{};
+    if (fileInfoStatus(ctx, source.ptr, &info) != .found or info.is_dir != 0 or info.first_cluster < 2 or info.size == 0 or info.size > 512 * 1024 * 1024) {
+        fail(ctx, command, "backup-info");
+        return 1;
+    }
+    const digest = checksumFileRange(ctx, source.ptr, 0, info.size) orelse {
+        fail(ctx, command, "backup-read");
+        return 1;
+    };
+    var io = BootBackupArchiveIo{ .ctx = ctx, .name = name, .source = source, .destination = destination, .size = info.size, .checksum = digest, .first_cluster = info.first_cluster };
+    if (!io.unreferenced()) {
+        fail(ctx, command, "referenced-or-unproven");
+        return 1;
+    }
+    if (!ensureDirectory(ctx, "C:\\R4OS\\UPDATE\\ARCHIVE")) {
+        fail(ctx, command, "archive-directory");
+        return 1;
+    }
+    system_update_backup.archive(&io) catch |err| {
+        fail(ctx, command, @errorName(err));
+        return 1;
+    };
+    ctx.write("SYSUPD ARCHIVE-BOOT-BACKUP result: OK source=");
+    ctx.write(source);
+    ctx.write(" archive=");
+    ctx.write(destination);
+    ctx.write(" bytes=");
+    ctx.printU64(info.size);
+    ctx.write(" checksum=");
+    ctx.printU64(digest);
+    ctx.println(" journal=unchanged");
+    return 0;
+}
+
 fn acquireUpdateLock(ctx: *const r4os.r4sys.Context, allow_resume: bool) UpdateLockStatus {
+    var remove_io = removal.Native.init(ctx, null);
+    defer remove_io.deinit();
+    if (remove_io.load() catch return .io) |record| if (!record.terminal()) return .busy;
     if (!allow_resume) {
         switch (readNewestValidJournalInto(ctx, &newest_journal_workspace)) {
             .found => {
@@ -4467,6 +5132,20 @@ fn acquireUpdateLock(ctx: *const r4os.r4sys.Context, allow_resume: bool) UpdateL
             .io => return .io,
         }
     }
+    const lease = acquireUpdateLease(ctx);
+    if (lease != .acquired) return lease;
+    // The pending removal may have been admitted between the first read
+    // and our lease acquisition. Check again while holding SYSLOCK.
+    if (remove_io.load() catch {
+        releaseUpdateLock(ctx);
+        return .io;
+    }) |record| if (!record.terminal()) {
+        releaseUpdateLock(ctx);
+        return .busy;
+    };
+    return .acquired;
+}
+fn acquireUpdateLease(ctx: *const r4os.r4sys.Context) UpdateLockStatus {
     const open_flags = r4os.abi.file_stream_open_create |
         r4os.r4sys.file_stream_open_lease;
     const begin_rc = ctx.fileStreamBegin(update_lock_path, open_flags);
@@ -4839,6 +5518,61 @@ fn ensureDirectory(ctx: *const r4os.r4sys.Context, path: [:0]const u8) bool {
     return fileInfoStatus(ctx, path, &info) == .found and info.is_dir != 0;
 }
 
+/// Provision normalized, admitted payload ancestors in root-to-leaf order.
+/// Chosen application paths may use another drive; the internal boot volume
+/// keeps its existing kernel-update path.
+/// Empty parents are shared namespace, not owned payloads: abort/rollback
+/// removes checked stage/target files but never deletes a directory by name.
+/// This remains replay-compatible with the existing journal and boot core.
+fn targetParents(ctx: *const r4os.r4sys.Context, entry: *const PayloadEntry, create: bool, command: []const u8) PackageVerifyStatus {
+    if (entry.class == .boot_kernel) return .ok;
+    const target = entry.targetText();
+    if (target.len < 4 or target.len >= max_path or
+        (!startsWithIgnoreCase(target, "C:\\") and !r4u_manifest.paths.applicationTarget(target)))
+    {
+        fail(ctx, command, "parent-path");
+        return .invalid;
+    }
+    var prefix: [max_path:0]u8 = .{0} ** max_path;
+    @memcpy(prefix[0..target.len], target);
+    var index: usize = 3;
+    while (index < target.len) : (index += 1) {
+        if (target[index] != '\\') continue;
+        prefix[index] = 0;
+        defer prefix[index] = '\\';
+        var info: r4os.abi.FileInfo = .{};
+        switch (fileInfoStatus(ctx, &prefix, &info)) {
+            .found => {
+                if (info.is_dir == 0) {
+                    fail(ctx, command, "parent-type");
+                    return .conflict;
+                }
+                continue;
+            },
+            .io => {
+                fail(ctx, command, "parent-info");
+                return .io;
+            },
+            .not_found => if (!create) return .ok,
+        }
+        // A create may succeed while its completion is lost. Verify the
+        // resulting object even after a reported error; retries are bounded
+        // by the ordinary package-stage retry, and never replace a file.
+        _ = ctx.dirCreate(&prefix);
+        switch (fileInfoStatus(ctx, &prefix, &info)) {
+            .found => if (info.is_dir == 0) {
+                fail(ctx, command, "parent-type");
+                return .conflict;
+            },
+            .not_found, .io => {
+                fail(ctx, command, "parent-create");
+                return .io;
+            },
+        }
+    }
+    return .ok;
+}
+
 fn printApplyReplaceFailure(ctx: *const r4os.r4sys.Context, phase: []const u8, entry: *const PayloadEntry, result: i32) void {
     ctx.write("SYSUPD APPLY result: FAILED reason=");
     ctx.write(phase);
@@ -4871,7 +5605,7 @@ fn componentTargetMatchesKind(kind: r4u_manifest.ComponentKind, target: []const 
         .r4l => startsWithIgnoreCase(target, "/R4OS/LIBS/") and endsWithIgnoreCase(target, ".R4L"),
         .r4d => startsWithIgnoreCase(target, "/R4OS/DRIVERS/") and endsWithIgnoreCase(target, ".R4D"),
         .r4p => startsWithIgnoreCase(target, "/R4OS/PROTOCOLS/") and endsWithIgnoreCase(target, ".R4P"),
-        .r4x => target.len > 1 and target[0] == '/' and endsWithIgnoreCase(target, ".R4X"),
+        .r4x => r4u_manifest.paths.applicationTarget(target),
     };
 }
 
@@ -4916,6 +5650,8 @@ fn validRollbackBackup(value: []const u8) bool {
 }
 
 fn kindMatchesTarget(kind: []const u8, target: []const u8) bool {
+    if (equalsIgnoreCase(kind, "software") and r4u_manifest.paths.applicationTarget(target)) return true;
+    if (r4u_manifest.paths.preloadTarget(target)) return equalsIgnoreCase(kind, "preload");
     const class = r4os.r4sys.classifySystemPath(target);
     return equalsIgnoreCase(kind, r4os.r4sys.systemReplaceClassName(class));
 }
@@ -5093,12 +5829,38 @@ fn incompatible(ctx: *const r4os.r4sys.Context, command: []const u8, reason: []c
     ctx.println(required);
 }
 
-fn nextToken(value: []const u8, pos: *usize) ?[]const u8 {
-    while (pos.* < value.len and isSpace(value[pos.*])) : (pos.* += 1) {}
-    if (pos.* >= value.len) return null;
-    const start = pos.*;
-    while (pos.* < value.len and !isSpace(value[pos.*])) : (pos.* += 1) {}
-    return value[start..pos.*];
+const TerminalArguments = struct { command: []const u8, argument: []const u8 };
+
+fn parseTerminalArguments(raw: []const u8) !TerminalArguments {
+    var detail: r4os.arguments.Failure = .{};
+    var cursor = try r4os.arguments.ArgCursor.init(raw, .{ .switches = 0 }, &detail);
+    var grammar = cursor;
+    while (try grammar.next()) |_| {}
+    const first = (try cursor.next()) orelse return .{ .command = "", .argument = "" };
+    const command = try first.bytes(raw);
+    const second = (try cursor.next()) orelse return .{ .command = command, .argument = "" };
+    if (second.quoted()) {
+        if (try cursor.next() != null) return error.UnexpectedArgument;
+        return .{ .command = command, .argument = try second.bytes(raw) };
+    }
+    // The established CLI also accepts an unquoted whole path remainder.
+    return .{ .command = command, .argument = trim(raw[first.raw_end..]) };
+}
+
+test "migration terminal keeps quoted and original whole path arguments" {
+    const quoted = try parseTerminalArguments("VERIFY \"C:\\Folder One\\UPDATE.R4U\"");
+    try std.testing.expectEqualStrings("VERIFY", quoted.command);
+    try std.testing.expectEqualStrings("C:\\Folder One\\UPDATE.R4U", quoted.argument);
+    const original = try parseTerminalArguments("APPLY C:\\Folder One\\UPDATE.R4U");
+    try std.testing.expectEqualStrings("C:\\Folder One\\UPDATE.R4U", original.argument);
+}
+
+test "migration terminal validates the complete command before dispatch" {
+    try std.testing.expectError(error.UnclosedQuote, parseTerminalArguments("STATUS \"unfinished"));
+    try std.testing.expectError(error.UnexpectedArgument, parseTerminalArguments("VERIFY \"C:\\X.R4U\" extra"));
+    try std.testing.expectError(error.InvalidEncoding, parseTerminalArguments("STATUS \xff"));
+    const extra = try parseTerminalArguments("STATUS extra");
+    try std.testing.expectEqualStrings("extra", extra.argument);
 }
 
 fn nextLine(value: []const u8, pos: *usize) ?[]const u8 {
@@ -5265,20 +6027,28 @@ fn packagePayloadPath(entry: *const PayloadEntry, index: usize) []const u8 {
 
 /// Performs the target policy that VERIFY and APPLY must agree on before any
 /// journal or stage file is written. Existing long filenames are supported:
-/// FAT changes only their stable short directory entry. A missing long target
-/// would require publishing a new multi-entry LFN run and is therefore not an
-/// atomic update target.
+/// FAT changes only their stable short directory entry and cannot create a
+/// new LFN run atomically. NTFS can publish a new long target in one entry.
 fn validatePackageTargets(ctx: *const r4os.r4sys.Context, info: *const PackageInfo, command: []const u8) bool {
     var index: usize = 0;
     while (index < info.payload_count) : (index += 1) {
         const entry = &info.payloads[index];
+        if (targetParents(ctx, entry, false, command) != .ok) return false;
         if (!validateShortName83Text(baseName(entry.targetText()))) {
             var target_info: r4os.abi.FileInfo = .{};
             switch (fileInfoStatus(ctx, entry.targetPtr(), &target_info)) {
                 .found => {},
                 .not_found => {
-                    fail(ctx, command, "target-lfn-missing");
-                    return false;
+                    // NTFS can publish one new long directory entry atomically.
+                    // FAT still requires an already existing LFN target.
+                    var limits: r4os.abi.FileNameLimits = .{};
+                    const atomic_long_target = ctx.fileNameLimits(entry.targetPtr(), &limits) == 0 and
+                        (limits.flags & r4os.abi.file_name_limits_flag_known) != 0 and
+                        limits.provider == r4os.abi.file_name_provider_ntfs;
+                    if (!atomic_long_target) {
+                        fail(ctx, command, "target-lfn-missing");
+                        return false;
+                    }
                 },
                 .io => {
                     fail(ctx, command, "target-info");

@@ -8,6 +8,14 @@ The files in this directory define the binary boundaries between R4M0
 modules, programs, Runtime-R4Ls, and the kernel. The target is little-endian
 x86_64 with 8-byte pointers and the C calling convention.
 
+Module/CpuBaseline.json owns the normative CPUID/XCR0 admission contract.
+SDK Profiles/Build.json owns its compiler feature/flag mapping and compares
+the normative descriptors before building. The obsolete module_cpu target/
+cFlags facade is removed after a caller audit. Historical compiler annotation
+fields in CpuBaseline.json remain byte-compatible evidence, not active build
+policy. The kernel still validates enabled XSTATE before module execution.
+Container arch=1 alone is not a CPU feature admission check. See R4M0.txt.
+
 Contracts
 ---------
 

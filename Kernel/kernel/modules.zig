@@ -6,6 +6,7 @@ const module_file = @import("module_file.zig");
 const module_r4m = @import("module_r4m.zig");
 const r4x_api = @import("../program/r4x_api.zig");
 const task_context = @import("../sched/task_context.zig");
+const generation2 = @import("../program/generation2.zig");
 
 const PAGE_SIZE: usize = 4096;
 const MAX_MODULES: usize = 64;
@@ -13,7 +14,7 @@ const MAX_NAME: usize = 32;
 const MAX_PATH: usize = 96;
 const MAX_SECTIONS: usize = 16;
 const MAX_PENDING_LIBS: usize = 32;
-const MAX_IMPORTS_PER_MODULE: usize = 16;
+const MAX_IMPORTS_PER_MODULE: usize = 32;
 const MAX_EXPORTS_PER_MODULE: usize = 16;
 const MAX_R4M_METADATA_PROBE: usize = 2048;
 const MAX_R4M_NAME_PROBE: usize = 128;
@@ -54,6 +55,12 @@ const platform_api_queries: [r4x_api.r4_platform_apis.len]r4x_api.R4LQuery = blk
             .reserved = 0,
         };
     }
+    break :blk queries;
+};
+
+const platform_api_queries2: [r4x_api.r4_platform_apis.len]generation2.abi.R4LQuery2 = blk: {
+    var queries: [r4x_api.r4_platform_apis.len]generation2.abi.R4LQuery2 = undefined;
+    for (r4x_api.r4_platform_apis, 0..) |meta, index| queries[index] = .{ .group = @intFromEnum(meta.group) };
     break :blk queries;
 };
 
@@ -112,6 +119,7 @@ const ResolvedImport = struct {
     module_len: usize = 0,
     symbol: [MAX_NAME]u8 = .{0} ** MAX_NAME,
     symbol_len: usize = 0,
+    minimum: u32 = 0,
     version: u32 = 0,
     address: u64 = 0,
 };
@@ -255,6 +263,11 @@ pub const PreparedLoad = struct {
         return if (exp.version >= min_version) exp.address else null;
     }
 
+    pub fn initEntry(self: *const PreparedLoad) ?InitIdentity {
+        if (!self.owns()) return null;
+        return initIdentity(&entries[self.slot]);
+    }
+
     pub fn commit(self: *PreparedLoad) ?usize {
         const expected = claimValue(self.generation, .reserved);
         if (@cmpxchgStrong(u64, &slot_claims[self.slot], expected, claimValue(self.generation, .retiring), .acq_rel, .acquire) != null) return null;
@@ -322,12 +335,35 @@ fn beginLoad() ?PreparedLoad {
     return load;
 }
 
-fn requiredExportsValid(entry: *const Entry) bool {
+pub const InitIdentity = struct { address: u64, generation: u8 };
+fn initIdentity(entry: *const Entry) ?InitIdentity {
+    const old_name: []const u8 = if (entry.kind == .r4d) "DriverInit" else if (entry.kind == .r4p) "ProtocolInit" else return null;
+    const new_name: []const u8 = if (entry.kind == .r4d) "DriverInit2" else "ProtocolInit2";
+    const first = findExport(entry, old_name);
+    const second = findExport(entry, new_name);
+    if ((first == null) == (second == null)) return null;
+    const generation: u8 = if (second != null) 2 else 1;
+    const exp = if (second) |value| value else first.?;
+    if (exp.version != generation or exp.address == 0 or exp.section_index >= entry.section_count) return null;
+    const section = &entry.sections[@intCast(exp.section_index)];
+    if ((section.flags & R4M_SECTION_FLAG_EXEC) == 0 or exp.section_offset >= section.mem_size) return null;
+    return .{ .address = exp.address, .generation = generation };
+}
+fn requiredExportsValid(entry: *const Entry, imports: []const ResolvedImport) bool {
     const required: []const []const u8 = switch (entry.kind) {
-        .r4d => &.{ "DriverInit", "DriverShutdown" },
-        .r4p => &.{ "ProtocolInit", "ProtocolShutdown", "ProtocolQuery", "ProtocolDispatch" },
+        .r4d => &.{"DriverShutdown"},
+        .r4p => &.{ "ProtocolShutdown", "ProtocolQuery", "ProtocolDispatch" },
         else => return true,
     };
+    const identity = initIdentity(entry) orelse return rejectLoadedExport(entry.name[0..entry.name_len], "Init/Init2", "ambiguous or invalid technical entry");
+    const expected_query: []const u8 = if (identity.generation == 2) "Query2" else "Query";
+    for (imports) |item| {
+        const name = item.module[0..item.module_len];
+        const symbol = item.symbol[0..item.symbol_len];
+        if (platformApiGroupId(name) != null or nameEq(symbol, "Query") or nameEq(symbol, "Query2")) {
+            if (!nameEq(symbol, expected_query) or item.minimum != identity.generation or item.version != identity.generation) return false;
+        }
+    }
     for (required) |symbol| {
         const exp = findExport(entry, symbol) orelse return rejectLoadedExport(entry.name[0..entry.name_len], symbol, "required export missing");
         if (exp.version < 1 or exp.address == 0 or exp.section_index >= entry.section_count) return false;
@@ -532,7 +568,7 @@ fn registerPlatformApis() void {
             .kind = .platform_api_provider_reserved,
             .state = .builtin,
             .resolver_status = .builtin,
-            .export_count = 1,
+            .export_count = 2,
             .generation = load.generation,
             .pinned = true,
         };
@@ -547,6 +583,14 @@ fn registerPlatformApis() void {
             .section_offset = 0,
         };
         e.exports[0].name_len = copyBytes("Query", e.exports[0].name[0..]);
+        e.exports[1] = .{
+            .used = true,
+            .version = generation2.abi.query_version,
+            .address = @intFromPtr(&platform_api_queries2[index]),
+            .section_index = 0,
+            .section_offset = 0,
+        };
+        e.exports[1].name_len = copyBytes(generation2.abi.query_symbol, e.exports[1].name[0..]);
         _ = load.commit() orelse return;
     }
 }
@@ -879,7 +923,7 @@ pub fn exportInfo(slot: usize, symbol: []const u8, min_version: u32) ?ExportInfo
     if (entries[slot].kind == .platform_api_provider_reserved) return .{
         .address = exp.address,
         .version = exp.version,
-        .available_size = r4x_api.r4l_query_struct_size,
+        .available_size = if (nameEq(symbol, generation2.abi.query_symbol)) @sizeOf(generation2.abi.R4LQuery2) else r4x_api.r4l_query_struct_size,
         .generation = entries[slot].generation,
         .module_slot = @intCast(slot),
         .kind = entries[slot].kind,
@@ -993,6 +1037,7 @@ fn resolveImportFromEntry(provider: *const Entry, import: ImportRecord, importer
     var resolved: ResolvedImport = .{};
     resolved.module_len = copyBytes(provider.name[0..provider.name_len], resolved.module[0..]);
     resolved.symbol_len = copyBytes(exp.name[0..exp.name_len], resolved.symbol[0..]);
+    resolved.minimum = import.min_version;
     resolved.version = exp.version;
     resolved.address = exp.address;
     return resolved;
@@ -1105,7 +1150,7 @@ fn loadR4MFile(load: *PreparedLoad, source: module_file.FileSource, tables: *con
     e.path_len = copyBytes(path, e.path[0..]);
     fillExportsFromTables(e, tables);
 
-    return requiredExportsValid(e);
+    return requiredExportsValid(e, resolved_imports);
 }
 
 fn loadR4M(load: *PreparedLoad, bytes: []const u8, expected_kind: Kind, fallback_name: []const u8, path: []const u8, resolved_imports: []const ResolvedImport) bool {
@@ -1227,7 +1272,7 @@ fn loadR4M(load: *PreparedLoad, bytes: []const u8, expected_kind: Kind, fallback
     e.path_len = copyBytes(path, e.path[0..]);
     fillExports(e, bytes, header);
 
-    return requiredExportsValid(e);
+    return requiredExportsValid(e, resolved_imports);
 }
 
 fn parseHeader(bytes: []const u8) ?Header {
@@ -1459,7 +1504,7 @@ fn validateLoadedExport(
     image: []const u8,
     module_name: []const u8,
 ) bool {
-    const is_query = nameEq(name, "Query");
+    const is_query = nameEq(name, "Query") or nameEq(name, generation2.abi.query_symbol);
     const has_interface_prefix = interfaceExportPrefix(name);
     if (!is_query and !has_interface_prefix) return true;
     if (section_index >= sections.len or section_index >= section_offsets.len) {
@@ -1481,6 +1526,15 @@ fn validateLoadedExport(
 }
 
 fn validateLoadedQuery(table: []const u8, export_version: u32, module_name: []const u8, symbol_name: []const u8) bool {
+    if (nameEq(symbol_name, generation2.abi.query_symbol)) {
+        if (table.len < @sizeOf(generation2.abi.R4LQuery2)) return rejectLoadedExport(module_name, symbol_name, "query2-range");
+        const declared = readLe32(table[8..12]);
+        if (export_version != generation2.abi.query_version or readLe32(table[0..4]) != generation2.abi.query_magic or
+            readLe32(table[4..8]) != 2 or declared < @sizeOf(generation2.abi.R4LQuery2) or
+            (declared & 7) != 0 or declared > table.len or readLe32(table[12..16]) != 0 or readLe64(table[16..24]) != 0)
+            return rejectLoadedExport(module_name, symbol_name, "query2-header");
+        return true;
+    }
     if (table.len < R4L_QUERY_SIZE) return rejectLoadedExport(module_name, symbol_name, "query-range");
     const declared_size = readLe32(table[8..12]);
     if (export_version != 1 or

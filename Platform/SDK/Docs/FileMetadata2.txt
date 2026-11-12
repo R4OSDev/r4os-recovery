@@ -1,0 +1,72 @@
+﻿Breite Datei-/Directorymetadaten ohne neue Handlemechanik
+=======================================================
+
+SDK0.64.165 / Contract0.64.81, R4SYS37 und kompakte Revision2.
+Normativer Anbieter: Contract/API/FileMetadata2.txt.
+Zig r4os.metadata2, C r4os/metadata2.h, Rust r4os_sdk::metadata2.
+
+SeitSDK0.64.209 verwendet auch die gemeinsame Subsystem-Speicherhilfe
+diesen Zugang fuer reine Groessen-/Typabfragen. Ein SHA256-Dateiname
+hat bereits vor der Endung64Zeichen und passt nicht in FileInfo.name[64].
+Save-, Stage- und Backupabfragen duerfen deshalb weder Namen noch
+Backendknoten verengen. Speicherformate und Transaktionsbesitzer bleiben.
+
+Alle drei Fassaden rufen genau die beiden optionalen Query2-Slots auf.
+Es gibt keinen Rueckfall durch FileInfo96/32-Bit-Knoten, keinen zweiten
+Directoryalgorithmus, keine Registry und keine neue Runtime-R4L. Der
+gemeinsame Algorithmus und dessen Mount-/Request-/Restartautoritaet liegen
+im vorhandenen Kernel-VFSbesitzer. Die C-Fassade ist absichtlich inline
+und verspricht keine unimplementierten SDK-Externsymbole.
+
+query/info liefert Found mit dem ganzen FileMetadata2-Record, bestaetigte
+Abwesenheit beziehungsweise den wirklichen Fehler. Unbekannte Inhaltsrevision,
+Root-/Directorygroesse und Rootzeiten bleiben ueber getrennte Flags unbekannt.
+identity/fileSize lesen nur tatsaechlich bescheinigte Felder. Identitaet
+bezeichnet das ganze Mount-/globaleNamespace-/Objekttupel; sie ist kein
+Retain, heutige Lebendigkeit, Clusterwert, Inhaltsrevision oder unendlich
+stabiler Inodeschluessel. Aktuelle NTFS-Anbieter behalten ihre echte32-Bit-
+Recordzulassung; volle u64-Projektion erweitert nicht deren Backend.
+
+Directory verwendet den eigenen2184-Byte-Cursor und begrenzten Callerspeicher
+mit1..8 ganzen1136-Byte-Records. Init/new macht keinen Kernelaufruf. Jeder
+Schritt macht hoechstens einen synchronen Batchaufruf. Rows, Progress0, End-5
+und Restart-10 bleiben getrennt; keine automatische Wiederholung oder Pause.
+Nur positive Rueckgabe initialisiert die bezeichneten Zeilen als nutzbare
+Seite. Alle Teilseiten bis zum echten Ende privat sammeln; bei Restart die
+ganze bisher zusammengesetzte Ansicht verwerfen und ausdruecklich resetten.
+Jede globale Namensraumpublication kann neu starten lassen, auch ausserhalb
+des betrachteten Verzeichnisses. Contentfelder sind Anbieter-Einzelkopien,
+keine gemeinsame atomare Inhaltsaufnahme des ganzen Verzeichnisses.
+
+validate verwendet nur den gebundenen capacity0-Pruefpfad ohne Fortschritt.
+Vor erster Bindung bleibt er ungueltig. Reset/Drop verwirft nur den Caller-
+Cursor; kein Kernelhandle, Mountpin oder Auftrag bleibt zwischen Aufrufen.
+Abbruch oder Ablauf kann einen aktiven synchronen Callbackloan nicht frueher
+freigeben; die wirkliche Rueckkehr ist der Rand. Es wird keine physische
+Stopquittung aus dem Reset abgeleitet.
+
+C/Zig behalten Context/Tabellen/Code, ganzen NUL-Pfad und disjunkte/exklusive
+Cursor-/Zeilenpuffer fuer ihre wirkliche Leihdauer. Initiale C-Cursor ueber
+R4SdkDirectoryMetadata2Init vollstaendig initialisieren. C/Zig-Seiten gelten
+bis zur Speichermutation. Rust leiht Context/CStr/MaybeUninit-Zeilen fuer die
+ganze Directorylebensdauer. next_page liefert eine an diesen Borrow gebundene
+Slice; ihr spaeterer Gebrauch sperrt weiteren Aufruf, Reset oder Mutation des
+geliehenen Puffers. Es gibt keine Send/Sync-Zusage und keine Rohcursorfreigabe.
+
+Bestehende Explorer-, Picker- und Editormodule und ihre Importprofile werden
+nicht migriert. Anbieter-/Host-/Gast-/Hardwarequalifikation und Originale
+stehen im Abschlussbericht Docs/API/FileMetadata2.txt sowie lokal unter
+Research/API-ABI/Umsetzung/0.90.22/.
+
+SDK0.64.208 - Dateigroesse des validierten privaten Snapshots
+-----------------------------------------------------------
+Files.readDocumentPrefix liefert bytes, truncated und file_size. file_size
+stammt aus demselben vor und nach dem Read geprueften Metadatenstand.
+Die Vorschaugrenze gilt bei file_size groesser oder gleich Pufferlaenge.
+Ein Voll-Leser verlangt file_size gleich bytes sowie seinen fachlichen
+Maximalumfang vor der Publikation. Identitaets-/Revisionswechsel verwerfen
+den Teilkandidaten innerhalb derselben Gesamtfrist. Der bestehende Ownerfall
+prueft Restart, exakte Groesse, einen gleich langen Praefix einer groesseren
+Datei und Ablauf ohne weiteren Read. Dieses logische Resultat wird von
+Zig-Dateikompositionen verwendet. Die nativen C-/Rust-Metadatentabellen
+binden die bestehenden gemeinsamen Providerrecords.

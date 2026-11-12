@@ -1,0 +1,71 @@
+﻿Optional Start2 stream bindings
+==============================
+
+program_launch_io and program_stdio are optional appended R4SYS functions.
+R4SYS41/1560 and Query2 SYS6/1552 preserve every older slot and signature.
+LaunchIoBinding32 and LaunchIo112 are separate fixed records. Start1,
+Start2/120, import records and reserved_runtime retain their exact meaning.
+The normal SDK entry is launch_io in Zig/Rust and launch_io_platform2.h in C.
+
+LaunchIo version1/size112 selects policy0auto/1console/2desktop and the
+existing console host selection:0default/inherited,1terminal_window,
+2terminal_mode. Nonzero console_host still requires a console program.
+stdin, stdout and stderr are three distinct LaunchIoBinding records.
+kind0 explicitly selects the existing default Console route and requires an
+all-zero End. kind1 selects an exact current parent-owned BytePipeEnd;
+stdin requires Reader, stdout/stderr require Writer. Reserved fields are0.
+Default does not inherit the parent's pipe bindings.
+For a process started through the older launch entrypoints, the snapshot is
+all Default with policy0/console_host0: no LaunchIo request was supplied.
+Those fields do not report the effective legacy launch policy/ConsoleHost;
+the existing ConsoleHost APIs remain authoritative for that information.
+
+The loader copies the complete request and bounded launch strings before
+construction. Only a Start2 child is accepted. The original loader, import,
+memory, console, process registry, task and completion owners perform work.
+There is no new process registry or console route. The new child receives
+its own immutable binding snapshot, containing no pointer to parent storage.
+
+All selected references are preflighted under the one resident pipe owner:
+full parent identity, active End and direction, space for EVERY selected
+reference and nonwrapping identity admission. Only after all checks succeed
+are all child references created. stdout/stderr selecting the same parent
+End still create TWO distinct child references and consume two slots.
+The owner is the full freshly reserved child process generation, before its
+first Ready publication. No child runs with a partial binding set.
+Parent references remain unchanged and live until their own Close/retirement.
+
+Failed unpublished construction closes child references through the existing
+reservation rollback, before payload/image/VM release. A failed resource
+acknowledgement retains the exact private reservation and retry identity.
+A failure after registry publication uses the original published-child
+retirement path; backing remains owned until actual acknowledgement.
+There is no optimistic release on failure. New caller handle output is
+published only on complete launch success; negative results leave it intact.
+The original detached-child commit boundary still applies if a parent is
+killed after the child has been committed. No start failure executes a child
+whose first task publication failed.
+
+program_stdio copies the current Start2 process's startup binding snapshot.
+Returned End values are BORROWED identities of references already owned by
+that process. Query or byte copies never Dup, reopen a closed stream or
+retain another reference. Dup is explicit. Close/Cancel follow BytePipes.txt;
+one close does not close another stream or parent reference. Query may return
+the original stale End after it was explicitly closed. Child early exit and
+hard kill close only that exact process generation's remaining references,
+after its physical threads retire. Creator storage never owns the backing.
+
+SDK stdio adapters are explicit, without global state or implicit Drop.
+Pipe reads/writes retain native Poll/Finite/Forever, accepted-prefix, EOF,
+BrokenPipe and Cancel semantics. Failed Close retains an exact retry value.
+Default Console retains its existing byte decoder/routing/count semantics;
+the added adapter performs Poll operations only. It promises no EOF, atomic
+write, physical delivery or finite/forever Console wait. Its write count is
+the original console call's consumed input, distinct from pipe queue admission.
+The existing console wait/event APIs remain available separately. Unsupported
+Console Close/Cancel and unsupported deadlines are explicit errors.
+
+Old applications, imports, start records and ConsoleHost behavior are unchanged.
+Only new explicit stdio adapters use bindings. Old write/console callbacks do
+not silently become pipe writes. Shell pipeline syntax, terminal UI, log
+capture and consumer migration are outside this provider version.

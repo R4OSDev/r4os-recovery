@@ -211,26 +211,6 @@ pub const Context = struct {
         return self.base.udpBeginCloseService(handle, request);
     }
 
-    pub fn serialLinkStatus(self: *const Context, out: *abi.SerialLinkStatus) i32 {
-        return self.base.serialLinkStatus(out);
-    }
-
-    pub fn serialLinkPoll(self: *const Context) i32 {
-        return self.base.serialLinkPoll();
-    }
-
-    pub fn serialLinkSendMessage(self: *const Context, data: []const u8) i32 {
-        return self.base.serialLinkSendMessage(data);
-    }
-
-    pub fn serialLinkHostTest(self: *const Context) i32 {
-        return self.base.serialLinkHostTest();
-    }
-
-    pub fn serialLinkInbox(self: *const Context, out: *abi.SerialLinkMessage) i32 {
-        return self.base.serialLinkInbox(out);
-    }
-
     pub fn tcpServiceStatusRaw(self: *const Context, out: *abi.NetServiceTcpStatus) i32 {
         return self.base.tcpServiceStatusRaw(out);
     }

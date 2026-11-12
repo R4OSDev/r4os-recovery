@@ -1,0 +1,15 @@
+[package]
+name = "r4os-contract"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+overflow-checks = true
+debug-assertions = true
+panic = "abort"

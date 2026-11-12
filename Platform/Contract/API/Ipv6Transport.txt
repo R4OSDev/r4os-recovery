@@ -1,0 +1,164 @@
+﻿R4OS IPv6-Transport und familienfaehige Resolver - Vertrag
+=======================================================
+
+Anbieterumbau 0.90.33; Abschluss und tatsaechliche Laufzeitqualifikation
+stehen getrennt in den Abnahmebelegen. Dieser Vertrag allein bescheinigt
+keine implementierte Faehigkeit, Hardware- oder Windowsabnahme.
+
+Besitzer und Anschluss
+----------------------
+NetIpv6 besitzt weiterhin Interfaces, Adressen, Routen und die kopierte
+Paketqueue gemaess Ipv6Providers.txt. NetTcp und NetUdp besitzen ihre neuen
+externen v6-Transportzustaende. TCPSVC/UDPSVC behalten den einen bestehenden
+oeffentlichen Frontkatalog; DNSSVC behaelt seine acht Cacheeintraege und die
+unveraenderlichen Antwortseiten. Der vorhandene Kernel-v4-Anbieter bleibt
+fuer den bisherigen Vertrag zustaendig. Es entsteht kein zweiter Kernel-
+IPv6-Stack und keine Anwendungsmigration.
+
+NetTcp/NetUdp importieren R4DEV:Query2:2, starten ueber ProtocolInit2 und
+deklarieren net.ipv4, net.ipv6 und net.icmpv6 als Abhaengigkeiten. Die
+bestehenden kleinen IPv4-Wireoperationen und ihre Payloadlayouts bleiben
+erhalten. Ein alter Kernel ohne den benoetigten optionalen PPI-Slot darf
+die neue Anbieterrevision nicht als betriebsbereit ausgeben.
+
+ProtocolApi120 bleibt exakt. ProtocolApi2 behaelt seinen originalen
+120-Byte-Praefix, protocol_dispatch@120 und link_io@128. process_status@136
+ist ein optionaler ganzer acht-Byte-Slot; neue Gesamtgroesse144, Minimum120.
+Typ und Rueckgabesemantik entsprechen R4SysFns.program_handle_status.
+Teilslots und null sind nicht erreichbar. Unbekannte/Busy-Prozessauskunft
+ist keine Todes- oder Freigabequittung. Es gibt keine zweite Prozessliste.
+Die Statusfunktion verwendet eigenen privaten Scratch; ihr bisheriger
+Fehlerausgabevertrag wird nicht in einen RPC-Erfolg umgedeutet.
+
+Private kopierte Transportanfrage
+---------------------------------
+NetworkTransportRequest ist ein neuer fixed-layout Record176/Align8:
+version@0=1, size@4=176, provider@8, broker@16, owner@32, request@48.
+broker und owner sind ganze ProgramProcessHandle16; request ist der
+unveraenderte NetworkSocketRequest128. Schreibbytes folgen dem Record.
+
+provider ist die exakte R4P-Modulidentitaet aus link_io/identity. broker
+bezeichnet die Dienstprozesslebenszeit, owner den Socket-Aufrufer. Das
+request.provider-Feld bindet die volle u64-Prozessgeneration des Brokers.
+Diese Identitaeten, Socketgeneration und Linkgeneration sind getrennt;
+PID-/32-Bit-Casts oder zusammengesetzte Ersatzidentitaeten sind unzulaessig.
+Socketgenerationen werden auch nach Fehlversuchen niemals wiederverwendet.
+
+Info verwendet leeren Input und NetworkProviderInfo48. Die bestehenden
+network_op_* transportieren die fachliche Operation, network_transport_op_tick
+begrenzt die vorhandene Dienstwartung. Tick liefert einen ganzen
+NetworkSocketResult88 ohne Socket. Die Protokolle verleihen keine internen
+Tabellen- oder Paketzeiger. Fehler/kurze Ausgaben veraendern keinen
+Aufrufer-Record, keine Ausgabelaenge und keinen Empfangsqueueeintrag.
+
+ipv6_op_prepare verwendet Ipv6Packet1656 mit leerem Payload. Der IPv6-
+Besitzer waehlt und prueft die konkrete Quelle und Route, bevor TCP/UDP die
+Pseudoheader-Pruefsumme bilden. Der Aufruf sendet weder ND noch Nutzdaten.
+Send prueft die gebundene Epoche erneut; kein stiller Wechsel der Verbindung
+auf einen neuen Anbieter oder Link. Ein globales Ziel darf eine ausdrueckliche
+Interface-ID besitzen; Link-Local behaelt seine numerische Scope-ID.
+
+TCP
+----
+Die externe v6-Tabelle hat16 begrenzte Slots einschliesslich Listenern und
+noch nicht angenommenen Kindern; je Listener hoechstens vier solche Kinder.
+Je Stream stehen8192 kopierte Empfangs- und Sendebytes sowie vier begrenzte
+Out-of-order-Segmente bereit. Backpressure ueberschreibt keine Nutzbytes.
+Eine Schreibquittung zaehlt einen lokal kopierten Praefix, nicht die
+Peer-ACKs. Ungelesene Daten gehen einer wirklichen FIN-/Resetmeldung vor.
+Eine ungueltige Socket-, Anbieter-, Clock- oder Linkidentitaet ist kein EOF.
+
+Connect/Listen/Accept verwenden echte Segmente, Peeradressen, Sequenzen und
+Pruefsummen. ISNs stammen aus dem bestehenden Entropieanbieter. SYN/RTO,
+Sequenz-Wrap, begrenzte Neuordnung, Fenster und Nullfensterproben verwenden
+die originale monotone Clock. Ein nicht quittierter Transmit erhoeht keinen
+gesendeten Praefix. Wiederholungen bleiben begrenzt und aendern das originale
+Aufruferbudget nicht. Ein noch nie quittiert gesendetes SYN hat keine
+verbleibende Wire-/Bufferleihe; sein lokaler Abbruch wartet nicht auf eine
+Nachbaraufloesung nur fuer einen Reset. Wartung erfolgt nur waehrend neuer v6-Ressourcen,
+innerhalb des bestehenden Dienstloops, ohne einen neuen Kernel-Protokolltimer.
+
+Der konservative v6-Pfad sendet hoechstens1280 IPv6-Bytes, TCP-MSS1220 und
+ein Nutzsegment gleichzeitig. Er handelt weder ECN, Window Scaling, SACK
+noch Timestamps aus. Es gibt keinen dynamischen PMTU-, Voll-RFC-, Leistungs-
+oder Internetabnahmeanspruch aus diesem begrenzten Anbieterstand.
+Close ist ein lokaler Abbruch mit echter Besitzerquittung; keine neue
+HalfClose-/Shutdown-Operation oder garantierte Wire-Close-Sequenz. Der
+vorhandene v4-Vertrag behandelt Peer-FIN weiter als terminalen Empfang.
+
+Neue v4-Listener verwenden den privaten listen_retained_result-Adapter am
+vorhandenen TCP-Besitzer. Er bindet die exakte Listenergeneration schon bei
+der Aufnahme des Kindes und erhaelt Nutzrest und genaue Terminalursache.
+Die bisherigen Listenoperationen behalten ihre alte Semantik. Die kleinere
+neue oeffentliche Antwort erlaubt bis4008 Lese-Bytes als Kapazitaet; der
+private alte v4-Reply wird als passender einzelner Praefix angefordert.
+
+Ein erfolgreiches Accept liefert eine neue Socketidentitaet. WouldBlock
+behaelt die Listeneridentitaet. Alle drei SDK-Sprachen pruefen diese
+Unterscheidung, statt den angenommenen Stream als denselben Listener zu
+interpretieren. Dualstack wird nur fuer den ausdruecklich angeforderten
+Wildcardlistener eingerichtet; empfangene Endpunkte behalten Familie4/6.
+V4-mapped-Adressen bleiben ohne eigene qualifizierte Faehigkeit Unsupported.
+
+UDP und MTU
+------------
+NetUdp besitzt16 v6-Sockets mit je vier ganzen kopierten Datagrammen. Bei
+voller Queue wird nur das neue Paket verworfen. Ein Empfang mit Kapazitaet0
+kann ein vorhandenes Datagramm konsumieren und meldet dessen Originallaenge;
+ein wirklich leeres Datagramm ist Ready/0, keine leere Queue. Der oeffentliche
+Recv-Vertrag behaelt Originallaenge, kopierte Bytes und Truncated getrennt.
+
+V6-Send unterstuetzt Nutzlast bis1232 bei der qualifizierten Software-MTU1280.
+Groessere Datagramme liefern PacketTooBig statt eines Queue-/Ausgabemangels.
+Das ist keine Behauptung ueber einen entdeckten Pfad-MTU-Wert. Fragmentierter
+Empfang bleibt an die Paket-/Reassemblygrenzen des IPv6-Besitzers gebunden.
+IPv6-UDP verwendet immer eine echte Pseudoheader-Pruefsumme; Null ist auf dem
+Wire keine Freigabe zum Ueberspringen. Nullergebnis wird als ffff kodiert.
+
+Dualstack wird nur bei ausdruecklichem Wildcard-Bind eingerichtet und besitzt
+zwei wirkliche Backends unter einem Dienst-Front. Teilfehler werden mit
+echten Quittungen zurueckgenommen. Ungewisser Ausgang behaelt die begrenzte
+urspruengliche Ressource. Eine v6-only-Bindung sendet nicht durch stille
+Umdeutung an einen v4-Endpunkt.
+
+DNS und Resolverlisten
+----------------------
+Queryfamilie4/6 waehlt A/AAAA unabhaengig von der Familie des DNS-Servers.
+Ein ausdruecklicher NetworkEndpoint waehlt genau diesen Server. Ohne ihn
+liest DNSSVC die geordnete lokale Datei C:\R4OS\CONFIG\RESOLVERS.R4S:
+
+    SERVER=192.0.2.53
+    SERVER=[2001:db8::53]:5353
+    SERVER=[fe80::53%1]
+
+Hoechstens acht ganze, unterschiedliche Eintraege und4096 Dateibytes; UTF8-
+BOM und Kommentarzeilen sind erlaubt. Fehlende/leere Liste verwendet den
+vorhandenen konfigurierten v4-DNS-Server. Defekte oder unlesbare Konfiguration
+wird nicht als leere Erfolgssicht behandelt. Namen fuer Hostinterfaces und
+stille Adress-/Scopecasts gibt es nicht. Die IPv6-Literaldekodierung ist der
+vorhandene reine Zig-Parser; ein numerischer Scope benoetigt keine Hostabfrage.
+
+Alle Versuche teilen das endliche originale Budget, hoechstens drei Sekunden.
+Die Restzeit wird auf die verbleibenden konfigurierten Resolver verteilt.
+Ein stiller erster Resolver verbraucht nicht die gesamte Liste. Querytyp
+und Aufruferdeadline werden dabei nicht geaendert. Autoritatives NXDOMAIN/
+NoData, abgeschnittene DNS-Antworten und Formatfehler sind keine versteckte
+Familien- oder Browserfallbackpolicy. SOA-Negativcache, DNSSEC, IDNA, DoH
+und TCP-Fallback werden damit nicht eingefuehrt.
+
+Der vorhandene reine DNS-Codec besitzt CNAME, TTL und hoechstens32 Adressen.
+Seiten mit hoechstens16 Antworten bleiben unveraenderlich und binden genau
+einen Aufruferprozess bis Release oder Ablauf der separaten30s-Lease.
+Vor Netzarbeit wird einer der acht originalen Cacheplaetze reserviert.
+Eine ungewisse UDP-Close-Quittung haelt denselben Cacheplatz bis zum echten
+Ownerabschluss; sie wird nicht durch einen neuen Katalog ersetzt. V6-/AAAA-
+Ergebnisse erscheinen niemals als abgeschnittene v4-Werte im alten Cache.
+
+Abnahmegrenzen
+---------------
+Normale Programme wechseln hier weder Startgeneration noch Importprofil.
+Zig/C/Rust-, Layout-, Kopier-, Fehler-, Deadline-, Besitzer- und echte Peer-
+Proben sind voneinander getrennt zu bewerten. Eine Faehigkeit wird erst mit
+dem tatsaechlichen Anbieter und Ende-zu-Ende-Beleg veroeffentlicht. Testgate,
+Benchmark, Paketidentitaet und Plattformgrenzen stehen im Versionsabschluss;
+ein Quellbuild allein ist weder ein Binärkompatibilitaets- noch Hardwarebeleg.

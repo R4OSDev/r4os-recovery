@@ -1,0 +1,137 @@
+﻿IPv6 provider contract (generation 2)
+=====================================
+
+Ownership and transport
+-----------------------
+NETIPV6.R4P/net.ipv6 owns IPv6 interfaces, addresses, routes, copied upper-layer
+packets and reassembly. NETNDP.R4P/net.ndp owns the bounded neighbor cache and
+ND validation. NETICMP6.R4P/net.icmpv6 owns stateless ICMPv6 and IPv6
+pseudoheader checksums. The existing Ethernet and NIC owners remain the only
+link path. None of these records implies a working TCP, UDP or DNS endpoint.
+The separate endpoint providers must qualify their own IPv6 capabilities.
+
+ProtocolApi2 appends optional protocol_dispatch and link_io callbacks after
+its original 120-byte prefix. The new complete table has 136 bytes. Init2
+still accepts the original prefix; each optional pointer requires its whole
+slot to be readable and non-null. A partial pointer is absent. The old raw
+ProtocolApi remains exactly 120 bytes. Callback borrows remain tied to the
+original admitted module/task/code lifetime. Rust's SDK view copies only
+complete known slots into an owned function table and borrows callback life.
+
+Nested dispatch admits only roles declared in the original acyclic R4P
+dependency graph. This is a lifetime/deadlock boundary, not a permissions
+model. NETIPV6 depends on net.ethernet, net.icmpv6 and net.ndp; NETNDP depends
+on net.icmpv6. There is no reverse dependency or foreign callback registry.
+
+All new records have version1 and exact generated size. Unused fields and
+unused array suffixes are zero. Requests are copied before output is changed.
+Errors preserve output bytes and output.len, except a detected clock change
+invalidates the affected private timed state. There is no timer rebasing.
+Successful output is one complete record. Dispatch is serialized by the
+existing sleepable R4P owner; no NIC/registry state lock spans packet I/O.
+
+Link mechanism
+---------------
+NetworkLinkRequest Identity returns the exact calling module provider token
+and real monotonic clock without an interface (index UINT32_MAX). Info reads
+one current NIC index. Transmit binds index, nonzero interface_id and the
+actual never-reused registration generation, and copies 14..1536 frame bytes
+within the real MTU. It returns the original backend acknowledgement, Busy
+as WouldBlock, without hidden retry. Callback admission pins enumeration
+before identity selection through actual TX; no DMA/frame loan escapes.
+
+NetworkLinkInfo.provider is (actual module generation <<32)|(module slot+1).
+Interface identity comes from the existing NIC registration; no synthetic
+versions or substitute registry are permitted. Availability, carrier up,
+qualified multicast RX and a valid real clock are independent flags. Unknown
+or down NICs do not acquire IPv6 readiness. Kernel RX supplies provider0 and
+copied frame/link data; the IPv6 owner obtains its own identity through PPI.
+The initial Enhanced-DAD/NUD provider additionally requires the existing
+entropy source for real nonces/randomized reachability. NoProvider/failed
+entropy does not admit an IPv6 interface or substitute timestamps as entropy.
+Missing entropy keeps the providers loadable and Info capabilities/max_packet
+zero. Busy source snapshots preserve admitted state; they are not removal.
+Controlled QEMU qualification supplies the actual virtio-rng device/provider;
+this does not imply that an arbitrary physical machine has such a source.
+
+IPv6 operations and limits
+---------------------------
+Info uses Ipv6InterfaceQuery.index for enumeration. provider0 is accepted for
+initial discovery only. Nonzero provider, interface_id and generation must
+all match if supplied. Address and route cursors select complete owned rows;
+the reported counts cover the complete current snapshot, never clipped rows.
+Mutation and packet work require exact provider/interface/generation.
+next_due_ns reports the next DAD probe/completion deadline for diagnostics;
+zero means no pending DAD deadline. It is not an aggregate wait source for
+the separate neighbor, prefix, router, lifetime or reassembly timers.
+
+Configure adds or removes an explicit additional non-link-local unicast
+address; the EUI64 link-local is automatic. Lifetimes are unsigned
+nanoseconds; UINT64_MAX explicitly means infinite. Preferred must not exceed
+valid. A new address remains tentative through acknowledged DAD and a full
+retransmit interval. Scope IDs equal the actual interface for link-local and
+link-scoped multicast, and are zero for global addresses; interface_id always
+identifies the selected link. No IPv4 mapping or automatic dual-stack fallback.
+
+Send/receive use copied Ipv6Packet records, including complete upper headers.
+TCP/UDP packets require a valid IPv6 pseudoheader checksum (UDP zero checksum
+is invalid). The endpoint capabilities stay separate. Receive selects exact
+interface and next_header; one complete queued record is consumed only on
+successful output. No application or existing module profile is migrated.
+The NetworkDeadline binds the real source/generation/event backend/tick rate.
+Calls do not wait internally: no ready packet/neighbor returns WouldBlock;
+an expired finite deadline returns Timeout. No implicit new timeout budget.
+
+Initial host policy: Ethernet links, MAC-derived link-local identifier, DAD,
+manual addresses and 64-bit SLAAC. Valid RA router and L/A prefix information
+is applied by the sole IPv6 owner. Preferred and valid lifetimes are distinct;
+the unauthenticated two-hour rule follows RFC4862. No DHCPv6-PD is implemented,
+so the P flag is ignored as required by RFC9762 section7.1. There is no router
+forwarding, SEND, DHCPv6 client, privacy-address or redirect-route capability.
+
+The initial maximum transmitted IPv6 packet is1280 bytes (upper payload1240),
+independent of a larger NIC/RA MTU. PMTU discovery is not advertised. Receive
+reassembly supports at least1500 total IPv6 bytes, with16 bounded datagrams,
+1504 fragmentable bytes each, 60-second lifetime and exact interface/clock
+binding. Overlap invalidates the whole datagram until expiry; atomic fragments
+do not touch another queue. First fragments need the complete extension chain
+and upper header. Fragmented ND, including atomic fragments, is discarded.
+At most8 extension headers and256 extension bytes; Hop-by-Hop is first only,
+Destination options obey action bits, type0 routing is discarded, nonzero
+unsupported SegmentsLeft is rejected. No AH/ESP/jumbogram processing.
+
+ND operations
+---------------
+RX first validates full ICMPv6 checksum, hop255, code0, source/destination,
+target, options and nonfragmented origin. An RA returns up to8 complete PIOs
+or Capacity before state mutation. Unknown length-valid options are ignored.
+SLLA/TLLA presence, NA Router/Solicited/Override and optional6-byte DAD nonce
+are explicit event flags. ND events are proposals, not a second route store.
+
+Resolve/tick return a generated ndp_action value: none, resolved, multicast
+probe, unicast probe or timed out. target/mac identify the action. Confirm
+with ndp_confirm_probe_sent acknowledges actual successful probe TX; only
+then do the retry counter and retransmit deadline advance. Confirm flags0 is
+an actual upper-layer reachability confirmation, never mere packet receipt.
+The neighbor owner uses INCOMPLETE/REACHABLE/STALE/DELAY/PROBE, up to3 probes,
+5-second delay, randomized reachable duration and actual source-clock time.
+Unsolicited NA does not allocate a neighbor. Capacity does not evict another
+unresolved/probing entry. Link reset retires only that exact interface epoch.
+
+DAD nonces come from the original entropy provider. Reflections match stored
+sent nonces; MAC equality alone never suppresses a conflict. Persistent loops
+are conservatively bounded: the address remains tentative/unusable after the
+initial and3 extra probes. No successful DAD is invented from a loop timeout.
+A genuine duplicate EUI64 link-local invalidates that interface's addresses.
+It retires its traffic/neighbor/reassembly state, reports capabilities0 and
+refuses later configuration/RA admission until a real interface epoch reset.
+
+References and qualification
+-----------------------------
+Primary protocol references: RFC8200, RFC4443, RFC4861, RFC4862, RFC5722,
+RFC6946, RFC6980, RFC7112, RFC7527 and RFC9762 (rfc-editor.org). This bounded
+initial implementation does not claim complete compliance with all IPv6
+extensions or later optional host protocols. Capabilities require actual
+provider qualification, with host codec, controlled guest/peer and physical
+NIC/IRQ/DMA evidence recorded separately. Old layouts/imports and the original
+IPv4 provider path remain in force until a separately requested cutover.

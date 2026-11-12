@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "release": "0.90.84",
+  "base_recovery_commit": "4ea28f4254d0a1ae3455c285a40a1b6cfb8a4bbc",
+  "scope": "Complete canonical source adoption into the existing independent Recovery owner. Legacy runtime39 stays byte-identical until85; new technical providers and actual native qualification still pending.",
+  "owners": [
+    {
+      "owner": "Contract",
+      "commit": "ebd4588477aa509383ee4448b0615948512def51",
+      "archive": "Legal/Sources/Contract-0.90.84.zip",
+      "sha256": "9e18169fc9f6020ae7cc42acd935b42b77410bed59dc699a1682d3aff5c6f0d7",
+      "target": "Platform/Contract",
+      "byte_identical_canonical_snapshot": true
+    },
+    {
+      "owner": "SDK",
+      "commit": "f3fa008ceeed9c9c7f1d88a059d662171580c700",
+      "archive": "Legal/Sources/SDK-0.90.84.zip",
+      "sha256": "1e8348d1a6794cb87c1fa297e222d668d8154ca39bf892d26b346ec151b3590c",
+      "target": "Platform/SDK",
+      "byte_identical_canonical_snapshot": true
+    }
+  ],
+  "original_runtime39_unchanged": true,
+  "status": "source candidate; native and final STANDARD still pending",
+  "recovery_version": "0.1.69",
+  "kernel_version": "0.1.66",
+  "menu_version": "0.1.27",
+  "canonical_snapshots": {
+    "passed": true,
+    "snapshots": [
+      {
+        "owner": "Contract",
+        "files": 88,
+        "byte_identical_to_canonical_owner_archive": true
+      },
+      {
+        "owner": "SDK",
+        "files": 1160,
+        "byte_identical_to_canonical_owner_archive": true
+      }
+    ]
+  },
+  "host_candidate": {
+    "kernel_compile_exit": 0,
+    "complete_existing_kernel_test_target_exit": 0,
+    "current_start_policy_exit": 0,
+    "original_missing_group_field_fixture_rebased_to_real_required_DriverApi2_callbacks": true,
+    "partial_optional_provider_case": true,
+    "kernel_compile_scope": "KernelBuild4 provider/context/metadata2 phase; later optional-import refinements have their separate start-policy test and require the following canonical source rebuild."
+  },
+  "provider_scope": "Actual compact contexts/tables with common native mechanism and owner callbacks. Separate physical context union, full32 import/name/code-binding records, exact ordered absent optional R4L records, no mixed technical generations. Canonical metadata2 identity/namespace and shared256-step FAT/NTFS budget. Optional unsupported facilities stay absent; no compact audio descriptor is passed to old callbacks.",
+  "historical_archives_retained": true,
+  "old_runtime39_unchanged": true
+}

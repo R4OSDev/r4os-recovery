@@ -2,8 +2,97 @@ const std = @import("std");
 const abi = @import("r4os_contract").abi;
 const r4sys = @import("r4sys.zig");
 const time_contract = @import("time_contract.zig");
+const checked = @import("time_budget.zig");
+const checkedFailure = checked.failure;
+const rpc_budget = @import("rpc_budget.zig");
 
 pub const Timeout = time_contract.Timeout;
+
+pub const Inventory = struct {
+    rows: []abi.ServiceInventoryRow,
+    revision: u64,
+    allocator: std.mem.Allocator,
+
+    pub fn deinit(self: *Inventory) void {
+        self.allocator.free(self.rows);
+        self.rows = &.{};
+    }
+};
+pub const InventoryRead = union(enum) { complete: Inventory, failure: i32 };
+
+pub fn inventoryAvailable(sys: *const r4sys.Context) bool {
+    return sys.hasFn("service_inventory_page") and sys.hasFn("service_control_bound");
+}
+
+/// All rows are caller-owned values. A native page size bounds one transfer,
+/// never the full inventory. Partial attempts are discarded on restart/OOM.
+pub fn readInventory(sys: *const r4sys.Context, allocator: std.mem.Allocator) InventoryRead {
+    if (!sys.hasFn("service_inventory_page")) return .{ .failure = abi.err_no_fn };
+    var values: std.ArrayList(abi.ServiceInventoryRow) = .empty;
+    defer values.deinit(allocator);
+    for (0..3) |_| {
+        values.clearRetainingCapacity();
+        var cursor: abi.ServiceInventoryCursor = .{};
+        var page: [abi.service_inventory_page_rows]abi.ServiceInventoryRow = undefined;
+        while (true) {
+            const previous = cursor;
+            const raw = sys.serviceInventoryPage(&cursor, &page);
+            if (raw == abi.service_api_result_restart or raw == abi.service_api_result_busy) break;
+            if (raw < 0) return .{ .failure = raw };
+            const count: usize = @intCast(raw);
+            if (count > page.len or cursor.revision == 0 or cursor.reserved != 0 or
+                cursor.flags & abi.service_inventory_dynamic == 0 or
+                cursor.flags & ~(abi.service_inventory_dynamic | abi.service_inventory_end) != 0 or
+                (previous.revision != 0 and (cursor.revision != previous.revision or cursor.total != previous.total)))
+                return .{ .failure = abi.service_api_result_invalid };
+            var last = previous.after_id;
+            for (page[0..count]) |row| {
+                if (row.registration_id <= last) return .{ .failure = abi.service_api_result_invalid };
+                last = row.registration_id;
+            }
+            if (cursor.after_id != last or values.items.len > cursor.total or count > cursor.total - values.items.len)
+                return .{ .failure = abi.service_api_result_invalid };
+            values.appendSlice(allocator, page[0..count]) catch return .{ .failure = abi.service_api_result_memory };
+            if (cursor.flags & abi.service_inventory_end != 0) {
+                if (values.items.len != cursor.total) return .{ .failure = abi.service_api_result_invalid };
+                const owned = values.toOwnedSlice(allocator) catch return .{ .failure = abi.service_api_result_memory };
+                return .{ .complete = .{ .rows = owned, .revision = cursor.revision, .allocator = allocator } };
+            }
+            if (count == 0) return .{ .failure = abi.service_api_result_invalid };
+        }
+    }
+    return .{ .failure = abi.service_api_result_busy };
+}
+
+pub const InventoryAction = union(enum) {
+    start,
+    stop: Timeout,
+    restart,
+    mode: u32,
+    remove,
+};
+
+pub fn controlEntry(sys: *const r4sys.Context, row: *const abi.ServiceInventoryRow, action: InventoryAction) i32 {
+    var request: abi.ServiceControlRequest = .{
+        .registration_id = row.registration_id,
+        .start_generation = row.start_generation,
+        .process = row.process,
+    };
+    switch (action) {
+        .start => request.operation = abi.service_control_start,
+        .stop => |timeout| {
+            request.operation = abi.service_control_stop;
+            request.timeout_ticks = time_contract.timeoutToTicks(timeout, sys.monotonicHz()) catch return abi.service_api_result_invalid;
+        },
+        .restart => request.operation = abi.service_control_restart,
+        .mode => |mode| {
+            request.operation = abi.service_control_mode;
+            request.mode = mode;
+        },
+        .remove => request.operation = abi.service_control_remove,
+    }
+    return sys.serviceControlBound(&request);
+}
 
 /// Only an explicit EOF publishes a complete inventory. The caller supplies
 /// private staging storage and must ignore its contents on failure. The current
@@ -60,6 +149,39 @@ pub const Services = struct {
     }
 };
 
+/// Retrying admission is source-level policy over the existing service ABI.
+pub fn registerUntil(services: *const Services, name: [*:0]const u8, flags: u32, budget: *rpc_budget.Budget) EndpointOpen {
+    while (!services.sys.programShouldClose()) {
+        _ = budget.remainingTicks() catch |err| return .{ .failure = rpc_budget.code(err) };
+        const result = services.register(name, flags);
+        switch (result) {
+            .endpoint => return result,
+            .failure => |code| switch (code) {
+                abi.service_api_result_busy, abi.service_api_result_duplicate, abi.service_api_result_not_running => {},
+                else => return result,
+            },
+        }
+        services.sys.sleepTicks(1);
+    }
+    return .{ .failure = abi.service_api_result_not_running };
+}
+
+pub fn openUntil(services: *const Services, name: [*:0]const u8, budget: *rpc_budget.Budget) ServiceOpen {
+    while (!services.sys.programShouldClose()) {
+        _ = budget.remainingTicks() catch |err| return .{ .failure = rpc_budget.code(err) };
+        const result = services.open(name);
+        switch (result) {
+            .connection => return result,
+            .failure => |code| switch (code) {
+                abi.service_api_result_busy, abi.service_api_result_not_found, abi.service_api_result_not_running, abi.service_api_result_no_endpoint => {},
+                else => return result,
+            },
+        }
+        services.sys.sleepTicks(1);
+    }
+    return .{ .failure = abi.service_api_result_not_running };
+}
+
 pub const ServiceOpen = union(enum) {
     connection: ServiceConnection,
     failure: i32,
@@ -103,17 +225,28 @@ pub const ServiceConnection = struct {
 
     pub fn call(self: *ServiceConnection, op: u16, request: []const u8, response: []u8, timeout: Timeout) ServiceCall {
         if (!self.valid()) return .{ .failure = abi.err_closed };
-        var header: abi.ServiceMessageHeader = .{};
-        const raw = self.sys.serviceCallTimeout(self.raw, op, request, &header, response, timeout);
-        if (raw == abi.service_api_result_timeout) return .timed_out;
-        if (raw == abi.service_api_result_bad_handle or raw == abi.service_api_result_not_running) {
-            self.raw = 0;
-            return .{ .failure = raw };
+        if (self.sys.base.generation2 != null) {
+            var operation = self.budget(timeout) catch |err| return .{ .failure = @import("rpc_budget.zig").code(err) };
+            return self.callBudget(op, request, response, &operation);
         }
-        if (raw < 0) return .{ .failure = raw };
-        if (header.status == abi.service_api_result_timeout) return .timed_out;
-        if (header.status != abi.service_api_result_ok) return .{ .remote_failure = header.status };
-        return .{ .response = .{ .header = header, .bytes = @intCast(raw) } };
+        const ticks = time_contract.timeoutToTicks(timeout, self.sys.monotonicHz()) catch return .{ .failure = abi.service_api_result_invalid };
+        return callWithTicks(self, op, request, response, ticks);
+    }
+
+    pub fn budget(self: *const ServiceConnection, timeout: Timeout) @import("rpc_budget.zig").Error!@import("rpc_budget.zig").Budget {
+        var clock: @import("rpc_budget.zig").Clock = null;
+        if (self.sys.base.generation2) |context| {
+            clock = @import("platform2.zig").abi.function(@import("platform2.zig").abi.R4SysFns2, context.system(), "monotonic_clock");
+        } else if (self.sys.hasFn("monotonic_clock")) {
+            clock = @ptrFromInt(self.sys.base.bundle.?.sys.?.monotonic_clock);
+        }
+        return @import("rpc_budget.zig").Budget.fromTimeout(clock, timeout);
+    }
+
+    pub fn callBudget(self: *ServiceConnection, op: u16, request: []const u8, response: []u8, operation: *@import("rpc_budget.zig").Budget) ServiceCall {
+        if (!self.valid()) return .{ .failure = abi.err_closed };
+        const ticks = operation.remainingTicks() catch |err| return if (err == error.TimedOut) .timed_out else .{ .failure = @import("rpc_budget.zig").code(err) };
+        return callWithTicks(self, op, request, response, ticks);
     }
 
     pub fn callTyped(self: *ServiceConnection, comptime Request: type, comptime Response: type, op: u16, request: *const Request, timeout: Timeout) TypedServiceCall(Response) {
@@ -139,6 +272,22 @@ pub const ServiceConnection = struct {
         return raw;
     }
 };
+
+/// Shared native tick-budget owner; not an extra reflected connection method.
+pub fn callWithTicks(connection: *ServiceConnection, op: u16, request: []const u8, response: []u8, ticks: u64) ServiceCall {
+    if (!connection.valid()) return .{ .failure = abi.err_closed };
+    var header: abi.ServiceMessageHeader = .{};
+    const raw = connection.sys.serviceCall(connection.raw, op, request, &header, response, ticks);
+    if (raw == abi.service_api_result_timeout) return .timed_out;
+    if (raw == abi.service_api_result_bad_handle or raw == abi.service_api_result_not_running) {
+        connection.raw = 0;
+        return .{ .failure = raw };
+    }
+    if (raw < 0) return .{ .failure = raw };
+    if (header.status == abi.service_api_result_timeout) return .timed_out;
+    if (header.status != abi.service_api_result_ok) return .{ .remote_failure = header.status };
+    return .{ .response = .{ .header = header, .bytes = @intCast(raw) } };
+}
 
 pub const EndpointWait = union(enum) {
     ready: u32,
@@ -212,8 +361,39 @@ pub const ServiceLoop = struct {
     stop_check_ticks: u64,
     drain_limit: u32,
     metrics: ServiceLoopMetrics = .{},
+    clock_guard: ?checked.DeadlineBudget = null,
+    init_error: i32 = 0,
 
     pub fn init(sys: r4sys.Context, endpoint_handle: u32, options: ServiceLoopOptions) ServiceLoop {
+        if (sys.base.generation2 != null) {
+            var loop: ServiceLoop = .{ .sys = sys, .endpoint_handle = endpoint_handle, .started_tick = 0, .stop_check_ticks = 1, .drain_limit = normalizeDrainLimit(options.drain_limit) };
+            const sample = sys.base.clockSampleChecked() catch |err| {
+                loop.init_error = checkedFailure(err);
+                return loop;
+            };
+            const stop = checked.millisecondsToTicks(options.stop_check_ms, sample.identity.tick_hz) catch |err| {
+                loop.init_error = checkedFailure(err);
+                return loop;
+            };
+            loop.stop_check_ticks = checked.toWaitTicks(.{ .kind = 1, .value = @max(stop, 1) }) catch |err| {
+                loop.init_error = checkedFailure(err);
+                return loop;
+            };
+            if (!sys.hasFn("ticks")) {
+                loop.init_error = checkedFailure(error.ClockUnavailable);
+                return loop;
+            }
+            // Absolute caller deadlines use the canonical timer's epoch.
+            // Its rebased tick counter is not instant_ns * requested_hz.
+            loop.started_tick = sys.ticks();
+            // An indefinite service lifetime still binds one actual source.
+            // Each endpoint wait retains its finite bounded Stop check.
+            loop.clock_guard = checked.DeadlineBudget.init(sample, .{ .kind = abi.timeout_kind_forever }) catch |err| {
+                loop.init_error = checkedFailure(err);
+                return loop;
+            };
+            return loop;
+        }
         const configured_stop_ticks = sys.ticksFromMilliseconds(options.stop_check_ms);
         return .{
             .sys = sys,
@@ -233,7 +413,9 @@ pub const ServiceLoop = struct {
             return .stop;
         }
 
-        const budget = serviceLoopWaitBudget(self.sys.ticks(), deadline_tick, self.stop_check_ticks);
+        if (self.init_error != 0) return .{ .failure = self.init_error };
+        const now = self.nowChecked() catch |err| return .{ .failure = checkedFailure(err) };
+        const budget = serviceLoopWaitBudget(now, deadline_tick, self.stop_check_ticks);
         if (budget.deadline_due) {
             self.metrics.deadline_wakes +%= 1;
             return .deadline;
@@ -256,6 +438,7 @@ pub const ServiceLoop = struct {
             self.metrics.stop_wakes +%= 1;
             return .stop;
         }
+        const after = if (self.clock_guard != null) self.nowChecked() catch |err| return .{ .failure = checkedFailure(err) } else 0;
         if (pending > 0) {
             const queued: u32 = @intCast(pending);
             self.metrics.request_wakes +%= 1;
@@ -263,13 +446,38 @@ pub const ServiceLoop = struct {
             return .{ .requests = queued };
         }
         if (deadline_tick) |deadline| {
-            if (self.sys.ticks() >= deadline) {
+            const current = if (self.clock_guard != null) after else self.sys.ticks();
+            if (current >= deadline) {
                 self.metrics.deadline_wakes +%= 1;
                 return .deadline;
             }
         }
         self.metrics.idle_wakes +%= 1;
         return .idle;
+    }
+
+    fn nowChecked(self: *ServiceLoop) checked.Error!u64 {
+        if (self.clock_guard) |*guard| {
+            const sample = try self.sys.base.clockSampleChecked();
+            _ = try guard.remaining(sample);
+            const ticks = self.sys.ticks();
+            if (ticks < self.started_tick) return error.ClockRegressed;
+            return ticks;
+        }
+        return self.sys.ticks();
+    }
+
+    fn reportNowChecked(self: *const ServiceLoop) checked.Error!u64 {
+        if (self.init_error != 0) return error.InvalidBudget;
+        if (self.clock_guard) |value| {
+            var guard = value;
+            const sample = try self.sys.base.clockSampleChecked();
+            _ = try guard.remaining(sample);
+            const ticks = self.sys.ticks();
+            if (ticks < self.started_tick) return error.ClockRegressed;
+            return ticks;
+        }
+        return self.sys.ticks();
     }
 
     pub fn beginBatch(self: *ServiceLoop, announced_requests: u32) ServiceRequestBatch {
@@ -307,12 +515,17 @@ pub const ServiceLoop = struct {
     }
 
     pub fn formatReport(self: *const ServiceLoop, service_name: []const u8, out: []u8) ?[]const u8 {
+        return self.formatReportChecked(service_name, out) catch null;
+    }
+
+    pub fn formatReportChecked(self: *const ServiceLoop, service_name: []const u8, out: []u8) (checked.Error || error{NoSpaceLeft})![]const u8 {
+        const now = try self.reportNowChecked();
         return std.fmt.bufPrint(
             out,
             "SVCLOOP|1|{s}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}|{d}",
             .{
                 service_name,
-                self.sys.ticks() -| self.started_tick,
+                now -| self.started_tick,
                 self.stop_check_ticks,
                 self.drain_limit,
                 self.metrics.wait_calls,
@@ -330,7 +543,7 @@ pub const ServiceLoop = struct {
                 self.metrics.fairness_yields,
                 self.metrics.max_batch,
             },
-        ) catch null;
+        );
     }
 };
 
@@ -345,6 +558,10 @@ pub const ServiceRequestBatch = struct {
 
     pub fn next(self: *ServiceRequestBatch) ServiceBatchStep {
         if (self.done) return .complete;
+        if (self.loop.init_error != 0) {
+            self.done = true;
+            return .{ .failure = self.loop.init_error };
+        }
         if (self.processed >= self.loop.drain_limit) return self.finishLimit();
 
         if (self.announced == 0) {
@@ -419,7 +636,7 @@ pub fn replyIfPending(sys: r4sys.Context, handle: u32, request_id: u32, status: 
     return completedReplyResult(sys.serviceEndpointReply(handle, request_id, status, payload));
 }
 
-fn completedReplyResult(raw: i32) i32 {
+pub fn completedReplyResult(raw: i32) i32 {
     return if (raw == abi.service_api_result_not_found) abi.service_api_result_ok else raw;
 }
 

@@ -1,0 +1,18 @@
+param(
+    [Parameter(Mandatory)][string]$SdkRoot,
+    [Parameter(Mandatory)][string]$ContractRoot,
+    [Parameter(Mandatory)][string]$ToolsRoot,
+    [string]$InstallRoot='', [string]$CacheRoot='', [string]$OutputRoot='',
+    [string[]]$DependencyRoot=@(), [string]$DependencyRootsJson='', [string]$Features='',
+    [switch]$NoDefaultFeatures, [string]$ZigRoot='', [switch]$Technical
+)
+$ErrorActionPreference='Stop';Set-StrictMode -Version Latest
+$arguments=@('-NoLogo','-NoProfile','-File',(Join-Path $SdkRoot 'Tools/Build-RustModule.ps1'),'-ProjectRoot',$PSScriptRoot,'-SdkRoot',$SdkRoot,'-ContractRoot',$ContractRoot,'-ToolsRoot',$ToolsRoot)
+if($InstallRoot){$arguments+=@('-InstallRoot',$InstallRoot)};if($CacheRoot){$arguments+=@('-CacheRoot',$CacheRoot)};if($OutputRoot){$arguments+=@('-OutputRoot',$OutputRoot)};if($Technical){$arguments+='-Technical'}
+if($DependencyRootsJson){
+    if($DependencyRoot.Count){throw 'Select DependencyRoot or DependencyRootsJson.'}
+    $arguments+=@('-DependencyRootsJson',$DependencyRootsJson)
+}elseif($DependencyRoot.Count){$arguments+=@('-DependencyRootsJson',(ConvertTo-Json -InputObject @($DependencyRoot) -Compress))}
+if($Features){$arguments+=@('-Features',$Features)};if($NoDefaultFeatures){$arguments+='-NoDefaultFeatures'};if($ZigRoot){$arguments+=@('-ZigRoot',$ZigRoot)}
+& pwsh @arguments
+exit $LASTEXITCODE

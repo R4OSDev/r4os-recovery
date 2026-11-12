@@ -24,7 +24,9 @@ pub const ROLE_STATE_BLOCKED: u8 = 3;
 pub const ROLE_STATE_ERROR: u8 = 4;
 pub const ROLE_STATE_DISABLED: u8 = 5;
 
+const next_api = @import("generation2.zig").abi;
 const InitFn = *const fn (*const protocol_api.Table) callconv(.c) i32;
+const InitFn2 = *const fn (*const next_api.ProtocolApi2) callconv(.c) i32;
 const ShutdownFn = *const fn () callconv(.c) i32;
 const QueryFn = *const fn (*protocol_api.ProtocolStatus) callconv(.c) i32;
 const DispatchFn = *const fn (u32, *const protocol_api.ProtocolBuffer, *protocol_api.ProtocolBuffer) callconv(.c) i32;
@@ -42,7 +44,8 @@ const Module = struct {
     dependencies: [MAX_DEPENDENCIES][registry.MAX_ROLE]u8 = .{.{0} ** registry.MAX_ROLE} ** MAX_DEPENDENCIES,
     dependency_lens: [MAX_DEPENDENCIES]usize = .{0} ** MAX_DEPENDENCIES,
     dependency_count: usize = 0,
-    init: ?InitFn = null,
+    init: u64 = 0,
+    init_generation: u8 = 1,
     shutdown: ?ShutdownFn = null,
     query: ?QueryFn = null,
     dispatch_fn: ?DispatchFn = null,
@@ -322,7 +325,7 @@ fn loadModuleBytesWithInfo(bytes: []const u8, info: R4MProtocolInfo, file_name: 
     }
     var prepared = modsys.prepareResolvedBytes(bytes, .r4p, file_name, path) orelse return false;
     defer prepared.abort();
-    const init_addr = prepared.exportAddress("ProtocolInit", 1) orelse return missingExport("ProtocolInit");
+    const identity = prepared.initEntry() orelse return missingExport("ProtocolInit");
     const shutdown_addr = prepared.exportAddress("ProtocolShutdown", 1) orelse return missingExport("ProtocolShutdown");
     const query_addr = prepared.exportAddress("ProtocolQuery", 1) orelse return missingExport("ProtocolQuery");
     const dispatch_addr = prepared.exportAddress("ProtocolDispatch", 1) orelse return missingExport("ProtocolDispatch");
@@ -343,7 +346,8 @@ fn loadModuleBytesWithInfo(bytes: []const u8, info: R4MProtocolInfo, file_name: 
         .module_slot = loaded_module_slot,
         .registry_slot = registry_slot,
         .dependency_count = info.dependency_count,
-        .init = @ptrFromInt(init_addr),
+        .init = identity.address,
+        .init_generation = identity.generation,
         .shutdown = @ptrFromInt(shutdown_addr),
         .query = @ptrFromInt(query_addr),
         .dispatch_fn = @ptrFromInt(dispatch_addr),
@@ -381,7 +385,7 @@ fn loadCatalogCandidate(candidate_index: usize) ?usize {
     };
     loader_perf.addR4pReadTicks(read_start);
     defer prepared.abort();
-    const init_addr = prepared.exportAddress("ProtocolInit", 1) orelse {
+    const identity = prepared.initEntry() orelse {
         _ = missingExport("ProtocolInit");
         return null;
     };
@@ -405,7 +409,8 @@ fn loadCatalogCandidate(candidate_index: usize) ?usize {
         .module_slot = loaded_module_slot,
         .registry_slot = candidate.registry_slot,
         .dependency_count = info.dependency_count,
-        .init = @ptrFromInt(init_addr),
+        .init = identity.address,
+        .init_generation = identity.generation,
         .shutdown = @ptrFromInt(shutdown_addr),
         .query = @ptrFromInt(query_addr),
         .dispatch_fn = @ptrFromInt(dispatch_addr),
@@ -568,13 +573,20 @@ fn initModule(module: *const Module) void {
     k.puts(registry.sourceName(module.source));
     k.puts("\r\n");
 
-    const init = module.init orelse {
+    const init_address = module.init;
+    if (init_address == 0) {
         registry.setError(module.registry_slot, -4, "missing init export");
         return;
-    };
+    }
     const init_start = loader_perf.now();
     protocol_api.enter(module.registry_slot);
-    const result = init(&protocol_api.table);
+    const result = if (module.init_generation == 2) result: {
+        const init: InitFn2 = @ptrFromInt(init_address);
+        break :result init(&protocol_api.table2);
+    } else result: {
+        const init: InitFn = @ptrFromInt(init_address);
+        break :result init(&protocol_api.table);
+    };
     protocol_api.leave();
     loader_perf.addR4pInitTicks(init_start);
     if (result != 0) {

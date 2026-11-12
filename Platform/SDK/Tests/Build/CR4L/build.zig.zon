@@ -1,0 +1,1 @@
+.{ .name = .r4os_c_r4l_fixture, .version = "0.1.0", .fingerprint = 0xa4102f1af3d265a8, .minimum_zig_version = "0.16.0", .dependencies = .{ .r4os_sdk = .{ .path = "../../.." } }, .paths = .{ "build.zig", "build.zig.zon", "module.R4MF", "src", "Contract", "Bindings", "Tests", "Docs" } }

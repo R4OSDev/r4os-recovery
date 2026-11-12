@@ -1,0 +1,15 @@
+[package]
+name = "rust-manifest-probe"
+version = "1.2.3"
+edition = "2024"
+build = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "src/main.rs"
+crate-type = ["staticlib"]
+
+[workspace]

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "r4xstart.h"
+#include "platform2.h"
 
 #define R4L_INTERFACE_MAGIC 0x31493452u
 #define R4L_INTERFACE_HEADER_VERSION 1u
@@ -13,6 +14,7 @@
 #define R4L_INTERFACE_REQUIRED_FLAG_MASK 0x00ffu
 
 #define R4L_BINDING_OK 0
+#define R4L_BINDING_ABSENT 1
 #define R4L_BINDING_INVALID_IMPORT (-1001)
 #define R4L_BINDING_MANIFEST_REVISION_TOO_OLD (-1002)
 #define R4L_BINDING_MISALIGNED_TABLE (-1003)
@@ -27,6 +29,7 @@
 #define R4L_BINDING_REVISION_TOO_OLD (-1012)
 #define R4L_BINDING_TABLE_TOO_SMALL (-1013)
 #define R4L_BINDING_INVALID_EXPECTATION (-1014)
+#define R4L_BINDING_INVALID_QUERY (-1015)
 
 typedef struct R4LInterfaceHeader {
     uint32_t magic;
@@ -58,6 +61,13 @@ _Static_assert(offsetof(R4LInterfaceHeader, abi_major) == 12u, "R4LInterfaceHead
 _Static_assert(offsetof(R4LInterfaceHeader, abi_minor) == 14u, "R4LInterfaceHeader.abi_minor offset mismatch");
 _Static_assert(offsetof(R4LInterfaceHeader, interface_id_lo) == 16u, "R4LInterfaceHeader.interface_id_lo offset mismatch");
 _Static_assert(offsetof(R4LInterfaceHeader, interface_id_hi) == 24u, "R4LInterfaceHeader.interface_id_hi offset mismatch");
+
+/* Provider ABI stays the same as the generated consumer tables. The caller
+ * owns every allocator, session and callback through exact close/quiescence. */
+#define R4L_PROVIDER_QUERY(symbol_) \
+    void r4l_entry(void) {} \
+    R4LQuery symbol_ __attribute__((aligned(8),section(".data.r4l_exports"))) = \
+        {R4L_ABI_MAGIC,R4L_ABI_VERSION,sizeof(R4LQuery),0,0,0}
 
 static inline int r4xstart_context_valid(const R4XStartContext *ctx) {
     return ctx != 0 &&
@@ -111,6 +121,30 @@ static inline const R4XStartImport *r4xstart_find_import_named(const R4XStartCon
     return 0;
 }
 
+/* The view was admitted by R4OS2ContextInit; only the shared import payload
+ * is inspected. No generation-1 context or platform table is constructed. */
+static inline const R4XStartImport *r4xstart2_find_import_named(const R4OS2Context *ctx, const char *module_name, const char *symbol_name) {
+    if (!ctx || !ctx->raw) return NULL;
+    const R4XStartImport *items = (const R4XStartImport *)(uintptr_t)ctx->raw->imports;
+    for (uint32_t i = 0; i < ctx->raw->import_count; ++i) {
+        if (r4xstart_import_name_equal(items[i].module_name, module_name) &&
+            r4xstart_import_name_equal(items[i].symbol_name, symbol_name)) return &items[i];
+    }
+    return NULL;
+}
+
+static inline int32_t r4l_query2(const R4OS2Context *ctx, const char *module_name, const R4LQuery2 **out_query) {
+    if (!out_query) return R4L_BINDING_INVALID_EXPECTATION;
+    *out_query = NULL;
+    const R4XStartImport *item = r4xstart2_find_import_named(ctx, module_name, "Query2");
+    if (!item || item->group_id || item->min_version != 2 || item->resolved_version != 2 || !item->table) return R4L_BINDING_INVALID_IMPORT;
+    if (item->table % _Alignof(R4LQuery2)) return R4L_BINDING_MISALIGNED_TABLE;
+    const R4LQuery2 *value = (const R4LQuery2 *)(uintptr_t)item->table;
+    if (value->magic != R4OS2_QUERY_MAGIC || value->abi_version != 2 || value->size < sizeof(*value) || value->group || value->reserved) return R4L_BINDING_INVALID_QUERY;
+    *out_query = value;
+    return R4L_BINDING_OK;
+}
+
 static inline int32_t r4l_validate_import(const R4XStartImport *item, const R4LInterfaceExpectation *expected, const R4LInterfaceHeader **out_header) {
     if (out_header != 0) *out_header = 0;
     if (expected == 0 || out_header == 0 ||
@@ -135,6 +169,20 @@ static inline int32_t r4l_validate_import(const R4XStartImport *item, const R4LI
     if (header->abi_minor < expected->min_revision) return R4L_BINDING_REVISION_TOO_OLD;
     if (header->size < expected->required_size) return R4L_BINDING_TABLE_TOO_SMALL;
     *out_header = header;
+    return R4L_BINDING_OK;
+}
+
+/* Query is current standalone-library metadata, distinct from a named API. */
+static inline int32_t r4l_query_metadata(const R4XStartContext *ctx, const char *module, const R4LQuery **out_query) {
+    if (!out_query) return R4L_BINDING_INVALID_EXPECTATION;
+    *out_query = 0;
+    const R4XStartImport *item = r4xstart_find_import_named(ctx,module,"Query");
+    if (!item || item->group_id != 0 || item->table == 0 || item->min_version == 0 || item->resolved_version < item->min_version) return R4L_BINDING_INVALID_IMPORT;
+    if (item->table % _Alignof(R4LQuery)) return R4L_BINDING_MISALIGNED_TABLE;
+    const R4LQuery *query = (const R4LQuery *)(uintptr_t)item->table;
+    if (item->resolved_version != 1 || query->magic != R4L_ABI_MAGIC || query->abi_version != R4L_ABI_VERSION ||
+        query->size < sizeof(R4LQuery) || query->group != 0 || query->kernel_bridge != 0 || query->reserved != 0) return R4L_BINDING_INVALID_QUERY;
+    *out_query = query;
     return R4L_BINDING_OK;
 }
 

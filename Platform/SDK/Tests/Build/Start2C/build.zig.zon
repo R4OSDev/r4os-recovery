@@ -1,0 +1,1 @@
+.{ .name = .r4os_start2_c_probe, .version = "0.1.0", .fingerprint = 0xeb840a7126f7e470, .minimum_zig_version = "0.16.0", .dependencies = .{ .r4os_sdk = .{ .path = "../../.." } }, .paths = .{ "build.zig", "build.zig.zon", "module.R4MF", "src" } }

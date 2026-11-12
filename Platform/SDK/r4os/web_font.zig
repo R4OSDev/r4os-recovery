@@ -101,10 +101,12 @@ pub const Catalog = struct {
         var best: ?abi.GuiFontInfo = null;
         var best_score: u64 = std.math.maxInt(u64);
         for (self.entries) |info| {
-            if (!renderable(info) or !self.support.has(info.id, codepoint)) continue;
+            if (!renderable(info)) continue;
             const family_penalty = familyPenalty(&info, wanted) orelse continue;
             const score = family_penalty +| faceScore(info, pixel_size, weight, italic);
-            if (score < best_score or (score == best_score and (best == null or info.id < best.?.id))) {
+            if ((score < best_score or (score == best_score and (best == null or info.id < best.?.id))) and
+                self.support.has(info.id, codepoint))
+            {
                 best = info;
                 best_score = score;
             }
@@ -122,15 +124,129 @@ pub const Catalog = struct {
         var best: ?abi.GuiFontInfo = null;
         var best_score: u64 = std.math.maxInt(u64);
         for (self.entries) |info| {
-            if (!renderable(info) or !self.support.has(info.id, codepoint)) continue;
+            if (!renderable(info)) continue;
             var score = faceScore(info, pixel_size, weight, italic);
             if ((info.flags & abi.gui_font_flag_builtin) != 0) score +|= 1_000_000;
-            if (score < best_score or (score == best_score and (best == null or info.id < best.?.id))) {
+            if ((score < best_score or (score == best_score and (best == null or info.id < best.?.id))) and
+                self.support.has(info.id, codepoint))
+            {
                 best = info;
                 best_score = score;
             }
         }
         return best;
+    }
+};
+
+/// A bounded four-way index for the installed-font owner's glyph answers.
+/// Negative answers are cacheable; every entry carries its catalogue revision.
+/// Hash collisions replace one bucket member and never change the answer.
+pub const SupportCache = struct {
+    const bucket_count = 128;
+    const ways = 4;
+    const Entry = struct { valid: bool = false, revision: u32 = 0, font_id: u32 = 0, codepoint: u32 = 0, supported: bool = false };
+    entries: [bucket_count][ways]Entry = .{.{Entry{}} ** ways} ** bucket_count,
+    cursors: [bucket_count]u2 = .{0} ** bucket_count,
+    lookups: u64 = 0,
+    probes: u64 = 0,
+    misses: u64 = 0,
+
+    fn bucket(revision: u32, font_id: u32, codepoint: u32) usize {
+        return scalarHash(codepoint ^ (font_id *% 0x9e3779b9) ^ (revision *% 0x85ebca6b)) & (bucket_count - 1);
+    }
+    pub fn get(self: *SupportCache, revision: u32, font_id: u32, codepoint: u32) ?bool {
+        self.lookups +|= 1;
+        for (self.entries[bucket(revision, font_id, codepoint)]) |entry| {
+            self.probes +|= 1;
+            if (entry.valid and entry.revision == revision and entry.font_id == font_id and entry.codepoint == codepoint) return entry.supported;
+        }
+        self.misses +|= 1;
+        return null;
+    }
+    pub fn put(self: *SupportCache, revision: u32, font_id: u32, codepoint: u32, supported: bool) void {
+        const index = bucket(revision, font_id, codepoint);
+        var slot: usize = self.cursors[index];
+        for (self.entries[index], 0..) |entry, position| {
+            if (!entry.valid or entry.revision != revision or (entry.font_id == font_id and entry.codepoint == codepoint)) {
+                slot = position;
+                break;
+            }
+        }
+        self.entries[index][slot] = .{ .valid = true, .revision = revision, .font_id = font_id, .codepoint = codepoint, .supported = supported };
+        self.cursors[index] = @truncate(slot + 1);
+    }
+};
+
+/// One immutable family/style/provider scope. A repeated scalar reuses the
+/// exact composite selection, including document fonts and missing glyphs.
+/// A new run creates a fresh resolver; no borrowed style survives that scope.
+pub fn RunResolver(comptime FaceType: type) type {
+    return struct {
+        const Self = @This();
+        const Entry = struct { valid: bool = false, codepoint: u32 = 0, face: FaceType = .{} };
+        context: ?*anyopaque = null,
+        callback: *const fn (?*anyopaque, []const u8, i32, u16, bool, ?u32) FaceType,
+        family: []const u8,
+        size: i32,
+        weight: u16,
+        italic: bool,
+        entries: [64]Entry = .{Entry{}} ** 64,
+        calls: u64 = 0,
+        hits: u64 = 0,
+
+        pub fn resolve(self: *Self, codepoint: u32) FaceType {
+            const entry = &self.entries[scalarHash(codepoint) & (self.entries.len - 1)];
+            if (entry.valid and entry.codepoint == codepoint) {
+                self.hits +|= 1;
+                return entry.face;
+            }
+            self.calls +|= 1;
+            const face = self.callback(self.context, self.family, self.size, self.weight, self.italic, codepoint);
+            entry.* = .{ .valid = true, .codepoint = codepoint, .face = face };
+            return face;
+        }
+    };
+}
+
+fn scalarHash(value: u32) u32 {
+    var mixed = value;
+    mixed ^= mixed >> 16;
+    mixed *%= 0x7feb352d;
+    mixed ^= mixed >> 15;
+    mixed *%= 0x846ca68b;
+    return mixed ^ (mixed >> 16);
+}
+
+/// Builds a caller-private enumeration. The caller publishes it only after a
+/// nonzero revision matches before and after every successful metadata read.
+pub const CatalogReader = struct {
+    context: *anyopaque,
+    revision: *const fn (*anyopaque) u32,
+    count: *const fn (*anyopaque) usize,
+    info: *const fn (*anyopaque, u32, *abi.GuiFontInfo) bool,
+    pub const Snapshot = struct { count: usize, revision: u32 };
+
+    pub fn read(self: CatalogReader, out: []abi.GuiFontInfo) ?Snapshot {
+        for (0..2) |_| {
+            const before = self.revision(self.context);
+            if (before == 0) return null;
+            const count = self.count(self.context);
+            if (count > out.len) return null;
+            var used: usize = 0;
+            var valid = true;
+            for (0..count) |index| {
+                var entry: abi.GuiFontInfo = .{};
+                if (!self.info(self.context, @intCast(index), &entry)) {
+                    valid = false;
+                    break;
+                }
+                if (!renderable(entry)) continue;
+                out[used] = entry;
+                used += 1;
+            }
+            if (valid and self.revision(self.context) == before) return .{ .count = used, .revision = before };
+        }
+        return null;
     }
 };
 
@@ -354,4 +470,113 @@ test "catalog exposes exact-family and final-fallback resolution" {
     try std.testing.expectEqual(@as(u32, 1), catalog.resolveAvailable(16, 400, false, null).id);
     try std.testing.expectEqual(@as(u32, 2), catalog.resolveId(2, null).?.id);
     try std.testing.expect(catalog.resolveId(99, null) == null);
+}
+
+const IndexedSupportFixture = struct {
+    cache: SupportCache = .{},
+    revision: u32 = 7,
+    glyph_queries: u64 = 0,
+    entries: [65]abi.GuiFontInfo = undefined,
+    fn init() @This() {
+        var self: @This() = .{};
+        for (&self.entries, 0..) |*entry, i| entry.* = testFont(@intCast(i), if (i == 64) "Latin" else if (i == 63) "Greek" else "Unrelated", 16, 400, 0);
+        self.entries[0].flags |= abi.gui_font_flag_builtin;
+        return self;
+    }
+    fn supports(context: ?*anyopaque, font_id: u32, codepoint: u32) bool {
+        const self: *@This() = @ptrCast(@alignCast(context.?));
+        if (self.cache.get(self.revision, font_id, codepoint)) |hit| return hit;
+        self.glyph_queries += 1;
+        const value = (font_id == 64 and codepoint == 'A') or (font_id == 63 and codepoint == 0x03A9);
+        self.cache.put(self.revision, font_id, codepoint, value);
+        return value;
+    }
+    fn catalog(self: *@This()) Catalog {
+        return .{ .entries = &self.entries, .support = .{ .context = self, .callback = supports } };
+    }
+    fn resolve(context: ?*anyopaque, family: []const u8, size: i32, weight: u16, italic: bool, codepoint: ?u32) Face {
+        const self: *@This() = @ptrCast(@alignCast(context.?));
+        return self.catalog().resolve(family, size, weight, italic, codepoint);
+    }
+};
+
+test "indexed warm mixed run preserves fallback and missing glyphs with bounded probes" {
+    var fixture = IndexedSupportFixture.init();
+    const scalars = [_]u32{ 'A', 0x03A9, 0x10FFFF };
+    const expected = [_]u32{ 64, 63, 0 };
+    for (scalars, expected) |cp, id| try std.testing.expectEqual(id, fixture.catalog().resolve("Latin, Greek", 16, 400, false, cp).id);
+    fixture.cache.lookups = 0;
+    fixture.cache.probes = 0;
+    fixture.cache.misses = 0;
+    fixture.glyph_queries = 0;
+    var run: RunResolver(Face) = .{ .context = &fixture, .callback = IndexedSupportFixture.resolve, .family = "Latin, Greek", .size = 16, .weight = 400, .italic = false };
+    for (0..16) |_| for (scalars, expected) |cp, id| {
+        const face = run.resolve(cp);
+        try std.testing.expectEqual(id, face.id);
+        try std.testing.expectEqual(cp != 0x10FFFF, face.found);
+    };
+    try std.testing.expectEqual(@as(u64, 3), run.calls);
+    try std.testing.expectEqual(@as(u64, 45), run.hits);
+    try std.testing.expectEqual(@as(u64, 0), fixture.glyph_queries);
+    try std.testing.expect(fixture.cache.probes <= fixture.cache.lookups * 4);
+    std.debug.print("GLYPHWORK scalars=48 resolutions={d} lookups={d} probes={d} glyph_queries={d}\n", .{ run.calls, fixture.cache.lookups, fixture.cache.probes, fixture.glyph_queries });
+    const before = fixture.glyph_queries;
+    fixture.revision += 1;
+    _ = fixture.catalog().resolve("Latin", 16, 400, false, 'A');
+    try std.testing.expectEqual(before + 1, fixture.glyph_queries);
+}
+
+test "glyph support hash collisions retain negative identity and revision semantics" {
+    var cache: SupportCache = .{};
+    var collision: [5]u32 = undefined;
+    var used: usize = 0;
+    var scalar: u32 = 0;
+    const bucket = SupportCache.bucket(4, 3, 0);
+    while (used < collision.len) : (scalar += 1) {
+        if (SupportCache.bucket(4, 3, scalar) != bucket) continue;
+        collision[used] = scalar;
+        used += 1;
+    }
+    for (collision, 0..) |cp, i| cache.put(4, 3, cp, i % 2 == 0);
+    try std.testing.expect(cache.get(4, 3, collision[0]) == null);
+    for (collision[1..], 1..) |cp, i| try std.testing.expectEqual(@as(?bool, i % 2 == 0), cache.get(4, 3, cp));
+    try std.testing.expect(cache.get(5, 3, collision[1]) == null);
+    try std.testing.expect(cache.get(4, 4, collision[1]) == null);
+}
+
+test "catalogue enumeration retries a revision change and rejects incomplete metadata" {
+    const Fixture = struct {
+        version: u32 = 1,
+        calls: usize = 0,
+        fail: bool = false,
+        fn cast(p: *anyopaque) *@This() {
+            return @ptrCast(@alignCast(p));
+        }
+        fn revision(p: *anyopaque) u32 {
+            return cast(p).version;
+        }
+        fn count(_: *anyopaque) usize {
+            return 2;
+        }
+        fn info(p: *anyopaque, index: u32, out: *abi.GuiFontInfo) bool {
+            const self = cast(p);
+            self.calls += 1;
+            if (self.fail and index == 1) return false;
+            out.* = testFont(index, if (self.version == 1) "Old" else "New", 16, 400, 0);
+            if (self.version == 1) self.version = 2;
+            return true;
+        }
+    };
+    var fixture: Fixture = .{};
+    const reader: CatalogReader = .{ .context = &fixture, .revision = Fixture.revision, .count = Fixture.count, .info = Fixture.info };
+    var pending: [2]abi.GuiFontInfo = undefined;
+    const result = reader.read(&pending).?;
+    try std.testing.expectEqual(@as(u32, 2), result.revision);
+    try std.testing.expectEqual(@as(usize, 2), result.count);
+    try std.testing.expectEqual(@as(usize, 4), fixture.calls);
+    for (pending) |entry| try std.testing.expectEqualStrings("New", fixedSpan(&entry.family));
+    fixture.fail = true;
+    fixture.calls = 0;
+    try std.testing.expect(reader.read(&pending) == null);
+    try std.testing.expectEqual(@as(usize, 4), fixture.calls);
 }

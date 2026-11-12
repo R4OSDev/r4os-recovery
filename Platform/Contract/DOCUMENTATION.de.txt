@@ -5,6 +5,18 @@ Dieses Repository ist die zentrale API-/ABI-Wahrheit der R4OS-Plattform.
 Es beschreibt den gemeinsamen R4M0-, R4XStart- und R4L-Mechanismus sowie die
 sechs vom Kernel bereitgestellten Plattformgruppen.
 
+R4DRAW39 / Contract0.64.74
+--------------------------
+Der Framevertrag ergänzt gradient_rounded_rect mit einem unveränderten
+GuiShapeResource-v1-Praefix und getrennten GuiGradientPaint-/GuiGradientStop-
+Records. Alle alten Payloads, Konstanten und Slots bleiben unverändert;
+die R4DRAW-Tabelle bleibt 912 Bytes groß. Zwei bis acht strikt geordnete
+Stopps, begrenzte endliche Koordinaten und eindeutige Payloadlängen gehören
+zur Aufnahmeprüfung. Interpolation und Darstellung besitzt der Desktop.
+Der kontrollierte Baseline-Abgleich fügt genau diese zwei Records und sechs
+Konstanten hinzu und erhöht ausschließlich die R4DRAW-Grammatikrevision.
+Fachliche Nutzung: SDK gui_shapes und Docs/API/GuiShapeContract.txt.
+
 Wahrheit und Ausgaben
 ---------------------
 
@@ -13,12 +25,16 @@ Wahrheit und Ausgaben
   Append-only-Vergleichsstand.
 - `ABI/` enthaelt die lesbaren Container-, Start- und Runtime-R4L-Vertraege.
 - `Module/R4MFv2.txt` beschreibt das gemeinsame Modulmanifest.
-- `Generated/` enthaelt die daraus erzeugten Zig-, Kernel- und C-Pakete,
+- `Generated/` enthaelt die daraus erzeugten Zig-, Kernel-, C- und Rust-Pakete,
   Conformance-Fixtures, Referenzdokumente und das API-Inventar.
 - Die exportierte Zig-ABI verbindet die schemagenerierten Definitionen mit
   den gemeinsamen technischen Plattformtypen aus dem eingefrorenen
   Referenzstand.
 - `Tools/ApiContractGen/` besitzt den Generator und seine Negativtests.
+- `Tools/AbiRustGen/` reflektiert die kanonischen ABI-Typen einschliesslich
+  der technischen Fassaden nach Rust. `write` erzeugt Zig/C zuerst und Rust
+  danach; normaler Build/check vergleichen nur. `test` prueft auch Rust-Host-
+  und Baretarget-Layouts sowie echte Rust/Zig/C-Callbacks im gleichen Gate.
 
 Nicht enthalten sind Kernelimplementierungen, handgeschriebene SDK-Fassaden,
 Module oder fachliche Vertraege konkreter Runtime-R4Ls. Eine benannte
@@ -27,6 +43,25 @@ vollstaendig in ihrer eigenen Library-Einheit.
 
 Build und Pruefung
 ------------------
+
+0.87.55 / Contract0.64.52: DriverApi38 ergaenzt die Semantik der normalen
+Work-Aufnahme um das ausdrueckliche continuation-Flag. Tabellenlayout664,
+alle alten Slots, Payloadlayouts und bisherigen Zahlenwerte bleiben gleich;
+die Mindestversion steht in driver_api_continuation_work_version. Nur neue
+Flag-Aufnahmen interpretieren continue/wait als Fortsetzung desselben
+Tickets. Unmarkierte Callbacks behalten auch fuer diese Zahlenwerte ihre
+terminalen Ergebnisse. IRQ-Klasse, owned-Callbackadmission und Audio-EDF
+nehmen das Flag nicht an. Die kontrollierte Baseline wurde nach diesem
+Kompatibilitaetsentscheid fortgeschrieben.
+
+Jeder Callback gibt vor seiner Rueckkehr alle lokalen Leihen/Locks frei.
+Continue stellt denselben Slot an das normale FIFO-Ende; wait verschiebt
+nur dessen naechste Zulaessigkeit um einen logischen Tick. Der vorhandene
+Worker wartet bei ausschliesslich verschobener Arbeit; kein neuer Thread,
+keine pauschale Timerfreigabe, keine Zwischen-Completion. Urspruengliche
+Einreichungs-/Startzeit und echte Join-/Cancel-/Releasequittungen bleiben
+erhalten. Die konkreten Produzentengrenzen qualifiziert der jeweilige
+Treiber; dies ist keine harte Laufzeitbegrenzung beliebigen nativen Codes.
 
 Voraussetzung ist Zig 0.16.0 oder kompatibel.
 
@@ -112,3 +147,66 @@ Vier additive drive_role_* Konstanten benennen die schon vorhandenen
 DriveInfo.role-Werte none=0, system=1, data=2, ram=3. Keine bestehende
 Konstante, Funktion, Tabelle oder Payloadgroesse aendert sich. Die explizite
 Baseline-Aktualisierung wurde auf genau diese Ergaenzungen begrenzt.
+
+R4DEV v14 / Stackfehler (0.84.1)
+--------------------------------
+Der optionale append-only Slot stack_fault liefert je CPU den letzten
+residenten ProgramStackFaultInfo-Datensatz. Aufnahme ohne Allokation,
+Owner-Lock oder Registryscan; Generationen stammen aus der vorhandenen
+Taskbindung. Verfuegbarkeitsflags unterscheiden fehlende Zuordnung von
+gemessenen Werten. Commitgroessen sind kein Hochwasser. Alte 438 Slots,
+308 Payloads und 1933 Konstanten bleiben unveraendert.
+
+R4DEV v15 / Kernelheap-Pruefung (0.84.11)
+---------------------------------------
+Der optionale Slot memory_kernel_heap_check erweitert das 400-Byte-
+Layoutpraefix auf 408 Bytes. ProgramKernelHeapCheck ist ein neuer fester
+168-Byte-v1-Datensatz. Bestehende Slots, Payloads und Konstanten behalten
+ihre Bedeutung. Die kontrollierte Baseline-Ergaenzung folgt einem expliziten
+Praefixvergleich; Packageversion 0.64.12, bestehende Baselineidentitaet bleibt.
+Eigene Allokationen und VM-Reservierungen bestimmen die Rueckgabebilanz;
+globale Vorher-/Nachher-Werte sind Beobachtungen. Absichtliche Double-Free-
+und VM-Fehler bleiben getrennt. Ein aktiver Lauf meldet Busy. Nicht quittierte
+Freigaben behalten ihre genaue Diagnoseidentitaet und sperren neue Laeufe.
+
+
+0.64.46: allgemeine Prozess-Lifecycleaufnahme
+------------------------------------------
+R4SYS29/1320 haengt program_lifecycle_begin und program_lifecycle_programs
+an den unveraenderten1304-Byte-Praefix an. ProgramLifecycleSnapshot40 traegt
+nur genauen Handle, Task-ID, Rolle/Klasse/Zustand/Flags, Exit und Fenster-ID.
+ProgramInventoryCursor bleibt binaer unveraendert; Flag lifecycle und Pagekind
+lifecycle grenzen diese Aufnahme ausdruecklich vom vollen Diagnoseinventar ab.
+Begin bindet allein den Registryepoch, Paging liest die kanonischen Slots und
+Completionnodes generationensortiert. Keine zweite Registry, kein VM-/Heap-/
+Task-/Threadstatistikabruf. Epochwechsel verlangt Restart ohne Teilpublikation;
+Busy und unvollstaendige Aufnahme sind keine Lifecycleautoritaet. Ein Epoch
+allein ersetzt keine erneute aktuelle Aufnahme veraenderlicher Prozessfelder.
+Vollinventar, Diagnosewerte und bisherige Slots/Layouts bleiben erhalten.
+
+0.87.42 / Contract0.64.48: R4SYS30 ergaenzt drive_info_geometry an1320,
+Tabelle1328, alle163 alten Slots und kompletter1320-Byte-Praefix bleiben.
+DriveInfo56 bleibt; reserved Bit0=drive_info_flag_free_valid bedeutet
+backendbestaetigtes FREE, auch0. Ohne Bit ist Freiplatz unbekannt. Geometrie
+fuehrt kein FREE/Bitmap-I/O aus; bestehende Mount-/Requestaufnahme kann
+warten. Volle Abfrage nutzt unveraenderten Backendcache. Query:1/alle5
+anderen Gruppen unveraendert; Zig/C/Rust-Konformanz und kontrollierter
+Praefixvergleich bestanden. Keine neue Hardware-/Zeitqualifikation.
+
+0.87.57 / Contract0.64.53: Ein separater Diagnose-Selektor
+kernel_scheduler_check_case_workers=128 erweitert die vorhandene KernelCheck-
+Auswahl. case_all=127 und alle498Slots/380Payloads/Layouts bleiben gleich.
+Der explizite4000Tick-Beobachter erzeugt oder beendet keine fremde Arbeit;
+er verlangt echte AP-Aufnahme und erfolgreiche Originalreturns von Desktop-
+Compute-, Async-Datei-/Service- und Audiofortschrittsarbeit. Alle CPU-/Task-/
+Owner-/Requestquittungen im Bootlog, maximal16repräsentative Returns jeKlasse.
+Kein Defaultsampler/Timerhook; unvollstaendige oder fehlende Arbeit gilt nicht
+als bestanden. Kontrollierte Baselineaenderung umfasst genau diesen Selektor.
+
+0.87.58: explizite AP-Idle-Timer-Diagnose
+
+kernel_scheduler_check_case_idle=256 ist ausschliesslich einzeln waehlbar.
+Der Kernel prueft echte Timer-IRQs waehrend eines stabilen AP-Idlefensters,
+wieder aktivierte Timer, Remote-Ready und zeitgesteuerte Wake-Ereignisse
+sowie den exakten Abbau eigener Diagnose-Tasks. all=127 und workers=128
+bleiben getrennt; Slotzahlen, Header und Payloadlayouts bleiben gleich.

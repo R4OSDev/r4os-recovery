@@ -1,0 +1,4840 @@
+{
+  "generation": 2,
+  "query_symbol": "Query2",
+  "start_symbol": "R4XStart2",
+  "slots": [
+    {
+      "group": "R4SYS",
+      "name": "write",
+      "source_number": 0,
+      "source_offset": 16,
+      "number": 0,
+      "offset": 16,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "putc",
+      "source_number": 1,
+      "source_offset": 24,
+      "number": 1,
+      "offset": 24,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "sleep_ticks",
+      "source_number": 2,
+      "source_offset": 32,
+      "number": 2,
+      "offset": 32,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "ticks",
+      "source_number": 3,
+      "source_offset": 40,
+      "number": 3,
+      "offset": 40,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "env_get",
+      "source_number": 4,
+      "source_offset": 48,
+      "number": 4,
+      "offset": 48,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "dir_entry",
+      "source_number": 5,
+      "source_offset": 56,
+      "number": 5,
+      "offset": 56,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_should_close",
+      "source_number": 6,
+      "source_offset": 64,
+      "number": 6,
+      "offset": 64,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_class",
+      "source_number": 7,
+      "source_offset": 72,
+      "number": 7,
+      "offset": 72,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_instance",
+      "source_number": 8,
+      "source_offset": 80,
+      "number": 8,
+      "offset": 80,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_status",
+      "source_number": 9,
+      "source_offset": 88,
+      "number": 9,
+      "offset": 88,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_open",
+      "source_number": 10,
+      "source_offset": 96,
+      "number": 10,
+      "offset": 96,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_close",
+      "source_number": 11,
+      "source_offset": 104,
+      "number": 11,
+      "offset": 104,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_call",
+      "source_number": 12,
+      "source_offset": 112,
+      "number": 12,
+      "offset": 112,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_endpoint_register",
+      "source_number": 13,
+      "source_offset": 120,
+      "number": 13,
+      "offset": 120,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_endpoint_unregister",
+      "source_number": 14,
+      "source_offset": 128,
+      "number": 14,
+      "offset": 128,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_endpoint_poll",
+      "source_number": 15,
+      "source_offset": 136,
+      "number": 15,
+      "offset": 136,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_endpoint_recv",
+      "source_number": 16,
+      "source_offset": 144,
+      "number": 16,
+      "offset": 144,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_endpoint_reply",
+      "source_number": 17,
+      "source_offset": 152,
+      "number": 17,
+      "offset": 152,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_detail_by_name",
+      "source_number": 18,
+      "source_offset": 160,
+      "number": 18,
+      "offset": 160,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_start",
+      "source_number": 19,
+      "source_offset": 168,
+      "number": 19,
+      "offset": 168,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_stop",
+      "source_number": 20,
+      "source_offset": 176,
+      "number": 20,
+      "offset": 176,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_restart",
+      "source_number": 21,
+      "source_offset": 184,
+      "number": 21,
+      "offset": 184,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_install",
+      "source_number": 22,
+      "source_offset": 192,
+      "number": 22,
+      "offset": 192,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_remove",
+      "source_number": 23,
+      "source_offset": 200,
+      "number": 23,
+      "offset": 200,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "reserved0",
+      "source_number": 24,
+      "source_offset": 208,
+      "number": 24,
+      "offset": 208,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "reserved1",
+      "source_number": 25,
+      "source_offset": 216,
+      "number": 25,
+      "offset": 216,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "vm_reserve",
+      "source_number": 26,
+      "source_offset": 224,
+      "number": 26,
+      "offset": 224,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "vm_commit",
+      "source_number": 27,
+      "source_offset": 232,
+      "number": 27,
+      "offset": 232,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "vm_decommit",
+      "source_number": 28,
+      "source_offset": 240,
+      "number": 28,
+      "offset": 240,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "vm_release",
+      "source_number": 29,
+      "source_offset": 248,
+      "number": 29,
+      "offset": 248,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "vm_query",
+      "source_number": 30,
+      "source_offset": 256,
+      "number": 30,
+      "offset": 256,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_create",
+      "source_number": 31,
+      "source_offset": 264,
+      "number": 31,
+      "offset": 264,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_exit",
+      "source_number": 32,
+      "source_offset": 272,
+      "number": 32,
+      "offset": 272,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_join",
+      "source_number": 33,
+      "source_offset": 280,
+      "number": 33,
+      "offset": 280,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_current",
+      "source_number": 34,
+      "source_offset": 288,
+      "number": 34,
+      "offset": 288,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_status",
+      "source_number": 35,
+      "source_offset": 296,
+      "number": 35,
+      "offset": 296,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_read",
+      "source_number": 36,
+      "source_offset": 304,
+      "number": 36,
+      "offset": 304,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_read_at",
+      "source_number": 37,
+      "source_offset": 312,
+      "number": 37,
+      "offset": 312,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_write",
+      "source_number": 38,
+      "source_offset": 320,
+      "number": 38,
+      "offset": 320,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_append",
+      "source_number": 39,
+      "source_offset": 328,
+      "number": 39,
+      "offset": 328,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_stream_begin",
+      "source_number": 40,
+      "source_offset": 336,
+      "number": 40,
+      "offset": 336,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_stream_write",
+      "source_number": 41,
+      "source_offset": 344,
+      "number": 41,
+      "offset": 344,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_stream_finish",
+      "source_number": 42,
+      "source_offset": 352,
+      "number": 42,
+      "offset": 352,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_stream_abort",
+      "source_number": 43,
+      "source_offset": 360,
+      "number": 43,
+      "offset": 360,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_service_call",
+      "source_number": 44,
+      "source_offset": 368,
+      "number": 44,
+      "offset": 368,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_status",
+      "source_number": 45,
+      "source_offset": 376,
+      "number": 45,
+      "offset": 376,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_wait",
+      "source_number": 46,
+      "source_offset": 384,
+      "number": 46,
+      "offset": 384,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_close",
+      "source_number": 47,
+      "source_offset": 392,
+      "number": 47,
+      "offset": 392,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "task_yield",
+      "source_number": 48,
+      "source_offset": 400,
+      "number": 48,
+      "offset": 400,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "reserved_shell_run",
+      "source_number": 49,
+      "source_offset": 408,
+      "number": null,
+      "offset": null,
+      "removed": true
+    },
+    {
+      "group": "R4SYS",
+      "name": "system_halt",
+      "source_number": 50,
+      "source_offset": 416,
+      "number": 49,
+      "offset": 408,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "system_reboot",
+      "source_number": 51,
+      "source_offset": 424,
+      "number": 50,
+      "offset": 416,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "system_poweroff",
+      "source_number": 52,
+      "source_offset": 432,
+      "number": 51,
+      "offset": 424,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "time_state",
+      "source_number": 53,
+      "source_offset": 440,
+      "number": 52,
+      "offset": 432,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "time_set_state",
+      "source_number": 54,
+      "source_offset": 448,
+      "number": 53,
+      "offset": 440,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "time_seconds_since_midnight",
+      "source_number": 55,
+      "source_offset": 456,
+      "number": 54,
+      "offset": 448,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "dir_list",
+      "source_number": 56,
+      "source_offset": 464,
+      "number": 55,
+      "offset": 456,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "dir_create",
+      "source_number": 57,
+      "source_offset": 472,
+      "number": 56,
+      "offset": 464,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "dir_delete",
+      "source_number": 58,
+      "source_offset": 480,
+      "number": 57,
+      "offset": 472,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "drive_info",
+      "source_number": 59,
+      "source_offset": 488,
+      "number": 58,
+      "offset": 480,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_info",
+      "source_number": 60,
+      "source_offset": 496,
+      "number": 59,
+      "offset": 488,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_delete",
+      "source_number": 61,
+      "source_offset": 504,
+      "number": 60,
+      "offset": 496,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_rename",
+      "source_number": 62,
+      "source_offset": 512,
+      "number": 61,
+      "offset": 504,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_copy",
+      "source_number": 63,
+      "source_offset": 520,
+      "number": 62,
+      "offset": 512,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_move",
+      "source_number": 64,
+      "source_offset": 528,
+      "number": 63,
+      "offset": 520,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_read",
+      "source_number": 65,
+      "source_offset": 536,
+      "number": 64,
+      "offset": 528,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_write",
+      "source_number": 66,
+      "source_offset": 544,
+      "number": 65,
+      "offset": 536,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_read_at",
+      "source_number": 67,
+      "source_offset": 552,
+      "number": 66,
+      "offset": 544,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_append",
+      "source_number": 68,
+      "source_offset": 560,
+      "number": 67,
+      "offset": 552,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_stream_begin",
+      "source_number": 69,
+      "source_offset": 568,
+      "number": 68,
+      "offset": 560,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_stream_write",
+      "source_number": 70,
+      "source_offset": 576,
+      "number": 69,
+      "offset": 568,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_stream_finish",
+      "source_number": 71,
+      "source_offset": 584,
+      "number": 70,
+      "offset": 576,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_stream_abort",
+      "source_number": 72,
+      "source_offset": 592,
+      "number": 71,
+      "offset": 584,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "env_set",
+      "source_number": 73,
+      "source_offset": 600,
+      "number": 72,
+      "offset": 592,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_key_info",
+      "source_number": 74,
+      "source_offset": 608,
+      "number": 73,
+      "offset": 600,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_enum_key",
+      "source_number": 75,
+      "source_offset": 616,
+      "number": 74,
+      "offset": 608,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_enum_value",
+      "source_number": 76,
+      "source_offset": 624,
+      "number": 75,
+      "offset": 616,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_get_value",
+      "source_number": 77,
+      "source_offset": 632,
+      "number": 76,
+      "offset": 624,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_set_value",
+      "source_number": 78,
+      "source_offset": 640,
+      "number": 77,
+      "offset": 632,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_delete_value",
+      "source_number": 79,
+      "source_offset": 648,
+      "number": 78,
+      "offset": 640,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_info",
+      "source_number": 80,
+      "source_offset": 656,
+      "number": 79,
+      "offset": 648,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_detail",
+      "source_number": 81,
+      "source_offset": 664,
+      "number": 80,
+      "offset": 656,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_set_start_mode",
+      "source_number": 82,
+      "source_offset": 672,
+      "number": 81,
+      "offset": 664,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_endpoint_wait",
+      "source_number": 83,
+      "source_offset": 680,
+      "number": 82,
+      "offset": 672,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_run",
+      "source_number": 84,
+      "source_offset": 688,
+      "number": 83,
+      "offset": 680,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_launch",
+      "source_number": 85,
+      "source_offset": 696,
+      "number": 84,
+      "offset": 688,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_spawn",
+      "source_number": 86,
+      "source_offset": 704,
+      "number": 85,
+      "offset": 696,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_kill",
+      "source_number": 87,
+      "source_offset": 712,
+      "number": 86,
+      "offset": 704,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_status",
+      "source_number": 88,
+      "source_offset": 720,
+      "number": 87,
+      "offset": 712,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_request_close",
+      "source_number": 89,
+      "source_offset": 728,
+      "number": 88,
+      "offset": 720,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_reap_instance",
+      "source_number": 90,
+      "source_offset": 736,
+      "number": 89,
+      "offset": 728,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "boot_log_info",
+      "source_number": 91,
+      "source_offset": 744,
+      "number": 90,
+      "offset": 736,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "boot_log_read",
+      "source_number": 92,
+      "source_offset": 752,
+      "number": 91,
+      "offset": 744,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_spawn_handle",
+      "source_number": 93,
+      "source_offset": 760,
+      "number": 92,
+      "offset": 752,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_open_handle",
+      "source_number": 94,
+      "source_offset": 768,
+      "number": 93,
+      "offset": 760,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_handle_status",
+      "source_number": 95,
+      "source_offset": 776,
+      "number": 94,
+      "offset": 768,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_handle_request_close",
+      "source_number": 96,
+      "source_offset": 784,
+      "number": 95,
+      "offset": 776,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_handle_kill",
+      "source_number": 97,
+      "source_offset": 792,
+      "number": 96,
+      "offset": 784,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_handle_wait",
+      "source_number": 98,
+      "source_offset": 800,
+      "number": 97,
+      "offset": 792,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_handle_reap",
+      "source_number": 99,
+      "source_offset": 808,
+      "number": 98,
+      "offset": 800,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_completion_read",
+      "source_number": 100,
+      "source_offset": 816,
+      "number": 99,
+      "offset": 808,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_inventory_begin",
+      "source_number": 101,
+      "source_offset": 824,
+      "number": 100,
+      "offset": 816,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_inventory_programs",
+      "source_number": 102,
+      "source_offset": 832,
+      "number": 101,
+      "offset": 824,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_inventory_tasks",
+      "source_number": 103,
+      "source_offset": 840,
+      "number": 102,
+      "offset": 832,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_inventory_threads",
+      "source_number": 104,
+      "source_offset": 848,
+      "number": 103,
+      "offset": 840,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_create_handle",
+      "source_number": 105,
+      "source_offset": 856,
+      "number": 104,
+      "offset": 848,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_handle_join",
+      "source_number": 106,
+      "source_offset": 864,
+      "number": 105,
+      "offset": 856,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_handle_status",
+      "source_number": 107,
+      "source_offset": 872,
+      "number": 106,
+      "offset": 864,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_replace_atomic",
+      "source_number": 108,
+      "source_offset": 880,
+      "number": 107,
+      "offset": 872,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_delete_if_match",
+      "source_number": 109,
+      "source_offset": 888,
+      "number": 108,
+      "offset": 880,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_update_atomic_checked",
+      "source_number": 110,
+      "source_offset": 896,
+      "number": 109,
+      "offset": 888,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "path_names_equal_collated",
+      "source_number": 111,
+      "source_offset": 904,
+      "number": 110,
+      "offset": 896,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_update_cleanup_checked",
+      "source_number": 112,
+      "source_offset": 912,
+      "number": 111,
+      "offset": 904,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_stream_declare_publish",
+      "source_number": 113,
+      "source_offset": 920,
+      "number": 112,
+      "offset": 912,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "module_resource_stat",
+      "source_number": 114,
+      "source_offset": 928,
+      "number": 113,
+      "offset": 920,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "module_resource_read",
+      "source_number": 115,
+      "source_offset": 936,
+      "number": 114,
+      "offset": 928,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_module_path",
+      "source_number": 116,
+      "source_offset": 944,
+      "number": 115,
+      "offset": 936,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_module_running",
+      "source_number": 117,
+      "source_offset": 952,
+      "number": 116,
+      "offset": 944,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "monotonic_clock",
+      "source_number": 118,
+      "source_offset": 960,
+      "number": 117,
+      "offset": 952,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "boot_ready",
+      "source_number": 119,
+      "source_offset": 968,
+      "number": 118,
+      "offset": 960,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_snapshot_begin",
+      "source_number": 120,
+      "source_offset": 976,
+      "number": 119,
+      "offset": 968,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_snapshot_page",
+      "source_number": 121,
+      "source_offset": 984,
+      "number": 120,
+      "offset": 976,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "registry_batch_mutate",
+      "source_number": 122,
+      "source_offset": 992,
+      "number": 121,
+      "offset": 984,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_write_at",
+      "source_number": 123,
+      "source_offset": 1000,
+      "number": 122,
+      "offset": 992,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_info",
+      "source_number": 124,
+      "source_offset": 1008,
+      "number": 123,
+      "offset": 1000,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "io_file_lock",
+      "source_number": 125,
+      "source_offset": 1016,
+      "number": 124,
+      "offset": 1008,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_inventory",
+      "source_number": 126,
+      "source_offset": 1024,
+      "number": 125,
+      "offset": 1016,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_device",
+      "source_number": 127,
+      "source_offset": 1032,
+      "number": 126,
+      "offset": 1024,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_partition",
+      "source_number": 128,
+      "source_offset": 1040,
+      "number": 127,
+      "offset": 1032,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_volume",
+      "source_number": 129,
+      "source_offset": 1048,
+      "number": 128,
+      "offset": 1040,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_claim_begin",
+      "source_number": 130,
+      "source_offset": 1056,
+      "number": 129,
+      "offset": 1048,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_claim_end",
+      "source_number": 131,
+      "source_offset": 1064,
+      "number": 130,
+      "offset": 1056,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_read",
+      "source_number": 132,
+      "source_offset": 1072,
+      "number": 131,
+      "offset": 1064,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_claim_read",
+      "source_number": 133,
+      "source_offset": 1080,
+      "number": 132,
+      "offset": 1072,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_claim_write",
+      "source_number": 134,
+      "source_offset": 1088,
+      "number": 133,
+      "offset": 1080,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_claim_flush",
+      "source_number": 135,
+      "source_offset": 1096,
+      "number": 134,
+      "offset": 1088,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_rescan",
+      "source_number": 136,
+      "source_offset": 1104,
+      "number": 135,
+      "offset": 1096,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_mount",
+      "source_number": 137,
+      "source_offset": 1112,
+      "number": 136,
+      "offset": 1104,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_unmount",
+      "source_number": 138,
+      "source_offset": 1120,
+      "number": 137,
+      "offset": 1112,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_use_begin",
+      "source_number": 139,
+      "source_offset": 1128,
+      "number": 138,
+      "offset": 1120,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "storage_use_end",
+      "source_number": 140,
+      "source_offset": 1136,
+      "number": 139,
+      "offset": 1128,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "directory_change_begin",
+      "source_number": 141,
+      "source_offset": 1144,
+      "number": 140,
+      "offset": 1136,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "directory_change_poll",
+      "source_number": 142,
+      "source_offset": 1152,
+      "number": 141,
+      "offset": 1144,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_copy_buffered",
+      "source_number": 143,
+      "source_offset": 1160,
+      "number": 142,
+      "offset": 1152,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "notification_create",
+      "source_number": 144,
+      "source_offset": 1168,
+      "number": 143,
+      "offset": 1160,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "notification_query",
+      "source_number": 145,
+      "source_offset": 1176,
+      "number": 144,
+      "offset": 1168,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "notification_notify",
+      "source_number": 146,
+      "source_offset": 1184,
+      "number": 145,
+      "offset": 1176,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "notification_wait",
+      "source_number": 147,
+      "source_offset": 1192,
+      "number": 146,
+      "offset": 1184,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "notification_close",
+      "source_number": 148,
+      "source_offset": 1200,
+      "number": 147,
+      "offset": 1192,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_local_get",
+      "source_number": 149,
+      "source_offset": 1208,
+      "number": 148,
+      "offset": 1200,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_local_publish",
+      "source_number": 150,
+      "source_offset": 1216,
+      "number": 149,
+      "offset": 1208,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_current_handle",
+      "source_number": 151,
+      "source_offset": 1224,
+      "number": 150,
+      "offset": 1216,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "cpu_capacity",
+      "source_number": 152,
+      "source_offset": 1232,
+      "number": 151,
+      "offset": 1224,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_exit",
+      "source_number": 153,
+      "source_offset": 1240,
+      "number": 152,
+      "offset": 1232,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "platform_input_snapshot",
+      "source_number": 154,
+      "source_offset": 1248,
+      "number": 153,
+      "offset": 1240,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "directory_next",
+      "source_number": 155,
+      "source_offset": 1256,
+      "number": 154,
+      "offset": 1248,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_placement_get",
+      "source_number": 156,
+      "source_offset": 1264,
+      "number": 155,
+      "offset": 1256,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "thread_placement_set",
+      "source_number": 157,
+      "source_offset": 1272,
+      "number": 156,
+      "offset": 1264,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "system_power_transition",
+      "source_number": 158,
+      "source_offset": 1280,
+      "number": 157,
+      "offset": 1272,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "entropy_source_info",
+      "source_number": 159,
+      "source_offset": 1288,
+      "number": 158,
+      "offset": 1280,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "entropy_fill",
+      "source_number": 160,
+      "source_offset": 1296,
+      "number": 159,
+      "offset": 1288,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_lifecycle_begin",
+      "source_number": 161,
+      "source_offset": 1304,
+      "number": 160,
+      "offset": 1296,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_lifecycle_programs",
+      "source_number": 162,
+      "source_offset": 1312,
+      "number": 161,
+      "offset": 1304,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "drive_info_geometry",
+      "source_number": 163,
+      "source_offset": 1320,
+      "number": 162,
+      "offset": 1312,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "directory_batch",
+      "source_number": 164,
+      "source_offset": 1328,
+      "number": 163,
+      "offset": 1320,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_observation_retain",
+      "source_number": 165,
+      "source_offset": 1336,
+      "number": 164,
+      "offset": 1328,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_observation_wait",
+      "source_number": 166,
+      "source_offset": 1344,
+      "number": 165,
+      "offset": 1336,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_observation_read",
+      "source_number": 167,
+      "source_offset": 1352,
+      "number": 166,
+      "offset": 1344,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_observation_release",
+      "source_number": 168,
+      "source_offset": 1360,
+      "number": 167,
+      "offset": 1352,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_name_limits",
+      "source_number": 169,
+      "source_offset": 1368,
+      "number": 168,
+      "offset": 1360,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_bound_detail",
+      "source_number": 170,
+      "source_offset": 1376,
+      "number": 169,
+      "offset": 1368,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_stop_bound",
+      "source_number": 171,
+      "source_offset": 1384,
+      "number": 170,
+      "offset": 1376,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_inventory_page",
+      "source_number": 172,
+      "source_offset": 1392,
+      "number": 171,
+      "offset": 1384,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "service_control_bound",
+      "source_number": 173,
+      "source_offset": 1400,
+      "number": 172,
+      "offset": 1392,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "system_update_target_supported",
+      "source_number": 174,
+      "source_offset": 1408,
+      "number": 173,
+      "offset": 1400,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "file_metadata2",
+      "source_number": 175,
+      "source_offset": 1416,
+      "number": 174,
+      "offset": 1408,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "directory_metadata_batch2",
+      "source_number": 176,
+      "source_offset": 1424,
+      "number": 175,
+      "offset": 1416,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_create",
+      "source_number": 177,
+      "source_offset": 1432,
+      "number": 176,
+      "offset": 1424,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_enroll",
+      "source_number": 178,
+      "source_offset": 1440,
+      "number": 177,
+      "offset": 1432,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_rearm",
+      "source_number": 179,
+      "source_offset": 1448,
+      "number": 178,
+      "offset": 1440,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_remove",
+      "source_number": 180,
+      "source_offset": 1456,
+      "number": 179,
+      "offset": 1448,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_wait",
+      "source_number": 181,
+      "source_offset": 1464,
+      "number": 180,
+      "offset": 1456,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_close",
+      "source_number": 182,
+      "source_offset": 1472,
+      "number": 181,
+      "offset": 1464,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "waitset_source_prepare",
+      "source_number": 183,
+      "source_offset": 1480,
+      "number": 182,
+      "offset": 1472,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_create",
+      "source_number": 184,
+      "source_offset": 1488,
+      "number": 183,
+      "offset": 1480,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_dup",
+      "source_number": 185,
+      "source_offset": 1496,
+      "number": 184,
+      "offset": 1488,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_read",
+      "source_number": 186,
+      "source_offset": 1504,
+      "number": 185,
+      "offset": 1496,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_write",
+      "source_number": 187,
+      "source_offset": 1512,
+      "number": 186,
+      "offset": 1504,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_cancel",
+      "source_number": 188,
+      "source_offset": 1520,
+      "number": 187,
+      "offset": 1512,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_close",
+      "source_number": 189,
+      "source_offset": 1528,
+      "number": 188,
+      "offset": 1520,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "byte_pipe_info",
+      "source_number": 190,
+      "source_offset": 1536,
+      "number": 189,
+      "offset": 1528,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_launch_io",
+      "source_number": 191,
+      "source_offset": 1544,
+      "number": 190,
+      "offset": 1536,
+      "removed": false
+    },
+    {
+      "group": "R4SYS",
+      "name": "program_stdio",
+      "source_number": 192,
+      "source_offset": 1552,
+      "number": 191,
+      "offset": 1544,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "read_key",
+      "source_number": 0,
+      "source_offset": 16,
+      "number": 0,
+      "offset": 16,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "mouse_state",
+      "source_number": 1,
+      "source_offset": 24,
+      "number": 1,
+      "offset": 24,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "mouse_show",
+      "source_number": 2,
+      "source_offset": 32,
+      "number": 2,
+      "offset": 32,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "mouse_hide",
+      "source_number": 3,
+      "source_offset": 40,
+      "number": 3,
+      "offset": 40,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "keyboard_layout_current",
+      "source_number": 4,
+      "source_offset": 48,
+      "number": 4,
+      "offset": 48,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "keyboard_layout_at",
+      "source_number": 5,
+      "source_offset": 56,
+      "number": 5,
+      "offset": 56,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "keyboard_layout_set",
+      "source_number": 6,
+      "source_offset": 64,
+      "number": 6,
+      "offset": 64,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_set_window",
+      "source_number": 7,
+      "source_offset": 72,
+      "number": 7,
+      "offset": 72,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_set_console_host",
+      "source_number": 8,
+      "source_offset": 80,
+      "number": 8,
+      "offset": 80,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_request_host_launch",
+      "source_number": 9,
+      "source_offset": 88,
+      "number": 9,
+      "offset": 88,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_take_host_launch",
+      "source_number": 10,
+      "source_offset": 96,
+      "number": 10,
+      "offset": 96,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_window_id",
+      "source_number": 11,
+      "source_offset": 104,
+      "number": 11,
+      "offset": 104,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_window_info",
+      "source_number": 12,
+      "source_offset": 112,
+      "number": 12,
+      "offset": 112,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_set_window_info",
+      "source_number": 13,
+      "source_offset": 120,
+      "number": 13,
+      "offset": 120,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_poll_event",
+      "source_number": 14,
+      "source_offset": 128,
+      "number": 14,
+      "offset": 128,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_push_event",
+      "source_number": 15,
+      "source_offset": 136,
+      "number": 15,
+      "offset": 136,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_set_text",
+      "source_number": 16,
+      "source_offset": 144,
+      "number": 16,
+      "offset": 144,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_text",
+      "source_number": 17,
+      "source_offset": 152,
+      "number": 17,
+      "offset": 152,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_revision",
+      "source_number": 18,
+      "source_offset": 160,
+      "number": 18,
+      "offset": 160,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_command",
+      "source_number": 19,
+      "source_offset": 168,
+      "number": 19,
+      "offset": 168,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_set_title",
+      "source_number": 20,
+      "source_offset": 176,
+      "number": 20,
+      "offset": 176,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_title",
+      "source_number": 21,
+      "source_offset": 184,
+      "number": 21,
+      "offset": 184,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_set_min_size",
+      "source_number": 22,
+      "source_offset": 192,
+      "number": 22,
+      "offset": 192,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_min_size",
+      "source_number": 23,
+      "source_offset": 200,
+      "number": 23,
+      "offset": 200,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_output",
+      "source_number": 24,
+      "source_offset": 208,
+      "number": 24,
+      "offset": 208,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_revision",
+      "source_number": 25,
+      "source_offset": 216,
+      "number": 25,
+      "offset": 216,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_state",
+      "source_number": 26,
+      "source_offset": 224,
+      "number": 26,
+      "offset": 224,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_set_metrics",
+      "source_number": 27,
+      "source_offset": 232,
+      "number": 27,
+      "offset": 232,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_push_key",
+      "source_number": 28,
+      "source_offset": 240,
+      "number": 28,
+      "offset": 240,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_write",
+      "source_number": 29,
+      "source_offset": 248,
+      "number": 29,
+      "offset": 248,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_read",
+      "source_number": 30,
+      "source_offset": 256,
+      "number": 30,
+      "offset": 256,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "clipboard_write",
+      "source_number": 31,
+      "source_offset": 264,
+      "number": 31,
+      "offset": 264,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "clipboard_read",
+      "source_number": 32,
+      "source_offset": 272,
+      "number": 32,
+      "offset": 272,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "clipboard_revision",
+      "source_number": 33,
+      "source_offset": 280,
+      "number": 33,
+      "offset": 280,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "clipboard_info",
+      "source_number": 34,
+      "source_offset": 288,
+      "number": 34,
+      "offset": 288,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "clipboard_clear",
+      "source_number": 35,
+      "source_offset": 296,
+      "number": 35,
+      "offset": 296,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "read_key_codepoint",
+      "source_number": 36,
+      "source_offset": 304,
+      "number": 36,
+      "offset": 304,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "reserved1",
+      "source_number": 37,
+      "source_offset": 312,
+      "number": 37,
+      "offset": 312,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_info",
+      "source_number": 38,
+      "source_offset": 320,
+      "number": 38,
+      "offset": 320,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_read",
+      "source_number": 39,
+      "source_offset": 328,
+      "number": 39,
+      "offset": 328,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_wait",
+      "source_number": 40,
+      "source_offset": 336,
+      "number": 40,
+      "offset": 336,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_publish",
+      "source_number": 41,
+      "source_offset": 344,
+      "number": 41,
+      "offset": 344,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_input_push",
+      "source_number": 42,
+      "source_offset": 352,
+      "number": 42,
+      "offset": 352,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_input_poll",
+      "source_number": 43,
+      "source_offset": 360,
+      "number": 43,
+      "offset": 360,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_input_status",
+      "source_number": 44,
+      "source_offset": 368,
+      "number": 44,
+      "offset": 368,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "desktop_activity_wait",
+      "source_number": 45,
+      "source_offset": 376,
+      "number": 45,
+      "offset": 376,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_map",
+      "source_number": 46,
+      "source_offset": 384,
+      "number": 46,
+      "offset": 384,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_current_console_host",
+      "source_number": 47,
+      "source_offset": 392,
+      "number": 47,
+      "offset": 392,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_request_desktop",
+      "source_number": 48,
+      "source_offset": 400,
+      "number": 48,
+      "offset": 400,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_spawn_with_console_host",
+      "source_number": 49,
+      "source_offset": 408,
+      "number": 49,
+      "offset": 408,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_spawn_with_console_host_handle",
+      "source_number": 50,
+      "source_offset": 416,
+      "number": 50,
+      "offset": 416,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "program_set_window_handle",
+      "source_number": 51,
+      "source_offset": 424,
+      "number": 51,
+      "offset": 424,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_push_input",
+      "source_number": 52,
+      "source_offset": 432,
+      "number": 52,
+      "offset": 432,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_acquire",
+      "source_number": 53,
+      "source_offset": 440,
+      "number": 53,
+      "offset": 440,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_release",
+      "source_number": 54,
+      "source_offset": 448,
+      "number": 54,
+      "offset": 448,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_consumers",
+      "source_number": 55,
+      "source_offset": 456,
+      "number": 55,
+      "offset": 456,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_publish_regions",
+      "source_number": 56,
+      "source_offset": 464,
+      "number": 56,
+      "offset": 464,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_input_wait",
+      "source_number": 57,
+      "source_offset": 472,
+      "number": 57,
+      "offset": 472,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "physical_key_poll",
+      "source_number": 58,
+      "source_offset": 480,
+      "number": 58,
+      "offset": 480,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "mouse_motion",
+      "source_number": 59,
+      "source_offset": 488,
+      "number": 59,
+      "offset": 488,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_snapshot_acquire",
+      "source_number": 60,
+      "source_offset": 496,
+      "number": 60,
+      "offset": 496,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_snapshot_release",
+      "source_number": 61,
+      "source_offset": 504,
+      "number": 61,
+      "offset": 504,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_source_reset",
+      "source_number": 62,
+      "source_offset": 512,
+      "number": 62,
+      "offset": 512,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "remote_frame_capture_stats",
+      "source_number": 63,
+      "source_offset": 520,
+      "number": 63,
+      "offset": 520,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "desktop_activity_notify",
+      "source_number": 64,
+      "source_offset": 528,
+      "number": 64,
+      "offset": 528,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_read_events",
+      "source_number": 65,
+      "source_offset": 536,
+      "number": 65,
+      "offset": 536,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_push_events",
+      "source_number": 66,
+      "source_offset": 544,
+      "number": 66,
+      "offset": 544,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_text_info",
+      "source_number": 67,
+      "source_offset": 552,
+      "number": 67,
+      "offset": 552,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "console_set_encoding",
+      "source_number": 68,
+      "source_offset": 560,
+      "number": 68,
+      "offset": 560,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_activity_wait",
+      "source_number": 69,
+      "source_offset": 568,
+      "number": 69,
+      "offset": 568,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_activity_notify",
+      "source_number": 70,
+      "source_offset": 576,
+      "number": 70,
+      "offset": 576,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_pointer_capture_info",
+      "source_number": 71,
+      "source_offset": 584,
+      "number": 71,
+      "offset": 584,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_pointer_capture_acquire",
+      "source_number": 72,
+      "source_offset": 592,
+      "number": 72,
+      "offset": 592,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_pointer_capture_release",
+      "source_number": 73,
+      "source_offset": 600,
+      "number": 73,
+      "offset": 600,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_pointer_capture_host",
+      "source_number": 74,
+      "source_offset": 608,
+      "number": 74,
+      "offset": 608,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_host_input",
+      "source_number": 75,
+      "source_offset": 616,
+      "number": 75,
+      "offset": 616,
+      "removed": false
+    },
+    {
+      "group": "R4DESK",
+      "name": "gui_window_appearance",
+      "source_number": 76,
+      "source_offset": 624,
+      "number": 76,
+      "offset": 624,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "screen_width",
+      "source_number": 0,
+      "source_offset": 16,
+      "number": 0,
+      "offset": 16,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "screen_height",
+      "source_number": 1,
+      "source_offset": 24,
+      "number": 1,
+      "offset": 24,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "clear",
+      "source_number": 2,
+      "source_offset": 32,
+      "number": 2,
+      "offset": 32,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "rect",
+      "source_number": 3,
+      "source_offset": 40,
+      "number": 3,
+      "offset": 40,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "text",
+      "source_number": 4,
+      "source_offset": 48,
+      "number": 4,
+      "offset": 48,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_revision",
+      "source_number": 5,
+      "source_offset": 56,
+      "number": 5,
+      "offset": 56,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_begin_frame",
+      "source_number": 6,
+      "source_offset": 64,
+      "number": 6,
+      "offset": 64,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_begin_frame_rect",
+      "source_number": 7,
+      "source_offset": 72,
+      "number": 7,
+      "offset": 72,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_present",
+      "source_number": 8,
+      "source_offset": 80,
+      "number": 8,
+      "offset": 80,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_blit_xrgb32",
+      "source_number": 9,
+      "source_offset": 88,
+      "number": 9,
+      "offset": 88,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_clear",
+      "source_number": 10,
+      "source_offset": 96,
+      "number": 10,
+      "offset": 96,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_rect",
+      "source_number": 11,
+      "source_offset": 104,
+      "number": 11,
+      "offset": 104,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_draw_text",
+      "source_number": 12,
+      "source_offset": 112,
+      "number": 12,
+      "offset": 112,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_draw_text_ex",
+      "source_number": 13,
+      "source_offset": 120,
+      "number": 13,
+      "offset": 120,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_blit",
+      "source_number": 14,
+      "source_offset": 128,
+      "number": 14,
+      "offset": 128,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_raster_read",
+      "source_number": 15,
+      "source_offset": 136,
+      "number": 15,
+      "offset": 136,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_present",
+      "source_number": 16,
+      "source_offset": 144,
+      "number": 16,
+      "offset": 144,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_count",
+      "source_number": 17,
+      "source_offset": 152,
+      "number": 17,
+      "offset": 152,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_info",
+      "source_number": 18,
+      "source_offset": 160,
+      "number": 18,
+      "offset": 160,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_measure",
+      "source_number": 19,
+      "source_offset": 168,
+      "number": 19,
+      "offset": 168,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_set_font",
+      "source_number": 20,
+      "source_offset": 176,
+      "number": 20,
+      "offset": 176,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_font",
+      "source_number": 21,
+      "source_offset": 184,
+      "number": 21,
+      "offset": 184,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "text_font",
+      "source_number": 22,
+      "source_offset": 192,
+      "number": 22,
+      "offset": 192,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_reload",
+      "source_number": 23,
+      "source_offset": 200,
+      "number": 23,
+      "offset": 200,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_glyph_row",
+      "source_number": 24,
+      "source_offset": 208,
+      "number": 24,
+      "offset": 208,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_blend_alpha8",
+      "source_number": 25,
+      "source_offset": 216,
+      "number": 25,
+      "offset": 216,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_begin",
+      "source_number": 26,
+      "source_offset": 224,
+      "number": 26,
+      "offset": 224,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_append",
+      "source_number": 27,
+      "source_offset": 232,
+      "number": 27,
+      "offset": 232,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_commit",
+      "source_number": 28,
+      "source_offset": 240,
+      "number": 28,
+      "offset": 240,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_cancel",
+      "source_number": 29,
+      "source_offset": 248,
+      "number": 29,
+      "offset": 248,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_info",
+      "source_number": 30,
+      "source_offset": 256,
+      "number": 30,
+      "offset": 256,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_read",
+      "source_number": 31,
+      "source_offset": 264,
+      "number": 31,
+      "offset": 264,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_blit_xrgb32_stride",
+      "source_number": 32,
+      "source_offset": 272,
+      "number": 32,
+      "offset": 272,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_present_regions",
+      "source_number": 33,
+      "source_offset": 280,
+      "number": 33,
+      "offset": 280,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_present_capabilities",
+      "source_number": 34,
+      "source_offset": 288,
+      "number": 34,
+      "offset": 288,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_present_completion",
+      "source_number": 35,
+      "source_offset": 296,
+      "number": 35,
+      "offset": 296,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_begin_damage",
+      "source_number": 36,
+      "source_offset": 304,
+      "number": 36,
+      "offset": 304,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_generation_info",
+      "source_number": 37,
+      "source_offset": 312,
+      "number": 37,
+      "offset": 312,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_generation_read",
+      "source_number": 38,
+      "source_offset": 320,
+      "number": 38,
+      "offset": 320,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_glyph_bitmap",
+      "source_number": 39,
+      "source_offset": 328,
+      "number": 39,
+      "offset": 328,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_revision",
+      "source_number": 40,
+      "source_offset": 336,
+      "number": 40,
+      "offset": 336,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_begin_replace",
+      "source_number": 41,
+      "source_offset": 344,
+      "number": 41,
+      "offset": 344,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_frame_stream_info",
+      "source_number": 42,
+      "source_offset": 352,
+      "number": 42,
+      "offset": 352,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_shared_raster_create",
+      "source_number": 43,
+      "source_offset": 360,
+      "number": 43,
+      "offset": 360,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_shared_raster_destroy",
+      "source_number": 44,
+      "source_offset": 368,
+      "number": 44,
+      "offset": 368,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_shared_raster_map_write",
+      "source_number": 45,
+      "source_offset": 376,
+      "number": 45,
+      "offset": 376,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_shared_raster_publish",
+      "source_number": 46,
+      "source_offset": 384,
+      "number": 46,
+      "offset": 384,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_shared_raster_acquire",
+      "source_number": 47,
+      "source_offset": 392,
+      "number": 47,
+      "offset": 392,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gui_shared_raster_release",
+      "source_number": 48,
+      "source_offset": 400,
+      "number": 48,
+      "offset": 400,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_create",
+      "source_number": 49,
+      "source_offset": 408,
+      "number": 49,
+      "offset": 408,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_describe",
+      "source_number": 50,
+      "source_offset": 416,
+      "number": 50,
+      "offset": 416,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_import",
+      "source_number": 51,
+      "source_offset": 424,
+      "number": 51,
+      "offset": 424,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_release",
+      "source_number": 52,
+      "source_offset": 432,
+      "number": 52,
+      "offset": 432,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_map",
+      "source_number": 53,
+      "source_offset": 440,
+      "number": 53,
+      "offset": 440,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_unmap",
+      "source_number": 54,
+      "source_offset": 448,
+      "number": 54,
+      "offset": 448,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_export_raster",
+      "source_number": 55,
+      "source_offset": 456,
+      "number": 55,
+      "offset": 456,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_stats",
+      "source_number": 56,
+      "source_offset": 464,
+      "number": 56,
+      "offset": 464,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_open",
+      "source_number": 57,
+      "source_offset": 472,
+      "number": 57,
+      "offset": 472,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_close",
+      "source_number": 58,
+      "source_offset": 480,
+      "number": 58,
+      "offset": 480,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit",
+      "source_number": 59,
+      "source_offset": 488,
+      "number": 59,
+      "offset": 488,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_fence_query",
+      "source_number": 60,
+      "source_offset": 496,
+      "number": 60,
+      "offset": 496,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_fence_wait",
+      "source_number": 61,
+      "source_offset": 504,
+      "number": 61,
+      "offset": 504,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_fence_cancel",
+      "source_number": 62,
+      "source_offset": 512,
+      "number": 62,
+      "offset": 512,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_fence_release",
+      "source_number": 63,
+      "source_offset": 520,
+      "number": 63,
+      "offset": 520,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_backend",
+      "source_number": 64,
+      "source_offset": 528,
+      "number": 64,
+      "offset": 528,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_revision",
+      "source_number": 65,
+      "source_offset": 536,
+      "number": 65,
+      "offset": 536,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_info",
+      "source_number": 66,
+      "source_offset": 544,
+      "number": 66,
+      "offset": 544,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_mode",
+      "source_number": 67,
+      "source_offset": 552,
+      "number": 67,
+      "offset": 552,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_edid",
+      "source_number": 68,
+      "source_offset": 560,
+      "number": 68,
+      "offset": 560,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_test",
+      "source_number": 69,
+      "source_offset": 568,
+      "number": 69,
+      "offset": 568,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_commit",
+      "source_number": 70,
+      "source_offset": 576,
+      "number": 70,
+      "offset": 576,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_submit",
+      "source_number": 71,
+      "source_offset": 584,
+      "number": 71,
+      "offset": 584,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_status",
+      "source_number": 72,
+      "source_offset": 592,
+      "number": 72,
+      "offset": 592,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_resolve",
+      "source_number": 73,
+      "source_offset": 600,
+      "number": 73,
+      "offset": 600,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_presentation_stats",
+      "source_number": 74,
+      "source_offset": 608,
+      "number": 74,
+      "offset": 608,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_cursor_info",
+      "source_number": 75,
+      "source_offset": 616,
+      "number": 75,
+      "offset": 616,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_cursor_submit",
+      "source_number": 76,
+      "source_offset": 624,
+      "number": 76,
+      "offset": 624,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_cursor_status",
+      "source_number": 77,
+      "source_offset": 632,
+      "number": 77,
+      "offset": 632,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_backend_info",
+      "source_number": 78,
+      "source_offset": 640,
+      "number": 78,
+      "offset": 640,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_native_start",
+      "source_number": 79,
+      "source_offset": 648,
+      "number": 79,
+      "offset": 648,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_native_query",
+      "source_number": 80,
+      "source_offset": 656,
+      "number": 80,
+      "offset": 656,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_native_receive",
+      "source_number": 81,
+      "source_offset": 664,
+      "number": 81,
+      "offset": 664,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_native_close",
+      "source_number": 82,
+      "source_offset": 672,
+      "number": 82,
+      "offset": 672,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_native_wait",
+      "source_number": 83,
+      "source_offset": 680,
+      "number": 83,
+      "offset": 680,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit_render_list",
+      "source_number": 84,
+      "source_offset": 688,
+      "number": 84,
+      "offset": 688,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_presentation_info",
+      "source_number": 85,
+      "source_offset": 696,
+      "number": 85,
+      "offset": 696,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_presentation_feedback",
+      "source_number": 86,
+      "source_offset": 704,
+      "number": 86,
+      "offset": 704,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_output_target",
+      "source_number": 87,
+      "source_offset": 712,
+      "number": 87,
+      "offset": 712,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit_output",
+      "source_number": 88,
+      "source_offset": 720,
+      "number": 88,
+      "offset": 720,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_output_presentation_info",
+      "source_number": 89,
+      "source_offset": 728,
+      "number": 89,
+      "offset": 728,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "display_output_presentation_feedback",
+      "source_number": 90,
+      "source_offset": 736,
+      "number": 90,
+      "offset": 736,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit_render_grid_list",
+      "source_number": 91,
+      "source_offset": 744,
+      "number": 91,
+      "offset": 744,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_color",
+      "source_number": 92,
+      "source_offset": 752,
+      "number": 92,
+      "offset": 752,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit_render_color_list",
+      "source_number": 93,
+      "source_offset": 760,
+      "number": 93,
+      "offset": 760,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_test_color",
+      "source_number": 94,
+      "source_offset": 768,
+      "number": 94,
+      "offset": 768,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_atomic_submit_color",
+      "source_number": 95,
+      "source_offset": 776,
+      "number": 95,
+      "offset": 776,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_refresh",
+      "source_number": 96,
+      "source_offset": 784,
+      "number": 96,
+      "offset": 784,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_refresh_request",
+      "source_number": 97,
+      "source_offset": 792,
+      "number": 97,
+      "offset": 792,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_memory_budget",
+      "source_number": 98,
+      "source_offset": 800,
+      "number": 98,
+      "offset": 800,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_telemetry",
+      "source_number": 99,
+      "source_offset": 808,
+      "number": 99,
+      "offset": 808,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_power",
+      "source_number": 100,
+      "source_offset": 816,
+      "number": 100,
+      "offset": 816,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_power_request",
+      "source_number": 101,
+      "source_offset": 824,
+      "number": 101,
+      "offset": 824,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_virtual_start",
+      "source_number": 102,
+      "source_offset": 832,
+      "number": 102,
+      "offset": 832,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_virtual_query",
+      "source_number": 103,
+      "source_offset": 840,
+      "number": 103,
+      "offset": 840,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_virtual_close",
+      "source_number": 104,
+      "source_offset": 848,
+      "number": 104,
+      "offset": 848,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_virtual_wait",
+      "source_number": 105,
+      "source_offset": 856,
+      "number": 105,
+      "offset": 856,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_buffer_map_persistent",
+      "source_number": 106,
+      "source_offset": 864,
+      "number": 106,
+      "offset": 864,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_backend_properties",
+      "source_number": 107,
+      "source_offset": 872,
+      "number": 107,
+      "offset": 872,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit_native",
+      "source_number": 108,
+      "source_offset": 880,
+      "number": 108,
+      "offset": 880,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_queue_submit_render_color_grid_list",
+      "source_number": 109,
+      "source_offset": 888,
+      "number": 109,
+      "offset": 888,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_output_brightness",
+      "source_number": 110,
+      "source_offset": 896,
+      "number": 110,
+      "offset": 896,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "gfx_brightness_request",
+      "source_number": 111,
+      "source_offset": 904,
+      "number": 111,
+      "offset": 904,
+      "removed": false
+    },
+    {
+      "group": "R4DRAW",
+      "name": "font_prefix_metrics2",
+      "source_number": 112,
+      "source_offset": 912,
+      "number": 112,
+      "offset": 912,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_connect",
+      "source_number": 0,
+      "source_offset": 16,
+      "number": 0,
+      "offset": 16,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_write",
+      "source_number": 1,
+      "source_offset": 24,
+      "number": 1,
+      "offset": 24,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_read",
+      "source_number": 2,
+      "source_offset": 32,
+      "number": 2,
+      "offset": 32,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_close",
+      "source_number": 3,
+      "source_offset": 40,
+      "number": 3,
+      "offset": 40,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_summary",
+      "source_number": 4,
+      "source_offset": 48,
+      "number": 4,
+      "offset": 48,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_connection",
+      "source_number": 5,
+      "source_offset": 56,
+      "number": 5,
+      "offset": 56,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_echo_listen_once",
+      "source_number": 6,
+      "source_offset": 64,
+      "number": 6,
+      "offset": 64,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_accept_read_once",
+      "source_number": 7,
+      "source_offset": 72,
+      "number": 7,
+      "offset": 72,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_ipv4_send",
+      "source_number": 8,
+      "source_offset": 80,
+      "number": 8,
+      "offset": 80,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_ipv4_recv",
+      "source_number": 9,
+      "source_offset": 88,
+      "number": 9,
+      "offset": 88,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_config_get",
+      "source_number": 10,
+      "source_offset": 96,
+      "number": 10,
+      "offset": 96,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_config_set",
+      "source_number": 11,
+      "source_offset": 104,
+      "number": 11,
+      "offset": 104,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_dns_resolve",
+      "source_number": 12,
+      "source_offset": 112,
+      "number": 12,
+      "offset": 112,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_dns_resolve_server",
+      "source_number": 13,
+      "source_offset": 120,
+      "number": 13,
+      "offset": 120,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_dhcp_acquire",
+      "source_number": 14,
+      "source_offset": 128,
+      "number": 14,
+      "offset": 128,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_dhcp_renew",
+      "source_number": 15,
+      "source_offset": 136,
+      "number": 15,
+      "offset": 136,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_dhcp_release",
+      "source_number": 16,
+      "source_offset": 144,
+      "number": 16,
+      "offset": 144,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_dhcp_status",
+      "source_number": 17,
+      "source_offset": 152,
+      "number": 17,
+      "offset": 152,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_detail_get",
+      "source_number": 18,
+      "source_offset": 160,
+      "number": 18,
+      "offset": 160,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_diag_run",
+      "source_number": 19,
+      "source_offset": 168,
+      "number": 19,
+      "offset": 168,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_open",
+      "source_number": 20,
+      "source_offset": 176,
+      "number": 20,
+      "offset": 176,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_send",
+      "source_number": 21,
+      "source_offset": 184,
+      "number": 21,
+      "offset": 184,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_recv",
+      "source_number": 22,
+      "source_offset": 192,
+      "number": 22,
+      "offset": 192,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_poll",
+      "source_number": 23,
+      "source_offset": 200,
+      "number": 23,
+      "offset": 200,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_close",
+      "source_number": 24,
+      "source_offset": 208,
+      "number": 24,
+      "offset": 208,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_summary",
+      "source_number": 25,
+      "source_offset": 216,
+      "number": 25,
+      "offset": 216,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_channel",
+      "source_number": 26,
+      "source_offset": 224,
+      "number": 26,
+      "offset": 224,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "serial_link_status",
+      "source_number": 27,
+      "source_offset": 232,
+      "number": 27,
+      "offset": 232,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "serial_link_poll",
+      "source_number": 28,
+      "source_offset": 240,
+      "number": 28,
+      "offset": 240,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "serial_link_send_message",
+      "source_number": 29,
+      "source_offset": 248,
+      "number": 29,
+      "offset": 248,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "serial_link_host_test",
+      "source_number": 30,
+      "source_offset": 256,
+      "number": 30,
+      "offset": 256,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "serial_link_inbox",
+      "source_number": 31,
+      "source_offset": 264,
+      "number": 31,
+      "offset": 264,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "net_service_request",
+      "source_number": 32,
+      "source_offset": 272,
+      "number": 32,
+      "offset": 272,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "ipc_performance",
+      "source_number": 33,
+      "source_offset": 280,
+      "number": 33,
+      "offset": 280,
+      "removed": false
+    },
+    {
+      "group": "R4NET",
+      "name": "tcp_performance",
+      "source_number": 34,
+      "source_offset": 288,
+      "number": 34,
+      "offset": 288,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_open_stream",
+      "source_number": 0,
+      "source_offset": 16,
+      "number": 0,
+      "offset": 16,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_write",
+      "source_number": 1,
+      "source_offset": 24,
+      "number": 1,
+      "offset": 24,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_close",
+      "source_number": 2,
+      "source_offset": 32,
+      "number": 2,
+      "offset": 32,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_set_volume",
+      "source_number": 3,
+      "source_offset": 40,
+      "number": 3,
+      "offset": 40,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_acquire",
+      "source_number": 4,
+      "source_offset": 48,
+      "number": 4,
+      "offset": 48,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_write_register",
+      "source_number": 5,
+      "source_offset": 56,
+      "number": 5,
+      "offset": 56,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_release",
+      "source_number": 6,
+      "source_offset": 64,
+      "number": 6,
+      "offset": 64,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_load_data",
+      "source_number": 7,
+      "source_offset": 72,
+      "number": 7,
+      "offset": 72,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_init",
+      "source_number": 8,
+      "source_offset": 80,
+      "number": 8,
+      "offset": 80,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_play_frame",
+      "source_number": 9,
+      "source_offset": 88,
+      "number": 9,
+      "offset": 88,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_stop",
+      "source_number": 10,
+      "source_offset": 96,
+      "number": 10,
+      "offset": 96,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "sid_model_name",
+      "source_number": 11,
+      "source_offset": 104,
+      "number": 11,
+      "offset": 104,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "midi_open_synth",
+      "source_number": 12,
+      "source_offset": 112,
+      "number": 12,
+      "offset": 112,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "midi_send",
+      "source_number": 13,
+      "source_offset": 120,
+      "number": 13,
+      "offset": 120,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "midi_close",
+      "source_number": 14,
+      "source_offset": 128,
+      "number": 14,
+      "offset": 128,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "opl3_write_register",
+      "source_number": 15,
+      "source_offset": 136,
+      "number": 15,
+      "offset": 136,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "opl3_reset",
+      "source_number": 16,
+      "source_offset": 144,
+      "number": 16,
+      "offset": 144,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "opl3_render_block",
+      "source_number": 17,
+      "source_offset": 152,
+      "number": 17,
+      "offset": 152,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "opl3_stop",
+      "source_number": 18,
+      "source_offset": 160,
+      "number": 18,
+      "offset": 160,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "reserved0",
+      "source_number": 19,
+      "source_offset": 168,
+      "number": 19,
+      "offset": 168,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "reserved1",
+      "source_number": 20,
+      "source_offset": 176,
+      "number": 20,
+      "offset": 176,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_output_info",
+      "source_number": 21,
+      "source_offset": 184,
+      "number": 21,
+      "offset": 184,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_select_output",
+      "source_number": 22,
+      "source_offset": 192,
+      "number": 22,
+      "offset": 192,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_stream_progress",
+      "source_number": 23,
+      "source_offset": 200,
+      "number": 23,
+      "offset": 200,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_set_stream_expectation",
+      "source_number": 24,
+      "source_offset": 208,
+      "number": 24,
+      "offset": 208,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_close_stream_progress",
+      "source_number": 25,
+      "source_offset": 216,
+      "number": 25,
+      "offset": 216,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_output_catalog",
+      "source_number": 26,
+      "source_offset": 224,
+      "number": 26,
+      "offset": 224,
+      "removed": false
+    },
+    {
+      "group": "R4AUDIO",
+      "name": "audio_capture_io",
+      "source_number": 27,
+      "source_offset": 232,
+      "number": 27,
+      "offset": 232,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "device_inventory_summary",
+      "source_number": 0,
+      "source_offset": 16,
+      "number": 0,
+      "offset": 16,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "device_inventory_record",
+      "source_number": 1,
+      "source_offset": 24,
+      "number": 1,
+      "offset": 24,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_summary",
+      "source_number": 2,
+      "source_offset": 32,
+      "number": 2,
+      "offset": 32,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_block_count",
+      "source_number": 3,
+      "source_offset": 40,
+      "number": 3,
+      "offset": 40,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_block",
+      "source_number": 4,
+      "source_offset": 48,
+      "number": 4,
+      "offset": 48,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_pressure_snapshot",
+      "source_number": 5,
+      "source_offset": 56,
+      "number": 5,
+      "offset": 56,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_reclaim_probe",
+      "source_number": 6,
+      "source_offset": 64,
+      "number": 6,
+      "offset": 64,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_backing_store_probe",
+      "source_number": 7,
+      "source_offset": 72,
+      "number": 7,
+      "offset": 72,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_backing_store_slot_probe",
+      "source_number": 8,
+      "source_offset": 80,
+      "number": 8,
+      "offset": 80,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_pager_gate_probe",
+      "source_number": 9,
+      "source_offset": 88,
+      "number": 9,
+      "offset": 88,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_page_io_probe",
+      "source_number": 10,
+      "source_offset": 96,
+      "number": 10,
+      "offset": 96,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_vm_page_state_probe",
+      "source_number": 11,
+      "source_offset": 104,
+      "number": 11,
+      "offset": 104,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_vm_reserve_probe",
+      "source_number": 12,
+      "source_offset": 112,
+      "number": 12,
+      "offset": 112,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "paging_summary",
+      "source_number": 13,
+      "source_offset": 120,
+      "number": 13,
+      "offset": 120,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_summary",
+      "source_number": 14,
+      "source_offset": 128,
+      "number": 14,
+      "offset": 128,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_task",
+      "source_number": 15,
+      "source_offset": 136,
+      "number": 15,
+      "offset": 136,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_storage",
+      "source_number": 16,
+      "source_offset": 144,
+      "number": 16,
+      "offset": 144,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_boot_phase",
+      "source_number": 17,
+      "source_offset": 152,
+      "number": 17,
+      "offset": 152,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "protocol_status",
+      "source_number": 18,
+      "source_offset": 160,
+      "number": 18,
+      "offset": 160,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "protocol_dispatch",
+      "source_number": 19,
+      "source_offset": 168,
+      "number": 19,
+      "offset": 168,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "display_summary",
+      "source_number": 20,
+      "source_offset": 176,
+      "number": 20,
+      "offset": 176,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "hardware_summary",
+      "source_number": 21,
+      "source_offset": 184,
+      "number": 21,
+      "offset": 184,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "boot_info_summary",
+      "source_number": 22,
+      "source_offset": 192,
+      "number": 22,
+      "offset": 192,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "boot_info_memory_count",
+      "source_number": 23,
+      "source_offset": 200,
+      "number": 23,
+      "offset": 200,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "boot_info_memory_entry",
+      "source_number": 24,
+      "source_offset": 208,
+      "number": 24,
+      "offset": 208,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "reserved0",
+      "source_number": 25,
+      "source_offset": 216,
+      "number": 25,
+      "offset": 216,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "reserved1",
+      "source_number": 26,
+      "source_offset": 224,
+      "number": 26,
+      "offset": 224,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "reserved_program_instance_storage_summary_v1",
+      "source_number": 27,
+      "source_offset": 232,
+      "number": null,
+      "offset": null,
+      "removed": true
+    },
+    {
+      "group": "R4DEV",
+      "name": "program_instance_storage_self_test",
+      "source_number": 28,
+      "source_offset": 240,
+      "number": 27,
+      "offset": 232,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "reserved_program_registry_summary_v1",
+      "source_number": 29,
+      "source_offset": 248,
+      "number": null,
+      "offset": null,
+      "removed": true
+    },
+    {
+      "group": "R4DEV",
+      "name": "reserved_program_registry_self_test_v1",
+      "source_number": 30,
+      "source_offset": 256,
+      "number": null,
+      "offset": null,
+      "removed": true
+    },
+    {
+      "group": "R4DEV",
+      "name": "program_registry_summary_v2",
+      "source_number": 31,
+      "source_offset": 264,
+      "number": 28,
+      "offset": 240,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "program_registry_self_test_v2",
+      "source_number": 32,
+      "source_offset": 272,
+      "number": 29,
+      "offset": 248,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "execution_inventory_summary",
+      "source_number": 33,
+      "source_offset": 280,
+      "number": 30,
+      "offset": 256,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "program_instance_storage_summary_v2",
+      "source_number": 34,
+      "source_offset": 288,
+      "number": 31,
+      "offset": 264,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "kernel_version",
+      "source_number": 35,
+      "source_offset": 296,
+      "number": 32,
+      "offset": 272,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_boot_phase_clock",
+      "source_number": 36,
+      "source_offset": 304,
+      "number": 33,
+      "offset": 280,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_irq_timing",
+      "source_number": 37,
+      "source_offset": 312,
+      "number": 34,
+      "offset": 288,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_boot_summary",
+      "source_number": 38,
+      "source_offset": 320,
+      "number": 35,
+      "offset": 296,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_driver_work",
+      "source_number": 39,
+      "source_offset": 328,
+      "number": 36,
+      "offset": 304,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_pci_inventory",
+      "source_number": 40,
+      "source_offset": 336,
+      "number": 37,
+      "offset": 312,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_input",
+      "source_number": 41,
+      "source_offset": 344,
+      "number": 38,
+      "offset": 320,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "display_state",
+      "source_number": 42,
+      "source_offset": 352,
+      "number": 39,
+      "offset": 328,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "driver_module_info",
+      "source_number": 43,
+      "source_offset": 360,
+      "number": 40,
+      "offset": 336,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_instrumentation",
+      "source_number": 44,
+      "source_offset": 368,
+      "number": 41,
+      "offset": 344,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_lock",
+      "source_number": 45,
+      "source_offset": 376,
+      "number": 42,
+      "offset": 352,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_stack",
+      "source_number": 46,
+      "source_offset": 384,
+      "number": 43,
+      "offset": 360,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "stack_fault",
+      "source_number": 47,
+      "source_offset": 392,
+      "number": 44,
+      "offset": 368,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "memory_kernel_heap_check",
+      "source_number": 48,
+      "source_offset": 400,
+      "number": 45,
+      "offset": 376,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "scheduler_kernel_check",
+      "source_number": 49,
+      "source_offset": 408,
+      "number": 46,
+      "offset": 384,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "smp_kernel_check",
+      "source_number": 50,
+      "source_offset": 416,
+      "number": 47,
+      "offset": 392,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "performance_smp_tlb",
+      "source_number": 51,
+      "source_offset": 424,
+      "number": 48,
+      "offset": 400,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "storage_block_queue_check",
+      "source_number": 52,
+      "source_offset": 432,
+      "number": 49,
+      "offset": 408,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "storage_nvme_check",
+      "source_number": 53,
+      "source_offset": 440,
+      "number": 50,
+      "offset": 416,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "usb_contract_check",
+      "source_number": 54,
+      "source_offset": 448,
+      "number": 51,
+      "offset": 424,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_count",
+      "source_number": 55,
+      "source_offset": 456,
+      "number": 52,
+      "offset": 432,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_port_at",
+      "source_number": 56,
+      "source_offset": 464,
+      "number": 53,
+      "offset": 440,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_open",
+      "source_number": 57,
+      "source_offset": 472,
+      "number": 54,
+      "offset": 448,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_configure",
+      "source_number": 58,
+      "source_offset": 480,
+      "number": 55,
+      "offset": 456,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_read",
+      "source_number": 59,
+      "source_offset": 488,
+      "number": 56,
+      "offset": 464,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_write",
+      "source_number": 60,
+      "source_offset": 496,
+      "number": 57,
+      "offset": 472,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_drain",
+      "source_number": 61,
+      "source_offset": 504,
+      "number": 58,
+      "offset": 480,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_status",
+      "source_number": 62,
+      "source_offset": 512,
+      "number": 59,
+      "offset": 488,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_cancel",
+      "source_number": 63,
+      "source_offset": 520,
+      "number": 60,
+      "offset": 496,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "serial_close",
+      "source_number": 64,
+      "source_offset": 528,
+      "number": 61,
+      "offset": 504,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_topology",
+      "source_number": 65,
+      "source_offset": 536,
+      "number": 62,
+      "offset": 512,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_cache_topology",
+      "source_number": 66,
+      "source_offset": 544,
+      "number": 63,
+      "offset": 520,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_lifecycle",
+      "source_number": 67,
+      "source_offset": 552,
+      "number": 64,
+      "offset": 528,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "kernel_cpu_lifecycle_check",
+      "source_number": 68,
+      "source_offset": 560,
+      "number": 65,
+      "offset": 536,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_capabilities",
+      "source_number": 69,
+      "source_offset": 568,
+      "number": 66,
+      "offset": 544,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_feature",
+      "source_number": 70,
+      "source_offset": 576,
+      "number": 67,
+      "offset": 552,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_register_read",
+      "source_number": 71,
+      "source_offset": 584,
+      "number": 68,
+      "offset": 560,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "kernel_cpu_register_check",
+      "source_number": 72,
+      "source_offset": 592,
+      "number": 69,
+      "offset": 568,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_power_info",
+      "source_number": 73,
+      "source_offset": 600,
+      "number": 70,
+      "offset": 576,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_power_capture",
+      "source_number": 74,
+      "source_offset": 608,
+      "number": 71,
+      "offset": 584,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_performance",
+      "source_number": 75,
+      "source_offset": 616,
+      "number": 72,
+      "offset": 592,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_cppc",
+      "source_number": 76,
+      "source_offset": 624,
+      "number": 73,
+      "offset": 600,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_performance_hint",
+      "source_number": 77,
+      "source_offset": 632,
+      "number": 74,
+      "offset": 608,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_firmware_performance",
+      "source_number": 78,
+      "source_offset": 640,
+      "number": 75,
+      "offset": 616,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_idle_info",
+      "source_number": 79,
+      "source_offset": 648,
+      "number": 76,
+      "offset": 624,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_machine_info",
+      "source_number": 80,
+      "source_offset": 656,
+      "number": 77,
+      "offset": 632,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_machine_bank",
+      "source_number": 81,
+      "source_offset": 664,
+      "number": 78,
+      "offset": 640,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_microcode_info",
+      "source_number": 82,
+      "source_offset": 672,
+      "number": 79,
+      "offset": 648,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_pmu_info",
+      "source_number": 83,
+      "source_offset": 680,
+      "number": 80,
+      "offset": 656,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_pmu_measure",
+      "source_number": 84,
+      "source_offset": 688,
+      "number": 81,
+      "offset": 664,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_pmu_result",
+      "source_number": 85,
+      "source_offset": 696,
+      "number": 82,
+      "offset": 672,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_acceleration_info",
+      "source_number": 86,
+      "source_offset": 704,
+      "number": 83,
+      "offset": 680,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "cpu_acceleration_work",
+      "source_number": 87,
+      "source_offset": 712,
+      "number": 84,
+      "offset": 688,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "fpu_observation",
+      "source_number": 88,
+      "source_offset": 720,
+      "number": 85,
+      "offset": 696,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "firmware_system_uuid",
+      "source_number": 89,
+      "source_offset": 728,
+      "number": 86,
+      "offset": 704,
+      "removed": false
+    },
+    {
+      "group": "R4DEV",
+      "name": "device_inventory_capture",
+      "source_number": 90,
+      "source_offset": 736,
+      "number": 87,
+      "offset": 712,
+      "removed": false
+    }
+  ]
+}

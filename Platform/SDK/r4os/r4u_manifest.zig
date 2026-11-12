@@ -1,9 +1,13 @@
 const std = @import("std");
+pub const paths = @import("system_update_paths.zig");
 
 pub const manifest_version: u16 = 2;
 pub const header_magic = "R4U2";
 pub const header_version: u16 = 2;
 pub const header_size: usize = 64;
+// The updater's journal owner is also the authority for package capacity.
+pub const max_package_payloads = @import("system_update_recovery.zig").max_package_payloads;
+pub const manifest_max_bytes: usize = 32 * 1024;
 pub const title_max_bytes: usize = 96;
 pub const description_max_bytes: usize = 2048;
 pub const package_name_max_bytes: usize = 48;
@@ -84,6 +88,28 @@ pub const DerivedClass = struct {
     activation: InstallMode = .live,
     priority: Priority = .normal,
 };
+
+pub fn kernelSupportsCompanions(version: []const u8) bool {
+    return (compareVersions(version, paths.companion_recovery_kernel) orelse -1) >= 0;
+}
+
+pub fn companionRecoveryRequirement(kind: ComponentKind, name: []const u8, target: []const u8, version: []const u8, state: RequirementState) bool {
+    return kind == .kernel and state == .active and std.ascii.eqlIgnoreCase(name, "KERNEL") and
+        targetEquals(target, "/boot/r4os.elf") and kernelSupportsCompanions(version);
+}
+
+pub fn kernelSupportsCompanionSet(version: []const u8, preload: bool) bool {
+    return (compareVersions(version, if (preload) paths.preload_recovery_kernel else paths.companion_recovery_kernel) orelse -1) >= 0;
+}
+pub fn companionSetRecoveryRequirement(kind: ComponentKind, name: []const u8, target: []const u8, version: []const u8, state: RequirementState, preload: bool) bool {
+    return companionRecoveryRequirement(kind, name, target, version, state) and kernelSupportsCompanionSet(version, preload);
+}
+pub fn includeCompanion(class: *DerivedClass, target: []const u8) void {
+    if (paths.preloadTarget(target)) {
+        class.activation = .restart;
+        class.priority = .foundation;
+    }
+}
 
 pub fn componentKindForPayload(value: []const u8, target: []const u8) ?ComponentKind {
     if (std.ascii.eqlIgnoreCase(value, "boot-kernel")) return .kernel;
@@ -174,8 +200,9 @@ pub fn canonicalInventoryTarget(out: []u8, payload_target: []const u8) ?[]const 
     if (payload_target.len == 0) return null;
     var source = payload_target;
     if (payload_target.len >= 3 and std.ascii.isAlphabetic(payload_target[0]) and payload_target[1] == ':' and isSeparator(payload_target[2])) {
-        if (std.ascii.toUpper(payload_target[0]) != 'C') return null;
-        source = payload_target[2..];
+        // C: retains the established image-root form. A distinct mounted
+        // volume keeps its letter, so D: never aliases an installed C: app.
+        source = if (std.ascii.toUpper(payload_target[0]) == 'C') payload_target[2..] else payload_target;
     } else if (!isSeparator(payload_target[0])) {
         return null;
     }
@@ -190,7 +217,9 @@ pub fn canonicalInventoryTarget(out: []u8, payload_target: []const u8) ?[]const 
         len += 1;
         previous_separator = separator;
     }
-    if (len == 0 or out[0] != '/' or out[len - 1] == '/') return null;
+    const foreign = len >= 4 and std.ascii.isAlphabetic(out[0]) and out[1] == ':' and out[2] == '/';
+    if (len == 0 or (out[0] != '/' and !foreign) or out[len - 1] == '/') return null;
+    if (foreign) out[0] = std.ascii.toUpper(out[0]);
     return out[0..len];
 }
 
@@ -202,6 +231,14 @@ pub fn targetEquals(left: []const u8, right: []const u8) bool {
         if (a != b) return false;
     }
     return true;
+}
+
+test "component inventory retains foreign drive identity for application updates" {
+    var buffer: [1024]u8 = undefined;
+    const target = canonicalInventoryTarget(&buffer, "d:\\Apps\\Grüße\\APP.R4X").?;
+    try std.testing.expectEqualStrings("D:/Apps/Grüße/APP.R4X", target);
+    try std.testing.expect(!targetEquals(target, "/Apps/Grüße/APP.R4X"));
+    try std.testing.expectEqualStrings("/Apps/APP.R4X", canonicalInventoryTarget(&buffer, "C:\\Apps\\APP.R4X").?);
 }
 
 pub fn isManagedStateTarget(canonical_target: []const u8) bool {
@@ -241,4 +278,29 @@ test "canonical inventory targets and derived classes" {
     includeComponent(&class, .r4l, "/R4OS/LIBS/R4STD.R4L");
     try std.testing.expectEqual(InstallMode.restart, class.activation);
     try std.testing.expectEqual(Priority.foundation, class.priority);
+    try std.testing.expectEqual(paths.CompanionKind.license, paths.companionKind("c:\\r4os\\licenses\\gfx\\NOTICE.TXT").?);
+    try std.testing.expectEqual(paths.CompanionKind.source, paths.companionKind("C:/R4OS/SOURCES/R4VIDEO/SOURCE.ZIP").?);
+    for ([_][]const u8{
+        "D:/R4OS/LICENSES/NOTICE.TXT",    "C:/R4OS/LICENSES-OTHER/NOTICE.TXT",
+        "C:/R4OS/LICENSES/../LIBS/X.R4L", "C:/R4OS/SOURCES/",
+        "C:/R4OS/SOURCES/FILE. ",
+    }) |path| try std.testing.expect(paths.companionKind(path) == null);
+    for ([_][]const u8{ "/boot/preload.r4i", "\\BOOT\\PRELOAD\\HIDREPORT.R4P", "/boot/preload/usbhid.r4p", "/boot/preload/usbbot.r4p", "/boot/preload/usbscsi.r4p" }) |path| {
+        try std.testing.expectEqual(paths.CompanionKind.preload, paths.companionKind(path).?);
+        var preload_class: DerivedClass = .{};
+        includeCompanion(&preload_class, path);
+        try std.testing.expectEqual(InstallMode.restart, preload_class.activation);
+        try std.testing.expectEqual(Priority.foundation, preload_class.priority);
+        try std.testing.expect(componentKindForPayload("preload", path) == null);
+    }
+    for ([_][]const u8{ "C:/boot/preload.r4i", "/boot/limine.conf", "/boot/preload/../r4os.elf", "/boot/preload/unknown.r4p", "/boot/preload.r4i.bak" }) |path|
+        try std.testing.expect(paths.companionKind(path) == null);
+    try std.testing.expect(!kernelSupportsCompanionSet("0.1.207", true));
+    try std.testing.expect(kernelSupportsCompanionSet("0.1.208", true));
+    try std.testing.expect(!companionSetRecoveryRequirement(.kernel, "KERNEL", "/boot/r4os.elf", "0.1.208", .installed, true));
+    try std.testing.expect(companionSetRecoveryRequirement(.kernel, "KERNEL", "/boot/r4os.elf", "0.1.208", .active, true));
+    try std.testing.expect(componentKindForPayload("license", "/R4OS/LICENSES/GFX.TXT") == null);
+    try std.testing.expect(companionRecoveryRequirement(.kernel, "KERNEL", "/boot/r4os.elf", "0.1.199", .active));
+    try std.testing.expect(!companionRecoveryRequirement(.kernel, "KERNEL", "/boot/r4os.elf", "0.1.198", .active));
+    try std.testing.expect(!companionRecoveryRequirement(.kernel, "KERNEL", "/boot/r4os.elf", "0.1.199", .installed));
 }

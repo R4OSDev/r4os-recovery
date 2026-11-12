@@ -4,6 +4,7 @@ const time_contract = @import("time_contract.zig");
 
 pub const footer_size: usize = @sizeOf(abi.ServiceDeadlineFooter);
 pub const forever_tick: u64 = std.math.maxInt(u64);
+pub const tcp_poll_tick: u64 = abi.net_service_tcp_deadline_poll;
 
 pub const RequestView = struct {
     payload: []const u8,
@@ -12,8 +13,11 @@ pub const RequestView = struct {
 
 pub fn deadlineFromTimeout(timeout: time_contract.Timeout, now_tick: u64, monotonic_hz: u32) time_contract.Error!u64 {
     const wait_ticks = try time_contract.timeoutToTicks(timeout, monotonic_hz);
-    if (wait_ticks == abi.io_wait_forever) return forever_tick;
-    return now_tick +| wait_ticks;
+    if (timeout.kind == abi.timeout_kind_poll) return tcp_poll_tick;
+    if (timeout.kind == abi.timeout_kind_forever) return forever_tick;
+    // Finite arithmetic must never become the unbounded sentinel.
+    if (wait_ticks == forever_tick or now_tick >= forever_tick - wait_ticks) return error.InvalidTimeout;
+    return now_tick + wait_ticks;
 }
 
 pub fn remainingTimeout(deadline_tick: u64, now_tick: u64, monotonic_hz: u32) time_contract.Timeout {

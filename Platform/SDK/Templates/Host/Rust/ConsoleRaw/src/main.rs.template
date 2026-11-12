@@ -1,0 +1,14 @@
+#![no_std]
+use r4os_sdk::App2;
+
+fn work(app: &mut App2<'_>) -> i32 {
+    if app.write("[RUST] {ProjectName}: console OK\n") < 0 { return 1; }
+    0
+}
+
+fn raw(context:&r4os_sdk::platform2::Context<'_>)->i32{
+ let mut app=match r4os_sdk::lowlevel_context2!(context){Ok(v)=>v,Err(n)=>return n};
+ if let Err(n)=r4os_sdk::lowlevel::initialize_runtime2(&app){return n;}
+ work(&mut app)
+}
+r4os_sdk::lowlevel_entry2!(raw);

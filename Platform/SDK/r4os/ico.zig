@@ -191,6 +191,67 @@ pub fn pixelAt(bytes: []const u8, image: BitmapImage, x: u32, y: u32) ?Pixel {
     }
 }
 
+/// Copy nearest-neighbour pixels into caller-owned RGB/alpha planes. Stride
+/// counts pixels; padding remains untouched. Source and both output slices
+/// must be resident and disjoint until return. No allocation or retained loan.
+/// Invalid layout/bounds/alias returns false before any output write. A
+/// missing palette sample remains transparent zero, exactly like pixelAt.
+pub fn copyScaledPixels(bytes: []const u8, image: BitmapImage, rgb: []u32, alpha: []u8, width: u32, height: u32, stride: usize) bool {
+    if (width == 0 or height == 0 or stride < width) return false;
+    const last_row = std.math.mul(usize, height - 1, stride) catch return false;
+    const needed = std.math.add(usize, last_row, width) catch return false;
+    if (rgb.len < needed or alpha.len < needed or !validBitmapLayout(bytes.len, image)) return false;
+    const rgb_bytes = std.math.mul(usize, rgb.len, @sizeOf(u32)) catch return false;
+    const source = byteSpan(@intFromPtr(bytes.ptr), bytes.len) orelse return false;
+    const colors = byteSpan(@intFromPtr(rgb.ptr), rgb_bytes) orelse return false;
+    const opacity = byteSpan(@intFromPtr(alpha.ptr), alpha.len) orelse return false;
+    if (source.overlaps(colors) or source.overlaps(opacity) or colors.overlaps(opacity)) return false;
+    for (0..height) |y| {
+        const sy: u32 = @intCast(@as(u64, y) * image.height / height);
+        for (0..width) |x| {
+            const sx: u32 = @intCast(@as(u64, x) * image.width / width);
+            const pixel = pixelAt(bytes, image, sx, sy) orelse Pixel{ .rgb = 0, .alpha = 0 };
+            const destination = y * stride + x;
+            rgb[destination] = pixel.rgb;
+            alpha[destination] = pixel.alpha;
+        }
+    }
+    return true;
+}
+const ByteSpan = struct {
+    start: usize,
+    end: usize,
+    fn overlaps(a: ByteSpan, b: ByteSpan) bool {
+        return a.start < b.end and b.start < a.end;
+    }
+};
+fn byteSpan(start: usize, length: usize) ?ByteSpan {
+    return .{ .start = start, .end = std.math.add(usize, start, length) catch return null };
+}
+fn rowsFit(length: usize, offset: usize, stride: usize, row_bytes: usize, height: u32) bool {
+    if (height == 0 or stride < row_bytes) return false;
+    const rows = std.math.mul(usize, height - 1, stride) catch return false;
+    const last = std.math.add(usize, offset, rows) catch return false;
+    const end = std.math.add(usize, last, row_bytes) catch return false;
+    return end <= length;
+}
+fn validBitmapLayout(length: usize, image: BitmapImage) bool {
+    if (image.width == 0 or image.height == 0 or (image.bpp != 8 and image.bpp != 32)) return false;
+    const row_bytes = std.math.mul(usize, image.width, if (image.bpp == 32) 4 else 1) catch return false;
+    if (!rowsFit(length, image.pixel_offset, image.stride, row_bytes, image.height)) return false;
+    if (image.bpp == 8) {
+        if (image.palette_count == 0 or image.palette_count > 256) return false;
+        const palette_bytes = std.math.mul(usize, image.palette_count, 4) catch return false;
+        const palette_end = std.math.add(usize, image.palette_offset, palette_bytes) catch return false;
+        if (palette_end > length) return false;
+        if (image.mask_stride != 0) {
+            const rounded = std.math.add(usize, image.width, 7) catch return false;
+            if (!rowsFit(length, image.mask_offset, image.mask_stride, rounded / 8, image.height)) return false;
+        }
+    }
+    return true;
+}
+
 fn paletteEntryCount(image: []const u8, entry: Entry) u32 {
     const used = if (image.len >= 40) readU32(image, 32) else 0;
     if (used != 0) return used;
@@ -245,19 +306,7 @@ fn readI32(bytes: []const u8, off: usize) i32 {
 }
 
 test "parse Windows ICO directory and 32bpp BMP image" {
-    const bytes = [_]u8{
-        0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x02, 0x02,
-        0x00, 0x00, 0x01, 0x00, 0x20, 0x00, 0x40, 0x00,
-        0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
-        0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00,
-        0x00, 0x00, 0x01, 0x00, 0x20, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,
-        0x00, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    };
+    const bytes = @embedFile("../Tests/Fixtures/Icons/windows32.ico").*;
 
     const dir = try parseDirectory(bytes[0..]);
     try std.testing.expectEqual(@as(u16, 1), dir.count);
@@ -273,19 +322,7 @@ test "parse Windows ICO directory and 32bpp BMP image" {
 }
 
 test "parse 8bpp indexed BMP icon with AND mask" {
-    const bytes = [_]u8{
-        0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x02, 0x02,
-        0x02, 0x00, 0x01, 0x00, 0x08, 0x00, 0x40, 0x00,
-        0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
-        0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00,
-        0x00, 0x00, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x01,
-        0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
-    };
+    const bytes = @embedFile("../Tests/Fixtures/Icons/indexed8.ico").*;
 
     const entry = try chooseBest(bytes[0..], 32);
     const image = try parseBmpImage(bytes[0..], entry);
@@ -296,4 +333,69 @@ test "parse 8bpp indexed BMP icon with AND mask" {
     try std.testing.expectEqual(@as(u8, 0xFF), pixelAt(bytes[0..], image, 0, 0).?.alpha);
     try std.testing.expectEqual(@as(u32, 0x0000FF), pixelAt(bytes[0..], image, 1, 0).?.rgb);
     try std.testing.expectEqual(@as(u8, 0x00), pixelAt(bytes[0..], image, 1, 0).?.alpha);
+}
+
+test "bulk ICO pixels preserve literal BGRA palette alpha scaling and padded bounds" {
+    const sources = .{ @embedFile("../Tests/Fixtures/Icons/windows32.ico"), @embedFile("../Tests/Fixtures/Icons/indexed8.ico") };
+    const expected_rgb = [2][4]u32{ .{ 0x0000ff, 0x00ff00, 0xff0000, 0xffffff }, .{ 0xff0000, 0x0000ff, 0x0000ff, 0xff0000 } };
+    const expected_alpha = [4]u8{ 255, 0, 255, 255 };
+    inline for (sources, 0..) |bytes, index| {
+        const image = try parseBmpImage(bytes, try chooseBest(bytes, 32));
+        var rgb = [_]u32{0x12345678} ** 24;
+        var alpha = [_]u8{91} ** 24;
+        try std.testing.expect(copyScaledPixels(bytes, image, &rgb, &alpha, 4, 4, 6));
+        for (0..24) |at| {
+            const y = at / 6;
+            const x = at % 6;
+            if (x < 4) {
+                const expected = (y / 2) * 2 + x / 2;
+                try std.testing.expectEqual(expected_rgb[index][expected], rgb[at]);
+                try std.testing.expectEqual(expected_alpha[expected], alpha[at]);
+            } else {
+                try std.testing.expectEqual(@as(u32, 0x12345678), rgb[at]);
+                try std.testing.expectEqual(@as(u8, 91), alpha[at]);
+            }
+        }
+        try std.testing.expect(copyScaledPixels(bytes, image, rgb[0..1], alpha[0..1], 1, 1, 1));
+        try std.testing.expectEqual(expected_rgb[index][0], rgb[0]);
+        try std.testing.expectEqual(@as(u8, 255), alpha[0]);
+    }
+}
+
+test "bulk ICO invalid planes layouts overflows and aliases never write" {
+    const bytes = @embedFile("../Tests/Fixtures/Icons/windows32.ico");
+    const image = try parseBmpImage(bytes, try chooseBest(bytes, 32));
+    var rgb = [_]u32{0x12345678} ** 24;
+    var alpha = [_]u8{91} ** 24;
+    const Shape = struct { width: u32, height: u32, stride: usize, capacity: usize };
+    for ([_]Shape{
+        .{ .width = 0, .height = 2, .stride = 2, .capacity = 24 },
+        .{ .width = 2, .height = 0, .stride = 2, .capacity = 24 },
+        .{ .width = 2, .height = 2, .stride = 1, .capacity = 24 },
+        .{ .width = 2, .height = 2, .stride = 2, .capacity = 3 },
+        .{ .width = 2, .height = 2, .stride = std.math.maxInt(usize), .capacity = 24 },
+    }) |shape| try std.testing.expect(!copyScaledPixels(bytes, image, rgb[0..shape.capacity], &alpha, shape.width, shape.height, shape.stride));
+    try std.testing.expect(!copyScaledPixels(bytes, image, &rgb, alpha[0..3], 2, 2, 2));
+    var invalid = image;
+    invalid.width = 0;
+    try std.testing.expect(!copyScaledPixels(bytes, invalid, &rgb, &alpha, 2, 2, 2));
+    invalid = image;
+    invalid.bpp = 24;
+    try std.testing.expect(!copyScaledPixels(bytes, invalid, &rgb, &alpha, 2, 2, 2));
+    invalid = image;
+    invalid.stride = 1;
+    try std.testing.expect(!copyScaledPixels(bytes, invalid, &rgb, &alpha, 2, 2, 2));
+    invalid = image;
+    invalid.pixel_offset = std.math.maxInt(usize) - 4;
+    try std.testing.expect(!copyScaledPixels(bytes, invalid, &rgb, &alpha, 2, 2, 2));
+    try std.testing.expect(!copyScaledPixels(bytes[0 .. image.pixel_offset + 15], image, &rgb, &alpha, 2, 2, 2));
+    try std.testing.expect(!copyScaledPixels(bytes, image, &rgb, std.mem.sliceAsBytes(&rgb), 2, 2, 2));
+    for (rgb) |value| try std.testing.expectEqual(@as(u32, 0x12345678), value);
+    for (alpha) |value| try std.testing.expectEqual(@as(u8, 91), value);
+    var storage: [64]u32 = @splat(0);
+    const raw = std.mem.sliceAsBytes(&storage);
+    @memcpy(raw[0..bytes.len], bytes);
+    const original = storage;
+    try std.testing.expect(!copyScaledPixels(raw[0..bytes.len], image, &storage, &alpha, 2, 2, 2));
+    try std.testing.expectEqualSlices(u32, &original, &storage);
 }

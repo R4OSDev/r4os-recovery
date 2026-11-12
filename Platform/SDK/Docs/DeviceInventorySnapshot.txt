@@ -1,0 +1,94 @@
+﻿Passives Geraeteinventar: eine Sammlung, feste Kopie, geliehene Seiten
+===================================================================
+
+SDK0.64.164 / Contract0.64.80, R4DEV37 und kompakte R4DEV-Revision2.
+Normativer Kernelvertrag: Contract/API/DeviceInventorySnapshot.txt.
+Zig: r4os.device_snapshot. C: device_snapshot.h und
+device_snapshot_platform2.h. Rust: r4os_sdk::device_snapshot.
+
+Besitzer und Aufwand
+-------------------
+Der Kernel kopiert einmal die vorhandenen passiven Metadatenanbieter in
+begrenzten Callerspeicher. Er fuehrt weder neue Hardware-/PCI-Scans noch
+neues I/O aus und haelt keine Snapshotallokation oder zweite Geraeteregistry.
+Der SDK-Besitzer stellt darauf Capture/Progress/View/BeginPages/Page/Cancel/
+Close bereit. C und Rust rufen dieselbe statische Zigmechanik auf, ohne R4L.
+
+Init macht keinen Provideraufruf. Capture macht genau einen synchronen
+Aufruf. Ein ausdruecklicher erneuter Capture ist ein neuer Versuch bzw. eine
+Aktualisierung. Er verwirft die alte Sicht vor dem Aufruf. Kein versteckter
+Retry, keine Folge von alten Indexaufrufen, keine implizite Allokation.
+Einmalige Zeilenvalidierung erfolgt vor der Veroeffentlichung. Danach bleiben
+Progress/View/Page O(1): keine Callbacks, Nachsammlung oder Vollzeilenpruefung.
+
+Vollstaendigkeit und Generation
+------------------------------
+Nur Status Complete und das vollstaendige validierte Kernelreceipt geben
+eine View frei. Count allein genuegt nicht. Capacity meldet required_count,
+aber keine verwendbare Teilsicht. OOM, Overflow, fehlender Provider, Fehler,
+ungueltiges Receipt und Cancel erzeugen ebenfalls keine leere Erfolgssicht.
+Die aktuelle Kernelimplementierung allokiert nicht; native Erweiterungen
+muessen Provider-OOM weiterhin als Fehler behandeln.
+
+Der Caller waehlt selbst genuegend ganzen Recordspeicher. Es gibt keine
+eingebaute Gesamtgeraetegrenze aus einer Testzahl. Selbst Kapazitaet0 kann
+eine wirklich leere Anbieteransicht vollstaendig aufnehmen; ein nicht-leerer
+Bestand bleibt dann Capacity. Jeder positive Capture hat eine eindeutige
+bootlokale nicht-null Generation. Sie bezeichnet die feste Kopie, keine
+gemeinsame atomare Hardware-/Hotplugrevision und keinen Device-Retain.
+Die unabhaengigen Provider kopieren Metadaten in ihrer bestehenden Folge.
+Eine Aufnahme darf ihre beobachtete Geraetepraesenz nicht als heutige
+Praesenz oder atomaren Zustand aller Quellen darstellen.
+
+BeginPages bindet ausdruecklich einen neuen Cursor an eine fertige Sicht.
+Page akzeptiert Limits1..64 ganzer Records und liefert eine geliehene
+Span/Slice. Die gespeicherte Position bleibt bei falscher Generation
+unveraendert; Restart liefert keine Zeilen. Jede bisher zusammengesetzte
+Teiltraversierung ist dann zu verwerfen. BeginPages ist die ausdrueckliche
+Neubindung. Am Ende folgen beliebig weitere leere Complete-Seiten ohne
+Providerarbeit. Ein neuer Capture kann nach Fehler oder Complete explizit
+versucht werden; nach Cancel/Close ist neue Initialisierung erforderlich.
+
+Leihen, Stop und Close
+---------------------
+Zustand, ganze Zielspanne, Cursor, Outputs und nativer Code bleiben gemappt,
+ausgerichtet, disjunkt und exklusiv fuer ihre tatsaechliche Leihdauer.
+Zustandsfelder sind privat. Native Anbieter initialisieren jedes bei Erfolg
+gemeldete Record vollstaendig, schreiben nur in angebotene Zeilen und
+halten nach wirklicher Rueckkehr keine Outputpointer. C/Zig-Views gelten bis
+zur naechsten Mutation. Ein Status oder eine Zwischenquittung kann Speicher
+eines noch aktiven Callbacks nicht freigeben.
+
+Cancel vor Capture verhindert den Aufruf. Reentrantes Cancel waehrend des
+synchronen Callbacks setzt nur StopRequested; InCall bleibt bis zur echten
+Rueckkehr gesetzt. Dessen Ergebnis wird dann verworfen. Ein bereits fertiger
+oder fehlgeschlagener Versuch ist terminal; Cancel darauf ist wirkungslos.
+Close waehrend InCall meldet Busy. Close danach verwirft die SDK-Sicht;
+es gibt keine physische Stop-/Hardware-/Kernelressourcenquittung. Es sind
+keine Locks ueber Provider, Wait, Alloc oder Freigabe zu halten.
+
+Rust leiht Context/nativen Provider sowie [MaybeUninit<DeviceInventoryRecord>]
+fuer die ganze Lebensdauer. view und Page.records leihen die initialisierte
+fertige Sicht; ihr spaeterer Gebrauch verhindert Capture/Close/Drop und
+Speichermutation. Mehrere immutable Seiten koennen gleichzeitig bestehen.
+Native Konstruktion ist unsafe und verlangt wirkliche Code-/Owner-/Mapping-
+und Initialisierungsgarantien, nicht nur einen gueltigen Zahlenwert.
+Es gibt keine Send/Sync-Zusage.
+
+Layouts und Ergebnisse
+----------------------
+Der Kernel besitzt DeviceInventoryRecord224 und SnapshotInfo64. Der SDK-
+Besitzer besitzt Provider8, Cursor16, PageInfo32, Progress80 und Snapshot112
+sowie acht statische FFI-Funktionen. Progress unterscheidet Initial0,
+Complete1, Capacity2, Failed3, NoProvider4, Cancelled5, Closed6 und
+InvalidProvider7. Page unterscheidet More1, Complete2 und Restart3.
+Wrapperfehler sind InvalidState-1, InvalidStorage-2, InvalidLimit-3, Busy-4,
+Closed-5, Incomplete-6 und InvalidCursor-7. Anbieterfehler bleiben im
+Progress.error_code erhalten. Fehlende Query2-Gruppen/Slots bleiben sichtbar;
+es gibt keinen langsamen Legacy-Indexfallback.
+
+Bestehende DeviceManager-, SysInfo- und Diagnosequellen bzw. Importprofile
+werden in dieser Anbieterphase nicht umgestellt. Hostmodell, Sprach- und
+Leihpruefung, wirklicher Kernel-/Gastbetrieb und Hardware sind getrennte
+Aussagen. Abnahme und Originale: Docs/API/DeviceInventorySnapshot.txt und
+lokal Research/API-ABI/Umsetzung/0.90.21/.

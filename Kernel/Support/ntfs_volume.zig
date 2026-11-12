@@ -1987,6 +1987,11 @@ pub const DirectoryNextStatus = enum { found, not_found, again, io };
 /// offset and whether its child was consumed. Reloading a node never scans
 /// the prefix. All scratch belongs to this call's enclosing volume gate.
 pub fn nextDirectoryEntry(v: *const Volume, dir: u64, cursor: *DirectoryCursor, out: *Entry) DirectoryNextStatus {
+    var remaining: u32 = 256;
+    return nextDirectoryEntryBudget(v, dir, cursor, out, &remaining);
+}
+
+pub fn nextDirectoryEntryBudget(v: *const Volume, dir: u64, cursor: *DirectoryCursor, out: *Entry, remaining: *u32) DirectoryNextStatus {
     if (cursor.state > 2 or cursor.depth > MAX_INDEX_DEPTH) return .io;
     if (cursor.state == 2) return .not_found;
     if (cursor.state == 0) cursor.* = .{ .state = 1, .depth = 1 };
@@ -2002,8 +2007,8 @@ pub fn nextDirectoryEntry(v: *const Volume, dir: u64, cursor: *DirectoryCursor, 
         const attr = ntfs.findAttribute(record, reloaded, .index_root, &ntfs.I30_NAME_UTF16) orelse return .io;
         root = ntfs.IndexRoot.parse(attr.value) orelse return .io;
     }
-    var examined: u32 = 0;
-    while (examined < 256) : (examined += 1) {
+    while (remaining.* != 0) {
+        remaining.* -= 1;
         const level = cursor.depth - 1;
         const frame = &cursor.frames[level];
         if (frame.child_done > 1) return .io;

@@ -30,12 +30,37 @@ pub const Context = struct {
         return self.base.audioOpenStream(rate, channels, format);
     }
 
+    pub fn audioOutputInfo(self: *const Context, index: u32, out: *abi.AudioOutputInfo) i32 {
+        return self.base.audioOutputInfo(index, out);
+    }
+
+    /// Discard outputs on failure; out is a complete receipt only on result1.
+    pub fn audioOutputCatalog(self: *const Context, outputs: []abi.AudioOutputInfo, out: *abi.AudioOutputCatalog) i32 {
+        return self.base.audioOutputCatalog(outputs, out);
+    }
+
+    pub fn audioSelectOutput(self: *const Context, id: *const [64]u8) i32 {
+        return self.base.audioSelectOutput(id);
+    }
+
     pub fn audioWrite(self: *const Context, stream_id: u32, data: []const u8) i32 {
         return self.base.audioWrite(stream_id, data);
     }
 
     pub fn audioClose(self: *const Context, stream_id: u32) i32 {
         return self.base.audioClose(stream_id);
+    }
+
+    pub fn audioStreamProgress(self: *const Context, stream_id: u32, generation: u64, out: *abi.AudioStreamProgress) i32 {
+        return self.base.audioStreamProgress(stream_id, generation, out);
+    }
+
+    pub fn audioSetStreamExpectation(self: *const Context, stream_id: u32, input: *const abi.AudioStreamExpectation) i32 {
+        return self.base.audioSetStreamExpectation(stream_id, input);
+    }
+
+    pub fn audioCloseStreamProgress(self: *const Context, stream_id: u32, generation: u64, out: *abi.AudioStreamProgress) i32 {
+        return self.base.audioCloseStreamProgress(stream_id, generation, out);
     }
 
     pub fn audioSetVolume(self: *const Context, stream_id: u32, fixed_volume: u32) i32 {

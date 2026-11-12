@@ -23,8 +23,32 @@ pub const Ipv4Address = struct {
         return .{ .octets = value };
     }
 
+    pub fn parseCanonical(text: []const u8) ?Ipv4Address {
+        var octets: [4]u8 = undefined;
+        var part: usize = 0;
+        var value: u16 = 0;
+        var digits: usize = 0;
+        for (text) |character| {
+            if (character == '.') {
+                if (part >= 3 or digits == 0) return null;
+                octets[part] = @intCast(value);
+                part += 1;
+                value = 0;
+                digits = 0;
+                continue;
+            }
+            if (character < '0' or character > '9' or digits >= 3 or (digits == 1 and value == 0)) return null;
+            value = value * 10 + (character - '0');
+            if (value > 255) return null;
+            digits += 1;
+        }
+        if (part != 3 or digits == 0) return null;
+        octets[3] = @intCast(value);
+        return fromBytes(octets);
+    }
+
     pub fn isUnspecified(self: Ipv4Address) bool {
-        return self.octets == .{ 0, 0, 0, 0 };
+        return std.mem.eql(u8, &self.octets, &.{ 0, 0, 0, 0 });
     }
 };
 
@@ -76,6 +100,22 @@ pub const TcpAccept = union(enum) {
     closed,
     no_service,
     failure: i32,
+};
+
+/// A validated close reply releases the TCPSVC frontend handle. A lifecycle
+/// of pending_close still has a network shutdown in progress.
+pub const TcpCloseReceipt = struct {
+    outcome: SocketIo = .{ .failure = abi.err_closed },
+    operation: u16 = abi.net_service_op_tcp_close_result,
+    action: u16 = 0,
+    ack: u32 = 0,
+    lifecycle_cause: u32 = abi.net_service_socket_lifecycle_unknown,
+    service_status: u32 = abi.net_service_status_idle,
+    accepted: bool = false,
+    pending_shutdown: bool = false,
+    frontend_released: bool = false,
+    submitted: bool = false,
+    reply_valid: bool = false,
 };
 
 pub const UdpOpen = union(enum) {
@@ -168,12 +208,33 @@ pub const Network = struct {
     }
 
     fn tcpServiceCall(self: *const Network, op: u16, request: []const u8, response: []u8, timeout: Timeout) services_facade.ServiceCall {
+        return self.tcpServiceCallTracking(op, request, response, timeout, null);
+    }
+
+    fn tcpServiceCallTracking(self: *const Network, op: u16, request: []const u8, response: []u8, timeout: Timeout, submitted: ?*bool) services_facade.ServiceCall {
+        if (submitted) |out| out.* = false;
         var encoded: [abi.service_api_max_payload]u8 = undefined;
-        const deadline_tick = service_deadline.deadlineFromTimeout(timeout, self.sys.ticks(), self.sys.monotonicHz()) catch
+        const hz = self.sys.monotonicHz();
+        const finite = timeout.kind == abi.timeout_kind_finite;
+        const started = if (finite) self.sys.ticks() else 0;
+        const deadline_tick = service_deadline.deadlineFromTimeout(timeout, started, hz) catch
             return .{ .failure = abi.service_api_result_invalid };
+        if (finite and deadline_tick <= started) return .timed_out;
         const payload = service_deadline.append(encoded[0..], request, deadline_tick) orelse
             return .{ .failure = abi.service_api_result_buffer_too_small };
-        return self.serviceCall(tcp_service, op, payload, response, timeout);
+        const services = services_facade.Services{ .sys = self.sys };
+        var connection = switch (services.open(tcp_service)) {
+            .connection => |value| value,
+            .failure => |raw| return .{ .failure = raw },
+        };
+        defer _ = connection.close();
+        const now = if (finite) self.sys.ticks() else 0;
+        if (finite and now >= deadline_tick) return .timed_out;
+        const remaining = if (timeout.kind == abi.timeout_kind_poll) 0 else if (deadline_tick == service_deadline.forever_tick) abi.io_wait_forever else deadline_tick - now;
+        if (submitted) |out| out.* = true;
+        const call = services_facade.callWithTicks(&connection, op, payload, response, remaining);
+        if (call == .response and call.response.header.op != op) return .{ .failure = abi.service_api_result_invalid };
+        return call;
     }
 };
 
@@ -182,6 +243,29 @@ pub const Resolver = struct {
 
     pub fn resolveA(self: *Resolver, name: []const u8, server: ?Ipv4Address, timeout: Timeout) ResolveResult {
         if (name.len == 0 or name.len > abi.service_api_max_payload - 4) return .{ .failure = abi.dns_result_name };
+        if (Ipv4Address.parseCanonical(name)) |address| return .{ .address = address };
+        if (self.network.sys.base.generation2) |context| {
+            const family = @import("network_family.zig");
+            const rpc = @import("rpc_budget.zig");
+            const clock = @import("stream_adapters.zig").PlatformClock.fromContext2(context) catch
+                return .{ .failure = rpc.code(error.ClockUnavailable) };
+            var budget = rpc.Budget.fromTimeout(clock.read, timeout) catch |err|
+                return .{ .failure = rpc.code(err) };
+            var client: family.Client = undefined;
+            const opened = family.Client.connect(context, .dns, &client);
+            if (opened == abi.service_api_result_not_found or opened == abi.service_api_result_no_endpoint or opened == abi.service_api_result_not_running) return .no_service;
+            if (opened != 0) return .{ .failure = opened };
+            defer _ = client.close();
+            var answers: [32]abi.NetworkResolveAnswer = undefined;
+            var count: u32 = 0;
+            const selected_server = if (server) |address| family.common.v4Endpoint(address.octets, 53) else abi.NetworkEndpoint{};
+            const result = family.resolveAll(&client, name, 4, selected_server, &budget, &answers, &count);
+            if (result == abi.network_error_timeout or result == abi.service_api_result_timeout) return .timed_out;
+            if (result == abi.network_error_not_found) return .not_found;
+            if (result != 0) return .{ .failure = result };
+            if (count == 0) return .not_found;
+            return .{ .address = Ipv4Address.fromBytes(answers[0].address.bytes[0..4].*) };
+        }
         var request: [abi.service_api_max_payload]u8 = undefined;
         var len: usize = 0;
         const op: u16 = if (server) |address| blk: {
@@ -208,6 +292,7 @@ pub const TcpSocket = struct {
     raw: u32 = 0,
     owned: bool = false,
     remote: SocketAddress = .{ .address = .{}, .port = 0 },
+    close_uncertain: bool = false,
 
     pub fn valid(self: *const TcpSocket) bool {
         return self.raw != 0;
@@ -221,7 +306,7 @@ pub const TcpSocket = struct {
         @memcpy(request[4 .. 4 + data.len], data);
         var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
         const call = self.network.tcpServiceCall(abi.net_service_op_tcp_write_result, request[0 .. 4 + data.len], response[0..], timeout);
-        const result = parseTcpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
+        const result = parseTcpCall(call, response[0..]) catch |raw| return mapTcpSocketFailure(raw);
         if (result.bytes > data.len) return .{ .failure = abi.service_api_result_invalid };
         return self.finishIo(result, result.bytes);
     }
@@ -234,8 +319,8 @@ pub const TcpSocket = struct {
         writeU16(request[0..], 4, @intCast(capacity));
         var response: [@sizeOf(abi.NetServiceTcpResult) + abi.net_service_tcp_read_max]u8 = undefined;
         const call = self.network.tcpServiceCall(abi.net_service_op_tcp_read_result, request[0..], response[0..], timeout);
-        const received = serviceResponse(call, response[0..]) catch |raw| return mapSocketFailure(raw);
-        const result = parseTcpCall(call, received) catch |raw| return mapSocketFailure(raw);
+        const received = serviceResponse(call, response[0..]) catch |raw| return mapTcpSocketFailure(raw);
+        const result = parseTcpCall(call, received) catch |raw| return mapTcpSocketFailure(raw);
         const outcome = self.finishIo(result, result.bytes);
         switch (outcome) {
             .bytes => if (result.bytes != 0) {
@@ -248,38 +333,109 @@ pub const TcpSocket = struct {
         return outcome;
     }
 
+    /// State-only poll. No transferred bytes; use tcpReadiness for a snapshot.
     pub fn poll(self: *TcpSocket, timeout: Timeout) SocketIo {
-        if (!self.valid()) return .{ .failure = abi.err_closed };
-        var request: [4]u8 = undefined;
-        writeU32(request[0..], 0, self.raw);
-        var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
-        const call = self.network.tcpServiceCall(abi.net_service_op_tcp_poll_result, request[0..], response[0..], timeout);
-        const result = parseTcpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
-        return self.finishIo(result, result.pending_rx);
+        return tcpReadiness(self, timeout).outcome;
     }
 
     pub fn close(self: *TcpSocket, timeout: Timeout) SocketIo {
         if (!self.valid()) return .{ .failure = abi.err_closed };
         if (!self.owned) return .{ .failure = abi.err_not_owned };
+        if (self.close_uncertain) return .{ .failure = abi.service_api_result_invalid };
         var request: [4]u8 = undefined;
         writeU32(request[0..], 0, self.raw);
         var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
         const call = self.network.tcpServiceCall(abi.net_service_op_tcp_close_result, request[0..], response[0..], timeout);
-        const result = parseTcpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
+        const result = parseTcpCall(call, response[0..]) catch |raw| return mapTcpSocketFailure(raw);
         const state = classifyTcp(result);
-        if (state == .ok or state == .closed) {
+        if (state == .ok or state == .closed or (state == .peer_closed and result.lifecycle_cause == abi.net_service_socket_lifecycle_closed)) {
             self.raw = 0;
             return .closed;
         }
         return mapSocketState(state, result.result);
     }
 
-    fn finishIo(self: *TcpSocket, result: abi.NetServiceTcpResult, bytes: u32) SocketIo {
+    /// Issues at most one close. An unconfirmed submitted request is retained
+    /// as uncertain on this object; callers must not issue a second close.
+    pub fn closeReceipt(self: *TcpSocket, timeout: Timeout) TcpCloseReceipt {
+        var receipt: TcpCloseReceipt = .{};
+        if (!self.valid()) return receipt;
+        if (!self.owned) {
+            receipt.outcome = .{ .failure = abi.err_not_owned };
+            return receipt;
+        }
+        if (self.close_uncertain) {
+            receipt.submitted = true;
+            receipt.outcome = .{ .failure = abi.service_api_result_invalid };
+            return receipt;
+        }
+        var request: [4]u8 = undefined;
+        writeU32(request[0..], 0, self.raw);
+        var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
+        const call = self.network.tcpServiceCallTracking(receipt.operation, request[0..], response[0..], timeout, &receipt.submitted);
+        const result = parseTcpCall(call, response[0..]) catch |raw| {
+            if (receipt.submitted) self.close_uncertain = true;
+            receipt.outcome = mapTcpSocketFailure(raw);
+            return receipt;
+        };
+        if (result.action != abi.net_service_tcp_action_close or
+            (result.flags & abi.net_service_tcp_flag_handle_valid) == 0 or result.handle != self.raw)
+        {
+            self.close_uncertain = true;
+            receipt.outcome = .{ .failure = abi.service_api_result_invalid };
+            return receipt;
+        }
+        receipt.reply_valid = true;
+        receipt.action = result.action;
+        receipt.ack = result.tx_ack;
+        receipt.lifecycle_cause = result.lifecycle_cause;
+        receipt.service_status = result.service_status;
+        receipt.outcome = mapSocketState(classifyTcp(result), result.result);
+        if (result.result == 0) {
+            receipt.accepted = true;
+            receipt.pending_shutdown = result.lifecycle_cause == abi.net_service_socket_lifecycle_pending_close;
+            receipt.frontend_released = true;
+            receipt.outcome = .closed;
+            self.raw = 0;
+        } else {
+            // TCPSVC may release its frontend even after a backend failure.
+            self.close_uncertain = true;
+        }
+        return receipt;
+    }
+
+    fn finishIo(_: *TcpSocket, result: abi.NetServiceTcpResult, bytes: u32) SocketIo {
         const state = classifyTcp(result);
-        if (state == .closed or state == .reset or state == .peer_closed) self.raw = 0;
-        return if (state == .ok) .{ .bytes = @intCast(bytes) } else mapSocketState(state, result.result);
+        // Transport termination does not acknowledge disposal of our frontend.
+        return if (bytes != 0 or state == .ok) .{ .bytes = @intCast(bytes) } else mapSocketState(state, result.result);
     }
 };
+
+/// A validated snapshot can be both peer-closed and readable. Its pending_rx
+/// is buffered availability, never a count transferred by the poll.
+pub const TcpPoll = struct {
+    outcome: SocketIo,
+    readiness: ?r4net.TcpReadiness = null,
+};
+
+/// Kept at module scope so the existing GUI value-method ABI does not grow.
+pub fn tcpReadiness(socket: *TcpSocket, timeout: Timeout) TcpPoll {
+    if (!socket.valid()) return .{ .outcome = .{ .failure = abi.err_closed } };
+    var request: [4]u8 = undefined;
+    writeU32(request[0..], 0, socket.raw);
+    var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
+    const call = socket.network.tcpServiceCall(abi.net_service_op_tcp_poll_result, request[0..], response[0..], timeout);
+    const result = parseTcpCall(call, response[0..]) catch |raw| return .{ .outcome = mapTcpSocketFailure(raw) };
+    var snapshot = r4net.tcpResultReadiness(&result);
+    if (result.service_status != abi.net_service_status_idle) snapshot.service_status = result.service_status;
+    if (snapshot.would_block) snapshot.service_status = abi.net_service_status_would_block;
+    snapshot.would_block = snapshot.service_status == abi.net_service_status_would_block or snapshot.would_block;
+    const state = classifyTcp(result);
+    return .{
+        .outcome = if (state == .ok) .{ .bytes = 0 } else mapSocketState(state, result.result),
+        .readiness = snapshot,
+    };
+}
 
 pub const TcpListener = struct {
     network: Network,
@@ -312,7 +468,7 @@ pub const TcpListener = struct {
         writeU16(request[0..], 0, self.port);
         var response: [@sizeOf(abi.NetServiceTcpResult)]u8 = undefined;
         const call = self.network.tcpServiceCall(abi.net_service_op_tcp_close_listen_result, request[0..], response[0..], timeout);
-        const result = parseTcpCall(call, response[0..]) catch |raw| return mapSocketFailure(raw);
+        const result = parseTcpCall(call, response[0..]) catch |raw| return mapTcpSocketFailure(raw);
         const state = classifyTcp(result);
         if (state == .ok or state == .closed) {
             self.port = 0;
@@ -473,7 +629,7 @@ fn mapResolveFailure(raw: anyerror) ResolveResult {
 
 fn mapTcpOpenFailure(raw: anyerror) TcpOpen {
     return switch (raw) {
-        error.TimedOut => .timed_out,
+        error.TimedOut => .{ .failure = abi.service_api_result_timeout },
         error.NoService => .no_service,
         else => .{ .failure = mapError(raw) },
     };
@@ -481,7 +637,7 @@ fn mapTcpOpenFailure(raw: anyerror) TcpOpen {
 
 fn mapListenerFailure(raw: anyerror) ListenerOpen {
     return switch (raw) {
-        error.TimedOut => .timed_out,
+        error.TimedOut => .{ .failure = abi.service_api_result_timeout },
         error.NoService => .no_service,
         else => .{ .failure = mapError(raw) },
     };
@@ -495,6 +651,12 @@ fn mapUdpOpenFailure(raw: anyerror) UdpOpen {
     };
 }
 
+// Missing/invalid TCP replies provide no confirmed prefix. In particular,
+// a native client timeout is not the structured server timeout state.
+fn mapTcpSocketFailure(raw: anyerror) SocketIo {
+    return .{ .failure = mapError(raw) };
+}
+
 fn mapSocketFailure(raw: anyerror) SocketIo {
     return switch (raw) {
         error.TimedOut => .timed_out,
@@ -505,7 +667,7 @@ fn mapSocketFailure(raw: anyerror) SocketIo {
 
 fn mapAcceptFailure(raw: anyerror) TcpAccept {
     return switch (raw) {
-        error.TimedOut => .timed_out,
+        error.TimedOut => .{ .failure = abi.service_api_result_timeout },
         error.NoService => .no_service,
         else => .{ .failure = mapError(raw) },
     };

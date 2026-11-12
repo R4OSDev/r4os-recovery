@@ -4,11 +4,9 @@
 
 /* Physical storage identities and claims belong to R4SYS. No driver access. */
 typedef struct R4Storage { R4Sys *system; } R4Storage;
-#define R4_STORAGE_HAS(s, name) ((s) && (s)->system && (s)->system->table && \
-    (s)->system->table->size >= offsetof(R4XStartR4Sys, name) + sizeof(uintptr_t) && \
-    (s)->system->table->name != 0)
+#define R4_STORAGE_HAS(s, name) ((s) && R4SYS_HAS((s)->system, name))
 #define R4_STORAGE_CALL(s, name, type, ...) (R4_STORAGE_HAS(s, name) ? \
-    ((type)(uintptr_t)(s)->system->table->name)(__VA_ARGS__) : R4OS_STORAGE_ERROR_UNSUPPORTED)
+    ((type)(uintptr_t)R4SYS_SLOT((s)->system, name))(__VA_ARGS__) : R4OS_STORAGE_ERROR_UNSUPPORTED)
 
 static inline int r4_storage_available(const R4Storage *s) {
     return R4_STORAGE_HAS(s, storage_inventory) && R4_STORAGE_HAS(s, storage_claim_begin) &&

@@ -1,4 +1,322 @@
 #include <r4os/r4os.h>
+#include <r4os/driver_resources.h>
+#include <r4os/driver_heap.h>
+#include <r4os/driver_threads.h>
+#include <r4os/driver_semaphores.h>
+#include <r4os/driver_display.h>
+
+static uint32_t power_query_mode;
+static int32_t power_register(const R4CpuPowerBackend *backend,uint64_t *cookie){*cookie=backend->context;return 0;}
+static int32_t power_unregister(uint64_t cookie){return cookie==UINT64_C(0x1234567885abcdef)?-83:-99;}
+static uint32_t power_current(void){return 63;}
+static int32_t power_cap(uint32_t cpu,R4CpuCapabilitiesInfo *out){out->epoch=cpu;return -84;}
+static int32_t power_topology(uint32_t cpu,R4CpuTopologyInfo *out){out->start_epoch=cpu;return -85;}
+static int32_t power_read(uint32_t cpu,uint64_t epoch,uint32_t id,R4CpuRegisterInfo *out){if(cpu!=63||id!=17)return -99;out->value=epoch;return -86;}
+static int32_t power_clock(R4MonotonicClockInfo *out){out->instant_ns=UINT64_C(0x1234567885abcdef);return 1;}
+static int32_t power_pair(uint32_t cpu,uint64_t epoch,R4CpuPowerCounters *out){if(cpu!=63)return -99;out->aperf=epoch;out->mperf=epoch+1;return -88;}
+static int32_t power_query(R4DriverCpuPowerApi *out){
+    if(out->version!=1||out->size!=sizeof(R4DriverCpuPowerApi))return -99;
+    *out=(R4DriverCpuPowerApi){.version=1,.size=72,.register_backend=(uintptr_t)&power_register,.unregister_backend=(uintptr_t)&power_unregister,
+        .current_cpu=(uintptr_t)&power_current,.capabilities=(uintptr_t)&power_cap,.topology=(uintptr_t)&power_topology,
+        .register_read=(uintptr_t)&power_read,.clock=(uintptr_t)&power_clock,.counters_read=(uintptr_t)&power_pair};
+    if(power_query_mode==5)out->size=64;
+    if(power_query_mode==1)out->version=2; if(power_query_mode==2)out->size=63; if(power_query_mode==3)out->clock=0;
+    return power_query_mode==4?-87:0;
+}
+static int power_checks(void){
+    R4DriverResourceApi resources={.version=1,.size=64,.cpu_power_query=(uintptr_t)&power_query};
+    R4DriverCpuPowerApi ctx={.version=71};
+    for(uint32_t size=56;size<64;size++){resources.size=size;
+        if(r4driver_resource_cpu_power(&resources,&ctx)!=R4OS_ERR_NO_FN||ctx.version!=71)return 1;}
+    resources.size=64;
+    for(power_query_mode=1;power_query_mode<5;power_query_mode++){
+        if(r4driver_resource_cpu_power(&resources,&ctx)>=0||ctx.version!=71)return 2;}
+    power_query_mode=0;
+    if(r4driver_resource_cpu_power(&resources,&ctx)!=0)return 3;
+    uint64_t identity=UINT64_C(0x1234567885abcdef),cookie=71;
+    R4CpuPowerBackend backend={.context=identity}; R4CpuCapabilitiesInfo cap={0}; R4CpuTopologyInfo topo={0};
+    R4CpuRegisterInfo raw={0}; R4MonotonicClockInfo clock={0};
+    if(r4driver_cpu_power_register(&ctx,&backend,&cookie)!=0||cookie!=identity||r4driver_cpu_power_unregister(&ctx,cookie)!=-83||r4driver_cpu_power_current(&ctx)!=63)return 4;
+    if(r4driver_cpu_power_capabilities(&ctx,63,&cap)!=-84||cap.epoch!=63||r4driver_cpu_power_topology(&ctx,63,&topo)!=-85||topo.start_epoch!=63)return 5;
+    if(r4driver_cpu_power_read(&ctx,63,identity,17,&raw)!=-86||raw.value!=identity||r4driver_cpu_power_clock(&ctx,&clock)!=1||clock.instant_ns!=identity)return 6;
+    R4CpuPowerCounters pair={0};
+    if(r4driver_cpu_power_counters(&ctx,63,identity,&pair)!=-88||pair.aperf!=identity||pair.mperf!=identity+1)return 8;
+    for(uint32_t size=64;size<72;size++){ctx.size=size;if(r4driver_cpu_power_counters(&ctx,63,identity,&pair)!=R4OS_ERR_NO_FN||pair.aperf!=identity)return 9;}
+    power_query_mode=5;
+    if(r4driver_resource_cpu_power(&resources,&ctx)!=0||r4driver_cpu_power_current(&ctx)!=63||r4driver_cpu_power_counters(&ctx,63,identity,&pair)!=R4OS_ERR_NO_FN||pair.aperf!=identity)return 10;
+    ctx=(R4DriverCpuPowerApi){.version=1,.size=64};
+    if(r4driver_cpu_power_register(&ctx,&backend,&cookie)!=R4OS_ERR_NO_FN||cookie!=identity||r4driver_cpu_power_current(&ctx)!=R4OS_CPU_POWER_CPU_NONE||
+        r4driver_cpu_power_unregister(&ctx,identity)!=R4OS_ERR_NO_FN||r4driver_cpu_power_capabilities(&ctx,63,&cap)!=R4OS_ERR_NO_FN||cap.epoch!=63||
+        r4driver_cpu_power_topology(&ctx,63,&topo)!=R4OS_ERR_NO_FN||topo.start_epoch!=63||r4driver_cpu_power_read(&ctx,63,identity,17,&raw)!=R4OS_ERR_NO_FN||raw.value!=identity||
+        r4driver_cpu_power_clock(&ctx,&clock)!=R4OS_ERR_NO_FN||clock.instant_ns!=identity||r4driver_cpu_power_counters(&ctx,63,identity,&pair)!=R4OS_ERR_NO_FN||pair.aperf!=identity)return 7;
+    return 0;
+}
+
+static int32_t control_write(uint32_t cpu,uint64_t epoch,uint64_t token,uint32_t id,uint64_t expected,uint64_t requested,R4CpuRegisterWriteInfo *out){
+    if(cpu!=63||epoch!=UINT64_C(0x1234567885abcdef)||token!=epoch||id!=20||expected!=epoch+1||requested!=epoch+2)return -99;
+    out->observed_after=requested;return -95;
+}
+static int control_checks(void){
+    uint64_t identity=UINT64_C(0x1234567885abcdef);R4CpuRegisterWriteInfo out={.observed_after=71};
+    R4DriverCpuPowerApi table={.version=1,.size=112,.register_compare_write=(uintptr_t)&control_write};
+    if(r4driver_cpu_power_compare_write(&table,63,identity,identity,20,identity+1,identity+2,&out)!=-95||out.observed_after!=identity+2)return 1;
+    for(uint32_t size=72;size<112;size++){table.size=size;if(r4driver_cpu_power_compare_write(&table,63,identity,identity,20,identity+1,identity+2,&out)!=R4OS_ERR_NO_FN||out.observed_after!=identity+2)return 2;}
+    table.size=112;table.register_compare_write=0;
+    if(r4driver_cpu_power_compare_write(&table,63,identity,identity,20,identity+1,identity+2,&out)!=R4OS_ERR_NO_FN||out.observed_after!=identity+2)return 3;
+    return 0;
+}
+
+static int32_t cppc_register(uint64_t cookie,const R4CpuCppcBackend *b){return cookie==b->context?-97:-99;}
+static int32_t cppc_rank(const R4CpuPerformanceHint *in,uint64_t *seq){if(in->cpu_index!=63)return -99;*seq=in->epoch;return -98;}
+static int cppc_checks(void){
+    const uint64_t identity=UINT64_C(0x1234567885abcdef);R4CpuCppcBackend backend={.context=identity};R4CpuPerformanceHint in={.cpu_index=63,.epoch=identity};uint64_t sequence=71;
+    R4DriverCpuPowerApi t={.version=1,.size=128,.register_cppc=(uintptr_t)&cppc_register,.rank_publish=(uintptr_t)&cppc_rank};
+    for(uint32_t size=112;size<120;size++){t.size=size;if(r4driver_cpu_power_register_cppc(&t,identity,&backend)!=R4OS_ERR_NO_FN)return 1;}
+    t.size=120;if(r4driver_cpu_power_register_cppc(&t,identity,&backend)!=-97)return 2;
+    for(uint32_t size=112;size<128;size++){t.size=size;if(r4driver_cpu_power_rank_publish(&t,&in,&sequence)!=R4OS_ERR_NO_FN||sequence!=71)return 3;}
+    t.size=128;if(r4driver_cpu_power_rank_publish(&t,&in,&sequence)!=-98||sequence!=identity)return 4;
+    t.rank_publish=0;t.register_cppc=0;if(r4driver_cpu_power_rank_publish(&t,&in,&sequence)!=R4OS_ERR_NO_FN||sequence!=identity||r4driver_cpu_power_register_cppc(&t,identity,&backend)!=R4OS_ERR_NO_FN)return 5;
+    return 0;
+}
+
+static uint64_t platform_root_probe(void) { return UINT64_C(0x100000080035); }
+static int32_t platform_view_probe(uint64_t physical, uint64_t bytes, uint64_t *out) {
+    if (physical != UINT64_C(0x100000080035) || bytes != 65536) return -1;
+    *out = UINT64_C(0xffff800000080035); return 0;
+}
+static int32_t platform_input_probe(uint32_t kind, uint32_t value) { return kind == 3 && value == 2 ? 0 : -1; }
+static int32_t platform_query_probe(R4DriverPlatformApi *out) {
+    if(out->version != 1 || out->size != 32) return -1;
+    *out = (R4DriverPlatformApi){.version=1,.size=32,.rsdp=(uintptr_t)&platform_root_probe,.physical_view=(uintptr_t)&platform_view_probe,.input_submit=(uintptr_t)&platform_input_probe}; return 0;
+}
+static int32_t platform_snapshot_probe(R4PlatformInputSnapshot *out) {
+    if(out->version != 1 || out->size != 64) return -1;
+    out->brightness_up = UINT64_C(0x200000080035); return 1;
+}
+static int platform_checks(void) {
+    R4DriverResourceApi resource = {.version=1,.size=48,.platform_query=(uintptr_t)&platform_query_probe};
+    R4DriverPlatformApi platform;
+    if(r4driver_resource_platform(&resource,&platform) != R4OS_ERR_NO_FN) return 1;
+    resource.size=55;
+    if(r4driver_resource_platform(&resource,&platform) != R4OS_ERR_NO_FN) return 2;
+    resource.size=56;
+    if(r4driver_resource_platform(&resource,&platform) != 0 || r4driver_platform_rsdp(&platform) != UINT64_C(0x100000080035)) return 3;
+    uint64_t view=0;
+    if(r4driver_platform_view(&platform,UINT64_C(0x100000080035),65536,&view) != 0 || view != UINT64_C(0xffff800000080035) || r4driver_platform_input(&platform,3,2) != 0) return 4;
+    R4XStartR4Sys table = {.size=1248,.platform_input_snapshot=(uintptr_t)&platform_snapshot_probe};
+    R4Sys sys={.table=&table}; R4PlatformInputSnapshot snapshot;
+    if(r4sys_platform_input_snapshot(&sys,&snapshot) != R4OS_ERR_NO_FN) return 5;
+    table.size=1256;
+    if(r4sys_platform_input_snapshot(&sys,&snapshot) != 1 || snapshot.brightness_up != UINT64_C(0x200000080035)) return 6;
+    table.platform_input_snapshot=0;
+    if(r4sys_platform_input_snapshot(&sys,&snapshot) != R4OS_ERR_NO_FN || r4sys_platform_input_snapshot(&sys,0) != R4OS_ERROR_INVALID) return 7;
+    return 0;
+}
+
+static int32_t boot_hold_probe(const R4GfxBootHoldRequest *input, R4GfxNativeState *output) {
+    if (input->generation != UINT64_C(0x100000000079) || input->reference.generation != UINT64_C(0x200000079)) return -77;
+    output->generation = input->generation + 1; output->retained = 1; return R4OS_GFX_OUTPUT_OK;
+}
+static int32_t boot_finish_probe(uint64_t generation, uint32_t operation, R4GfxNativeState *output) {
+    if (generation != UINT64_C(0x10000000007a) || operation != 2) return -77;
+    output->outcome = R4OS_GFX_OUTPUT_OUTCOME_LOST; output->retained = 1; return R4OS_GFX_OUTPUT_OK;
+}
+static int32_t prepare_held_probe(const R4GfxNativeRegistration *input, uint64_t generation, R4GfxNativeState *output) {
+    if (generation != UINT64_C(0x10000000007a) || input->context != UINT64_C(0x200000000079)) return -77;
+    output->generation = generation; output->retained = 1; output->outcome = R4OS_GFX_OUTPUT_OUTCOME_VALIDATED;
+    return R4OS_GFX_OUTPUT_OK;
+}
+static int32_t headless_resume_probe(const R4GfxBackendBinding *input, uint64_t generation, R4GfxNativeState *output) {
+    if (input->adapter_id != 79 || generation != UINT64_C(0x10000000007a) || output->version != 1 || output->size != sizeof(*output)) return -77;
+    output->generation = generation; output->retained = 1; output->state = R4OS_DISPLAY_STATE_RECOVERING;
+    output->outcome = R4OS_GFX_OUTPUT_OUTCOME_LOST; return R4OS_GFX_OUTPUT_OK;
+}
+static int boot_display_checks(void) {
+    _Static_assert(offsetof(R4GfxDriverDisplayApi, boot_hold) == 40, "old display prefix");
+    _Static_assert(offsetof(R4GfxDriverDisplayApi, boot_finish) == 48, "finish offset");
+    _Static_assert(offsetof(R4GfxDriverDisplayApi, prepare_held) == 56, "held native tail");
+    _Static_assert(sizeof(R4GfxDriverDisplayApi) >= 64 && sizeof(R4GfxBootHoldRequest) == 56, "boot hold prefix and payload layout");
+    R4GfxDriverDisplayApi table = { .version = 1, .size = 40, .boot_hold = (uint64_t)(uintptr_t)&boot_hold_probe, .boot_finish = (uint64_t)(uintptr_t)&boot_finish_probe, .prepare_held = (uint64_t)(uintptr_t)&prepare_held_probe };
+    R4GfxBootHoldRequest request = { .version = 1, .size = sizeof(request), .generation = UINT64_C(0x100000000079), .reference = { .id = 7, .generation = UINT64_C(0x200000079) } };
+    R4GfxNativeState state = { .version = 1, .size = sizeof(state), .generation = 79 };
+    if (r4driver_display_boot_hold(&table, &request, &state) != R4OS_ERR_NO_FN || state.generation != 79) return 1;
+    table.size = 48;
+    if (r4driver_display_boot_hold(&table, &request, &state) != R4OS_GFX_OUTPUT_OK || state.generation != request.generation + 1) return 2;
+    table.size = 55;
+    if (r4driver_display_boot_finish(&table, state.generation, 2, &state) != R4OS_ERR_NO_FN) return 3;
+    table.size = 56;
+    if (r4driver_display_boot_finish(&table, state.generation, 2, &state) != R4OS_GFX_OUTPUT_OK || state.retained != 1 || state.outcome != R4OS_GFX_OUTPUT_OUTCOME_LOST) return 4;
+    table.boot_finish = 0;
+    if (r4driver_display_boot_finish(&table, state.generation, 2, &state) != R4OS_ERR_NO_FN) return 5;
+    R4GfxNativeRegistration candidate = { .version = 1, .size = sizeof(candidate), .context = UINT64_C(0x200000000079) };
+    if (r4driver_display_prepare_held(&table, &candidate, state.generation, &state) != R4OS_ERR_NO_FN || state.outcome != R4OS_GFX_OUTPUT_OUTCOME_LOST) return 6;
+    table.size = 63;
+    if (r4driver_display_prepare_held(&table, &candidate, state.generation, &state) != R4OS_ERR_NO_FN) return 7;
+    table.size = 64;
+    if (r4driver_display_prepare_held(&table, 0, state.generation, &state) != R4OS_GFX_OUTPUT_ERROR_INVALID ||
+        r4driver_display_prepare_held(&table, &candidate, state.generation, 0) != R4OS_GFX_OUTPUT_ERROR_INVALID) return 10;
+    if (r4driver_display_prepare_held(&table, &candidate, state.generation, &state) != R4OS_GFX_OUTPUT_OK || state.generation != UINT64_C(0x10000000007a) || state.outcome != R4OS_GFX_OUTPUT_OUTCOME_VALIDATED || state.retained != 1) return 8;
+    table.prepare_held = 0;
+    if (r4driver_display_prepare_held(&table, &candidate, state.generation, &state) != R4OS_ERR_NO_FN) return 9;
+    _Static_assert(offsetof(R4GfxDriverDisplayApi, resume_headless) == 144, "headless resume tail");
+    R4GfxBackendBinding backend = { .version = 1, .size = sizeof(backend), .adapter_id = 79 };
+    if (r4driver_display_resume_headless(&table, &backend, state.generation, &state) != R4OS_ERR_NO_FN) return 11;
+    table.resume_headless = (uint64_t)(uintptr_t)&headless_resume_probe;
+    const uint32_t capacities[] = {40, 136, 144, 145, 151};
+    for (unsigned i=0; i<sizeof(capacities)/sizeof(capacities[0]); ++i) {
+        table.size = capacities[i];
+        if (r4driver_display_supports_headless_resume(&table) ||
+            r4driver_display_resume_headless(&table, &backend, state.generation, &state) != R4OS_ERR_NO_FN ||
+            state.generation != UINT64_C(0x10000000007a)) return 12;
+    }
+    table.size = 152; table.version = 2;
+    if (r4driver_display_resume_headless(&table, &backend, state.generation, &state) != R4OS_ERR_NO_FN) return 13;
+    table.version = 1;
+    if (r4driver_display_resume_headless(&table, 0, state.generation, &state) != R4OS_GFX_OUTPUT_ERROR_INVALID ||
+        r4driver_display_resume_headless(&table, &backend, state.generation, 0) != R4OS_GFX_OUTPUT_ERROR_INVALID) return 14;
+    if (!r4driver_display_supports_headless_resume(&table) ||
+        r4driver_display_resume_headless(&table, &backend, state.generation, &state) != R4OS_GFX_OUTPUT_OK ||
+        state.retained != 1 || state.state != R4OS_DISPLAY_STATE_RECOVERING || state.outcome != R4OS_GFX_OUTPUT_OUTCOME_LOST) return 15;
+    table.resume_headless = 0;
+    if (r4driver_display_resume_headless(&table, &backend, state.generation, &state) != R4OS_ERR_NO_FN) return 16;
+    return 0;
+}
+
+static int32_t semaphore_create_probe(uint32_t initial, uint32_t maximum, uint64_t *output) {
+    if (initial != UINT32_C(0x80000001) || maximum != UINT32_MAX || *output != 0) return -77;
+    *output = UINT64_C(0x100000000079); return 0;
+}
+static int32_t semaphore_acquire_probe(uint64_t handle, uint64_t ticks) { return handle == UINT64_C(0x100000000079) && ticks == UINT64_MAX ? R4OS_DRIVER_SEMAPHORE_ERROR_TIMEOUT : -77; }
+static int32_t semaphore_release_probe(uint64_t handle) { return handle == UINT64_C(0x100000000079) ? R4OS_DRIVER_SEMAPHORE_ERROR_OVERFLOW : -77; }
+static int32_t semaphore_destroy_probe(uint64_t handle) { return handle == UINT64_C(0x100000000079) ? R4OS_DRIVER_SEMAPHORE_ERROR_BUSY : -77; }
+static int32_t semaphore_status_probe(uint64_t handle, R4DriverSemaphoreStatus *output) {
+    if (handle != UINT64_C(0x100000000079)) return -77;
+    *output = (R4DriverSemaphoreStatus){ .version = 1, .size = sizeof(*output), .handle = handle, .owner_epoch = UINT64_C(0x200000000079), .maximum = UINT32_MAX, .queued_waiters = 3, .active_acquires = 4 }; return 0;
+}
+static int32_t semaphore_stats_probe(R4DriverSemaphoreStats *output) { *output = (R4DriverSemaphoreStats){ .version = 1, .size = sizeof(*output), .records = UINT64_C(0x300000000079), .closing = 1 }; return 0; }
+static uint32_t semaphore_context_probe(void) { return R4OS_DRIVER_SEMAPHORE_CONTEXT_IRQ; }
+static int semaphore_checks(void) {
+    R4DriverSemaphoreApi api = { .version = 1, .size = sizeof(api), .create = (uint64_t)(uintptr_t)&semaphore_create_probe, .acquire = (uint64_t)(uintptr_t)&semaphore_acquire_probe, .release = (uint64_t)(uintptr_t)&semaphore_release_probe, .destroy = (uint64_t)(uintptr_t)&semaphore_destroy_probe, .status = (uint64_t)(uintptr_t)&semaphore_status_probe, .stats = (uint64_t)(uintptr_t)&semaphore_stats_probe, .context_flags = (uint64_t)(uintptr_t)&semaphore_context_probe };
+    uint64_t handle = 79;
+    if (r4driver_semaphore_create(&api, UINT32_C(0x80000001), UINT32_MAX, &handle) != 0 || handle != UINT64_C(0x100000000079)) return 1;
+    if (r4driver_semaphore_acquire(&api, handle, UINT64_MAX) != R4OS_DRIVER_SEMAPHORE_ERROR_TIMEOUT || r4driver_semaphore_release(&api, handle) != R4OS_DRIVER_SEMAPHORE_ERROR_OVERFLOW || r4driver_semaphore_destroy(&api, handle) != R4OS_DRIVER_SEMAPHORE_ERROR_BUSY) return 2;
+    R4DriverSemaphoreStatus status = {0}; R4DriverSemaphoreStats stats = {0};
+    if (r4driver_semaphore_status(&api, handle, &status) != 0 || status.owner_epoch != UINT64_C(0x200000000079) || status.maximum != UINT32_MAX || r4driver_semaphore_stats(&api, &stats) != 0 || stats.records != UINT64_C(0x300000000079) || r4driver_semaphore_context_flags(&api) != R4OS_DRIVER_SEMAPHORE_CONTEXT_IRQ) return 3;
+    if (r4driver_semaphore_create(&api, 0, 1, 0) != R4OS_DRIVER_SEMAPHORE_ERROR_INVALID || r4driver_semaphore_status(&api, handle, 0) != R4OS_DRIVER_SEMAPHORE_ERROR_INVALID || r4driver_semaphore_stats(&api, 0) != R4OS_DRIVER_SEMAPHORE_ERROR_INVALID) return 4;
+    api.size = offsetof(R4DriverSemaphoreApi, destroy);
+    if (r4driver_semaphore_destroy(&api, handle) != R4OS_ERR_NO_FN || r4driver_semaphore_context_flags(&api) != 0 || r4driver_semaphore_release(&api, handle) != R4OS_DRIVER_SEMAPHORE_ERROR_OVERFLOW) return 5;
+    api.version = 2;
+    if (r4driver_semaphore_create(&api, 0, 1, &handle) != R4OS_ERR_NO_FN || handle != 0) return 6;
+    api = (R4DriverSemaphoreApi){ .version = 1, .size = sizeof(api) };
+    if (r4driver_semaphore_acquire(&api, 1, 0) != R4OS_ERR_NO_FN || r4driver_semaphore_status(&api, 1, &status) != R4OS_ERR_NO_FN || r4driver_semaphore_stats(&api, &stats) != R4OS_ERR_NO_FN || r4driver_semaphore_release(0, 1) != R4OS_ERR_NO_FN) return 7;
+    return 0;
+}
+
+static int32_t driver_thread_handler(uintptr_t value) { return value == UINT64_C(0x100000000037) ? 79 : -1; }
+static int32_t driver_thread_start_probe(const R4DriverThreadRequest *input, uint64_t *output) {
+    if (input->version != 1 || input->size != 32 || input->reserved != 0 || input->flags != R4OS_DRIVER_THREAD_FLAG_PARALLEL) return -77;
+    if (((R4DriverThreadHandler)(uintptr_t)input->handler)(input->context) != 79) return -78;
+    *output = UINT64_C(0x200000000079);
+    return 0;
+}
+static int32_t driver_thread_join_probe(uint64_t handle, uint64_t timeout, int32_t *result) {
+    return handle == UINT64_C(0x200000000079) && timeout == UINT64_C(0x300000000091) && *result == 0 ? R4OS_DRIVER_THREAD_ERROR_TIMEOUT : -77;
+}
+static int32_t driver_thread_stop_probe(uint64_t handle) { return handle == UINT64_C(0x200000000079) ? R4OS_DRIVER_THREAD_ERROR_CLOSED : -77; }
+static int32_t driver_thread_release_probe(uint64_t handle) { return handle == UINT64_C(0x200000000079) ? R4OS_DRIVER_THREAD_ERROR_BUSY : -77; }
+static int32_t driver_thread_status_probe(uint64_t handle, R4DriverThreadStatus *output) {
+    if (handle != UINT64_C(0x200000000079)) return -77;
+    *output = (R4DriverThreadStatus){ .version = 1, .size = sizeof(*output), .handle = handle, .task_generation = UINT64_C(0x200000000001), .result = -79 };
+    return 0;
+}
+static uint64_t driver_thread_current_probe(void) { return UINT64_C(0x200000000079); }
+static int32_t driver_thread_abort_probe(int32_t result) { return result == -76001 ? R4OS_DRIVER_THREAD_ERROR_BUSY : -77; }
+static int32_t driver_thread_sleep_probe(uint64_t ticks) { return ticks == UINT64_MAX ? R4OS_DRIVER_THREAD_ERROR_CANCELLED : -77; }
+static int32_t driver_thread_stats_probe(R4DriverThreadStats *output) {
+    *output = (R4DriverThreadStats){ .version = 1, .size = sizeof(*output), .records = UINT64_C(0x100000000003), .closing = 1 };
+    return 0;
+}
+static int32_t driver_thread_request_probe(R4DriverThreadRequest *output) {
+    *output = (R4DriverThreadRequest){ .version = 1, .size = sizeof(*output), .handler = UINT64_C(0xffffc00000007900), .context = UINT64_C(0x200000000079), .flags = R4OS_DRIVER_THREAD_FLAG_ABORTABLE };
+    return R4OS_DRIVER_THREAD_ERROR_CONTEXT;
+}
+static int driver_thread_checks(void) {
+    R4DriverThreadApi api = { .version = 1, .size = sizeof(api), .start = (uint64_t)(uintptr_t)&driver_thread_start_probe, .stop = (uint64_t)(uintptr_t)&driver_thread_stop_probe, .join = (uint64_t)(uintptr_t)&driver_thread_join_probe, .release = (uint64_t)(uintptr_t)&driver_thread_release_probe, .status = (uint64_t)(uintptr_t)&driver_thread_status_probe, .current = (uint64_t)(uintptr_t)&driver_thread_current_probe, .sleep_ticks = (uint64_t)(uintptr_t)&driver_thread_sleep_probe, .stats = (uint64_t)(uintptr_t)&driver_thread_stats_probe };
+    uint64_t handle = 99;
+    int32_t result = 123;
+    R4DriverThreadRequest request = {0};
+    if (r4driver_thread_current_request(&api, &request) != R4OS_ERR_NO_FN) return 1;
+    api.current_request = (uint64_t)(uintptr_t)&driver_thread_request_probe;
+    const uint32_t capacities[] = {72, 80, 87};
+    for (unsigned i = 0; i < sizeof(capacities) / sizeof(capacities[0]); ++i) {
+        api.size = capacities[i];
+        if (r4driver_thread_current_request(&api, &request) != R4OS_ERR_NO_FN || request.handler != 0) return 1;
+    }
+    api.size = 88;
+    if (r4driver_thread_current_request(&api, &request) != R4OS_DRIVER_THREAD_ERROR_CONTEXT || request.handler != UINT64_C(0xffffc00000007900) || request.context != UINT64_C(0x200000000079) || request.flags != R4OS_DRIVER_THREAD_FLAG_ABORTABLE) return 1;
+    if (r4driver_thread_current_request(&api, 0) != R4OS_DRIVER_THREAD_ERROR_INVALID || r4driver_thread_current_request(0, &request) != R4OS_ERR_NO_FN) return 1;
+    if (r4driver_thread_abort_current(&api, -76001) != R4OS_ERR_NO_FN) return 1;
+    api.abort_current = (uint64_t)(uintptr_t)&driver_thread_abort_probe;
+    if (r4driver_thread_abort_current(&api, -76001) != R4OS_DRIVER_THREAD_ERROR_BUSY) return 1;
+    api.size = R4OS_DRIVER_THREAD_API_MIN_BYTES;
+    if (r4driver_thread_abort_current(&api, -76001) != R4OS_ERR_NO_FN) return 1;
+    if (r4driver_thread_start(&api, driver_thread_handler, 0, R4OS_DRIVER_THREAD_FLAG_ABORTABLE, &handle) != R4OS_ERR_NO_FN || handle != 0) return 1;
+    api.size = sizeof(api);
+    R4DriverThreadStatus status = { .version = 1, .size = sizeof(status) };
+    R4DriverThreadStats stats = { .version = 1, .size = sizeof(stats) };
+    if (r4driver_thread_start(&api, driver_thread_handler, UINT64_C(0x100000000037), R4OS_DRIVER_THREAD_FLAG_PARALLEL, &handle) != 0 || handle != UINT64_C(0x200000000079)) return 1;
+    if (r4driver_thread_join(&api, handle, UINT64_C(0x300000000091), &result) != R4OS_DRIVER_THREAD_ERROR_TIMEOUT || result != 0) return 1;
+    if (r4driver_thread_stop(&api, handle) != R4OS_DRIVER_THREAD_ERROR_CLOSED || r4driver_thread_release(&api, handle) != R4OS_DRIVER_THREAD_ERROR_BUSY) return 1;
+    if (r4driver_thread_status(&api, handle, &status) != 0 || status.task_generation != UINT64_C(0x200000000001) || status.result != -79) return 1;
+    if (r4driver_thread_current(&api) != handle || r4driver_thread_sleep_ticks(&api, UINT64_MAX) != R4OS_DRIVER_THREAD_ERROR_CANCELLED) return 1;
+    if (r4driver_thread_stats(&api, &stats) != 0 || stats.records != UINT64_C(0x100000000003)) return 1;
+    if (r4driver_thread_start(&api, driver_thread_handler, 0, 0, 0) != R4OS_DRIVER_THREAD_ERROR_INVALID || r4driver_thread_join(&api, 1, 1, 0) != R4OS_DRIVER_THREAD_ERROR_INVALID) return 1;
+    if (r4driver_thread_status(&api, 1, 0) != R4OS_DRIVER_THREAD_ERROR_INVALID || r4driver_thread_stats(&api, 0) != R4OS_DRIVER_THREAD_ERROR_INVALID) return 1;
+    api.size = offsetof(R4DriverThreadApi, join);
+    result = 123;
+    if (r4driver_thread_join(&api, handle, 1, &result) != R4OS_ERR_NO_FN || result != 0 || r4driver_thread_release(&api, handle) != R4OS_ERR_NO_FN) return 1;
+    api.version = 2;
+    if (r4driver_thread_start(&api, driver_thread_handler, 0, 0, &handle) != R4OS_ERR_NO_FN || handle != 0 || r4driver_thread_current(&api) != 0) return 1;
+    if (r4driver_thread_stop(0, 1) != R4OS_ERR_NO_FN || r4driver_thread_stats(0, &stats) != R4OS_ERR_NO_FN) return 1;
+    return 0;
+}
+
+static int32_t driver_heap_allocate_probe(uint64_t bytes, uint32_t alignment, R4DriverHeapAllocation *out) {
+    if (bytes != UINT64_C(0x100000001) || alignment != 4096) return -77;
+    *out = (R4DriverHeapAllocation){ .version = 1, .size = sizeof(*out), .handle = UINT64_C(0x200000003), .cpu_address = UINT64_C(0xffffc00000001000), .byte_length = bytes, .alignment = alignment };
+    return 0;
+}
+static int32_t driver_heap_release_probe(uint64_t handle) {
+    return handle == UINT64_C(0x200000003) ? R4OS_DRIVER_HEAP_ERROR_RELEASE : -77;
+}
+static int driver_heap_checks(void) {
+    R4DriverHeapApi api = { .version = 1, .size = sizeof(api), .allocate = (uint64_t)(uintptr_t)&driver_heap_allocate_probe, .release = (uint64_t)(uintptr_t)&driver_heap_release_probe };
+    R4DriverHeapAllocation allocation = { .version = 1, .size = sizeof(allocation) };
+    if (r4driver_heap_allocate(&api, UINT64_C(0x100000001), 4096, &allocation) != 0 || allocation.byte_length != UINT64_C(0x100000001) || allocation.cpu_address != UINT64_C(0xffffc00000001000)) return 1;
+    if (r4driver_heap_release(&api, allocation.handle) != R4OS_DRIVER_HEAP_ERROR_RELEASE) return 1;
+    if (r4driver_heap_stats(&api, 0) != R4OS_ERR_NO_FN) return 1;
+    if (r4driver_heap_allocate(&api, 1, 16, 0) != R4OS_DRIVER_HEAP_ERROR_INVALID) return 1;
+    api.size = offsetof(R4DriverHeapApi, release);
+    if (r4driver_heap_release(&api, 1) != R4OS_ERR_NO_FN) return 1;
+    api.version = 2;
+    if (r4driver_heap_allocate(&api, 1, 16, &allocation) != R4OS_ERR_NO_FN || r4driver_heap_release(0, 1) != R4OS_ERR_NO_FN) return 1;
+    return 0;
+}
+
+static int32_t driver_resource_probe(uint64_t handle, uint64_t offset, uint8_t *out, uint32_t bytes, uint64_t deadline) {
+    if (handle != UINT64_C(0x100000001) || offset != UINT64_C(0x200000003) || deadline != UINT64_C(0x300000005) || bytes != 1) return -77;
+    out[0] = 79;
+    return 1;
+}
+static int driver_resource_checks(void) {
+    uint8_t byte = 0;
+    R4DriverResourceApi api = { .version = 1, .size = sizeof(api), .read_at = (uint64_t)(uintptr_t)&driver_resource_probe };
+    if (r4driver_resource_read_at(&api, UINT64_C(0x100000001), UINT64_C(0x200000003), &byte, 1, UINT64_C(0x300000005)) != 1 || byte != 79) return 1;
+    api.size = offsetof(R4DriverResourceApi, read_at);
+    if (r4driver_resource_read_at(&api, 1, 0, &byte, 1, 10) != R4OS_ERR_NO_FN) return 1;
+    if (r4driver_resource_stat(0, 0, 0, 0) != R4OS_ERR_NO_FN || r4driver_resource_now_ns(&api) != UINT64_MAX) return 1;
+    return 0;
+}
 
 _Static_assert(sizeof(struct R4Process) == sizeof(R4OS_ProcessHandle), "legacy R4Process tag layout drifted");
 _Static_assert(sizeof(((struct R4Process *)0)->raw) == sizeof(uint32_t), "legacy R4Process.raw is no longer uint32_t");
@@ -112,14 +430,118 @@ static void init_app(R4App *app, R4XStartR4Sys *table, R4XStartR4Desk *desk) {
     *app = (R4App){0}; app->system.table = table; app->desktop.table = desk;
 }
 
-int main(void) {
+static int32_t current_identity_probe(R4ProgramJoinHandle *out) {
+    *out = (R4ProgramJoinHandle){ .thread_id = 17, .instance_id = 31,
+        .thread_generation = UINT64_C(0x10000007939), .instance_generation = UINT64_C(0x20000007939) };
+    return R4OS_THREAD_OK;
+}
+static int current_identity_checks(void) {
+    R4XStartR4Sys table = {0};
+    R4Sys sys = { .table = &table };
+    R4ProgramJoinHandle output = { .thread_generation = 79 };
+    table.thread_current_handle = (uintptr_t)&current_identity_probe;
+    const uint32_t short_sizes[] = {1224, 1231};
+    for (unsigned i = 0; i < 2; ++i) {
+        table.size = short_sizes[i];
+        if (r4sys_thread_current_handle(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.thread_generation != 79) return 1;
+    }
+    table.size = 1232; table.thread_current_handle = 0;
+    if (r4sys_thread_current_handle(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.thread_generation != 79) return 2;
+    table.thread_current_handle = (uintptr_t)&current_identity_probe;
+    if (r4sys_thread_current_handle(&sys, 0) != R4OS_THREAD_ERROR_INVALID) return 3;
+    if (r4sys_thread_current_handle(&sys, &output) != R4OS_THREAD_OK || output.thread_id != 17 || output.instance_id != 31 ||
+        output.thread_generation != UINT64_C(0x10000007939) || output.instance_generation != UINT64_C(0x20000007939) || output.reserved != 0) return 4;
+    return 0;
+}
+
+static int32_t cpu_capacity_probe(R4CpuCapacity *output) {
+    *output = (R4CpuCapacity){ .available_cpus = 3, .configured_cpus = 4 };
+    return R4OS_THREAD_OK;
+}
+static int cpu_capacity_checks(void) {
+    R4XStartR4Sys table = {0};
+    R4Sys sys = { .table = &table };
+    R4CpuCapacity output = { .available_cpus = 79 };
+    table.cpu_capacity = (uintptr_t)&cpu_capacity_probe;
+    const uint32_t short_sizes[] = {1232, 1239};
+    for (unsigned i = 0; i < 2; ++i) {
+        table.size = short_sizes[i];
+        if (r4sys_cpu_capacity(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.available_cpus != 79) return 1;
+    }
+    table.size = 1240; table.cpu_capacity = 0;
+    if (r4sys_cpu_capacity(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.available_cpus != 79) return 2;
+    table.cpu_capacity = (uintptr_t)&cpu_capacity_probe;
+    if (r4sys_cpu_capacity(&sys, 0) != R4OS_THREAD_ERROR_INVALID) return 3;
+    if (r4sys_cpu_capacity(&sys, &output) != R4OS_THREAD_OK || output.available_cpus != 3 || output.configured_cpus != 4) return 4;
+    return 0;
+}
+
+static unsigned placement_calls;
+static int32_t placement_get_probe(const R4ProgramJoinHandle *handle, R4ThreadPlacementInfo *info, uint64_t *cpus, uint32_t count) {
+    if (handle->thread_generation != UINT64_C(0x10000007939)) return -99;
+    ++placement_calls; info->cpu_word_count = 2;
+    if (count) { if (count != 3) return -99; cpus[0] = 1; cpus[1] = UINT64_C(1) << 13; }
+    return 37;
+}
+static int32_t placement_set_probe(const R4ProgramJoinHandle *handle, const R4ThreadPlacementRequest *request, const uint64_t *cpus, uint32_t count) {
+    if (handle->thread_generation != UINT64_C(0x10000007939) || request->work_class != R4OS_THREAD_PLACEMENT_CLASS_BATCH || count != 2 || cpus[1] != (UINT64_C(1) << 13)) return -99;
+    ++placement_calls; return 41;
+}
+static int placement_checks(void) {
+    R4XStartR4Sys table = {0}; R4Sys sys = {.table = &table};
+    R4ProgramJoinHandle handle = {.thread_generation = UINT64_C(0x10000007939)};
+    R4ThreadPlacementInfo info = {.version = 1, .size = 64};
+    R4ThreadPlacementRequest request = {.version = 1, .size = 32, .work_class = R4OS_THREAD_PLACEMENT_CLASS_BATCH};
+    uint64_t words[3] = {79,79,79}; placement_calls = 0;
+    table.thread_placement_get = (uintptr_t)&placement_get_probe;
+    table.thread_placement_set = (uintptr_t)&placement_set_probe;
+    table.size = 1271;
+    if (r4sys_thread_placement_get(&sys,&handle,&info,words,3) != R4OS_THREAD_ERROR_UNSUPPORTED) return 1;
+    table.size = 1279;
+    if (r4sys_thread_placement_set(&sys,&handle,&request,words,2) != R4OS_THREAD_ERROR_UNSUPPORTED) return 2;
+    table.size = 1280; table.thread_placement_get = 0; table.thread_placement_set = 0;
+    if (r4sys_thread_placement_get(&sys,&handle,&info,words,3) != R4OS_THREAD_ERROR_UNSUPPORTED || r4sys_thread_placement_set(&sys,&handle,&request,words,2) != R4OS_THREAD_ERROR_UNSUPPORTED || placement_calls || words[0] != 79) return 3;
+    table.thread_placement_get = (uintptr_t)&placement_get_probe; table.thread_placement_set = (uintptr_t)&placement_set_probe;
+    if (r4sys_thread_placement_get(&sys,&handle,&info,0,0) != 37 || info.cpu_word_count != 2) return 4;
+    if (r4sys_thread_placement_get(&sys,&handle,&info,words,3) != 37 || words[0] != 1 || words[1] != (UINT64_C(1)<<13) || words[2] != 79) return 5;
+    if (r4sys_thread_placement_set(&sys,&handle,&request,words,2) != 41 || placement_calls != 3) return 6;
+    return 0;
+}
+
+static int32_t program_exit_probe(int32_t code, uint32_t reason) {
+    return code == -73 && reason == R4OS_PROGRAM_EXIT_REASON_FAILED ? R4OS_THREAD_ERROR_BUSY : R4OS_THREAD_ERROR_INVALID;
+}
+static int program_exit_checks(void) {
+    R4XStartR4Sys table = {0};
+    R4Sys sys = { .table = &table };
+    table.program_exit = (uintptr_t)&program_exit_probe;
+    const uint32_t short_sizes[] = {1240, 1247};
+    for (unsigned i = 0; i < 2; ++i) {
+        table.size = short_sizes[i];
+        if (r4sys_program_exit(&sys, -73, R4OS_PROGRAM_EXIT_REASON_FAILED) != R4OS_THREAD_ERROR_UNSUPPORTED) return 1;
+    }
+    table.size = 1248; table.program_exit = 0;
+    if (r4sys_program_exit(&sys, -73, R4OS_PROGRAM_EXIT_REASON_FAILED) != R4OS_THREAD_ERROR_UNSUPPORTED) return 2;
+    table.program_exit = (uintptr_t)&program_exit_probe;
+    if (r4sys_program_exit(&sys, -73, R4OS_PROGRAM_EXIT_REASON_FAILED) != R4OS_THREAD_ERROR_BUSY) return 3;
+    return 0;
+}
+
+static int32_t compute_create_probe(R4ThreadEntryFn entry, uint64_t arg, uint64_t stack, uint32_t flags, R4ProgramJoinHandle *out) {
+    if (flags != R4OS_THREAD_CREATE_FLAG_COMPUTE_WORKER || arg != 85u || stack != 262144u) return -99;
+    return fake_thread_create_handle(entry, arg, stack, 0u, out);
+}
+
+static int app_resource_checks(void) {
     R4App app; R4XStartR4Sys table; R4XStartR4Desk desk; init_app(&app, &table, &desk); R4Resources resources = r4_app_resources(&app);
-    R4PerformanceView performance = r4_devices_performance(r4_app_devices(&app));
-    R4ProgramRegistrySummary registry_v1 = {0}; R4ProgramRegistrySelfTestResult registry_test_v1 = {0};
-    R4ProgramRegistrySummaryV2 registry_v2 = {0}; R4ProgramRegistrySelfTestResultV2 registry_test_v2 = {0};
-    if (r4_program_registry_summary(&performance, &registry_v1) != R4OS_ERR_NO_FN || r4_program_registry_self_test(&performance, &registry_test_v1) != R4OS_ERR_NO_FN) return 32;
-    if (r4_program_registry_summary_v2(&performance, &registry_v2) != R4OS_ERR_NO_FN || r4_program_registry_self_test_v2(&performance, &registry_test_v2) != R4OS_ERR_NO_FN) return 32;
-    if (r4_program_registry_summary_legacy(&performance, &registry_v1) != R4OS_ERR_NO_FN || r4_program_registry_self_test_legacy(&performance, &registry_test_v1) != R4OS_ERR_NO_FN) return 32;
+    R4ProgramJoinHandle refused = {0};
+    if (r4sys_compute_worker_create(&app.system, unused_thread, 85u, 262144u, &refused) != R4OS_THREAD_ERROR_UNSUPPORTED || refused.thread_id != 0u) return 88;
+    table.thread_create_handle = (uintptr_t)&compute_create_probe;
+    R4JoinHandle compute;
+    if (r4_resources_create_compute_worker(&resources, unused_thread, 85u, 262144u, &compute) != 0) return 88;
+    R4ResourceWait compute_result = r4_join_wait(&compute, forever_timeout());
+    if (compute_result.kind != R4_RESOURCE_WAIT_EXITED || compute_result.value != 85 || r4_join_handle_valid(&compute)) return 88;
+    table.thread_create_handle = (uintptr_t)&fake_thread_create_handle;
     struct R4Process legacy_process = {0}; legacy_process.raw = 73u;
     uint32_t legacy_id = legacy_process.raw;
     if (legacy_process.raw == 0u || legacy_id != 73u) return 33;
@@ -176,4 +598,43 @@ int main(void) {
         if (r4_resources_async_read(&resources, path, buffer, sizeof(buffer), 0u, &request) != 0 || r4_io_request_wait(&request, forever_timeout()).kind != R4_RESOURCE_WAIT_EXITED || r4_io_request_close(&request) != 0) return 23;
     }
     return process_slots == 0u && thread_slots == 0u && vm_slots == 0u && io_slots == 0u ? 0 : 30;
+}
+
+static unsigned registry_v2_calls;
+static int32_t registry_summary_v2_peer(R4ProgramRegistrySummaryV2 *out) {
+    if(out->version<2 || out->size<sizeof(*out)) return -1;
+    ++registry_v2_calls;out->live_slots=7;return 1;
+}
+static int32_t registry_test_v2_peer(R4ProgramRegistrySelfTestResultV2 *out) {
+    if(out->version<2 || out->size<sizeof(*out)) return -1;
+    ++registry_v2_calls;out->flags=17;return 1;
+}
+int main(void) {
+    if (platform_checks()) return 100;
+    if (program_exit_checks() != 0) return 86;
+    if (placement_checks() != 0) return 87;
+    if (cpu_capacity_checks() != 0) return 85;
+    if (current_identity_checks() != 0) return 84;
+    if (boot_display_checks() != 0) return 83;
+    if (semaphore_checks() != 0) return 82;
+    if (driver_heap_checks() != 0) return 80;
+    if (driver_thread_checks() != 0) return 81;
+    if (driver_resource_checks() != 0) return 79;
+    if (power_checks() != 0) return 89;
+    if (control_checks() != 0) return 90;
+    if (cppc_checks() != 0) return 91;
+    R4App app; R4XStartR4Sys table; R4XStartR4Desk desk; init_app(&app, &table, &desk);
+    R4PerformanceView performance = r4_devices_performance(r4_app_devices(&app));
+    R4ProgramRegistrySummaryV2 registry_v2 = {0}; R4ProgramRegistrySelfTestResultV2 registry_test_v2 = {0};
+    if (r4_program_registry_summary_v2(&performance, &registry_v2) != R4OS_ERR_NO_FN || r4_program_registry_self_test_v2(&performance, &registry_test_v2) != R4OS_ERR_NO_FN) return 32;
+    R4XStartR4Dev current_dev={.size=sizeof(current_dev),.program_registry_summary_v2=(uintptr_t)registry_summary_v2_peer,.program_registry_self_test_v2=(uintptr_t)registry_test_v2_peer};
+    app.devices.table=&current_dev;
+    registry_v2.version=2;registry_v2.size=sizeof(registry_v2);
+    registry_test_v2.version=2;registry_test_v2.size=sizeof(registry_test_v2);
+    current_dev.size=offsetof(R4XStartR4Dev,program_registry_summary_v2);
+    if(r4_program_registry_summary_v2(&performance,&registry_v2)!=R4OS_ERR_NO_FN || registry_v2_calls) return 92;
+    current_dev.size=sizeof(current_dev);
+    if(r4_program_registry_summary_v2(&performance,&registry_v2)!=1 || registry_v2.live_slots!=7) return 93;
+    if(r4_program_registry_self_test_v2(&performance,&registry_test_v2)!=1 || registry_test_v2.flags!=17 || registry_v2_calls!=2) return 94;
+    return app_resource_checks();
 }

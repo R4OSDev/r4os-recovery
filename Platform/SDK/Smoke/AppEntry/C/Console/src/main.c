@@ -1,4 +1,5 @@
 #include <r4os/r4os.h>
+#include "companion.h"
 
 static void parity_u64(R4Sys *sys, uint64_t value) {
     char buffer[20];
@@ -20,7 +21,34 @@ static void parity_text(R4Sys *sys, const char *text) {
     r4sys_write(sys, (const uint8_t *)text, r4os_cstr_len(text));
 }
 
+static int32_t heap_case(R4App *app) {
+    R4Heap heap;
+    if (r4_heap_init(&app->system,&heap) != 0) return 101;
+    if (r4sys_vm_alloc(&app->system,UINT64_MAX,8) || r4sys_vm_alloc(&app->system,UINT64_MAX-4096u,8192)) return 113;
+    if (r4_heap_alloc(&heap,0,8) || r4_heap_alloc(&heap,8,3) || r4_heap_calloc(&heap,UINTPTR_MAX,2)) return 102;
+    uint8_t *p=(uint8_t *)r4_heap_alloc(&heap,128,64);
+    if (!p || (uintptr_t)p%64) return 103;
+    for (uint32_t i=0;i<128;++i) p[i]=0x5a;
+    uint8_t *next=(uint8_t *)r4_heap_realloc(&heap,p,256*1024,64);
+    if (!next) return 104;
+    p=next;
+    for (uint32_t i=0;i<128;++i) if(p[i]!=0x5a) return 105;
+    R4Heap wrong=heap;wrong.instance+=1;
+    if(r4_heap_free(&wrong,p)!=-2 || p[0]!=0x5a) return 106;
+    if(r4_heap_free(&heap,p)!=0) return 107;
+    p=(uint8_t *)r4_heap_calloc(&heap,128,2);
+    if(!p) return 108;
+    for(uint32_t i=0;i<256;++i) if(p[i]) return 109;
+    if(r4_heap_free(&heap,p)!=0) return 110;
+    R4HeapStats stats;uint64_t active=1;
+    if(r4_heap_stats(&heap,&stats)!=0 || !r4_heap_stat(&stats,"active_allocations",&active) || active) return 111;
+    if(r4_heap_finish(&heap)!=0) return 112;
+    parity_text(&app->system,"[HEAPC] aligned/calloc/realloc/owner/full release OK\r\n");
+    return 0;
+}
+
 int32_t r4_app_main(R4App *app) {
+    if (r4_c_companion(7u) != 24u) return 114;
     if (app->profile != R4_APP_PROFILE_CONSOLE || !r4_app_has_group(app, R4L_GROUP_R4SYS) || r4_app_has_group(app, R4L_GROUP_R4DESK)) return 81;
     R4Files files = r4_app_files(app);
     R4FilePath missing_path, payload_path;
@@ -66,5 +94,7 @@ int32_t r4_app_main(R4App *app) {
     parity_u64(&app->system, handle_after);
     parity_text(&app->system, "\r\n");
     if (buffer[64] != 0xA5u || handle_before != 1u || close_raw != 0 || handle_after != 0u) return 86;
+    int32_t heap_result=heap_case(app);
+    if(heap_result!=0) return heap_result;
     return r4sys_write_line(&app->system, "APPCCON app entry: OK");
 }

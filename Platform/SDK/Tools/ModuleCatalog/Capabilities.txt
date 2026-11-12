@@ -1,0 +1,142 @@
+﻿ModuleCatalog capability interface3
+===================================
+
+Public query (SDK0.64.90 and matched toolset):
+
+  bin/<host-triple>/module-catalog capabilities --json
+  module-catalog capabilities --json --profile /TOOLS/RustToolsProfile.json
+  module-catalog capabilities --json --profile /TOOLS/RustToolsProfile.json --output FILE
+
+The packaged executable locates RustToolsProfile.json two directory levels
+above its host binary directory. Developer/install locations can pass --profile.
+No Rust/Zig compiler, tool installation, registry download or build is invoked.
+The query validates exported file hashes and reads the canonical exported
+template/profile snapshots. It works with an empty PATH and missing Cargo/
+rustup homes. Success writes JSON to stdout (or --output), no success text on
+stderr. Exit0 means success; exit1 means invalid CLI, missing/invalid profile,
+file/hash or template/manifest error. Diagnostics/usage stay on stderr.
+
+Top-level schema is3, interface="r4os-sdk-capabilities". Schema3 adds the
+current owner-maintained function/role matrix, complete host-role file maps
+and the common New-Project creator. Consumers check the schema explicitly,
+ignore unknown additive fields and use stable template/profile IDs. Schema2
+packages remain immutable. SDK selection now comes exclusively from Profiles/Build.json,
+Tools.json and Components.json. Apps may pin additional non-system libraries.
+Generated project locks are checked projections, not independent system selection.
+Manifest2, semantic plan1, Rust build-plan2 and the R4M0/R4XStart ABI remain.
+
+Identity and formats
+--------------------
+sdk and contract contain package version, exact source commit/dirty marker,
+input hashes and separately named Rust crates. sdk.rust_crate and
+contract.binding_crate are currently each0.1.0; those are not SDK/Contract or
+module versions. No DevKit source binding is required. technical=true denotes a
+development/dirty export, not a completed frozen integration. Final packages
+carry clean commits. formats names manifest2, semantic_plan1, source_catalog4,
+installed_catalog4, rust_build_plan2 and the unchanged R4M0/R4XStart contracts.
+cpu projects canonical Contract/CpuBaseline.json. rust_codegen is the selected
+module codegen profile, separately qualified from the normal kernel profile.
+
+Support and evidence
+--------------------
+support rows project the same module_capabilities.query used by SDK build
+admission. Language/kind/class/entry enums come from the shared manifest parser.
+Each row identifies language, kind, app_class, entry_mode, role, execution and
+hosts; supported/code/reason are distinct from installed-tool availability.
+owner_contract/missing_steps explain unsupported Rust roles. Native C rows
+state one source, exact class imports and the R4CC subset. C/Rust R4L/R4D/R4P use genuine owner roots and original entry/export contracts.
+Rust app/lowlevel and canonical GUI subsystem roles use their actual profiles.
+Host C uses Zig/Clang; no dummy Zig owner root is required. Native Rust/Zig
+compilation remains unsupported; native C stays its explicit R4CC subset.
+
+qualification separates Linux host builds, actual Windows execution, cross-host
+byte identity, common R4X startup tests and runtime class checks. SDK0.64.64
+qualifies console/gui/service in local KVM-SMP4; exact final package artifact
+hashes and separate observations are referenced by the general SDK-Release.json
+manifest. Reused runtime results retain their original qualified package scope.
+Do not reinterpret "supported" as hardware
+or runtime-test coverage. local_availability_queried=false means no installation
+probe was made. Setup/Rust.sh check separately reports actual tools/versions/
+components/linker hash and a nonzero result for missing or wrong installation.
+
+Template projection
+-------------------
+templates reads real template.ini definitions and File=source|target maps.
+Language, kind, class, imports, target, role, module version and resources come
+from each parsed module.R4MF.template. Facts are a sample expansion using the
+definition's DefaultProjectName; R4L also uses sample0.1.0/none/library target
+for its explicit input placeholders. Raw input_tokens and source file hashes
+remain visible, so sample values are not a second editable manifest truth.
+files includes actual canonical source paths/targets/hash; input_tokens shows
+all template substitutions, not only interactive user inputs.
+
+Host creator is Tools/New-Project.ps1; the existing New-RustProject command
+selects Rust and delegates to it. All33 supported host combinations have one
+complete file map: app/lowlevel console/gui/service, app/lowlevel GUI subsystem,
+R4L, R4D and R4P for each of Zig/C/Rust. The two existing native C templates
+remain consumed by R4CODE/R4BUILD, separately from host creation.
+
+The creator checks explicitly selected matched components, fills general
+module/crate inputs and initializes each NEW R4L's own contract/baseline,
+bindings, conformance and docs with the original generator. Rust R4L's local
+Cargo graph is generated offline. Existing baseline changes remain explicit
+owner work; copying a partial library template is not complete creation.
+
+Every host file map uses common PS7 Build.ps1 and thin .sh/.bat starters.
+Build-Project routes Rust to its existing Cargo/receipt owner; C/Zig use the
+original SDK addR4MF builder against the actual project manifest and sources.
+No generated Zig business root, sibling workspace, IDE state, source injection
+or second role grammar is involved. C/Zig select their pinned ZigRoot and use
+owned output/cache directories; a failed build removes its own prior artifact.
+
+language_parity projects the canonical SDK matrix's current capabilities and
+module_roles, with evidence IDs referring to Profile/LanguageParity.json.
+Historical analysis snapshots and older evidence retain their date/scope;
+semantic support, installed tools, actual host/guest checks, physical hardware
+and performance are distinct. Neither schema nor language parity grants a
+Windows execution or direct Rust FP/SIMD qualification by implication.
+
+Tools
+-----
+tools binds Rust/Cargo/rustup and target IDs, required versus optional components,
+upstream bootstrap/release/component URLs/SHA256 and exported host binaries.
+rust-lld comes from the exact rustc archive; linker.source_component and
+linker.exact_sources identify that required host component and its URL/SHA.
+check reports the installed binary SHA. llvm-tools-preview separately supplies
+the profile's LLVM inspection tools. r4xbuilder is pinned by SDK source plus
+exported file hash. SDK0.64.65 corrects the linker origin label from0.64.64;
+compiler, linker bytes, module codegen and runtime semantics are unchanged.
+No Zig is needed by the exported Rust build. Host C is Zig's bundled Clang on
+Windows/Linux; native R4CC is a separate, smaller compiler inside R4OS.
+zig_host is derived from SDK/Profiles/Tools.json, also read by the SDK installer;
+this catalog does not maintain another compiler-version list.
+
+Host consumption
+----------------
+Read JSON before presenting project choices. Match the requested combination
+and inspect its supported/code/reason and qualification. Select a template by
+ID, collect its real inputs, install only necessary tools from the selected
+profile, then invoke the SDK creator/build driver with explicit component roots.
+The caller selects the SDK and its offered profile, plus extra app libraries.
+Contract, tools and system libraries follow the SDK. Roots select locations;
+the SDK validates their exact identities and records actual inputs.
+Rust build.json schema2 and native C/Zig host build.json schema1 are separate
+source/tool/artifact receipts, not this capability schema3 or semantic plan1.
+An actual complete capability JSON is included with the SDK release manifest;
+the query above reproduces it without a compiler. This interface implements no
+IDE version selector, project lock management or native Rust compiler.
+
+SDK0.64.90 release qualification
+--------------------------------
+The separate source/tool archives and exact published bytes are described by
+SDK-Release.json. Libraries is an explicit independent component for local
+library clients/helpers; it is not an implicit workspace sibling dependency.
+The current matrix binds functional owner evidence through71 and the ongoing
+source review gate in drift_guard. Original body/projection changes require
+review of the affected C/Rust implementation and matching functional proof.
+The small gate is part of SDK module-test/test and language-parity-check;
+it is not another runtime suite and does not create consumer project pins.
+Linux and actual KVM4 desktop-host evidence remain qualified. Windows testing
+was explicitly skipped on2026-10-22; Windows execution and cross-host byte
+identity remain false. Keep native compiler, integer Rust backend, hardware,
+physical visibility, lifecycle and performance limits from the actual owners.

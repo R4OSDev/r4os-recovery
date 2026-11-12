@@ -4,9 +4,9 @@
   "source_schema_version": 11,
   "source_baseline_id": "standalone-contract-0.64.11",
   "summary": {
-    "group_function_signatures": 356,
+    "group_function_signatures": 526,
     "sdk_operation_contracts": 0,
-    "parity_entries": 356,
+    "parity_entries": 526,
     "cross_language_fixtures": 1
   },
   "signature_parity": [
@@ -1388,6 +1388,339 @@
       "coverage": "generated_signature"
     },
     {
+      "id": "R4SYS.thread_placement_get",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_placement_get",
+      "c_contract": "R4SysThreadPlacementGetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.thread_placement_set",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.thread_placement_set",
+      "c_contract": "R4SysThreadPlacementSetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.system_power_transition",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.system_power_transition",
+      "c_contract": "R4SysSystemPowerTransitionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.entropy_source_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.entropy_source_info",
+      "c_contract": "R4SysEntropySourceInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.entropy_fill",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.entropy_fill",
+      "c_contract": "R4SysEntropyFillFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_lifecycle_begin",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_lifecycle_begin",
+      "c_contract": "R4SysProgramLifecycleBeginFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_lifecycle_programs",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_lifecycle_programs",
+      "c_contract": "R4SysProgramLifecycleProgramsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.drive_info_geometry",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.drive_info_geometry",
+      "c_contract": "R4SysDriveInfoGeometryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.directory_batch",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.directory_batch",
+      "c_contract": "R4SysDirectoryBatchFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_observation_retain",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_observation_retain",
+      "c_contract": "R4SysProgramObservationRetainFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_observation_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_observation_wait",
+      "c_contract": "R4SysProgramObservationWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_observation_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_observation_read",
+      "c_contract": "R4SysProgramObservationReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_observation_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_observation_release",
+      "c_contract": "R4SysProgramObservationReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_name_limits",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_name_limits",
+      "c_contract": "R4SysFileNameLimitsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_bound_detail",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_bound_detail",
+      "c_contract": "R4SysServiceBoundDetailFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_stop_bound",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_stop_bound",
+      "c_contract": "R4SysServiceStopBoundFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_inventory_page",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_inventory_page",
+      "c_contract": "R4SysServiceInventoryPageFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.service_control_bound",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.service_control_bound",
+      "c_contract": "R4SysServiceControlBoundFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.system_update_target_supported",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.system_update_target_supported",
+      "c_contract": "R4SysSystemUpdateTargetSupportedFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.file_metadata2",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.file_metadata2",
+      "c_contract": "R4SysFileMetadata2Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.directory_metadata_batch2",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.directory_metadata_batch2",
+      "c_contract": "R4SysDirectoryMetadataBatch2Fn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_create",
+      "c_contract": "R4SysWaitsetCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_enroll",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_enroll",
+      "c_contract": "R4SysWaitsetEnrollFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_rearm",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_rearm",
+      "c_contract": "R4SysWaitsetRearmFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_remove",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_remove",
+      "c_contract": "R4SysWaitsetRemoveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_wait",
+      "c_contract": "R4SysWaitsetWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_close",
+      "c_contract": "R4SysWaitsetCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.waitset_source_prepare",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.waitset_source_prepare",
+      "c_contract": "R4SysWaitsetSourcePrepareFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_create",
+      "c_contract": "R4SysBytePipeCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_dup",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_dup",
+      "c_contract": "R4SysBytePipeDupFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_read",
+      "c_contract": "R4SysBytePipeReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_write",
+      "c_contract": "R4SysBytePipeWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_cancel",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_cancel",
+      "c_contract": "R4SysBytePipeCancelFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_close",
+      "c_contract": "R4SysBytePipeCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.byte_pipe_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.byte_pipe_info",
+      "c_contract": "R4SysBytePipeInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_launch_io",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_launch_io",
+      "c_contract": "R4SysProgramLaunchIoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4SYS.program_stdio",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4SysFns.program_stdio",
+      "c_contract": "R4SysProgramStdioFn",
+      "coverage": "generated_signature"
+    },
+    {
       "id": "R4DESK.read_key",
       "kind": "group_slot",
       "exposure": "public",
@@ -1910,6 +2243,168 @@
       "coverage": "generated_signature"
     },
     {
+      "id": "R4DESK.mouse_motion",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.mouse_motion",
+      "c_contract": "R4DeskMouseMotionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_snapshot_acquire",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_snapshot_acquire",
+      "c_contract": "R4DeskRemoteFrameSnapshotAcquireFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_snapshot_release",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_snapshot_release",
+      "c_contract": "R4DeskRemoteFrameSnapshotReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_source_reset",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_source_reset",
+      "c_contract": "R4DeskRemoteFrameSourceResetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.remote_frame_capture_stats",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.remote_frame_capture_stats",
+      "c_contract": "R4DeskRemoteFrameCaptureStatsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.desktop_activity_notify",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.desktop_activity_notify",
+      "c_contract": "R4DeskDesktopActivityNotifyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_read_events",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_read_events",
+      "c_contract": "R4DeskConsoleReadEventsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_push_events",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_push_events",
+      "c_contract": "R4DeskConsolePushEventsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_text_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_text_info",
+      "c_contract": "R4DeskConsoleTextInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.console_set_encoding",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.console_set_encoding",
+      "c_contract": "R4DeskConsoleSetEncodingFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_activity_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_activity_wait",
+      "c_contract": "R4DeskGuiActivityWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_activity_notify",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_activity_notify",
+      "c_contract": "R4DeskGuiActivityNotifyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_pointer_capture_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_pointer_capture_info",
+      "c_contract": "R4DeskGuiPointerCaptureInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_pointer_capture_acquire",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_pointer_capture_acquire",
+      "c_contract": "R4DeskGuiPointerCaptureAcquireFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_pointer_capture_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_pointer_capture_release",
+      "c_contract": "R4DeskGuiPointerCaptureReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_pointer_capture_host",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_pointer_capture_host",
+      "c_contract": "R4DeskGuiPointerCaptureHostFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_host_input",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_host_input",
+      "c_contract": "R4DeskGuiHostInputFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DESK.gui_window_appearance",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DeskFns.gui_window_appearance",
+      "c_contract": "R4DeskGuiWindowAppearanceFn",
+      "coverage": "generated_signature"
+    },
+    {
       "id": "R4DRAW.screen_width",
       "kind": "group_slot",
       "exposure": "public",
@@ -2348,6 +2843,582 @@
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4DrawFns.gui_shared_raster_release",
       "c_contract": "R4DrawGuiSharedRasterReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_create",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_create",
+      "c_contract": "R4DrawGfxBufferCreateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_describe",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_describe",
+      "c_contract": "R4DrawGfxBufferDescribeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_import",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_import",
+      "c_contract": "R4DrawGfxBufferImportFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_release",
+      "c_contract": "R4DrawGfxBufferReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_map",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_map",
+      "c_contract": "R4DrawGfxBufferMapFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_unmap",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_unmap",
+      "c_contract": "R4DrawGfxBufferUnmapFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_export_raster",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_export_raster",
+      "c_contract": "R4DrawGfxBufferExportRasterFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_stats",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_stats",
+      "c_contract": "R4DrawGfxBufferStatsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_open",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_open",
+      "c_contract": "R4DrawGfxQueueOpenFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_close",
+      "c_contract": "R4DrawGfxQueueCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit",
+      "c_contract": "R4DrawGfxQueueSubmitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_fence_query",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_fence_query",
+      "c_contract": "R4DrawGfxFenceQueryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_fence_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_fence_wait",
+      "c_contract": "R4DrawGfxFenceWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_fence_cancel",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_fence_cancel",
+      "c_contract": "R4DrawGfxFenceCancelFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_fence_release",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_fence_release",
+      "c_contract": "R4DrawGfxFenceReleaseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_backend",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_backend",
+      "c_contract": "R4DrawGfxQueueBackendFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_revision",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_revision",
+      "c_contract": "R4DrawGfxOutputRevisionFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_info",
+      "c_contract": "R4DrawGfxOutputInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_mode",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_mode",
+      "c_contract": "R4DrawGfxOutputModeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_edid",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_edid",
+      "c_contract": "R4DrawGfxOutputEdidFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_test",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_test",
+      "c_contract": "R4DrawGfxAtomicTestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_commit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_commit",
+      "c_contract": "R4DrawGfxAtomicCommitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_submit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_submit",
+      "c_contract": "R4DrawGfxAtomicSubmitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_status",
+      "c_contract": "R4DrawGfxAtomicStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_resolve",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_resolve",
+      "c_contract": "R4DrawGfxAtomicResolveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_presentation_stats",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_presentation_stats",
+      "c_contract": "R4DrawDisplayPresentationStatsFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_cursor_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_cursor_info",
+      "c_contract": "R4DrawDisplayCursorInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_cursor_submit",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_cursor_submit",
+      "c_contract": "R4DrawDisplayCursorSubmitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_cursor_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_cursor_status",
+      "c_contract": "R4DrawDisplayCursorStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_backend_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_backend_info",
+      "c_contract": "R4DrawGfxQueueBackendInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_native_start",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_native_start",
+      "c_contract": "R4DrawGfxNativeStartFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_native_query",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_native_query",
+      "c_contract": "R4DrawGfxNativeQueryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_native_receive",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_native_receive",
+      "c_contract": "R4DrawGfxNativeReceiveFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_native_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_native_close",
+      "c_contract": "R4DrawGfxNativeCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_native_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_native_wait",
+      "c_contract": "R4DrawGfxNativeWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit_render_list",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit_render_list",
+      "c_contract": "R4DrawGfxQueueSubmitRenderListFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_presentation_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_presentation_info",
+      "c_contract": "R4DrawDisplayPresentationInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_presentation_feedback",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_presentation_feedback",
+      "c_contract": "R4DrawDisplayPresentationFeedbackFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_output_target",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_output_target",
+      "c_contract": "R4DrawDisplayOutputTargetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit_output",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit_output",
+      "c_contract": "R4DrawGfxQueueSubmitOutputFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_output_presentation_info",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_output_presentation_info",
+      "c_contract": "R4DrawDisplayOutputPresentationInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.display_output_presentation_feedback",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.display_output_presentation_feedback",
+      "c_contract": "R4DrawDisplayOutputPresentationFeedbackFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit_render_grid_list",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit_render_grid_list",
+      "c_contract": "R4DrawGfxQueueSubmitRenderGridListFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_color",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_color",
+      "c_contract": "R4DrawGfxOutputColorFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit_render_color_list",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit_render_color_list",
+      "c_contract": "R4DrawGfxQueueSubmitRenderColorListFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_test_color",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_test_color",
+      "c_contract": "R4DrawGfxAtomicTestColorFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_atomic_submit_color",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_atomic_submit_color",
+      "c_contract": "R4DrawGfxAtomicSubmitColorFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_refresh",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_refresh",
+      "c_contract": "R4DrawGfxOutputRefreshFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_refresh_request",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_refresh_request",
+      "c_contract": "R4DrawGfxRefreshRequestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_memory_budget",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_memory_budget",
+      "c_contract": "R4DrawGfxMemoryBudgetFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_telemetry",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_telemetry",
+      "c_contract": "R4DrawGfxTelemetryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_power",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_power",
+      "c_contract": "R4DrawGfxOutputPowerFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_power_request",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_power_request",
+      "c_contract": "R4DrawGfxPowerRequestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_virtual_start",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_virtual_start",
+      "c_contract": "R4DrawGfxVirtualStartFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_virtual_query",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_virtual_query",
+      "c_contract": "R4DrawGfxVirtualQueryFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_virtual_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_virtual_close",
+      "c_contract": "R4DrawGfxVirtualCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_virtual_wait",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_virtual_wait",
+      "c_contract": "R4DrawGfxVirtualWaitFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_buffer_map_persistent",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_buffer_map_persistent",
+      "c_contract": "R4DrawGfxBufferMapPersistentFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_backend_properties",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_backend_properties",
+      "c_contract": "R4DrawGfxQueueBackendPropertiesFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit_native",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit_native",
+      "c_contract": "R4DrawGfxQueueSubmitNativeFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_queue_submit_render_color_grid_list",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_queue_submit_render_color_grid_list",
+      "c_contract": "R4DrawGfxQueueSubmitRenderColorGridListFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_output_brightness",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_output_brightness",
+      "c_contract": "R4DrawGfxOutputBrightnessFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.gfx_brightness_request",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.gfx_brightness_request",
+      "c_contract": "R4DrawGfxBrightnessRequestFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DRAW.font_prefix_metrics2",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DrawFns.font_prefix_metrics2",
+      "c_contract": "R4DrawFontPrefixMetrics2Fn",
       "coverage": "generated_signature"
     },
     {
@@ -2855,6 +3926,51 @@
       "coverage": "generated_signature"
     },
     {
+      "id": "R4AUDIO.audio_stream_progress",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_stream_progress",
+      "c_contract": "R4AudioAudioStreamProgressFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_set_stream_expectation",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_set_stream_expectation",
+      "c_contract": "R4AudioAudioSetStreamExpectationFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_close_stream_progress",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_close_stream_progress",
+      "c_contract": "R4AudioAudioCloseStreamProgressFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_output_catalog",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_output_catalog",
+      "c_contract": "R4AudioAudioOutputCatalogFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4AUDIO.audio_capture_io",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4AudioFns.audio_capture_io",
+      "c_contract": "R4AudioAudioCaptureIoFn",
+      "coverage": "generated_signature"
+    },
+    {
       "id": "R4DEV.device_inventory_summary",
       "kind": "group_slot",
       "exposure": "advanced",
@@ -3080,39 +4196,12 @@
       "coverage": "generated_signature"
     },
     {
-      "id": "R4DEV.program_instance_storage_summary",
-      "kind": "group_slot",
-      "exposure": "advanced",
-      "language_parity": "zig_and_c_required",
-      "zig_contract": "R4DevFns.program_instance_storage_summary",
-      "c_contract": "R4DevProgramInstanceStorageSummaryFn",
-      "coverage": "generated_signature"
-    },
-    {
       "id": "R4DEV.program_instance_storage_self_test",
       "kind": "group_slot",
       "exposure": "advanced",
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4DevFns.program_instance_storage_self_test",
       "c_contract": "R4DevProgramInstanceStorageSelfTestFn",
-      "coverage": "generated_signature"
-    },
-    {
-      "id": "R4DEV.program_registry_summary",
-      "kind": "group_slot",
-      "exposure": "advanced",
-      "language_parity": "zig_and_c_required",
-      "zig_contract": "R4DevFns.program_registry_summary",
-      "c_contract": "R4DevProgramRegistrySummaryFn",
-      "coverage": "generated_signature"
-    },
-    {
-      "id": "R4DEV.program_registry_self_test",
-      "kind": "group_slot",
-      "exposure": "advanced",
-      "language_parity": "zig_and_c_required",
-      "zig_contract": "R4DevFns.program_registry_self_test",
-      "c_contract": "R4DevProgramRegistrySelfTestFn",
       "coverage": "generated_signature"
     },
     {
@@ -3212,6 +4301,447 @@
       "language_parity": "zig_and_c_required",
       "zig_contract": "R4DevFns.performance_input",
       "c_contract": "R4DevPerformanceInputFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.display_state",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.display_state",
+      "c_contract": "R4DevDisplayStateFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.driver_module_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.driver_module_info",
+      "c_contract": "R4DevDriverModuleInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_instrumentation",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_instrumentation",
+      "c_contract": "R4DevPerformanceInstrumentationFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_lock",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_lock",
+      "c_contract": "R4DevPerformanceLockFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_stack",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_stack",
+      "c_contract": "R4DevPerformanceStackFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.stack_fault",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.stack_fault",
+      "c_contract": "R4DevStackFaultFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.memory_kernel_heap_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.memory_kernel_heap_check",
+      "c_contract": "R4DevMemoryKernelHeapCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.scheduler_kernel_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.scheduler_kernel_check",
+      "c_contract": "R4DevSchedulerKernelCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.smp_kernel_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.smp_kernel_check",
+      "c_contract": "R4DevSmpKernelCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.performance_smp_tlb",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.performance_smp_tlb",
+      "c_contract": "R4DevPerformanceSmpTlbFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.storage_block_queue_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.storage_block_queue_check",
+      "c_contract": "R4DevStorageBlockQueueCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.storage_nvme_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.storage_nvme_check",
+      "c_contract": "R4DevStorageNvmeCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.usb_contract_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.usb_contract_check",
+      "c_contract": "R4DevUsbContractCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_count",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_count",
+      "c_contract": "R4DevSerialCountFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_port_at",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_port_at",
+      "c_contract": "R4DevSerialPortAtFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_open",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_open",
+      "c_contract": "R4DevSerialOpenFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_configure",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_configure",
+      "c_contract": "R4DevSerialConfigureFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_read",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_read",
+      "c_contract": "R4DevSerialReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_write",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_write",
+      "c_contract": "R4DevSerialWriteFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_drain",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_drain",
+      "c_contract": "R4DevSerialDrainFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_status",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_status",
+      "c_contract": "R4DevSerialStatusFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_cancel",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_cancel",
+      "c_contract": "R4DevSerialCancelFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.serial_close",
+      "kind": "group_slot",
+      "exposure": "public",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.serial_close",
+      "c_contract": "R4DevSerialCloseFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_topology",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_topology",
+      "c_contract": "R4DevCpuTopologyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_cache_topology",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_cache_topology",
+      "c_contract": "R4DevCpuCacheTopologyFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_lifecycle",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_lifecycle",
+      "c_contract": "R4DevCpuLifecycleFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.kernel_cpu_lifecycle_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.kernel_cpu_lifecycle_check",
+      "c_contract": "R4DevKernelCpuLifecycleCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_capabilities",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_capabilities",
+      "c_contract": "R4DevCpuCapabilitiesFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_feature",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_feature",
+      "c_contract": "R4DevCpuFeatureFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_register_read",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_register_read",
+      "c_contract": "R4DevCpuRegisterReadFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.kernel_cpu_register_check",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.kernel_cpu_register_check",
+      "c_contract": "R4DevKernelCpuRegisterCheckFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_power_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_power_info",
+      "c_contract": "R4DevCpuPowerInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_power_capture",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_power_capture",
+      "c_contract": "R4DevCpuPowerCaptureFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_performance",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_performance",
+      "c_contract": "R4DevCpuPerformanceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_cppc",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_cppc",
+      "c_contract": "R4DevCpuCppcFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_performance_hint",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_performance_hint",
+      "c_contract": "R4DevCpuPerformanceHintFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_firmware_performance",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_firmware_performance",
+      "c_contract": "R4DevCpuFirmwarePerformanceFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_idle_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_idle_info",
+      "c_contract": "R4DevCpuIdleInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_machine_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_machine_info",
+      "c_contract": "R4DevCpuMachineInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_machine_bank",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_machine_bank",
+      "c_contract": "R4DevCpuMachineBankFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_microcode_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_microcode_info",
+      "c_contract": "R4DevCpuMicrocodeInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_pmu_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_pmu_info",
+      "c_contract": "R4DevCpuPmuInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_pmu_measure",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_pmu_measure",
+      "c_contract": "R4DevCpuPmuMeasureFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_pmu_result",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_pmu_result",
+      "c_contract": "R4DevCpuPmuResultFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_acceleration_info",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_acceleration_info",
+      "c_contract": "R4DevCpuAccelerationInfoFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.cpu_acceleration_work",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.cpu_acceleration_work",
+      "c_contract": "R4DevCpuAccelerationWorkFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.fpu_observation",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.fpu_observation",
+      "c_contract": "R4DevFpuObservationFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.firmware_system_uuid",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.firmware_system_uuid",
+      "c_contract": "R4DevFirmwareSystemUuidFn",
+      "coverage": "generated_signature"
+    },
+    {
+      "id": "R4DEV.device_inventory_capture",
+      "kind": "group_slot",
+      "exposure": "advanced",
+      "language_parity": "zig_and_c_required",
+      "zig_contract": "R4DevFns.device_inventory_capture",
+      "c_contract": "R4DevDeviceInventoryCaptureFn",
       "coverage": "generated_signature"
     }
   ],

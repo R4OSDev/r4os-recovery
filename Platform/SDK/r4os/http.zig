@@ -668,6 +668,338 @@ pub fn serializedHeadersContain(serialized: []const u8, wanted: []const u8) bool
     return containsSerializedHeader(serialized, wanted);
 }
 
+/// HTTP payload framing independent of a buffered request body. The returned
+/// bytes contain headers only; the caller sends the body afterwards.
+pub const RequestFraming = union(enum) { content_length: u64, chunked };
+pub const StreamHeadResult = union(enum) { bytes: []u8, invalid_headers, output_too_small };
+
+pub fn buildStreamRequestHead(out: []u8, method: Method, url: ParsedUrl, options: RequestOptions, framing: RequestFraming) StreamHeadResult {
+    if (containsSerializedHeader(options.headers, "content-length") or
+        containsSerializedHeader(options.headers, "transfer-encoding") or
+        containsSerializedHeader(options.headers, "expect") or
+        containsSerializedHeader(options.headers, "connection")) return .invalid_headers;
+    var head_options = options;
+    head_options.body = "";
+    head_options.connection_close = true;
+    const head = switch (buildRequest(out, method, url, head_options)) {
+        .bytes => |value| value,
+        .invalid_url => return .invalid_headers,
+        .output_too_small => return .output_too_small,
+    };
+    var pos = head.len - 2;
+    if (options.content_type.len != 0 and !containsSerializedHeader(options.headers, "content-type")) {
+        if (!append(out, &pos, "Content-Type: ") or !appendHeaderValue(out, &pos, options.content_type) or !append(out, &pos, "\r\n")) return .output_too_small;
+    }
+    switch (framing) {
+        .content_length => |length| {
+            if (!append(out, &pos, "Content-Length: ") or !appendUnsigned(out, &pos, length) or !append(out, &pos, "\r\n")) return .output_too_small;
+        },
+        .chunked => if (!append(out, &pos, "Transfer-Encoding: chunked\r\n")) return .output_too_small,
+    }
+    if (!append(out, &pos, "\r\n")) return .output_too_small;
+    return .{ .bytes = out[0..pos] };
+}
+
+pub const PayloadStreamLimits = struct {
+    body_bytes: u64 = 64 * 1024 * 1024,
+    header_bytes: usize = max_header_bytes,
+    line_bytes: usize = 1024,
+    trailer_bytes: usize = max_header_bytes,
+    trailer_count: usize = max_header_count,
+    informational_count: u8 = 8,
+    allow_close_delimited: bool = false,
+};
+
+pub const PayloadStreamState = enum(u8) { need_more, head, chunk, complete, aborted, failure };
+pub const PayloadStreamStep = struct {
+    state: PayloadStreamState,
+    consumed: usize = 0,
+    /// Borrowed from this push's input, until the caller reuses that input.
+    bytes: []const u8 = "",
+    failure: ?ResponseError = null,
+};
+
+/// Bounded, zero-copy payload decoder. Consume `step.consumed`, handle the
+/// event, then push the remaining input. `head` precedes every body callback.
+/// EOF is an authenticated transport decision made by the TCP/TLS owner.
+/// The older Content-Length-only StreamDecoder/download contract is unchanged.
+pub const PayloadStreamDecoder = struct {
+    header_buffer: []u8,
+    method: Method,
+    limits: PayloadStreamLimits,
+    head: ?ParsedHead = null,
+    header_len: usize = 0,
+    received: u64 = 0,
+    remaining: u64 = 0,
+    line: [1024]u8 = undefined,
+    line_len: usize = 0,
+    trailer_bytes: usize = 0,
+    trailer_count: usize = 0,
+    informational_count: u8 = 0,
+    crlf: u8 = 0,
+    phase: enum { header, length, size, data, data_crlf, trailers, close_body, done, aborted, failed } = .header,
+    failure: ResponseError = .malformed_chunk,
+
+    pub fn init(header_buffer: []u8, method: Method, limits: PayloadStreamLimits) PayloadStreamDecoder {
+        return .{ .header_buffer = header_buffer, .method = method, .limits = limits };
+    }
+
+    /// Metadata borrows the stable caller header buffer. No body is buffered.
+    pub fn response(self: *const PayloadStreamDecoder) ?Response {
+        const h = self.head orelse return null;
+        return .{ .status = h.status, .transfer = h.transfer, .body = &.{}, .headers = h.headers, .location = h.location, .content_type = h.content_type, .content_security_policy = h.content_security_policy, .access_control_allow_origin = h.access_control_allow_origin, .access_control_allow_credentials = h.access_control_allow_credentials, .set_cookie = h.set_cookie, .set_cookies = h.set_cookies, .set_cookie_count = h.set_cookie_count, .content_range = h.content_range, .consumed = h.body_start };
+    }
+
+    pub fn totalBytes(self: *const PayloadStreamDecoder) ?u64 {
+        const h = self.head orelse return null;
+        return switch (h.transfer) {
+            .none => 0,
+            .content_length => h.content_length,
+            else => null,
+        };
+    }
+
+    pub fn receivedBytes(self: *const PayloadStreamDecoder) u64 {
+        return self.received;
+    }
+
+    fn failed(self: *PayloadStreamDecoder, consumed: usize, err: ResponseError) PayloadStreamStep {
+        self.phase = .failed;
+        self.failure = err;
+        return .{ .state = .failure, .consumed = consumed, .failure = err };
+    }
+
+    pub fn push(self: *PayloadStreamDecoder, input: []const u8, eof: bool, stop_requested: bool) PayloadStreamStep {
+        if (self.phase == .failed) return self.failed(0, self.failure);
+        if (self.phase == .done) return if (input.len == 0) .{ .state = .complete } else self.failed(0, .unexpected_body);
+        if (stop_requested or self.phase == .aborted) {
+            self.phase = .aborted;
+            return .{ .state = .aborted };
+        }
+        if (self.limits.line_bytes == 0 or self.limits.line_bytes > self.line.len) return self.failed(0, .malformed_chunk);
+        var pos: usize = 0;
+        while (true) {
+            switch (self.phase) {
+                .done => return if (pos == input.len) .{ .state = .complete, .consumed = pos } else self.failed(pos, .unexpected_body),
+                .header => {
+                    while (pos < input.len) {
+                        if (self.header_len >= @min(self.header_buffer.len, @min(max_header_bytes, self.limits.header_bytes))) return self.failed(pos, .header_too_large);
+                        self.header_buffer[self.header_len] = input[pos];
+                        self.header_len += 1;
+                        pos += 1;
+                        if (self.header_len < 4 or !std.mem.eql(u8, self.header_buffer[self.header_len - 4 .. self.header_len], "\r\n\r\n")) continue;
+                        var h = switch (parseHead(self.header_buffer[0..self.header_len])) {
+                            .value => |value| value,
+                            .failure => |err| return self.failed(pos, err),
+                            .need_more => unreachable,
+                        };
+                        if (h.status == 101) return self.failed(pos, .unsupported_version);
+                        if (h.status < 200) {
+                            if (h.transfer != .close_delimited) return self.failed(pos, .malformed_header);
+                            if (self.informational_count >= self.limits.informational_count) return self.failed(pos, .too_many_headers);
+                            self.informational_count += 1;
+                            self.header_len = 0;
+                            continue;
+                        }
+                        if (h.status == 204 and h.transfer != .close_delimited) return self.failed(pos, .malformed_header);
+                        if (self.method == .head or h.status == 204 or h.status == 304) h.transfer = .none;
+                        self.head = h;
+                        self.remaining = h.content_length;
+                        self.phase = switch (h.transfer) {
+                            .none => .done,
+                            .content_length => if (self.remaining == 0) .done else .length,
+                            .chunked => .size,
+                            .close_delimited => if (self.limits.allow_close_delimited) .close_body else return self.failed(pos, .content_length_required),
+                        };
+                        if (h.transfer == .content_length and self.remaining > self.limits.body_bytes) return self.failed(pos, .body_too_large);
+                        return .{ .state = .head, .consumed = pos };
+                    }
+                },
+                .length, .data, .close_body => {
+                    if (self.phase == .length and input.len - pos > self.remaining) return self.failed(pos, .conflicting_length);
+                    const count: usize = if (self.phase == .close_body) input.len - pos else @intCast(@min(input.len - pos, self.remaining));
+                    if (count != 0) {
+                        if (count > self.limits.body_bytes - self.received) return self.failed(pos, .body_too_large);
+                        self.received += count;
+                        if (self.phase != .close_body) {
+                            self.remaining -= count;
+                            if (self.remaining == 0) self.phase = if (self.phase == .length) .done else .data_crlf;
+                        }
+                        return .{ .state = .chunk, .consumed = pos + count, .bytes = input[pos .. pos + count] };
+                    }
+                    if (self.phase == .close_body and eof) {
+                        self.phase = .done;
+                        continue;
+                    }
+                },
+                .data_crlf => {
+                    while (pos < input.len and self.crlf < 2) {
+                        if (input[pos] != "\r\n"[self.crlf]) return self.failed(pos, .malformed_chunk);
+                        pos += 1;
+                        self.crlf += 1;
+                    }
+                    if (self.crlf == 2) {
+                        self.crlf = 0;
+                        self.phase = .size;
+                        continue;
+                    }
+                },
+                .size, .trailers => {
+                    while (pos < input.len) {
+                        if (self.line_len >= self.limits.line_bytes) return self.failed(pos, .malformed_chunk);
+                        if (self.phase == .trailers) {
+                            if (self.trailer_bytes >= self.limits.trailer_bytes) return self.failed(pos, .header_too_large);
+                            self.trailer_bytes += 1;
+                        }
+                        self.line[self.line_len] = input[pos];
+                        self.line_len += 1;
+                        pos += 1;
+                        if (self.line_len < 2 or !std.mem.eql(u8, self.line[self.line_len - 2 .. self.line_len], "\r\n")) continue;
+                        const line = self.line[0 .. self.line_len - 2];
+                        if (self.phase == .size) {
+                            var digits: usize = 0;
+                            while (digits < line.len and std.ascii.isHex(line[digits])) : (digits += 1) {}
+                            if (digits == 0 or (digits != line.len and !validChunkExtensions(line[digits..]))) return self.failed(pos, .malformed_chunk);
+                            self.remaining = std.fmt.parseInt(u64, line[0..digits], 16) catch return self.failed(pos, .malformed_chunk);
+                            if (self.remaining > self.limits.body_bytes - self.received) return self.failed(pos, .body_too_large);
+                            self.phase = if (self.remaining == 0) .trailers else .data;
+                        } else if (line.len == 0) {
+                            self.phase = .done;
+                        } else {
+                            if (self.trailer_count >= self.limits.trailer_count) return self.failed(pos, .too_many_headers);
+                            self.trailer_count += 1;
+                            const colon = std.mem.indexOfScalar(u8, line, ':') orelse return self.failed(pos, .malformed_header);
+                            const name = line[0..colon];
+                            if (name.len == 0 or !isHeaderName(name) or hasForbiddenHeaderByte(line[colon + 1 ..]) or
+                                equalsIgnoreCase(name, "content-length") or equalsIgnoreCase(name, "transfer-encoding") or
+                                equalsIgnoreCase(name, "host") or equalsIgnoreCase(name, "connection") or equalsIgnoreCase(name, "trailer")) return self.failed(pos, .malformed_header);
+                        }
+                        self.line_len = 0;
+                        break;
+                    }
+                    if (self.line_len == 0 and pos < input.len) continue;
+                    if (self.phase == .done) continue;
+                },
+                .aborted, .failed => unreachable,
+            }
+            if (eof) return self.failed(pos, .transport_closed_early);
+            return .{ .state = .need_more, .consumed = pos };
+        }
+    }
+};
+
+fn validChunkExtensions(input: []const u8) bool {
+    var pos: usize = 0;
+    while (pos < input.len) {
+        // RFC 9112 7.1.1: BWS around extension separators/parameters.
+        while (pos < input.len and (input[pos] == ' ' or input[pos] == '\t')) : (pos += 1) {}
+        if (pos == input.len) return false;
+        if (input[pos] != ';') return false;
+        pos += 1;
+        while (pos < input.len and (input[pos] == ' ' or input[pos] == '\t')) : (pos += 1) {}
+        const start = pos;
+        while (pos < input.len and isHeaderName(input[pos .. pos + 1])) : (pos += 1) {}
+        if (pos == start) return false;
+        while (pos < input.len and (input[pos] == ' ' or input[pos] == '\t')) : (pos += 1) {}
+        if (pos == input.len) return true;
+        if (input[pos] == ';') continue;
+        if (input[pos] != '=') return false;
+        pos += 1;
+        while (pos < input.len and (input[pos] == ' ' or input[pos] == '\t')) : (pos += 1) {}
+        if (pos == input.len) return false;
+        if (input[pos] == '"') {
+            pos += 1;
+            while (pos < input.len and input[pos] != '"') : (pos += 1) {
+                if (input[pos] == '\\') {
+                    pos += 1;
+                    if (pos == input.len) return false;
+                }
+                if ((input[pos] < 0x20 and input[pos] != '\t') or input[pos] == 0x7f) return false;
+            }
+            if (pos == input.len) return false;
+            pos += 1;
+        } else {
+            const value = pos;
+            while (pos < input.len and isHeaderName(input[pos .. pos + 1])) : (pos += 1) {}
+            if (value == pos) return false;
+        }
+    }
+    return true;
+}
+
+test "HTTP81 bounded payload delivers split UTF8 before final chunk with all framings" {
+    const payload = "data: Gr\xc3\xb6\xc3\x9fe\n\nid: 7\n\n";
+    const cases = .{
+        "HTTP/1.1 200 OK\r\nContent-Length: 22\r\n\r\n" ++ payload,
+        "HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n16 \t; note = \"a;b\"\r\n" ++ payload ++ "\r\n0\r\nX-End: yes\r\n\r\n",
+        "HTTP/1.0 200 OK\r\n\r\n" ++ payload,
+    };
+    inline for (cases) |wire| {
+        var header: [max_header_bytes]u8 = undefined;
+        var decoder = PayloadStreamDecoder.init(&header, .post, .{ .allow_close_delimited = true });
+        var output: [128]u8 = undefined;
+        var count: usize = 0;
+        var first_at: ?usize = null;
+        var pos: usize = 0;
+        while (pos < wire.len) {
+            const step = decoder.push(wire[pos .. pos + 1], false, false);
+            try std.testing.expect(step.state != .failure and step.state != .aborted);
+            if (step.state == .head) try std.testing.expectEqual(@as(u16, 200), decoder.response().?.status);
+            if (step.state == .chunk) {
+                if (first_at == null) first_at = pos;
+                @memcpy(output[count .. count + step.bytes.len], step.bytes);
+                count += step.bytes.len;
+            }
+            try std.testing.expect(step.consumed == 1);
+            pos += step.consumed;
+        }
+        try std.testing.expectEqual(PayloadStreamState.complete, decoder.push("", true, false).state);
+        try std.testing.expectEqualStrings(payload, output[0..count]);
+        try std.testing.expect(first_at.? < wire.len - 4);
+        try std.testing.expectEqual(@as(u64, payload.len), decoder.receivedBytes());
+    }
+}
+
+test "HTTP81 malformed framing limits early EOF and latched cancellation" {
+    const cases = .{
+        "HTTP/1.1 200 OK\r\nContent-Length: 1\r\nTransfer-Encoding: chunked\r\n\r\n",
+        "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nx!\n0\r\n\r\n",
+        "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n+1\r\nx\r\n0\r\n\r\n",
+        "HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nx",
+        "HTTP/1.1 200 OK\r\n\r\nx",
+        "HTTP/1.1 200 OK\r\nContent-Length: 99\r\n\r\n",
+        "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0\r\nContent-Length: 0\r\n\r\n",
+        "HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\nxx",
+        "HTTP/1.1 100 Continue\r\nContent-Length: 0\r\n\r\nHTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n",
+        "HTTP/1.1 204 No Content\r\nTransfer-Encoding: chunked\r\n\r\n",
+    };
+    inline for (cases) |wire| {
+        var header: [max_header_bytes]u8 = undefined;
+        var decoder = PayloadStreamDecoder.init(&header, .post, .{ .body_bytes = 8 });
+        var pos: usize = 0;
+        while (true) {
+            const step = decoder.push(wire[pos..], true, false);
+            pos += step.consumed;
+            if (step.state == .failure) break;
+            try std.testing.expect(step.state == .head or step.state == .chunk);
+        }
+        try std.testing.expectEqual(PayloadStreamState.failure, decoder.push("", false, false).state);
+    }
+    var header: [max_header_bytes]u8 = undefined;
+    var decoder = PayloadStreamDecoder.init(&header, .post, .{});
+    try std.testing.expectEqual(PayloadStreamState.aborted, decoder.push("", false, true).state);
+    try std.testing.expectEqual(PayloadStreamState.aborted, decoder.push("HTTP/1.1", false, false).state);
+}
+
+test "HTTP81 request headers frame a separate twenty KB body" {
+    const url = parseUrl("http://stream.example/events").value;
+    var output: [1024]u8 = undefined;
+    const head = buildStreamRequestHead(&output, .post, url, .{ .content_type = "application/json" }, .{ .content_length = 20 * 1024 }).bytes;
+    try std.testing.expect(std.mem.endsWith(u8, head, "Content-Length: 20480\r\n\r\n"));
+    try std.testing.expect(std.mem.indexOf(u8, head, "Content-Type: application/json\r\n") != null);
+    try std.testing.expect(buildStreamRequestHead(&output, .post, url, .{ .headers = "Content-Length: 7\n" }, .chunked) == .invalid_headers);
+}
+
 pub const RedirectResult = union(enum) {
     url: []u8,
     invalid: UrlError,

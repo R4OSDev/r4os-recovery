@@ -104,8 +104,15 @@ function Test-RecoveryInventory([string]$Root) {
     }
     $providers = @{}
     $contract = Get-Content -Raw -LiteralPath (Join-Path $Root 'Platform/Contract/API/ApiContract.json') | ConvertFrom-Json -AsHashtable
+    $platformImports=@($contract.groups.query_import)
+    $generationPath=Join-Path $Root 'Platform/Contract/API/Generation2.json'
+    if(Test-Path -LiteralPath $generationPath -PathType Leaf) {
+        $generation=Get-Content -Raw -LiteralPath $generationPath|ConvertFrom-Json -AsHashtable
+        if($generation.schema -ne 1 -or $generation.generation -ne 2){throw 'Invalid canonical Recovery target generation.'}
+        $platformImports+=@($contract.groups|ForEach-Object { $_.name+':'+$generation.query.symbol+':'+$generation.query.export_version })
+    }
     foreach ($provider in $lock.platformProviders) {
-        if ($provider -cnotin $contract.groups.query_import) { throw "Provider absent from pinned Contract: $provider" }
+        if ($provider -cnotin $platformImports) { throw "Provider absent from pinned Contract: $provider" }
         $providers[$provider] = $true
     }
     $sources = @{}

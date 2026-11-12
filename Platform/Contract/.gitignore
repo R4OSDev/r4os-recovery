@@ -1,6 +1,11 @@
 # Build-Artefakte
 /.zig-cache/
 /zig-out/
+/zig-pkg/
+/Generated/SDK/Rust/target/
+/Generated/Conformance/Rust/target/
+/Tests/RustInterop/target/
+/Temp/
 
 # OS- und Editor-Muell
 Thumbs.db

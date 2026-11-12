@@ -1,4 +1,5 @@
 const std = @import("std");
+const generation2 = @import("generation2.zig");
 
 const default_schema_path = "API/ApiContract.json";
 const default_baseline_path = "API/ApiContract.baseline.json";
@@ -389,7 +390,12 @@ const phase_a_groups = [_]ExpectedGroup{
     // atomic registry batches at slots 120..122. 0.70.8 appends asynchronous
     // offset writes, file-size queries and advisory range locks at 123..125.
     // 0.76.8 appends fifteen storage inventory/claim/I/O/mount/use slots.
-    .{ .id = 1, .name = "R4SYS", .kind = .kernel_table, .functions = 153, .reserved = 2, .tombstones = 1 },
+    // Baseline refresh 0.79.4 includes the existing slots through 143.
+    // 0.79.39 adds process-scoped self-exit at slot153 (v23); the v22
+    // 1240-byte prefix and all existing function signatures are retained.
+    // 0.90.21 baseline refresh includes the already published optional
+    // system_update_target_supported append; no existing slot changes.
+    .{ .id = 1, .name = "R4SYS", .kind = .kernel_table, .functions = 190, .reserved = 2, .tombstones = 1 },
     // 0.62.31 activates slot 36 for Unicode keyboard codepoints while the
     // original byte-oriented read_key remains ABI-compatible at slot 0.
     // The append-only console input transport occupies slot 52; 0.69.47
@@ -397,7 +403,8 @@ const phase_a_groups = [_]ExpectedGroup{
     // 0.69.48 adds one-generation multi-region publication at slot 56;
     // 0.69.67 appends the generation-bound console-input wait at slot 57;
     // 0.72.1 adds ordered layout-independent physical keys at slot 58.
-    .{ .id = 2, .name = "R4DESK", .kind = .kernel_table, .functions = 58, .reserved = 1, .tombstones = 0 },
+    // Same refresh includes the existing gui_window_appearance append.
+    .{ .id = 2, .name = "R4DESK", .kind = .kernel_table, .functions = 76, .reserved = 1, .tombstones = 0 },
     // 0.62.3 used the first public R4DRAW extension slot for font_reload;
     // 0.62.4 added the transient glyph-row query, 0.62.41 appends the
     // font-neutral hosted Alpha8 coverage-mask transport, and 0.62.43 adds
@@ -408,17 +415,31 @@ const phase_a_groups = [_]ExpectedGroup{
     // 0.75.4 adds the one-lookup bulk glyph snapshot at slot 39; 0.75.5
     // appends the font-catalogue generation used by consumer caches at 40;
     // 0.75.16 adds replacement streams at 41..42 and 0.75.17 appends the
-    // bounded shared-raster lifecycle at 43..48.
-    .{ .id = 3, .name = "R4DRAW", .kind = .kernel_table, .functions = 49, .reserved = 0, .tombstones = 0 },
+    // bounded shared-raster lifecycle at 43..48. 0.79.5 adds BO memory at
+    // 49..56; 0.79.6 adds asynchronous queues/fences/backends at 57..64.
+    // 0.79.17 appends a coherent, opaque backend protocol profile at 78.
+    // 0.79.25 appends the exact-output color capability snapshot at slot92.
+    // 0.79.35 extends native memory placement/properties and appends retained
+    // native command submission at slot108; every previous slot is unchanged.
+    .{ .id = 3, .name = "R4DRAW", .kind = .kernel_table, .functions = 113, .reserved = 0, .tombstones = 0 },
     // 0.69.12 activates the two preallocated R4NET extension slots for the
     // generation-bound service request path and its kernel-channel telemetry;
     // 0.75.18 appends the TCP burst/ACK/poll performance snapshot at slot 34.
     .{ .id = 4, .name = "R4NET", .kind = .kernel_table, .functions = 35, .reserved = 0, .tombstones = 0 },
     // 0.78.16 appends physical audio-output enumeration and selection.
-    .{ .id = 5, .name = "R4AUDIO", .kind = .kernel_table, .functions = 21, .reserved = 2, .tombstones = 0 },
-    // R4DEV extends the passive diagnostic tail through slot 41 with the
-    // canonical PCI and input snapshots; slot 27 remains frozen.
-    .{ .id = 6, .name = "R4DEV", .kind = .kernel_table, .functions = 40, .reserved = 2, .tombstones = 0 },
+    // 0.87.53 appends generation-exact progress/expectation/close receipts;
+    // the original200-byte table and both reserved slots are unchanged.
+    .{ .id = 5, .name = "R4AUDIO", .kind = .kernel_table, .functions = 26, .reserved = 2, .tombstones = 0 },
+    // 0.84.1 appends the bounded resident stack-failure snapshot at slot 47
+    // (v14); 0.84.11 appends explicit owned kernel-heap checks at 48 (v15).
+    // Every existing slot and payload prefix is retained.
+    // 0.84.36 appends ten raw COM functions; all55 old slots stay unchanged.
+    // 0.86.80 retires V1 diagnostic slots27/29/30 in place. Their zero
+    // tombstones cannot be reused; current V2 slots/payloads do not move.
+    // Existing 0.89.2 firmware_system_identity is already public in Contract71.
+    // 0.90.21 appends one passive whole-capture function at slot90; the
+    // original736-byte table prefix and all three tombstones are retained.
+    .{ .id = 6, .name = "R4DEV", .kind = .kernel_table, .functions = 86, .reserved = 2, .tombstones = 3 },
 };
 
 pub fn main(init: std.process.Init) !void {
@@ -440,11 +461,13 @@ pub fn main(init: std.process.Init) !void {
         defer baseline.deinit();
         try validateContract(allocator, &parsed.value, &baseline.value);
         try runSelftest(allocator, &parsed.value, &baseline.value);
+        try generation2.selftest(allocator, io, &parsed.value);
         std.debug.print("ApiContractGen selftest OK: 26/26 Mutationen erkannt; zentrale Runtime-R4L-Gruppen abgelehnt, gueltige Slot-/Payload-Appends, Extensible-Canaries und API-Inventarauswahl akzeptiert.\n", .{});
         return;
     }
 
     try validateInternal(&parsed.value, options.update_baseline);
+    try generation2.process(allocator, io, &parsed.value, false, false);
     const payload_reference = try renderPayloadReference(allocator, &parsed.value);
     defer allocator.free(payload_reference);
     const zig_abi = try renderZigAbi(allocator, &parsed.value);
@@ -467,6 +490,7 @@ pub fn main(init: std.process.Init) !void {
     defer allocator.free(r4l_contract);
 
     if (options.action == .write and options.update_baseline) {
+        try generation2.process(allocator, io, &parsed.value, true, false);
         const canonical = try canonicalAlloc(allocator, parsed.value);
         defer allocator.free(canonical);
         try cwd.writeFile(io, .{ .sub_path = options.schema_path, .data = canonical });
@@ -487,6 +511,8 @@ pub fn main(init: std.process.Init) !void {
     var baseline = try std.json.parseFromSlice(Contract, allocator, baseline_bytes, .{});
     defer baseline.deinit();
     try validateContract(allocator, &parsed.value, &baseline.value);
+
+    try generation2.process(allocator, io, &parsed.value, options.action == .write, options.action == .check);
 
     const canonical = try canonicalAlloc(allocator, parsed.value);
     defer allocator.free(canonical);
@@ -813,13 +839,13 @@ fn renderCAbi(allocator: std.mem.Allocator, contract: *const Contract) ![]u8 {
         const rendered = try std.fmt.bufPrint(&buffer, "{d}", .{value.value});
         try appendCValueMacro(&out, allocator, value.name, value.value_type, rendered);
     };
-    try out.appendSlice(allocator, "\ntypedef enum R4ErrorDomain {\n");
+    try out.appendSlice(allocator, "\n/* Wire typedefs are reflected from Zig by the technical projection. */\nenum {\n");
     for (contract.status_domains, 0..) |domain, index| {
         try out.appendSlice(allocator, "    R4_ERROR_DOMAIN_");
         try appendUpper(&out, allocator, domain.name);
         try appendFmt(&out, allocator, " = {d}{s}\n", .{ domain.id, if (index + 1 == contract.status_domains.len) "" else "," });
     }
-    try out.appendSlice(allocator, "} R4ErrorDomain;\n\n");
+    try out.appendSlice(allocator, "};\n\n");
 
     for (contract.groups) |group| {
         try out.appendSlice(allocator, "#define R4L_GROUP_");
@@ -831,13 +857,13 @@ fn renderCAbi(allocator: std.mem.Allocator, contract: *const Contract) ![]u8 {
         try appendUpper(&out, allocator, app_class.name);
         try appendFmt(&out, allocator, " {d}u\n", .{app_class.value});
     }
-    try out.appendSlice(allocator, "\ntypedef enum R4AppProfile {\n");
+    try out.appendSlice(allocator, "\nenum {\n");
     for (contract.app_profiles, 0..) |profile, index| {
         try out.appendSlice(allocator, "    R4_APP_PROFILE_");
         try appendUpper(&out, allocator, profile.name);
         try appendFmt(&out, allocator, " = {d}{s}\n", .{ profile.value, if (index + 1 == contract.app_profiles.len) "" else "," });
     }
-    try out.appendSlice(allocator, "} R4AppProfile;\n");
+    try out.appendSlice(allocator, "};\n");
     for (contract.app_profiles) |profile| {
         try out.appendSlice(allocator, "#define R4_APP_PROFILE_");
         try appendUpper(&out, allocator, profile.name);
@@ -927,7 +953,7 @@ fn renderCAbi(allocator: std.mem.Allocator, contract: *const Contract) ![]u8 {
             }
         }
     }
-    try out.appendSlice(allocator, "\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n");
+    try out.appendSlice(allocator, "\n#include <r4os/abi_technical_generated.h>\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n");
     return out.toOwnedSlice(allocator);
 }
 
@@ -1223,7 +1249,11 @@ fn renderStartDoc(allocator: std.mem.Allocator, contract: *const Contract) ![]u8
     for (contract.app_profiles) |profile| try appendFmt(&out, allocator, "    {s} -> app.class={s}, required-mask=0x{X}, optional-mask=0x{X}\n", .{ profile.name, profile.app_class, groupMask(contract, profile.required_groups), groupMask(contract, profile.optional_groups) });
     try out.appendSlice(allocator, "\nGruppentabellen\n---------------\n\n");
     for (contract.groups) |group| if (group.kind == .kernel_table) try appendFmt(&out, allocator, "    R4XSTART_{s}_VERSION = {d}\n    R4XSTART_{s}_SIZE    = {d}\n", .{ group.name, group.abi_version, group.name, group.size });
-    try out.appendSlice(allocator, "\nDie sechs eingebauten Platform APIs beginnen jeweils mit magic, abi_version, size und flags;\ndanach folgen die im Schema definierten 8-Byte-Slots. Externe Runtime-R4Ls\nbesitzen libraryeigene Vertraege und werden hier nicht zentral registriert.\n\n" ++ start_doc_end);
+    try out.appendSlice(allocator, "\nDiese Zahlen beschreiben die aktuellen Provider-Tabellen. Die gleichnamigen\n" ++
+        "generierten SDK-Importkonstanten bezeichnen den unterstuetzten Mindestprefix\n" ++
+        "und koennen kleiner/aelter bleiben. Optionale angehaengte Felder werden nach\n" ++
+        "der tatsaechlich gelieferten Tabellengroesse mit hasFn geprueft.\n" ++
+        "\nDie sechs eingebauten Platform APIs beginnen jeweils mit magic, abi_version, size und flags;\ndanach folgen die im Schema definierten 8-Byte-Slots. Externe Runtime-R4Ls\nbesitzen libraryeigene Vertraege und werden hier nicht zentral registriert.\n\n" ++ start_doc_end);
     return out.toOwnedSlice(allocator);
 }
 
@@ -1436,6 +1466,10 @@ fn renderApiInventory(allocator: std.mem.Allocator, contract: *const Contract) !
             "  \"schema_version\": 1,\n" ++
             "  \"generated_from\": \"{s}\",\n" ++
             "  \"contract_schema_version\": {d},\n" ++
+            "  \"c_binding\": \"Generated/SDK/C/include/r4os/abi_generated.h\",\n" ++
+            "  \"c_technical_binding\": \"Generated/SDK/C/include/r4os/abi_technical_generated.h\",\n" ++
+            "  \"rust_binding\": \"Generated/SDK/Rust/src/lib.rs\",\n" ++
+            "  \"rust_inventory\": \"Generated/Inventory/RustABI.json\",\n" ++
             "  \"summary\": {{\n" ++
             "    \"function_count\": {d},\n" ++
             "    \"group_slot_count\": {d},\n" ++
@@ -2016,26 +2050,30 @@ fn validateContract(allocator: std.mem.Allocator, current: *const Contract, base
 
     for (baseline.groups, 0..) |old_group, group_index| {
         const group = &current.groups[group_index];
-        if (group.id != old_group.id or
-            !std.mem.eql(u8, group.name, old_group.name) or
-            !std.mem.eql(u8, group.query_import, old_group.query_import) or
-            !std.mem.eql(u8, group.table_type, old_group.table_type) or
-            !std.mem.eql(u8, group.fn_namespace, old_group.fn_namespace) or
-            group.kind != old_group.kind or group.required != old_group.required or
-            group.magic != old_group.magic or group.header_size != old_group.header_size or
-            group.pointer_size != old_group.pointer_size)
-        {
-            return error.GroupIdentityDrift;
-        }
-        if (group.slots.len < old_group.slots.len) return error.SlotRemoved;
-        for (old_group.slots, 0..) |old_slot, slot_index| {
-            try requireCanonicalEqual(allocator, group.slots[slot_index], old_slot, error.SlotDrift);
-        }
-        if (group.slots.len == old_group.slots.len) {
-            if (group.abi_version != old_group.abi_version) return error.VersionWithoutAppend;
-        } else if (group.abi_version <= old_group.abi_version) {
-            return error.AppendWithoutVersionBump;
-        }
+        try validateGroupEvolution(allocator, group, &old_group);
+    }
+}
+
+fn validateGroupEvolution(allocator: std.mem.Allocator, group: *const Group, old_group: *const Group) !void {
+    if (group.id != old_group.id or
+        !std.mem.eql(u8, group.name, old_group.name) or
+        !std.mem.eql(u8, group.query_import, old_group.query_import) or
+        !std.mem.eql(u8, group.table_type, old_group.table_type) or
+        !std.mem.eql(u8, group.fn_namespace, old_group.fn_namespace) or
+        group.kind != old_group.kind or group.required != old_group.required or
+        group.magic != old_group.magic or group.header_size != old_group.header_size or
+        group.pointer_size != old_group.pointer_size)
+    {
+        return error.GroupIdentityDrift;
+    }
+    if (group.slots.len < old_group.slots.len) return error.SlotRemoved;
+    for (old_group.slots, 0..) |old_slot, slot_index| {
+        try requireCanonicalEqual(allocator, group.slots[slot_index], old_slot, error.SlotDrift);
+    }
+    if (group.slots.len == old_group.slots.len) {
+        if (group.abi_version != old_group.abi_version) return error.VersionWithoutAppend;
+    } else if (group.abi_version <= old_group.abi_version) {
+        return error.AppendWithoutVersionBump;
     }
 }
 
@@ -2630,8 +2668,10 @@ fn runSelftest(allocator: std.mem.Allocator, contract: *Contract, baseline: *con
 
     const old_slots = group.slots;
     const old_size = group.size;
-    group.slots = old_slots[0 .. old_slots.len - 1];
-    group.size -= 8;
+    // Remove a slot covered by the baseline, even when the current schema
+    // already contains a legitimate optional append beyond that baseline.
+    group.slots = old_slots[0 .. baseline.groups[0].slots.len - 1];
+    group.size = group.header_size + @as(u32, @intCast(group.slots.len)) * group.pointer_size;
     try expectRejected(allocator, contract, baseline);
     group.slots = old_slots;
     group.size = old_size;
@@ -2692,8 +2732,13 @@ fn runSelftest(allocator: std.mem.Allocator, contract: *Contract, baseline: *con
     contract.groups[1].magic = old_magic;
 
     const old_version = group.abi_version;
+    const reference_group = group.*;
     group.abi_version += 1;
-    try expectRejected(allocator, contract, baseline);
+    // A version-only mutation is checked against the current table shape.
+    // Its already accepted new slots must not legitimize another bump.
+    if (validateGroupEvolution(allocator, group, &reference_group)) |_| return error.MutationNotRejected else |err| {
+        if (err != error.VersionWithoutAppend) return err;
+    }
     group.abi_version = old_version;
 
     group.size += 8;
@@ -2716,8 +2761,11 @@ fn runSelftest(allocator: std.mem.Allocator, contract: *Contract, baseline: *con
     };
     group.slots = extended_slots;
     group.size += group.pointer_size;
-    try expectRejected(allocator, contract, baseline);
+    if (validateGroupEvolution(allocator, group, &reference_group)) |_| return error.MutationNotRejected else |err| {
+        if (err != error.AppendWithoutVersionBump) return err;
+    }
     group.abi_version += 1;
+    try validateGroupEvolution(allocator, group, &reference_group);
     try validateContract(allocator, contract, baseline);
     group.abi_version -= 1;
     group.size -= group.pointer_size;

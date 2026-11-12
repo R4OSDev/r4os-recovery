@@ -1,0 +1,1 @@
+const std=@import("std");pub fn build(b:*std.Build)void{const owner=b.lazyImport(@This(),"r4os_sdk") orelse return;const dep=b.dependencyFromBuildZig(owner,.{});const sdk=owner.sdk(b,dep,.{});_=sdk.addR4MF(b.path("module.R4MF"));}

@@ -31,13 +31,17 @@ R4DRAW
 ------
 
 Zeichen- und Rasterfunktionen fuer Pixel, Linien, Rechtecke, Text, Fonts,
-Oberflaechen und Present.
+Oberflaechen und Present. Der Ausgangskatalog und die optionalen atomaren
+Modusauftraege teilen denselben Displaybesitzer; ABI13 ergaenzt
+asynchrones Einreichen, Status sowie Bestaetigung/Rueckkehr.
 
 R4NET
 -----
 
 Netzwerkfunktionen fuer Adapterstatus, UDP/TCP, DNS, DHCP, ICMP,
-Netzwerkdienste, Diagnose und Serial-Link-Transport.
+Netzwerkdienste und Diagnose. Die ehemaligen SerialLink-Slots27-31 bleiben
+als binär stabile Kompatibilitätsstubs reserviert: immer err_no_fn, keine
+Puffer- oder UART-Zugriffe. Kein SerialLink-Transport und keine aktive SDK-Fassade.
 
 R4AUDIO
 -------
@@ -78,3 +82,7 @@ Gemeinsame Regeln
 - Nicht erreichbare Plattformgruppen beziehungsweise Felder melden
   `err_no_group` (-9001) oder `err_no_fn` (-9002).
 - Fachliche Runtime-R4L-Fehler bleiben Eigentum der jeweiligen Library.
+
+R4DESK21 ergaenzt gui_window_appearance am Tabellenende. Die rein lesende
+48-Byte-Antwort bindet die geladenen optionalen R4X-Titelfarben an exakte
+Prozess-/Fenster-/Hostgenerationen. Vertrag: ABI/R4M0TitleAppearance.txt.

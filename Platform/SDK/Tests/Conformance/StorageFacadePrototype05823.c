@@ -21,6 +21,30 @@ static int32_t fake_storage_begin(const R4StorageTarget *target, uint64_t *claim
     (void)target; *claim = 17; return 0;
 }
 
+static uint32_t resume_calls;
+static int resume_stale;
+static int32_t fake_directory_batch_default(const uint8_t *path, R4DirectoryBatchCursor *cursor, R4DirectoryBatchEntry *out, uint32_t capacity) {
+    (void)path; if (resume_stale) return -10; if (!capacity) return 0;
+    if (cursor->backend[0]) return -5;
+    assert(capacity >= 2); cursor->backend[0] = 1; cursor->change.mount_generation = 1;
+    out[0] = (R4DirectoryBatchEntry){0}; out[1] = (R4DirectoryBatchEntry){0};
+    memcpy(out[0].path, "C:\\ONE.TXT", 11); memcpy(out[1].path, "C:\\SUB", 7);
+    out[0].info.exists = out[1].info.exists = 1; out[1].info.is_dir = 1;
+    return 2;
+}
+static int32_t fake_directory_batch(const uint8_t *path, R4DirectoryBatchCursor *cursor, R4DirectoryBatchEntry *out, uint32_t capacity) {
+    (void)path; ++resume_calls; assert(cursor->version == 1 && cursor->size == sizeof(*cursor));
+    if (resume_stale) return -10;
+    if (!capacity) return 0;
+    if (!cursor->backend[0]) { cursor->backend[0] = 1; cursor->change.mount_generation = 1; return 0; }
+    if (cursor->backend[0] > 1) return -5;
+    assert(capacity >= 2); cursor->backend[0] = 2;
+    out[0] = (R4DirectoryBatchEntry){0}; out[1] = (R4DirectoryBatchEntry){0};
+    memcpy(out[0].path, "C:\\ONE.TXT", 11); memcpy(out[1].path, "C:\\TWO.TXT", 11);
+    out[0].info.exists = out[1].info.exists = 1; out[0].info.size = out[1].info.size = 123;
+    return 2;
+}
+
 static void physical_storage_contract(void) {
     R4XStartR4Sys table = {0}; table.size = R4XSTART_R4SYS_SIZE;
     R4Sys sys = {0}; sys.table = &table; R4Storage storage = {&sys};
@@ -191,6 +215,8 @@ static R4XStartR4Sys make_table(int full) {
     table.dir_create = (uint64_t)(uintptr_t)&fake_dir_create;
     table.dir_delete = (uint64_t)(uintptr_t)&fake_file_delete;
     table.dir_entry = (uint64_t)(uintptr_t)&fake_dir_entry;
+    table.directory_batch = (uintptr_t)&fake_directory_batch_default;
+    table.size = sizeof(table);
     table.file_stream_begin = (uint64_t)(uintptr_t)&fake_stream_begin;
     table.file_stream_write = (uint64_t)(uintptr_t)&fake_stream_write;
     table.file_stream_finish = (uint64_t)(uintptr_t)&fake_stream_finish;
@@ -225,6 +251,19 @@ int main(void) {
     assert(r4_directory_next(&iterator).is_directory == 1u);
     assert(r4_directory_next(&iterator).state == R4_DIRECTORY_END);
     assert(r4_directory_next(&iterator).state == R4_DIRECTORY_END);
+
+    table.directory_batch = (uintptr_t)&fake_directory_batch;
+    table.size = offsetof(R4XStartR4Sys, directory_batch);
+    iterator = r4_files_iterate(files, &directory);
+    assert(r4_directory_next(&iterator).raw_code == R4OS_ERR_NO_FN && resume_calls == 0);
+    table.size = sizeof(table); iterator = r4_files_iterate(files, &directory);
+    R4DirectoryNext continued = r4_directory_next(&iterator);
+    assert(continued.state == R4_DIRECTORY_ENTRY && continued.has_info && continued.info.size == 123 && resume_calls == 3);
+    resume_stale = 1; assert(r4_directory_next(&iterator).raw_code == -10); resume_stale = 0;
+    assert(r4_directory_next(&iterator).state == R4_DIRECTORY_ENTRY);
+    assert(r4_directory_next(&iterator).state == R4_DIRECTORY_END);
+    uint32_t calls = resume_calls; r4_directory_revisit_after_removal(&iterator);
+    assert(r4_directory_next(&iterator).state == R4_DIRECTORY_ENTRY && calls == resume_calls);
 
     R4StreamReader reader = r4_files_stream_reader(files, &path);
     assert(r4_stream_reader_read(&reader, buffer, 2u).bytes == 2u);

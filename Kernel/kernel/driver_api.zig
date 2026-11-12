@@ -758,80 +758,83 @@ pub const Table = extern struct {
     net_receive_packet: *const fn (i32, *const NetPacket) callconv(.c) i32,
 };
 
-pub var table = Table{
-    .magic = MAGIC,
-    .version = VERSION,
-    .size = @sizeOf(Table),
-    .reserved = 0,
-    .log_info = logInfo,
-    .log_warn = logWarn,
-    .log_error = logError,
-    .port_inb = portInb,
-    .port_outb = portOutb,
-    .alloc_dma_buffer = allocDmaBuffer,
-    .free_dma_buffer = freeDmaBuffer,
-    .request_irq = requestIrq,
-    .release_irq = releaseIrq,
-    .get_option = getOption,
-    .register_audio_backend = registerAudioBackend,
-    .register_storage_backend = registerStorageBackend,
-    .register_input_backend = registerInputBackend,
-    .register_synth_engine = registerSynthEngine,
-    .register_mixer_backend = registerMixerBackend,
-    .register_net_backend = registerNetBackend,
-    .alloc_dma_region = allocDmaRegion,
-    .free_dma_region = freeDmaRegion,
-    .pci_device_count = pciDeviceCount,
-    .pci_device_at = pciDeviceAt,
-    .pci_find_by_class = pciFindByClass,
-    .pci_read_config32 = pciReadConfig32,
-    .pci_write_config32 = pciWriteConfig32,
-    .pci_read_bar = pciReadBar,
-    .pci_enable_bus_master = pciEnableBusMaster,
-    .irq_register = irqRegister,
-    .irq_unregister = irqUnregister,
-    .irq_stats = irqStats,
-    .pci_map_bar = pciMapBar,
-    .port_inw = portInw,
-    .port_outw = portOutw,
-    .port_inl = portInl,
-    .port_outl = portOutl,
-    .net_receive_frame = netReceiveFrame,
-    .register_audio_output_backend = registerAudioOutputBackend,
-    .unregister_audio_backend = unregisterAudioBackend,
-    .tick_count = tickCount,
-    .timer_frequency = timerFrequency,
-    .wait_ticks = waitTicks,
-    .register_synth_engine_v2 = registerSynthEngineV2,
-    .unregister_storage_backend = unregisterStorageBackend,
-    .storage_backend_recovery_begin = storageBackendRecoveryBegin,
-    .storage_backend_recovery_finish = storageBackendRecoveryFinish,
-    .register_usb_host_controller = registerUsbHostController,
-    .unregister_usb_host_controller = unregisterUsbHostController,
-    .driver_work_submit = driverWorkSubmit,
-    .driver_work_cancel = driverWorkCancel,
-    .driver_completion_wait = driverCompletionWait,
-    .driver_completion_status = driverCompletionStatus,
-    .driver_completion_release = driverCompletionRelease,
-    .driver_work_summary = driverWorkSummary,
-    .pci_enable_msi = pciEnableMsi,
-    .alloc_dma_region_constrained = allocDmaRegionConstrained,
-    .pci_disable_msi = pciDisableMsi,
-    .protocol_dispatch = protocolDispatch,
-    .dma_pin_buffer = dmaPinBuffer,
-    .dma_map_pinned = dmaMapPinned,
-    .dma_sync_for_device = dmaSyncForDevice,
-    .dma_sync_for_cpu = dmaSyncForCpu,
-    .dma_unmap = dmaUnmap,
-    .dma_unpin_buffer = dmaUnpinBuffer,
-    .driver_work_submit_request = driverWorkSubmitRequest,
-    .activate_usb_host_controller = activateUsbHostController,
-    .register_display_blit_backend = registerDisplayBlitBackend,
-    .unregister_display_blit_backend = unregisterDisplayBlitBackend,
-    .net_schedule_rx = netScheduleRx,
-    .net_backend_query = netBackendQuery,
-    .net_receive_packet = netReceivePacket,
-};
+pub var table = initialTable();
+fn initialTable() Table {
+    return Table{
+        .magic = MAGIC,
+        .version = VERSION,
+        .size = @sizeOf(Table),
+        .reserved = 0,
+        .log_info = logInfo,
+        .log_warn = logWarn,
+        .log_error = logError,
+        .port_inb = portInb,
+        .port_outb = portOutb,
+        .alloc_dma_buffer = allocDmaBuffer,
+        .free_dma_buffer = freeDmaBuffer,
+        .request_irq = requestIrq,
+        .release_irq = releaseIrq,
+        .get_option = getOption,
+        .register_audio_backend = registerAudioBackend,
+        .register_storage_backend = registerStorageBackend,
+        .register_input_backend = registerInputBackend,
+        .register_synth_engine = registerSynthEngine,
+        .register_mixer_backend = registerMixerBackend,
+        .register_net_backend = registerNetBackend,
+        .alloc_dma_region = allocDmaRegion,
+        .free_dma_region = freeDmaRegion,
+        .pci_device_count = pciDeviceCount,
+        .pci_device_at = pciDeviceAt,
+        .pci_find_by_class = pciFindByClass,
+        .pci_read_config32 = pciReadConfig32,
+        .pci_write_config32 = pciWriteConfig32,
+        .pci_read_bar = pciReadBar,
+        .pci_enable_bus_master = pciEnableBusMaster,
+        .irq_register = irqRegister,
+        .irq_unregister = irqUnregister,
+        .irq_stats = irqStats,
+        .pci_map_bar = pciMapBar,
+        .port_inw = portInw,
+        .port_outw = portOutw,
+        .port_inl = portInl,
+        .port_outl = portOutl,
+        .net_receive_frame = netReceiveFrame,
+        .register_audio_output_backend = registerAudioOutputBackend,
+        .unregister_audio_backend = unregisterAudioBackend,
+        .tick_count = tickCount,
+        .timer_frequency = timerFrequency,
+        .wait_ticks = waitTicks,
+        .register_synth_engine_v2 = registerSynthEngineV2,
+        .unregister_storage_backend = unregisterStorageBackend,
+        .storage_backend_recovery_begin = storageBackendRecoveryBegin,
+        .storage_backend_recovery_finish = storageBackendRecoveryFinish,
+        .register_usb_host_controller = registerUsbHostController,
+        .unregister_usb_host_controller = unregisterUsbHostController,
+        .driver_work_submit = driverWorkSubmit,
+        .driver_work_cancel = driverWorkCancel,
+        .driver_completion_wait = driverCompletionWait,
+        .driver_completion_status = driverCompletionStatus,
+        .driver_completion_release = driverCompletionRelease,
+        .driver_work_summary = driverWorkSummary,
+        .pci_enable_msi = pciEnableMsi,
+        .alloc_dma_region_constrained = allocDmaRegionConstrained,
+        .pci_disable_msi = pciDisableMsi,
+        .protocol_dispatch = protocolDispatch,
+        .dma_pin_buffer = dmaPinBuffer,
+        .dma_map_pinned = dmaMapPinned,
+        .dma_sync_for_device = dmaSyncForDevice,
+        .dma_sync_for_cpu = dmaSyncForCpu,
+        .dma_unmap = dmaUnmap,
+        .dma_unpin_buffer = dmaUnpinBuffer,
+        .driver_work_submit_request = driverWorkSubmitRequest,
+        .activate_usb_host_controller = activateUsbHostController,
+        .register_display_blit_backend = registerDisplayBlitBackend,
+        .unregister_display_blit_backend = unregisterDisplayBlitBackend,
+        .net_schedule_rx = netScheduleRx,
+        .net_backend_query = netBackendQuery,
+        .net_receive_packet = netReceivePacket,
+    };
+}
 
 fn logInfo(text: [*:0]const u8) callconv(.c) void {
     log_event.driver(log_event.Severity.info, current_owner, text);
@@ -2889,4 +2892,34 @@ fn zEqSlice(z: [*:0]const u8, slice: []const u8) bool {
 fn upper(c: u8) u8 {
     if (c >= 'a' and c <= 'z') return c - ('a' - 'A');
     return c;
+}
+
+const api2 = @import("../program/generation2.zig");
+pub const table2: api2.abi.DriverApi2 = initTable2();
+fn initTable2() api2.abi.DriverApi2 {
+    @setEvalBranchQuota(2_000_000);
+    const source = initialTable();
+    var result: api2.abi.DriverApi2 = undefined;
+    inline for (@typeInfo(api2.abi.DriverApi2).@"struct".fields) |field| {
+        if (comptime @offsetOf(api2.abi.DriverApi2, field.name) < 16) continue;
+        if (comptime std.mem.eql(u8, field.name, "register_audio_output_backend")) {
+            // Recovery has no generation2 audio backend owner. Never hand a
+            // compact AudioBackend2/status callback to the old descriptor ABI.
+            @field(result, field.name) = audioOutputUnavailable2;
+        } else if (comptime @hasField(Table, field.name)) {
+            @field(result, field.name) = api2.callback(field.type, @field(source, field.name));
+        } else if (comptime std.mem.eql(u8, field.name, "monotonic_clock")) {
+            @field(result, field.name) = api2.callback(field.type, &@import("../program/r4sys.zig").monotonicClock);
+        } else if (comptime @typeInfo(field.type) == .optional) {
+            @field(result, field.name) = null;
+        } else @compileError("Missing Recovery DriverApi2 owner: " ++ field.name);
+    }
+    result.magic = api2.abi.driver_magic;
+    result.version = api2.abi.driver_version;
+    result.size = @sizeOf(api2.abi.DriverApi2);
+    result.reserved = 0;
+    return result;
+}
+fn audioOutputUnavailable2(_: [*:0]const u8, _: *const api2.abi.AudioBackend2) callconv(.c) i32 {
+    return -5;
 }

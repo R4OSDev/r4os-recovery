@@ -1,0 +1,96 @@
+﻿Begrenzte gemeinsame FilePickerSession
+====================================
+
+SDK0.64.167, Anbieterphase0.90.24, unveraenderter Contract82/Kernel466.
+
+file_picker.Session besitzt den gemeinsamen Controller in statischem Zig.
+Elf C-Funktionen und der sichere Rust-Borrower fuehren denselben Besitzer aus.
+Der vorhandene file_metadata2/directory_metadata_batch2 besitzt weiterhin
+saemtliche Aufloesung/I/O/Mount-/Taskgrenzen. Keine neue Kernel-API, Registry,
+Heapallokation oder dauerhafte Mount-/Dateileihe entsteht. Alter FileDialog,
+DialogState, DialogPage und document_save bleiben erhalten. Der Zigdialog-
+Adapter projiziert geliehene Labels/Zustaende in den vorhandenen FileDialog;
+Zeichnen, Hit-Tests, Dateischreiben und Anwendungsoberflaeche bleiben dort.
+
+Der Caller bietet zwei disjunkte ausgerichtete ganze Rowpuffer an, Kapazitaet
+4..256, zweiter Puffer mindestens so gross. Eine Row1400 enthaelt originale
+DirectoryMetadataEntry2(1136), kind/reserviert und UTF8-Graphemlabel256. Label
+ist Darstellung; der1024-Byte-NUL-Pfad ist vollstaendig. parent/previous/next
+belegen bis3Zeilen, page_size=capacity-3 wie beim alten DialogPage. Verzeichnisse
+bleiben unabhaengig vom ASCII-Extensionsuffix navigierbar. Optionaler Filter
+bekommt nur Dateieintraege:0ausblenden,1annehmen,negativeFehler; anderepositive
+Werte sind defekte Anbieter. Context/Filter/Code leben bis wirklichem Return.
+
+Begin normalisiert/kopiert einen ganzen absoluten Pfad und startet nur einen
+privaten Kandidaten. Stepbudget1..64 begrenzt I/O-Anbieteraufrufe: zuerst
+Directorymetadaten, dann Einzelelementbatches durch echtes EOF, einschliesslich
+ausgeblendeter/off-page Eintraege. Zusaetzlich hoechstens ein Filtercallback
+je Dateizeile. Das ist keine Zeit-/Latenzgarantie fuer physisches I/O.0 ist
+Fortschritt, kein EOF. Nur echtes EOF publiziert durch Puffertausch; bis dahin
+ist keine Kandidatenzeile lesbar. Mount-/Namespace-/Ownerbindung wird von den
+kanonischen Cursorn geprueft; Root- und Zeilenmetadaten muessen dazu passen.
+Ein ungueltiger Anbieter, Filterfehler, I/O oder Restart verwirft den Kandidaten
+und erhaelt alte ganze Sicht, Auswahl/Scroll, Namen und bestaetigte Entscheidung.
+Ein historisches altes View ist dadurch kein aktueller Dateipraesenzbeleg.
+
+Ein nicht wiederverwendeter u64-SDK-Revisionsschluessel bindet die ganze Seite.
+Bei MAX wird weiterer Begin verweigert, niemals Wrap. Ganze FileIdentity2-
+Tupel sind Namespacebeobachtungen, weder Retain, offener Handle noch atomare
+Zusage ueber spaeteren Zugriff. Aktivierung validiert den alten Cursor und
+liest Metadaten erneut. Bei echten Zeilen muss die ganze Identitaet gleich
+sein. Parentzeilen besitzen keine erfundene Identitaet und duerfen einen
+anderen Mount betreten. Synthetische previous/next benutzen den gespeicherten
+Verzeichnispfad/Seitenschluessel, niemals einen alten Dateisystemindex.
+Erneute Namespacepublication kann auch aus fremden Verzeichnissen Restart
+ausloesen. Inhalte/Metadaten sind weiterhin einzelne Beobachtungen.
+
+Modus Open/Save ist explizit. Name ist entweder leer oder genau eine ganze
+gueltige Pfadkomponente nach vorhandenem UTF8/BMP-Pfadvertrag, ohne Slash,
+Punkt/Punktpunkt oder Abschneiden. Kein implizites Suffix/Format. Fehlender
+Name im Savemodus liefert eine neue Pfadentscheidung mit unbekannten Metadaten;
+fehlende Dateien in Open sind Fehler. Bestehende Directoryziele navigieren.
+Bestehende Saveziele liefern NeedsOverwrite, bis der Caller ausdruecklich
+erlaubt. Erlaubnis bindet den genauen zuvor beobachteten ganzen Pfad und
+FileIdentity2: geaendertes/fehlendes Ziel wird Veraltet, nicht still eine
+neue Datei. Begin, geaenderter Name/Selektion, Cancel und erfolgreiche
+Bestaetigung beenden diese Erlaubnis. candidate_info/path sind nur im Idle
+der private Overwritekandidat, overwrite_pending ist sein0/1-Tag; waehrend
+Ladung gehoeren sie ausschliesslich der Directorytransaktion. Neues Lesen
+beweist keine unveraenderten Inhalte oder atomare spaetere Saveoperation.
+Kein Schreiben/Oeffnen und kein
+automatischer Ueberschreibdialog. Bestaetigte Auswahl ist eine ganze Kopie;
+Fehler/Cancel veraendern sie nicht. Savepolicy/Format/Dateioperation und
+Vergleich/Claim beim spaeteren Zugriff bleiben beim Anwendungs-/Savebesitzer.
+
+Session8640, Provider32, Row1400, Decision1144, Progress56; C/Zig/Rustlayouts
+werden statisch verglichen. Statefelder sind privat, keine Callersteuerung.
+Progressflags:1historischeVollsicht,2Ladung,4imCallback,8geschlossen. staged
+ist reine Fortschrittsdiagnose; nur View gewaehrt Zeilenautoritaet. Fokus
+0Liste/1Name/2OK/3Cancel, pressed0..3oder4keinPress. Bestehende GUI-Fokus-
+und Scrollhelfer bleiben Owner. Up/Down zirkulieren nur bei Listenfokus,
+Tab/ShiftTab wechseln Fokus, Enter bestaetigt/navigiert, Escape cancelt.
+Nameediting sowie Maus-/Formatdarstellung bleiben beim bestehenden GUIcaller.
+Open ueberspringt den im bestehenden FileDialog deaktivierten Namenfokus.
+Der alte Renderer besitzt fuer Liste/Name nur eine gemeinsame select-
+Darstellung; der Adapter projiziert beide Savefokuswerte darauf, waehrend
+der Controller die vier Eingabeziele getrennt behaelt. Keine Erweiterung
+oder Umdeutung des bisherigen FileDialoglayouts ist damit verbunden.
+
+Cancel schliesst logisch, loescht privaten Kandidaten und Presszustand.
+Es gibt keine inter-call Kernelressource zu quittieren. Reentrant-/aktive
+Aufrufe liefern Busy; auch Cancel beendet keine wirkliche Provider-/Filter-
+Code-/Storageleihe vor Rueckkehr. Keine parallele Mutation. Session, Texte,
+Outputs und beide ganzen Puffer muessen im nativen Vertrag disjunkt und
+gueltig sein. Views/Label-/Dialogprojektionen enden vor mutierendem Aufruf.
+Rust leiht Context und beide ganzen MaybeUninitpuffer, ist weder Send noch
+Sync; Rows leihen self und sperren spaeter benutzte Mutation. Native Filter
+verlangen ausdruecklich unsafe Code-/Kontextlebenszeit; der normale Zugriff
+mit Extensionsfilter ist sicher. Quelle fuer native Vertrauensgrenzen ist
+der vorhandene unsafe Contextvertrag. Keine globale Sitzungsbindung.
+
+SDKfehler:-201State/Pfad,-202Storage,-203Busy,-204Inkomplett,-205Anbieter,
+-206Geschlossen,-207Revisionerschoepft,-208Fehlt,-10Veraltet. Originale
+negative Anbieterfehler bleiben erhalten; fehlender neuer Slot meldet-9002,
+kein Rueckfall auf einen alten Provider. Anwendungsmigration folgt separat.
+Qualifikationsbelege und tatsaechliche Abnahmegrenzen stehen in Docs/API/
+FilePickerSession.txt und Research/API-ABI/Umsetzung/0.90.24/.

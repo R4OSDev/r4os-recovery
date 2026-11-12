@@ -1,0 +1,1 @@
+Create this local-contract provider with the generic SDK New-Project creator. It generates the initial owner baseline/bindings and Rust lock once; Build.ps1 uses matched components. Subsequent contract changes use the original generator and explicit baseline review. Resources and callbacks remain caller/session owned through real close.

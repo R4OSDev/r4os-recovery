@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "generation": 2,
+  "source": "API/ApiContract.json",
+  "query": {
+    "symbol": "Query2",
+    "export_version": 2,
+    "magic": 843854930,
+    "abi_version": 2,
+    "size": 24,
+    "remove_fields": [
+      "kernel_bridge"
+    ]
+  },
+  "start": {
+    "symbol": "R4XStart2",
+    "export_version": 2,
+    "magic": 844641362,
+    "abi_major": 2,
+    "abi_minor": 0,
+    "size": 120,
+    "remove_fields": [
+      "reserved_runtime"
+    ]
+  },
+  "tables": {
+    "magic_high_byte": 50,
+    "initial_version": 1,
+    "remove_slots": {
+      "R4SYS": [
+        "reserved_shell_run"
+      ],
+      "R4DEV": [
+        "reserved_program_instance_storage_summary_v1",
+        "reserved_program_registry_summary_v1",
+        "reserved_program_registry_self_test_v1"
+      ]
+    },
+    "source_versions": {
+      "R4SYS": 36,
+      "R4DESK": 21,
+      "R4DRAW": 39,
+      "R4NET": 2,
+      "R4AUDIO": 4,
+      "R4DEV": 36
+    }
+  },
+  "driver": {
+    "init_symbol": "DriverInit2",
+    "protocol_init_symbol": "ProtocolInit2",
+    "export_version": 2,
+    "initial_version": 1,
+    "source_version": 39,
+    "protocol_source_version": 1,
+    "protocol_magic": 843665488,
+    "remove_fields": [
+      "register_audio_backend",
+      "register_synth_engine"
+    ],
+    "magic": 843665476,
+    "protocol_tail_fields": [
+      "protocol_dispatch",
+      "link_io",
+      "process_status"
+    ]
+  },
+  "audio_status": {
+    "name": "AudioBackendStatus2",
+    "remove_fields": [
+      "last_write_ticks",
+      "max_write_ticks",
+      "total_write_ticks",
+      "last_refill_ticks",
+      "max_refill_ticks",
+      "total_refill_ticks"
+    ],
+    "backend_version": 3,
+    "backend_magic": 843208001
+  },
+  "selection": {
+    "default_generation": 1,
+    "profile_selection": "SDK/Profiles",
+    "mixed_start_generations": "reject",
+    "missing_generation": "reject",
+    "shared_resource_owners": true,
+    "profiles": [
+      "r4os-zig-generation2",
+      "r4os-c-generation2",
+      "r4os-rust-generation2",
+      "r4os-zig-r4d-generation2",
+      "r4os-c-r4d-generation2",
+      "r4os-rust-r4d-generation2",
+      "r4os-zig-r4p-generation2",
+      "r4os-c-r4p-generation2",
+      "r4os-rust-r4p-generation2"
+    ]
+  }
+}

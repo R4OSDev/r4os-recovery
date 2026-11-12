@@ -232,6 +232,15 @@ pub fn volumeForDrive(letter: u8) ?Volume {
     return mounted_volumes[index];
 }
 
+pub fn volumeForReference(ref: access.MountRef) ?Volume {
+    const guard = locks.storage.acquire();
+    defer locks.storage.release(guard);
+    const volume = if (ref.slot == 26) boot_volume_slot else if (ref.slot < mounted_volumes.len) mounted_volumes[ref.slot] else null;
+    const found = volume orelse return null;
+    const actual = found.accessReference() orelse return null;
+    return if (actual.slot == ref.slot and actual.generation == ref.generation) found else null;
+}
+
 // The storage transaction has already stopped admissions and drained I/O.
 // Generation invalidation and removal are one short metadata publication.
 pub fn unmount(ref: access.MountRef) bool {
@@ -769,6 +778,11 @@ pub fn readDirectoryEntryStatus(volume: Volume, dir: NodeRef, index: usize, out:
 
 pub const DirectoryNextStatus = enum { found, not_found, again, io };
 pub fn nextDirectoryEntry(volume: Volume, dir: NodeRef, state: *[128]u64, out: *Entry) DirectoryNextStatus {
+    var remaining: u32 = 256;
+    return nextDirectoryEntryBudget(volume, dir, state, out, &remaining);
+}
+
+pub fn nextDirectoryEntryBudget(volume: Volume, dir: NodeRef, state: *[128]u64, out: *Entry, remaining: *u32) DirectoryNextStatus {
     comptime {
         if (@sizeOf(fat32.DirectoryCursor) > 1024 or @sizeOf(ntfs_fs.DirectoryCursor) > 1024) @compileError("directory cursor exceeds contract");
     }
@@ -776,7 +790,7 @@ pub fn nextDirectoryEntry(volume: Volume, dir: NodeRef, state: *[128]u64, out: *
         .fat32 => |v| blk: {
             if (dir > 0xffffffff) break :blk .io;
             var entry: fat32.Entry = undefined;
-            const status = fat32.nextDirectoryEntry(v, @intCast(dir), @ptrCast(state), &entry);
+            const status = fat32.nextDirectoryEntryBudget(v, @intCast(dir), @ptrCast(state), &entry, remaining);
             if (status == .found) out.* = entryFromFat32(entry);
             break :blk switch (status) {
                 .found => .found,
@@ -787,7 +801,7 @@ pub fn nextDirectoryEntry(volume: Volume, dir: NodeRef, state: *[128]u64, out: *
         },
         .ntfs => |v| blk: {
             var entry: ntfs_fs.Entry = undefined;
-            const status = ntfs_fs.nextDirectoryEntry(v, dir, @ptrCast(state), &entry);
+            const status = ntfs_fs.nextDirectoryEntryBudget(v, dir, @ptrCast(state), &entry, remaining);
             if (status == .found) out.* = entryFromNtfs(entry);
             break :blk switch (status) {
                 .found => .found,

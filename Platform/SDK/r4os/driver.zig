@@ -11,16 +11,7 @@ pub const SharedDmaBuffer = struct {
     const payload_offset: u32 = 4096;
 
     pub fn create(ctx: *const Context, bytes: u32, max_phys: u64) ?*SharedDmaBuffer {
-        if (bytes == 0 or bytes > abi.dma_mapping_max_bytes) return null;
-        var region: abi.DmaBuffer = .{};
-        if (ctx.allocDmaRegionConstrained(bytes + payload_offset, payload_offset, max_phys, &region) != 0) return null;
-        if (region.virt_addr == 0 or region.bytes < bytes + payload_offset) {
-            ctx.freeDmaRegion(&region);
-            return null;
-        }
-        const self: *SharedDmaBuffer = @ptrFromInt(region.virt_addr);
-        self.* = .{ .region = region, .payload_bytes = bytes };
-        return self;
+        return createSharedDmaBuffer(ctx, bytes, max_phys);
     }
 
     pub fn data(self: *const SharedDmaBuffer) []u8 {
@@ -35,14 +26,66 @@ pub const SharedDmaBuffer = struct {
     }
 
     pub fn release(self: *SharedDmaBuffer, ctx: *const Context) void {
-        const previous = @atomicRmw(u32, &self.references, .Sub, 1, .acq_rel);
-        if (previous == 0) unreachable;
-        if (previous != 1) return;
-        // The descriptor passed to free must outlive the allocation it frees.
-        var region = self.region;
-        ctx.freeDmaRegion(&region);
+        releaseSharedDmaBuffer(self, ctx);
     }
 };
+
+// One allocation/refcount owner for both explicit technical generations.
+// Generic entry points are not foreign helper ABI exports.
+pub fn createSharedDmaBuffer(ctx: anytype, bytes: u32, max_phys: u64) ?*SharedDmaBuffer {
+    if (bytes == 0 or bytes > abi.dma_mapping_max_bytes) return null;
+    var region: abi.DmaBuffer = .{};
+    if (ctx.allocDmaRegionConstrained(bytes + SharedDmaBuffer.payload_offset, SharedDmaBuffer.payload_offset, max_phys, &region) != 0) return null;
+    if (region.virt_addr == 0 or region.bytes < bytes + SharedDmaBuffer.payload_offset) {
+        ctx.freeDmaRegion(&region);
+        return null;
+    }
+    const self: *SharedDmaBuffer = @ptrFromInt(region.virt_addr);
+    self.* = .{ .region = region, .payload_bytes = bytes };
+    return self;
+}
+pub fn releaseSharedDmaBuffer(self: *SharedDmaBuffer, ctx: anytype) void {
+    const previous = @atomicRmw(u32, &self.references, .Sub, 1, .acq_rel);
+    if (previous == 0) unreachable;
+    if (previous != 1) return;
+    // The descriptor passed to free must outlive the allocation it frees.
+    var region = self.region;
+    ctx.freeDmaRegion(&region);
+}
+
+/// Version 3 adds the canonical output callbacks to the unchanged v2 prefix.
+pub const AudioOutputBackend = extern struct {
+    base: abi.AudioBackend = .{ .version = abi.audio_backend_outputs_version, .size = 96 },
+    outputs: abi.AudioOutputExtension,
+};
+
+/// Version 4 distinguishes completed application PCM from a physical Stop.
+/// The optional idle callback drains all caller data; a silent carrier may
+/// remain owned by the selected output. Stop/shutdown must still stop DMA.
+pub const AudioOutputIdleBackend = extern struct {
+    base: AudioOutputBackend,
+    idle: ?*const fn (?*anyopaque) callconv(.c) i32 = null,
+};
+
+/// Version5 keeps the complete idle prefix. Tagged acceptance and cursor
+/// snapshots share one physical epoch, so reset cannot reattribute old PCM.
+pub const AudioOutputPlaybackBackend = extern struct {
+    base: AudioOutputIdleBackend,
+    write_tracked: ?*const fn (?*anyopaque, [*]const u8, u32, u32, u16, u16, *abi.AudioBackendWriteReceipt) callconv(.c) i32 = null,
+    playback: ?*const fn (?*anyopaque, *abi.AudioBackendPlayback) callconv(.c) i32 = null,
+    flow: ?*const fn (?*anyopaque, *const abi.AudioBackendFlow) callconv(.c) i32 = null,
+};
+
+comptime {
+    if (@sizeOf(abi.AudioBackend) != 72 or @offsetOf(AudioOutputBackend, "outputs") != 72 or @sizeOf(AudioOutputBackend) != 96)
+        @compileError("audio output backend prefix drift");
+    if (@offsetOf(AudioOutputIdleBackend, "idle") != 96 or @sizeOf(AudioOutputIdleBackend) != 104)
+        @compileError("audio idle backend prefix drift");
+    if (@offsetOf(AudioOutputPlaybackBackend, "write_tracked") != 104 or
+        @offsetOf(AudioOutputPlaybackBackend, "playback") != 112 or
+        @offsetOf(AudioOutputPlaybackBackend, "flow") != 120 or @sizeOf(AudioOutputPlaybackBackend) != 128)
+        @compileError("audio playback backend prefix drift");
+}
 
 pub const r4d_shutdown_entry_offset: u32 = 5;
 
@@ -57,6 +100,56 @@ pub fn entriesAsm(comptime init_target: []const u8, comptime shutdown_target: []
 }
 
 pub const Context = struct {
+    pub fn serial(self: *const Context) ?@import("driver_serial.zig").Context {
+        if (!self.supportsDriverApi(abi.driver_api_serial_version, @offsetOf(abi.DriverApi, "serial_query") + 8)) return null;
+        const query = self.api.serial_query orelse return null;
+        var table: abi.DriverSerialApi = .{};
+        if (query(&table) != abi.serial_ok or table.version != 1 or table.size < @sizeOf(abi.DriverSerialApi)) return null;
+        return .{ .table = table };
+    }
+
+    pub fn heap(self: *const Context) ?@import("driver_heap.zig").Context {
+        if (!self.supportsDriverApi(30, @offsetOf(abi.DriverApi, "heap_query") + @sizeOf(usize))) return null;
+        const query = self.api.heap_query orelse return null;
+        var table: abi.DriverHeapApi = .{};
+        if (query(&table) != abi.driver_heap_ok or table.version != 1 or table.size < @sizeOf(abi.DriverHeapApi)) return null;
+        return .{ .table = table };
+    }
+    pub fn resources(self: *const Context) ?@import("driver_resources.zig").Context {
+        if (!self.supportsDriverApi(29, @offsetOf(abi.DriverApi, "resource_query") + @sizeOf(usize))) return null;
+        const query = self.api.resource_query orelse return null;
+        var table: abi.DriverResourceApi = .{};
+        if (query(&table) != abi.driver_resource_ok or table.version != 1 or table.size < 32) return null;
+        return .{ .table = table };
+    }
+    pub fn graphicsDisplay(self: *const Context) ?@import("driver_display.zig").Context {
+        if (!self.supportsDriverApi(28, @offsetOf(abi.DriverApi, "gfx_display_query") + @sizeOf(usize))) return null;
+        const query = self.api.gfx_display_query orelse return null;
+        var table: abi.GfxDriverDisplayApi = .{};
+        if (query(&table) != abi.gfx_output_ok or table.version != 1 or table.size < 40) return null;
+        return .{ .table = table };
+    }
+    pub fn graphicsOutputs(self: *const Context) ?@import("driver_outputs.zig").Context {
+        if (!self.supportsDriverApi(27, @offsetOf(abi.DriverApi, "gfx_output_query") + @sizeOf(usize))) return null;
+        const query = self.api.gfx_output_query orelse return null;
+        var table: abi.GfxDriverOutputApi = .{};
+        if (query(&table) != abi.gfx_output_ok or table.version != 1 or table.size < 24) return null;
+        return .{ .table = table };
+    }
+    pub fn graphicsQueue(self: *const Context) ?@import("driver_queue.zig").Context {
+        if (!self.supportsDriverApi(26, @offsetOf(abi.DriverApi, "gfx_queue_query") + @sizeOf(usize))) return null;
+        const query = self.api.gfx_queue_query orelse return null;
+        var table: abi.GfxDriverQueueApi = .{ .size = @sizeOf(abi.GfxDriverQueueApi) };
+        if (query(&table) != abi.gfx_queue_ok or table.version != 1 or table.size < 56) return null;
+        return .{ .table = table };
+    }
+    pub fn memory(self: *const Context) ?@import("driver_memory.zig").Context {
+        if (!self.supportsDriverApi(25, @offsetOf(abi.DriverApi, "gfx_memory_query") + @sizeOf(usize))) return null;
+        const query = self.api.gfx_memory_query orelse return null;
+        var table: abi.GfxDriverMemoryApi = .{};
+        if (query(&table) != abi.gfx_buffer_result_ok or table.version != 1 or table.size < 112) return null;
+        return .{ .table = table };
+    }
     api: *const abi.DriverApi,
 
     pub fn init(api: *const abi.DriverApi) Context {
@@ -84,7 +177,9 @@ pub const Context = struct {
     }
 
     pub fn apiCompatible(self: *const Context) bool {
-        return self.supportsDriverApi(abi.driver_api_version, @intCast(@sizeOf(abi.DriverApi)));
+        // The v25 memory query is optional. Existing drivers keep the v24
+        // minimum; memory() negotiates the additional tail independently.
+        return self.supportsDriverApi(24, @offsetOf(abi.DriverApi, "gfx_memory_query"));
     }
 
     pub fn logInfo(self: *const Context, text: [*:0]const u8) void {
@@ -127,10 +222,6 @@ pub const Context = struct {
         return self.api.get_option(driver_name, key);
     }
 
-    pub fn registerSynthEngine(self: *const Context, name: [*:0]const u8, engine: *const anyopaque) i32 {
-        return self.api.register_synth_engine(name, engine);
-    }
-
     pub fn registerSynthEngineEx(self: *const Context, name: [*:0]const u8, engine: *const abi.SynthEngine) i32 {
         return self.api.register_synth_engine_v2(name, engine);
     }
@@ -139,10 +230,32 @@ pub const Context = struct {
         return self.api.register_audio_output_backend(name, backend);
     }
 
+    pub fn registerAudioOutputs(self: *const Context, name: [*:0]const u8, backend: *const AudioOutputBackend) i32 {
+        return self.api.register_audio_output_backend(name, backend);
+    }
+
+    pub fn registerAudioOutputIdle(self: *const Context, name: [*:0]const u8, backend: *const AudioOutputIdleBackend) i32 {
+        return self.api.register_audio_output_backend(name, backend);
+    }
+
+    pub fn registerAudioOutputPlayback(self: *const Context, name: [*:0]const u8, backend: *const AudioOutputPlaybackBackend) i32 {
+        return self.api.register_audio_output_backend(name, backend);
+    }
+
     pub fn unregisterAudioBackend(self: *const Context, name: [*:0]const u8) i32 {
         return self.api.unregister_audio_backend(name);
     }
 
+    /// Bind once after registering the structured backend. The callback must
+    /// observe real row/count/active publication epochs under its own owner.
+    pub fn registerAudioOutputEpoch(self: *const Context, name: [*:0]const u8, callback: abi.AudioOutputEpochFn) i32 {
+        if (!self.supportsDriverApi(39, @offsetOf(abi.DriverApi, "register_audio_output_epoch") + 8)) return abi.err_no_fn;
+        const bind = self.api.register_audio_output_epoch orelse return abi.err_no_fn;
+        return bind(name, callback);
+    }
+
+    /// Kernel 0.1.304 requires the complete v2 NetBackend header. Optional
+    /// packet metadata/callbacks may remain absent; canonical flat I/O stays valid.
     pub fn registerNetBackend(self: *const Context, name: [*:0]const u8, backend: *const abi.NetBackend) i32 {
         return self.api.register_net_backend(name, backend);
     }
@@ -241,6 +354,18 @@ pub const Context = struct {
         return self.api.dma_sync_for_cpu(mapping);
     }
 
+    pub fn syncDmaRangeForDevice(self: *const Context, mapping: *const abi.DmaMapping, offset: u32, bytes: u32) i32 {
+        if (!self.supportsDriverApi(34, @offsetOf(abi.DriverApi, "dma_sync_range_for_device") + 8)) return abi.err_no_fn;
+        const callback = self.api.dma_sync_range_for_device orelse return abi.err_no_fn;
+        return callback(mapping, offset, bytes);
+    }
+
+    pub fn syncDmaRangeForCpu(self: *const Context, mapping: *const abi.DmaMapping, offset: u32, bytes: u32) i32 {
+        if (!self.supportsDriverApi(34, @offsetOf(abi.DriverApi, "dma_sync_range_for_cpu") + 8)) return abi.err_no_fn;
+        const callback = self.api.dma_sync_range_for_cpu orelse return abi.err_no_fn;
+        return callback(mapping, offset, bytes);
+    }
+
     pub fn unmapDma(self: *const Context, mapping: *abi.DmaMapping) i32 {
         return self.api.dma_unmap(mapping);
     }
@@ -309,6 +434,17 @@ pub const Context = struct {
         return self.api.driver_work_submit_request(request, out_handle);
     }
 
+    /// Execute one bounded hardware slice on BSP under the existing driver
+    /// lifecycle owner. Waits stay in the caller's dedicated pacing task.
+    /// A completion with driver_work_owner_busy ran no callback and may be
+    /// retried after releasing that completion. Context must outlive completion.
+    pub fn workSubmitOwned(self: *const Context, handler: abi.DriverWorkHandler, context: usize, out_handle: *u32) i32 {
+        out_handle.* = 0;
+        if (!self.supportsDriverApi(abi.driver_api_owned_work_version, @offsetOf(abi.DriverApi, "driver_work_submit_owned") + 8)) return abi.err_no_fn;
+        const callback = self.api.driver_work_submit_owned orelse return abi.err_no_fn;
+        return callback(handler, context, out_handle);
+    }
+
     pub fn workCancel(self: *const Context, handle: u32) i32 {
         return self.api.driver_work_cancel(handle);
     }
@@ -335,6 +471,31 @@ pub const Context = struct {
 
     pub fn timerFrequency(self: *const Context) u32 {
         return self.api.timer_frequency();
+    }
+
+    /// Same fixed-layout snapshot and 1/0 availability result as R4SYS.
+    /// Read-only, also during shutdown; no driver owner guard or wait.
+    pub fn monotonicClock(self: *const Context, output: *abi.MonotonicClockInfo) i32 {
+        output.* = .{};
+        if (self.api.version < 31 or self.api.size < @offsetOf(abi.DriverApi, "monotonic_clock") + 8) return abi.err_no_fn;
+        const callback = self.api.monotonic_clock orelse return abi.err_no_fn;
+        return callback(output);
+    }
+
+    pub fn threads(self: *const Context) ?@import("driver_threads.zig").Context {
+        if (self.api.version < 32 or self.api.size < @offsetOf(abi.DriverApi, "thread_query") + 8) return null;
+        const query = self.api.thread_query orelse return null;
+        var table: abi.DriverThreadApi = .{};
+        if (query(&table) != 0 or table.version != 1 or table.size < abi.driver_thread_api_min_bytes) return null;
+        return .{ .table = table };
+    }
+
+    pub fn semaphores(self: *const Context) ?@import("driver_semaphores.zig").Context {
+        if (self.api.version < 33 or self.api.size < @offsetOf(abi.DriverApi, "semaphore_query") + 8) return null;
+        const query = self.api.semaphore_query orelse return null;
+        var table: abi.DriverSemaphoreApi = .{};
+        if (query(&table) != 0 or table.version != 1 or table.size < @sizeOf(abi.DriverSemaphoreApi)) return null;
+        return .{ .table = table };
     }
 
     pub fn waitTicks(self: *const Context, ticks: u64) void {

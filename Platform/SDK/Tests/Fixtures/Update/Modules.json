@@ -1,0 +1,19 @@
+{
+  "schema": 4,
+  "profile": "test",
+  "count": 1,
+  "entries": [
+    {
+      "name": "KERNEL",
+      "kind": "KERNEL",
+      "version": "0.1.381",
+      "target": "/boot/r4os.elf",
+      "module_role": null,
+      "subsystem_id": null,
+      "subsystem_display_name": null,
+      "guest_formats": [],
+      "guest_extensions": [],
+      "guest_features": []
+    }
+  ]
+}

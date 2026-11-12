@@ -1,0 +1,59 @@
+﻿Prepared text prefix metrics
+===========================
+
+SDK0.64.166 / Contract0.64.82, provider step0.90.23.
+Zig: r4os.text_metrics; C: text_metrics.h plus standalone
+text_metrics_platform2.h; Rust: r4os_sdk::text_metrics (shared native owner).
+Normative Kernel receipt: Contract/API/FontPrefixMetrics2.txt.
+
+The caller owns one bounded immutable complete UTF8 source (no NUL,
+at most4096bytes), whole FontAdvance2 storage and the cache. Init captures
+nothing. Prepare invalidates previous views, invokes one exact optional
+DRAW Query2 font_prefix_metrics2 callback, validates its complete scalar
+receipt and projects rows in place to whole grapheme ends. Preparation is
+linear; repeated hit/key/view/progress do no callback, copy or full text scan.
+No new Canvas/control/application use is introduced in this provider phase.
+
+Provider8, Key32, Progress48 and Cache112 are native x86_64 SDK records,
+distinct from the Kernel FontAdvance2(8)/FontAdvanceInfo2(40) records.
+Key binds source address/byte length, caller nonreused text revision and
+the exact font ID/bank revision. It is no content hash or globally unique
+allocation identity. Reusing a text revision for changed bytes is outside
+the key contract; discard views and reinitialize for a changed source.
+
+Progress.required_count is SCALAR storage capacity. Progress.count and the
+GetView span describe only the final GRAPHEME rows. The private native_info
+field is the preprojection receipt; it grants no raw scalar view after the
+SDK has compacted that storage. Count0 with Complete is a genuine prepared
+empty view; capacity, encoding, unavailable and provider failures never
+become empty success. Invalid receipts/rows return SDK invalid-provider-105.
+
+Prepare returns original Kernel statuses and diagnostic required_count for
+capacity-7. SDK structural statuses: invalid-state-101, storage-102,
+busy-103, incomplete-104, invalid-provider-105. Key mismatch returns stale-10.
+Raw optional-slot lookup errors are preserved by the low-level bindings;
+there is no fallback to the old repeated-prefix implementation.
+
+Hit upper-bounds the first prefix width strictly greater than x, then uses
+the original integer half-distance tie rule. It preserves zero advances,
+x<=0 and original LF-start/CRLF stopping. Widths are logical integer pixels
+in the existing additive font model, not shaping/kerning/Bidi/cell counts.
+
+A cache is a frozen historical observation. ValidateFont uses an empty-text
+checked provider stamp (constant work) to detect later publication; failure
+or revision mismatch discards the logical cache and returns the original
+failure or stale. It does not promise the font remains current in a later
+render. Reprepare is explicit. Canonical revision wrap closes new metrics
+for this boot; old font APIs keep their original behavior.
+
+Source, whole storage, state, outputs and code are mapped, aligned and
+disjoint. Source and prepared rows remain immutable for every valid borrowed
+view. An active callback cannot be ended by Reset: busy/in-call persists to
+actual return. Reset discards an SDK view only; there is no Kernel cache
+resource, retained font lease or physical stop to acknowledge. Rust borrows
+Context, str, whole MaybeUninit storage and returned views; raw providers and
+native construction retain their explicit unsafe lifetime preconditions.
+
+Implementation qualification and limits: Docs/API/TextMetrics.txt and local
+Research/API-ABI/Umsetzung/0.90.23/. Before23 original host/native baselines
+are preserved; source-only declarations are not a completed runtime proof.

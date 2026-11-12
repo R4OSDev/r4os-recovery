@@ -1,0 +1,6 @@
+const r4os=@import("r4os");
+fn work(app:*r4os.App2)i32 { app.system().println("Hello from {ProjectName}");return 0; }
+
+export fn R4XStart2(raw:*const r4os.platform2.abi.R4XStartContext2) linksection(".text.r4xstart_entry") callconv(.c)i32{
+ var app=switch(r4os.App2.init(raw,.console)){.value=>|v|v,.failure=>|e|return e.raw_code};return work(&app);
+}

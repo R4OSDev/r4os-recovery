@@ -2,12 +2,16 @@
   "schema_version": 1,
   "generated_from": "API/ApiContract.json",
   "contract_schema_version": 11,
+  "c_binding": "Generated/SDK/C/include/r4os/abi_generated.h",
+  "c_technical_binding": "Generated/SDK/C/include/r4os/abi_technical_generated.h",
+  "rust_binding": "Generated/SDK/Rust/src/lib.rs",
+  "rust_inventory": "Generated/Inventory/RustABI.json",
   "summary": {
-    "function_count": 356,
-    "group_slot_count": 356,
+    "function_count": 526,
+    "group_slot_count": 526,
     "sdk_only_count": 0,
-    "public_count": 264,
-    "advanced_count": 92
+    "public_count": 384,
+    "advanced_count": 142
   },
   "functions": [
     {
@@ -364,7 +368,7 @@
       "kind": "group_slot",
       "slot": 31,
       "exposure": "public",
-      "description": "Creates a program thread from an entry callback.",
+      "description": "Creates a program thread from an entry callback. Flags accept zero or thread_create_flag_compute_worker; unknown bits or missing runtime.workers=owned-v1 return thread_error_unsupported. A compute caller passes its compute role to descendants even with zero flags. Foreground main scheduling and console ownership are unchanged; compute workers retain exact instance VM/resource and join/exit ownership.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -688,7 +692,7 @@
       "kind": "group_slot",
       "slot": 59,
       "exposure": "public",
-      "description": "Returns capacity and filesystem information for a mounted drive.",
+      "description": "Returns mounted drive metadata and scalar filesystem geometry, then performs the exact FREE query under the existing mounted request owner. May wait for request admission and cold bitmap I/O. DriveInfo.reserved bit drive_info_flag_free_valid is set only when the FREE backend supplied a value; zero free space with that bit set is valid. Other reserved bits remain zero.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -1240,7 +1244,7 @@
       "kind": "group_slot",
       "slot": 105,
       "exposure": "public",
-      "description": "R4SYS creates a joinable thread and returns its exact generation-safe identity.",
+      "description": "R4SYS creates a joinable thread and returns its exact generation-safe identity. Flags accept zero or thread_create_flag_compute_worker; unknown bits or missing runtime.workers=owned-v1 return thread_error_unsupported. A compute caller passes its compute role to descendants even with zero flags. Foreground main scheduling and console ownership are unchanged; compute workers retain exact instance VM/resource and join/exit ownership.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -1847,6 +1851,450 @@
       }
     },
     {
+      "name": "R4SYS.thread_placement_get",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 156,
+      "exposure": "public",
+      "description": "Get placement of the exact live thread/instance generations (including main). Returns thread_ok, thread_error_invalid/no_instance/not_found/busy or thread_placement_error_capacity. Validate info version1 and capacity>=64. word_capacity0 allows null cpus and returns metadata including required word count; otherwise capacity must suffice and cpus must be nonnull. Copy exactly cpu_word_count words and64 info bytes on success; all outputs and tails unchanged on errors. Caller buffers must not overlap. No allocation or retained caller pointer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.thread_placement_set",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 157,
+      "exposure": "public",
+      "description": "Set placement of an exact live thread/instance generation (including main). Returns thread_ok, thread_error_invalid/no_instance/not_found/busy/unsupported or thread_placement_error_capacity. Reject unknown flags/class/reserved data, empty sets, unavailable or module-disallowed CPUs and hints outside the set, without state changes. Explicit input length must equal the discovered required word count; default-cpus requires word_count0. Running acceptance may remain pending until full outgoing RSP/FPU save; query revisions. No synchronous wait or realtime guarantee. Repeated equal requests do not renew preferred-class budgets; class toggles share one bounded activation budget. No retained caller pointer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.system_power_transition",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 158,
+      "exposure": "advanced",
+      "description": "Explicit bounded blocking orderly system transition: power_transition_action_halt/reboot/poweroff. Closes new CPU control ownership and pins current CPU membership before cooperative POWERSVC stop and real same-CPU request return. No Runtime owner over waits. Refusal returns a negative power_transition_error_* and retains real resources without stopping APs; CPU ownership reopens. Accepted transition becomes terminal and does not return. Missing/disabled provider stays functional. Existing nonblocking raw system_halt/reboot/poweroff slots retain their signatures/meanings; with held requests they refuse immediately rather than waiting or falsely acknowledging return. Profiles/parameter policy stay external. timeout_ticks is an explicit wait budget, clamped to5 seconds;0 requests only a bounded poll. Timeout/refusal may follow an already requested cooperative service stop; query status rather than automatic retry. The immediate legacy slots never perform this new service wait.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.entropy_source_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 159,
+      "exposure": "advanced",
+      "description": "Purely cached registered-device source observation. Original source/driver epoch and module generation retained after close. No callback/device/CPU instruction, I/O or entropy consumption.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.entropy_fill",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 160,
+      "exposure": "advanced",
+      "description": "Explicit bounded registered-device source read,1..4096bytes. Ordinary task with IF on, exact task admission through output, exact driver instance/lifecycle lease through resident callback/staging, no Runtime owner over wait. Release driver owner before potentially paged caller copy. Positive exact count only with confirmed full receipt; failure discards/clears valid caller range, never initial/partial entropy. No RNG pool or clock/ID substitute; SDK owns RDRAND-first/source choice.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_lifecycle_begin",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 161,
+      "exposure": "public",
+      "description": "Nonblocking process-registry epoch admission only. Initializes the existing cursor with initialized|lifecycle, snapshot_generation=program_epoch, no registry traversal, allocation, VM, heap, task or thread diagnostics. Failure leaves cursor unchanged; Busy is not lifecycle authority. Does not cache or equate program epochs with all mutable metadata.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_lifecycle_programs",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 162,
+      "exposure": "public",
+      "description": "One bounded generation-ordered lifecycle page from the canonical process registry, including pending/done completions. Forty-byte records carry exact handles and current process fields without VM statistics. Epoch mismatch returns restart with no row/cursor advancement; Busy/invalid has no complete authority. Complete paging must finish before adoption/disappearance decisions; revalidate exact handles at actions. A lifecycle cursor cannot be used by full inventory calls or vice versa.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.drive_info_geometry",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 163,
+      "exposure": "public",
+      "description": "Returns the same mounted drive identity/capacity and scalar cluster geometry without executing FREE or reading a free-space bitmap. Existing exact mount/request admission can wait. Free fields and drive_info_flag_free_valid are zero: explicitly unknown, not measured zero. Existing DriveInfo56 layout unchanged. index0..25; returns1 mounted,0 unmounted,-1 invalid index,-2 request unavailable.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.directory_batch",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 164,
+      "exposure": "public",
+      "description": "Initialize with path and default2160-byte cursor; continuation uses its captured node/path with exact logical-owner, mount and mutation validation. Return1..capacity complete1120-byte records,0 bounded progress,-5 EOF; -1 invalid,-3 absent/not-directory initially,-7 full-path bounds,-9 I/O/admission,-10 stale/foreign/cancel. Capacity1..8; one shared256-step backend budget and prepared metadata per visit. Initialized capacity0/out=NULL validates without advancing (RAM-only while namespace unchanged); input path is ignored on continuation. No persistent kernel allocation/scan lease; call guards always release, including caller unwind. Outputs/cursor have no authority on error. A caller must not modify or concurrently reuse a cursor.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_observation_retain",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 165,
+      "exposure": "public",
+      "description": "Create an independent observation binding to the exact process handle and generation while its completion record still exists. A first binding can be admitted before owner reap; after consuming owner reap, a new independent binding can still be admitted while an existing reference retains that exact record. Copying the same observation token creates no additional binding or reference. Once the last retaining reference is released and the consumed record is removed, retain fails; it never reconstructs missing completion or output evidence. flags0 binds cleanup to the calling process generation; PORTABLE explicitly survives creator exit until release. Existing generation checks and owner reap authority are unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_observation_wait",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 166,
+      "exposure": "public",
+      "description": "Nonconsuming observation of the exact retained terminal record, including after owner reap. Zero polls and FOREVER waits; completion wins at timeout. Release/creator cleanup invalidates only this binding and wakes a blocked observer.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_observation_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 167,
+      "exposure": "public",
+      "description": "Read the immutable retained normalized UTF-8 console transcript, merging stdout/stderr in accepted order. OUTPUT_AVAILABLE distinguishes captured empty output from unavailable evidence; OUTPUT_TRUNCATED/OUTPUT_INCOMPLETE forbid a full-output claim. Offset refers to retained bytes, not discarded prefixes.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_observation_release",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 168,
+      "exposure": "public",
+      "description": "Release exactly one independent retention binding. Last release after owner consumption frees only retained completion/output storage. Normal bound observations also close when their creator ends; portable observations require explicit release. Stale/wrong-generation handles cannot close another binding.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_name_limits",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 169,
+      "exposure": "public",
+      "description": "Resolve the actual target mount (the final file need not exist) and return its name/operation limits without mutation or free-space scanning. C:\\BOOT may differ from its visible drive provider. Return FileStream errors, including NAME_TOO_LONG; unsupported providers leave output untouched. The exact mount identity is a snapshot, not a reservation; file operations revalidate normally.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_bound_detail",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 170,
+      "exposure": "public",
+      "description": "Returns ServiceDetail and its exact current or last retained ProgramProcessHandle from one generation-validated registry selection. Terminal rows may retain the last process identity until next start/removal; an unbound row returns a zero process handle. The identity value grants no retention lease. Use service_stop_bound for service shutdown or program_handle_status, program_handle_request_close and program_handle_kill with this full handle; never reopen the displayed ID. Concurrent replacement returns BUSY, not another generation. Endpoint counters remain per-owner snapshots. No wait for process completion; normal owner/lifecycle admission may block.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_stop_bound",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 171,
+      "exposure": "public",
+      "description": "Request cooperative stop only if the named service is still bound to the supplied full ProgramProcessHandle; mismatch returns BUSY before Close. The same captured registry target is used throughout status/Close/completion, including restart/reinstall races. One absolute monotonic entry wait budget includes owner/status work; zero polls, FOREVER waits. Only actual retained physical completion succeeds; TIMEOUT remains an unknown outcome. The expected handle must be nonzero/valid; unbound starts use the existing named stop contract.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_inventory_page",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 172,
+      "exposure": "public",
+      "description": "Read a bounded page from a dynamic service inventory. Zero cursor begins; later calls bind revision/total/last ID. Returns copied row count, END explicitly proves EOF, DYNAMIC reports no compiled count limit. Membership/configuration changes return RESTART; callers discard all partial pages. Cursor/rows remain unchanged on errors; buffer tail remains untouched. capacity must be positive and only bounds one transfer; arbitrary many pages are supported. Complete 1024-byte paths and exact registration/start/process bindings are returned. Runtime and endpoint counters are per-owner observations. No new process/endpoint lease is granted.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.service_control_bound",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 173,
+      "exposure": "public",
+      "description": "Apply START/STOP/RESTART/MODE/REMOVE only to the original registration ID and expected full process/start binding. A removed/reinstalled name, reused process ID or changed start returns BUSY/NOT_FOUND before effects. Uses existing native generation-aware start/stop/reap, absolute stop deadline, restart/disable and self-restart policy. MODE requires a valid public mode; other operations require mode0. Only STOP accepts timeout_ticks; other operations require0. Timeout is unknown completion, never automatic retry or permission for a second close/start. Returns the existing service status domain; no caller pointers are retained.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.system_update_target_supported",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 174,
+      "exposure": "public",
+      "description": "Read-only admission query for the installed early-update-recovery target scope. Borrowed NUL-terminated native journal path, at most1023 UTF8 bytes; returns1 if normalized target is supported,0 if outside the scope,-1 for invalid path/Unicode. No filesystem access, reservation, installation or version/dependency check. Mount, capacity, artifact identity, ownership and lifecycle remain the updater preflight responsibility.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.file_metadata2",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 175,
+      "exposure": "public",
+      "description": "Read actual VFS metadata under the existing exact mount/request owner, preserving full u64 backend node. Returns1 found,0 absent; negative errors leave output unchanged. Qualified identity uses exact mount plus nonreused global namespace observation and tagged FAT directory slot or NTFS node/sequence; no generic first-cluster identity, handle, retain, stable infinite incarnation or content revision. Current providers do not certify content revision; flags distinguish unknown size/times/revision. Namespace change during observation returns-10; namespace exhaustion returns-12. No allocation or retained caller pointers. Synchronous return ends the output loan. Current backend admission limits remain; this API does not add real NTFS>u32 support.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.directory_metadata_batch2",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 176,
+      "exposure": "public",
+      "description": "Use the same canonical bounded directory engine and exact owner/mount/path guards with a distinct2184-byte cursor and1136-byte records. Capacity1..8, shared256physical-step budget; positive count publishes rows,0 bounded progress,-5 EOF. Bound capacity0/out=NULL validates without advancing. Any global namespace publication or mount/owner mismatch returns-10; discard all prior pages. Errors leave caller cursor unchanged and grant no row authority; buffer contents on errors are unspecified. Whole paths and same FileMetadata2 identity projection as single lookup. No persistent Kernel allocation, mount pin or scan; reset closes/cancels. Current content metadata remains per-entry observations, not one atomic directory-wide content snapshot. Namespace exhaustion-12 never reuses an identity.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_create",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 177,
+      "exposure": "public",
+      "description": "Create a resident process namespace record with explicit1..32capacity and exact creating native Task ID/generation. Handles never repeat. Allocation/publication guarded outside Runtime. No caller pointer retained. Creator death closes/unlinks all actual source registrations during real thread retirement; no stack Drop assumption.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_enroll",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 178,
+      "exposure": "public",
+      "description": "Creator-only exact source admission and predicate registration share Runtime with source notify/close. Copies80bytes; notification handle resolves only in this process. Per-source cap32; timer source has one fixed absolute clock-bound deadline. New registration and outputs publish only after complete validation; no caller buffer retained.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_rearm",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 179,
+      "exposure": "public",
+      "description": "Creator-only rearm of same kind/object/generation/tag/flags. Notification updates observed revision; timer supplies new explicit absolute deadline and clock. Closed notification cannot be resurrected. Changes wake existing owner if necessary, never consume source state or renew a wait deadline implicitly.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_remove",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 180,
+      "exposure": "public",
+      "description": "Creator-only removal detaches the actual resident source link atomically before slot reuse. Registration IDs never repeat within set. Removing a source grants no source Close, read/reap, work cancel or buffer/DMA release.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_wait",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 181,
+      "exposure": "public",
+      "description": "Creator-only non-consuming wait-any. Poll/Finite/Forever explicit; finite outer deadline and timer clocks are revalidated without rebasing. All outputs disjoint/mapped/borrowed through real return. Bounded local rows copy after Runtime release; no caller/stack pointer or unwind pin is retained by scheduler through sleep. Original one Task wait_node enrolls only in resident set queue. Source publications and enrollment are atomic; close/kill detach real links. More/rescan/coalesced flags disclose incomplete batch; level results repeat until rearm/remove. Timeout/cancel never authorizes source data/DMA release.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 182,
+      "exposure": "public",
+      "description": "Any same-process task may close to cancel an owner wait. Close atomically detaches every source link and wakes original Task queue before heap free. Failed backing free preserves exact closed identity for retry. Waiter never dereferences old set after park. Process cleanup drains sets before notification sources and Runtime backing. Already removed handles are stale; SDK owner may make its own completed close idempotent.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.waitset_source_prepare",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 183,
+      "exposure": "public",
+      "description": "Prepare kinds3..7 from copied64byte complete identities under each canonical IO/Program/Thread/Service/GUI owner, then Runtime. Output existing80byte source publishes only on success. Globally never-reused observer epoch prevents enrollment from following a replacement after prepare. No resource retain, work consumption, polling worker or new registry. Legacy IO/endpoint identifies current incarnation only; ambiguous IO IDs rejected. Main GUI only. Unsupported remains explicit. Preparation can race Close; Enroll then returns Stale/Closed.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_create",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 184,
+      "exposure": "public",
+      "description": "Create one bounded resident byte channel and two exact caller-owned references. Capacity1..65536,64channels globally,4MB total admitted payload including unfinished frees. Allocation/free outside Runtime; caller output publishes only on success. No worker, handler or application migration.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_dup",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 185,
+      "exposure": "public",
+      "description": "Create a distinct same-direction reference in the same exact process. At most32 live or unreleased references per pipe. Simple handle copies do not keep an end alive. No transfer to another process or launch.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_read",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 186,
+      "exposure": "public",
+      "description": "Read one bounded prefix, up to4096bytes, under one original Poll/Finite/Forever absolute budget. Nonzero length required; caller spans disjoint and borrowed until actual return. Finite identity/regression/expiry revalidated before admission, never rebased by wakes. A <=atomic_limit write waits for the whole offered record; larger writes may return an exact partial prefix. Caller spans remain borrowed through actual return. No resident queue stores caller pointers; no Unwind guard survives scheduler park. Cancel/close wakes actual waiters; every wake re-resolves full endpoint identity. Last writer close then drain yields EOF; last reader close yields BrokenPipe with zero accepted bytes. No peer-delivery or physical-DMA claim.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_write",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 187,
+      "exposure": "public",
+      "description": "Write one bounded prefix, up to4096bytes, under one original Poll/Finite/Forever absolute budget. Nonzero length required; caller spans disjoint and borrowed until actual return. Finite identity/regression/expiry revalidated before admission, never rebased by wakes. A <=atomic_limit write waits for the whole offered record; larger writes may return an exact partial prefix. Caller spans remain borrowed through actual return. No resident queue stores caller pointers; no Unwind guard survives scheduler park. Cancel/close wakes actual waiters; every wake re-resolves full endpoint identity. Last writer close then drain yields EOF; last reader close yields BrokenPipe with zero accepted bytes. No peer-delivery or physical-DMA claim.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_cancel",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 188,
+      "exposure": "public",
+      "description": "Advance the exact reference cancellation epoch and wake current operations. Applies to calls already admitted, including staging; a later call uses a fresh epoch. No close, byte discard, reference release or cancellation of other duplicate ends. Epoch never wraps.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_close",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 189,
+      "exposure": "public",
+      "description": "Close only this exact reference, waking all blocked directions. Last writer permits buffered drain then EOF. Last reader discards unread bytes and forbids later writes with BrokenPipe. Last reference frees real backing outside Runtime; failed free retains a closed exact retry identity and all resource accounting. Process retirement closes its own references, never peers in other processes.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.byte_pipe_info",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 190,
+      "exposure": "public",
+      "description": "Copy advisory coherent channel capacity/queued/reference counts and atomic/step limits. Does not reserve capacity or prove drain, delivery or shutdown.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_launch_io",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 191,
+      "exposure": "public",
+      "description": "Copy and validate LaunchIo and launch strings, then create one Start2 child. All selected pipe references bind atomically to its full reserved generation before first Ready. Both stdout/stderr create distinct refs even for the same parent End. No automatic inheritance; every failure rolls child refs back. Parent references remain untouched; caller out_handle only publishes complete success.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4SYS.program_stdio",
+      "group": "R4SYS",
+      "kind": "group_slot",
+      "slot": 192,
+      "exposure": "public",
+      "description": "Return this exact Start2 process startup binding snapshot; defaults use existing console routes. Pipe End values are borrowed references owned by this process, not a new retain. Query does not reopen closed ends; Dup explicitly if another owning reference is needed. No parent pointers or context-reserved fields are used.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
       "name": "R4DESK.read_key",
       "group": "R4DESK",
       "kind": "group_slot",
@@ -2380,7 +2828,7 @@
       "kind": "group_slot",
       "slot": 45,
       "exposure": "public",
-      "description": "Waits for desktop input, GUI activity, or a timeout.",
+      "description": "Wait for desktop-owner input, GPU/cursor/mode, console, process or filesystem activity, or the original finite timeout. Uses the desktop-owner sequence and queue independently of gui_activity_wait. Returns1 for changed sequence,0 timeout,-2 cancelled/killed,-3 failed wait; output is written on nonnegative return only. Forever waits have no periodic250-ms slices; cancellation is a real wake. Normal GUI window loops use gui_activity_wait and their exact instance/subscriptions instead.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -2476,7 +2924,7 @@
       "kind": "group_slot",
       "slot": 53,
       "exposure": "advanced",
-      "description": "Registers one active remote-frame readback consumer, wakes the desktop on the first consumer, and returns the active consumer count.",
+      "description": "Registers one active remote-frame readback consumer, wakes the desktop on the first consumer, and returns the active consumer count. Demand is charged to the actual program generation; unmatched releases cannot remove another consumer. Process teardown removes all its outstanding demand.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -2488,7 +2936,7 @@
       "kind": "group_slot",
       "slot": 54,
       "exposure": "advanced",
-      "description": "Releases one active remote-frame readback consumer, discards the full-frame shadow after the last consumer, and returns the remaining consumer count.",
+      "description": "Releases one active remote-frame readback consumer, discards the full-frame shadow after the last consumer, and returns the remaining consumer count. Releases only one demand owned by the actual caller; explicitly leased snapshots remain valid until snapshot_release or process teardown.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -2537,6 +2985,222 @@
       "slot": 58,
       "exposure": "advanced",
       "description": "Takes the next ordered layout-independent physical keyboard transition for the desktop host.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.mouse_motion",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 59,
+      "exposure": "advanced",
+      "description": "Returns a MouseMotion snapshot and unclamped accumulated relative input. Version1/size48 required; return0 on success. Does not constrain Desktop coordinates to the boot display. Optional append-only table entry; legacy mouse_state remains unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_snapshot_acquire",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 60,
+      "exposure": "advanced",
+      "description": "Nonblocking acquire(expected_revision,out_info,out_lease):0 success, unavailable on publication race, no frame, no consumer, exhausted lease quota or all three snapshots retained. expected_revision0 selects current; otherwise exact match required before any caller I/O. Returns one immutable coherent frame and pixel lease; release explicitly after network/encoding/file access. Actual program must hold remote_frame_acquire demand. No waiting for readers and no GPU access under kernel owner.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_snapshot_release",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 61,
+      "exposure": "advanced",
+      "description": "Nonblocking release of exact snapshot id+epoch for actual caller generation.0 success; invalid/stale token has no effect. Consumer process teardown releases any remaining lease automatically after execution retirement. Demand and immutable snapshot lifetime are separate: the last demand release does not invalidate a held snapshot.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_source_reset",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 62,
+      "exposure": "advanced",
+      "description": "Desktop publisher claims a fresh source epoch, invalidates live capture/history immediately and wakes consumers. Required at host startup and primary receiver/layout changes. Retained reader snapshots remain immutable until their own release. Process teardown retires its publisher epoch.0 success; no hardware or GPU work in this entry.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.remote_frame_capture_stats",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 63,
+      "exposure": "advanced",
+      "description": "Nonblocking copied publisher and immutable snapshot statistics.0 success; unavailable if another publisher/snapshot operation owns the short access guard. Pixel copies and allocations are preemptible and never hold a no-sleep owner over I/O.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.desktop_activity_notify",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 64,
+      "exposure": "advanced",
+      "description": "Wake existing desktop-activity waiters after publishing userland GUI work. Returns 0. This notification carries no frame, input event or completion proof; callers must publish their state before signalling. Coalesce idle/unchanged work.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_read_events",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 65,
+      "exposure": "advanced",
+      "description": "Current admitted main/legacy console input owner reads0..64 complete events. Native u32 values are retained as full text scalars; navigation is explicitly kind2, legacy byte producers become kind3. Returns complete event count,0 for empty/zero capacity, negative for invalid/closed/unavailable context. Successful prefix only is written, all tails and all error outputs unchanged. Current console/redirected target identity is pinned until after the unlocked caller copy. No Input/Registry/Runtime owner spans pageable caller access. A compute worker is not an input producer/consumer. No decoder, line editor or clipboard policy in the kernel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_push_events",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 66,
+      "exposure": "advanced",
+      "description": "Queues up to64 complete explicit input events for the exact live handle generation. Validate/copy the complete batch before admission, including wireversion/kind/scalar/flags; invalid batch mutates nothing. Returns accepted event prefix length,0 for full/zero count, negative for invalid/stale/closed/non-console context. Unaccepted suffix remains caller-owned for bounded retry. Same FIFO/4095-byte capacity/generation/wake and close ownership as existing input; a text scalar charges its full UTF8 width and is never partially admitted. Existing raw-byte APIs retain their formats/statuses. No callback, allocation, borrowed caller pointer or decoder state spans the queue lock.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_text_info",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 67,
+      "exposure": "advanced",
+      "description": "Returns current or retained-completion text metadata for the exact handle generation. Success0; invalid/stale/non-console negative; output untouched on error. Resident snapshot taken under its owner, all owners/pins released before pageable caller output copy.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.console_set_encoding",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 68,
+      "exposure": "advanced",
+      "description": "Changes only the exact live console producer encoding. Success0; invalid encoding/context-1; pending UTF8 prefix or closed/done-2. Existing canonical UTF8 transcript is never reinterpreted. Three output stream decoders remain independent. No font charset or input encoding change.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_activity_wait",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 69,
+      "exposure": "public",
+      "description": "Wait for activity of the exact calling GUI program instance. last_sequence is private to that instance; subscriptions is the gui_activity_shared_* mask (0 allowed). Returns1 for changed sequence,0 for the original finite timeout,-1 invalid mask/context/output,-2 terminal close/kill,-3 failed wait. Writes the current sequence on nonnegative return only. Initial enrollment and a subscription change force one rescan so a publication between poll and first wait is retained. Sequence check and wait enrollment share Runtime with targeted GUI event/lifecycle publication. A forever wait has no periodic timeout slices. Clipboard/directory notifications affect only subscribed instances; ordinary mouse/GPU/console/desktop activity does not wake this queue. Main GUI owner thread only; no queue, subscription or borrowed caller pointer outlives the exact program payload. Process Close requests are sequence events (allowing a Save dialog); terminal teardown closes the queue and unlinks subscriptions.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_activity_notify",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 70,
+      "exposure": "advanced",
+      "description": "Publish a shared GUI change after its authoritative state/revision is committed. A nonzero gui_activity_shared_* mask is required; returns0 on publication,-1 for unknown/zero bits. Only exact live GUI instances subscribed to a matching category receive a sequence/wake; no registry scan, allocation or periodic diagnostic work. This is a hint to re-read original state, not payload delivery, task completion or a revision value. Caller state must be visible before this call. Desktop-owner activity is independently signalled so its existing shared-state observers continue to progress. Ordinary desktop_activity_notify does not broadcast GUI activity.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_pointer_capture_info",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 71,
+      "exposure": "public",
+      "description": "Query an exact own capture, including the last terminal receipt. Null capture queries the current own window identity/capabilities and any current binding; it does not acquire or reserve anything.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_pointer_capture_acquire",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 72,
+      "exposure": "public",
+      "description": "Request capture for the exact supplied current own window incarnation. Zero accepts PENDING only; ACTIVE starts after desktop validation/cursor policy and an explicit grant notice. Foreign/stale identities and contention cannot change another lease. Previous reliable control notices must be consumed before another request.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_pointer_capture_release",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 73,
+      "exposure": "public",
+      "description": "End exactly this own pending/active lease. The last matching terminal receipt releases idempotently; stale or foreign tokens cannot release a newer lease. Desktop restoration is woken and native terminal state/control notice remain observable.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_pointer_capture_host",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 74,
+      "exposure": "public",
+      "description": "Registered desktop-host bind/snapshot/grant/cancel/delivery/unbind. Grant follows focused visible-window and WM-conflict validation and applied cursor policy. Ordinary captured delivery is exact-generation and source bound; control notices remain reliable outside the ordinary queue. Absolute remote input cannot be labelled physical raw motion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_host_input",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 75,
+      "exposure": "public",
+      "description": "Nonblocking exact ordinary GUI input QUERY/POST/RESET for the registered Desktop host. Query returns the current exact window identity; accepted POST returns0, full returns Busy without consuming input. A pending reset fences subsequent POST until its reliable native control receipt is consumed. Reset removes unread ordinary input while preserving metadata and prior native capture termination. Output is written only on success; no ID-only or window-epoch truncation fallback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DESK.gui_window_appearance",
+      "group": "R4DESK",
+      "kind": "group_slot",
+      "slot": 76,
+      "exposure": "public",
+      "description": "Read immutable loaded R4X title colors for the exact hosted window. Only its registered Desktop host may read; no setter, file reopen or focus change.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3131,6 +3795,774 @@
       }
     },
     {
+      "name": "R4DRAW.gfx_buffer_create",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 49,
+      "exposure": "public",
+      "description": "Creates zeroed resident system RAM with checked descriptor and finite budget. Success is 1; failure leaves outputs untouched and retains any failed VM rollback internally.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_describe",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 50,
+      "exposure": "public",
+      "description": "Copies the descriptor for one reference owned by the current caller.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_import",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 51,
+      "exposure": "public",
+      "description": "Imports a live shareable reference into the current caller, preserving immutable mode. Producer exit closes new imports; existing references survive.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_release",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 52,
+      "exposure": "public",
+      "description": "Drops one caller reference; maps, device jobs and scanout retain their own leases. Stale or duplicate release has no effect.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_map",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 53,
+      "exposure": "public",
+      "description": "Retains a CPU read (0) or write (1) map with an explicit 64-bit range. Conflicting consumers return Busy; WC reads and unavailable CPU mappings are unsupported.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_unmap",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 54,
+      "exposure": "public",
+      "description": "Ends one caller CPU map after the caller has stopped accessing it, orders CPU visibility, and permits deferred release. Device completion is not exposed through this function.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_export_raster",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 55,
+      "exposure": "public",
+      "description": "Exports an exact held shared-raster consumer lease as an immutable BO reference without a pixel copy. The producer may not overwrite the buffer while that reference survives.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_stats",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 56,
+      "exposure": "public",
+      "description": "Copies one coherent budget, object, reference and lease snapshot.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_open",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 57,
+      "exposure": "public",
+      "description": "Opens one bounded asynchronous queue for the current program. Unknown adapters or milestones return unsupported; no silent fallback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_close",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 58,
+      "exposure": "public",
+      "description": "Closes the caller queue, cancels every pending fence, and drops caller fence references. Physical device uses survive until acknowledged quiescent.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 59,
+      "exposure": "public",
+      "description": "Returns after acceptance without executing commands or copying pixels. All descriptors and up to eight dependencies are copied; source/target leases retain backing and prevent premature CPU reuse. Failure leaves output and existing latest-frame work untouched.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_fence_query",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 60,
+      "exposure": "public",
+      "description": "Snapshots one exact fence without waiting. A terminal cancellation may still report device-active; resources are reusable only after physical quiescence.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_fence_wait",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 61,
+      "exposure": "public",
+      "description": "Waits without spinning or holding a metadata owner. timeout_ticks is a scheduler-tick duration, with UINT64_MAX meaning indefinite; the submission deadline remains independently finite in monotonic nanoseconds. Wait timeout leaves output unchanged and does not cancel the job. wait_for=0 waits for logical completion; wait_for=1 waits until the operation is physically quiescent and every queue BO lease has been released. Both events are sticky and generation-retained.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_fence_cancel",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 62,
+      "exposure": "public",
+      "description": "Requests the sole logical cancelled completion for a caller-owned fence. Already terminal returns already-completed. Never asserts native DMA quiescence.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_fence_release",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 63,
+      "exposure": "public",
+      "description": "Drops the caller fence reference. Active backing, dependency edges, wake publication and task-generation waiter records prohibit premature slot reuse.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_backend",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 64,
+      "exposure": "public",
+      "description": "Queries one fixed backend inventory slot, from zero through gfx_queue_backend_capacity minus one. Zero is software; other slots may be vacant. Returns 1 with an exact binding, 0 for vacant, negative for error; output changes only on 1. Revalidate by opening with the returned generations. No hidden fallback or successful partial enumeration.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_revision",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 65,
+      "exposure": "public",
+      "description": "Reads the output revision used with existing desktop activity waits. No second event queue and no busy polling are required.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 66,
+      "exposure": "public",
+      "description": "Reads one of the advertised fixed catalog slots; holes return zero without modifying output. Stable ports survive disconnects, receiver generations do not.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_mode",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 67,
+      "exposure": "public",
+      "description": "Reads one source-filtered mode for an exact receiver incarnation. Stale never returns data belonging to a different receiver.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_edid",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 68,
+      "exposure": "public",
+      "description": "Copies one complete raw EDID block for an exact receiver incarnation. Missing blocks return zero; invalid/stale leaves output unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_test",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 69,
+      "exposure": "public",
+      "description": "Checks the complete output/geometry/format/pitch/PLL/plane/bandwidth/fence state without reservations or device writes. Native commits remain unsupported until hardware and all desktop consumers negotiate the full pipeline.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_commit",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 70,
+      "exposure": "public",
+      "description": "Revalidates the complete state before committing. Currently the firmware backend only supports retaining its actual fixed scanout. Unnegotiated native mode/puffer changes return unsupported before any hardware write. Commit outcomes never imply VBlank.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_submit",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 71,
+      "exposure": "public",
+      "description": "Submit an asynchronous single-primary native atomic change. Copies the complete state and retains full source references before returning. Requires an opted-in native backend and a 1000..60000 ms confirmation interval. Returns queued status, never a hardware success. Unsupported geometry or unavailable capability has no device effects.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_status",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 72,
+      "exposure": "public",
+      "description": "Read the retained mode transaction without waiting. Ticket zero reads the latest transaction for diagnostics; an explicit obsolete ticket returns stale. Reading is allowed across caller exit and hardware loss.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_resolve",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 73,
+      "exposure": "public",
+      "description": "The submitting program confirms the visible candidate or requests rollback. Confirmation is accepted only before its deadline. Cancellation and timeout are requests for actual driver rollback; backing remains retained until real completion. Status is nonblocking; caller exit does not stop the deadline worker.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_presentation_stats",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 74,
+      "exposure": "public",
+      "description": "Read coherent per-head statistics from the current native primary backend. Returns gfx_output_ok or a negative gfx_output error, with no output mutation on failure. No waits, device calls or CPU-copy fence reinterpretation. Unsupported/boot framebuffer backends have no visible hardware completion sample.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_cursor_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 75,
+      "exposure": "public",
+      "description": "Read optional native primary hardware-cursor capabilities. Unsupported leaves caller output unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_cursor_submit",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 76,
+      "exposure": "public",
+      "description": "Submit one finite asynchronous cursor operation for the calling program. Busy keeps prior state. Prepare borrows the source until terminal completion; only successful show/hide confirmation changes visible ownership.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_cursor_status",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 77,
+      "exposure": "public",
+      "description": "Read coherent primary cursor status without rendering or waits. A caller must not draw software while hardware visibility is confirmed or unknown.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_backend_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 78,
+      "exposure": "public",
+      "description": "Queries one existing backend inventory slot with its coherent optional protocol profile. Same 1/0/negative result and capacity as gfx_queue_backend; output changes only on 1. Profile bytes belong to the driver and are interpreted by the matching userland library, never by the kernel. Opening the exact returned binding detects reset or replacement.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_native_start",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 79,
+      "exposure": "public",
+      "description": "Start a caller-owned native BO allocation. Copies input and returns a pending request. Exact provider memory generation and finite deadline required; at most 16 requests per program. No R4D callback executes on the application task. Receive or close each successful request; error leaves output unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_native_query",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 80,
+      "exposure": "public",
+      "description": "Inspect a request owned by the current program. Logical terminal status does not prove physical driver cleanup. Output changes only on success.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_native_receive",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 81,
+      "exposure": "public",
+      "description": "Atomically transfer a successful request-held BO reference to the current program and consume the request. Pending reports busy, failed returns its recorded error. Capacity failure leaves request available for retry. Output changes only on success.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_native_close",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 82,
+      "exposure": "public",
+      "description": "Close a caller-owned allocation request; discard unreceived result and cancel queued work. Claimed work, provider callback and enrolled waiters remain retained until their exact completion. Cannot imply GPU or firmware quiescence.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_native_wait",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 83,
+      "exposure": "public",
+      "description": "Wait on sticky request completion outside owner locks. Exact task-generation wait record survives hard task termination until reaper detach. Relative wait timeout leaves the request and output unchanged; allocation deadline separately closes logical work. Returns terminal status on 1, including failed/cancelled result.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit_render_list",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 84,
+      "exposure": "public",
+      "description": "Atomically admit 1..16 ordered draws with one retained source/target pair and one fence. Requires render_list operation6 and backend bit6; the ordinary submit entry rejects this operation. All list contents are copied before admission. No pixels or device command words are accepted.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_presentation_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 85,
+      "exposure": "public",
+      "description": "Reports per-head presentation policy, real capabilities and scanout observations. Software copy reports no VSync or visibility guarantee. Caller initializes version1/size; output changes only on success.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_presentation_feedback",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 86,
+      "exposure": "public",
+      "description": "Read one actual visible receipt by exact head and source queue fence from the bounded32-frame display history. Independent of current frame and queue-client release. No match returns unavailable; reset/takeover invalidates old history. A retained history record is metadata only, not a BO reference. released_ns retains its existing meaning: retirement of that flip previous image, not the submitted source.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_output_target",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 87,
+      "exposure": "public",
+      "description": "Read the current exact presentation identity for one adapter/head. No match is unavailable; receiver-only catalog entries are not active presentation targets. Caller initializes version1/size48; changes output only on success. Adapter0 names the firmware/software adapter, never an implicit wildcard.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit_output",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 88,
+      "exposure": "public",
+      "description": "Present a complete image to an exact copied output target. Accepts only present/direct_present; validates all output generations and holds the same queue/BO lifetime as ordinary submission. Target selection is never silently reduced to the primary on older kernels: the separate optional slot is mandatory. Other outputs remain independent.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_output_presentation_info",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 89,
+      "exposure": "public",
+      "description": "Read presentation capabilities for an exact copied GfxOutputTarget. Adapter/head and every generation must match. Success-only output; no primary fallback for stale or unknown targets.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.display_output_presentation_feedback",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 90,
+      "exposure": "public",
+      "description": "Read one source fence visibility receipt from the exact output. No other adapter or head can satisfy the query; feedback retains the existing independently retired source lifetime.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit_render_grid_list",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 91,
+      "exposure": "public",
+      "description": "Copy one bounded draw/grid list to an admitted native queue. Operation render_grid_list is explicitly negotiated. Exact grid sampling stays in the R4D/GPU; common code retains source, target and immutable descriptors until the actual receipt.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_color",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 92,
+      "exposure": "public",
+      "description": "Reads driver-published color capabilities and confirmed output encoding for the exact output identity. Missing source metadata returns unsupported; stale output never returns another receiver state. No hardware access or color conversion.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit_render_color_list",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 93,
+      "exposure": "public",
+      "description": "Submit1..16 compatible sampled draws and a copied bounded userland color program. Requires operation render_color_list. Coefficients, source and target remain retained until native completion; no partial list is admitted.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_test_color",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 94,
+      "exposure": "public",
+      "description": "Validate one color mode request and its two distinct BOs against copied source facts without starting device work. Actual receiver/link/source revalidation still occurs in the native driver before commit.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_atomic_submit_color",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 95,
+      "exposure": "public",
+      "description": "Submit a color mode request through the existing confirmation/rollback owner. Retains canonical SDR shadow plus separate encoded image and immutable signal; current active output color changes only after actual driver acknowledgement.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_refresh",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 96,
+      "exposure": "public",
+      "description": "Read independent VRR capability, acknowledged state and actual hardware interval history for this exact output/mode. Missing implementation returns unsupported; output is untouched on error.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_refresh_request",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 97,
+      "exposure": "public",
+      "description": "Set or renew bounded presenter VRR intent. Caller owns the intent until release, close or lease expiry. Returns assigned sequence/deadline without asserting that hardware has switched. Exact target required; operation is atomic on success.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_memory_budget",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 98,
+      "exposure": "public",
+      "description": "Query the configured budget and retained BO charges of one exact adapter/memory generation. Read-only; configure operations are rejected. No R4D callback, allocation or hardware query. Error leaves output unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_telemetry",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 99,
+      "exposure": "public",
+      "description": "Query one exact adapter/memory-generation telemetry snapshot and optionally renew finite demand. Pure metadata exchange with the existing R4D worker. No hardware access or callback. Unknown/expired measurements remain explicit; error preserves output.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_power",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 100,
+      "exposure": "public",
+      "description": "Read acknowledged screen power and independent signal/sink capabilities. Firmware framebuffer and missing drivers return unsupported. Exact connector identity remains queryable while sleeping; output is unchanged on error.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_power_request",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 101,
+      "exposure": "public",
+      "description": "Request or renew screen sleep, or wake immediately. Atomic copied intent with30s off lease; caller close and expiry wake. No GPU/system suspend or synchronous hardware operation. Driver acknowledgement is read separately.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_virtual_start",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 102,
+      "exposure": "public",
+      "description": "Copy and admit an owner-bound GPU range or binding. Output changes only on success; a pending handle is not proof of completed hardware work. Finite creation deadline and exact adapter generation are required.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_virtual_query",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 103,
+      "exposure": "public",
+      "description": "Read the exact caller resource, including after retirement requested with close mode 0. Never infer GPU quiescence from the creation result.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_virtual_close",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 104,
+      "exposure": "public",
+      "description": "Mode 0 requests resource retirement while retaining the public handle for query/wait; mode 1 additionally releases that handle. Range close propagates to all bindings. Neither mode waits for GPU quiescence or discards an outstanding driver claim.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_virtual_wait",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 105,
+      "exposure": "public",
+      "description": "Until 0 waits for settled creation, until 1 for confirmed backend retirement. Completion wins a concurrent wait timeout. A wait timeout changes neither the resource deadline nor its ownership. Exact task retirement removes waiter metadata.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_buffer_map_persistent",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 106,
+      "exposure": "public",
+      "description": "Retain a persistent CPU read (0) or read/write (1) mapping of write-back system RAM. This lease holds backing, not exclusive execution access: device/queue uses may coexist. The caller must synchronize all CPU/GPU access and the driver must perform GPU cache/engine barriers. No GPU completion or host-coherent device capability is implied. Ordinary CPU maps, immutable exports and scanout retain their conflict rules. Close through gfx_buffer_unmap; exact process retirement removes this CPU lease while independent device uses continue to retain backing. Unsupported for VRAM, WC/UC or absent CPU backing.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_backend_properties",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 107,
+      "exposure": "public",
+      "description": "Read immutable vendor properties for an exact backend binding. Returns 1 on success, 0 when this live incarnation has no properties, negative for invalid/stale/lost/unsupported binding. Full output required; output unchanged on every non-success. Properties are hardware/protocol facts, not admitted queue operations or Vulkan feature qualification.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit_native",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 108,
+      "exposure": "public",
+      "description": "Submit native command metadata with the ordinary queue fence/dependency/deadline contract. operation must be native; all ordinary source/target/render/row fields must be empty. Backend native operation and exact profile identity required. Copies payload and binding array; reserves acknowledged mappings and canonical BO execution under the common owner. Close/cancel/producer exit cannot free active GPU resources; physical completion or proved reset is required. Driver validates private payload. Output unchanged on failure; no Linux ioctl or vendor method interpretation in the kernel.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_queue_submit_render_color_grid_list",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 109,
+      "exposure": "public",
+      "description": "Atomically submit1..16 compatible color draws with per-draw logical grids. Requires render_color_grid_list capability. Copies all descriptors before entering the queue owner; no pixel conversion, intermediate image or partial submission.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_output_brightness",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 110,
+      "exposure": "public",
+      "description": "Read the last driver brightness receipt. Output unchanged on failure; unavailable is explicit. current is confirmed programmed intensity, not measured luminance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.gfx_brightness_request",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 111,
+      "exposure": "public",
+      "description": "Admit a normalized brightness request for an exact native output generation. Latest writer wins, survives caller exit. Returns an admission serial only; hardware completion/failure is read separately. No synchronous hardware call.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DRAW.font_prefix_metrics2",
+      "group": "R4DRAW",
+      "kind": "group_slot",
+      "slot": 112,
+      "exposure": "public",
+      "description": "Bounded linear scalar-prefix widths under one existing exact font bank/task-unwind lease. Strict UTF8/no embedded NUL, explicit length0..4096, rows capacity0..4096. One preflight validates/counts; one emission pass uses current additive glyph advances and existing CR/LF maximum-line width behavior. Returns0 complete with unique nonzero bank revision/count/complete flag; -7 capacity reports required_count with no usable rows; all other errors grant no output authority. Empty source/capacity0 is a constant-work checked font stamp probe, no full text scan. Caller keeps immutable source and whole aligned disjoint exclusive outputs/code through real synchronous return. No heap, global text cache, persistent handle, second font owner, rendering/shaping/kerning or current-font/physical completion promise. Canonical font revision wrap permanently refuses new metrics rather than reusing identities; existing font APIs remain unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
       "name": "R4NET.tcp_connect",
       "group": "R4NET",
       "kind": "group_slot",
@@ -3460,7 +4892,7 @@
       "kind": "group_slot",
       "slot": 27,
       "exposure": "advanced",
-      "description": "Returns serial-link connection and transfer state.",
+      "description": "Reserved ABI compatibility stub since0.84.34: always returns err_no_fn without reading or writing buffers, accessing any UART, polling, sending, loading a module or scheduling work. SerialLink is removed; slot name, number, signature and payload layouts stay frozen.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3472,7 +4904,7 @@
       "kind": "group_slot",
       "slot": 28,
       "exposure": "advanced",
-      "description": "Polls the serial link for newly received messages.",
+      "description": "Reserved ABI compatibility stub since0.84.34: always returns err_no_fn without reading or writing buffers, accessing any UART, polling, sending, loading a module or scheduling work. SerialLink is removed; slot name, number, signature and payload layouts stay frozen.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3484,7 +4916,7 @@
       "kind": "group_slot",
       "slot": 29,
       "exposure": "advanced",
-      "description": "Sends one framed message over the serial link.",
+      "description": "Reserved ABI compatibility stub since0.84.34: always returns err_no_fn without reading or writing buffers, accessing any UART, polling, sending, loading a module or scheduling work. SerialLink is removed; slot name, number, signature and payload layouts stay frozen.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3496,7 +4928,7 @@
       "kind": "group_slot",
       "slot": 30,
       "exposure": "advanced",
-      "description": "Runs the serial-link host interoperability probe.",
+      "description": "Reserved ABI compatibility stub since0.84.34: always returns err_no_fn without reading or writing buffers, accessing any UART, polling, sending, loading a module or scheduling work. SerialLink is removed; slot name, number, signature and payload layouts stay frozen.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3508,7 +4940,7 @@
       "kind": "group_slot",
       "slot": 31,
       "exposure": "advanced",
-      "description": "Reads one message from the serial-link inbox.",
+      "description": "Reserved ABI compatibility stub since0.84.34: always returns err_no_fn without reading or writing buffers, accessing any UART, polling, sending, loading a module or scheduling work. SerialLink is removed; slot name, number, signature and payload layouts stay frozen.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -3797,6 +5229,66 @@
       "slot": 22,
       "exposure": "public",
       "description": "Selects a NUL-terminated physical output identity in a 64-byte buffer. AUDSVC owns normal user selection; queued application streams and master volume survive the route switch.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_stream_progress",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 23,
+      "exposure": "public",
+      "description": "Returns canonical source/device progress for one owned stream generation; generation0 only binds a freshly opened stream. No speaker-emission receipt.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_set_stream_expectation",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 24,
+      "exposure": "public",
+      "description": "Sets explicit continuous-source deadline/watermarks for this exact owned stream generation; end is distinct from starvation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_close_stream_progress",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 25,
+      "exposure": "public",
+      "description": "Ends and closes this exact owned stream, returning its last valid drain/consumption snapshot before retirement; shared output may have a known partial cursor.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_output_catalog",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 26,
+      "exposure": "public",
+      "description": "Copy the complete current output catalog in linear row-query work. Caller supplies at least256 AudioOutputInfo slots and a disjoint v1/size>=224 AudioOutputCatalog; no allocation or retained pointer. Returns1 on complete success, service_api_result_busy for contention/provider epoch change, err_no_fn if a registered provider lacks the epoch contract, invalid for malformed metadata/capacity. Metadata and buffer tail remain unchanged on failure; the row prefix is scratch and MUST be discarded unless result1. Count<=256; each provider count<=32, validated with its actual epoch before and after all rows under one registry permit. No retry loop, wait callback, hardware scan, route/Stop/ELD receipt or global availability lease. Scalar audio_output_info stays available for individual consumers.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4AUDIO.audio_capture_io",
+      "group": "R4AUDIO",
+      "kind": "group_slot",
+      "slot": 27,
+      "exposure": "public",
+      "description": "Optional infrastructure-only nonblocking copied input backend IO through original R4D audio registry/permit. No kernel capture queue or decoder. Request and reply records are disjoint borrowed pointers; output PCM scratch is at most2048bytes/whole frames. Returns0 for a complete reply whose result carries operation outcome; negative mechanism errors do not publish reply metadata. No registered input returns explicit UnsupportedCapture in copied reply. R4D retains DMA/pins through failed Stop/Close/shutdown; input record is removed only after genuine hardware quiescence ACK. AUDSVC owns normal client catalog/queue/policy; no playback readback.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -4103,48 +5595,12 @@
       }
     },
     {
-      "name": "R4DEV.program_instance_storage_summary",
-      "group": "R4DEV",
-      "kind": "group_slot",
-      "slot": 27,
-      "exposure": "advanced",
-      "description": "Legacy v1 storage summary output. The provider never reads the incoming header, writes exactly the frozen 256-byte v1 prefix and leaves bytes after that prefix untouched, preserving callers built with the original C facade.",
-      "locations": {
-        "sdk": "Generated/SDK/Zig/abi_generated.zig",
-        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
-      }
-    },
-    {
       "name": "R4DEV.program_instance_storage_self_test",
       "group": "R4DEV",
       "kind": "group_slot",
       "slot": 28,
       "exposure": "advanced",
       "description": "Runs the bounded dynamic program-instance storage diagnostic.",
-      "locations": {
-        "sdk": "Generated/SDK/Zig/abi_generated.zig",
-        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
-      }
-    },
-    {
-      "name": "R4DEV.program_registry_summary",
-      "group": "R4DEV",
-      "kind": "group_slot",
-      "slot": 29,
-      "exposure": "advanced",
-      "description": "Returns compatibility summary data for the dynamic program registry.",
-      "locations": {
-        "sdk": "Generated/SDK/Zig/abi_generated.zig",
-        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
-      }
-    },
-    {
-      "name": "R4DEV.program_registry_self_test",
-      "group": "R4DEV",
-      "kind": "group_slot",
-      "slot": 30,
-      "exposure": "advanced",
-      "description": "Runs the compatibility dynamic program-registry diagnostic.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
@@ -4277,6 +5733,594 @@
       "slot": 41,
       "exposure": "advanced",
       "description": "Returns compact i8042, keyboard, GUI-event, console-input and program-entry queue counters.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.display_state",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 42,
+      "exposure": "advanced",
+      "description": "Returns one coherent display owner, candidate, generation, capability and fallback snapshot without PCI or MMIO reads.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.driver_module_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 43,
+      "exposure": "advanced",
+      "description": "Copies retained metadata of the initialized R4D owner; no file, PCI or MMIO reads. Returns 1 on success, 0 for no runtime R4D, -1 for invalid capacity/version/owner, -2 while the lifecycle is busy. No output on failure. Firmware version names the declared embedded bundle, never successful device execution.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_instrumentation",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 44,
+      "exposure": "advanced",
+      "description": "Reads instrumentation mode, sampling rates, enumeration bounds and clock quality without collecting the broad performance summary. Returns 1 on success, -1 for invalid version/capacity; no output on failure.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_lock",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 45,
+      "exposure": "advanced",
+      "description": "Read-only resident instrumentation snapshot. Returns 1 on success, 0 beyond the index range, -1 for invalid version/capacity; no output on failure.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_stack",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 46,
+      "exposure": "advanced",
+      "description": "Read-only resident instrumentation snapshot. Returns 1 on success, 0 beyond the index range, -1 for invalid version/capacity; no output on failure.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.stack_fault",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 47,
+      "exposure": "advanced",
+      "description": "Read the latest resident stack failure for CPU slot index. Returns 1 for a coherent snapshot (sequence zero means no recorded failure), 0 beyond CPU slots, -1 for invalid version/capacity and -2 for a concurrently changing record after three attempts. Failure never changes output. No allocation, owner acquisition, scan, wait, trace activation or state reset.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.memory_kernel_heap_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 48,
+      "exposure": "advanced",
+      "description": "Explicit bounded kernel-heap check after boot. Runs the existing allocator, patterns, alignment, double-free, 2000-op churn, 16-iteration acceptance and resident-commit cases with exact owned cleanup. Never assumes the global heap is empty and never resets global counters. Returns 1 for a versioned report (including failed, busy or cancelled), 0 when unavailable and -1 for invalid version/capacity without changing output. At most one check runs; normal heap users remain admitted. Close is cooperative; caller task lifetime is retained through cleanup. Deliberate double-free and VM errors are counted separately. Global before/after usage is observational, not a leak oracle. An unacknowledged release retains its exact diagnostic identity and blocks further checks.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.scheduler_kernel_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 49,
+      "exposure": "advanced",
+      "description": "Explicit bounded scheduler/synchronization checks using the existing native cases on a BSP-only controller. Selection is a nonzero kernel_scheduler_check_case_* mask. Exact own task generations and work tickets remain resident until actual exit/release acknowledgments. Caller lifetime survives waits; close requests cooperative cancellation. Exclusive with native boot probes. No global reserve-failure injection, timer reprogramming or artificial clock advancement; those isolated cases are advertised separately. Returns 1 for a fixed report, 0 when unavailable, -1 for invalid selection/header/capacity without output mutation. Failed cleanup retains the resident session and prevents new work; never retry automatically.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.smp_kernel_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 50,
+      "exposure": "advanced",
+      "description": "Explicit bounded functional SMP check on an owned BSP controller and one FPU-ready pinned worker per schedulable CPU. Reuses native placement/checksum, actual old/new mapping reads, exact request-generation remote TLB acknowledgments, monotonic clock and own heap/mutex contracts. Own task retirement precedes mapping/frame cleanup. No global DROP_ACK injection, global counter resets/empty baselines, speedup threshold, heap boot acceptance or R4L/serial boot assertions. Missing second CPU reports unavailable without work. Exact resources and failed releases remain resident; cooperative close cannot discard live workers or backing. Returns 1 for a fixed report including busy/failure/cancellation, 0 when context unavailable, -1 for invalid header/capacity unchanged output.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.performance_smp_tlb",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 51,
+      "exposure": "advanced",
+      "description": "Passive current CPU/schedulable and clock-registration/quality snapshot plus actual remote TLB request/ACK/timeout counters since boot. Reports an active isolated injection explicitly; never starts work or presents historical boot outcomes as a new passing check. Loads are individually current, not atomic across owners; clock quality is functional even without detail metrics. Returns 1 for fixed snapshot, -1 for invalid version/capacity without output mutation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.storage_block_queue_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 52,
+      "exposure": "advanced",
+      "description": "Explicit bounded synthetic blockqueue diagnosis on an owned BSP controller. Shares existing independent-controller, bounded queue, reordered/duplicate completion, kill/unregister barrier, reset/late callback, real timeout/cancel, ordered flush and partial-batch cases. Uses own exact device/request/task generations, actual completion and retirement receipts; never touches physical test disks or resets global queues/counters. Failed resources remain resident and block another session. Returns1 for fixed report incl unavailable/busy/failure/cancel,0 for context unavailable,-1 for invalid header/capacity without output mutation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.storage_nvme_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 53,
+      "exposure": "advanced",
+      "description": "Explicit bounded read-only NVMe IRQ/completion proof. Binds one exact device generation and resident buffer through actual read completion and release. Matches native request/backend identity to a driver observation of its own hardware CQE, namespace/controller epochs and IRQ-driven worker pass after DMA release acknowledgment. Passive per-device before/after counters are descriptive only. Missing hardware/observation/IRQ capability is unavailable, not a pass. No deliberate write/reset/reconfiguration/fault injection. Caller output never reaches a worker; late or uncertain state retains resources/session. Returns1 for fixed report,0 for context unavailable,-1 for invalid header/capacity unchanged output.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.usb_contract_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 54,
+      "exposure": "advanced",
+      "description": "Explicit bounded synthetic USB ring-cycle and event-router contracts using the existing native owner functions. Only private stack-local state; no allocation, waits, tasks, live mailbox access, real TRB submission, port reset or hardware reconfiguration. Reentrant and repeatable without USB hardware. This is not a physical USB/liveboot qualification. Returns1 for a fixed32-byte report,-1 for invalid header/capacity with output unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_count",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 55,
+      "exposure": "public",
+      "description": "Count currently registered ports, including reserved debug ports. Dynamic count, no two-port maximum.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_port_at",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 56,
+      "exposure": "public",
+      "description": "Copy one current port descriptor by catalog index;0success, NotFound at end. Enumeration is not an open reservation; use copied port_id+generation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_open",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 57,
+      "exposure": "public",
+      "description": "Exclusively bind exact port generation to current process generation. Out handle zero on failure. Debug COM1 remains Busy until actual handoff.0success; provider open bounded/no retained buffers.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_configure",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 58,
+      "exposure": "public",
+      "description": "Configure exact process-owned open port; Busy until previous TX physically drains. Unsupported settings unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_read",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 59,
+      "exposure": "public",
+      "description": "Read_some raw bytes, wait for at least one only.0timeout polls. Finite logical-tick deadline, UINT64_MAX invalid. Per-port IRQ event wait leaves Ready list. Valid transfer output retains partial bytes/errors even on failure; no automatic replay. Empty call has no device effects.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_write",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 60,
+      "exposure": "public",
+      "description": "Queue raw bytes with exact accepted prefix; no framing.0timeout polls, finite ticks only. Per-port IRQ queue-space wait leaves Ready list. Partial bytes retained on timeout/cancel/error; caller keeps buffer through return. Physical completion requires drain.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_drain",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 61,
+      "exposure": "public",
+      "description": "Confirm empty software TX and actual hardware TEMT, not remote receipt. Finite ticks,0polls. IRQ readiness plus bounded timer for final shift completion; no yield spin.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_status",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 62,
+      "exposure": "public",
+      "description": "Coherent exact open-handle line/modem/buffer/error snapshot. No UART access through a reserved debug port.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_cancel",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 63,
+      "exposure": "public",
+      "description": "Cancel already admitted operations on this exact process-owned opening; wake only its serial waiters. Retain actual accepted bytes and device-owned buffers. Future operations may continue; no unrelated task/work completion signaled.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.serial_close",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 64,
+      "exposure": "public",
+      "description": "Close admission, cancel/wake operations, await real callback references and hardware stop. Normal flags0 drains; serial_close_abort discards own queued bytes with accounting. Finite ticks;0polls. Timeout/unknown retains same closing handle and port/context for retry, successful0 alone releases ownership. Process/driver exit uses explicit abort with same actual quiescence.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_topology",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 65,
+      "exposure": "advanced",
+      "description": "Copy one passive immutable boot CPU record. Returns cpu_topology_result_ok, _end, _invalid or _busy. Validate version1/caller capacity; errors and end leave output and any tail unchanged. No CPUID, allocation, wait, new hardware scan or hardware mutation during this query. Current online/schedulable flags are advisory per-call snapshots; calls across CPUs are not one transaction.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_cache_topology",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 66,
+      "exposure": "advanced",
+      "description": "Copy one passive local cache descriptor for an exact boot CPU. Returns cpu_topology_result_ok, _end, _invalid or _busy; errors/end leave output and tail unchanged. Read CpuTopologyInfo cache_status to distinguish unavailable/invalid/truncated catalogs. No CPUID or new scan during this query.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_lifecycle",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 67,
+      "exposure": "advanced",
+      "description": "Query0 is passive and requires expected_epoch0; any configured CPU including BSP is queryable. Offline1/online2 require the exact current nonzero epoch, BSP caller with IF on and no held owners, an admitted task, no concurrent CPU-sensitive probe, and a configured non-BSP target. Returns cpu_lifecycle_ok0, error_invalid/busy/index/epoch/context/qualification/state. Success writes exactly128 bytes and preserves caller tail. Every error leaves output unchanged; Busy may have moved safe saved tasks or IRQs and must be followed by query, never automatic retry. Before TLB withdrawal a rejected drain restores scheduling only after exact AP cancellation; after withdrawal uncertainty remains quarantined. Confirmed stop and fresh module baseline, CPUID, xstate, PAT, tables, LAPIC, clock and scheduler qualification are mandatory for reuse. No retained caller pointer, forced kernel-context migration, physical hotplug or CPU reservation.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.kernel_cpu_lifecycle_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 68,
+      "exposure": "advanced",
+      "description": "Explicit bounded native CPU lifecycle work on an admitted BSP task with IF on and no owners. Returns1 for a fixed report (including Busy/failure/unavailable),0 when caller context unavailable, -1 invalid header/capacity with unchanged output. Exact task retirement and true hardware receipts govern success; retained resources block reuse. Leaves tested CPU freshly online after a successful cycle; never runs implicitly from metrics or boot.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_capabilities",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 69,
+      "exposure": "advanced",
+      "description": "Passive CPU capture query. Returns cpu_capabilities_ok or error_invalid/index/busy. Any configured CPU including offline is observable; current lifecycle state is advisory. Only captured controls have validity flags. Unknown optional fields never block boot. Writes exactly272 bytes on success; every error leaves output and tail unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_feature",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 70,
+      "exposure": "advanced",
+      "description": "Passive indexed query within CpuCapabilitiesInfo.feature_count for the exact nonzero current epoch; returns end after enumeration, error_epoch across reuse, busy during capture. Writes exactly112 bytes on success. Hardware, OS activation and unknown actual use are independent; raw data only when flagged. No output/tail changes on end/error.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_register_read",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 71,
+      "exposure": "advanced",
+      "description": "Explicit named current-CPU read only. Returns cpu_capabilities_ok/error_invalid/index/busy/epoch/context/offline/unsupported/fault. Preserves caller IF and entire output/tail on failure. Caller routes through existing approved compute worker if needed; no general cross-CPU RPC or arbitrary MSR number. Architectural EFER/APIC_BASE/PAT/MTRRCAP require explicit capability; APERF/MPERF require exact Intel/AMD vendor and CPUID6.ECX0; Intel platform info limited to verified family6 models3C/45/46. Raw counters and nominal ratios are not current frequency. No public write. IF-on admitted task without held owners required at entry; refusal also preserves IF-off callers. Append-only CPUPOWER named IDs add proven Intel6:3C/45/46 sensor/energy reads and AMD19h:01h:B1 PPR reads. Named Intel microcode capture performs only the architectural zero-preload/CPUID1 latch; AMD patch8B never receives that write. No caller-controlled write or power request.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.kernel_cpu_register_check",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 72,
+      "exposure": "advanced",
+      "description": "Explicit bounded local native instruction/#GP/IF check. Returns cpu_capabilities_ok with passed/failed report, or exact admission/header errors with unchanged output. IF-on task/no-held-owner context required at entry. Own membership lease prevents concurrent logical offline through final restoration. Exactly four fixed reserved-ID read/write probes; unsupported feature refuses before instruction. Writes exactly128 bytes; never implicitly runs in metrics/boot.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_power_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 73,
+      "exposure": "advanced",
+      "description": "Passive cached external CPUPOWER observation. No register access, sampling worker, wait or policy write. Exact requested CPU epoch and provider instance; stale clock/CPU data lose valid bits. Returns cpu_capabilities_ok with explicit missing/unknown states, or exact header/index/epoch/busy errors preserving all output/tail.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_power_capture",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 74,
+      "exposure": "advanced",
+      "description": "Explicit bounded local passive CPUPOWER capture. IF-on admitted task with no held owners, exact current CPU/start epoch and stable clock required. Caller routes via existing approved compute workers; no remote RPC or implicit wait. Reads never alter power requests/limits. Intel microcode signature may use its exact zero-preload/CPUID1 latch, AMD patch level is read only. Optional inaccessible values are reported unknown with raw/fault context. Returns cpu_capabilities_ok or exact errors with output/tail unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_performance",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 75,
+      "exposure": "advanced",
+      "description": "Explicit local external performance provider operation with exact CPU/start/provider/ownership epochs. No governor or remote dispatch. Bad/unsupported requests preserve output and never write. Return0 provides the complete fixed receipt, including real fault/uncertain/conflict and reset-only activation; examine state/last_error and retain hardware until actual explicit release. Caller tail preserved. Request readback never claims physical delivered performance.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_cppc",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 76,
+      "exposure": "advanced",
+      "description": "Explicit current-CPU external AMD CPPC operation. Abstract local request, separately consented one-way activation, exact baseline/token/revision and complete fault/readback receipt. Unsupported model/transport/epoch or invalid request performs no write. A return0 result supplies the receipt including uncertain/conflict; read state/last_error and retain hardware until actual local return. No governor, arbitrary MSR, physical frequency/energy or package-broadcast claim.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_performance_hint",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 77,
+      "exposure": "advanced",
+      "description": "Passive cached same-catalogue preferred-core observation bound to exact CPU/provider/clock epochs and maximum1s sampling age. No model-register access, provider callback, work or policy. Missing/stale/incomparable observations are unknown, never low capacity or a placement guarantee. Refusal preserves caller output/tail.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_firmware_performance",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 78,
+      "exposure": "advanced",
+      "description": "Explicit CPUPOWER firmware performance request, separately typed from local HWP/CPPC. May wait for actual external ACPIPLAT worker completion. Task/CPU/provider identities remain pinned; no Runtime/local-register owner spans the call. Refusal preserves output; complete receipt may report uncertain hardware and retained resources. No arbitrary model register, governor, automatic mutation retry or physical energy/clock claim.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_idle_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 79,
+      "exposure": "advanced",
+      "description": "Passive copy of independent idle declaration, local qualification and software counters. Hardware residency, wake latency and energy remain unavailable without own readback; never execute CPUID/MSR/MONITOR on this query.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_machine_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 80,
+      "exposure": "advanced",
+      "description": "Passive copy of bounded resident MCA boot/terminal receipt. No hardware work, lock, module callback or automatic retry. Error preserves output/tail.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_machine_bank",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 81,
+      "exposure": "advanced",
+      "description": "Passive bank copy bound to exact CPU/original epoch/complete capture sequence. End or stale/busy/index/header error preserves all output/tail. Never arbitrary MSR access.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_microcode_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 82,
+      "exposure": "advanced",
+      "description": "Passive fixed early microcode receipt. Exact CPU/execution epoch, real revision-read validity, loaded/supplied/virtual/prerequisite/failure states and post-baseline capture stay distinct. No update operation, hardware access or callback. Error preserves full output/tail.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_pmu_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 83,
+      "exposure": "advanced",
+      "description": "Passive cached interface/model/current epoch and exact retained measurement ownership. No hardware access or callback.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_pmu_measure",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 84,
+      "exposure": "advanced",
+      "description": "Explicit synchronous private CPU-counter scope, exact CPU/epoch/nonreused generation. Native supported named event only, virtual/unknown refused before MSR/work.1..4096 pure resident callback iterations, no allocation/fault/block/yield/API/placement call, IF0 only during short owned transaction then original IF. Original register state and exact readbacks before release; uncertain restoration retains quarantined PMU and lifecycle lease. Return0 means a complete receipt, not count validity; inspect status/flags. No arbitrary MSR/event/firmware interface. Work is a borrowed nullable pointer to one typed callback slot; null slot/address is invalid. SDK convenience facades pass a copied local function slot. No host-dependent optional-by-value callback enters the ABI.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_pmu_result",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 85,
+      "exposure": "advanced",
+      "description": "Passive latest retained result copy for exact original CPU/epoch/generation. Offline/restart never relabel data; stale identity/error leaves all output/tail unchanged.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_acceleration_info",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 86,
+      "exposure": "advanced",
+      "description": "Passive cached local optional CPU/OS facts and conservative all-configured hardware hints. No CPU instruction, measurement, callback or execution grant. Current CPU may change after return.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.cpu_acceleration_work",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 87,
+      "exposure": "advanced",
+      "description": "Explicit synchronous pure resident baseline/SHA execution window. Exact TaskAdmission/lifecycle lease through output, original actual IF immediately before CLI, exact physical CPU/epoch/feature/OS revalidation. Virtual exposed ISA allowed, never PMU or physical qualification.1..64iterations,2ms accepted hardware clock. No allocation/fault/wait/yield/API/placement change; no Runtime owner across callback. No arbitrary feature mask/registers. Receipt0 alone not accepted: inspect flags/status/callback/identity/IF/clock. Refusal before work preserves output/tail; no automatic retry.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.fpu_observation",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 88,
+      "exposure": "advanced",
+      "description": "Explicitly begin/end one current native task-generation/token/RIP-window observation. Scope records actual qualified local timer delivery, actual task switches and actual registered R4D hardware IRQ callbacks. No normal SysV call may be assumed to preserve XMM/YMM data. Direct IRQ guard calls do not count. Caller owns audited register-live bounds inside its retained module image. No caller pointer, lock or runtime borrow spans userland work; task retirement discards metadata, no hardware cleanup. Every failure preserves output and any existing observation. Zero events are unavailable hardware coverage.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.firmware_system_uuid",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 89,
+      "exposure": "advanced",
+      "description": "Passive validated SMBIOS Type 1 system UUID in canonical RFC byte order. Returns 0 only for a nontrivial UUID; unavailable or invalid firmware preserves caller output. No network or storage side effects.",
+      "locations": {
+        "sdk": "Generated/SDK/Zig/abi_generated.zig",
+        "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"
+      }
+    },
+    {
+      "name": "R4DEV.device_inventory_capture",
+      "group": "R4DEV",
+      "kind": "group_slot",
+      "slot": 90,
+      "exposure": "advanced",
+      "description": "Copy one complete passive device inventory into caller record storage in one existing collect traversal. Returns0 for a complete frozen copy; -2 reports insufficient capacity with generation0 and required_count, -3 refuses overflow, -4 refuses identity exhaustion. Existing per-source metadata copies are not globally atomic. No new scan, IO, allocation, persistent Kernel snapshot or device retain. Rows on any failure are private and must be discarded; receipt is valid on the documented capacity/overflow errors. All pointers are exclusively borrowed for the synchronous call; buffers must be mapped, aligned and disjoint. Null rows allowed only at capacity0. Actual return ends the loan; caller cancellation cannot forcibly end an active callback.",
       "locations": {
         "sdk": "Generated/SDK/Zig/abi_generated.zig",
         "provider": "Generated/Kernel/Zig/r4x_api_generated.zig"

@@ -30,7 +30,9 @@ const DriverType = enum(u16) {
     unknown = 0,
 };
 
+const next_api = @import("generation2.zig").abi;
 const InitFn = *const fn (*const driver_api.Table) callconv(.c) i32;
+const InitFn2 = *const fn (*const next_api.DriverApi2) callconv(.c) i32;
 const ShutdownFn = *const fn () callconv(.c) i32;
 
 const LoadMode = enum {
@@ -81,7 +83,8 @@ const ModuleDriver = struct {
     name_len: usize = 0,
     driver_type: u16 = 0,
     module_slot: usize = 0,
-    init: ?InitFn = null,
+    init: u64 = 0,
+    init_generation: u8 = 1,
     shutdown: ?ShutdownFn = null,
 };
 
@@ -338,7 +341,7 @@ fn loadR4MDriverFile(source: module_file.FileSource, mode: LoadMode, fallback_na
     const existing = findModuleDriver(info_name) orelse blk: {
         var prepared = modules.prepareResolvedFile(source, .r4d, fallback_name, path) orelse return false;
         defer prepared.abort();
-        const init_addr = prepared.exportAddress("DriverInit", 1) orelse {
+        const identity = prepared.initEntry() orelse {
             k.puts("[R4D] missing DriverInit export\r\n");
             return false;
         };
@@ -351,7 +354,7 @@ fn loadR4MDriverFile(source: module_file.FileSource, mode: LoadMode, fallback_na
             return false;
         };
         const module_slot = prepared.commit() orelse return false;
-        storeModuleDriver(descriptor_slot, info_name, info.driver_type, module_slot, @ptrFromInt(init_addr), @ptrFromInt(shutdown_addr));
+        storeModuleDriver(descriptor_slot, info_name, info.driver_type, module_slot, identity.address, identity.generation, @ptrFromInt(shutdown_addr));
         break :blk descriptor_slot;
     };
 
@@ -370,7 +373,7 @@ fn loadR4MDriverFileRuntime(source: module_file.FileSource, fallback_name: []con
     const existing = findModuleDriver(info_name) orelse blk: {
         var prepared = modules.prepareResolvedFile(source, .r4d, fallback_name, path) orelse return .load_failed;
         defer prepared.abort();
-        const init_addr = prepared.exportAddress("DriverInit", 1) orelse {
+        const identity = prepared.initEntry() orelse {
             k.puts("[R4D] missing DriverInit export\r\n");
             return .invalid_file;
         };
@@ -383,7 +386,7 @@ fn loadR4MDriverFileRuntime(source: module_file.FileSource, fallback_name: []con
             return .load_failed;
         };
         const module_slot = prepared.commit() orelse return .load_failed;
-        storeModuleDriver(descriptor_slot, info_name, info.driver_type, module_slot, @ptrFromInt(init_addr), @ptrFromInt(shutdown_addr));
+        storeModuleDriver(descriptor_slot, info_name, info.driver_type, module_slot, identity.address, identity.generation, @ptrFromInt(shutdown_addr));
         break :blk descriptor_slot;
     };
 
@@ -396,7 +399,7 @@ fn loadR4MPreloadDriverBytes(bytes: []const u8, fallback_name: []const u8, path:
     const existing = findModuleDriver(info_name) orelse blk: {
         var prepared = modules.prepareResolvedBytes(bytes, .r4d, fallback_name, path) orelse return .load_failed;
         defer prepared.abort();
-        const init_addr = prepared.exportAddress("DriverInit", 1) orelse {
+        const identity = prepared.initEntry() orelse {
             k.puts("[R4D] missing DriverInit export\r\n");
             return .invalid_file;
         };
@@ -409,7 +412,7 @@ fn loadR4MPreloadDriverBytes(bytes: []const u8, fallback_name: []const u8, path:
             return .load_failed;
         };
         const module_slot = prepared.commit() orelse return .load_failed;
-        storeModuleDriver(descriptor_slot, info_name, info.driver_type, module_slot, @ptrFromInt(init_addr), @ptrFromInt(shutdown_addr));
+        storeModuleDriver(descriptor_slot, info_name, info.driver_type, module_slot, identity.address, identity.generation, @ptrFromInt(shutdown_addr));
         break :blk descriptor_slot;
     };
 
@@ -455,10 +458,11 @@ fn initRuntimeModuleResultSource(module_slot: usize, source: LoadSource) Runtime
     };
 
     const owner = ownerForRegistrySlot(registry_slot);
-    const init = descriptor.init orelse {
+    const init_address = descriptor.init;
+    if (init_address == 0) {
         driver_registry.setState(registry_slot, .failed);
         return .invalid_file;
-    };
+    }
     const shutdown = descriptor.shutdown orelse {
         k.puts("[R4D] missing DriverShutdown before init\r\n");
         driver_registry.setState(registry_slot, .failed);
@@ -471,6 +475,11 @@ fn initRuntimeModuleResultSource(module_slot: usize, source: LoadSource) Runtime
     }
     const result = owner_init: {
         defer _ = driver_api.leaveOwner();
+        if (descriptor.init_generation == 2) {
+            const init: InitFn2 = @ptrFromInt(init_address);
+            break :owner_init init(&driver_api.table2);
+        }
+        const init: InitFn = @ptrFromInt(init_address);
         break :owner_init init(&driver_api.table);
     };
     if (result != 0) {
@@ -708,13 +717,14 @@ fn runtimeIdentityMatches(driver: *const RuntimeDriver, generation: u64, owner: 
         driver.registry_slot == registry_slot;
 }
 
-fn storeModuleDriver(slot: usize, name: []const u8, driver_type_value: u16, module_slot: usize, init: InitFn, shutdown: ShutdownFn) void {
+fn storeModuleDriver(slot: usize, name: []const u8, driver_type_value: u16, module_slot: usize, init: u64, init_generation: u8, shutdown: ShutdownFn) void {
     const d = &module_drivers[slot];
     d.* = .{
         .used = true,
         .driver_type = driver_type_value,
         .module_slot = module_slot,
         .init = init,
+        .init_generation = init_generation,
         .shutdown = shutdown,
     };
     d.name_len = if (name.len < MAX_RUNTIME_NAME) name.len else MAX_RUNTIME_NAME - 1;

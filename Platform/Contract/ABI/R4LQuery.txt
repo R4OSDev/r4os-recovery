@@ -68,8 +68,8 @@ Query-Vertrag
   libraryeigene Funktionstabelle direkt mit
   `<MODUL>:<INTERFACE>:<REVISION>`.
 - Es existiert kein direkt importierbarer interner Kernelzugang. Platform
-  APIs werden ausschliesslich ueber ihren oeffentlichen Namen und Query:1
-  importiert.
+  APIs werden ueber ihren oeffentlichen Namen importiert; Generation 1
+  verwendet Query:1, Generation 2 den getrennten Namen Query2:2.
 - Neue optionale Libraries verwenden group=0 und keine zentrale Gruppen-ID.
 
 Beispiel
@@ -79,3 +79,26 @@ Beispiel
     IMPORT=EXAMPLE:API_V1:1
 
 Die Importliste eines Projekts steht ausschliesslich in module.R4MF.
+
+Generation 2
+------------
+
+Der getrennte Export Query2:2 besitzt R4LQuery2: magic=0x324C3452,
+abi_version=2, size=24, group an Offset 12 und reserved:u64 an Offset 16.
+reserved bleibt 0; ein kernel_bridge-Feld existiert in diesem Record nicht.
+Die kanonischen Ableitungsregeln stehen in API/Generation2.json. Die daraus
+generierten Zig-/C-/Rust-Typen unter Generated/Generation2 sind verbindlich.
+
+Eine Runtime-R4L verwendet group=0. Sie darf Query:1 und Query2:2 gleichzeitig
+anbieten; fachliche Interfaces behalten ihre eigenen Exportnamen/Revisionen.
+Der Loader prueft vor der Veroeffentlichung Revision, Magic, Headergroesse,
+Abschnittsgrenze, Ausrichtung, Gruppe und reserved. Query2:1 und ein alter
+32-Byte-Query unter dem neuen Namen sind ungueltig. Der Exportresolver selbst
+behaelt seine Mindestversionssemantik fuer unabhaengige fachliche Interfaces.
+
+Ein R4X mit R4XStart2:2 verwendet Platformimporte <GRUPPE>:Query2:2. Der
+Loader liefert ausschliesslich die kompakte neue Funktionstabelle. Die Query
+selbst bleibt Metadatum. Benannte Runtime-R4L-Imports werden mit demselben
+exakten Modulslot und derselben Generation wie bisher bis zum physischen
+Ende aller gebundenen Programmtasks gehalten. Es gibt keinen neuen privaten
+Bridgezeiger und keinen zweiten Ressourcenbesitzer.

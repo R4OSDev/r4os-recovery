@@ -1,0 +1,71 @@
+﻿Audio-Gesamtfrist und angenommene PCM-Sourcezeit
+============================================
+
+SDK0.64.168, Anbieterphase0.90.25. Contract82/Kernel466/AUDSVC bleiben
+unveraendert. Zig audio_write/pcm_source, C audio_write.h/pcm_source.h,
+Rust audio_write::Writer/pcm_source::Pacer teilen genau einen Zig-Besitzer.
+Das bestehende AudioStream.write behaelt seine relative Frist pro RPC.
+Keine Anwendung wird in dieser Anbieterphase umgestellt.
+
+Writer leiht die ganze PCM-Quelle und den wirklichen bestehenden Stream.
+Init liest die gepruefte Clock einmal und bildet genau eine absolute Frist.
+writeOnce/Step mit Budget1 startet hoechstens einen synchronen AUDSVC-RPC;
+writeBounded/Step erlaubt1..64, setzt nur nach bestaetigtem Fortschritt fort
+und liefert bei Busy sofort. Poll erlaubt insgesamt einen sofortigen RPC.
+Forever bleibt explizit. Finite verwendet ausschliesslich das verbleibende
+Budget und event_requested_hz. Keine Ersatztaktrate, kein stiller Epochwechsel
+oder Regression, kein Wiederholen nach endgueltiger Frist/Ungewissheit.
+Ein bereits zugelassener synchroner RPC kann nach der Frist zurueckkehren;
+seine ganze bestaetigte Prefixbytezahl bleibt auch bei Timeout/Cancel erhalten.
+Dies begrenzt neue Aufnahmen, garantiert keine harte physische Laufzeit.
+
+Vorhandener20-Byte-Writeheader und4096-Byte-RPCmechanik bleiben. Payload
+maximal4076, abgerundet auf ganze2-/4-Byte-S16-Mono-/Stereoframes. Der
+vorhandene Replyvalidator prueft120Bytes, Action/Stream, result==PCMbytes
+und Frameausrichtung. Replylaenge ist keine angenommene PCMbytezahl.
+Gueltige negative Replies bestaetigen keine neuen PCMbytes. Busy ist
+WouldBlock. Transporttimeout, ungueltiger Reply oder unbekannte Wirkung
+sind terminal Uncertain mit dem bekannten Prefix; niemals automatisch replay.
+last_service_flags/service_flags_valid beschreiben ausschliesslich den
+letzten gueltigen Reply:1Backend,2Mixer,4Sessions,8Ready,16DurationUnavailable.
+Das sind historische Praesenzbeobachtungen, keine aktuelle Abspielquittung.
+
+Der normale Konstruktor leiht app_audio.AudioStream beziehungsweise den
+compiler-typisierten C R4SdkAudioAudioStream oder Rust platform::Stream.
+Provider.fromStream ermittelt die Framebreite; C legacy!=NULL/frame_bytes=0
+ebenso. Der manuelle alte C R4AudioStream ist ein anderer Typ und darf
+nicht gecastet werden. Der bestehende ServiceConnection-Besitzer fuehrt
+den RPC einschliesslich seiner BadHandle/NotRunning-Invalidierung aus.
+Keine neue Verbindung/Registry, kein implizites Open/Close/Discovery.
+
+Der fortgeschrittene Query2-Adapter leiht genau service_call/monotonic_clock
+und Caller-channel/stream-IDs. Rust from_native_handles ist unsafe: echte
+gueltige Handle-/Code-/Kontextlebenszeit und Exklusivitaet verantwortet der
+Caller, Context und ganze Quelle bleiben geliehen. Kein gleichzeitiger RPC
+oder Close. C-Inlineadapter audio_write_platform2.h bleibt ausserhalb der
+facades.h. Writer152/Provider40/Progress56 sind in Zig/C/Rust gleich.
+Writer speichert keinen Selbstzeiger und ist zwischen Aufrufen verschiebbar.
+State, Quelle, Output, Stream und Callbackdaten sind disjunkt/mapped und
+bleiben bis zum wirklichen Return gueltig. Cancel ist nur logische Bitte;
+es beendet keine aktive Callback-/Quell-/Streamleihe vor dessen Return.
+Rust verhindert Quellenfreigabe und Streamclose bei spaeter benutztem Writer;
+Writer ist nicht Send. Streamclose erfolgt danach beim urspruenglichen Owner.
+
+Pacer ist reiner Callerwert72Bytes, Deadline64Bytes, ohne I/O oder Sleep.
+Clockidentitaet besteht aus source/generation/event_backend/requested_hz.
+Rate und Framebreite sind ungleich0; Accepted verlangt ganze Frames und
+einen Sample des wirklichen Writestarts. Der exakte Zaehler verwendet
+ns*rate als u128, ABI hi/lo-u64. end=max(alterEnd,start*rate)+frames*1e9.
+Bruchteile bleiben erhalten; eine lange Pause spart kein zukuenftiges Budget.
+accepted_frames zaehlt ausschliesslich bestaetigte Sourceframes, nicht
+RPC-Replybytes, Hardware/DMA oder hoerbar abgespielte Frames.
+
+deadline(sample,false) liefert ceil-Wartezeit bis end-lead_frames,
+deadline(sample,true) bis Sourceende. Keine Clockrundung oder Hardware-
+Drainannahme.0angenommene Bytes erzeugen kein End/Leadguthaben. Pause
+verwirft End/Lead und behaelt Diagnoseframezahl, Resume beginnt eine neue
+Schedule. Reset/Init waehlt Clock/Rate/Frame/Lead explizit neu und setzt den
+Zaehler0. Clockwechsel/-regression, defekte Frames und Ueberlaeufe lassen
+Pacer bei Fehler unveraendert. Neue Rate nach Reset; kein impliziter Wechsel.
+Auch eine fertige Sourcewartezeit erlaubt keine Freigabe aktiver Hardware-
+oder Streamressourcen. Der wirkliche Besitzer liefert deren eigene Quittung.

@@ -1,0 +1,24 @@
+const r4os=@import("r4os");
+fn work(app:*r4os.App2)i32 {
+ const services=app.services() orelse return -1;
+ var endpoint=switch(services.register("{ProjectName}",0)){.endpoint=>|v|v,.failure=>|n|return n};
+ var owner=r4os.ServiceLoop.init(app.system(),endpoint.raw,.{});
+ var result:i32=0;
+ outer:while(true)switch(owner.wait(null)){
+  .stop=>break,.failure=>|n|{result=n;break;},.requests=>|count|{
+   var batch=owner.beginBatch(count);
+   while(true)switch(batch.next()){
+    .request=>{var bytes:[r4os.abi.service_api_max_payload]u8=undefined;switch(endpoint.recv(&bytes)){
+     .message=>|m|{const status=if(m.header.op==1) r4os.abi.service_api_result_ok else r4os.abi.service_api_result_bad_op;
+      const rc=endpoint.replyIfPending(m.header.request_id,status,if(m.header.op==1) "{ProjectName} OK" else "BADOP");if(rc<0 and !app.shouldClose()){result=rc;break:outer;}},
+     .would_block=>{},.failure=>|n|{if(!app.shouldClose())result=n;break:outer;},
+    }},.complete,.yielded=>break,.failure=>|n|{result=n;break:outer;},
+   };
+  },else=>{},
+ };
+ const closed=endpoint.unregister();if(closed<0 and closed!=r4os.abi.err_closed)return closed;return result;
+}
+
+export fn R4XStart2(raw:*const r4os.platform2.abi.R4XStartContext2) linksection(".text.r4xstart_entry") callconv(.c)i32{
+ var app=switch(r4os.App2.init(raw,.service)){.value=>|v|v,.failure=>|e|return e.raw_code};return work(&app);
+}

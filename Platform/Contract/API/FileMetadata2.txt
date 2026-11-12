@@ -1,0 +1,96 @@
+﻿Verlustfreie Metadaten und namensraumgebundene Dateiidentitaet
+============================================================
+
+Contract0.64.81, R4SYS37, kompakte R4SYS-Tabellenrevision2, 0.90.22.
+Die Symbolvertraege Query:1/Query2:2 und R4XStart:1/R4XStart2:2 bleiben.
+Zwei optionale Slots folgen dem erhaltenen1416-Byte-SYS-Praefix, kompakt1408.
+Neue Groessen1432/1424. Der Generation2-Sourceursprung36 bleibt unveraendert.
+Alle bisherigen Slots, Typen, Fehlerzahlen und Nulltombstones bleiben.
+
+Identitaet ist keine Clusterzuordnung
+-----------------------------------
+FileIdentity2 hat48Byte: genaue Mountgeneration, globale Namensraumgeneration,
+zwei opake Objektwoerter, Mountslot, vorhandene file_name_provider-Kennung,
+Flags und reserviert0. FAT verwendet die wirkliche Directorysektor-/Offset-
+Position, NTFS den vollen Knoten samt vorhandener Sequenz. Roots tragen ein
+eigenes Rootflag. Erste Datencluster koennen0, geteilt oder beim Schreiben
+veraendert sein und sind deshalb keine generische Dateiidentitaet.
+
+Die ganze Identitaet gilt ausschliesslich innerhalb der genau bezeichneten
+globalen Namensraumbeobachtung. Das ist bewusst kein unendlich stabiler
+Inode-/Geburtsschluessel, Handle, Retain, heutiger Praesenzbeleg oder eine
+Inhaltsrevision. Nur vollstaendige gueltige Tupel vergleichen. Generation0
+ist bei gesetzten Bindungs-/Gueltigkeitsflags ein gueltiger Namespacewert.
+Nach einer Namensraumpublikation sind alte neue Traversierungen neu zu lesen;
+auch eine Aenderung in einem anderen Verzeichnis kann Restart ausloesen.
+
+Quelle ist die bestehende kanonische Directory-Historysequenz. Deren alte
+Ring-/Cursorvertraege duerfen weiter modulo arbeiten. Ein zusaetzlicher
+kanonischer Erschoepfungsbeleg sperrt die neuen Identitaetsfunktionen dauerhaft,
+bevor eine Namespaceidentitaet nach Sequenzwrap erneut verwendet werden koennte.
+Es gibt weder eine zweite Sequenz noch eine zweite Datei-/Namensraumregistry.
+
+Metadaten und Gueltigkeit
+------------------------
+FileMetadata2 hat112Byte: Version1/size112, Identitaet48, drei u64-Werte fuer
+Dateigroesse, Inhaltsrevision und optionale Backendknotendiagnose, vier u32
+fuer Flags/Attribute/sichtbares Laufwerk/reserviert, fuenf originale DOS-
+Zeitwoerter und drei reservierte Nullwoerter. Die Flags bezeichnen Exists,
+Directory, IdentityValid, ByteSizeValid, ContentRevisionValid,
+BackendNodeValid, DosTimeValid und Reparse.
+
+Aktuelle Anbieter bescheinigen keine Inhaltsrevision: deren Flag bleibt aus,
+Wert0 bleibt unbekannt. DOS-Zeiten oder Backendknoten duerfen nicht als solche
+Revision umgedeutet werden. Dateigroesse wird fuer Dateien bescheinigt;
+Directory-/Rootgroesse bleibt unbekannt. Roots liefern keine erfundenen
+Datumswerte. Normale Zeiten behalten ihre bisherige DOS-Praezision. Ein
+Backendknoten bleibt als voller u64-Diagnosewert erhalten und ist kein Handle.
+Aktuelle reale NTFS-Zulassung lehnt Recordnummern oberhalb u32 weiterhin ab;
+der neue Projektionsvertrag fuehrt keinen neuen grossen NTFS-Backendpfad ein.
+
+file_metadata2 leiht einen ganzen NUL-Pfad und exklusiven ausgerichteten Output.
+1 bedeutet gefunden und publiziert den ganzen Record,0 bestaetigte Abwesenheit
+ohne Outputaenderung. Fehler lassen den Output unveraendert. Der bestehende
+Mount-/Caller-/Requestbesitzer spannt die wirkliche Aufloesung. Namespacewechsel
+waehrend der Beobachtung liefert Restart-10, Erschoepfung-12. Kein retained
+Callerpointer, keine neue Kernelallokation oder physische IO-Funktion entsteht.
+
+Directoryseiten
+---------------
+DirectoryMetadataEntry2 hat1136Byte: Metadaten112 und vollstaendiger1024-Byte-
+NUL-Pfad. Es gibt kein gekuerztes Anzeigelabel in der autoritativen Identitaet.
+DirectoryMetadataCursor2 hat2184Byte: Version1/size2184, Namespacegeneration,
+Boundflag/reserviert und den vorhandenen2160-Byte-Scan. Das ist ein eigener
+Typ und darf nicht mit einem alten DirectoryBatchCursor vertauscht werden.
+
+directory_metadata_batch2 nutzt denselben kanonischen Request-/Backendscan,
+Kapazitaet1..8 und gemeinsames256-Schrittbudget. Positive Werte publizieren
+ganze Records,0 ist begrenzter Fortschritt,-5 vollstaendiges Ende. Initial
+ist der ganze Defaultcursor erforderlich. Continuation verwendet den erfassten
+Pfad, Besitzer und Mount; Initialpath wird danach ignoriert. Bound capacity0
+und outNULL validiert ohne Fortschritt. Irgendeine Namensraumpublication,
+Mount-/Besitzerwechsel oder ungueltige Bindung erzwingt Restart-10. Dann alle
+bisherigen Teilseiten verwerfen. Cursor bleibt bei Fehler unveraendert;
+eventuell geschriebene Outputbytes haben auf Fehler keine Adoptierungsautoritaet.
+Aktuelle Inhaltsfelder bleiben Einzelbeobachtungen der Anbieter, keine atomare
+Inhaltsaufnahme eines ganzen Verzeichnisses.
+
+Es bleibt keine Kernelressource oder Mountleihe zwischen Aufrufen. Reset auf
+Defaults schliesst/cancelt sofort den Callerzustand. Ein aktiver synchroner
+Callbackloan endet aber erst nach wirklicher Rueckkehr, auch nach Ablauf oder
+Stop. Kein Metadatenowner ueberspannt IO, Wait, fremde Callbacks oder Freigabe.
+
+Erhaltener Vertrag
+------------------
+FileInfo96, DirectoryBatchEntry1120 und beide alten Cursor bleiben binaer
+unveraendert. Alle alten FileInfo-Projektionen pruefen den u64-Knoten vor
+Darstellung und liefern den definierten Fehler-11, wenn u32 nicht reicht;
+auch Root und DirectoryNext/Batch duerfen weder abschneiden noch paniken.
+Im bisherigen Darstellungsbereich bleiben ihre Felder und Verhalten erhalten.
+Alte Directoryscans behalten insbesondere ihre Zulassung unveraenderter
+Ziel-/Parentbindungen trotz Publikation in anderen Verzeichnissen.
+Atomic Replace, Delete-if-match und ihre wirklichen Compare-/Claimbesitzer
+werden durch die neue passive Identitaet weder ersetzt noch automatisch genutzt.
+Bestehende Explorer-/Picker-/Editorquellen und Importprofile werden in dieser
+Anbieterphase nicht umgestellt. Hostmodelle, echte Gastanbieter, grosse reale
+Backends und Hardware sind getrennte Abnahmegrenzen.

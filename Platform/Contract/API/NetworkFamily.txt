@@ -1,0 +1,201 @@
+﻿R4OS: Family-aware copied network RPC1
+======================================
+
+This contract is owned by Contract. Existing Query1 tables, NIPC payloads and
+service opcodes keep their original layouts. New requests use the network_op_*
+namespace on the existing TCPSVC, UDPSVC and DNSSVC managed endpoints, reached
+through Query2 service_open/call/close. There is no second socket registry or
+kernel network stack. Numeric constants and exact layouts come from
+ApiContract.json and Generated/; this text defines their operation semantics.
+
+NetworkAddress is32 bytes: family4 has four network-order address octets and
+12 zero bytes; family6 has16 network-order octets. Scope and interface IDs are
+local indices, not transmitted remote zone identities. Reserved fields zero.
+NetworkEndpoint is40 bytes, with a host-order u16 port and zero reserved/flags.
+No implicit v4-mapped conversion, dual-stack binding or family fallback is
+performed. These policies have separate request bits; absent capability means
+UnsupportedPolicy. An unsupported recognized family returns UnsupportedFamily.
+An unknown/malformed family, padding or reserved bit returns Invalid.
+
+INFO has an empty request and a48byte NetworkProviderInfo reply. Provider is
+the boot-unique, nonzero service process generation, not PID, clock or endpoint
+handle. Capabilities distinguish family support, TCP/UDP, resolver A, AAAA wire
+codec and actual AAAA resolution. A capability is not a link-up or reachability
+assertion. Individual provider limits are authoritative. Clock/route failures
+remain operation errors. A codec alone never makes an IPv6 transport available.
+
+NetworkDeadline48 is a copied checked budget: poll0, finite1, forever2, exact
+version/size, zero reserved, absolute boot-monotonic nanoseconds, last sample
+and source/generation/event-backend/logical-tick-frequency identity. Finite and
+forever budgets retain that identity; clock changes or regressions fail rather
+than restarting the budget. A canonical all-zero poll payload, apart from its
+version/size, permits one immediate attempt without requiring a clock sample.
+Poll never initiates a TCP connection or DNS transaction. A queued finite
+request is checked against its original absolute limit. Conversion to an
+existing tick backend rounds a positive remainder up once, at most one logical
+tick; it does not grant a fresh duration after each retry. A deadline is an
+upper bound on attempted work, not a promise to wait until data arrives.
+Immediate reads/writes/receives can return WouldBlock before a finite limit;
+callers may retry with the SAME absolute budget. Uncertain mutations are never
+automatically retried. Each new DNS transaction has an additional provider
+limit of3seconds; a forever caller budget does not disable DNS operation limits.
+
+Current provider qualification and the explicit extensions for0.90.33 are
+specified in Ipv6Transport.txt. The initial IPv4-only binding/listener limits
+below describe0.90.31; they are not restrictions on a qualified IPv6 provider.
+The shared identity, copied output, ownership and deadline rules still apply.
+
+SOCKET REQUESTS
+---------------
+NetworkSocketRequest128 has exact version/size, provider, socket, generation,
+endpoint, deadline, flags and bytes. Write/Send append exactly bytes payload;
+all other requests append none. Provider must match current INFO. Creation
+uses socket/generation0. Every subsequent operation uses the returned socket
+and never-reused generation from that same provider and process owner. No
+operation adopts an old Query1 handle. Handles share the original service
+front tables and existing backend resources. Counter exhaustion fails instead
+of wrapping typed generations. Backend handle identities do not rewind during
+a live restart. Lost creation replies close their newly created owner resource.
+
+Creation first requires a free original front entry. An undeliverable public
+creation reply attempts original backend close/abort. The front entry is
+released only on an actual acknowledgement; uncertainty retains it until a
+later owner-end or service cleanup. A lost private backend creation result can
+also retain bounded backend work until its real cleanup. There is no invented
+receipt or automatic retry of an outcome whose resource identity is unknown.
+
+The existing request header identifies the caller process, not an individual
+opened service channel. New resources retain its full ProgramProcessHandle
+generation internally, so a reused process ID cannot adopt an old resource.
+Several channels of the same live process may address its sockets. Closing a
+client channel does not replace explicit socket Close. Only while typed sockets
+exist, the existing service loop checks their exact owners at bounded1second
+intervals and aborts/closes abandoned sockets after a real terminal or exact
+missing/stale process result. Busy/unavailable owner status retains resources.
+An uncertain backend return retains the bounded front entry for a later actual
+acknowledgement. Original old-only idle waits remain unchanged. Resolver pins
+also bind the full owner generation and can be reclaimed after its actual end.
+
+Connect: TCPSVC only, exact remote endpoint, bytes0. Poll returns WouldBlock
+without allocating or sending SYN. A finite/forever attempt uses the original
+backend TCP owner. An established connection which receives FIN before the
+connect reply still has its original connected identity and retained cause.
+
+Bind: UDPSVC only in the qualified initial implementation. Exact local wildcard
+IPv4 address and port1..65535, bytes0; no implicit ephemeral-port choice or bind
+to an unimplemented per-interface address. Other binding policies are explicitly
+unsupported. Listen/Accept opcodes reserve the shared family contract but are
+not advertised or implemented by the initial family-aware TCP provider. The
+existing independent Query1 listener operations remain available as before.
+
+Read/Recv: endpoint all zero; bytes is the caller capacity within INFO.max_recv.
+Write: endpoint all zero; bytes within INFO.max_send. Send: exact destination
+endpoint, bytes within INFO.max_send. Close: endpoint all zero and bytes0.
+Unknown socket/generation/owner fails BadSocket; replaced provider fails
+ProviderChanged. Close retires only the exact public generation. A later use
+fails BadSocket, never EOF. Synchronous caller buffers remain live until the
+real call returns; a transport timeout is no borrowed-buffer or resource-stop
+acknowledgement. Packet retransmission/FIN work can continue at the original
+kernel owner after a graceful local close, without a caller buffer loan.
+
+NetworkSocketResult88 is followed by copied bytes only for Read/Recv. For
+Write/Send its bytes is a confirmed accepted prefix, with no appended reply
+payload. The caller owns and retains every suffix. original_bytes equals bytes
+for stream operations and sends. Read capacity0 succeeds Ready/0 without
+consuming input or claiming EOF. Recv capacity0 deliberately consumes the next
+whole datagram, reporting its original length and Truncated as appropriate.
+A queued empty datagram is Ready/0 with a source endpoint; an empty queue is
+WouldBlock. Recv consumes exactly one datagram: original_bytes is its actual
+queued length, bytes is the copied prefix, and Truncated is set iff a suffix was
+discarded. Missing datagram fragments are never reconstructed by the SDK.
+
+TCP EOF is returned only for an exact retained peer FIN after its confirmed
+input prefix was drained. Reset is retained separately at the TCP connection
+owner, even after its last payload byte. Repeated reads can observe the same
+terminal cause until explicit close/abort. Invalid/reused identities and a
+missing old backend entry cannot be interpreted as EOF. The original Query1
+read/close semantics remain unchanged for its non-retaining sockets.
+
+RESOLVER PAGES
+--------------
+Resolve uses NetworkResolveRequest392. Initial request: query0/cursor0,
+capacity1..16, exact family, policy0 unless separately supported, name_len1..254
+and zero unused name bytes. Names are explicit ASCII labels with an optional
+final dot; no guessed IDNA/UTF8 conversion. Server all zero selects configured
+DNS. Otherwise it is an explicit supported endpoint, including its source-checked
+reply port. A/AAAA question type is distinct from DNS transport family.
+
+A successful transaction copies all distinct, relevant answer addresses, at
+most32. Oversized result sets fail Capacity; truncation or malformed DNS never
+becomes a partial successful list. The codec checks transaction, full question,
+class, family, message bounds and compression. CNAME chains contribute minimum
+TTL. Unrelated answer owners and authority/additional glue are not adopted as
+requested addresses. Wire TC reports TruncatedDns; no DNS-over-TCP fallback is
+claimed by the initial provider. NXDOMAIN/no relevant data reports NotFound;
+negative caching/SOA processing is not added by this typed path.
+
+NetworkResolvePage48 is followed by count NetworkResolveAnswer40 records. Its
+query identity pins this immutable copied set in an existing DNS cache slot.
+next equals cursor+count, total is the complete set size, More iff next<total.
+Subsequent request: exact provider/query, requested cursor/capacity, all other
+fields in their canonical zero form, with valid nested deadline header. Family
+must be explicitly0 on subsequent pages. Release: provider/query only, family0,
+capacity0 and all other canonical defaults. Release returns an empty success.
+A stale, expired or wrong-owner query fails NotFound. Provider replacement is
+separate ProviderChanged. Initial undelivered replies release their new pin.
+
+Page lease is fixed30seconds from completion, never extended by reads. Clock
+changes/regressions invalidate affected leases. The lease permits reading the
+already copied result; it does not extend DNS TTL. TTL0 and a wire TTL with its
+high bit set both prohibit reuse of these typed cache entries for later
+transactions. The original independent legacy first-A cache policy remains.
+Per-address TTL
+is the minimum valid TTL for the complete RRSet/CNAME chain. Legacy first-A
+queries share the original cache owner but cannot overwrite a pinned typed set.
+When every slot is pinned, a new typed query fails Capacity before network work;
+legacy queries may continue without storing a cache result. A whole-set release
+or expiry makes the original slot replaceable again.
+
+QUALIFIED INITIAL PROVIDERS (0.90.31)
+------------------------------------
+TCPSVC0.1.10 and UDPSVC0.1.6 use existing IPv4 owners. DNSSVC0.1.6 resolves A over
+IPv4 and shares the complete-answer codec owned by NetDns. Its AAAA codec bit
+only reports codec availability. All three advertise IPv6=false; typed family6
+requests fail UnsupportedFamily. Interface0 denotes the existing default IPv4
+path. A nonzero v4 scope/interface returns UnsupportedScope. Dualstack,
+v4-mapped and implicit fallback remain false/UnsupportedPolicy. Actual external
+IPv6/ICMPv6/neighbor roles and TCP/UDP/DNS integration require separate provider
+qualification. No application/import/profile migration is performed here.
+
+PRIVATE EXISTING-KERNEL NIPC ADAPTERS
+-----------------------------------
+On the existing TCP/UDP kernel channels, network_op_info accepts an empty
+request and returns NetworkProviderInfo48 with provider0. This zero is private
+adapter metadata, never a public managed-service provider identity. Its
+qualified bits and per-call limits advertise the retained TCP/truncating UDP
+operations below. An older backend's BadOp or malformed reply grants none of
+these features. TCPSVC/UDPSVC INFO then retains its actual process generation
+but returns transport capability bits/limits0, and typed creation fails Backend.
+Their unchanged Query1 operations can continue on that older backend.
+
+net_service_op_tcp_connect_retained_result uses the original6byte IPv4/port
+payload and optional ServiceDeadlineFooter, and original NetServiceTcpResult.
+It sets retention during allocation at the TCP owner, before handshake/receive.
+Original NIPC reads expose that exact retained EOF/reset lifecycle until Close.
+No original result layout is enlarged. Normal connect selects no retention.
+
+On the existing kernel UDP channel only, network_op_recv is a private adapter:
+exact6byte handle/capacity request; original NetServiceUdpResult, then LE u32
+original datagram length, then its copied bytes. The copied capacity is bounded
+by the original reply capacity minus4. It consumes the original UDP FIFO and
+preserves empty-datagram metadata. This channel payload is not the public
+managed-service NetworkSocketRequest. Only UDPSVC uses this adapter; normal
+consumer access remains the typed service client. Original UDP recv-small keeps
+its non-consuming error behavior and original NIPC result layout.
+
+PRIMARY WIRE SOURCES
+--------------------
+https://www.rfc-editor.org/rfc/rfc1035.html
+https://datatracker.ietf.org/doc/html/rfc3596
+https://www.rfc-editor.org/rfc/rfc2181.html
+https://www.rfc-editor.org/rfc/rfc4007.html

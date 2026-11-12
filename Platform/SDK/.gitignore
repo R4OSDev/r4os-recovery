@@ -4,6 +4,7 @@
 **/.zig-cache/
 **/zig-out/
 **/zig-pkg/
+**/target/
 
 *.exe
 !Tests/Fixture/SubsystemResolver/*.exe
@@ -13,3 +14,7 @@
 
 .DS_Store
 Thumbs.db
+
+/.Installed/
+
+/.Cache/

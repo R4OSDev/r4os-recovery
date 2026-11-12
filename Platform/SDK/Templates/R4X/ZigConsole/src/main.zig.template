@@ -1,0 +1,4 @@
+const r4os=@import("r4os");
+fn work(app:*r4os.App2)i32 { app.system().println("Hello from {ProjectName}");return 0; }
+
+pub fn r4_app_main(app:*r4os.App2)i32{return work(app);}

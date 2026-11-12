@@ -2,6 +2,7 @@ const abi = @import("r4os_contract").abi;
 const program = @import("program.zig");
 const std = @import("std");
 const time_contract = @import("time_contract.zig");
+const update_paths = @import("system_update_paths.zig");
 
 pub const name = "R4SYS";
 pub const import_query = "R4SYS:Query:1";
@@ -34,6 +35,8 @@ pub const file_replace_atomic_error_alias: i32 = -5;
 pub const file_replace_atomic_error_conflict: i32 = -6;
 pub const file_replace_atomic_error_io: i32 = -7;
 pub const file_replace_atomic_error_not_atomic: i32 = -8;
+pub const file_replace_atomic_error_name_not_supported = abi.file_replace_atomic_error_name_not_supported;
+pub const file_replace_atomic_error_name_too_long = abi.file_replace_atomic_error_name_too_long;
 pub const file_replace_atomic_flag_consume_stage: u32 = 1 << 0;
 pub const file_replace_atomic_flag_require_target_absent: u32 = 1 << 1;
 pub const file_replace_atomic_flag_require_owned_stage: u32 = 1 << 2;
@@ -115,6 +118,8 @@ pub const SystemReplaceClass = enum(u8) {
     /// Payload on another mounted volume (NTFS data disk, boot partition):
     /// plain atomic file replacement without service/driver semantics.
     data,
+    license,
+    source,
 };
 
 pub const SystemReplacePlan = struct {
@@ -182,6 +187,8 @@ pub fn systemReplaceClassName(class: SystemReplaceClass) []const u8 {
         .sdk => "sdk",
         .temp => "temp",
         .data => "data",
+        .license => "license",
+        .source => "source",
         .unknown => "unknown",
     };
 }
@@ -226,13 +233,18 @@ pub fn systemReplaceNeedsReboot(class: SystemReplaceClass) bool {
         .font,
         .sdk,
         => true,
-        .config, .temp, .data, .unknown => false,
+        .config, .temp, .data, .license, .source, .unknown => false,
     };
 }
 
 pub fn classifySystemPath(path_raw: []const u8) SystemReplaceClass {
     const path = trimPath(path_raw);
     if (path.len == 0) return .unknown;
+    if (update_paths.companionKind(path)) |kind| return switch (kind) {
+        .license => .license,
+        .source => .source,
+        .preload => .boot_kernel,
+    };
     if (pathEquals(path, "/boot/r4os.elf") or pathEquals(path, "\\boot\\r4os.elf")) return .boot_kernel;
     if (pathEquals(path, "C:\\CONFIG.R4S")) return .config;
     if (pathHasPrefix(path, "C:\\R4OS\\LIBS\\") and endsWithIgnoreCase(path, ".R4L")) return .system_library;
@@ -246,6 +258,7 @@ pub fn classifySystemPath(path_raw: []const u8) SystemReplaceClass {
     if (pathHasPrefix(path, "C:\\R4OS\\SDK\\")) return .sdk;
     if (pathHasPrefix(path, "C:\\TEMP\\")) return .temp;
     if (isForeignDrivePath(path)) return .data;
+    if (update_paths.applicationTarget(path)) return .software;
     return .unknown;
 }
 
@@ -657,17 +670,20 @@ pub const Context = struct {
 
     // Vertragsauskunft direkt aus der R4SYS-Gruppentabelle.
     pub fn contractValid(self: *const Context) bool {
+        if (self.base.generation2) |context| return context.system() != null;
         const b = self.base.bundle orelse return false;
         return b.sys != null;
     }
 
     pub fn tableAbiVersion(self: *const Context) u32 {
+        if (self.base.generation2) |context| return if (context.system()) |table| table.abi_version else 0;
         const b = self.base.bundle orelse return 0;
         const table = b.sys orelse return 0;
         return table.abi_version;
     }
 
     pub fn tableSize(self: *const Context) u32 {
+        if (self.base.generation2) |context| return if (context.system()) |table| table.size else 0;
         const b = self.base.bundle orelse return 0;
         const table = b.sys orelse return 0;
         return table.size;
@@ -687,6 +703,22 @@ pub const Context = struct {
 
     pub fn readKey(self: *const Context) u8 {
         return self.base.readKey();
+    }
+
+    pub fn consolePushEvents(self: *const Context, handle: abi.ProgramProcessHandle, events: []const abi.ConsoleInputEvent) i32 {
+        return self.base.consolePushEvents(handle, events);
+    }
+
+    pub fn consoleReadEvents(self: *const Context, out: []abi.ConsoleInputEvent) i32 {
+        return self.base.consoleReadEvents(out);
+    }
+
+    pub fn consoleTextInfo(self: *const Context, handle: abi.ProgramProcessHandle, out: *abi.ConsoleTextInfo) i32 {
+        return self.base.consoleTextInfo(handle, out);
+    }
+
+    pub fn consoleSetEncoding(self: *const Context, handle: abi.ProgramProcessHandle, encoding: u32) i32 {
+        return self.base.consoleSetEncoding(handle, encoding);
     }
 
     pub fn consoleRead(self: *const Context, out: []u8) i32 {
@@ -841,6 +873,20 @@ pub const Context = struct {
         return self.base.monotonicHz();
     }
 
+    pub fn timeoutTicks(self: *const Context, timeout: abi.R4Timeout) time_contract.checked.Error!u64 {
+        if (self.base.generation2 == null) return time_contract.timeoutToTicks(timeout, self.monotonicHz());
+        var value = try time_contract.checked.fromTimeout(timeout);
+        if (value.kind == 1) {
+            const sample = try self.base.clockSampleChecked();
+            value = try time_contract.checked.timeoutTicks(timeout, sample.identity.tick_hz);
+        }
+        return time_contract.checked.toWaitTicks(value);
+    }
+
+    pub fn platformInputSnapshot(self: *const Context, out: *abi.PlatformInputSnapshot) i32 {
+        return self.base.platformInputSnapshot(out);
+    }
+
     pub fn monotonicClock(self: *const Context, out: *abi.MonotonicClockInfo) i32 {
         return self.base.monotonicClock(out);
     }
@@ -855,6 +901,10 @@ pub const Context = struct {
 
     pub fn monotonicBackend(self: *const Context) abi.TimeBackend {
         return self.base.monotonicBackend();
+    }
+
+    pub fn systemPowerTransition(self: *const Context, action: u32, timeout_ticks: u64) i32 {
+        return self.base.systemPowerTransition(action, timeout_ticks);
     }
 
     pub fn systemHalt(self: *const Context) noreturn {
@@ -917,6 +967,19 @@ pub const Context = struct {
         return self.base.programCompletionRead(handle, offset, out, out_read);
     }
 
+    pub fn programObservationRetain(self: *const Context, process: *const abi.ProgramProcessHandle, flags: u32, out: *abi.ProgramObservationHandle) i32 {
+        return self.base.programObservationRetain(process, flags, out);
+    }
+    pub fn programObservationWait(self: *const Context, observation: *const abi.ProgramObservationHandle, timeout_ticks: u64, out: *abi.ProgramProcessCompletion) i32 {
+        return self.base.programObservationWait(observation, timeout_ticks, out);
+    }
+    pub fn programObservationRead(self: *const Context, observation: *const abi.ProgramObservationHandle, offset: u32, out: []u8, out_read: *u32) i32 {
+        return self.base.programObservationRead(observation, offset, out, out_read);
+    }
+    pub fn programObservationRelease(self: *const Context, observation: *const abi.ProgramObservationHandle) i32 {
+        return self.base.programObservationRelease(observation);
+    }
+
     pub fn programSpawnWithConsoleHost(self: *const Context, path: [*:0]const u8, args: [*:0]const u8, policy: abi.LaunchPolicy, host: abi.ConsoleHostKind) i32 {
         return self.base.programSpawnWithConsoleHost(path, args, policy, host);
     }
@@ -943,6 +1006,14 @@ pub const Context = struct {
 
     pub fn programInstance(self: *const Context, index: u32, out: *abi.ProgramInstanceInfo) i32 {
         return self.base.programInstance(index, out);
+    }
+
+    pub fn programLifecycleBegin(self: *const Context, cursor: *abi.ProgramInventoryCursor) i32 {
+        return self.base.programLifecycleBegin(cursor);
+    }
+
+    pub fn programLifecyclePrograms(self: *const Context, cursor: *abi.ProgramInventoryCursor, out: []abi.ProgramLifecycleSnapshot, page: *abi.ProgramInventoryPageInfo) i32 {
+        return self.base.programLifecyclePrograms(cursor, out, page);
     }
 
     pub fn programInventoryBegin(self: *const Context, cursor: *abi.ProgramInventoryCursor, out: *abi.ProgramInventorySummary) i32 {
@@ -973,8 +1044,16 @@ pub const Context = struct {
         return self.base.threadCreateHandle(entry, arg, stack_reserve_bytes, flags, out_handle);
     }
 
+    pub fn computeWorkerCreate(self: *const Context, entry: abi.ThreadEntryFn, arg: u64, stack_reserve_bytes: u64, out_handle: *abi.ProgramJoinHandle) i32 {
+        return self.base.computeWorkerCreate(entry, arg, stack_reserve_bytes, out_handle);
+    }
+
     pub fn threadExit(self: *const Context, exit_code: i32) noreturn {
         self.base.threadExit(exit_code);
+    }
+
+    pub fn programExit(self: *const Context, exit_code: i32, reason: u32) i32 {
+        return self.base.programExit(exit_code, reason);
     }
 
     pub fn threadJoin(self: *const Context, thread_id: u32, timeout_ticks: u64, out_exit_code: *i32) i32 {
@@ -987,6 +1066,45 @@ pub const Context = struct {
 
     pub fn threadCurrent(self: *const Context) u32 {
         return self.base.threadCurrent();
+    }
+
+    pub fn threadCurrentHandle(self: *const Context, out: *abi.ProgramJoinHandle) i32 {
+        return self.base.threadCurrentHandle(out);
+    }
+
+    pub fn threadPlacementGet(self: *const Context, handle: *const abi.ProgramJoinHandle, info: *abi.ThreadPlacementInfo, cpus: []u64) i32 {
+        return self.base.threadPlacementGet(handle, info, cpus);
+    }
+    pub fn threadPlacementSet(self: *const Context, handle: *const abi.ProgramJoinHandle, request: *const abi.ThreadPlacementRequest, cpus: []const u64) i32 {
+        return self.base.threadPlacementSet(handle, request, cpus);
+    }
+
+    pub fn cpuCapacity(self: *const Context, out: *abi.CpuCapacity) i32 {
+        return self.base.cpuCapacity(out);
+    }
+
+    pub fn notificationCreate(self: *const Context, output: *u64) i32 {
+        return self.base.notificationCreate(output);
+    }
+    pub fn notificationQuery(self: *const Context, handle: u64, sequence: *u64) i32 {
+        return self.base.notificationQuery(handle, sequence);
+    }
+    pub fn notificationNotify(self: *const Context, handle: u64, count: u32) i32 {
+        return self.base.notificationNotify(handle, count);
+    }
+    pub fn notificationWait(self: *const Context, handle: u64, observed: u64, timeout_ticks: u64) i32 {
+        return self.base.notificationWait(handle, observed, timeout_ticks);
+    }
+    pub fn notificationClose(self: *const Context, handle: u64) i32 {
+        return self.base.notificationClose(handle);
+    }
+
+    pub fn programLocalGet(self: *const Context, key: u64, out_value: *u64) i32 {
+        return self.base.programLocalGet(key, out_value);
+    }
+
+    pub fn programLocalPublish(self: *const Context, key: u64, value: u64, out_value: *u64) i32 {
+        return self.base.programLocalPublish(key, value, out_value);
     }
 
     pub fn threadStatus(self: *const Context, thread_id: u32, out: *abi.ProgramThreadInfo) i32 {
@@ -1162,12 +1280,28 @@ pub const Context = struct {
         return self.base.serviceDetailByName(service_name, out);
     }
 
+    pub fn serviceBoundDetail(self: *const Context, service_name: [*:0]const u8, out: *abi.ServiceDetail, process: *abi.ProgramProcessHandle) i32 {
+        return self.base.serviceBoundDetail(service_name, out, process);
+    }
+
+    pub fn serviceInventoryPage(self: *const Context, cursor: *abi.ServiceInventoryCursor, rows: []abi.ServiceInventoryRow) i32 {
+        return self.base.serviceInventoryPage(cursor, rows);
+    }
+
+    pub fn serviceControlBound(self: *const Context, request: *const abi.ServiceControlRequest) i32 {
+        return self.base.serviceControlBound(request);
+    }
+
     pub fn serviceStart(self: *const Context, service_name: [*:0]const u8, out: *abi.ServiceInfo) i32 {
         return self.base.serviceStart(service_name, out);
     }
 
     pub fn serviceStop(self: *const Context, service_name: [*:0]const u8, out: *abi.ServiceInfo, timeout_ticks: u64) i32 {
         return self.base.serviceStop(service_name, out, timeout_ticks);
+    }
+
+    pub fn serviceStopBound(self: *const Context, service_name: [*:0]const u8, process: *const abi.ProgramProcessHandle, out: *abi.ServiceInfo, timeout_ticks: u64) i32 {
+        return self.base.serviceStopBound(service_name, process, out, timeout_ticks);
     }
 
     pub fn serviceRestart(self: *const Context, service_name: [*:0]const u8, out: *abi.ServiceInfo) i32 {
@@ -1218,6 +1352,14 @@ pub const Context = struct {
         return self.base.fileAppend(path, data);
     }
 
+    pub fn fileNameLimits(self: *const Context, path: [*:0]const u8, out: *abi.FileNameLimits) i32 {
+        return self.base.fileNameLimits(path, out);
+    }
+
+    pub fn systemUpdateTargetSupported(self: *const Context, path: [*:0]const u8) i32 {
+        return self.base.systemUpdateTargetSupported(path);
+    }
+
     pub fn fileStreamBegin(self: *const Context, path: [*:0]const u8, flags: u32) i32 {
         return self.base.fileStreamBegin(path, flags);
     }
@@ -1238,8 +1380,20 @@ pub const Context = struct {
         return self.base.dirList(path, out);
     }
 
+    pub fn directoryChangeBegin(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryChangeCursor) i32 {
+        return self.base.directoryChangeBegin(path, cursor);
+    }
+
+    pub fn directoryChangePoll(self: *const Context, cursor: *abi.DirectoryChangeCursor) i32 {
+        return self.base.directoryChangePoll(cursor);
+    }
+
     pub fn directoryNext(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryScanCursor, out: []u8, info: *abi.FileInfo) i32 {
         return self.base.directoryNext(path, cursor, out, info);
+    }
+
+    pub fn directoryBatch(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryBatchCursor, out: []abi.DirectoryBatchEntry) i32 {
+        return self.base.directoryBatch(path, cursor, out);
     }
 
     pub fn dirEntry(self: *const Context, path: [*:0]const u8, index: u32, out: []u8) i32 {
@@ -1248,6 +1402,10 @@ pub const Context = struct {
 
     pub fn driveInfo(self: *const Context, index: u32) ?abi.DriveInfo {
         return self.base.driveInfo(index);
+    }
+
+    pub fn driveInfoGeometry(self: *const Context, index: u32) ?abi.DriveInfo {
+        return self.base.driveInfoGeometry(index);
     }
 
     pub fn fileInfo(self: *const Context, path: [*:0]const u8) ?abi.FileInfo {
@@ -1510,6 +1668,9 @@ test "r4sys exposes project and ABI metadata" {
 
 test "r4sys classifies system replacement targets" {
     try std.testing.expectEqual(SystemReplaceClass.boot_kernel, classifySystemPath("/boot/r4os.elf"));
+    try std.testing.expectEqual(SystemReplaceClass.boot_kernel, classifySystemPath("/boot/preload.r4i"));
+    try std.testing.expectEqual(SystemReplaceClass.boot_kernel, classifySystemPath("/boot/preload/hidreport.r4p"));
+    try std.testing.expectEqual(SystemReplaceClass.unknown, classifySystemPath("/boot/preload/unknown.r4p"));
     try std.testing.expectEqual(SystemReplaceClass.system_library, classifySystemPath("C:\\R4OS\\LIBS\\R4STD.R4L"));
     try std.testing.expectEqual(SystemReplaceClass.driver, classifySystemPath("C:/R4OS/DRIVERS/RTL8139.R4D"));
     try std.testing.expectEqual(SystemReplaceClass.protocol, classifySystemPath("C:\\R4OS\\PROTOCOLS\\NETTCP.R4P"));
@@ -1521,6 +1682,11 @@ test "r4sys classifies system replacement targets" {
     try std.testing.expectEqual(SystemReplaceClass.config, classifySystemPath("C:\\R4OS\\CONFIG\\VERSION.R4S"));
     try std.testing.expectEqual(SystemReplaceClass.config, classifySystemPath("C:\\CONFIG.R4S"));
     try std.testing.expectEqual(SystemReplaceClass.sdk, classifySystemPath("C:\\R4OS\\SDK\\Contract\\ABI\\R4LQuery.txt"));
+    try std.testing.expectEqual(SystemReplaceClass.license, classifySystemPath("C:/R4OS/LICENSES/GFX/NOTICE.TXT"));
+    try std.testing.expectEqual(SystemReplaceClass.source, classifySystemPath("C:/R4OS/SOURCES/R4VIDEO/SOURCE.ZIP"));
+    try std.testing.expectEqual(SystemReplaceClass.unknown, classifySystemPath("C:/R4OS/LICENSES/../LIBS/X.R4L"));
+    try std.testing.expect(!systemReplaceNeedsReboot(.license));
+    try std.testing.expect(!systemReplaceNeedsReboot(.source));
     try std.testing.expectEqual(SystemReplaceClass.temp, classifySystemPath("C:\\TEMP\\SYSREPL.TXT"));
     try std.testing.expectEqual(SystemReplaceClass.data, classifySystemPath("D:\\R4OS\\LIBS\\R4STD.R4L"));
     try std.testing.expectEqual(SystemReplaceClass.unknown, classifySystemPath("C:\\R4OS\\UNBEKANNT\\X.BIN"));

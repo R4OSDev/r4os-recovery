@@ -1,0 +1,55 @@
+﻿Immutable-bank font prefix metrics
+=================================
+
+Contract0.64.82, provider step0.90.23. Optional R4DRAW slot
+font_prefix_metrics2 appends at byte912 to the unchanged original912-byte
+table. No DRAW slots are retired, so the compact Query2 prefix and new
+offset are also912; both complete tables are920 bytes. Both headers have
+16 bytes. DRAW40 projects to compact revision2 with fixed source origin39.
+
+FontAdvance2 is8bytes/alignment4: byte_end u32 at0 and prefix_width u32 at4.
+FontAdvanceInfo2 is40bytes/alignment8: version/size at0/4, font_revision u64
+at8, font_id/text_bytes/count/required_count/flags/reserved0 u32 at16..36.
+Version1 and size40 are exact. Complete flag1 alone grants row authority.
+
+Input is a complete immutable UTF8 span without embedded NUL,0..4096bytes.
+Capacity is0..4096 whole aligned caller rows. Source/rows/receipt/code are
+mapped, disjoint, and borrowed exclusively where mutable until actual
+synchronous return. Null text is allowed only for length0; null rows only
+for capacity0. Native mapping/alias/lifetime remain explicit preconditions.
+
+The provider takes ONE existing canonical font bank/task-unwind read lease.
+It validates/counts and then emits bounded scalar-end prefix widths using
+the same glyph advances as the original font_measure. CR adds no advance;
+LF preserves the maximum previous line and resets current line width. This
+is the existing additive scalar model, not kerning, shaping, Bidi or glyph
+cluster placement. No heap, global text cache, new bank or persistent handle.
+
+Result0 publishes the entire receipt/count and every scalar-end row. Byte
+ends strictly increase to the explicit length; prefix widths never decrease.
+Capacity-7 publishes required_count diagnostically with count0/flags0 and
+no row authority. Invalid-1, unavailable font-2, encoding-5, overflow-6,
+view-unavailable-9 and exhausted revision-12 grant no usable partial cache.
+Other error outputs are unspecified and must never be adopted.
+
+The font revision comes from that exact immutable bank, not a later current
+query. At the ORIGINAL u32 publication wrap a sticky exhaustion flag closes
+new metric observations permanently for this boot. The original wrapping
+counter and old font APIs keep their contract; there is no second counter.
+Revision0 is unavailable. Existing View pins bank and task unwind; no lease
+survives actual return. Source/record pointers are never retained by Kernel.
+
+Empty text/capacity0 is a constant-work checked font-stamp observation, no
+full-text measurement. A completed prefix array is a frozen historical font
+observation. Later publication does not rewrite it. A fresh checked stamp
+and the caller's exact text revision decide explicit invalidation/reprepare;
+neither stamp nor cached hit test promises the font stays current during a
+later render. SDK mismatch status-10 means stale, never an automatic retry.
+
+The new SDK owner maps scalar rows to complete grapheme-end prefix rows
+linearly in caller storage, preserving original LF-start/CRLF behavior.
+It binds source lifetime/nonreused caller text revision/font ID/revision.
+Binary search uses the original strict width and integer-half tie rules,
+including zero-advance graphemes and x<=0. Prepared hits do no provider call,
+prefix copy, font measurement or full source scan. Existing Canvas/controls
+and all application sources/import profiles are unchanged in this phase.

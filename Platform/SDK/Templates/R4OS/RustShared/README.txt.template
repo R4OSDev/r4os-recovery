@@ -1,0 +1,31 @@
+﻿{DisplayName}: {ProjectName}
+================================
+
+This complete project uses SDK template {TemplateId}. Select the separate
+component directories when invoking the build:
+
+  ./Build.sh -SdkRoot /SDK -ContractRoot /CONTRACT -ToolsRoot /TOOLS -InstallRoot /install -CacheRoot /cache
+
+Windows: Build.bat with the same parameters. Both call this project's Build.ps1
+and the SDK-owned PS7 driver. No complete R4OS workspace or Settings.R4S.
+The caller owns component version selection and any project lock. The SDK
+checks the selected components against the tool profile's source hashes and
+required toolchain; it neither creates nor reads a project pin file.
+Cargo.lock is included; builds are offline/locked. module.R4MF owns module
+class, identity, imports, version, resources and target. Change that manifest
+for module facts; Cargo's crate identity remains separate.
+
+The output is build/{ProjectName}.R4X with build.json source/tool/container
+provenance. Copy the container to its manifest TARGET in R4OS. Console apps
+print a marker and return0. GUI apps need the regular desktop host, display
+a window, wait for events and close normally. Services use SERVMAN:
+
+  SERVMAN INSTALL {ProjectName} C:\path\{ProjectName}.R4X
+  SERVMAN START {ProjectName}
+  SERVMAN STATUS {ProjectName}
+  SERVMAN STOP {ProjectName}
+
+Only the template's actual class applies; read module.R4MF. Service endpoints
+register under that module name, wait on bounded deadlines and unregister on
+stop. No native Rust compiler is installed in R4OS by these host tools.
+See SDK/Rust/README.txt for the profile, supported scope and evidence limits.

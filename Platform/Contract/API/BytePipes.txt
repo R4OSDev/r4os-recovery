@@ -1,0 +1,145 @@
+﻿Bounded byte pipes
+==================
+
+Ownership and role
+------------------
+SDK byte_pipe is a Library facade. The technically necessary resident byte
+channel, exact process references, native Task wait enrollment and process
+retirement live with the Kernel program/IPC resource owners. No new canonical
+module or service is required. Existing R4NET IPC is message-oriented: its
+numeric channels, copied messages and close counter cannot establish stream
+references, last-writer EOF or a buffer surviving its creating process.
+Process-local Notifications alone cannot transfer such ownership either.
+
+Contract0.64.89 adds seven OPTIONAL R4SYS tail slots. Query1 keeps all previous
+184 slots and signatures, revision40/1544bytes; Query2 projects the same owner,
+revision5/1536bytes, without the retired shell slot. Existing consumers keep
+their imports and start generation. Resolve complete, nonnull function slots;
+a short/absent table returns NoFn, never a synthetic stream capability.
+
+Records and admission
+---------------------
+BytePipeEnd24 contains handle:u64, generation:u64, direction:u32, reserved:u32.
+Reader=1, Writer=2, reserved=0. Both reference handle and pipe generation are
+nonzero and never repeat during a boot. Generation exhaustion is an error,
+never wrap/reuse. The current exact process ID+generation owns each reference.
+Changing direction or copying the record does not create another reference.
+byte_pipe_dup creates a distinct same-direction reference in that process.
+
+BytePipePair56 has version1/size56 followed by Reader and Writer. Create
+publishes both references atomically. Capacity is an exact byte count1..65536.
+The provider admits at most64 pipes and4MB=4194304 payload bytes globally,
+including reserved allocations and unfinished backing frees. Each pipe admits
+32 endpoint references and32 simultaneously parked read/write operations.
+Waiter admission reads the original native queue counts under Runtime; Close,
+Cancel and progress therefore traverse at most32 actual waiter nodes. Full
+wait admission returns Capacity without bytes or output mutation. Metadata
+and rings have stable resident heap backing;
+allocation and free happen outside Runtime, not in a caller's VM allocation.
+Actual resource admission is authoritative; Info is only an observation.
+
+BytePipeInfo48 contains version/size, capacity:u64, queued:u64, readers:u32,
+writers:u32, atomic_limit:u64, max_step:u64. Atomic limit=min(capacity,4096),
+maximum synchronous step4096. No arbitrary string, packet or message framing
+exists in the byte stream. Caller policy chooses chunking and framing.
+
+Operations and progress
+-----------------------
+byte_pipe_create(capacity,out_pair), byte_pipe_dup(end,out_end),
+byte_pipe_info(end,out_info), byte_pipe_cancel(end), byte_pipe_close(end),
+byte_pipe_read(end,data,length,deadline,out_progress), and byte_pipe_write
+with const input data are synchronous C-ABI calls. Length is a nonzero u64;
+all caller spans must be accessible for their full declared length. Read/write
+data, deadline48 and progress24 are pairwise disjoint. Caller spans stay borrowed throughout a blocked call. No resident queue
+retains their pointers, and no pointer is retained beyond actual return; no callback, handler or background worker owns
+a pipe operation. Caller page faults/copies happen outside Runtime. Short
+unwind ownership protects staging/publication, and is returned before park.
+
+BytePipeProgress24 contains version1/size24, bytes:u64, state:u32, flags:u32=0.
+API return0 publishes this complete result. Negative errors leave result and
+read storage unchanged. Result states are independent of the API error domain:
+ Ready1       nonzero exact accepted write or copied read prefix
+ WouldBlock2  Poll found no admissible data/space, bytes0
+ EOF3         no writer references remain AND queued bytes are drained, bytes0
+ BrokenPipe4  no reader references remain, bytes0
+ Cancelled5   this reference's cancellation epoch changed during the call
+ TimedOut6    the original finite deadline expired before admission, bytes0
+ Closed7      this operation's reference closed after initial admission
+
+One call transfers at most4096bytes. A write whose whole offered length is
+no larger than atomic_limit waits until that WHOLE length fits, or returns
+WouldBlock/Timeout/Cancel/Close with zero bytes. A larger write may accept a
+prefix bounded by space and max_step. Competing reader/writer operations are
+serialized at the original Runtime boundary with the copied ring bytes.
+Thus multiple readers/writers are supported; reads consume disjoint prefixes,
+and qualifying small writes do not interleave. Large logical writes may
+interleave between calls. No scheduling fairness, whole-call WriteAll,
+record-preserving Read or reader-delivery acknowledgment is implied.
+
+An accepted prefix belongs to the pipe, not the caller's input storage. It is
+not evidence that a reader consumed it or that an end-to-end operation drained.
+The caller retains every unaccepted suffix. StreamTransfer can own a larger
+logical operation with its existing exact-prefix and original-budget rules.
+
+Budget, cancellation and queues
+------------------------------
+Deadline is the existing copied48byte WaitSetDeadline VALUE contract; using
+it requires no WaitSet. Poll0 and Forever2 use zero clock/deadline fields.
+Finite1 binds one absolute nanosecond instant and original source/generation/
+event-backend/logical-tick identity, including the previous observation.
+Expiry and clock change/regression are checked before each admission. Wakes
+never renew the budget. Expiry permits no new bytes, even if data is ready.
+Poll performs one immediate bounded admission. Forever has no outer timeout.
+
+Empty readers and backpressured writers enroll their actual native Task node
+in the resident channel's existing scheduler WaitQueue mechanism. Predicate
+observation and enrollment share Runtime; no check-to-park gap, polling task,
+sleep loop or periodic pipe worker is introduced. Every wake re-resolves the
+nonreused full endpoint identity; it never dereferences a pre-park record.
+Close/Cancel and real progress wake the appropriate queues. Hard kill removes
+the actual native waiter before Task stack and owner resources can retire.
+
+Cancel advances a nonwrapping epoch on ONE reference and wakes admitted calls,
+including staging calls. It closes/discards nothing and does not cancel a
+different duplicate. Calls started later observe the new epoch and may proceed.
+A write/read already committed under Runtime wins over a later Cancel; accepted
+bytes are never retracted or hidden. Finite timeout/cancel returns no external
+work loan: synchronous copying has really returned, with no DMA or peer work.
+
+Close and process lifetime
+-------------------------
+Close invalidates only that reference. Remaining duplicates keep their own
+directions alive. Last Writer close allows all buffered accepted bytes to be
+read before EOF. Last Reader close discards unread bytes and causes later
+writes to report BrokenPipe. Neither counter nor empty queue is a physical
+backing-release acknowledgment. Last reference detaches/wakes actual waiters
+and removes lookup access before freeing the resident allocation outside
+Runtime. A failed free keeps a CLOSED exact retry identity and its admission
+budget. Info/Dup/new I/O reject it; Close must retry the same identity.
+
+After all exact process threads physically retire, the original program
+reaper closes that process's remaining references before Notifications and
+instance payload/VM teardown. Incomplete backing free keeps retirement pending.
+No stack destructor is relied upon. A later LaunchIo contract can duplicate
+references into an atomically published child; it cannot inherit a raw handle,
+stack pointer or reserved_runtime field. That binding is a separate version.
+
+WaitSource and scope
+--------------------
+The core provider uses native channel queues and is independent of WaitSet
+availability. No BytePipe WaitSource adapter is advertised in this revision;
+unsupported source kinds keep the existing explicit Unsupported result. No
+new shell syntax, terminal UI, stderr redirection or application migration is
+included. Old message-IPC semantics, notifications and program starts remain
+with their existing owners. Host adapters, real guest waits, hardware and
+whole-release STANDARD have separate evidence; none substitutes for another.
+
+The ordinary reaper has a conservative atomic empty-channel hint. It is
+updated only under Runtime at canonical admission, OOM rollback and actual
+last-free ACK. It grants no allocation/free rights and remains true for
+unpublished allocations and incomplete releases. Fully retired process
+threads cannot publish a later endpoint; no-pipe retirements need no new lock.
+
+With concurrent readers, EOF describes the channel after consumption. An
+earlier read can still be publishing its copied prefix. Join every own call
+before releasing its output span; EOF is no acknowledgment for those loans.

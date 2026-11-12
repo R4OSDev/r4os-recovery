@@ -1,34 +1,29 @@
 ﻿R4OS SDK C Toolchain
 ====================
 
-This is the installed target location for the native R4OS C toolchain:
+The native R4OS C toolchain is installed at
 
     C:/R4OS/SDK/Toolchains/C
 
-R4CC.R4X is installed under bin. R4CC is an R4OS bootstrap compiler; the
-native path does not use an external host compiler or a private compiler copy
-inside R4CODE.
+R4CC.R4X is installed under bin. R4CC is an R4OS bootstrap compiler. The
+native path uses the shared R4CC and R4Pack cores pinned by R4BUILD.
 
-The current R4MF v2 C application subset supports:
+The R4MF v2 C application subset uses R4App2 and the SDK templates under
+Templates/R4OS. The console template uses R4SdkStdio2 and an explicit
+R4SdkStdioWrite loop with confirmed byte counts, WouldBlock and Close.
 
-    #include <r4os/r4os.h>
-    R4OS_TEXT(name, "text")
-    int32_t r4_app_main(R4App *app)
-    r4sys_write_line(&app->system, name)
+R4CC emits raw text-section bytes for R4XStart2 and Query2. R4BUILD uses
+the R4Pack core to create an R4M0 .R4X in the project's out directory.
+Console projects declare R4SYS:Query2:2 and R4DESK:Query2:2. GUI projects
+also declare R4DRAW:Query2:2 and use the existing facade and activity loop.
 
-R4CC emits raw text-section bytes for R4XStart and R4SYS. R4BUILD then uses
-the R4PACK core to create an R4M0 .R4X in the project's out directory.
-
-Supported profiles are R4X_C_App_Console and R4X_C_App_Desktop. Unsupported
-profiles or languages fail with an explicit capability error; the build never
-falls back to a host compiler or old entry point.
+The native profiles are R4X_C2_Console and R4X_C2_Desktop_OK. The shared
+capability query admits one C source and the supported console/GUI subset.
+Other languages, entry modes and module roles report their capability result.
 
 R4CC.STATUS records installed toolchain capabilities for R4BUILD. Worker
-builds use the same R4CC and R4PACK logic directly without host tools or a
-prebuilt example artifact.
+builds execute the shared compiler and packer logic in their own process.
 
-Subdirectories:
-
-- bin contains executable toolchain programs.
-- lib is reserved for future runtime and helper objects.
-- include-extra is reserved for toolchain-specific private headers.
+The bin directory contains executable toolchain programs. The lib and
+include-extra directories provide the established locations for runtime
+objects and toolchain-specific headers.

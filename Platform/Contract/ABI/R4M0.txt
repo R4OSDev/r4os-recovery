@@ -20,6 +20,28 @@ schreiben; Loader lehnen 5 und 6 fail-closed ab.
 
 Architektur 1 ist x86_64.
 
+CPU-Ausfuehrungsvertrag
+-----------------------
+
+Architektur 1 prueft das Containerformat, nicht die CPU-Mindestmerkmale.
+Der gemeinsame Modulbau verwendet Module/CpuBaseline.json als einzige
+maschinenlesbare Quelle fuer seine tatsaechlichen ISA-Voraussetzungen und
+die benoetigte XCR0-Maske. Die Compilerabbildung kommt ausschliesslich aus
+SDK/Profiles/Build.json und wird gegen die normativen CPUID-/XCR0-Felder
+geprueft. Der unbenutzte Contract-Compilerhelfer module_cpu ist entfernt;
+historische Compilerannotationen im JSON sind keine aktive Profilquelle.
+Kernel/Build.ps1 uebernimmt dieselben CPUID-Deskriptoren und den Profilhash
+in seine unveraenderliche, ELF-gebundene Buildkonfiguration.
+
+Das vorhandene Profil r4os-avx2-v1 verlangt die x86_64-Basis, SSE bis SSE4.2,
+AVX/AVX2, AES-NI, PCLMULQDQ und XSAVE mit aktivem x87-/SSE-/YMM-Zustand.
+OSXSAVE wird nach der OS-Initialisierung geprueft, nicht von der Firmware
+vorausgesetzt. Ein FXSAVE-/SSE2-Backend allein laesst dieses Profil nicht zu.
+Vor dem ersten Modulaufruf muss der Kernel die vollstaendige CPU-/Zustands-
+baseline bestaetigen. Ein fehlendes Pflichtmerkmal fuehrt vorher zu einem
+benannten kontrollierten Fehler. Container-/Tabellenversionen und vorhandene
+Importnamen aendern sich durch diese Durchsetzung nicht.
+
 Header
 ------
 
@@ -77,10 +99,15 @@ Meta-/Stringbereich. Beispiel:
 
 Ein Export nennt Symbol, Section, Sectionoffset und Version. Namen und
 Versionen sind innerhalb eines Moduls case-insensitiv eindeutig; leere,
-ueberlange, doppelte oder Version-0-Exporte sind ungueltig. R4X exportiert
-R4XStart Version 1. Eine benannte Runtime-R4L exportiert Query Version 1 und
-mindestens eine fachliche Tabelle wie API_V1; deren Header und Revision folgen
-R4LInterface.txt. R4D und R4P verwenden ihre jeweiligen Modulvertraege.
+ueberlange, doppelte oder Version-0-Exporte sind ungueltig. Die ausgewaehlte
+Plattformgeneration bestimmt den technischen Start-/Query-/Initvertrag.
+Generation2-R4X exportiert R4XStart2 Version2 und importiert eingebaute APIs
+als Query2 Version2. Runtime-R4Ls exportieren zusaetzlich ihre unabhaengigen
+fachlichen Tabellen wie TEXT_V1 oder COMPILER_V1. Deren Header und Revision
+folgen R4LInterface.txt; eine fachliche Revision1 bleibt unter Generation2
+gueltig. Waehrend der Verbraucherumstellung bestehen die alten technischen
+Query-/Start-/Initvertraege neben den neuen. Keine Generation wird durch
+Umbenennen eines Exports oder Umdeuten einer Tabelle angepasst.
 
 Beim ELF-basierten Bau einer Runtime-R4L deklariert module.R4MF die Zuordnung
 
@@ -156,15 +183,33 @@ oben laesst dafuer keinen Freiheitsgrad.
 Aktueller R4X-Startvertrag
 --------------------------
 
-Ein ausfuehrbares R4X besitzt:
+Ein Generation2-R4X besitzt:
+
+    r4x.start=r4xstart2
+    r4x.entry=R4XStart2
+    r4x.start_abi=2
+    r4x.context=R4XStartContext2
+
+sowie Export R4XStart2:2 und Import R4SYS:Query2:2. Der wirkliche Startkontext
+hat120Byte, der technische R4LQuery2-Record24Byte ohne Kernelbridge. Die
+Typen, Gruppenidentitaeten und533stabilen Slotpositionen gehoeren
+API/Generation2.json und dessen erzeugten Bindings unter Generated/Generation2/.
+Ein SDK-Profil waehlt die Generation ausdruecklich; ENTRY_MODE=app verwendet
+die normale Sprachlaufzeit mit aus dem ganzen Manifest abgeleiteten Startdaten.
+ENTRY_MODE=lowlevel bleibt ein ausdruecklicher technischer Einstieg.
+
+Der waehrend der Migration verbleibende Generation1-Vertrag besitzt:
 
     r4x.start=r4xstart
     r4x.entry=R4XStart
+    r4x.start_abi=1
     r4x.context=R4XStartContext
 
 sowie Export R4XStart:1 und Import R4SYS:Query:1. Weitere Imports stammen
 aus module.R4MF. Nicht passende oder widerspruechliche Startdaten sind
-generisch ungueltig und werden nicht gestartet.
+generisch ungueltig und werden nicht gestartet. Alte128-Byte-Kontexte werden
+nicht aus Generation2-Records erzeugt. GUI-, Service- und Subsystemrollen
+aendern weder den Kontexttyp noch den technischen Generationsexport.
 
 Subsystem-R4X-Metadaten (seit 0.66.0)
 -------------------------------------
@@ -195,3 +240,6 @@ Vertragsquellen und Verbraucher
 
 Loader, SDK-Packager und Gast-Packager sind Verbraucher dieses Vertrags und
 besitzen keine abweichende Formatwahrheit.
+
+Optionale unveraenderliche R4X-Titelfarben des bestehenden META-Kanals:
+ABI/R4M0TitleAppearance.txt. Keine neue Section oder Containerrevision.

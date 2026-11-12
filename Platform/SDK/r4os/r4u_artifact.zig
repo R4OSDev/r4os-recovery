@@ -32,6 +32,43 @@ pub const SliceReader = struct {
 };
 
 pub fn inspect(reader: anytype, size: u64) ?Identity {
+    var buffered = BufferedReader(@TypeOf(reader)){ .source = reader, .size = size };
+    return inspectBuffered(&buffered, size);
+}
+
+// All metadata paths use the same bounded reader. Byte-oriented parsing of
+// string terminators must not become one filesystem transaction per byte.
+fn BufferedReader(comptime Reader: type) type {
+    return struct {
+        source: Reader,
+        size: u64,
+        cache: [512]u8 = undefined,
+        start: u64 = 0,
+        used: usize = 0,
+
+        pub fn readAt(self: *@This(), offset: u64, out: []u8) bool {
+            if (offset > self.size or out.len > self.size - offset) return false;
+            var done: usize = 0;
+            while (done < out.len) {
+                const at = offset + done;
+                if (self.used == 0 or at < self.start or at - self.start >= self.used) {
+                    self.used = 0;
+                    const count: usize = @intCast(@min(self.cache.len, self.size - at));
+                    if (!self.source.readAt(at, self.cache[0..count])) return false;
+                    self.start = at;
+                    self.used = count;
+                }
+                const index: usize = @intCast(at - self.start);
+                const count = @min(out.len - done, self.used - index);
+                @memcpy(out[done..][0..count], self.cache[index..][0..count]);
+                done += count;
+            }
+            return true;
+        }
+    };
+}
+
+fn inspectBuffered(reader: anytype, size: u64) ?Identity {
     var magic: [4]u8 = undefined;
     if (size < magic.len or !reader.readAt(0, magic[0..])) return null;
     if (std.mem.eql(u8, magic[0..], "R4M0")) return inspectR4M0(reader, size);
@@ -221,4 +258,41 @@ test "R4M0 metadata identity is exact" {
     try std.testing.expectEqual(contract.ComponentKind.r4x, identity.kind);
     try std.testing.expectEqualStrings("TERMINAL", identity.nameText());
     try std.testing.expectEqualStrings("1.2.3", identity.versionText());
+}
+
+test "metadata reads are bounded blocks with exact boundaries and failed reads" {
+    const Reader = struct {
+        bytes: []const u8,
+        calls: usize = 0,
+        fail_at: ?u64 = null,
+        pub fn readAt(self: *@This(), offset: u64, out: []u8) bool {
+            self.calls += 1;
+            std.debug.assert(out.len <= 512);
+            if (self.fail_at) |at| if (offset >= at) return false;
+            return (SliceReader{ .bytes = self.bytes }).readAt(offset, out);
+        }
+    };
+    var bytes: [640]u8 = .{0} ** 640;
+    @memcpy(bytes[0..4], "R4M0");
+    std.mem.writeInt(u16, bytes[4..6], 1, .little);
+    std.mem.writeInt(u16, bytes[8..10], 1, .little);
+    std.mem.writeInt(u16, bytes[10..12], 64, .little);
+    const strings = "TERMINAL\x00r4x.name=TERMINAL\x00module.version=1.2.3\x00";
+    std.mem.writeInt(u32, bytes[56..60], 500, .little);
+    std.mem.writeInt(u32, bytes[60..64], strings.len, .little);
+    @memcpy(bytes[500..][0..strings.len], strings);
+    var reader = Reader{ .bytes = bytes[0 .. 500 + strings.len] };
+    const identity = inspect(&reader, reader.bytes.len).?;
+    try std.testing.expectEqualStrings("TERMINAL", identity.nameText());
+    try std.testing.expectEqualStrings("1.2.3", identity.versionText());
+    try std.testing.expectEqual(@as(usize, 2), reader.calls);
+    reader.fail_at = 512;
+    try std.testing.expect(inspect(&reader, reader.bytes.len) == null);
+    reader.fail_at = null;
+    try std.testing.expect(inspect(&reader, reader.bytes.len - 1) == null);
+    bytes[500 + strings.len - 1] = 'x';
+    try std.testing.expect(inspect(&reader, reader.bytes.len) == null);
+    bytes[500 + strings.len - 1] = 0;
+    std.mem.writeInt(u32, bytes[56..60], 0xffffffff, .little);
+    try std.testing.expect(inspect(&reader, reader.bytes.len) == null);
 }

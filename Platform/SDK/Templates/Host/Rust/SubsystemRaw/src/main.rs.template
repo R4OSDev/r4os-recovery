@@ -1,0 +1,35 @@
+#![no_std]
+use core::{mem::MaybeUninit,pin::pin};
+use r4os_sdk::{App2,abi,gui,resources::Timeout};
+
+fn draw(window:&mut gui::Session<'_, '_>)->Result<(),r4os_sdk::storage::Error>{
+ let mut commands=[abi::GuiFrameCommand::default();16];let mut resources=[0u8;256];
+ let mut paint=window.begin(&mut commands,&mut resources)?;
+ paint.clear(0x0024384c)?;
+ paint.text(16,20,c"Hello from Rust",0x00ffffff,0x0024384c)?;
+ paint.text(16,48,c"{ProjectName}",0x008fe0ff,0x0024384c)?;
+ paint.present().map(|_|())
+}
+fn work(app:&mut App2<'_>)->i32{
+ if !app.args().is_empty() && r4os_sdk::subsystems::Launch::parse(app.args()).is_err(){return 8;}
+ let mut storage=pin!(gui::SessionStorage::new());
+ let mut timers=[const{MaybeUninit::uninit()};1];
+ let mut window=match gui::Session::open2(storage.as_mut(),app,gui::Role::Window,&mut timers){Ok(v)=>v,Err(_)=>return 2};
+ if window.set_title(c"{ProjectName} - Rust").is_err() || draw(&mut window).is_err(){return 2;}
+ let _=app.write("[RUST] {ProjectName}: window ready\n");
+ while !app.should_close(){match window.next(Timeout::AfterNanos(20_000_000)){
+  Ok(Some(event))=>match event.kind(){
+   Some(gui::EventKind::Close)=>break,
+   Some(gui::EventKind::Resize|gui::EventKind::FontChanged)=>if draw(&mut window).is_err(){return 3;},
+   _=>{},
+  },Ok(None)=>{},Err(_)=>return 4,
+ }}
+ let _=app.write("[RUST] {ProjectName}: window closed\n");0
+}
+
+fn raw(context:&r4os_sdk::platform2::Context<'_>)->i32{
+ let mut app=match r4os_sdk::lowlevel_context2!(context){Ok(v)=>v,Err(n)=>return n};
+ if let Err(n)=r4os_sdk::lowlevel::initialize_runtime2(&app){return n;}
+ work(&mut app)
+}
+r4os_sdk::lowlevel_entry2!(raw);

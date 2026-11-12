@@ -1,4 +1,5 @@
 const std = @import("std");
+const rust = @import("rust.zig");
 
 const max_file_bytes: usize = 4 * 1024 * 1024;
 const interface_header_size: u32 = 32;
@@ -117,6 +118,7 @@ const Options = struct {
     implementation_zig_path: ?[]const u8 = null,
     binding_zig_path: ?[]const u8 = null,
     binding_c_path: ?[]const u8 = null,
+    binding_rust_path: ?[]const u8 = null,
     fixture_zig_path: ?[]const u8 = null,
     fixture_c_path: ?[]const u8 = null,
     docs_path: ?[]const u8 = null,
@@ -129,9 +131,10 @@ const Paths = struct {
     exports: []const []const u8,
     contract: []const u8,
     baseline: []const u8,
-    implementation_zig: []const u8,
+    implementation_zig: ?[]const u8,
     binding_zig: []const u8,
     binding_c: []const u8,
+    binding_rust: ?[]const u8,
     fixture_zig: []const u8,
     fixture_c: []const u8,
     docs: []const u8,
@@ -162,6 +165,8 @@ pub fn main(init: std.process.Init) !void {
     defer allocator.free(binding_zig);
     const binding_c = try renderBindingC(allocator, &parsed.value);
     defer allocator.free(binding_c);
+    const binding_rust = if (paths.binding_rust != null) try rust.render(allocator, &parsed.value) else null;
+    defer if (binding_rust) |text| allocator.free(text);
     const fixture_zig = try renderFixtureZig(allocator, &parsed.value);
     defer allocator.free(fixture_zig);
     const fixture_c = try renderFixtureC(allocator, &parsed.value);
@@ -184,9 +189,10 @@ pub fn main(init: std.process.Init) !void {
     switch (paths.action) {
         .check => {
             if (!std.mem.eql(u8, contract_bytes, canonical)) return error.ContractNotCanonical;
-            try checkFile(io, cwd, allocator, paths.implementation_zig, implementation_zig, error.ImplementationZigDrift);
+            if (paths.implementation_zig) |path| try checkFile(io, cwd, allocator, path, implementation_zig, error.ImplementationZigDrift);
             try checkFile(io, cwd, allocator, paths.binding_zig, binding_zig, error.BindingZigDrift);
             try checkFile(io, cwd, allocator, paths.binding_c, binding_c, error.BindingCDrift);
+            if (paths.binding_rust) |path| try checkFile(io, cwd, allocator, path, binding_rust.?, error.BindingRustDrift);
             try checkFile(io, cwd, allocator, paths.fixture_zig, fixture_zig, error.FixtureZigDrift);
             try checkFile(io, cwd, allocator, paths.fixture_c, fixture_c, error.FixtureCDrift);
             try checkFile(io, cwd, allocator, paths.docs, docs, error.DocumentationDrift);
@@ -194,9 +200,13 @@ pub fn main(init: std.process.Init) !void {
         .write => {
             try cwd.writeFile(io, .{ .sub_path = paths.contract, .data = canonical });
             if (paths.update_baseline) try cwd.writeFile(io, .{ .sub_path = paths.baseline, .data = canonical });
-            try cwd.writeFile(io, .{ .sub_path = paths.implementation_zig, .data = implementation_zig });
+            if (paths.implementation_zig) |path| try cwd.writeFile(io, .{ .sub_path = path, .data = implementation_zig });
             try cwd.writeFile(io, .{ .sub_path = paths.binding_zig, .data = binding_zig });
             try cwd.writeFile(io, .{ .sub_path = paths.binding_c, .data = binding_c });
+            if (paths.binding_rust) |path| {
+                if (std.fs.path.dirname(path)) |parent| try cwd.createDirPath(io, parent);
+                try cwd.writeFile(io, .{ .sub_path = path, .data = binding_rust.? });
+            }
             try cwd.writeFile(io, .{ .sub_path = paths.fixture_zig, .data = fixture_zig });
             try cwd.writeFile(io, .{ .sub_path = paths.fixture_c, .data = fixture_c });
             try cwd.writeFile(io, .{ .sub_path = paths.docs, .data = docs });
@@ -241,6 +251,8 @@ fn parseOptions(allocator: std.mem.Allocator, args: []const []const u8) !Paths {
             options.binding_zig_path = try nextArg(args, &index);
         } else if (std.mem.eql(u8, arg, "--binding-c")) {
             options.binding_c_path = try nextArg(args, &index);
+        } else if (std.mem.eql(u8, arg, "--binding-rust")) {
+            options.binding_rust_path = try nextArg(args, &index);
         } else if (std.mem.eql(u8, arg, "--fixture-zig")) {
             options.fixture_zig_path = try nextArg(args, &index);
         } else if (std.mem.eql(u8, arg, "--fixture-c")) {
@@ -260,7 +272,7 @@ fn parseOptions(allocator: std.mem.Allocator, args: []const []const u8) !Paths {
     if (options.exports.items.len == 0) return error.MissingManifestExports;
     const contract = options.contract_path orelse return error.MissingContractPath;
     const baseline = options.baseline_path orelse return error.MissingBaselinePath;
-    const implementation_zig = options.implementation_zig_path orelse return error.MissingImplementationZigPath;
+    const implementation_zig = options.implementation_zig_path;
     const binding_zig = options.binding_zig_path orelse return error.MissingBindingZigPath;
     const binding_c = options.binding_c_path orelse return error.MissingBindingCPath;
     const fixture_zig = options.fixture_zig_path orelse return error.MissingFixtureZigPath;
@@ -277,6 +289,7 @@ fn parseOptions(allocator: std.mem.Allocator, args: []const []const u8) !Paths {
         .implementation_zig = implementation_zig,
         .binding_zig = binding_zig,
         .binding_c = binding_c,
+        .binding_rust = options.binding_rust_path,
         .fixture_zig = fixture_zig,
         .fixture_c = fixture_c,
         .docs = docs,
@@ -299,7 +312,8 @@ fn printUsage() void {
         \\Usage: r4l-contract-gen --check|--write|--selftest
         \\       --module-name NAME --export PUBLIC:ELF_SYMBOL:REVISION [--export ...]
         \\       --contract PATH --baseline PATH
-        \\       --implementation-zig PATH --binding-zig PATH --binding-c PATH
+        \\       [--implementation-zig PATH] --binding-zig PATH --binding-c PATH
+        \\       [--binding-rust PATH]  # library-local Rust consumer source
         \\       --fixture-zig PATH --fixture-c PATH --docs PATH
         \\       [--update-baseline]  # only together with --write
         \\
@@ -544,7 +558,9 @@ fn renderBindingZig(allocator: std.mem.Allocator, contract: *const Contract) ![]
     try out.appendSlice(allocator, "// Generated by R4LContractGen. Do not edit.\nconst r4os = @import(\"r4os\");\n\npub const InterfaceHeader = r4os.runtime_r4l.InterfaceHeader;\n");
     try renderZigDefinitions(&out, allocator, contract);
     for (contract.interfaces) |interface| {
-        try emit(&out, allocator, "\npub const {s}Client = struct {{\n    header: *const InterfaceHeader,\n\n    pub fn init(raw: *const r4os.abi.R4XStartContext) !{s}Client {{\n        const item = r4os.r4xstart.Context.init(raw).findImportNamed(module_name, {s}_export_name) orelse return error.MissingImport;\n        const header = try r4os.runtime_r4l.validateImport(item, .{{\n            .interface_id_lo = 0x{x},\n            .interface_id_hi = 0x{x},\n            .abi_major = {d},\n            .min_revision = {d},\n            .required_size = {d},\n            .known_required_flags = {d},\n        }});\n", .{ interface.zig_type, interface.zig_type, interface.zig_name, interface.interface_id_lo, interface.interface_id_hi, interface.abi_major, interface.revision, tableSize(interface), interface.known_required_flags });
+        try emit(&out, allocator, "\npub const {s}Client = struct {{\n    header: *const InterfaceHeader,\n\n    pub fn init(raw: *const r4os.abi.R4XStartContext) !{s}Client {{\n        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, {s}_export_name) orelse return error.MissingImport);\n    }}\n", .{ interface.zig_type, interface.zig_type, interface.zig_name });
+        try emit(&out, allocator, "\n    pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !{s}Client {{\n        const context = try r4os.platform2.Context.init(raw);\n        _ = try r4os.runtime_r4l.query2(&context, module_name);\n        return fromImport(context.findImportNamed(module_name, {s}_export_name) orelse return error.MissingImport);\n    }}\n", .{ interface.zig_type, interface.zig_name });
+        try emit(&out, allocator, "\n    fn fromImport(item: *const r4os.abi.R4XStartImport) !{s}Client {{\n        const header = try r4os.runtime_r4l.validateImport(item, .{{\n            .interface_id_lo = 0x{x},\n            .interface_id_hi = 0x{x},\n            .abi_major = {d},\n            .min_revision = {d},\n            .required_size = {d},\n            .known_required_flags = {d},\n        }});\n", .{ interface.zig_type, interface.interface_id_lo, interface.interface_id_hi, interface.abi_major, interface.revision, tableSize(interface), interface.known_required_flags });
         for (interface.functions) |function| {
             try emit(&out, allocator, "        if (r4os.runtime_r4l.slotAddress(header, {d}) == null) return error.MissingSlot;\n", .{interface_header_size + @as(u32, function.slot) * pointer_size});
         }
@@ -680,7 +696,7 @@ fn renderBindingC(allocator: std.mem.Allocator, contract: *const Contract) ![]u8
         try appendUpperIdentifier(&out, allocator, contract.module_name);
         try out.append(allocator, '_');
         try appendUpperIdentifier(&out, allocator, interface.zig_name);
-        try out.appendSlice(allocator, "_HEADER_INITIALIZER { R4L_INTERFACE_MAGIC, R4L_INTERFACE_HEADER_VERSION, 0u, ");
+        try emit(&out, allocator, "_HEADER_INITIALIZER {{ R4L_INTERFACE_MAGIC, R4L_INTERFACE_HEADER_VERSION, {d}u, ", .{interface.known_required_flags});
         try appendUpperIdentifier(&out, allocator, contract.module_name);
         try out.append(allocator, '_');
         try appendUpperIdentifier(&out, allocator, interface.zig_name);
@@ -724,9 +740,13 @@ fn renderBindingC(allocator: std.mem.Allocator, contract: *const Contract) ![]u8
         }
         try emit(&out, allocator, "}} {s};\n_Static_assert(sizeof({s}) == {d}u, \"{s} size mismatch\");\n", .{ interface.c_type, interface.c_type, tableSize(interface), interface.c_type });
         for (interface.functions) |function| try emit(&out, allocator, "_Static_assert(offsetof({s}, {s}) == {d}u, \"{s}.{s} offset mismatch\");\n", .{ interface.c_type, function.name, interface_header_size + @as(u32, function.slot) * pointer_size, interface.c_type, function.name });
-        try emit(&out, allocator, "typedef struct {s}Client {{ const R4LInterfaceHeader *header; }} {s}Client;\n\nstatic inline int32_t {s}_{s}_init(const R4XStartContext *ctx, {s}Client *out_client) {{\n    if (out_client == 0) return R4L_BINDING_INVALID_EXPECTATION;\n    out_client->header = 0;\n    const R4XStartImport *item = r4xstart_find_import_named(ctx, \"{s}\", \"{s}\");\n    const R4LInterfaceExpectation expected = {{ 0x{x}ull, 0x{x}ull, {d}u, {d}u, {d}u, {d}u, 0u }};\n    const R4LInterfaceHeader *header = 0;\n    int32_t status = r4l_validate_import(item, &expected, &header);\n    if (status != R4L_BINDING_OK) return status;\n", .{ interface.c_type, interface.c_type, contract.c_prefix, interface.zig_name, interface.c_type, contract.module_name, interface.export_name, interface.interface_id_lo, interface.interface_id_hi, interface.abi_major, interface.revision, tableSize(interface), interface.known_required_flags });
+        try emit(&out, allocator, "typedef struct {s}Client {{ const R4LInterfaceHeader *header; }} {s}Client;\n\nstatic inline int32_t {s}_{s}_from_import(const R4XStartImport *item, {s}Client *out_client) {{\n    if (out_client == 0) return R4L_BINDING_INVALID_EXPECTATION;\n    out_client->header = 0;\n    const R4LInterfaceExpectation expected = {{ 0x{x}ull, 0x{x}ull, {d}u, {d}u, {d}u, {d}u, 0u }};\n    const R4LInterfaceHeader *header = 0;\n    int32_t status = r4l_validate_import(item, &expected, &header);\n    if (status != R4L_BINDING_OK) return status;\n", .{ interface.c_type, interface.c_type, contract.c_prefix, interface.zig_name, interface.c_type, interface.interface_id_lo, interface.interface_id_hi, interface.abi_major, interface.revision, tableSize(interface), interface.known_required_flags });
         for (interface.functions) |function| try emit(&out, allocator, "    if (r4l_slot_address(header, {d}u) == 0) return R4L_BINDING_TABLE_TOO_SMALL;\n", .{interface_header_size + @as(u32, function.slot) * pointer_size});
         try out.appendSlice(allocator, "    out_client->header = header;\n    return R4L_BINDING_OK;\n}\n");
+        try emit(&out, allocator, "\nstatic inline int32_t {s}_{s}_init(const R4XStartContext *ctx, {s}Client *out_client) {{\n    return {s}_{s}_from_import(r4xstart_find_import_named(ctx, \"{s}\", \"{s}\"), out_client);\n}}\n", .{ contract.c_prefix, interface.zig_name, interface.c_type, contract.c_prefix, interface.zig_name, contract.module_name, interface.export_name });
+        try emit(&out, allocator, "\nstatic inline int32_t {s}_{s}_init2(const R4XStartContext2 *raw, {s}Client *out_client) {{\n    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;\n    out_client->header = 0;\n    R4OS2Context ctx;\n    if (R4OS2ContextInit(raw, &ctx) != R4OS2_CONTEXT_OK) return R4L_BINDING_INVALID_IMPORT;\n    const R4LQuery2 *query = 0;\n    int32_t status = r4l_query2(&ctx, \"{s}\", &query);\n    if (status != R4L_BINDING_OK) return status;\n    return {s}_{s}_from_import(r4xstart2_find_import_named(&ctx, \"{s}\", \"{s}\"), out_client);\n}}\n", .{ contract.c_prefix, interface.zig_name, interface.c_type, contract.module_name, contract.c_prefix, interface.zig_name, contract.module_name, interface.export_name });
+        try emit(&out, allocator, "\nstatic inline int32_t {s}_{s}_init2_optional(const R4XStartContext2 *raw, {s}Client *out_client) {{\n    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;\n    out_client->header = 0;\n    R4OS2Context ctx;\n    if (R4OS2ContextInit(raw, &ctx) != R4OS2_CONTEXT_OK) return R4L_BINDING_INVALID_IMPORT;\n    const R4XStartImport *item = r4xstart2_find_import_named(&ctx, \"{s}\", \"{s}\");\n    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;\n    return {s}_{s}_init2(raw, out_client);\n}}\n", .{ contract.c_prefix, interface.zig_name, interface.c_type, contract.module_name, interface.export_name, contract.c_prefix, interface.zig_name });
+        try emit(&out, allocator, "\nstatic inline int32_t {s}_{s}_init_optional(const R4XStartContext *ctx, {s}Client *out_client) {{\n    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;\n    out_client->header = 0;\n    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;\n    const R4XStartImport *item = r4xstart_find_import_named(ctx, \"{s}\", \"{s}\");\n    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;\n    return {s}_{s}_init(ctx, out_client);\n}}\n", .{ contract.c_prefix, interface.zig_name, interface.c_type, contract.module_name, interface.export_name, contract.c_prefix, interface.zig_name });
         for (interface.functions) |function| {
             const fn_type = try cFunctionTypeNameAlloc(allocator, interface.c_type, function.name);
             defer allocator.free(fn_type);
@@ -978,6 +998,14 @@ test "contract check rejects slot signature and layout drift" {
     const allocator = std.testing.allocator;
     try validateContract(&contract);
     try validateManifestIdentity(&contract, "ACME", &.{"API_V1:acme_api_v1:1"});
+    interfaces[0].known_required_flags = 1;
+    const c_flags = try renderBindingC(allocator, &contract);
+    defer allocator.free(c_flags);
+    try std.testing.expect(std.mem.indexOf(u8, c_flags, "R4L_INTERFACE_HEADER_VERSION, 1u, ") != null);
+    const rust_flags = try rust.render(allocator, &contract);
+    defer allocator.free(rust_flags);
+    try std.testing.expect(std.mem.indexOf(u8, rust_flags, "known_required_flags: 1") != null);
+    interfaces[0].known_required_flags = 0;
     try std.testing.expectError(error.ManifestModuleNameDrift, validateManifestIdentity(&contract, "OTHER", &.{"API_V1:acme_api_v1:1"}));
     try std.testing.expectError(error.ManifestExportRevisionDrift, validateManifestIdentity(&contract, "ACME", &.{"API_V1:acme_api_v1:2"}));
     try std.testing.expectError(error.ManifestExportSymbolDrift, validateManifestIdentity(&contract, "ACME", &.{"API_V1:other_symbol:1"}));

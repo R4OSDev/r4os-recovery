@@ -1,0 +1,12 @@
+R4OS_MODULE_MANIFEST=2
+KIND=R4D
+NAME={ProjectName}
+VERSION={Version}
+LANGUAGE=Zig
+SDK_PROFILE=r4os-zig-r4d-generation2
+SOURCE=src/main.zig
+TARGET=/R4OS/DRIVERS/{ProjectName}.R4D
+IMAGE_SCOPE=none
+IMPORT=R4DEV:Query2:2
+META=r4d.name={ProjectName}
+META=r4d.type=misc

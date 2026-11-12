@@ -1,0 +1,10 @@
+[package]
+name="l66r-abi"
+version="0.1.0"
+edition="2024"
+[lib]
+path="src/lib.rs"
+[dependencies]
+r4os-sdk={version="=0.1.0"}
+
+[workspace]

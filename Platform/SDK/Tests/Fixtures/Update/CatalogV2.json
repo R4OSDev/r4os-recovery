@@ -1,0 +1,29 @@
+{
+  "schema": 2,
+  "generated_at": "2026-08-10T12:00:00Z",
+  "releases": [
+    {
+      "release": "0.63.17",
+      "manifest": {
+        "schema": 1,
+        "release": "0.63.17",
+        "profiles": {
+          "slim": {"count": 1, "required": [
+            {"kind": "KERNEL", "name": "KERNEL", "target": "/boot/r4os.elf", "version": "1.0.0"}
+          ]},
+          "full": {"count": 2, "required": [
+            {"kind": "KERNEL", "name": "KERNEL", "target": "/boot/r4os.elf", "version": "1.0.0"},
+            {"kind": "R4X", "name": "FULLOPT", "target": "/R4OS/SOFTWARE/FULL/FULLOPT.R4X", "version": "1.0.0"}
+          ]},
+          "test": {"count": 2, "required": [
+            {"kind": "KERNEL", "name": "KERNEL", "target": "/boot/r4os.elf", "version": "1.0.0"},
+            {"kind": "R4X", "name": "TESTONLY", "target": "/R4OS/SOFTWARE/TEST/TESTONLY.R4X", "version": "1.0.0"}
+          ]}
+        },
+        "filename": "R4OS-RELEASE-0.63.17.JSON",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "packages": []
+    }
+  ]
+}

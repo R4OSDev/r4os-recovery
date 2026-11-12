@@ -29,21 +29,24 @@ pub const Table = extern struct {
 
 var current_slot: ?usize = null;
 
-pub var table = Table{
-    .magic = MAGIC,
-    .version = VERSION,
-    .size = @sizeOf(Table),
-    .reserved = 0,
-    .log_info = logInfo,
-    .log_warn = logWarn,
-    .log_error = logError,
-    .register_role = registerRole,
-    .set_status = setStatus,
-    .dependency_status = dependencyStatus,
-    .alloc = alloc,
-    .free = free,
-    .file_read = fileRead,
-};
+pub var table = initialTable();
+fn initialTable() Table {
+    return Table{
+        .magic = MAGIC,
+        .version = VERSION,
+        .size = @sizeOf(Table),
+        .reserved = 0,
+        .log_info = logInfo,
+        .log_warn = logWarn,
+        .log_error = logError,
+        .register_role = registerRole,
+        .set_status = setStatus,
+        .dependency_status = dependencyStatus,
+        .alloc = alloc,
+        .free = free,
+        .file_read = fileRead,
+    };
+}
 
 pub fn enter(slot: usize) void {
     current_slot = slot;
@@ -111,4 +114,25 @@ fn zSlice(text: [*:0]const u8) []const u8 {
 
 fn currentSlotId() u32 {
     return if (current_slot) |slot| @intCast(slot) else 0xFFFF_FFFF;
+}
+
+const api2 = @import("../program/generation2.zig");
+pub const table2: api2.abi.ProtocolApi2 = initTable2();
+fn initTable2() api2.abi.ProtocolApi2 {
+    @setEvalBranchQuota(2_000_000);
+    const source = initialTable();
+    var result: api2.abi.ProtocolApi2 = undefined;
+    inline for (@typeInfo(api2.abi.ProtocolApi2).@"struct".fields) |field| {
+        if (comptime @offsetOf(api2.abi.ProtocolApi2, field.name) < 16) continue;
+        if (comptime @hasField(Table, field.name)) {
+            @field(result, field.name) = api2.callback(field.type, @field(source, field.name));
+        } else if (comptime @typeInfo(field.type) == .optional) {
+            @field(result, field.name) = null;
+        } else @compileError("Missing Recovery ProtocolApi2 owner: " ++ field.name);
+    }
+    result.magic = api2.abi.protocol_magic;
+    result.version = api2.abi.protocol_version;
+    result.size = @sizeOf(api2.abi.ProtocolApi2);
+    result.reserved = 0;
+    return result;
 }

@@ -1,0 +1,1 @@
+.{ .name = .r4os_driver_client_fixture, .version = "0.1.0", .fingerprint = 0x390397eea2c63336, .minimum_zig_version = "0.16.0", .dependencies = .{ .r4os_sdk = .{ .path = "../../.." } }, .paths = .{ "build.zig", "build.zig.zon", "module.R4MF", "src" } }

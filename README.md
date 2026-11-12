@@ -4,6 +4,14 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
+Recovery0.1.69 / its own Zig Kernel0.1.66 adopts the canonical Contract0.64.93
+and SDK0.64.210 as exact, independently pinned source snapshots. Its source
+candidate implements separate Query2/Start2/DriverInit2/ProtocolInit2 bindings;
+original runtime modules keep their old generation during the controlled
+transition. New missing capabilities stay unavailable. Full native acceptance
+and release evidence are recorded separately in Provenance; a source/layout
+or host-test result alone is not a guest qualification.
+
 The current baseline contains pinned kernel, platform contract and SDK sources,
 39 precompiled console, service, driver, protocol and library modules, and
 their original source archives and license notices. Since 0.76.2 the separate

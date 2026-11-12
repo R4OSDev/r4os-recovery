@@ -20,7 +20,7 @@ const R4M_VERSION: u16 = 1;
 const R4D_API_VERSION: u32 = 11;
 const R4P_API_VERSION: u32 = 1;
 const MAX_PROTOCOL_DEPENDENCIES: usize = 16;
-const MAX_MODULE_IMPORTS: usize = 16;
+const MAX_MODULE_IMPORTS: usize = 32;
 const MAX_MODULE_EXPORTS: usize = 16;
 const MAX_MODULE_RELOCATIONS: usize = 4096;
 const R4X_FLAG_APP_CLASS_CONSOLE: u32 = 0x00000001;
@@ -46,12 +46,17 @@ const RSRC_TYPE_HELP: u16 = 2;
 const RSRC_TYPE_FILE: u16 = 3;
 const RSRC_MAX_NAME_LEN: usize = 63;
 const ELF_ET_REL: u16 = 1;
+const ELF_ET_EXEC: u16 = 2;
+const ELF_ET_DYN: u16 = 3;
+const ELF_SHT_PROGBITS: u32 = 1;
+const ELF_STB_WEAK: u8 = 2;
 const ELF_SHT_SYMTAB: u32 = 2;
 const ELF_SHT_RELA: u32 = 4;
 const ELF_SHT_NOBITS: u32 = 8;
 const ELF_R_X86_64_64: u32 = 1;
 const ELF_R_X86_64_PC32: u32 = 2;
 const ELF_R_X86_64_PLT32: u32 = 4;
+const ELF_R_X86_64_GOTPCREL: u32 = 9;
 const ELF_R_X86_64_REX_GOTPCRELX: u32 = 42;
 
 const RelaxedGotPcRelxForm = enum {
@@ -173,6 +178,11 @@ pub fn main(init: std.process.Init) !void {
     const args = try init.minimal.args.toSlice(init.arena.allocator());
     const io = init.io;
     const cwd = std.Io.Dir.cwd();
+
+    if (args.len == 4 and std.mem.eql(u8, args[1], "--stack-probes")) {
+        try @import("stack_probes.zig").run(io, args[2], args[3]);
+        return;
+    }
 
     var output_path: ?[]const u8 = null;
     var code_path: ?[]const u8 = null;
@@ -634,6 +644,8 @@ const R4MOptions = struct {
 };
 
 fn writeR4M(cwd: std.Io.Dir, io: std.Io, a: std.mem.Allocator, opts: R4MOptions) !void {
+    const appearance = try @import("r4os_title_appearance").parse(opts.metadata);
+    if (opts.format != .r4x and appearance.flags != 0) return error.TitleColorRequiresR4X;
     const kind = moduleKindFromFormat(opts.format);
     const name = opts.module_name orelse switch (opts.format) {
         .r4x => "APP",
@@ -1143,7 +1155,10 @@ fn parseElfRelocations(a: std.mem.Allocator, elf: []const u8, sections: []const 
         if (section_count > std.math.maxInt(usize) - relocation_capacity) return error.TooManyRelocations;
         relocation_capacity += @intCast(section_count);
     }
-    const out = try a.alloc(ModuleRelocation, relocation_capacity);
+    // A closed GOT reference needs its relative patch and one full-width
+    // definition for the linker-created GOT slot (deduplicated below).
+    const capacity = std.math.mul(usize, relocation_capacity, 2) catch return error.TooManyRelocations;
+    const out = try a.alloc(ModuleRelocation, capacity);
     errdefer a.free(out);
     var count: usize = 0;
 
@@ -1173,15 +1188,45 @@ fn parseElfRelocations(a: std.mem.Allocator, elf: []const u8, sections: []const 
             const addend64 = rI64(elf, rel_off + 16);
             const symbol_index = info >> 32;
             const elf_reloc_type: u32 = @intCast(info & 0xffff_ffff);
-            const r4m_kind = r4mRelocKindFromElf(elf_reloc_type) orelse {
+            if (elf_reloc_type == ELF_R_X86_64_GOTPCREL) {
+                if (symbol_index >= sym_count) return error.BadElfRelocation;
+                const sym_off: usize = @intCast(symtab.file_off + symbol_index * symtab.entsize);
+                const target_index = rU16(elf, sym_off + 6);
+                const target_value = rU64(elf, sym_off + 8);
+                if (target_index == 0 or target_index >= shnum) return error.UnsupportedElfRelocationTarget;
+                const target = readElfSectionHeader(elf, shoff, shentsize, shstr, target_index) orelse return error.BadElfSectionTable;
+                const target_name = r4mElfSectionName(target.name) orelse return error.UnsupportedElfRelocationTarget;
+                const target_section = resolveSectionIndex(sections, target_name) orelse return error.UnsupportedElfRelocationTarget;
+                const target_offset = try elfSectionOffset(elf_type, target_value, target.addr);
+                if (target_offset >= sections[target_section].mem_size) return error.BadElfRelocationRange;
+                var got: ?ElfSectionHeader = null;
+                for (0..shnum) |header_index| {
+                    const header = readElfSectionHeader(elf, shoff, shentsize, shstr, header_index) orelse return error.BadElfSectionTable;
+                    if (!std.mem.eql(u8, header.name, ".got")) continue;
+                    if (got != null) return error.UnclosedElfGot;
+                    got = header;
+                }
+                const got_header = got orelse return error.UnclosedElfGot;
+                const got_section = resolveSectionIndex(sections, ".got") orelse return error.UnclosedElfGot;
+                const pair = try closedGotReference(elf, elf_type, patch_header, sections[patch_section_index], patch_value, addend64, got_header, sections[got_section], target_value, sections[target_section], target_offset);
+                try appendGotDefinition(out, &count, pair.definition);
+                out[count] = pair.reference;
+                count += 1;
+                continue;
+            }
+            const mapped_kind = if (elf_reloc_type == ELF_R_X86_64_REX_GOTPCRELX) blk: {
+                if (symbol_index >= sym_count) return error.BadElfRelocation;
+                const sym_off: usize = @intCast(symtab.file_off + symbol_index * symtab.entsize);
+                try checkRelaxedRipReference(elf, elf_type, patch_header, patch_value, addend64, rU64(elf, sym_off + 8));
+                break :blk @as(?u32, R4M_RELOC_REL32);
+            } else r4mRelocKindFromElf(elf_reloc_type);
+            const r4m_kind = mapped_kind orelse {
                 if (elf_reloc_type == 0) continue;
                 // R_X86_64_REX_GOTPCRELX is a linker-relaxation hint, not a
                 // portable description of the final patch. LLD can leave the
                 // same relocation type on both RIP-relative LEA displacements
                 // and absolute signed-32 immediates (for example ADD/CMP).
                 // R4M0 intentionally has no load-address-limited ABS32 kind.
-                if (elf_reloc_type == ELF_R_X86_64_REX_GOTPCRELX)
-                    return error.UnsupportedRelaxedGotPcRelx;
                 return error.UnsupportedElfRelocation;
             };
             if (symbol_index >= sym_count) return error.BadElfRelocation;
@@ -1191,17 +1236,38 @@ fn parseElfRelocations(a: std.mem.Allocator, elf: []const u8, sections: []const 
             const sym_off: usize = @intCast(symtab.file_off + symbol_index * symtab.entsize);
             const sym_section_index = rU16(elf, sym_off + 6);
             const sym_value = rU64(elf, sym_off + 8);
-            if (sym_section_index == 0 or sym_section_index >= shnum) return error.UnsupportedElfRelocationTarget;
+            const patch_offset64 = try elfSectionOffset(elf_type, patch_value, patch_header.addr);
+            const patch_size = relocationPatchSize(r4m_kind);
+            const patch_mem_size = sections[@intCast(patch_section_index)].mem_size;
+            if (patch_offset64 > patch_mem_size or patch_size > patch_mem_size - patch_offset64)
+                return error.BadElfRelocationRange;
+            if (sym_section_index == 0) {
+                // A final ELF may retain --emit-relocs records for optional
+                // weak entrypoints already resolved to NULL. Keep that literal
+                // zero; it is neither a load-address fixup nor an R4M import.
+                // Localized or strong undefined symbols are never accepted.
+                if ((elf_type != ELF_ET_EXEC and elf_type != ELF_ET_DYN) or
+                    elf[sym_off + 4] >> 4 != ELF_STB_WEAK or sym_value != 0 or
+                    elf_reloc_type != ELF_R_X86_64_64 or addend64 != 0 or
+                    patch_header.sh_type != ELF_SHT_PROGBITS or
+                    patch_offset64 > patch_header.size or
+                    patch_size > patch_header.size - patch_offset64)
+                    return error.UnsupportedElfRelocationTarget;
+                try checkRangeU64(elf.len, patch_header.file_off, patch_header.size);
+                const patch_file_offset: usize = @intCast(patch_header.file_off + patch_offset64);
+                if (rU64(elf, patch_file_offset) != 0) return error.UnsupportedElfRelocationTarget;
+                continue;
+            }
+            if (sym_section_index >= shnum) return error.UnsupportedElfRelocationTarget;
             const target_header = readElfSectionHeader(elf, shoff, shentsize, shstr, sym_section_index) orelse return error.BadElfSectionTable;
             const target_name = r4mElfSectionName(target_header.name) orelse return error.UnsupportedElfRelocationTarget;
             const target_section_index = resolveSectionIndex(sections, target_name) orelse return error.UnsupportedElfRelocationTarget;
 
-            const patch_offset64 = try elfSectionOffset(elf_type, patch_value, patch_header.addr);
             const target_offset64 = try elfSectionOffset(elf_type, sym_value, target_header.addr);
             if (patch_offset64 > std.math.maxInt(u32) or target_offset64 > std.math.maxInt(u32)) return error.BadElfRelocationRange;
             if (patch_offset64 >= sections[@intCast(patch_section_index)].mem_size) return error.BadElfRelocationRange;
             if (target_offset64 >= sections[@intCast(target_section_index)].mem_size) return error.BadElfRelocationRange;
-            out[count] = .{
+            const relocation: ModuleRelocation = .{
                 .kind = r4m_kind,
                 .patch_section = sections[@intCast(patch_section_index)].name,
                 .patch_offset = @intCast(patch_offset64),
@@ -1209,11 +1275,84 @@ fn parseElfRelocations(a: std.mem.Allocator, elf: []const u8, sections: []const 
                 .target_offset = @intCast(target_offset64),
                 .addend = @intCast(r4m_addend64),
             };
-            count += 1;
+            if (std.mem.eql(u8, patch_name, ".got")) {
+                if (r4m_kind != R4M_RELOC_ABS64 or patch_offset64 % 8 != 0) return error.UnclosedElfGot;
+                try appendGotDefinition(out, &count, relocation);
+            } else {
+                out[count] = relocation;
+                count += 1;
+            }
         }
     }
 
+    for (sections) |section| {
+        if (!std.mem.eql(u8, section.name, ".got")) continue;
+        if (section.data.len % 8 != 0 or section.alignment < 8) return error.UnclosedElfGot;
+        var offset: usize = 0;
+        while (offset < section.data.len) : (offset += 8) {
+            if (rU64(section.data, offset) == 0) continue;
+            var found = false;
+            for (out[0..count]) |relocation| {
+                if (std.mem.eql(u8, relocation.patch_section, ".got") and relocation.patch_offset == offset and relocation.kind == R4M_RELOC_ABS64) found = true;
+            }
+            if (!found) return error.UnclosedElfGot;
+        }
+    }
     return try a.realloc(out, count);
+}
+
+const ClosedGot = struct { reference: ModuleRelocation, definition: ModuleRelocation };
+
+fn closedGotReference(elf: []const u8, elf_type: u16, patch: ElfSectionHeader, patch_section: InputSection, patch_value: u64, addend: i64, got: ElfSectionHeader, got_section: InputSection, symbol_value: u64, target: InputSection, target_offset: u64) !ClosedGot {
+    // Only the unrelaxed, fully linked form is admitted. GOTPCRELX remains
+    // rejected: a relaxation hint can describe an absolute signed-32 patch.
+    if ((elf_type != ELF_ET_EXEC and elf_type != ELF_ET_DYN) or addend != -4 or
+        patch.sh_type != ELF_SHT_PROGBITS or got.sh_type != ELF_SHT_PROGBITS or
+        (got.flags & 7) != 3 or got.alignment < 8 or got.addr % 8 != 0 or got.size % 8 != 0)
+        return error.UnclosedElfGot;
+    const patch_offset = try elfSectionOffset(elf_type, patch_value, patch.addr);
+    if (patch_offset > patch.size or 4 > patch.size - patch_offset or patch_offset > std.math.maxInt(u32) or patch_offset + 4 > patch_section.mem_size) return error.BadElfRelocationRange;
+    try checkRangeU64(elf.len, patch.file_off, patch.size);
+    try checkRangeU64(elf.len, got.file_off, got.size);
+    const displacement: i32 = @bitCast(rU32(elf, @intCast(patch.file_off + patch_offset)));
+    const slot_address = @as(i128, patch_value) + displacement + 4;
+    const slot_offset = slot_address - @as(i128, got.addr);
+    if (slot_offset < 0 or slot_offset > std.math.maxInt(u32) or slot_offset + 8 > got.size or slot_offset + 8 > got_section.mem_size or @mod(slot_offset, 8) != 0 or target_offset > std.math.maxInt(u32)) return error.UnclosedElfGot;
+    if (rU64(elf, @intCast(got.file_off + @as(u64, @intCast(slot_offset)))) != symbol_value) return error.UnclosedElfGot;
+    return .{
+        .reference = .{ .kind = R4M_RELOC_REL32, .patch_section = patch_section.name, .patch_offset = @intCast(patch_offset), .target_section = got_section.name, .target_offset = @intCast(slot_offset), .addend = 0 },
+        .definition = .{ .kind = R4M_RELOC_ABS64, .patch_section = got_section.name, .patch_offset = @intCast(slot_offset), .target_section = target.name, .target_offset = @intCast(target_offset), .addend = 0 },
+    };
+}
+
+fn checkRelaxedRipReference(elf: []const u8, elf_type: u16, patch: ElfSectionHeader, patch_value: u64, addend: i64, symbol_value: u64) !void {
+    // The final instruction, not the relaxation hint, supplies the contract.
+    // Only a linked 64-bit RIP-relative LEA with the exact resolved symbol
+    // displacement can become REL32. ADD/CMP immediates remain forbidden.
+    if ((elf_type != ELF_ET_EXEC and elf_type != ELF_ET_DYN) or addend != -4 or
+        patch.sh_type != ELF_SHT_PROGBITS or patch.flags & 6 != 6)
+        return error.UnsupportedRelaxedGotPcRelx;
+    const offset = try elfSectionOffset(elf_type, patch_value, patch.addr);
+    if (offset < 3 or offset > patch.size or 4 > patch.size - offset) return error.BadElfRelocationRange;
+    try checkRangeU64(elf.len, patch.file_off, patch.size);
+    const start: usize = @intCast(patch.file_off + offset - 3);
+    const prefix = elf[start..][0..3].*;
+    if (prefix[0] & 8 == 0 or classifyRelaxedGotPcRelx(prefix) != .rip_relative)
+        return error.UnsupportedRelaxedGotPcRelx;
+    const displacement: i32 = @bitCast(rU32(elf, start + 3));
+    if (@as(i128, patch_value) + 4 + displacement != symbol_value)
+        return error.UnsupportedRelaxedGotPcRelx;
+}
+
+fn appendGotDefinition(out: []ModuleRelocation, count: *usize, candidate: ModuleRelocation) !void {
+    for (out[0..count.*]) |existing| {
+        if (!std.mem.eql(u8, existing.patch_section, candidate.patch_section) or existing.patch_offset != candidate.patch_offset) continue;
+        if (existing.kind != candidate.kind or existing.target_offset != candidate.target_offset or existing.addend != candidate.addend or !std.mem.eql(u8, existing.target_section, candidate.target_section)) return error.UnclosedElfGot;
+        return;
+    }
+    if (count.* == out.len) return error.TooManyRelocations;
+    out[count.*] = candidate;
+    count.* += 1;
 }
 
 fn readElfSectionHeader(elf: []const u8, shoff: usize, shentsize: u16, shstr: []const u8, index: usize) ?ElfSectionHeader {
@@ -1244,9 +1383,8 @@ fn r4mRelocKindFromElf(elf_reloc_type: u32) ?u32 {
 }
 
 // The four-byte relocation field follows these three instruction bytes.
-// This classifier is diagnostic/test evidence only: neither form is
-// accepted as an R4M relocation because one ELF relocation type can denote
-// both forms in the same linked image.
+// Admission additionally requires a full-width destination and the exact
+// linked symbol displacement. The hint alone is never a relocation mapping.
 fn classifyRelaxedGotPcRelx(prefix: [3]u8) RelaxedGotPcRelxForm {
     const rex = prefix[0];
     const opcode = prefix[1];
@@ -1270,6 +1408,66 @@ test "REX GOTPCRELX is not blindly mapped to an R4M relocation" {
     try std.testing.expectEqual(RelaxedGotPcRelxForm.rip_relative, classifyRelaxedGotPcRelx(.{ 0x48, 0x8d, 0x05 }));
     try std.testing.expectEqual(RelaxedGotPcRelxForm.absolute_imm32, classifyRelaxedGotPcRelx(.{ 0x48, 0x81, 0xc0 }));
     try std.testing.expectEqual(RelaxedGotPcRelxForm.absolute_imm32, classifyRelaxedGotPcRelx(.{ 0x48, 0x81, 0xff }));
+}
+
+test "only a resolved full-width RIP LEA can close a relaxation hint" {
+    var elf = [_]u8{ 0x48, 0x8d, 0x0d, 0, 0, 0, 0, 0 };
+    wU32(&elf, 3, 0x1000 - 7);
+    const patch: ElfSectionHeader = .{ .name = ".text", .sh_type = ELF_SHT_PROGBITS, .flags = 6, .addr = 0x1000, .file_off = 0, .size = elf.len, .link = 0, .info = 0, .alignment = 16, .entsize = 0 };
+    try checkRelaxedRipReference(&elf, ELF_ET_EXEC, patch, 0x1003, -4, 0x2000);
+    try checkRelaxedRipReference(&elf, ELF_ET_DYN, patch, 0x1003, -4, 0x2000);
+    try std.testing.expectError(error.UnsupportedRelaxedGotPcRelx, checkRelaxedRipReference(&elf, ELF_ET_REL, patch, 0x1003, -4, 0x2000));
+    try std.testing.expectError(error.UnsupportedRelaxedGotPcRelx, checkRelaxedRipReference(&elf, ELF_ET_EXEC, patch, 0x1003, 0, 0x2000));
+    try std.testing.expectError(error.UnsupportedRelaxedGotPcRelx, checkRelaxedRipReference(&elf, ELF_ET_EXEC, patch, 0x1003, -4, 0x2001));
+    elf[0] = 0x40; // A 32-bit destination would truncate a high load address.
+    try std.testing.expectError(error.UnsupportedRelaxedGotPcRelx, checkRelaxedRipReference(&elf, ELF_ET_EXEC, patch, 0x1003, -4, 0x2000));
+    elf[0] = 0x48;
+    for ([_][2]u8{ .{ 0x81, 0xc0 }, .{ 0x81, 0xff }, .{ 0x8b, 0x05 } }) |suffix| {
+        @memcpy(elf[1..3], &suffix);
+        try std.testing.expectError(error.UnsupportedRelaxedGotPcRelx, checkRelaxedRipReference(&elf, ELF_ET_EXEC, patch, 0x1003, -4, 0x2000));
+    }
+    try std.testing.expectError(error.BadElfRelocationRange, checkRelaxedRipReference(&elf, ELF_ET_EXEC, patch, 0x1002, -4, 0x2000));
+    // Moving source and target together preserves the admitted displacement.
+    const high_base: u64 = 0xffff_8000_1000_0000;
+    try std.testing.expectEqual(@as(u64, high_base + 0x2000), @as(u64, @intCast(@as(i128, high_base + 0x1003) + 4 + @as(i32, @bitCast(rU32(&elf, 3))))));
+}
+
+test "closed unrelaxed GOT uses relative slot and full-width owned definition" {
+    var elf = [_]u8{0} ** 32;
+    wU32(&elf, 0, 0xffc);
+    wU32(&elf, 16, 0x1020);
+    const patch: ElfSectionHeader = .{ .name = ".text", .sh_type = ELF_SHT_PROGBITS, .flags = 6, .addr = 0x1000, .file_off = 0, .size = 16, .link = 0, .info = 0, .alignment = 16, .entsize = 0 };
+    var got: ElfSectionHeader = .{ .name = ".got", .sh_type = ELF_SHT_PROGBITS, .flags = 3, .addr = 0x2000, .file_off = 16, .size = 8, .link = 0, .info = 0, .alignment = 8, .entsize = 0 };
+    const text: InputSection = .{ .name = ".text", .data = elf[0..16], .mem_size = 64, .alignment = 16, .flags = R4M_SECTION_FLAG_ALLOC | R4M_SECTION_FLAG_EXEC };
+    const slots: InputSection = .{ .name = ".got", .data = elf[16..24], .mem_size = 8, .alignment = 8, .flags = R4M_SECTION_FLAG_ALLOC | R4M_SECTION_FLAG_WRITE };
+    const pair = try closedGotReference(&elf, ELF_ET_EXEC, patch, text, 0x1000, -4, got, slots, 0x1020, text, 32);
+    try std.testing.expectEqual(R4M_RELOC_REL32, pair.reference.kind);
+    try std.testing.expectEqualStrings(".got", pair.reference.target_section);
+    try std.testing.expectEqual(@as(u32, 0), pair.reference.target_offset);
+    try std.testing.expectEqual(R4M_RELOC_ABS64, pair.definition.kind);
+    try std.testing.expectEqual(@as(u32, 32), pair.definition.target_offset);
+    // A different, high-half module layout keeps only an internal relative
+    // displacement; the function address retains its full 64 bits.
+    const image_base: u64 = 0xFFFFFF1000010000;
+    const got_placement: u64 = 0x5000;
+    const displacement = got_placement - 4;
+    try std.testing.expectEqual(image_base + got_placement, image_base + 4 + displacement);
+    try std.testing.expect(image_base + pair.definition.target_offset > std.math.maxInt(u32));
+    var output: [4]ModuleRelocation = undefined;
+    var count: usize = 0;
+    try appendGotDefinition(&output, &count, pair.definition);
+    try appendGotDefinition(&output, &count, pair.definition);
+    try std.testing.expectEqual(@as(usize, 1), count);
+    var conflicting = pair.definition;
+    conflicting.target_offset += 1;
+    try std.testing.expectError(error.UnclosedElfGot, appendGotDefinition(&output, &count, conflicting));
+    try std.testing.expectError(error.UnclosedElfGot, closedGotReference(&elf, ELF_ET_REL, patch, text, 0x1000, -4, got, slots, 0x1020, text, 32));
+    try std.testing.expectError(error.UnclosedElfGot, closedGotReference(&elf, ELF_ET_EXEC, patch, text, 0x1000, 0, got, slots, 0x1020, text, 32));
+    wU32(&elf, 16, 0x1021);
+    try std.testing.expectError(error.UnclosedElfGot, closedGotReference(&elf, ELF_ET_EXEC, patch, text, 0x1000, -4, got, slots, 0x1020, text, 32));
+    wU32(&elf, 16, 0x1020);
+    got.flags = 7;
+    try std.testing.expectError(error.UnclosedElfGot, closedGotReference(&elf, ELF_ET_EXEC, patch, text, 0x1000, -4, got, slots, 0x1020, text, 32));
 }
 
 test "portable ELF relocation mapping remains full-width or relative" {
@@ -1303,6 +1501,7 @@ fn elfSectionName(strings: []const u8, off_u32: u32) ?[]const u8 {
 }
 
 fn r4mElfSectionName(name: []const u8) ?[]const u8 {
+    if (std.mem.eql(u8, name, ".got")) return ".got";
     if (std.mem.eql(u8, name, ".text") or std.mem.startsWith(u8, name, ".text.")) return ".text";
     if (std.mem.eql(u8, name, ".rodata") or std.mem.startsWith(u8, name, ".rodata.")) return ".rodata";
     if (std.mem.eql(u8, name, ".data") or std.mem.startsWith(u8, name, ".data.")) return ".data";
@@ -1827,6 +2026,60 @@ fn moduleKindName(kind: u16) ?[]const u8 {
     };
 }
 
+test "R4M0 writes every admitted import and rejects the next count before publication" {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var names: [33][16]u8 = undefined;
+    var imports: [33]ModuleImport = undefined;
+    for (&imports, &names, 0..) |*import, *name, index| {
+        import.* = .{
+            .module = try std.fmt.bufPrint(name, "LIB{d}", .{index}),
+            .symbol = "Query2",
+            .min_version = 2,
+            .flags = 1,
+        };
+    }
+    const sections = [_]InputSection{.{
+        .name = ".text",
+        .data = "\xc3",
+        .mem_size = 1,
+        .alignment = 16,
+        .flags = R4M_SECTION_FLAG_ALLOC | R4M_SECTION_FLAG_EXEC,
+    }};
+    var options: R4MOptions = .{
+        .out = "imports.r4x",
+        .format = .r4x,
+        .sections = &sections,
+        .module_name = "IMPORTS",
+        .driver_name = "",
+        .protocol_name = "",
+        .app_class = .console,
+        .imports = &.{},
+        .exports = &.{},
+        .relocations = &.{},
+        .metadata = &.{},
+    };
+    for ([_]usize{ 0, 16, 17, 22, 32 }) |count| {
+        options.imports = imports[0..count];
+        try writeR4M(directory.dir, std.testing.io, std.testing.allocator, options);
+        const image = try directory.dir.readFileAlloc(std.testing.io, options.out, std.testing.allocator, .limited(8192));
+        defer std.testing.allocator.free(image);
+        try std.testing.expectEqual(count, rU32(image, 28));
+        for (options.imports, 0..) |import, index| {
+            const offset = rU32(image, 24) + index * R4M_IMPORT_SIZE;
+            const name_offset = rU32(image, offset);
+            try std.testing.expectEqualStrings(import.module, std.mem.sliceTo(image[name_offset..], 0));
+            try std.testing.expectEqual(@as(u32, 2), rU32(image, offset + 8));
+            try std.testing.expectEqual(@as(u32, 1), rU32(image, offset + 12));
+        }
+    }
+    options.imports = &imports;
+    try std.testing.expectError(error.BadArgs, writeR4M(directory.dir, std.testing.io, std.testing.allocator, options));
+    const previous = try directory.dir.readFileAlloc(std.testing.io, options.out, std.testing.allocator, .limited(8192));
+    defer std.testing.allocator.free(previous);
+    try std.testing.expectEqual(@as(u32, 32), rU32(previous, 28));
+}
+
 test "ELF exports retain a symbolic source until section resolution" {
     const symbolic = try parseModuleExport("API_V1:@acme_api_v1:3");
     try std.testing.expectEqualStrings("API_V1", symbolic.name);
@@ -1838,4 +2091,78 @@ test "ELF exports retain a symbolic source until section resolution" {
     try std.testing.expectEqualStrings(".data", fixed.section.?);
     try std.testing.expectEqual(@as(u32, 40), fixed.offset);
     try std.testing.expect(fixed.elf_symbol == null);
+}
+
+test "linked weak NULL entrypoints remain NULL without a module relocation" {
+    // A complete small ELF exercises the real parser, including section/file
+    // bounds. A defined pointer in the same format must still be relocated.
+    var elf = [_]u8{0} ** 640;
+    @memcpy(elf[0..6], "\x7fELF\x02\x01");
+    wU16(&elf, 16, ELF_ET_EXEC);
+    wU16(&elf, 18, 0x3e);
+    wU32(&elf, 40, 64); // section table
+    wU16(&elf, 58, 64);
+    wU16(&elf, 60, 5);
+    wU16(&elf, 62, 1);
+    const names = "\x00.shstrtab\x00.rodata\x00.symtab\x00.rela.rodata\x00";
+    @memcpy(elf[384..][0..names.len], names);
+    for ([_]u32{ 1, 11, 19, 27 }, [_]u32{ 3, 1, 2, 4 }, [_]u32{ 384, 448, 480, 544 }, [_]u32{ names.len, 16, 48, 24 }, 1..) |name, kind, offset, size, i| {
+        const sh = 64 + i * 64;
+        wU32(&elf, sh, name);
+        wU32(&elf, sh + 4, kind);
+        wU32(&elf, sh + 24, offset);
+        wU32(&elf, sh + 32, size);
+    }
+    wU32(&elf, 192 + 16, 0x1000); // .rodata address
+    wU32(&elf, 256 + 56, 24); // symbol entry size
+    wU32(&elf, 320 + 40, 3); // relocation symbol table
+    wU32(&elf, 320 + 44, 2); // relocation patch section
+    wU32(&elf, 320 + 56, 24);
+    elf[504 + 4] = ELF_STB_WEAK << 4;
+    wU32(&elf, 544, 0x1000); // patch address
+    wU32(&elf, 544 + 8, ELF_R_X86_64_64);
+    wU32(&elf, 544 + 12, 1); // symbol index
+    const valid = elf;
+    const sections = [_]InputSection{.{ .name = ".rodata", .data = elf[448..464], .mem_size = 16, .alignment = 8, .flags = R4M_SECTION_FLAG_ALLOC }};
+    for ([_]u16{ ELF_ET_EXEC, ELF_ET_DYN }) |kind| {
+        wU16(&elf, 16, kind);
+        const relocs = try parseElfRelocations(std.testing.allocator, &elf, &sections);
+        defer std.testing.allocator.free(relocs);
+        try std.testing.expectEqual(@as(usize, 0), relocs.len);
+        try std.testing.expectEqual(@as(u64, 0), rU64(&elf, 448));
+    }
+    // None of these unresolved or inconsistent inputs may silently disappear.
+    const invalid = [_]struct { offset: usize, byte: u8 }{
+        .{ .offset = 16, .byte = ELF_ET_REL },
+        .{ .offset = 16, .byte = 4 },
+        .{ .offset = 508, .byte = 0 }, // local undefined
+        .{ .offset = 508, .byte = 1 << 4 }, // strong undefined
+        .{ .offset = 512, .byte = 1 }, // nonzero undefined symbol value
+        .{ .offset = 560, .byte = 1 }, // nonzero addend
+        .{ .offset = 448, .byte = 1 }, // unresolved/nonzero final pointer
+        .{ .offset = 552, .byte = ELF_R_X86_64_PC32 },
+        .{ .offset = 196, .byte = ELF_SHT_NOBITS },
+        .{ .offset = 224, .byte = 7 }, // fewer than eight file-backed bytes
+    };
+    for (invalid) |change| {
+        elf = valid;
+        elf[change.offset] = change.byte;
+        if (rU16(&elf, 16) == ELF_ET_REL) wU32(&elf, 544, 0);
+        try std.testing.expectError(error.UnsupportedElfRelocationTarget, parseElfRelocations(std.testing.allocator, &elf, &sections));
+    }
+    elf = valid;
+    wU32(&elf, 544, 0x1009); // pointer crosses patch section end
+    try std.testing.expectError(error.BadElfRelocationRange, parseElfRelocations(std.testing.allocator, &elf, &sections));
+    elf = valid;
+    wU32(&elf, 192 + 24, 636); // truncated file data
+    try std.testing.expectError(error.BadR4MRange, parseElfRelocations(std.testing.allocator, &elf, &sections));
+    elf = valid;
+    wU16(&elf, 504 + 6, 2);
+    wU32(&elf, 504 + 8, 0x1000);
+    wU32(&elf, 448, 0x1000);
+    const relocs = try parseElfRelocations(std.testing.allocator, &elf, &sections);
+    defer std.testing.allocator.free(relocs);
+    try std.testing.expectEqual(@as(usize, 1), relocs.len);
+    try std.testing.expectEqual(R4M_RELOC_ABS64, relocs[0].kind);
+    try std.testing.expectEqualStrings(".rodata", relocs[0].target_section);
 }

@@ -16,7 +16,6 @@ const packed_header_size: usize = 8;
 const packed_record_size: usize = (path_max + 1) + (app_max + 1) + (title_max + 1);
 const packed_max_bytes: usize = packed_header_size + packed_record_size * max_items;
 const legacy_record_size: usize = (legacy_path_max + 1) + (app_max + 1) + (title_max + 1);
-const packed_read_max_bytes: usize = packed_header_size + legacy_record_size * max_items;
 
 pub const Entry = struct {
     path: [path_max + 1]u8 = .{0} ** (path_max + 1),
@@ -62,7 +61,7 @@ pub fn readEntries(sys: anytype, out: []Entry) usize {
 }
 
 fn writePackedEntries(sys: anytype, entries: []const Entry) bool {
-    var data: [packed_read_max_bytes]u8 = .{0} ** packed_read_max_bytes;
+    var data: [packed_max_bytes]u8 = .{0} ** packed_max_bytes;
     const packed_bytes = packEntries(entries, data[0..]) orelse return false;
     return apiOk(sys.registrySetBinary(root_key, items_value, packed_bytes));
 }
@@ -236,6 +235,34 @@ fn writeU16(out: []u8, value: u16) void {
 
 fn readU16(data: []const u8) u16 {
     return @as(u16, data[0]) | (@as(u16, data[1]) << 8);
+}
+
+test "recent documents write all eight current records through the registry owner" {
+    const Mock = struct {
+        bytes: [packed_max_bytes]u8 = undefined,
+        len: usize = 0,
+        pub fn registrySetBinary(self: *@This(), key: [*:0]const u8, name: [*:0]const u8, value: []const u8) i32 {
+            if (!std.mem.eql(u8, std.mem.span(key), root_key) or !std.mem.eql(u8, std.mem.span(name), items_value) or value.len > self.bytes.len) return -1;
+            @memcpy(self.bytes[0..value.len], value);
+            self.len = value.len;
+            return abi.registry_api_result_ok;
+        }
+    };
+    var entries: [max_items]Entry = .{Entry{}} ** max_items;
+    var path: [213]u8 = undefined;
+    @memcpy(path[0..3], "C:\\");
+    @memset(path[3..203], 'a');
+    @memcpy(path[203..], "\\FILE0.TXT");
+    for (&entries, 0..) |*entry, i| {
+        path[208] = '0' + @as(u8, @intCast(i));
+        try std.testing.expect(setEntry(entry, &path, "EDITOR"));
+    }
+    var mock = Mock{};
+    try std.testing.expect(writePackedEntries(&mock, &entries));
+    try std.testing.expectEqual(packed_max_bytes, mock.len);
+    var decoded: [max_items]Entry = undefined;
+    try std.testing.expectEqual(max_items, unpackEntries(mock.bytes[0..mock.len], &decoded));
+    for (entries, decoded) |expected, actual| try std.testing.expectEqualStrings(expected.pathText(), actual.pathText());
 }
 
 test "recent document list keeps newest first and deduplicates" {

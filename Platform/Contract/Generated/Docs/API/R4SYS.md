@@ -3,7 +3,7 @@
 <!-- R4OS-APIREF:BEGIN R4SYS (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4SYS (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Sys` v25, 1264 Bytes, 153 Funktionsfelder und 156 Slots insgesamt.
+Kernel-Gruppentabelle `R4XStartR4Sys` v41, 1560 Bytes, 190 Funktionsfelder und 193 Slots insgesamt.
 Signatur-Wahrheit: `abi.R4SysFns` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
@@ -165,4 +165,41 @@ Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 | 153 | 1240 | function | `program_exit` | `*const fn (i32, u32) callconv(.c) i32` |
 | 154 | 1248 | function | `platform_input_snapshot` | `*const fn (*PlatformInputSnapshot) callconv(.c) i32` |
 | 155 | 1256 | function | `directory_next` | `*const fn ([*:0]const u8, *DirectoryScanCursor, [*]u8, u32, *FileInfo) callconv(.c) i32` |
+| 156 | 1264 | function | `thread_placement_get` | `*const fn (*const ProgramJoinHandle, *ThreadPlacementInfo, ?[*]u64, u32) callconv(.c) i32` |
+| 157 | 1272 | function | `thread_placement_set` | `*const fn (*const ProgramJoinHandle, *const ThreadPlacementRequest, ?[*]const u64, u32) callconv(.c) i32` |
+| 158 | 1280 | function | `system_power_transition` | `*const fn (u32, u64) callconv(.c) i32` |
+| 159 | 1288 | function | `entropy_source_info` | `*const fn (*EntropySourceInfo) callconv(.c) i32` |
+| 160 | 1296 | function | `entropy_fill` | `*const fn ([*]u8, u32) callconv(.c) i32` |
+| 161 | 1304 | function | `program_lifecycle_begin` | `*const fn (*ProgramInventoryCursor) callconv(.c) i32` |
+| 162 | 1312 | function | `program_lifecycle_programs` | `*const fn (*ProgramInventoryCursor, [*]ProgramLifecycleSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
+| 163 | 1320 | function | `drive_info_geometry` | `*const fn (u32, *DriveInfo) callconv(.c) i32` |
+| 164 | 1328 | function | `directory_batch` | `*const fn (?[*:0]const u8, *DirectoryBatchCursor, ?[*]DirectoryBatchEntry, u32) callconv(.c) i32` |
+| 165 | 1336 | function | `program_observation_retain` | `*const fn (*const ProgramProcessHandle, u32, *ProgramObservationHandle) callconv(.c) i32` |
+| 166 | 1344 | function | `program_observation_wait` | `*const fn (*const ProgramObservationHandle, u64, *ProgramProcessCompletion) callconv(.c) i32` |
+| 167 | 1352 | function | `program_observation_read` | `*const fn (*const ProgramObservationHandle, u32, [*]u8, u32, *u32) callconv(.c) i32` |
+| 168 | 1360 | function | `program_observation_release` | `*const fn (*const ProgramObservationHandle) callconv(.c) i32` |
+| 169 | 1368 | function | `file_name_limits` | `*const fn ([*:0]const u8, *FileNameLimits) callconv(.c) i32` |
+| 170 | 1376 | function | `service_bound_detail` | `*const fn ([*:0]const u8, *ServiceDetail, *ProgramProcessHandle) callconv(.c) i32` |
+| 171 | 1384 | function | `service_stop_bound` | `*const fn ([*:0]const u8, *const ProgramProcessHandle, *ServiceInfo, u64) callconv(.c) i32` |
+| 172 | 1392 | function | `service_inventory_page` | `*const fn (*ServiceInventoryCursor, [*]ServiceInventoryRow, u32) callconv(.c) i32` |
+| 173 | 1400 | function | `service_control_bound` | `*const fn (*const ServiceControlRequest) callconv(.c) i32` |
+| 174 | 1408 | function | `system_update_target_supported` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 175 | 1416 | function | `file_metadata2` | `*const fn ([*:0]const u8, *FileMetadata2) callconv(.c) i32` |
+| 176 | 1424 | function | `directory_metadata_batch2` | `*const fn (?[*:0]const u8, *DirectoryMetadataCursor2, ?[*]DirectoryMetadataEntry2, u32) callconv(.c) i32` |
+| 177 | 1432 | function | `waitset_create` | `*const fn (u32, *u64) callconv(.c) i32` |
+| 178 | 1440 | function | `waitset_enroll` | `*const fn (u64, *const WaitSource, *u64) callconv(.c) i32` |
+| 179 | 1448 | function | `waitset_rearm` | `*const fn (u64, u64, *const WaitSource) callconv(.c) i32` |
+| 180 | 1456 | function | `waitset_remove` | `*const fn (u64, u64) callconv(.c) i32` |
+| 181 | 1464 | function | `waitset_wait` | `*const fn (u64, *const WaitSetDeadline, [*]WaitSetEvent, u32, *WaitSetBatch) callconv(.c) i32` |
+| 182 | 1472 | function | `waitset_close` | `*const fn (u64) callconv(.c) i32` |
+| 183 | 1480 | function | `waitset_source_prepare` | `*const fn (*const WaitSourceRequest, *WaitSource) callconv(.c) i32` |
+| 184 | 1488 | function | `byte_pipe_create` | `*const fn (u64, *BytePipePair) callconv(.c) i32` |
+| 185 | 1496 | function | `byte_pipe_dup` | `*const fn (BytePipeEnd, *BytePipeEnd) callconv(.c) i32` |
+| 186 | 1504 | function | `byte_pipe_read` | `*const fn (BytePipeEnd, [*]u8, u64, *const WaitSetDeadline, *BytePipeProgress) callconv(.c) i32` |
+| 187 | 1512 | function | `byte_pipe_write` | `*const fn (BytePipeEnd, [*]const u8, u64, *const WaitSetDeadline, *BytePipeProgress) callconv(.c) i32` |
+| 188 | 1520 | function | `byte_pipe_cancel` | `*const fn (BytePipeEnd) callconv(.c) i32` |
+| 189 | 1528 | function | `byte_pipe_close` | `*const fn (BytePipeEnd) callconv(.c) i32` |
+| 190 | 1536 | function | `byte_pipe_info` | `*const fn (BytePipeEnd, *BytePipeInfo) callconv(.c) i32` |
+| 191 | 1544 | function | `program_launch_io` | `*const fn ([*:0]const u8, [*:0]const u8, *const LaunchIo, *ProgramProcessHandle) callconv(.c) i32` |
+| 192 | 1552 | function | `program_stdio` | `*const fn (*LaunchIo) callconv(.c) i32` |
 <!-- R4OS-APIREF:END R4SYS -->

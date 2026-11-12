@@ -1,0 +1,9 @@
+#include <r4os/technical2.h>
+/* Real R4D roots. Add exact device matching and explicit resource retirement
+ * here; the default misc shell owns no device, DMA, IRQ or callback backing. */
+int32_t driver_init(const R4DriverApi2 *api){
+ R4OS2Driver view;if(R4OS2DriverInit(api,&view))return -1;
+ api->log_info((const uint8_t *)"{ProjectName}: initialized");return 0;
+}
+int32_t driver_shutdown(void){return 0;}
+R4OS_DRIVER_ENTRY2(driver_init,driver_shutdown);

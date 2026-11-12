@@ -4,9 +4,14 @@
 Rolle
 -----
 
-R4XStart ist der aktuelle Einstieg fuer R4X-Programme. Der Loader uebergibt
-einen R4XStartContext. Das SDK validiert ihn und erzeugt daraus einen
-r4os.r4x.Context mit den importierten Gruppen-Contexts.
+Diese Datei beschreibt den waehrend der Migration erhaltenen
+Generation1-Einstieg R4XStart mit R4XStartContext. Generation2 verwendet
+R4XStart2:2, den wirklichen120-Byte-R4XStartContext2 und Query2:2 fuer
+eingebaute Plattformgruppen. Normativ sind ABI/R4M0.txt, API/Generation2.json
+und die daraus erzeugten Bindings unter Generated/Generation2/. Fachliche
+Runtime-R4L-Revisionen sind davon unabhaengig. Das normale SDK-App2-Startup
+validiert alle geordneten Manifestimports einschliesslich optionaler Libraries;
+es formt keinen alten Kontext oder eine alte Gruppentabelle.
 
 R4OS-CONTRACT-GENERATED:BEGIN R4XSTART
 Dieser Block wird aus ApiContract.json erzeugt und darf nicht von Hand geaendert werden.
@@ -82,18 +87,23 @@ App-Profile
 Gruppentabellen
 ---------------
 
-    R4XSTART_R4SYS_VERSION = 25
-    R4XSTART_R4SYS_SIZE    = 1264
-    R4XSTART_R4DESK_VERSION = 12
-    R4XSTART_R4DESK_SIZE    = 488
-    R4XSTART_R4DRAW_VERSION = 9
-    R4XSTART_R4DRAW_SIZE    = 408
+    R4XSTART_R4SYS_VERSION = 41
+    R4XSTART_R4SYS_SIZE    = 1560
+    R4XSTART_R4DESK_VERSION = 21
+    R4XSTART_R4DESK_SIZE    = 632
+    R4XSTART_R4DRAW_VERSION = 40
+    R4XSTART_R4DRAW_SIZE    = 920
     R4XSTART_R4NET_VERSION = 2
     R4XSTART_R4NET_SIZE    = 296
-    R4XSTART_R4AUDIO_VERSION = 2
-    R4XSTART_R4AUDIO_SIZE    = 200
-    R4XSTART_R4DEV_VERSION = 10
-    R4XSTART_R4DEV_SIZE    = 352
+    R4XSTART_R4AUDIO_VERSION = 5
+    R4XSTART_R4AUDIO_SIZE    = 240
+    R4XSTART_R4DEV_VERSION = 37
+    R4XSTART_R4DEV_SIZE    = 744
+
+Diese Zahlen beschreiben die aktuellen Provider-Tabellen. Die gleichnamigen
+generierten SDK-Importkonstanten bezeichnen den unterstuetzten Mindestprefix
+und koennen kleiner/aelter bleiben. Optionale angehaengte Felder werden nach
+der tatsaechlich gelieferten Tabellengroesse mit hasFn geprueft.
 
 Die sechs eingebauten Platform APIs beginnen jeweils mit magic, abi_version, size und flags;
 danach folgen die im Schema definierten 8-Byte-Slots. Externe Runtime-R4Ls

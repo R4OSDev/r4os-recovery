@@ -12,6 +12,7 @@
 // intact.
 
 const std = @import("std");
+pub const ntfs_work_counters = true;
 const ntfs = @import("ntfs_format");
 const vol = @import("ntfs_volume");
 const mkfs = @import("ntfs_mkfs");
@@ -138,7 +139,32 @@ fn readAndCheck(v: *vol.Volume, dir: u64, name: []const u8, expected: []const u8
 fn countEntries(v: *vol.Volume, dir: u64) ?usize {
     var sink = vol.EnumSink{ .wanted = 10_000_000 };
     if (!vol.enumerateDirectory(v, dir, &sink)) return null;
-    return sink.seen;
+    const before = v.scratch.work.directory_entries;
+    var cursor: vol.DirectoryCursor = .{};
+    var count: usize = 0;
+    while (true) {
+        var entry: vol.Entry = undefined;
+        switch (vol.nextDirectoryEntry(v, dir, &cursor, &entry)) {
+            .again => continue,
+            .not_found => break,
+            .io => return null,
+            .found => {},
+        }
+        if (count % 197 == 0) {
+            var reference = vol.EnumSink{ .wanted = count };
+            if (!vol.enumerateDirectory(v, dir, &reference)) return null;
+            const expected = reference.found orelse return null;
+            if (entry.record != expected.record or entry.sequence != expected.sequence or
+                !std.mem.eql(u8, entry.name[0..entry.name_len], expected.name[0..expected.name_len])) return null;
+        }
+        count += 1;
+    }
+    const visited = v.scratch.work.directory_entries - before;
+    if (count != sink.seen or visited > count * 3 + 64) return null;
+    if (count == TREE_FILES) std.debug.print("NTFS cursor: {d} entries, {d} physical visits; legacy prefix selections would visit at least {d} names\n", .{ count, visited, count * (count + 1) / 2 });
+    var after: vol.Entry = undefined;
+    if (vol.nextDirectoryEntry(v, dir, &cursor, &after) != .not_found) return null;
+    return count;
 }
 
 fn treeName(buf: []u8, i: usize) []const u8 {
@@ -524,6 +550,50 @@ fn runCrashMatrix(allocator: std.mem.Allocator, meta: mkfs.Meta) !void {
     std.debug.print("crash matrix: ok (5 ops x 40 budgets)\n", .{});
 }
 
+// Resident files interleaved with external payload allocations fragment the
+// directory index past the smaller ordinary payload run buffer. Exercise
+// the actual B+ tree/allocator and cold metadata, without a new test group.
+var fragmented_attr: vol.AttrScratch = .{};
+fn runFragmentedDirectory(allocator: std.mem.Allocator, meta: mkfs.Meta) !void {
+    const image = try formatFresh(allocator, meta, 24 * 1024 * 1024);
+    defer allocator.free(image);
+    var dev = RamDevice{ .image = image };
+    var v = openVolume(&dev) orelse return fail("fragmented index: mount", .{});
+    vol.flush_budget = null;
+    const root = ntfs.MFT_RECORD_ROOT;
+    if (vol.createDirectory(&v, root, "FRAGMENT") != .ok or vol.createDirectory(&v, root, "FILLERS") != .ok) return fail("fragmented index: mkdir", .{});
+    const target = (vol.lookupInDirectory(&v, root, "FRAGMENT") orelse return fail("fragmented index: target", .{})).record;
+    const fillers = (vol.lookupInDirectory(&v, root, "FILLERS") orelse return fail("fragmented index: fillers", .{})).record;
+    var name_buf: [64]u8 = undefined;
+    const data: [320]u8 = @splat(0xa5);
+    const gap: [4096]u8 = @splat(0x77);
+    for (0..1200) |number| {
+        const name = std.fmt.bufPrint(&name_buf, "R4T{d:0>4}.BIN", .{number}) catch return fail("fragmented index: filename", .{});
+        const status = vol.createFile(&v, target, name, &data);
+        if (status != .ok) {
+            const collected = vol.collectAttribute(&v, target, .index_allocation, &ntfs.I30_NAME_UTF16, &fragmented_attr);
+            const free = vol.freeClusterCount(&v) orelse 0;
+            return fail("fragmented index: create {d} status={s} index-runs={d} collected={} free-clusters={d}", .{ number, @tagName(status), fragmented_attr.count, collected, free });
+        }
+        const fill_name = std.fmt.bufPrint(&name_buf, "F4T{d:0>4}.BIN", .{number}) catch return fail("fragmented index: gap filename", .{});
+        const fill_status = vol.createFile(&v, fillers, fill_name, &gap);
+        if (fill_status != .ok) return fail("fragmented index: gap {d} status={s}", .{ number, @tagName(fill_status) });
+    }
+    if (!vol.collectAttribute(&v, target, .index_allocation, &ntfs.I30_NAME_UTF16, &fragmented_attr) or fragmented_attr.count <= 24) return fail("fragmented index: did not exceed24 original runs", .{});
+    const runs = fragmented_attr.count;
+    if (countEntries(&v, target) != 1200) return fail("fragmented index: enumeration", .{});
+    for (0..1200) |number| {
+        const name = std.fmt.bufPrint(&name_buf, "R4T{d:0>4}.BIN", .{number}) catch return fail("fragmented index: verify name", .{});
+        if (!readAndCheck(&v, target, name, &data)) return fail("fragmented index: content {d}", .{number});
+    }
+    var cold_dev = RamDevice{ .image = image };
+    var cold = openVolume(&cold_dev) orelse return fail("fragmented index: cold mount", .{});
+    if (countEntries(&cold, target) != 1200 or countEntries(&cold, fillers) != 1200) return fail("fragmented index: cold names", .{});
+    const last = std.fmt.bufPrint(&name_buf, "R4T{d:0>4}.BIN", .{1199}) catch return fail("fragmented index: last name", .{});
+    if (!readAndCheck(&cold, target, last, &data) or !readAndCheck(&cold, fillers, "F4T1199.BIN", &gap)) return fail("fragmented index: cold contents", .{});
+    std.debug.print("fragmented index:1200files/1200allocation-gaps/full exact contents/cold remount PASS runs={d} free-clusters={d}\n", .{ runs, vol.freeClusterCount(&cold) orelse 0 });
+}
+
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
     const io = init.io;
@@ -539,7 +609,15 @@ pub fn main(init: std.process.Init) !void {
     defer meta_dir.close(io);
     const meta = try loadMeta(allocator, io, meta_dir);
 
+    if (args.len == 3 and std.mem.eql(u8, args[2], "--fragmented-index")) {
+        try runFragmentedDirectory(allocator, meta);
+        if (failures != 0) std.process.exit(1);
+        std.debug.print("NTFSTREE fragmented result: OK\n", .{});
+        return;
+    }
+
     try runBigDirectory(allocator, meta, io, cwd);
+    try runFragmentedDirectory(allocator, meta);
     try runDirOps(allocator, meta, io, cwd);
     try runAppendLadder(allocator, meta, io, cwd);
     try runChurn(allocator, meta, out_path, io, cwd);

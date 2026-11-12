@@ -5,7 +5,8 @@
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .r4os_sdk = .{
-            .path = "../../SDK",
+            .url = "{SdkUrl}",
+            .hash = "{SdkHash}",
         },
     },
     .paths = .{

@@ -7,6 +7,9 @@ pub const MonotonicInstant = abi.R4MonotonicInstant;
 pub const Deadline = abi.R4Deadline;
 pub const UtcTime = abi.R4UtcTime;
 pub const Timeout = abi.R4Timeout;
+/// Explicit checked budgets; the existing saturating interfaces retain their
+/// original contracts for consumers that have not migrated.
+pub const checked = @import("time_budget.zig");
 
 pub const nanoseconds_per_second: u64 = abi.nanoseconds_per_second;
 
@@ -22,17 +25,13 @@ pub fn resolutionNanoseconds(monotonic_hz: u32) Error!u64 {
 pub fn durationToTicks(duration: Duration, monotonic_hz: u32) Error!u64 {
     if (monotonic_hz == 0) return Error.UnknownFrequency;
     if (duration.nanoseconds == 0) return 0;
-    const product = @as(u128, duration.nanoseconds) * monotonic_hz;
-    const rounded = (product + nanoseconds_per_second - 1) / nanoseconds_per_second;
-    return if (rounded > std.math.maxInt(u64)) std.math.maxInt(u64) else @intCast(rounded);
+    return checked.scaleCeil(duration.nanoseconds, monotonic_hz, nanoseconds_per_second) catch std.math.maxInt(u64);
 }
 
 pub fn durationFromTicks(ticks: u64, monotonic_hz: u32) Error!Duration {
     if (monotonic_hz == 0) return Error.UnknownFrequency;
     if (ticks == 0) return .{};
-    const product = @as(u128, ticks) * nanoseconds_per_second;
-    const rounded = (product + monotonic_hz - 1) / monotonic_hz;
-    return .{ .nanoseconds = if (rounded > std.math.maxInt(u64)) std.math.maxInt(u64) else @intCast(rounded) };
+    return .{ .nanoseconds = checked.scaleCeil(ticks, nanoseconds_per_second, monotonic_hz) catch std.math.maxInt(u64) };
 }
 
 pub fn monotonicFromTicks(ticks: u64, monotonic_hz: u32) Error!MonotonicInstant {

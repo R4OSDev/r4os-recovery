@@ -1,0 +1,17 @@
+[package]
+name="r4os-r4l-provider-probe"
+version="0.1.0"
+edition="2024"
+build=false
+autobins=false
+autoexamples=false
+autotests=false
+autobenches=false
+[lib]
+path="src/main.rs"
+crate-type=["staticlib"]
+[dependencies]
+r4os-sdk={version="=0.1.0"}
+l66r-abi={path="Bindings/Rust"}
+[workspace]
+exclude=["Bindings/Rust"]

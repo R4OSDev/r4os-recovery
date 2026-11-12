@@ -1,3 +1,4 @@
+#include <r4os/app2.h>
 #include <r4os/r4os.h>
 
 R4OS_TEXT(window_title, "{ProjectName}");
@@ -18,7 +19,7 @@ static int32_t draw_window(R4Window *window)
     return r4_paint_present(&paint);
 }
 
-int32_t r4_app_main(R4App *app)
+static int32_t work(R4App *app)
 {
     R4Timer timers[1] = {{0}};
     R4Window window;
@@ -40,4 +41,8 @@ int32_t r4_app_main(R4App *app)
             return 0;
         }
     }
+}
+
+int32_t r4_app_main(R4App2 *app2){
+ R4App app;int32_t rc=r4_app2_facade(app2,&app);if(rc<0)return rc;return work(&app);
 }

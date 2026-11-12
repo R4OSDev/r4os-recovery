@@ -11,10 +11,12 @@ pub const History = struct {
     const capacity = 256;
     const Entry = struct { mount: access.MountRef, node: u64 };
     sequence: u64 = 0,
+    namespace_exhausted: bool = false,
     entries: [capacity]Entry = undefined,
 
     pub fn publish(self: *History, mount: access.MountRef, node: u64) void {
         self.entries[@intCast(self.sequence % capacity)] = .{ .mount = mount, .node = node };
+        if (self.sequence == ~@as(u64, 0)) self.namespace_exhausted = true;
         self.sequence +%= 1;
     }
 
@@ -32,6 +34,10 @@ pub const History = struct {
             if (event.mount.slot == cursor.mount_slot and event.mount.generation == cursor.mount_generation and event.node == cursor.node) return true;
         }
         return false;
+    }
+
+    pub fn observation(self: *const History) ?u64 {
+        return if (self.namespace_exhausted or self.sequence == ~@as(u64, 0)) null else self.sequence + 1;
     }
 };
 
@@ -57,4 +63,12 @@ pub fn poll(cursor: *Cursor) i32 {
     const guard = locks.storage.acquire();
     defer locks.storage.release(guard);
     return if (history.poll(cursor)) 1 else 0;
+}
+
+// A namespace observation is not a content revision or infinite object birth
+// ID. Exhaustion is terminal for new metadata observations; never reuse0/1.
+pub fn namespaceGeneration() ?u64 {
+    const guard = locks.storage.acquire();
+    defer locks.storage.release(guard);
+    return history.observation();
 }

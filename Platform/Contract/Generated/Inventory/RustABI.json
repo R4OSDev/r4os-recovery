@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "binding": "Generated/SDK/Rust/src/lib.rs",
+  "sources": ["API/ApiContract.json", "Generated/SDK/Zig/abi.zig"],
+  "extern_structs": 575,
+  "fields": 8916,
+  "integer_enums": 20,
+  "callback_declarations": 806,
+  "constants": 3777,
+  "scalar_float_abi_values": 0,
+  "direct_vector_abi_values": 0,
+  "excluded_zig_metadata_types": ["R4AppProfileMeta", "R4PlatformApiMeta", "R4ApiSlotMeta"],
+  "target": "x86_64-unknown-none"
+}

@@ -564,6 +564,99 @@ const Winner = struct {
     base_url: []const u8 = "",
 };
 
+/// Caller-owned scratch for one immutable DOM/style pass. Rebuild before each
+/// pass, including after a same-size reorder. No document or stylesheet state
+/// is mutated, and no computed style survives in this index.
+pub const SiblingIndex = struct {
+    const Entry = struct {
+        previous: u16 = html.none,
+        next: u16 = html.none,
+        index: u16 = 0,
+        from_end: u16 = 1,
+        type_index: u16 = 0,
+        type_from_end: u16 = 1,
+    };
+
+    document: ?*const html.Document = null,
+    entries: [html.max_nodes]Entry = undefined,
+    type_order: [html.max_nodes]u16 = undefined,
+
+    pub fn prepare(self: *SiblingIndex, document: *const html.Document) void {
+        self.document = document;
+        @memset(self.entries[0..document.node_count], .{});
+        var count: usize = 0;
+        for (document.nodes[0..document.node_count]) |parent| {
+            var previous = html.none;
+            var position: u16 = 0;
+            var child = parent.first_child;
+            while (child != html.none and child < document.node_count) {
+                if (document.nodes[child].kind == .element) {
+                    position += 1;
+                    self.entries[child].index = position;
+                    self.entries[child].previous = previous;
+                    if (previous != html.none) self.entries[previous].next = child;
+                    previous = child;
+                    self.type_order[count] = child;
+                    count += 1;
+                }
+                child = document.nodes[child].next_sibling;
+            }
+            while (previous != html.none) {
+                const entry = &self.entries[previous];
+                entry.from_end = position - entry.index + 1;
+                previous = entry.previous;
+            }
+        }
+
+        // Group equal parent/tag pairs without another walk per target node.
+        // The sibling position tie-break preserves DOM order even after moves.
+        // Heap sort bounds the work independently of tag names and uses no
+        // allocation or document-sized stack temporary.
+        const ordered = self.type_order[0..count];
+        std.sort.heap(u16, ordered, self, typeLessThan);
+        var start: usize = 0;
+        while (start < count) {
+            const first = ordered[start];
+            var end = start + 1;
+            while (end < count and
+                document.nodes[ordered[end]].parent == document.nodes[first].parent and
+                equalsIgnoreCase(document.nodeName(ordered[end]), document.nodeName(first))) : (end += 1)
+            {}
+            for (ordered[start..end], start..) |node, index| {
+                self.entries[node].type_index = @intCast(index - start + 1);
+                self.entries[node].type_from_end = @intCast(end - index);
+            }
+            start = end;
+        }
+    }
+
+    fn typeLessThan(self: *const SiblingIndex, left: u16, right: u16) bool {
+        const document = self.document.?;
+        const left_parent = document.nodes[left].parent;
+        const right_parent = document.nodes[right].parent;
+        if (left_parent != right_parent) return left_parent < right_parent;
+        const left_name = document.nodeName(left);
+        const right_name = document.nodeName(right);
+        for (left_name[0..@min(left_name.len, right_name.len)], right_name[0..@min(left_name.len, right_name.len)]) |a, b| {
+            if (toLower(a) != toLower(b)) return toLower(a) < toLower(b);
+        }
+        if (left_name.len != right_name.len) return left_name.len < right_name.len;
+        return self.entries[left].index < self.entries[right].index;
+    }
+};
+
+const MatchContext = struct {
+    document: *const html.Document,
+    siblings: ?*const SiblingIndex = null,
+
+    fn sibling(self: MatchContext, node: u16) ?SiblingIndex.Entry {
+        const index = self.siblings orelse return null;
+        if (index.document != self.document or node >= self.document.node_count or
+            self.document.nodes[node].kind != .element) return null;
+        return index.entries[node];
+    }
+};
+
 pub const Stylesheet = struct {
     source: [max_source_bytes]u8 = undefined,
     base_urls: [max_base_url_bytes]u8 = undefined,
@@ -753,6 +846,22 @@ pub const Stylesheet = struct {
         viewport_width: i32,
         viewport_height: i32,
     ) ComputedStyle {
+        return self.computeForViewportSizeWithSiblings(document, node_index, parent, state, pseudo, viewport_width, viewport_height, null);
+    }
+
+    /// Sibling data must be prepared for this immutable document/style pass.
+    pub fn computeForViewportSizeWithSiblings(
+        self: *const Stylesheet,
+        document: *const html.Document,
+        node_index: u16,
+        parent: ?*const ComputedStyle,
+        state: ElementState,
+        pseudo: PseudoElement,
+        viewport_width: i32,
+        viewport_height: i32,
+        siblings: ?*const SiblingIndex,
+    ) ComputedStyle {
+        const context = MatchContext{ .document = document, .siblings = siblings };
         var style = initialStyle(document, node_index, parent, state, pseudo);
         const reverted_style = style;
         var winners: [property_count]Winner = .{Winner{}} ** property_count;
@@ -774,7 +883,7 @@ pub const Stylesheet = struct {
             const rule = self.rules[rule_index];
             if (!rule.media.matches(viewport_width, viewport_height)) continue;
             const selector = rule.selector.bytes(self.source[0..self.source_len]);
-            if (!selectorMatches(document, node_index, selector, state, pseudo)) continue;
+            if (!selectorMatches(context, node_index, selector, state, pseudo)) continue;
             const base_url = self.sourceSectionBase(rule.source_section);
             var declaration_index: usize = rule.declaration_start;
             const end = declaration_index + rule.declaration_count;
@@ -927,6 +1036,8 @@ pub const Stylesheet = struct {
         layer: u8,
         source_section: u16,
     ) Error!void {
+        const declaration_start = self.declaration_count;
+        var declarations_parsed = false;
         var start = selector_start;
         var cursor = selector_start;
         var bracket_depth: usize = 0;
@@ -943,8 +1054,10 @@ pub const Stylesheet = struct {
             start = cursor + 1;
             if (selector.end <= selector.start) continue;
             if (self.rule_count >= self.rules.len) return error.RuleLimit;
-            const declaration_start = self.declaration_count;
-            try self.parseDeclarations(body_start, body_end);
+            if (!declarations_parsed) {
+                try self.parseDeclarations(body_start, body_end);
+                declarations_parsed = true;
+            }
             if (self.declaration_count == declaration_start) continue;
             self.rules[self.rule_count] = .{
                 .selector = refFor(selector.start, selector.end),
@@ -2176,7 +2289,7 @@ fn nextCssValueToken(value: []const u8, cursor: *usize) ?[]const u8 {
     return trim(value[start..cursor.*]);
 }
 
-fn selectorMatches(document: *const html.Document, node_index: u16, selector_input: []const u8, state: ElementState, pseudo: PseudoElement) bool {
+fn selectorMatches(context: MatchContext, node_index: u16, selector_input: []const u8, state: ElementState, pseudo: PseudoElement) bool {
     var selector = trim(selector_input);
     const selector_pseudo = selectorPseudoElement(selector);
     if (selector_pseudo != pseudo) return false;
@@ -2186,11 +2299,11 @@ fn selectorMatches(document: *const html.Document, node_index: u16, selector_inp
     var combinators: [max_selector_parts]u8 = .{' '} ** max_selector_parts;
     const count = splitSelector(selector, &parts, &combinators) catch return false;
     if (count == 0) return false;
-    return selectorPartsMatch(document, node_index, node_index, selector, &parts, &combinators, count - 1, state);
+    return selectorPartsMatch(context, node_index, node_index, selector, &parts, &combinators, count - 1, state);
 }
 
 fn selectorPartsMatch(
-    document: *const html.Document,
+    context: MatchContext,
     target_node: u16,
     current_node: u16,
     selector: []const u8,
@@ -2199,31 +2312,32 @@ fn selectorPartsMatch(
     part_index: usize,
     target_state: ElementState,
 ) bool {
+    const document = context.document;
     const state = if (current_node == target_node) target_state else relatedElementState(document, current_node, target_state);
-    if (!compoundMatches(document, current_node, selector[parts[part_index].start..parts[part_index].end], state)) return false;
+    if (!compoundMatches(context, current_node, selector[parts[part_index].start..parts[part_index].end], state)) return false;
     if (part_index == 0) return true;
 
     switch (combinators[part_index]) {
         '>' => {
             const parent = elementParent(document, current_node) orelse return false;
-            return selectorPartsMatch(document, target_node, parent, selector, parts, combinators, part_index - 1, target_state);
+            return selectorPartsMatch(context, target_node, parent, selector, parts, combinators, part_index - 1, target_state);
         },
         '+' => {
-            const sibling = previousElementSibling(document, current_node) orelse return false;
-            return selectorPartsMatch(document, target_node, sibling, selector, parts, combinators, part_index - 1, target_state);
+            const sibling = previousElementSibling(context, current_node) orelse return false;
+            return selectorPartsMatch(context, target_node, sibling, selector, parts, combinators, part_index - 1, target_state);
         },
         '~' => {
-            var sibling = previousElementSibling(document, current_node);
+            var sibling = previousElementSibling(context, current_node);
             while (sibling) |candidate| {
-                if (selectorPartsMatch(document, target_node, candidate, selector, parts, combinators, part_index - 1, target_state)) return true;
-                sibling = previousElementSibling(document, candidate);
+                if (selectorPartsMatch(context, target_node, candidate, selector, parts, combinators, part_index - 1, target_state)) return true;
+                sibling = previousElementSibling(context, candidate);
             }
             return false;
         },
         else => {
             var parent = elementParent(document, current_node);
             while (parent) |candidate| {
-                if (selectorPartsMatch(document, target_node, candidate, selector, parts, combinators, part_index - 1, target_state)) return true;
+                if (selectorPartsMatch(context, target_node, candidate, selector, parts, combinators, part_index - 1, target_state)) return true;
                 parent = elementParent(document, candidate);
             }
             return false;
@@ -2267,7 +2381,11 @@ fn elementParent(document: *const html.Document, node_index: u16) ?u16 {
     return parent;
 }
 
-fn previousElementSibling(document: *const html.Document, node_index: u16) ?u16 {
+fn previousElementSibling(context: MatchContext, node_index: u16) ?u16 {
+    if (context.sibling(node_index)) |entry| {
+        return if (entry.previous == html.none) null else entry.previous;
+    }
+    const document = context.document;
     if (node_index >= document.node_count) return null;
     const parent = document.nodes[node_index].parent;
     if (parent == html.none or parent >= document.node_count) return null;
@@ -2281,6 +2399,7 @@ fn previousElementSibling(document: *const html.Document, node_index: u16) ?u16 
 }
 
 pub fn matchesSelector(document: *const html.Document, node_index: u16, selector_input: []const u8) bool {
+    const context = MatchContext{ .document = document };
     var start: usize = 0;
     var cursor: usize = 0;
     var bracket_depth: usize = 0;
@@ -2294,7 +2413,7 @@ pub fn matchesSelector(document: *const html.Document, node_index: u16, selector
             if (byte != ',' or bracket_depth != 0 or paren_depth != 0) continue;
         }
         const selector = trim(selector_input[start..cursor]);
-        if (selector.len > 0 and selectorMatches(document, node_index, selector, .{}, .none)) return true;
+        if (selector.len > 0 and selectorMatches(context, node_index, selector, .{}, .none)) return true;
         start = cursor + 1;
     }
     return false;
@@ -2349,7 +2468,8 @@ fn splitSelector(selector: []const u8, parts: *[max_selector_parts]Range, combin
     return count;
 }
 
-fn compoundMatches(document: *const html.Document, node_index: u16, compound: []const u8, state: ElementState) bool {
+fn compoundMatches(context: MatchContext, node_index: u16, compound: []const u8, state: ElementState) bool {
+    const document = context.document;
     if (node_index >= document.node_count or document.nodes[node_index].kind != .element) return false;
     var cursor: usize = 0;
     if (cursor < compound.len and compound[cursor] == '*') {
@@ -2386,7 +2506,7 @@ fn compoundMatches(document: *const html.Document, node_index: u16, compound: []
                 argument = trim(compound[cursor + 1 .. close]);
                 cursor = close + 1;
             }
-            if (!pseudoClassMatches(document, node_index, name, argument, state)) return false;
+            if (!pseudoClassMatches(context, node_index, name, argument, state)) return false;
         } else {
             return false;
         }
@@ -2507,7 +2627,8 @@ fn attributeWordContains(actual: []const u8, expected: []const u8, insensitive: 
     return false;
 }
 
-fn pseudoClassMatches(document: *const html.Document, node_index: u16, name: []const u8, argument: []const u8, state: ElementState) bool {
+fn pseudoClassMatches(context: MatchContext, node_index: u16, name: []const u8, argument: []const u8, state: ElementState) bool {
+    const document = context.document;
     if (equalsIgnoreCase(name, "root")) {
         const parent = document.nodes[node_index].parent;
         return parent != html.none and parent < document.node_count and document.nodes[parent].kind == .document;
@@ -2530,27 +2651,27 @@ fn pseudoClassMatches(document: *const html.Document, node_index: u16, name: []c
         return document.attribute(node_index, "placeholder") != null and value.len == 0;
     }
     if (equalsIgnoreCase(name, "scope")) return true;
-    if (equalsIgnoreCase(name, "not")) return !selectorListMatchesState(document, node_index, argument, state);
-    if (equalsIgnoreCase(name, "is") or equalsIgnoreCase(name, "where")) return selectorListMatchesState(document, node_index, argument, state);
-    if (equalsIgnoreCase(name, "has")) return relativeSelectorListMatches(document, node_index, argument, state);
+    if (equalsIgnoreCase(name, "not")) return !selectorListMatchesState(context, node_index, argument, state);
+    if (equalsIgnoreCase(name, "is") or equalsIgnoreCase(name, "where")) return selectorListMatchesState(context, node_index, argument, state);
+    if (equalsIgnoreCase(name, "has")) return relativeSelectorListMatches(context, node_index, argument, state);
     if (equalsIgnoreCase(name, "empty")) return elementIsEmpty(document, node_index);
     if (equalsIgnoreCase(name, "lang")) return languageMatches(document, node_index, unquote(trim(argument)));
-    if (equalsIgnoreCase(name, "first-child")) return elementSiblingIndex(document, node_index) == 1;
-    if (equalsIgnoreCase(name, "last-child")) return isLastElementChild(document, node_index);
-    if (equalsIgnoreCase(name, "only-child")) return elementSiblingIndex(document, node_index) == 1 and isLastElementChild(document, node_index);
+    if (equalsIgnoreCase(name, "first-child")) return elementSiblingIndex(context, node_index) == 1;
+    if (equalsIgnoreCase(name, "last-child")) return isLastElementChild(context, node_index);
+    if (equalsIgnoreCase(name, "only-child")) return elementSiblingIndex(context, node_index) == 1 and isLastElementChild(context, node_index);
     if (equalsIgnoreCase(name, "nth-child")) {
-        return nthExpressionMatches(elementSiblingIndex(document, node_index), argument);
+        return nthExpressionMatches(elementSiblingIndex(context, node_index), argument);
     }
-    if (equalsIgnoreCase(name, "nth-last-child")) return nthExpressionMatches(elementSiblingIndexFromEnd(document, node_index), argument);
-    if (equalsIgnoreCase(name, "first-of-type")) return elementTypeSiblingIndex(document, node_index) == 1;
-    if (equalsIgnoreCase(name, "last-of-type")) return elementTypeSiblingIndexFromEnd(document, node_index) == 1;
-    if (equalsIgnoreCase(name, "only-of-type")) return elementTypeSiblingIndex(document, node_index) == 1 and elementTypeSiblingIndexFromEnd(document, node_index) == 1;
-    if (equalsIgnoreCase(name, "nth-of-type")) return nthExpressionMatches(elementTypeSiblingIndex(document, node_index), argument);
-    if (equalsIgnoreCase(name, "nth-last-of-type")) return nthExpressionMatches(elementTypeSiblingIndexFromEnd(document, node_index), argument);
+    if (equalsIgnoreCase(name, "nth-last-child")) return nthExpressionMatches(elementSiblingIndexFromEnd(context, node_index), argument);
+    if (equalsIgnoreCase(name, "first-of-type")) return elementTypeSiblingIndex(context, node_index) == 1;
+    if (equalsIgnoreCase(name, "last-of-type")) return elementTypeSiblingIndexFromEnd(context, node_index) == 1;
+    if (equalsIgnoreCase(name, "only-of-type")) return elementTypeSiblingIndex(context, node_index) == 1 and elementTypeSiblingIndexFromEnd(context, node_index) == 1;
+    if (equalsIgnoreCase(name, "nth-of-type")) return nthExpressionMatches(elementTypeSiblingIndex(context, node_index), argument);
+    if (equalsIgnoreCase(name, "nth-last-of-type")) return nthExpressionMatches(elementTypeSiblingIndexFromEnd(context, node_index), argument);
     return false;
 }
 
-fn selectorListMatchesState(document: *const html.Document, node_index: u16, selector_list: []const u8, state: ElementState) bool {
+fn selectorListMatchesState(context: MatchContext, node_index: u16, selector_list: []const u8, state: ElementState) bool {
     var start: usize = 0;
     var cursor: usize = 0;
     var bracket_depth: usize = 0;
@@ -2573,13 +2694,13 @@ fn selectorListMatchesState(document: *const html.Document, node_index: u16, sel
             if (byte != ',' or bracket_depth != 0 or paren_depth != 0) continue;
         }
         const selector = trim(selector_list[start..cursor]);
-        if (selector.len > 0 and selectorMatches(document, node_index, selector, state, .none)) return true;
+        if (selector.len > 0 and selectorMatches(context, node_index, selector, state, .none)) return true;
         start = cursor + 1;
     }
     return false;
 }
 
-fn relativeSelectorListMatches(document: *const html.Document, node_index: u16, selector_list: []const u8, state: ElementState) bool {
+fn relativeSelectorListMatches(context: MatchContext, node_index: u16, selector_list: []const u8, state: ElementState) bool {
     var start: usize = 0;
     var cursor: usize = 0;
     var bracket_depth: usize = 0;
@@ -2593,50 +2714,56 @@ fn relativeSelectorListMatches(document: *const html.Document, node_index: u16, 
             if (byte != ',' or bracket_depth != 0 or paren_depth != 0) continue;
         }
         const selector = trim(selector_list[start..cursor]);
-        if (selector.len > 0 and relativeSelectorMatches(document, node_index, selector, state)) return true;
+        if (selector.len > 0 and relativeSelectorMatches(context, node_index, selector, state)) return true;
         start = cursor + 1;
     }
     return false;
 }
 
-fn relativeSelectorMatches(document: *const html.Document, node_index: u16, selector: []const u8, state: ElementState) bool {
+fn relativeSelectorMatches(context: MatchContext, node_index: u16, selector: []const u8, state: ElementState) bool {
+    const document = context.document;
     if (selector[0] == '>') {
         const child_selector = trim(selector[1..]);
         var child = document.nodes[node_index].first_child;
         while (child != html.none and child < document.node_count) {
-            if (document.nodes[child].kind == .element and selectorMatches(document, child, child_selector, relatedElementState(document, child, state), .none)) return true;
+            if (document.nodes[child].kind == .element and selectorMatches(context, child, child_selector, relatedElementState(document, child, state), .none)) return true;
             child = document.nodes[child].next_sibling;
         }
         return false;
     }
     if (selector[0] == '+') {
-        const sibling = nextElementSibling(document, node_index) orelse return false;
-        return selectorMatches(document, sibling, trim(selector[1..]), relatedElementState(document, sibling, state), .none);
+        const sibling = nextElementSibling(context, node_index) orelse return false;
+        return selectorMatches(context, sibling, trim(selector[1..]), relatedElementState(document, sibling, state), .none);
     }
     if (selector[0] == '~') {
-        var sibling = nextElementSibling(document, node_index);
+        var sibling = nextElementSibling(context, node_index);
         while (sibling) |candidate| {
-            if (selectorMatches(document, candidate, trim(selector[1..]), relatedElementState(document, candidate, state), .none)) return true;
-            sibling = nextElementSibling(document, candidate);
+            if (selectorMatches(context, candidate, trim(selector[1..]), relatedElementState(document, candidate, state), .none)) return true;
+            sibling = nextElementSibling(context, candidate);
         }
         return false;
     }
-    return descendantMatchesSelector(document, node_index, selector, state);
+    return descendantMatchesSelector(context, node_index, selector, state);
 }
 
-fn descendantMatchesSelector(document: *const html.Document, node_index: u16, selector: []const u8, state: ElementState) bool {
+fn descendantMatchesSelector(context: MatchContext, node_index: u16, selector: []const u8, state: ElementState) bool {
+    const document = context.document;
     var child = document.nodes[node_index].first_child;
     while (child != html.none and child < document.node_count) {
         if (document.nodes[child].kind == .element) {
-            if (selectorMatches(document, child, selector, relatedElementState(document, child, state), .none)) return true;
-            if (descendantMatchesSelector(document, child, selector, state)) return true;
+            if (selectorMatches(context, child, selector, relatedElementState(document, child, state), .none)) return true;
+            if (descendantMatchesSelector(context, child, selector, state)) return true;
         }
         child = document.nodes[child].next_sibling;
     }
     return false;
 }
 
-fn nextElementSibling(document: *const html.Document, node_index: u16) ?u16 {
+fn nextElementSibling(context: MatchContext, node_index: u16) ?u16 {
+    if (context.sibling(node_index)) |entry| {
+        return if (entry.next == html.none) null else entry.next;
+    }
+    const document = context.document;
     if (node_index >= document.node_count) return null;
     var cursor = document.nodes[node_index].next_sibling;
     while (cursor != html.none and cursor < document.node_count) {
@@ -3295,7 +3422,11 @@ fn countGridColumns(value: []const u8) u8 {
     return clampUnsigned(count, 1, 8);
 }
 
-fn elementSiblingIndex(document: *const html.Document, node_index: u16) u16 {
+fn elementSiblingIndex(context: MatchContext, node_index: u16) u16 {
+    if (context.sibling(node_index)) |entry| {
+        return entry.index;
+    }
+    const document = context.document;
     const parent = document.nodes[node_index].parent;
     if (parent == html.none or parent >= document.node_count) return 0;
     var index: u16 = 0;
@@ -3308,7 +3439,11 @@ fn elementSiblingIndex(document: *const html.Document, node_index: u16) u16 {
     return 0;
 }
 
-fn elementSiblingIndexFromEnd(document: *const html.Document, node_index: u16) u16 {
+fn elementSiblingIndexFromEnd(context: MatchContext, node_index: u16) u16 {
+    if (context.sibling(node_index)) |entry| {
+        return entry.from_end;
+    }
+    const document = context.document;
     if (node_index >= document.node_count or document.nodes[node_index].kind != .element) return 0;
     var index: u16 = 1;
     var child = document.nodes[node_index].next_sibling;
@@ -3319,7 +3454,11 @@ fn elementSiblingIndexFromEnd(document: *const html.Document, node_index: u16) u
     return index;
 }
 
-fn elementTypeSiblingIndex(document: *const html.Document, node_index: u16) u16 {
+fn elementTypeSiblingIndex(context: MatchContext, node_index: u16) u16 {
+    if (context.sibling(node_index)) |entry| {
+        return entry.type_index;
+    }
+    const document = context.document;
     if (node_index >= document.node_count or document.nodes[node_index].kind != .element) return 0;
     const parent = document.nodes[node_index].parent;
     if (parent == html.none or parent >= document.node_count) return 0;
@@ -3334,7 +3473,11 @@ fn elementTypeSiblingIndex(document: *const html.Document, node_index: u16) u16 
     return 0;
 }
 
-fn elementTypeSiblingIndexFromEnd(document: *const html.Document, node_index: u16) u16 {
+fn elementTypeSiblingIndexFromEnd(context: MatchContext, node_index: u16) u16 {
+    if (context.sibling(node_index)) |entry| {
+        return entry.type_from_end;
+    }
+    const document = context.document;
     if (node_index >= document.node_count or document.nodes[node_index].kind != .element) return 0;
     const name = document.nodeName(node_index);
     var index: u16 = 1;
@@ -3346,7 +3489,11 @@ fn elementTypeSiblingIndexFromEnd(document: *const html.Document, node_index: u1
     return index;
 }
 
-fn isLastElementChild(document: *const html.Document, node_index: u16) bool {
+fn isLastElementChild(context: MatchContext, node_index: u16) bool {
+    if (context.sibling(node_index)) |entry| {
+        return entry.index != 0 and entry.from_end == 1;
+    }
+    const document = context.document;
     const parent = document.nodes[node_index].parent;
     if (parent == html.none or parent >= document.node_count) return false;
     var child = document.nodes[node_index].next_sibling;
@@ -4431,4 +4578,91 @@ test "CSS cascade layers order normal important unlayered and inline declaration
     const inline_style = sheet.compute(&document, testElementById(&document, "inline"), null, .{}, .none);
     try std.testing.expectEqual(@as(u32, 0x220022), inline_style.color);
     try std.testing.expectEqual(@as(u32, 0x330033), inline_style.background_color.?);
+}
+
+test "CSS selector groups share declarations and retain transactional capacity errors" {
+    const sheet = try std.testing.allocator.create(Stylesheet);
+    defer std.testing.allocator.destroy(sheet);
+    const document = try std.testing.allocator.create(html.Document);
+    defer std.testing.allocator.destroy(document);
+    _ = try document.parse("<p id=target class='s0 s899'>Text</p>", .{});
+    var source: [max_source_bytes]u8 = undefined;
+    var len: usize = 0;
+    for (0..900) |i| {
+        const text = try std.fmt.bufPrint(source[len..], "{s}.s{d}", .{ if (i == 0) @as([]const u8, "") else ",", i });
+        len += text.len;
+    }
+    const body = "{color:#112233;background-color:#445566;padding:2px;margin:3px;display:block}";
+    @memcpy(source[len..][0..body.len], body);
+    len += body.len;
+    const stats = try sheet.parse(source[0..len]);
+    try std.testing.expectEqual(@as(usize, 900), stats.rules);
+    try std.testing.expectEqual(@as(usize, 5), stats.declarations);
+    const target = testElementById(document, "target");
+    try std.testing.expectEqual(@as(u32, 0x112233), sheet.compute(document, target, null, .{}, .none).color);
+    try sheet.append(".s0{color:#778899} #target{color:#aabbcc !important}");
+    try std.testing.expectEqual(@as(u32, 0xAABBCC), sheet.compute(document, target, null, .{}, .none).color);
+    const before = sheet.stats();
+    const source_len = sheet.source_len;
+    const sections = sheet.source_section_count;
+    const base_len = sheet.base_url_len;
+    const too_many_rules = "p," ** 124 ++ "p{color:red}";
+    try std.testing.expectError(error.RuleLimit, sheet.appendWithBase(too_many_rules, "https://example.test/failed.css"));
+    try std.testing.expectEqualDeep(before, sheet.stats());
+    try std.testing.expectEqual(source_len, sheet.source_len);
+    try std.testing.expectEqual(sections, sheet.source_section_count);
+    try std.testing.expectEqual(base_len, sheet.base_url_len);
+    try std.testing.expectError(error.DeclarationLimit, sheet.append("p{" ++ "color:red;" ** max_declarations ++ "}"));
+    try std.testing.expectEqualDeep(before, sheet.stats());
+    try std.testing.expectEqual(source_len, sheet.source_len);
+    try std.testing.expectEqual(sections, sheet.source_section_count);
+    try std.testing.expectEqual(@as(u32, 0xAABBCC), sheet.compute(document, target, null, .{}, .none).color);
+    try sheet.append("p,span{}");
+    try std.testing.expectEqualDeep(before, sheet.stats());
+}
+
+test "CSS sibling pass matches scans after reorder detach and replacement" {
+    const document = try std.testing.allocator.create(html.Document);
+    defer std.testing.allocator.destroy(document);
+    _ = try document.parse("<body><section id=group>text<span id=a></span><!--gap--><em id=b></em><SPAN id=c></SPAN><span id=d></span></section><aside id=other><span id=e></span></aside></body>", .{});
+    const index = try std.testing.allocator.create(SiblingIndex);
+    defer std.testing.allocator.destroy(index);
+    const group = testElementById(document, "group");
+    const other = testElementById(document, "other");
+    const a = testElementById(document, "a");
+    const b = testElementById(document, "b");
+    const c = testElementById(document, "c");
+    const d = testElementById(document, "d");
+    const e = testElementById(document, "e");
+    const node_count = document.node_count;
+    const selectors = [_][]const u8{
+        ":first-child",                            ":last-child",                  ":only-child",                 ":nth-child(2n+1)",                             ":nth-last-child(2)",
+        ":first-of-type",                          ":last-of-type",                ":only-of-type",               ":nth-of-type(2)",                              ":nth-last-of-type(2)",
+        "span + em",                               "em + span",                    "#a ~ span",                   "section > span:is(:nth-child(3),:last-child)", "span:not(:first-of-type)",
+        "section:has(> span:nth-last-of-type(2))", "span:has(+ em:first-of-type)", "span:has(~ span:last-child)", "body:has(span:nth-of-type(2))",
+    };
+    for (0..5) |pass| {
+        switch (pass) {
+            1 => try document.insertBefore(group, d, a),
+            2 => try document.detach(c),
+            3 => try document.attach(other, c),
+            4 => try document.replaceChild(group, e, b),
+            else => {},
+        }
+        try std.testing.expectEqual(node_count, document.node_count);
+        index.prepare(document);
+        const cached = MatchContext{ .document = document, .siblings = index };
+        for (document.nodes[0..document.node_count], 0..) |node, i| {
+            if (node.kind != .element) continue;
+            for (selectors) |selector| {
+                try std.testing.expectEqual(matchesSelector(document, @intCast(i), selector), selectorMatches(cached, @intCast(i), selector, .{}, .none));
+            }
+        }
+        if (pass == 0) {
+            try std.testing.expect(selectorMatches(cached, c, "span:nth-child(3):nth-of-type(2):nth-last-of-type(2)", .{}, .none));
+            try std.testing.expect(selectorMatches(cached, e, "span:only-child:only-of-type", .{}, .none));
+        }
+        if (pass == 1) try std.testing.expect(selectorMatches(cached, d, "span:first-child:first-of-type", .{}, .none));
+        if (pass == 2) try std.testing.expect(!selectorMatches(cached, c, ":first-child", .{}, .none));
+    }
 }

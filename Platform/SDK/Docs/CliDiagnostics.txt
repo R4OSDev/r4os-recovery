@@ -1,0 +1,172 @@
+﻿Argumentcursor und begrenzte Diagnoserecords (SDK0.64.161)
+=========================================================
+
+Besitzer und Anschluss
+---------------------
+Der SDK-Owner r4os/arg_cursor.zig implementiert die Argumentgrammatik;
+r4os/diagnostic_buffer.zig und diagnostic_sinks.zig besitzen Queue und kleine
+Adapter. Zig: r4os.arguments / r4os.diagnostics. C: cli_helpers.h und fuer
+Query2-Factories cli_platform2.h. Rust: r4os_sdk::cli. C und Rust rufen die
+gleiche statische Zig-Implementierung im vorhandenen SDK-Fassadenobjekt auf.
+Kein zusaetzliches R4L, Kernelparser oder Logservice. Bestehende Programme,
+Parser, Puffer und Importprofile werden hiermit nicht umgestellt.
+
+Argumente
+---------
+ArgCursor leiht unveraenderliche UTF8-Bytes, allokiert nichts und liefert
+Bytebereiche der Originaleingabe. Die Policy nennt maximale Bytes (0 erlaubt
+nur leere Eingabe), Quotes und lexikalische Schalterpraefixe. Standard: 4096
+Bytes, ganze doppelt zitierte Tokens, Slashschalter; Dash ist ausdruecklich
+zuschaltbar. Space und Tab trennen. Andere ASCII-Steuerzeichen einschliesslich
+NUL, CR, LF und DEL werden mit Byteoffset abgewiesen. UTF8-Fehler zeigen den
+Beginn der fehlerhaften Sequenz, nicht einen geratenen Zeichenindex.
+
+Doppelte Quotes umschliessen ein ganzes Token. Ein leeres "" ist ein echtes
+leeres Argument, verschieden vom Ende. Ein Quote innerhalb eines unzitierten
+Tokens oder ein Nichttrenner nach dem schliessenden Quote ist fehlerhaft.
+Unabgeschlossene Quotes melden die oeffnende Position. Apostrophe sind
+literale Bytes, Backslashes bleiben unveraendert; keine Host-argv-Escapes oder
+Zusammenfuehrung benachbarter Quoteabschnitte. NoQuotes ist ein ausdruecklicher
+Modus fuer einfache vorhandene Tokenizer, keine globale Grammatikumschaltung.
+
+next/next_token liefert Token, Ende oder Fehler mit Offset. Ende und
+Parsefehler bleiben sticky. Ein Fehler liefert kein Token und verschiebt die
+vorherige Cursorposition nicht. Bereits gelesene Tokens beweisen nicht die
+Gueltigkeit des noch ungeprueften Rests. Die Position liegt am rohen Tokenende
+vor seinen nachfolgenden Trennzeichen. remainingRaw/remaining_raw erhaelt den
+exakten Rest einschliesslich wiederholter und abschliessender Leerzeichen;
+remainingArguments/remaining_arguments entfernt nur fuehrende Space/Tab.
+Delegierte Befehle erhalten diesen Originalbereich ohne Neuzusammensetzung.
+
+Schaltererkennung ist lexikalisch, keine Pfaderkennung. Zitierte Tokens sind
+niemals implizite Schalter. Slash/Dash allein bleibt Operand. switchParts
+trennt am ersten Doppelpunkt, erhaelt Wertbytes und unterscheidet keinen Wert
+von einem explizit leeren Wert. switchIs vergleicht nur den Namen ASCII-
+case-insensitiv. Eine Anwendung entscheidet spaeter ueber gueltige Optionen.
+
+Diagnosequeue und Verlust
+------------------------
+BoundedDiagnosticBuffer leiht exklusiven, festen Speicher bis UINT32_MAX
+Bytes. Metadaten, Textquelle und Speicher duerfen sich nicht ueberlappen.
+Rust bindet diese Speicherleihe typisiert und erlaubt keine nebenlaeufige
+Mutation. Zig/C verlangen gemappten Speicher und gueltige exclusive Leihen;
+Zahlenpruefungen sind keine Pruefung von Seitentabellen oder Lebensdauer.
+
+appendRecord nimmt einen vollstaendigen gueltigen UTF8-Record mit Severity
+Debug0/Info1/Warning2/Error3 an oder meldet Full/RecordTooLarge mit benoetigter
+Kapazitaet. Die private Queue braucht derzeit 8 Byte Metadaten je Record;
+das Speicherformat ist kein persistenter Vertrag. Kein automatisches Newline,
+Abschneiden von Records/Skalaren, Allokieren oder automatisches Flush.
+Uebergrosse Anfragen werden vor dem Lesen ihrer Bytes abgewiesen; die
+Ablehnungszaehler zaehlen daher Eingabeanfragen, nicht validierte Records.
+Bei passender Gesamtkapazitaet wird Text vor Full geprueft. Ungueltiger Text,
+Alias- oder Zustandsfehler veraendern keine Ablehnungszaehler. Kumulative
+Zaehler saettigen mit sichtbarem sticky Flag, niemals stiller Ueberlauf.
+Aktuell wartende Records/Bytes sind getrennt von kumulativem Durchsatz.
+
+flushOnce fuehrt genau einen synchronen Callback mit maximal 1..INT32_MAX
+Bytes aus. Chunk enthaelt Bytes, urspruengliche Gesamtlaenge, Offset und
+Severity. Eine Bestaetigung nennt Accepted/WouldBlock/Failed/Uncertain und
+ein genaues akzeptiertes Bytepraefix. Auch bei Failed wird das bestaetigte
+Praefix exakt verbraucht; der unbestaetigte Rest bleibt erhalten. Nach einem
+Teilpraefix kann ein Chunk mitten in UTF8 beginnen/enden und ist deshalb
+ausdruecklich ein Bytebereich, kein str. Rust verlangt einen fuer jede
+Callbackleihe gueltigen FnMut und verhindert das Behalten der Chunks.
+Leere Records verlangen einen echten Accepted-Callback; null Fortschritt bei
+nichtleerem Record bedeutet WouldBlock. Keine interne Wiederholung/Waitschleife.
+
+Uncertain verbraucht nur das bekannte Praefix und sperrt weiteres Flush.
+Ungueltige Bestaetigung (zu grosse Anzahl, unbekannter Tag, Reserved!=0)
+sperrt ohne erfundene Annahmezahl. Erneuter Aufruf ruft den Sink nicht auf.
+discard ist eine ausdrueckliche lokale Entscheidung: Es meldet wartende
+Records/Bytes, bekanntes Erstpraefix und Unsicherheit, leert Queue/Sperre,
+erhaelt aber kumulative Zaehler. Das ist keine Peercancel-, Persistenz-,
+Hardwarestop- oder Ressourcenfreigabequittung. Reentrante Mutation wird Busy.
+
+Vorhandene Sinks
+---------------
+ConsoleSink verwendet den kanonischen R4DESK-console_write-Callback mit
+stdout1/stderr2. FileSink verwendet pfadbasiertes R4SYS-file_append auf einem
+bereits vorbereiteten Z-Pfad; Dateianlage/Truncate bestimmt der Aufrufer.
+Positive Ergebnisse sind Bytepraefixe, 0 ist WouldBlock (leerer Record kann
+quittiert werden). Negative Resultate nach Aufruf sind konservativ Uncertain,
+weil der alte Vertrag keinen sicher nicht geschriebenen Praefix nennt.
+Keine void-Ausgabefassade oder Putc-Fallback verschleiert die Annahmezahl.
+Fehlender Provider oder ungueltige Konfiguration vor Aufruf ist KnownFailed.
+Die Quittung ist keine Garantie physischer Anzeige oder dauerhafter Ablage.
+ConsoleSink sendet die unveraenderten UTF8-Bytes. Die passende Konsolenkodierung
+waehlt der Aufrufer; der Adapter schaltet sie nicht nebenlaeufig um.
+
+LogSink nutzt die originalen R4SYS-service_open/call/close-Callbacks fuer
+LOGSVC und den bestehenden LogServiceWriteRequest/LogServiceStatus. Er nimmt
+nur einen vollstaendigen Record ohne vorheriges Teilpraefix an, maximal159
+Textbytes und nichtleeren Ursprung bis31 Bytes; beide striktes UTF8 ohne NUL.
+Zu kleine Flushbudgets oder groessere Texte werden vor RPC abgewiesen,
+niemals durch stilles Clipping oder aufgeteilte Logrecords ersetzt.
+
+Das Aufrufbudget ist ausdruecklich in logischen Ticks des vorhandenen RPC-
+Owners angegeben: getaggtes Poll oder Finite1..UINT64_MAX-1. Mit der echten
+logischen Frequenz ueber checked timeoutTicks vorbereiten; keine erfundene
+100Hz-Vorgabe und keine Nanosekunden als Ticks. Forever und finiteMAX sind
+hier unzulaessig, weil das alte rohe MAX im RPC Forever bedeutet. Das ist
+kein Gesamtdeadlinevertrag fuer mehrteilige Transfers (separate API).
+
+Nur vollstaendige, passende Statusantwort samt Transportheader bestaetigt
+den Record. Timeout, kurze/fehlerhafte Antwort oder Fehler nach service_call
+ist Uncertain, weil LOGSVC bereits vor seiner Antwort speichert. Keine
+automatische Wiederholung; eine Statusabfrage beweist keine Recordidentitaet.
+Auf service_open folgend wird der wirkliche Handle behalten. Close-Fehler
+behalten active_handle und sperren neue RPCs; ausdrueckliches closePending/
+R4SdkDiagnosticLogClose/close_pending versucht genau einen Close. Erfolg oder
+BadHandle beendet die lokale Besitzbindung. Bestaetigter Record plus Close-
+Fehler meldet Failed mit voller Annahmezahl, ohne Record erneut zu senden.
+Vor Zerstoeren einer Konfiguration ausstehenden Handle abschliessen; Rust
+kennzeichnet LogSink must_use, ein vergessenes Handle leakt einen Service-
+Verweis. Keine Payload-/Originleihe wird asynchron gehalten.
+
+fromContext2, C *2-Factories und Rust new loesen ausschliesslich echte Slots
+der ausgewaehlten Query2-Tabellen auf, ohne synthetische Legacytabellen.
+Fehlende Slots bleiben NoProvider/err_no_fn. Provider-/Pfad-/Ursprungsleihen
+muessen bis zum letzten Aufruf einschliesslich ausstehendem Close gelten.
+Zig/C mit schon kanonisch aufgeloesten Callbacks koennen diese direkt setzen.
+
+API-Beispiele
+-------------
+Zig:
+  var failure: r4os.arguments.Failure = .{};
+  var args = try r4os.arguments.ArgCursor.init(raw_args, .{}, &failure);
+  const token = (try args.next()) orelse return;
+  const suffix = try args.remainingRaw(); // Originalbytes, keine Neusynthese
+  _ = token; _ = suffix;
+  var memory: [512]u8 = undefined;
+  var queue = try r4os.diagnostics.BoundedDiagnosticBuffer.init(&memory);
+  _ = try queue.appendRecord("Fertig\n", .info);
+  var sink = try r4os.diagnostics.ConsoleSink.fromContext2(context2, 1);
+  const result = try queue.flushOnce(128, r4os.diagnostics.ConsoleSink.send, &sink);
+  // result.kind/accepted_bytes auswerten; kein implizites Retry.
+  _ = result;
+
+C:
+  #include <r4os/cli_platform2.h>
+  uint8_t memory[512]; R4SdkDiagnosticBuffer queue;
+  R4SdkDiagnosticAppend append; R4SdkDiagnosticFlush result;
+  R4SdkDiagnosticConsole sink;
+  if (R4SdkDiagnosticConsole2(context2, 1, &sink) ||
+      R4SdkDiagnosticInit(memory, sizeof(memory), &queue)) return -1;
+  if (R4SdkDiagnosticAppendRecord(&queue, (const uint8_t *)"OK\n", 3, 1, &append)) return -1;
+  if (append.kind != R4_DIAG_ACCEPTED) return -1;
+  if (R4SdkDiagnosticFlushOnce(&queue, 128, R4SdkDiagnosticConsoleSend, &sink, &result)) return -1;
+  // kind, akzeptierte Bytes und gegebenenfalls expliziten lokalen Abbruch pruefen.
+
+Rust:
+  use r4os_sdk::cli::{ArgCursor, ArgPolicy, BoundedDiagnosticBuffer, ConsoleSink, Severity};
+  let mut args = ArgCursor::new(raw_args, ArgPolicy::default())?;
+  let token = args.next_token()?;
+  let tail = args.remaining_raw()?; // Beide leihen die Originaleingabe.
+  let mut memory = [0u8; 512];
+  let mut queue = BoundedDiagnosticBuffer::new(&mut memory)?;
+  let admitted = queue.append_record("OK\n", Severity::Info)?;
+  if admitted.kind != 0 { /* Full oder RecordTooLarge behandeln */ }
+  let mut sink = ConsoleSink::new(context2, r4os_sdk::abi::ConsoleStream::stdout)?;
+  let result = queue.flush_once(128, |chunk| sink.send(chunk))?;
+  // result.kind, Annahmepraefix und Poison auswerten.

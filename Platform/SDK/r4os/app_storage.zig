@@ -2,6 +2,7 @@ const abi = @import("r4os_contract").abi;
 const path_contract = @import("path.zig");
 const file_stream = @import("file_stream.zig");
 const r4sys = @import("r4sys.zig");
+const metadata2 = @import("metadata2.zig");
 
 pub const FilePath = path_contract.FilePath;
 pub const AbsoluteFilePath = path_contract.AbsoluteFilePath;
@@ -31,6 +32,77 @@ pub const Transfer = union(enum) {
     failure: i32,
 };
 
+pub const DocumentPrefix = union(enum) {
+    value: struct { bytes: usize, truncated: bool, file_size: u64 = 0 },
+    failure: i32,
+};
+
+test "stream owner document prefix discards a restarted snapshot within one deadline" {
+    const std = @import("std");
+    const p2 = @import("platform2.zig");
+    const Peer = struct {
+        var meta_calls: usize = 0;
+        var read_calls: usize = 0;
+        var tick: u64 = 0;
+        var always_restart: bool = false;
+        var file_size: u64 = 3;
+        fn shouldClose(_: *const p2.abi.R4XStartContext2) callconv(.c) u32 {
+            return 0;
+        }
+        fn clock(out: *abi.MonotonicClockInfo) callconv(.c) i32 {
+            tick += 1000;
+            out.* = .{ .instant_ns = tick, .flags = abi.monotonic_clock_flag_valid, .source = 1, .generation = 1, .resolution_ns = 1, .event_requested_hz = 1000 };
+            return 1;
+        }
+        fn metadata(_: [*:0]const u8, out: *abi.FileMetadata2) callconv(.c) i32 {
+            meta_calls += 1;
+            if (always_restart or meta_calls == 2) return abi.file_metadata2_error_restart;
+            out.* = .{ .byte_size = file_size, .content_revision = if (meta_calls == 1) 1 else 2, .flags = abi.file_metadata2_flag_exists | abi.file_metadata2_flag_byte_size_valid |
+                abi.file_metadata2_flag_identity_valid | abi.file_metadata2_flag_content_revision_valid, .identity = .{ .mount_slot = 2, .mount_generation = 1, .namespace_generation = if (meta_calls == 1) 1 else 2, .object_lo = 17 } };
+            return 1;
+        }
+        fn read(_: [*:0]const u8, offset: u32, out: [*]u8, capacity: u32) callconv(.c) i32 {
+            read_calls += 1;
+            if (offset != 0 or capacity != 3) return abi.file_metadata2_error_invalid;
+            @memcpy(out[0..3], if (read_calls == 1) "old" else "new");
+            return 3;
+        }
+    };
+    Peer.meta_calls = 0;
+    Peer.read_calls = 0;
+    Peer.tick = 0;
+    Peer.always_restart = false;
+    Peer.file_size = 3;
+    var system: p2.abi.R4XStartR4Sys2 = .{};
+    system.monotonic_clock = @intFromPtr(&Peer.clock);
+    system.file_metadata2 = @intFromPtr(&Peer.metadata);
+    system.file_read_at = @intFromPtr(&Peer.read);
+    var imports = [_]abi.R4XStartImport{.{ .group_id = 1, .resolved_version = 2, .table = @intFromPtr(&system) }};
+    var start: p2.abi.R4XStartContext2 = .{ .imports = @intFromPtr(&imports), .import_count = imports.len, .flags = abi.r4xstart_flag_close_supported, .should_close = @intFromPtr(&Peer.shouldClose) };
+    const context = try p2.Context.init(&start);
+    const files = Files{ .sys = r4sys.Context.fromProgram(.{ .generation2 = &context }) };
+    var memory: [8]u8 = undefined;
+    var path = try AbsoluteFilePath.parse("C:\\DOCUMENT.TXT");
+    const value = files.readDocumentPrefix(path.asZ(), &memory, .{ .kind = abi.timeout_kind_finite, .nanoseconds = 1_000_000_000 });
+    try std.testing.expectEqualDeep(DocumentPrefix{ .value = .{ .bytes = 3, .truncated = false, .file_size = 3 } }, value);
+    try std.testing.expectEqualStrings("new", memory[0..value.value.bytes]);
+    try std.testing.expect(!value.value.truncated);
+    try std.testing.expectEqual(@as(usize, 2), Peer.read_calls);
+    try std.testing.expectEqual(@as(usize, 4), Peer.meta_calls);
+    Peer.file_size = 6;
+    var exact_capacity: [3]u8 = undefined;
+    const prefix = files.readDocumentPrefix(path.asZ(), &exact_capacity, .{ .kind = abi.timeout_kind_finite, .nanoseconds = 1_000_000_000 });
+    try std.testing.expectEqualDeep(DocumentPrefix{ .value = .{ .bytes = 3, .truncated = true, .file_size = 6 } }, prefix);
+    try std.testing.expectEqualStrings("new", &exact_capacity);
+    try std.testing.expectEqual(@as(usize, 3), Peer.read_calls);
+    const reads_before_timeout = Peer.read_calls;
+    Peer.file_size = 3;
+    Peer.always_restart = true;
+    const expired = files.readDocumentPrefix(path.asZ(), &memory, .{ .kind = abi.timeout_kind_finite, .nanoseconds = 10_000 });
+    try std.testing.expectEqual(abi.service_api_result_timeout, expired.failure);
+    try std.testing.expectEqual(reads_before_timeout, Peer.read_calls);
+}
+
 pub const Operation = union(enum) {
     ok,
     missing,
@@ -58,6 +130,11 @@ pub const AtomicReplaceResult = union(enum) {
     failure: i32,
 };
 
+pub const FileNameLimitsResult = union(enum) {
+    value: abi.FileNameLimits,
+    failure: i32,
+};
+
 pub const FileInfoResult = union(enum) {
     value: abi.FileInfo,
     missing,
@@ -70,6 +147,7 @@ pub const DirectoryEntry = struct {
     kind: DirectoryKind,
     path: []const u8,
     info: ?abi.FileInfo = null,
+    metadata: ?abi.FileMetadata2 = null,
 };
 
 pub const DirectoryNext = union(enum) {
@@ -112,12 +190,92 @@ pub const Files = struct {
         return .{ .bytes = @intCast(raw) };
     }
 
+    /// Query the actual mount, including hidden C:\BOOT routing. A successful
+    /// snapshot reserves nothing; stream/atomic operations revalidate normally.
+    pub fn nameLimits(self: *const Files, file_path: PathZ) FileNameLimitsResult {
+        var value: abi.FileNameLimits = .{};
+        const raw = self.sys.fileNameLimits(file_path.ptr, &value);
+        if (raw != 0) return .{ .failure = raw };
+        return .{ .value = value };
+    }
+
     pub fn info(self: *const Files, file_path: PathZ) FileInfoResult {
+        if (self.sys.base.generation2 != null) {
+            return switch (self.metadata(file_path)) {
+                .found => |value| if (legacyInfo(value, file_path.bytes())) |old| .{ .value = old } else .{ .failure = abi.file_metadata2_error_unsupported },
+                .missing => .missing,
+                .failure => |code| .{ .failure = code },
+            };
+        }
         var value: abi.FileInfo = .{};
         const raw = self.sys.fileInfoRaw(file_path.ptr, &value);
         if (raw < 0) return .{ .failure = raw };
         if (raw == 0 or value.exists == 0) return .missing;
         return .{ .value = value };
+    }
+
+    pub fn metadata(self: *const Files, file_path: PathZ) metadata2.InfoResult {
+        const view = self.sys.base.generation2 orelse return .{ .failure = abi.file_metadata2_error_unsupported };
+        return metadata2.info(view, file_path.ptr);
+    }
+
+    /// Private editor candidate, including one lookahead byte. Publication is
+    /// the caller's operation. Compare every identity/revision the provider
+    /// certifies and discard all partial bytes on a readonly namespace restart.
+    /// file_size belongs to that validated snapshot, including a bounded prefix.
+    pub fn readDocumentPrefix(self: *const Files, file_path: PathZ, out: []u8, timeout: abi.R4Timeout) DocumentPrefix {
+        if (out.len == 0) return .{ .failure = abi.file_metadata2_error_invalid };
+        const context = self.sys.base.generation2 orelse return .{ .failure = abi.file_metadata2_error_unsupported };
+        const platform = @import("platform2.zig");
+        const stream = @import("stream_api.zig");
+        const rpc = @import("rpc_budget.zig");
+        const clock_fn = platform.abi.function(platform.abi.R4SysFns2, context.system(), "monotonic_clock");
+        var clock = stream.adapters.PlatformClock{ .read = clock_fn };
+        var budget = rpc.Budget.fromTimeout(clock_fn, timeout) catch |err| return .{ .failure = rpc.code(err) };
+        read_snapshot: while (true) {
+            _ = budget.remainingTicks() catch |err| return .{ .failure = rpc.code(err) };
+            if (self.sys.programShouldClose()) return .{ .failure = abi.file_metadata2_error_io };
+            const before = switch (metadata2.info(context, file_path.ptr)) {
+                .found => |value| value,
+                .missing => return .{ .failure = abi.file_stream_error_not_found },
+                .failure => |code| {
+                    if (code != abi.file_metadata2_error_restart) return .{ .failure = code };
+                    self.sys.sleepTicks(0);
+                    continue :read_snapshot;
+                },
+            };
+            const size = metadata2.fileSize(&before) orelse return .{ .failure = abi.file_metadata2_error_unsupported };
+            if (before.version != 1 or before.size != @sizeOf(abi.FileMetadata2) or
+                before.flags & abi.file_metadata2_flag_directory != 0) return .{ .failure = abi.file_metadata2_error_invalid };
+            const count: usize = @intCast(@min(size, out.len));
+            var source = stream.adapters.FileRead.fromContext2(context, file_path.ptr, 0) catch return .{ .failure = abi.err_no_fn };
+            const driver: stream.adapters.Driver = .{ .sys = self.sys, .clock = &clock, .budget = &budget };
+            const progress = driver.read(out[0..count], 64 * 1024, stream.adapters.FileRead.step, &source, true) catch return .{ .failure = abi.file_metadata2_error_io };
+            if (progress.outcome != @intFromEnum(stream.Outcome.complete) or progress.bytes != count) {
+                return .{ .failure = if (progress.error_code < 0) progress.error_code else abi.file_metadata2_error_io };
+            }
+            const after = switch (metadata2.info(context, file_path.ptr)) {
+                .found => |value| value,
+                .missing => return .{ .failure = abi.file_stream_error_not_found },
+                .failure => |code| {
+                    if (code != abi.file_metadata2_error_restart) return .{ .failure = code };
+                    self.sys.sleepTicks(0);
+                    continue :read_snapshot;
+                },
+            };
+            _ = budget.remainingTicks() catch |err| return .{ .failure = rpc.code(err) };
+            if (after.version != 1 or after.size != @sizeOf(abi.FileMetadata2) or
+                after.flags & abi.file_metadata2_flag_directory != 0) return .{ .failure = abi.file_metadata2_error_invalid };
+            if (metadata2.fileSize(&after) != size) continue :read_snapshot;
+            if (metadata2.identity(&before)) |identity| {
+                const observed = metadata2.identity(&after) orelse return .{ .failure = abi.file_metadata2_error_restart };
+                if (!@import("std").meta.eql(identity.*, observed.*)) continue :read_snapshot;
+            }
+            if (before.flags & abi.file_metadata2_flag_content_revision_valid != 0 and
+                (after.flags & abi.file_metadata2_flag_content_revision_valid == 0 or
+                    before.content_revision != after.content_revision)) continue :read_snapshot;
+            return .{ .value = .{ .bytes = count, .truncated = size >= out.len, .file_size = size } };
+        }
     }
 
     pub fn delete(self: *const Files, file_path: PathZ) Operation {
@@ -136,8 +294,23 @@ pub const Files = struct {
         return classifyPresenceOperation(self.sys.dirDelete(directory.ptr));
     }
 
+    pub fn beginDirectoryChanges(self: *const Files, directory: PathZ, cursor: *abi.DirectoryChangeCursor) i32 {
+        return self.sys.directoryChangeBegin(directory.ptr, cursor);
+    }
+
+    /// No directory scan, retained kernel handle or I/O. Consume the cursor
+    /// before reloading; a change during that reload is seen on the next poll.
+    pub fn pollDirectoryChanges(self: *const Files, cursor: *abi.DirectoryChangeCursor) i32 {
+        return self.sys.directoryChangePoll(cursor);
+    }
+
     pub fn iterate(self: Files, directory: PathZ) DirectoryIterator {
-        return .{ .files = self, .directory = directory };
+        var value = DirectoryIterator{ .files = self, .directory = directory };
+        if (self.sys.base.generation2 != null) {
+            value.cursor = .{ .next = .{} };
+            value.buffer = .{ .next = undefined };
+        }
+        return value;
     }
 
     pub fn streamReader(self: Files, file_path: PathZ) StreamReader {
@@ -191,49 +364,144 @@ pub const DirectoryIterator = struct {
     directory: PathZ,
     index: u32 = 2,
     ended: bool = false,
-    cursor: abi.DirectoryScanCursor = .{},
+    cursor: union { first: abi.DirectoryBatchCursor, next: abi.DirectoryMetadataCursor2 } = .{ .first = .{} },
+    buffer: union { first: [4]abi.DirectoryBatchEntry, next: [4]abi.DirectoryMetadataEntry2 } = .{ .first = @splat(.{}) },
+    buffer_index: u32 = 0,
+    buffer_count: u32 = 0,
     legacy_after_removal: bool = false,
 
     pub fn next(self: *DirectoryIterator, out_path: []u8) DirectoryNext {
         if (self.ended) return .end;
         if (out_path.len == 0) return .{ .failure = abi.file_stream_error_invalid };
         @memset(out_path, 0);
-        var info: abi.FileInfo = .{};
-        const resumable = !self.legacy_after_removal and self.index >= 2 and
-            (self.index == 2 or self.cursor.change.mount_generation != 0) and self.files.sys.hasFn("directory_next");
-        const raw = if (resumable) blk: {
-            while (true) {
-                const result = self.files.sys.directoryNext(self.directory.ptr, &self.cursor, out_path, &info);
-                if (result != 2) break :blk result;
-                if (self.files.sys.programShouldClose()) return .{ .failure = -10 };
-                self.files.sys.sleepTicks(0);
+        if (self.files.sys.base.generation2 != null) return self.next2(out_path);
+        if (self.legacy_after_removal or self.index < 2) {
+            const raw = self.files.sys.dirEntry(self.directory.ptr, self.index, out_path);
+            if (raw == r4sys.dir_entry_result_end) {
+                self.ended = true;
+                return .end;
             }
-        } else self.files.sys.dirEntry(self.directory.ptr, self.index, out_path);
-        if (raw == r4sys.dir_entry_result_end) {
-            self.ended = true;
-            return .end;
+            if (raw < 0) return .{ .failure = raw };
+            self.index += 1;
+            return .{ .entry = .{ .kind = if (raw == 1) .directory else .file, .path = spanZ(out_path), .info = null } };
         }
-        if (raw < 0) return .{ .failure = raw };
+        while (self.buffer_index == self.buffer_count) {
+            const raw = self.files.sys.directoryBatch(self.directory.ptr, &self.cursor.first, &self.buffer.first);
+            if (raw == r4sys.dir_entry_result_end) {
+                self.ended = true;
+                return .end;
+            }
+            if (raw < 0) return .{ .failure = raw };
+            if (raw > self.buffer.first.len) return .{ .failure = abi.file_stream_error_invalid };
+            if (raw != 0) {
+                self.buffer_index = 0;
+                self.buffer_count = @intCast(raw);
+                break;
+            }
+            if (self.files.sys.programShouldClose()) return .{ .failure = -10 };
+            self.files.sys.sleepTicks(0);
+        }
+        if (self.files.sys.programShouldClose()) return .{ .failure = -10 };
+        // Buffered values remain private until exact mount/owner/namespace
+        // validation. Unchanged scans take the kernel's RAM-only path.
+        const valid = self.files.sys.directoryBatch(self.directory.ptr, &self.cursor.first, self.buffer.first[0..0]);
+        if (valid < 0) return .{ .failure = valid };
+        const record = &self.buffer.first[self.buffer_index];
+        const length = @import("std").mem.indexOfScalar(u8, &record.path, 0) orelse return .{ .failure = abi.file_stream_error_invalid };
+        // A small output does not consume this buffered item.
+        if (length >= out_path.len) return .{ .failure = -7 };
+        @memcpy(out_path[0..length], record.path[0..length]);
+        self.buffer_index += 1;
         self.index += 1;
+        return .{ .entry = .{ .kind = if (record.info.is_dir != 0) .directory else .file, .path = out_path[0..length], .info = record.info } };
+    }
+
+    fn next2(self: *DirectoryIterator, out_path: []u8) DirectoryNext {
+        const view = self.files.sys.base.generation2.?;
+        if (self.legacy_after_removal) return .{ .failure = abi.file_metadata2_error_restart };
+        while (self.buffer_index == self.buffer_count) {
+            const raw = metadata2.batch(view, self.directory.ptr, &self.cursor.next, &self.buffer.next);
+            if (raw == r4sys.dir_entry_result_end) {
+                self.ended = true;
+                return .end;
+            }
+            if (raw < 0) return .{ .failure = raw };
+            if (raw > self.buffer.next.len) return .{ .failure = abi.file_metadata2_error_invalid };
+            if (raw != 0) {
+                self.buffer_index = 0;
+                self.buffer_count = @intCast(raw);
+                break;
+            }
+            if (self.files.sys.programShouldClose()) return .{ .failure = abi.err_closed };
+            self.files.sys.sleepTicks(0);
+        }
+        if (self.files.sys.programShouldClose()) return .{ .failure = abi.err_closed };
+        const valid = metadata2.batch(view, null, &self.cursor.next, self.buffer.next[0..0]);
+        if (valid != 0) {
+            self.buffer_index = 0;
+            self.buffer_count = 0;
+            return .{ .failure = if (valid < 0) valid else abi.file_metadata2_error_invalid };
+        }
+        const record = &self.buffer.next[self.buffer_index];
+        if (record.info.version != 1 or record.info.size < @sizeOf(abi.FileMetadata2) or record.info.flags & abi.file_metadata2_flag_exists == 0) return .{ .failure = abi.file_metadata2_error_invalid };
+        const length = @import("std").mem.indexOfScalar(u8, &record.path, 0) orelse return .{ .failure = abi.file_metadata2_error_path_bounds };
+        if (length >= out_path.len) return .{ .failure = -7 };
+        @memcpy(out_path[0..length], record.path[0..length]);
+        self.buffer_index += 1;
         return .{ .entry = .{
-            .kind = if (raw == 1) .directory else .file,
-            .path = spanZ(out_path),
-            .info = if (resumable) info else null,
+            .kind = if (record.info.flags & abi.file_metadata2_flag_directory != 0) .directory else .file,
+            .path = out_path[0..length],
+            .info = legacyInfo(record.info, record.path[0..length]),
+            .metadata = record.info,
         } };
     }
 
-    /// R4SYS directory indices address the Nth currently live entry.  After
-    /// removing the entry just returned by `next`, its successor shifts into
-    /// that same logical index and must be visited before advancing again.
+    /// Deleting the returned entry shifts its successor into the same live
+    /// Nth index. This is current mutation behavior, not an old-OS fallback.
     pub fn revisitAfterRemoval(self: *DirectoryIterator) void {
-        // Deleting while iterating intentionally changes the generation.
-        // Preserve the old live-index removal contract for this traversal.
         self.legacy_after_removal = true;
-        self.cursor = .{};
+        if (self.files.sys.base.generation2 != null) {
+            self.buffer_index = 0;
+            self.buffer_count = 0;
+            self.ended = false;
+            return; // Explicit Restart; never replay the old index API.
+        }
+        self.cursor = .{ .first = .{} };
+        self.buffer_index = 0;
+        self.buffer_count = 0;
         if (self.index > 2) self.index -= 1;
         self.ended = false;
     }
 };
+
+fn legacyInfo(value: abi.FileMetadata2, path: []const u8) ?abi.FileInfo {
+    const std = @import("std");
+    if (value.version != 1 or value.size < @sizeOf(abi.FileMetadata2) or value.flags & abi.file_metadata2_flag_exists == 0) return null;
+    if (value.flags & abi.file_metadata2_flag_backend_node_valid != 0 and value.backend_node > std.math.maxInt(u32)) return null;
+    if (value.attributes > std.math.maxInt(u8) or value.drive_letter > std.math.maxInt(u8)) return null;
+    const directory = value.flags & abi.file_metadata2_flag_directory != 0;
+    if (!directory and value.flags & abi.file_metadata2_flag_byte_size_valid == 0) return null;
+    var result: abi.FileInfo = .{
+        .exists = 1,
+        .is_dir = @intFromBool(directory),
+        .attr = @intCast(value.attributes),
+        .drive = @intCast(value.drive_letter),
+        .size = if (value.flags & abi.file_metadata2_flag_byte_size_valid != 0) value.byte_size else 0,
+        .first_cluster = if (value.flags & abi.file_metadata2_flag_backend_node_valid != 0) @intCast(value.backend_node) else 0,
+    };
+    if (value.flags & abi.file_metadata2_flag_dos_time_valid != 0) {
+        result.created_time = value.created_time;
+        result.created_date = value.created_date;
+        result.access_date = value.access_date;
+        result.modified_time = value.modified_time;
+        result.modified_date = value.modified_date;
+    }
+    const start = if (std.mem.lastIndexOfAny(u8, path, "\\/")) |i| i + 1 else 0;
+    const name = path[start..];
+    if (name.len >= result.name.len) return null;
+    @memcpy(result.name[0..name.len], name);
+    return result;
+}
 
 pub const StreamReader = struct {
     files: Files,
@@ -533,6 +801,12 @@ pub const Registry = struct {
         if (raw < 0) return .{ .failure = raw };
         if (@as(usize, @intCast(raw)) > out.len) return .{ .failure = abi.registry_api_result_buffer_too_small };
         return .{ .value = .{ .info = info, .bytes = out[0..@as(usize, @intCast(raw))] } };
+    }
+
+    /// Generic tools retain the on-disk type tag; the Registry owner validates
+    /// the tag and payload and serializes the mutation with every writer.
+    pub fn setValue(self: *const Registry, key: *const RegistryPath, name: [*:0]const u8, value_type: u16, value: []const u8) Operation {
+        return classifyRegistryOperation(self.sys.registrySetValue(key.asZ().ptr, name, value_type, value));
     }
 
     pub fn setString(self: *const Registry, key: *const RegistryPath, name: [*:0]const u8, value: []const u8) Operation {

@@ -337,6 +337,7 @@ pub const PlanRequirement = struct {
     name: []const u8,
     target: []const u8,
     version: []const u8,
+    state: r4u_manifest.RequirementState = .installed,
     current_satisfied: bool = false,
 };
 
@@ -376,19 +377,27 @@ pub fn planOrder(
 
     for (requirements) |requirement| {
         if (requirement.package_index >= packages.len) return error.InvalidReference;
-        if (requirement.current_satisfied) continue;
+        // A package can provide installed bytes, never the running kernel.
+        if (requirement.state == .active) {
+            if (!requirement.current_satisfied) return error.UnresolvedRequirement;
+            continue;
+        }
         var provider: ?u8 = null;
         for (components) |component| {
             if (component.kind != requirement.kind or
                 !std.ascii.eqlIgnoreCase(component.name, requirement.name) or
-                !r4u_manifest.targetEquals(component.target, requirement.target) or
-                (r4u_manifest.compareVersions(component.version, requirement.version) orelse -1) < 0)
+                !r4u_manifest.targetEquals(component.target, requirement.target))
             {
                 continue;
             }
+            // The batch's final artifact replaces the currently installed
+            // provider. A sufficient old installation cannot hide a downgrade.
+            if ((r4u_manifest.compareVersions(component.version, requirement.version) orelse -1) < 0)
+                return error.UnresolvedRequirement;
             provider = component.package_index;
             break;
         }
+        if (provider == null and requirement.current_satisfied) continue;
         const provider_index = provider orelse return error.UnresolvedRequirement;
         if (provider_index == requirement.package_index or edges[provider_index][requirement.package_index]) continue;
         edges[provider_index][requirement.package_index] = true;
@@ -584,4 +593,17 @@ test "planner rejects unresolved and cyclic package requirements" {
         .{ .package_index = 1, .kind = .r4x, .name = "A", .target = "/R4OS/SOFTWARE/A/A.R4X", .version = "1.0.0" },
     };
     try std.testing.expectError(error.DependencyCycle, planOrder(packages[0..], components[0..], cyclic[0..], order[0..]));
+    const kernel = [_]PlanComponent{
+        .{ .package_index = 0, .kind = .kernel, .name = "KERNEL", .target = "/boot/r4os.elf", .version = "0.1.199" },
+    };
+    var active = [_]PlanRequirement{
+        .{ .package_index = 1, .kind = .kernel, .name = "KERNEL", .target = "/boot/r4os.elf", .version = "0.1.199", .state = .active },
+    };
+    try std.testing.expectError(error.UnresolvedRequirement, planOrder(&packages, &kernel, &active, &order));
+    active[0].current_satisfied = true;
+    _ = try planOrder(&packages, &kernel, &active, &order);
+    const downgrade = [_]PlanRequirement{
+        .{ .package_index = 1, .kind = .r4x, .name = "A", .target = "/R4OS/SOFTWARE/A/A.R4X", .version = "2.0.0", .current_satisfied = true },
+    };
+    try std.testing.expectError(error.UnresolvedRequirement, planOrder(&packages, &components, &downgrade, &order));
 }

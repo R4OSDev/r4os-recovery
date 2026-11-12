@@ -27,6 +27,8 @@ pub const Expectation = struct {
 };
 
 pub const BindingError = error{
+    MissingImport,
+    InvalidQuery,
     InvalidImport,
     ManifestRevisionTooOld,
     MisalignedTable,
@@ -42,6 +44,32 @@ pub const BindingError = error{
     TableTooSmall,
     InvalidExpectation,
 };
+
+/// Names belong to the shared import payload in either start generation.
+pub fn importNameEquals(raw: u64, expected: []const u8) bool {
+    if (raw == 0 or expected.len == 0 or expected.len >= 32) return false;
+    const value: [*]const u8 = @ptrFromInt(raw);
+    for (expected, 0..) |byte, index| {
+        const actual = value[index];
+        if (actual == 0 or asciiUpper(actual) != asciiUpper(byte)) return false;
+    }
+    return value[expected.len] == 0;
+}
+
+fn asciiUpper(value: u8) u8 {
+    return if (value >= 'a' and value <= 'z') value - ('a' - 'A') else value;
+}
+
+/// Technical admission is distinct from each library's named API revision.
+pub fn query2(context: *const @import("platform2.zig").Context, module: []const u8) BindingError!*const @import("platform2.zig").abi.R4LQuery2 {
+    const next = @import("platform2.zig").abi;
+    const item = context.findImportNamed(module, "Query2") orelse return error.MissingImport;
+    if (item.group_id != 0 or item.min_version != 2 or item.resolved_version != 2 or item.table == 0) return error.InvalidImport;
+    if (item.table % @alignOf(next.R4LQuery2) != 0) return error.MisalignedTable;
+    const descriptor: *const next.R4LQuery2 = @ptrFromInt(item.table);
+    if (descriptor.magic != next.query_magic or descriptor.abi_version != 2 or descriptor.size < @sizeOf(next.R4LQuery2) or descriptor.group != 0 or descriptor.reserved != 0) return error.InvalidQuery;
+    return descriptor;
+}
 
 comptime {
     if (@sizeOf(InterfaceHeader) != interface_header_size or @alignOf(InterfaceHeader) != interface_alignment) {

@@ -1,8 +1,26 @@
 const std = @import("std");
+const grapheme = @import("r4std_grapheme");
+const bounded_text = @import("bounded_text.zig");
 const abi = @import("r4os_contract").abi;
 const r4sys = @import("r4sys.zig");
 const r4desk = @import("r4desk.zig");
 const r4draw = @import("r4draw.zig");
+const modern = @import("gui_modern.zig");
+const text_metrics = @import("text_metrics.zig");
+const text_metrics_runtime = @import("text_metrics_runtime.zig");
+const text_control = @import("gui_text_control.zig");
+const offers = @import("clipboard_offer.zig");
+const composition = @import("text_composition.zig");
+pub const TextClipboard = text_control.Clipboard;
+pub const Style = modern.Style;
+pub const FontSet = modern.FontSet;
+pub const TextRole = modern.TextRole;
+pub const SurfaceRole = modern.SurfaceRole;
+pub const Card = modern.Card;
+pub const TileGrid = modern.TileGrid;
+pub const Progress = modern.Progress;
+pub const Paragraph = modern.Paragraph;
+pub const modernSupported = modern.supported;
 
 pub const font_w: i32 = 8;
 pub const font_h: i32 = 8;
@@ -171,6 +189,8 @@ pub const FocusState = struct {
     }
 };
 
+/// Local widget target/action state only; native capture is the explicit
+/// Window.pointerCapture/R4DESK contract, including its host grant.
 pub const MouseCapture = struct {
     target: ?usize = null,
     action: ControlAction = .none,
@@ -565,17 +585,22 @@ pub const TabBar = struct {
     focused: bool = false,
     tab_h: i32 = 22,
     palette: Palette = default_palette,
+    /// Keep the classic eight-pixel default; modern callers use Canvas.layoutTabs.
+    text_advance: i32 = font_w,
 
     pub fn draw(self: TabBar, canvas: Canvas, scratch: []u8) i32 {
         return drawTabBar(canvas, self, scratch);
     }
 
     pub fn tabRect(self: TabBar, index: usize) Rect {
-        return tabBarItemRect(self.rect, self.items, index, self.tab_h);
+        return tabBarItemRectWithAdvance(self.rect, self.items, index, self.tab_h, self.text_advance);
     }
 
     pub fn indexAt(self: TabBar, x: i32, y: i32) ?usize {
-        return tabBarIndexAt(self.rect, self.items, self.tab_h, x, y);
+        for (self.items, 0..) |item, index| {
+            if (item.enabled and self.tabRect(index).contains(x, y)) return index;
+        }
+        return null;
     }
 
     pub fn keyAction(self: TabBar, key: u8) SelectionStep {
@@ -1287,6 +1312,8 @@ pub const FileDialog = struct {
     items: []const []const u8,
     mode: FileDialogMode = .open,
     file_name: []const u8 = "",
+    file_name_cursor: ?usize = null,
+    file_name_selection: TextRange = .{},
     selected_index: usize = 0,
     hover_index: ?usize = null,
     first_index: usize = 0,
@@ -1298,7 +1325,7 @@ pub const FileDialog = struct {
     palette: Palette = default_palette,
 
     pub fn draw(self: FileDialog, canvas: Canvas, scratch: []u8) i32 {
-        return drawFileDialogEx(canvas, self.rect, scratch, self.title, self.path, self.items, self.selected_index, self.hover_index, self.first_index, self.max_visible_rows, self.mode, self.file_name, self.ok_text, self.cancel_text, self.focus_action, self.pressed_action, self.palette);
+        return drawFileDialogText(canvas, self.rect, scratch, self.title, self.path, self.items, self.selected_index, self.hover_index, self.first_index, self.max_visible_rows, self.mode, self.file_name, self.ok_text, self.cancel_text, self.focus_action, self.pressed_action, self.palette, self.file_name_cursor, self.file_name_selection);
     }
 
     pub fn listRect(self: FileDialog) Rect {
@@ -1374,6 +1401,8 @@ pub const InputDialog = struct {
     title: []const u8,
     label: []const u8,
     value: []const u8,
+    value_cursor: ?usize = null,
+    value_selection: TextRange = .{},
     ok_text: []const u8 = "OK",
     cancel_text: []const u8 = "Cancel",
     focus_action: DialogAction = .select,
@@ -1423,12 +1452,24 @@ pub const InputDialog = struct {
     }
 };
 
-pub fn TextArea(comptime capacity: usize) type {
-    if (capacity < 2) @compileError("TextArea capacity must be at least 2 bytes");
+/// Fixed arrays retain their original public type/layout. An explicit []u8
+/// storage parameter lets foreign callers borrow a runtime-sized buffer and
+/// use the same editor, without a second Unicode/editing implementation.
+pub fn borrowedTextArea(buffer: []u8) ?TextArea([]u8) {
+    if (buffer.len < 2) return null;
+    var result = TextArea([]u8){ .buffer = buffer };
+    result.clear();
+    return result;
+}
+
+pub fn TextArea(comptime capacity: anytype) type {
+    const Buffer = if (@TypeOf(capacity) == type) capacity else [capacity]u8;
+    if (Buffer != []u8 and @typeInfo(Buffer) != .array) @compileError("TextArea storage must be a byte array or []u8");
+    if (Buffer != []u8 and @typeInfo(Buffer).array.len < 2) @compileError("TextArea capacity must be at least 2 bytes");
     return struct {
         const Self = @This();
 
-        buffer: [capacity]u8 = .{0} ** capacity,
+        buffer: Buffer = if (Buffer == []u8) @constCast(&.{}) else @splat(0),
         len: usize = 0,
         cursor: usize = 0,
         selection_anchor: ?usize = null,
@@ -1440,8 +1481,7 @@ pub fn TextArea(comptime capacity: usize) type {
         palette: Palette = default_palette,
 
         pub fn maxTextLen(self: *const Self) usize {
-            _ = self;
-            return capacity - 1;
+            return self.buffer.len - 1;
         }
 
         pub fn value(self: *const Self) []const u8 {
@@ -1457,6 +1497,7 @@ pub fn TextArea(comptime capacity: usize) type {
         }
 
         pub fn set(self: *Self, value_text: []const u8) void {
+            if (!grapheme.valid(value_text)) return;
             self.clear();
             _ = self.insertSliceRaw(value_text);
             self.cursor = self.len;
@@ -1492,12 +1533,13 @@ pub fn TextArea(comptime capacity: usize) type {
 
         pub fn selectionRange(self: *const Self) TextRange {
             const anchor = self.selection_anchor orelse self.cursor;
-            return TextRange.normalized(@min(anchor, self.len), @min(self.cursor, self.len));
+            const range = TextRange.normalized(@min(anchor, self.len), @min(self.cursor, self.len));
+            return .{ .start = graphemeFloor(self.value(), range.start), .end = if (range.isEmpty()) graphemeFloor(self.value(), range.end) else graphemeCeil(self.value(), range.end) };
         }
 
         pub fn setSelection(self: *Self, start: usize, end: usize) void {
-            self.selection_anchor = utf8FloorBoundary(self.value(), start);
-            self.cursor = utf8FloorBoundary(self.value(), end);
+            self.selection_anchor = if (start <= end) graphemeFloor(self.value(), start) else graphemeCeil(self.value(), start);
+            self.cursor = if (start < end) graphemeCeil(self.value(), end) else graphemeFloor(self.value(), end);
             self.preferred_col = null;
         }
 
@@ -1530,6 +1572,37 @@ pub fn TextArea(comptime capacity: usize) type {
             return ctx.clipboardWrite(selected) >= 0;
         }
 
+        /// Caller begins/commits the exact stage and cuts only after its ACK.
+        pub fn stageSelection(self: *const Self, client: *const offers.Client, stage: *const offers.Lease) i32 {
+            if (!self.hasSelection()) return abi.clipboard_offer_error_not_found;
+            return text_control.stageText(client, stage, self.selectedValue());
+        }
+
+        pub fn pasteOffer(self: *Self, client: *const offers.Client, snapshot: *const offers.Lease, format: *const offers.Format, scratch: []u8, view: *const TextAreaView) i32 {
+            if (self.disabled) return abi.clipboard_offer_error_unsupported;
+            const count = text_control.readText(client, snapshot, format, scratch);
+            if (count < 0) return count;
+            return @intFromBool(self.pasteSlice(scratch[0..@intCast(count)], view.*));
+        }
+
+        pub fn beginComposition(self: *const Self, state: *composition.Owner, focus: *const composition.Focus, provider: *const composition.Provider, revision: u64, caret: *const composition.Caret, out: *composition.Id) i32 {
+            if (self.disabled) return abi.composition_error_unsupported;
+            const range = self.selectionRange();
+            return state.begin(focus.*, provider.*, revision, self.value(), .{ .start = range.start, .end = range.end }, caret.*, out);
+        }
+
+        pub fn applyComposition(self: *Self, state: *composition.Owner, focus: *const composition.Focus, provider: *const composition.Provider, event: *const composition.Event, text: []const u8, revision: *u64, view: *const TextAreaView) i32 {
+            if (self.disabled) return abi.composition_error_unsupported;
+            const rc = state.apply(focus.*, provider.*, event.*, text, self.buffer[0..self.maxTextLen()], &self.len, revision);
+            if (rc == 0 and event.kind == abi.composition_event_commit) {
+                self.buffer[self.len] = 0;
+                self.cursor = @intCast(event.replacement.start + text.len);
+                self.clearSelection();
+                self.afterEdit(view.*);
+            }
+            return rc;
+        }
+
         pub fn cutToClipboard(self: *Self, ctx: *const r4desk.Context) bool {
             if (self.disabled) return false;
             if (!self.copyToClipboard(ctx)) return false;
@@ -1546,16 +1619,30 @@ pub fn TextArea(comptime capacity: usize) type {
 
         pub fn pasteSlice(self: *Self, value_text: []const u8, view: TextAreaView) bool {
             if (self.disabled) return false;
+            const range = self.selectionRange();
+            const cap = self.available() + range.count();
+            const end = editablePrefix(value_text, cap, true) orelse return false;
+            if (end == 0) return false;
             const deleted = self.deleteSelection();
-            const inserted = self.insertSliceRaw(value_text);
+            const inserted = self.insertSliceRaw(value_text[0..end]);
             const changed = deleted or inserted > 0;
             if (changed) self.afterEdit(view);
             return changed;
         }
 
+        /// Complete typed representations must fit before selection deletion.
+        pub fn pasteSliceChecked(self: *Self, value_text: []const u8, view: TextAreaView) bool {
+            const cap = self.available() + self.selectionRange().count();
+            const end = editablePrefix(value_text, cap, true) orelse return false;
+            if (end != value_text.len) return false;
+            return self.pasteSlice(value_text, view);
+        }
+
         pub fn insertByte(self: *Self, ch: u8, view: TextAreaView) bool {
             if (self.disabled) return false;
             const normalized = normalizeTextAreaByte(ch) orelse return false;
+            const range = self.selectionRange();
+            if (self.available() + range.count() == 0) return false;
             _ = self.deleteSelection();
             if (!self.insertByteRaw(normalized)) return false;
             self.afterEdit(view);
@@ -1564,8 +1651,12 @@ pub fn TextArea(comptime capacity: usize) type {
 
         pub fn insertSlice(self: *Self, value_text: []const u8, view: TextAreaView) bool {
             if (self.disabled) return false;
+            const range = self.selectionRange();
+            const cap = self.available() + range.count();
+            const end = editablePrefix(value_text, cap, true) orelse return false;
+            if (end == 0) return false;
             const deleted = self.deleteSelection();
-            const inserted = self.insertSliceRaw(value_text);
+            const inserted = self.insertSliceRaw(value_text[0..end]);
             const changed = deleted or inserted > 0;
             if (changed) self.afterEdit(view);
             return changed;
@@ -1588,7 +1679,7 @@ pub fn TextArea(comptime capacity: usize) type {
                 return true;
             }
             if (self.cursor == 0) return false;
-            const target = utf8PreviousIndex(self.value(), self.cursor);
+            const target = graphemePrevious(self.value(), self.cursor);
             self.removeRange(target, self.cursor);
             self.cursor = @min(target, self.len);
             self.afterEdit(view);
@@ -1602,14 +1693,14 @@ pub fn TextArea(comptime capacity: usize) type {
                 return true;
             }
             if (self.cursor >= self.len) return false;
-            self.removeRange(self.cursor, utf8NextIndex(self.value(), self.cursor));
+            self.removeRange(self.cursor, graphemeNext(self.value(), self.cursor));
             self.afterEdit(view);
             return true;
         }
 
         pub fn removeRange(self: *Self, start: usize, end: usize) void {
-            const safe_start = @min(start, self.len);
-            const safe_end = @min(end, self.len);
+            const safe_start = graphemeFloor(self.value(), start);
+            const safe_end = graphemeCeil(self.value(), end);
             if (safe_start >= safe_end) return;
             const count = safe_end - safe_start;
             var index = safe_start;
@@ -1628,7 +1719,7 @@ pub fn TextArea(comptime capacity: usize) type {
         }
 
         pub fn moveCursorTo(self: *Self, index: usize, extend_selection: bool, view: TextAreaView) bool {
-            const target = utf8FloorBoundary(self.value(), index);
+            const target = graphemeFloor(self.value(), index);
             if (target == self.cursor and (extend_selection or !self.hasSelection())) return false;
             self.setCursorInternal(target, extend_selection);
             self.preferred_col = null;
@@ -1639,13 +1730,13 @@ pub fn TextArea(comptime capacity: usize) type {
         pub fn moveLeft(self: *Self, extend_selection: bool, view: TextAreaView) bool {
             if (!extend_selection and self.hasSelection()) return self.moveCursorTo(self.selectionRange().start, false, view);
             if (self.cursor == 0) return false;
-            return self.moveCursorTo(utf8PreviousIndex(self.value(), self.cursor), extend_selection, view);
+            return self.moveCursorTo(graphemePrevious(self.value(), self.cursor), extend_selection, view);
         }
 
         pub fn moveRight(self: *Self, extend_selection: bool, view: TextAreaView) bool {
             if (!extend_selection and self.hasSelection()) return self.moveCursorTo(self.selectionRange().end, false, view);
             if (self.cursor >= self.len) return false;
-            return self.moveCursorTo(utf8NextIndex(self.value(), self.cursor), extend_selection, view);
+            return self.moveCursorTo(graphemeNext(self.value(), self.cursor), extend_selection, view);
         }
 
         pub fn moveHome(self: *Self, extend_selection: bool, view: TextAreaView) bool {
@@ -1661,8 +1752,9 @@ pub fn TextArea(comptime capacity: usize) type {
         pub fn moveVertical(self: *Self, delta: i32, extend_selection: bool, view: TextAreaView) bool {
             if (delta == 0) return false;
             const wrap_cols = view.effectiveWrapCols();
-            const point = textAreaVisualPoint(self.value(), self.cursor, wrap_cols);
-            const last_line = textAreaVisualLineCount(self.value(), wrap_cols) - 1;
+            const layout = textAreaLayout(self.value(), self.cursor, wrap_cols, 0, 0);
+            const point = layout.caret;
+            const last_line = layout.total_lines - 1;
             const base_col = self.preferred_col orelse point.column;
             var target_line = point.line;
             if (delta < 0) {
@@ -1727,7 +1819,7 @@ pub fn TextArea(comptime capacity: usize) type {
         }
 
         pub fn beginMouseSelection(self: *Self, index: usize, view: TextAreaView) void {
-            const safe_index = @min(index, self.len);
+            const safe_index = graphemeFloor(self.value(), index);
             self.cursor = safe_index;
             self.selection_anchor = safe_index;
             self.preferred_col = null;
@@ -1757,6 +1849,20 @@ pub fn TextArea(comptime capacity: usize) type {
             );
         }
 
+        /// Uses the same visible line, font and whole grapheme advances as
+        /// measured rendering. A failed receipt preserves the caller's index.
+        pub fn hitTestChecked(self: *const Self, canvas: Canvas, x: i32, y: i32, view: TextAreaView, out: *usize) i32 {
+            const row: usize = if (y <= 0) 0 else @intCast(@divTrunc(y, @max(1, canvas.font.line_height)));
+            const range = textAreaVisualLineRange(self.value(), self.scroll_line + row, view.effectiveWrapCols());
+            const first = utf8ByteIndexForColumns(self.value(), range.start, range.end, self.scroll_col);
+            const last = utf8ByteIndexForColumns(self.value(), first, range.end, view.effectiveVisibleCols());
+            var local: usize = 0;
+            const rc = canvas.textIndexChecked(self.value()[first..last], x, &local);
+            if (rc != 0) return rc;
+            out.* = first + local;
+            return 0;
+        }
+
         pub fn scrollTo(self: *Self, line: usize, column: usize, view: TextAreaView) void {
             self.scroll_line = line;
             self.scroll_col = column;
@@ -1774,19 +1880,25 @@ pub fn TextArea(comptime capacity: usize) type {
         }
 
         pub fn clampScroll(self: *Self, view: TextAreaView) void {
-            const line_count = textAreaVisualLineCount(self.value(), view.effectiveWrapCols());
+            const layout = textAreaLayout(self.value(), self.cursor, view.effectiveWrapCols(), 0, 0);
+            self.clampScrollWithLayout(view, &layout);
+        }
+
+        fn clampScrollWithLayout(self: *Self, view: TextAreaView, layout: *const TextAreaLayout) void {
+            const line_count = layout.total_lines;
             const rows = view.effectiveVisibleRows();
             const max_first = if (line_count > rows) line_count - rows else 0;
             if (self.scroll_line > max_first) self.scroll_line = max_first;
             const max_col = if (view.wrap_cols == 0) blk: {
-                const widest_line = textAreaVisualMaxColumns(self.value(), 0);
+                const widest_line = layout.max_columns;
                 break :blk if (widest_line > view.effectiveVisibleCols()) widest_line - view.effectiveVisibleCols() else 0;
             } else 0;
             if (self.scroll_col > max_col) self.scroll_col = max_col;
         }
 
         pub fn ensureCursorVisible(self: *Self, view: TextAreaView) void {
-            const point = textAreaVisualPoint(self.value(), self.cursor, view.effectiveWrapCols());
+            const layout = textAreaLayout(self.value(), self.cursor, view.effectiveWrapCols(), 0, 0);
+            const point = layout.caret;
             const rows = view.effectiveVisibleRows();
             const cols = view.effectiveVisibleCols();
             if (point.line < self.scroll_line) {
@@ -1799,7 +1911,7 @@ pub fn TextArea(comptime capacity: usize) type {
             } else if (point.column >= self.scroll_col + cols) {
                 self.scroll_col = point.column + 1 - cols;
             }
-            self.clampScroll(view);
+            self.clampScrollWithLayout(view, &layout);
         }
 
         pub fn draw(self: *const Self, canvas: Canvas, rect: Rect, scratch: []u8) i32 {
@@ -1807,13 +1919,14 @@ pub fn TextArea(comptime capacity: usize) type {
         }
 
         fn afterEdit(self: *Self, view: TextAreaView) void {
+            self.cursor = graphemeCeil(self.value(), self.cursor);
             self.preferred_col = null;
             self.ensureCursorVisible(view);
         }
 
         fn setCursorInternal(self: *Self, index: usize, extend_selection: bool) void {
             const old_cursor = self.cursor;
-            self.cursor = @min(index, self.len);
+            self.cursor = graphemeFloor(self.value(), index);
             if (extend_selection) {
                 if (self.selection_anchor == null) self.selection_anchor = old_cursor;
             } else {
@@ -1822,28 +1935,15 @@ pub fn TextArea(comptime capacity: usize) type {
         }
 
         fn insertSliceRaw(self: *Self, value_text: []const u8) usize {
-            var inserted: usize = 0;
+            const end = editablePrefix(value_text, self.available(), true) orelse return 0;
             var i: usize = 0;
-            while (i < value_text.len) {
-                const source_index = i;
+            var inserted: usize = 0;
+            while (i < end) {
                 var ch = value_text[i];
                 i += 1;
                 if (ch == '\r') {
-                    if (i < value_text.len and value_text[i] == '\n') i += 1;
+                    if (i < end and value_text[i] == '\n') i += 1;
                     ch = '\n';
-                }
-                if (ch >= 0x80) {
-                    const sequence_len = utf8SequenceLengthAt(value_text, source_index);
-                    if (sequence_len > 1) {
-                        if (self.len + sequence_len >= self.buffer.len) break;
-                        var offset: usize = 0;
-                        while (offset < sequence_len) : (offset += 1) {
-                            _ = self.insertByteRaw(value_text[source_index + offset]);
-                        }
-                        i = source_index + sequence_len;
-                        inserted += sequence_len;
-                        continue;
-                    }
                 }
                 const normalized = normalizeTextAreaByte(ch) orelse continue;
                 if (!self.insertByteRaw(normalized)) break;
@@ -1865,29 +1965,87 @@ pub fn TextArea(comptime capacity: usize) type {
     };
 }
 
-pub fn TextField(comptime capacity: usize) type {
-    if (capacity == 0) @compileError("TextField capacity must be greater than zero");
+pub fn borrowedTextField(buffer: []u8) ?TextField([]u8) {
+    if (buffer.len == 0) return null;
+    var result = TextField([]u8){ .buffer = buffer };
+    result.clear();
+    return result;
+}
+
+pub fn TextField(comptime capacity: anytype) type {
+    const Buffer = if (@TypeOf(capacity) == type) capacity else [capacity]u8;
+    if (Buffer != []u8 and @typeInfo(Buffer) != .array) @compileError("TextField storage must be a byte array or []u8");
+    if (Buffer != []u8 and @typeInfo(Buffer).array.len == 0) @compileError("TextField capacity must be greater than zero");
     return struct {
         const Self = @This();
 
-        buffer: [capacity]u8 = .{0} ** capacity,
+        buffer: Buffer = if (Buffer == []u8) @constCast(&.{}) else @splat(0),
         len: usize = 0,
         cursor: usize = 0,
         selection_anchor: ?usize = null,
         focused: bool = false,
         disabled: bool = false,
+        password: bool = false,
         palette: Palette = default_palette,
+
+        const password_max_bytes: usize = 4096;
+
+        fn inputLimit(self: *const Self) usize {
+            return @min(self.buffer.len - 1, if (self.password) password_max_bytes else std.math.maxInt(usize));
+        }
+
+        /// A password field keeps plaintext only in its caller-owned editor
+        /// buffer. This operation never reveals or copies it elsewhere.
+        pub fn setPasswordMode(self: *Self, enabled: bool) bool {
+            if (enabled and self.len > password_max_bytes) return false;
+            self.password = enabled;
+            if (enabled) @memset(self.buffer[self.len + 1 ..], 0);
+            return true;
+        }
 
         pub fn value(self: *const Self) []const u8 {
             return self.buffer[0..self.len];
         }
 
         pub fn set(self: *Self, value_text: []const u8) void {
-            @memset(self.buffer[0..], 0);
-            self.len = utf8PrefixBytes(value_text, std.math.maxInt(usize), self.buffer.len - 1);
-            @memcpy(self.buffer[0..self.len], value_text[0..self.len]);
+            if (!bounded_text.valid(value_text)) return;
+            const end = grapheme.prefix(value_text, self.inputLimit()) catch return;
+            if (!bounded_text.assignZ(self.buffer[0..], value_text[0..end])) return;
+            self.len = end;
             self.cursor = self.len;
             self.selection_anchor = null;
+            if (self.password) @memset(self.buffer[self.len + 1 ..], 0);
+        }
+
+        /// Exact editable preload. Invalid/overlong input preserves value,
+        /// cursor and selection; callers must report the failed assignment.
+        pub fn setExact(self: *Self, value_text: []const u8) bool {
+            if (value_text.len > self.inputLimit()) return false;
+            if (!bounded_text.assignZ(self.buffer[0..], value_text)) return false;
+            self.len = value_text.len;
+            self.cursor = self.len;
+            self.selection_anchor = null;
+            if (self.password) @memset(self.buffer[self.len + 1 ..], 0);
+            return true;
+        }
+
+        pub fn setSelection(self: *Self, start: usize, end: usize) void {
+            self.selection_anchor = if (start <= end) graphemeFloor(self.value(), start) else graphemeCeil(self.value(), start);
+            self.cursor = if (start < end) graphemeCeil(self.value(), end) else graphemeFloor(self.value(), end);
+        }
+
+        /// Preflight replacement capacity before the existing scalar editor
+        /// may delete a selection. Navigation retains its existing contract.
+        pub fn handleCodepointChecked(self: *Self, codepoint: u32) bool {
+            if (self.disabled) return false;
+            if (isTextCodepoint(codepoint)) {
+                var encoded: [4]u8 = undefined;
+                const bytes = encodeUtf8Codepoint(codepoint, &encoded);
+                const range = self.selectionRange();
+                const retained = self.len - (range.end - range.start);
+                if (bytes == 0 or bytes > self.inputLimit() - retained) return false;
+            }
+            return self.handleCodepoint(codepoint);
         }
 
         pub fn clear(self: *Self) void {
@@ -1931,13 +2089,13 @@ pub fn TextField(comptime capacity: usize) type {
                 },
                 Key.left => {
                     if (self.cursor == 0) return false;
-                    self.cursor = utf8PreviousIndex(self.value(), self.cursor);
+                    self.cursor = graphemePrevious(self.value(), self.cursor);
                     self.clearSelection();
                     return true;
                 },
                 Key.right => {
                     if (self.cursor >= self.len) return false;
-                    self.cursor = utf8NextIndex(self.value(), self.cursor);
+                    self.cursor = graphemeNext(self.value(), self.cursor);
                     self.clearSelection();
                     return true;
                 },
@@ -1956,26 +2114,37 @@ pub fn TextField(comptime capacity: usize) type {
                 Key.backspace => {
                     if (self.deleteSelection()) return true;
                     if (self.cursor == 0) return false;
-                    const target = utf8PreviousIndex(self.value(), self.cursor);
+                    const target = graphemePrevious(self.value(), self.cursor);
                     self.removeRange(target, self.cursor);
-                    self.cursor = target;
+                    self.cursor = graphemeFloor(self.value(), target);
                     return true;
                 },
                 Key.delete => {
                     if (self.deleteSelection()) return true;
                     if (self.cursor >= self.len) return false;
-                    self.removeRange(self.cursor, utf8NextIndex(self.value(), self.cursor));
+                    self.removeRange(self.cursor, graphemeNext(self.value(), self.cursor));
+                    self.cursor = graphemeFloor(self.value(), self.cursor);
                     return true;
                 },
                 else => {},
             }
             if (!isTextCodepoint(codepoint)) return false;
-            _ = self.deleteSelection();
             var encoded: [4]u8 = undefined;
             const encoded_len = encodeUtf8Codepoint(codepoint, &encoded);
-            if (encoded_len == 0 or self.len + encoded_len >= self.buffer.len) return false;
+            const range = self.selectionRange();
+            if (encoded_len == 0 or self.len - (range.end - range.start) + encoded_len > self.inputLimit()) return false;
+            _ = self.deleteSelection();
+            // An empty selection still has an anchor (e.g. Ctrl+A in an
+            // empty field). It must not select the newly inserted scalar.
+            self.clearSelection();
             for (encoded[0..encoded_len]) |ch| _ = self.insertPrintable(ch);
+            self.cursor = graphemeCeil(self.value(), self.cursor);
             return true;
+        }
+
+        pub fn handleClipboardCodepoint(self: *Self, ctx: *const r4desk.Context, codepoint: u32) bool {
+            if (codepoint == Key.ctrl_c or codepoint == Key.ctrl_x or codepoint == Key.ctrl_v) return self.handleClipboardKey(ctx, @intCast(codepoint));
+            return self.handleCodepointChecked(codepoint);
         }
 
         pub fn handleClipboardKey(self: *Self, ctx: *const r4desk.Context, key: u8) bool {
@@ -1988,11 +2157,43 @@ pub fn TextField(comptime capacity: usize) type {
         }
 
         pub fn copyToClipboard(self: *const Self, ctx: *const r4desk.Context) bool {
+            if (self.password) return false;
             return ctx.clipboardWrite(self.clipboardValue()) >= 0;
         }
 
+        /// No publication occurs here: caller retains the stage through ACK.
+        pub fn stageSelection(self: *const Self, client: *const offers.Client, stage: *const offers.Lease) i32 {
+            if (self.password) return abi.clipboard_offer_error_unsupported;
+            return text_control.stageText(client, stage, self.clipboardValue());
+        }
+
+        pub fn pasteOffer(self: *Self, client: *const offers.Client, snapshot: *const offers.Lease, format: *const offers.Format, scratch: []u8) i32 {
+            if (self.disabled) return abi.clipboard_offer_error_unsupported;
+            defer if (self.password) @memset(scratch, 0);
+            const count = text_control.readText(client, snapshot, format, scratch);
+            if (count < 0) return count;
+            return @intFromBool(self.pasteSlice(scratch[0..@intCast(count)]));
+        }
+
+        pub fn beginComposition(self: *const Self, state: *composition.Owner, focus: *const composition.Focus, provider: *const composition.Provider, revision: u64, caret: *const composition.Caret, out: *composition.Id) i32 {
+            if (self.disabled or self.password) return abi.composition_error_unsupported;
+            const range = self.selectionRange();
+            return state.begin(focus.*, provider.*, revision, self.value(), .{ .start = range.start, .end = range.end }, caret.*, out);
+        }
+
+        pub fn applyComposition(self: *Self, state: *composition.Owner, focus: *const composition.Focus, provider: *const composition.Provider, event: *const composition.Event, text: []const u8, revision: *u64) i32 {
+            if (self.disabled or self.password) return abi.composition_error_unsupported;
+            const rc = state.apply(focus.*, provider.*, event.*, text, self.buffer[0..self.inputLimit()], &self.len, revision);
+            if (rc == 0 and event.kind == abi.composition_event_commit) {
+                self.buffer[self.len] = 0;
+                self.cursor = graphemeCeil(self.value(), @intCast(event.replacement.start + text.len));
+                self.clearSelection();
+            }
+            return rc;
+        }
+
         pub fn cutToClipboard(self: *Self, ctx: *const r4desk.Context) bool {
-            if (self.disabled) return false;
+            if (self.disabled or self.password) return false;
             if (!self.copyToClipboard(ctx)) return false;
             if (!self.deleteSelection()) self.clear();
             return true;
@@ -2001,35 +2202,33 @@ pub fn TextField(comptime capacity: usize) type {
         pub fn pasteFromClipboard(self: *Self, ctx: *const r4desk.Context) bool {
             if (self.disabled) return false;
             var data: [clipboard_buffer_size]u8 = .{0} ** clipboard_buffer_size;
+            defer if (self.password) @memset(&data, 0);
             const len = ctx.clipboardRead(data[0..]);
             if (len <= 0) return false;
-            _ = self.deleteSelection();
-            const input_len = @min(data.len, @as(usize, @intCast(len)));
-            const input = data[0..input_len];
-            var changed = false;
-            var i: usize = 0;
-            while (i < input.len) {
-                const ch = data[i];
-                if (ch == 0) break;
-                if (ch < 0x20 or ch == 0x7F) {
-                    i += 1;
-                    continue;
-                }
-                const sequence_len = utf8SequenceLengthAt(input, i);
-                if (sequence_len > 1) {
-                    if (self.len + sequence_len >= self.buffer.len) break;
-                    var offset: usize = 0;
-                    while (offset < sequence_len) : (offset += 1) changed = self.insertPrintable(input[i + offset]) or changed;
-                    i += sequence_len;
-                    continue;
-                }
-                changed = self.insertPrintable(ch) or changed;
-                i += 1;
-            }
+            if (@as(usize, @intCast(len)) > data.len) return false;
+            return self.pasteSlice(data[0..@intCast(len)]);
+        }
+
+        pub fn pasteSlice(self: *Self, input: []const u8) bool {
+            if (self.disabled) return false;
+            const range = self.selectionRange();
+            const cap = self.inputLimit() - self.len + range.end - range.start;
+            const end = editablePrefix(input, cap, false) orelse return false;
+            if (end == 0) return false;
+            const deleted = self.deleteSelection();
+            var changed = deleted;
+            for (input[0..end]) |ch| changed = self.insertPrintable(ch) or changed;
+            self.cursor = graphemeCeil(self.value(), self.cursor);
             return changed;
         }
 
         pub fn draw(self: *const Self, canvas: Canvas, rect: Rect, scratch: []u8) i32 {
+            if (self.password) {
+                var masked: [password_max_bytes + 1]u8 = undefined;
+                defer @memset(&masked, 0);
+                const visible = passwordMask(self.value(), self.cursor, self.selectionRange(), &masked);
+                return drawTextFieldEx(canvas, rect, scratch, masked[0..visible.len], visible.cursor, visible.selection, self.focused, self.disabled, self.palette);
+            }
             return drawTextFieldEx(canvas, rect, scratch, self.value(), self.cursor, self.selectionRange(), self.focused, self.disabled, self.palette);
         }
 
@@ -2037,7 +2236,7 @@ pub fn TextField(comptime capacity: usize) type {
             if (!self.hasSelection()) return false;
             const range = self.selectionRange();
             self.removeRange(range.start, range.end);
-            self.cursor = range.start;
+            self.cursor = graphemeFloor(self.value(), range.start);
             self.clearSelection();
             return true;
         }
@@ -2059,7 +2258,7 @@ pub fn TextField(comptime capacity: usize) type {
 
         fn insertPrintable(self: *Self, ch: u8) bool {
             if (ch < 0x20 or ch == 0x7F) return false;
-            if (self.len >= self.buffer.len - 1) return false;
+            if (self.len >= self.inputLimit()) return false;
             var index = self.len;
             while (index > self.cursor) : (index -= 1) self.buffer[index] = self.buffer[index - 1];
             self.buffer[self.cursor] = ch;
@@ -2068,6 +2267,33 @@ pub fn TextField(comptime capacity: usize) type {
             self.cursor += 1;
             return true;
         }
+    };
+}
+
+const PasswordVisual = struct { len: usize, cursor: usize, selection: TextRange };
+
+fn passwordIndex(value: []const u8, byte_index: usize) usize {
+    const target = graphemeFloor(value, @min(byte_index, value.len));
+    var at: usize = 0;
+    var count: usize = 0;
+    while (at < target) : (count += 1) at = graphemeNext(value, at);
+    return count;
+}
+
+/// Render-only projection. The original UTF-8 bytes never enter the canvas
+/// scratch buffer or a draw command; each grapheme becomes one mask glyph.
+fn passwordMask(value: []const u8, cursor: usize, selection: anytype, out: *[4097]u8) PasswordVisual {
+    var at: usize = 0;
+    var count: usize = 0;
+    while (at < value.len and count < out.len - 1) : (count += 1) {
+        out[count] = '*';
+        at = graphemeNext(value, at);
+    }
+    out[count] = 0;
+    return .{
+        .len = count,
+        .cursor = passwordIndex(value, cursor),
+        .selection = .{ .start = passwordIndex(value, selection.start), .end = passwordIndex(value, selection.end) },
     };
 }
 
@@ -2390,6 +2616,12 @@ pub const Canvas = struct {
     h: i32,
     font: FontMetrics = .{},
     frame_canvas: ?*FrameCanvas = null,
+    /// Application-local opt-in. null preserves the complete classic path.
+    style: ?Style = null,
+    /// Immutable source, rows, cache and provider code outlive this Canvas.
+    /// Font publication requires explicit ValidateFont/reprepare or clear.
+    text_metrics_cache: ?*const text_metrics.Cache = null,
+    text_metrics_key: text_metrics.Key = .{},
 
     pub fn init(ctx: *const r4draw.Context, info: abi.GuiWindowInfo) Canvas {
         return initSize(ctx, info.client_w, info.client_h);
@@ -2416,6 +2648,59 @@ pub const Canvas = struct {
         var next = self;
         next.font = fontMetricsForId(self.ctx, font_id);
         return next;
+    }
+
+    pub fn withStyle(self: Canvas, style: Style) Canvas {
+        var next = self;
+        next.style = style;
+        return next.withTextRole(.body);
+    }
+
+    /// Mutates only this paint's caller-owned canvas, never a system theme.
+    pub fn setStyle(self: *Canvas, style: Style) i32 {
+        if (!style.valid()) return abi.gui_frame_error_invalid;
+        self.* = self.withStyle(style);
+        return 0;
+    }
+
+    pub fn withTextRole(self: Canvas, role: TextRole) Canvas {
+        if (self.style) |style| return self.withFontId(style.fonts.id(role));
+        return self;
+    }
+
+    pub fn layoutTabs(self: Canvas, tabs: TabBar) TabBar {
+        var result = tabs;
+        result.text_advance = self.font.max_advance;
+        if (self.style) |style| result.tab_h = @max(result.tab_h, style.controlHeight(self.font));
+        return result;
+    }
+
+    pub fn surface(self: Canvas, item: Rect, role: SurfaceRole) i32 {
+        const style = self.style orelse return self.rect(item, default_palette.client_bg);
+        if (!style.valid()) return abi.gui_frame_error_invalid;
+        return modern.surface(self, item, switch (role) {
+            .plain => style.surface,
+            .soft => style.soft,
+            .accent => style.accent,
+            .selected => style.tint,
+        }, style.line, style.radius, false);
+    }
+
+    pub fn card(self: Canvas, item: Card, scratch: []u8) i32 {
+        return item.draw(self, scratch);
+    }
+    /// Scalar-friendly facade for exactly the existing Button presentation.
+    pub fn actionButton(self: Canvas, area: Rect, value: []const u8, state: ButtonState, focused: bool, primary: bool, scratch: []u8) i32 {
+        return drawButtonEx(self, area, scratch, value, state, focused, primary, false, default_palette);
+    }
+    pub fn progressBar(self: Canvas, area: Rect, completed: u64, total: u64, phase: u32, disabled: bool) i32 {
+        return self.progress(.{ .rect = area, .completed = completed, .total = total, .phase = phase, .disabled = disabled });
+    }
+    pub fn progress(self: Canvas, item: Progress) i32 {
+        return item.draw(self);
+    }
+    pub fn paragraph(self: Canvas, item: Paragraph, scratch: []u8) i32 {
+        return item.draw(self, scratch);
     }
 
     pub fn clear(self: Canvas, rgb: u32) i32 {
@@ -2502,6 +2787,83 @@ pub const Canvas = struct {
         var metrics: abi.GuiTextMetrics = .{};
         if (self.ctx.fontMeasure(self.font.id, value, &metrics) >= 0) return clampU32ToI32(metrics.width);
         return fallbackTextWidthZ(value, self.font.max_advance);
+    }
+
+    /// Grapheme-safe hit testing using the same font as rendering. Single-line
+    /// controls accept at most 4096 display bytes here; editing stays TextField's.
+    pub fn textIndexAt(self: Canvas, value: []const u8, x: i32) usize {
+        if (self.ctx.base.generation2 != null) {
+            var result: usize = 0;
+            if (self.textIndexChecked(value, x, &result) != 0) return 0;
+            return result;
+        }
+        return self.originalTextIndexAt(value, x);
+    }
+
+    /// Every Canvas copy keeps this loan until clear/destruction. No provider
+    /// call is made by subsequent hits; the caller supplies exact revision keys.
+    pub fn bindTextMetrics(self: *Canvas, cache: *const text_metrics.Cache, expected: *const text_metrics.Key) i32 {
+        const actual = cache.key() catch |err| return text_metrics_runtime.code(err);
+        if (!std.meta.eql(actual, expected.*) or actual.font_id != self.font.id) return abi.font_metrics2_stale;
+        self.text_metrics_cache = cache;
+        self.text_metrics_key = actual;
+        return 0;
+    }
+
+    /// Drops a logical view only, without stopping an active callback/hardware.
+    pub fn clearTextMetrics(self: *Canvas) void {
+        self.text_metrics_cache = null;
+        self.text_metrics_key = .{};
+    }
+
+    /// Failure preserves output. Context2 never calls the old prefix algorithm.
+    pub fn textIndexChecked(self: Canvas, value: []const u8, x: i32, out: *usize) i32 {
+        if (value.len > abi.font_metrics2_max_bytes) return abi.font_metrics2_capacity;
+        if (self.text_metrics_cache) |cache| {
+            const key = self.text_metrics_key;
+            if (key.source_address != @intFromPtr(value.ptr) or key.text_bytes != value.len or key.font_id != self.font.id) return abi.font_metrics2_stale;
+            const result = cache.hit(key, x) catch |err| return text_metrics_runtime.code(err);
+            out.* = result;
+            return 0;
+        }
+        if (!bounded_text.valid(value)) return abi.font_metrics2_encoding;
+        const context = self.ctx.base.generation2 orelse {
+            out.* = self.originalTextIndexAt(value, x);
+            return 0;
+        };
+        const binding = @import("text_metrics_api.zig").provider2(context);
+        if (binding.status != 0) return binding.status;
+        var rows: [abi.font_metrics2_max_bytes]abi.FontAdvance2 = undefined;
+        var cache = text_metrics.Cache.init(
+            .{ .address = @intFromPtr(value.ptr), .length = value.len },
+            .{ .address = @intFromPtr(&rows), .length = @sizeOf(@TypeOf(rows)) },
+            @intCast(rows.len),
+            binding.provider,
+        ) catch |err| return text_metrics_runtime.code(err);
+        // This fresh preparation never exposes its source/rows/key outside the
+        // call. Persistent views instead bind explicit caller revision keys.
+        const prepared = cache.prepare(1, self.font.id) catch |err| return text_metrics_runtime.code(err);
+        if (prepared.error_code != 0) return prepared.error_code;
+        const key = cache.key() catch |err| return text_metrics_runtime.code(err);
+        const result = cache.hit(key, x) catch |err| return text_metrics_runtime.code(err);
+        out.* = result;
+        return 0;
+    }
+
+    fn originalTextIndexAt(self: Canvas, value: []const u8, x: i32) usize {
+        if (x <= 0 or !bounded_text.valid(value)) return 0;
+        var iterator = DisplayIterator{ .inner = .{ .bytes = value } };
+        var previous: usize = 0;
+        var previous_width: i32 = 0;
+        while (iterator.next()) |range| {
+            if (range.end > 4096 or value[range.start] == '\n') break;
+            const width = displayPrefixWidth(self, value[0..range.end]);
+            if (x < previous_width + @divTrunc(width - previous_width, 2)) return previous;
+            if (x < width) return range.end;
+            previous = range.end;
+            previous_width = width;
+        }
+        return previous;
     }
 
     pub fn charsForWidth(self: Canvas, width_px: i32) usize {
@@ -2656,7 +3018,7 @@ pub fn copyEllipsized(out: []u8, value: []const u8, width_px: i32) []const u8 {
         return out[0..dot_count];
     }
 
-    const keep = utf8PrefixBytes(value, capacity_chars - 3, out.len - 4);
+    const keep = graphemeFloor(value, utf8PrefixBytes(value, capacity_chars - 3, out.len - 4));
     @memcpy(out[0..keep], value[0..keep]);
     @memcpy(out[keep .. keep + 3], "...");
     out[keep + 3] = 0;
@@ -2664,39 +3026,61 @@ pub fn copyEllipsized(out: []u8, value: []const u8, width_px: i32) []const u8 {
 }
 
 pub fn copyEllipsizedForCanvas(canvas: Canvas, out: []u8, value: []const u8, width_px: i32) []const u8 {
+    return copyEllipsizedMeasured(canvas, out, value, width_px);
+}
+
+fn ellipsisCandidate(out: []u8, value: []const u8, keep: usize) [:0]u8 {
+    @memcpy(out[0..keep], value[0..keep]);
+    @memcpy(out[keep..][0..3], "...");
+    out[keep + 3] = 0;
+    return out[0 .. keep + 3 :0];
+}
+
+fn copyEllipsizedMeasured(measure: anytype, out: []u8, value: []const u8, width_px: i32) []const u8 {
     if (out.len == 0) return out[0..0];
-    @memset(out, 0);
+    out[0] = 0;
     if (width_px <= 0) return out[0..0];
-
-    if (value.len <= out.len - 1) {
-        if (value.len > 0) @memcpy(out[0..value.len], value);
+    if (value.len < out.len) {
+        @memcpy(out[0..value.len], value);
         out[value.len] = 0;
-        if (canvas.textWidthZ(@ptrCast(out.ptr)) <= width_px) return out[0..value.len];
+        if (measure.textWidthZ(@ptrCast(out.ptr)) <= width_px) return out[0..value.len];
     }
-
-    var dots: [4]u8 = .{ '.', '.', '.', 0 };
-    const ellipsis_w = canvas.textWidthZ(@ptrCast(&dots));
-    if (ellipsis_w > width_px or out.len < 4) {
-        const dot_capacity = @min(canvas.charsForWidth(width_px), @min(@as(usize, 3), out.len - 1));
-        @memset(out[0..dot_capacity], '.');
-        out[dot_capacity] = 0;
-        return out[0..dot_capacity];
+    const dots: [:0]const u8 = "...";
+    if (out.len < 4 or measure.textWidthZ(dots.ptr) > width_px) {
+        var count = @min(@as(usize, 3), out.len - 1);
+        while (count > 0) : (count -= 1) {
+            @memset(out[0..count], '.');
+            out[count] = 0;
+            if (measure.textWidthZ(@ptrCast(out.ptr)) <= width_px) return out[0..count];
+        }
+        out[0] = 0;
+        return out[0..0];
     }
+    var high = displayFloor(value, @min(value.len, out.len - 4));
+    if (measure.textWidthZ(ellipsisCandidate(out, value, high).ptr) <= width_px) return out[0 .. high + 3];
 
-    var keep = @min(value.len, out.len - 4);
-    keep = utf8PrefixBytes(value, std.math.maxInt(usize), keep);
-    while (keep > 0) : (keep = utf8PreviousIndex(value, keep)) {
-        @memset(out, 0);
-        @memcpy(out[0..keep], value[0..keep]);
-        @memcpy(out[keep .. keep + 3], "...");
-        out[keep + 3] = 0;
-        if (canvas.textWidthZ(@ptrCast(out.ptr)) <= width_px) return out[0 .. keep + 3];
+    // R4DRAW's rendered glyph advances are nonnegative. Search one logical
+    // line at a time: a newline can move the dots onto a shorter line, so the
+    // candidate widths across that boundary need not be monotone. Measure
+    // complete candidates, retaining proportional metrics and dot spacing.
+    var low: usize = 0;
+    while (std.mem.lastIndexOfScalar(u8, value[0..high], '\n')) |newline| {
+        low = newline + 1;
+        if (measure.textWidthZ(ellipsisCandidate(out, value, low).ptr) <= width_px) break;
+        high = newline;
+        low = 0;
     }
-
-    @memset(out, 0);
-    @memcpy(out[0..3], "...");
-    out[3] = 0;
-    return out[0..3];
+    while (low < high) {
+        const midpoint = low + (high - low + 1) / 2;
+        var middle = displayFloor(value, midpoint);
+        if (middle <= low) middle = displayNext(value, low);
+        if (measure.textWidthZ(ellipsisCandidate(out, value, middle).ptr) <= width_px) {
+            low = middle;
+        } else {
+            high = displayPrevious(value, middle);
+        }
+    }
+    return ellipsisCandidate(out, value, low);
 }
 
 pub fn spanZ(value: [*:0]const u8) []const u8 {
@@ -2719,111 +3103,102 @@ pub fn textAreaViewForRect(canvas: Canvas, rect: Rect) TextAreaView {
 }
 
 pub fn textAreaVisualPoint(value: []const u8, index: usize, wrap_cols: usize) TextAreaPoint {
-    const cols = effectiveTextAreaWrapCols(wrap_cols);
-    const safe_index = @min(index, value.len);
-    var line: usize = 0;
-    var column: usize = 0;
-    var i: usize = 0;
-    while (i < safe_index) {
-        const ch = value[i];
-        const next = utf8NextIndex(value, i);
-        if (ch == '\r') {
-            i = next;
-            continue;
-        }
-        if (ch != '\n' and column >= cols) {
-            line += 1;
-            column = 0;
-        }
-        if (ch == '\n') {
-            line += 1;
-            column = 0;
-        } else {
-            column += 1;
-        }
-        i = next;
-    }
-    if (safe_index < value.len and value[safe_index] != '\r' and value[safe_index] != '\n' and column >= cols) {
-        line += 1;
-        column = 0;
-    }
-    return .{ .line = line, .column = column };
+    return textAreaLayout(value, index, wrap_cols, 0, 0).caret;
 }
 
+// One scalar still occupies one current bitmap renderer cell. A cluster can
+// span several such cells; wrapping and hit testing never cut that cluster.
 pub fn textAreaIndexForVisualPosition(value: []const u8, target_line: usize, target_column: usize, wrap_cols: usize) usize {
     const cols = effectiveTextAreaWrapCols(wrap_cols);
     var line: usize = 0;
     var column: usize = 0;
-    var i: usize = 0;
-    while (i < value.len) {
-        const ch = value[i];
-        if (ch != '\r' and ch != '\n' and column >= cols) {
+    var it = DisplayIterator{ .inner = .{ .bytes = value } };
+    while (it.next()) |range| {
+        const ch = value[range.start];
+        const width = utf8VisualColumnCount(value[range.start..range.end]);
+        if (ch != '\r' and ch != '\n' and column != 0 and (column >= cols or width > cols - column)) {
             line += 1;
             column = 0;
         }
-        if (line > target_line) return i;
-        if (line == target_line and column >= target_column) return i;
-        if (ch == '\r') {
-            i += 1;
-            continue;
-        }
-        if (ch == '\n') {
-            if (line == target_line) return i;
+        if (line > target_line) return range.start;
+        if (line == target_line and (column >= target_column or target_column - column < width)) return range.start;
+        if (ch == '\r' or ch == '\n') {
+            if (line == target_line) return range.start;
             line += 1;
             column = 0;
-            i += 1;
-            continue;
-        }
-        column += 1;
-        i = utf8NextIndex(value, i);
+        } else column += width;
     }
     return value.len;
 }
 
 pub fn textAreaVisualLineRange(value: []const u8, visual_line: usize, wrap_cols: usize) TextRange {
-    const cols = effectiveTextAreaWrapCols(wrap_cols);
-    const start = textAreaIndexForVisualPosition(value, visual_line, 0, cols);
-    var end = start;
-    var column: usize = 0;
-    while (end < value.len) {
-        const ch = value[end];
-        if (ch == '\r') {
-            end = utf8NextIndex(value, end);
-            continue;
-        }
-        if (ch == '\n') return .{ .start = start, .end = end };
-        if (column >= cols) return .{ .start = start, .end = end };
-        column += 1;
-        end = utf8NextIndex(value, end);
-    }
-    return .{ .start = start, .end = end };
+    const layout = textAreaLayout(value, 0, wrap_cols, visual_line, 1);
+    return if (layout.range_count == 0) .{ .start = value.len, .end = value.len } else layout.ranges[0];
 }
 
 pub fn textAreaVisualLineCount(value: []const u8, wrap_cols: usize) usize {
     return textAreaVisualPoint(value, value.len, wrap_cols).line + 1;
 }
 
-pub fn textAreaVisualMaxColumns(value: []const u8, wrap_cols: usize) usize {
-    const cols = effectiveTextAreaWrapCols(wrap_cols);
-    var widest: usize = 0;
-    var column: usize = 0;
-    var i: usize = 0;
-    while (i < value.len) {
-        const ch = value[i];
-        i = utf8NextIndex(value, i);
-        if (ch == '\r') continue;
-        if (ch == '\n') {
-            widest = @max(widest, column);
-            column = 0;
-            continue;
+/// One current-document traversal supplies visible rows, caret and both
+/// scroll extents. It retains at most 128 ranges and is never reused across
+/// edits, wrap changes or geometry changes.
+pub const TextAreaLayout = struct {
+    ranges: [128]TextRange = .{TextRange{ .start = 0, .end = 0 }} ** 128,
+    range_count: usize = 0,
+    first_line: usize,
+    total_lines: usize = 1,
+    max_columns: usize = 0,
+    caret: TextAreaPoint = .{ .line = 0, .column = 0 },
+    visited_bytes: usize = 0,
+
+    fn finishLine(self: *TextAreaLayout, line: usize, start: usize, end: usize, column: usize, rows: usize) void {
+        self.max_columns = @max(self.max_columns, column);
+        if (line >= self.first_line and line - self.first_line < @min(rows, self.ranges.len)) {
+            self.ranges[line - self.first_line] = .{ .start = start, .end = end };
+            self.range_count = line - self.first_line + 1;
         }
-        if (column >= cols) {
-            widest = @max(widest, column);
-            column = 0;
-        }
-        column += 1;
     }
-    return @max(widest, column);
+};
+
+pub fn textAreaLayout(value: []const u8, cursor: usize, wrap_cols: usize, first_line: usize, rows: usize) TextAreaLayout {
+    var result = TextAreaLayout{ .first_line = first_line };
+    const cols = effectiveTextAreaWrapCols(wrap_cols);
+    const caret_index = @min(cursor, value.len);
+    var caret_found = false;
+    var line: usize = 0;
+    var column: usize = 0;
+    var start: usize = 0;
+    var it = DisplayIterator{ .inner = .{ .bytes = value } };
+    while (it.next()) |range| {
+        const ch = value[range.start];
+        const width = utf8VisualColumnCount(value[range.start..range.end]);
+        if (ch != '\r' and ch != '\n' and column != 0 and (column >= cols or width > cols - column)) {
+            result.finishLine(line, start, range.start, column, rows);
+            line += 1;
+            column = 0;
+            start = range.start;
+        }
+        if (!caret_found and caret_index < range.end) {
+            result.caret = .{ .line = line, .column = column };
+            caret_found = true;
+        }
+        result.visited_bytes += range.end - range.start;
+        if (ch == '\r' or ch == '\n') {
+            result.finishLine(line, start, range.start, column, rows);
+            line += 1;
+            column = 0;
+            start = range.end;
+        } else column += width;
+    }
+    if (!caret_found) result.caret = .{ .line = line, .column = column };
+    result.finishLine(line, start, value.len, column, rows);
+    result.total_lines = line + 1;
+    return result;
+}
+
+pub fn textAreaVisualMaxColumns(value: []const u8, wrap_cols: usize) usize {
+    return textAreaLayout(value, 0, wrap_cols, 0, 0).max_columns;
 }
 
 fn utf8SequenceLengthAt(value: []const u8, index: usize) usize {
@@ -2894,26 +3269,20 @@ fn utf8NextIndex(value: []const u8, index: usize) usize {
 fn utf8PreviousIndex(value: []const u8, index: usize) usize {
     const target = @min(index, value.len);
     if (target == 0) return 0;
-    var current: usize = 0;
-    var previous: usize = 0;
-    while (current < target) {
-        previous = current;
-        const next = utf8NextIndex(value, current);
-        if (next >= target) return previous;
-        current = next;
+    // A UTF-8 scalar spans at most four bytes. Invalid bytes keep the same
+    // one-byte fallback as the forward decoder, including interior indices.
+    var candidate = target -| 4;
+    while (candidate < target) : (candidate += 1) {
+        if (utf8NextIndex(value, candidate) >= target) return candidate;
     }
-    return previous;
+    unreachable;
 }
 
 fn utf8FloorBoundary(value: []const u8, index: usize) usize {
     const target = @min(index, value.len);
-    var current: usize = 0;
-    while (current < target) {
-        const next = utf8NextIndex(value, current);
-        if (next > target) return current;
-        current = next;
-    }
-    return current;
+    if (target == 0) return 0;
+    const previous = utf8PreviousIndex(value, target);
+    return if (utf8NextIndex(value, previous) == target) target else previous;
 }
 
 fn utf8ScalarCount(value: []const u8) usize {
@@ -2949,16 +3318,16 @@ fn utf8PrefixBytes(value: []const u8, max_scalars: usize, max_bytes: usize) usiz
 }
 
 fn utf8ByteIndexForColumns(value: []const u8, start: usize, end: usize, columns: usize) usize {
-    var index = @min(start, value.len);
+    const safe_start = @min(start, value.len);
     const safe_end = @min(end, value.len);
+    var it = DisplayIterator{ .inner = .{ .bytes = value[safe_start..safe_end] } };
     var used: usize = 0;
-    while (index < safe_end and used < columns) {
-        const ch = value[index];
-        const next = @min(safe_end, utf8NextIndex(value, index));
-        index = next;
-        if (ch == '\r') continue;
-        if (ch == '\n') break;
-        used += 1;
+    var index = safe_start;
+    while (it.next()) |range| {
+        const width = utf8VisualColumnCount(it.inner.bytes[range.start..range.end]);
+        if (width > columns - used) break;
+        used += width;
+        index = safe_start + range.end;
     }
     return index;
 }
@@ -2978,6 +3347,7 @@ pub fn drawButton(canvas: Canvas, rect: Rect, scratch: []u8, text: []const u8, s
 
 pub fn drawButtonEx(canvas: Canvas, rect: Rect, scratch: []u8, text: []const u8, state: ButtonState, focused: bool, is_default: bool, is_cancel: bool, palette: Palette) i32 {
     if (rect.isEmpty()) return 0;
+    if (canvas.style) |style| return modern.button(canvas, rect, scratch, text, state, focused, is_default, style);
 
     _ = canvas.rect(rect, palette.face);
     const pressed = state == .pressed;
@@ -3024,14 +3394,21 @@ pub fn drawTextField(canvas: Canvas, rect: Rect, scratch: []u8, value: []const u
     return drawTextFieldEx(canvas, rect, scratch, value, value.len, .{ .start = value.len, .end = value.len }, focused, disabled, palette);
 }
 
-pub fn drawTextFieldEx(canvas: Canvas, rect: Rect, scratch: []u8, value: []const u8, cursor: usize, selection: anytype, focused: bool, disabled: bool, palette: Palette) i32 {
+pub fn drawTextFieldEx(canvas: Canvas, rect: Rect, scratch: []u8, value: []const u8, cursor: usize, selection: anytype, focused: bool, disabled: bool, original_palette: Palette) i32 {
     if (rect.isEmpty()) return 0;
+    const palette = if (canvas.style) |style| style.palette() else original_palette;
     const bg = if (disabled) palette.face else palette.client_bg;
-    _ = canvas.rect(rect, bg);
-    _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = rect.w, .h = default_metrics.bevel }, palette.face_shadow);
-    _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_shadow);
-    _ = canvas.rect(.{ .x = rect.x, .y = rect.y + rect.h - default_metrics.bevel, .w = rect.w, .h = default_metrics.bevel }, palette.face_light);
-    _ = canvas.rect(.{ .x = rect.x + rect.w - default_metrics.bevel, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_light);
+    if (canvas.style) |style| {
+        if (!style.valid()) return abi.gui_frame_error_invalid;
+        const rc = modern.surface(canvas, rect, bg, if (focused and !disabled) style.accent else style.line, style.radius, focused and !disabled);
+        if (rc < 0) return rc;
+    } else {
+        _ = canvas.rect(rect, bg);
+        _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = rect.w, .h = default_metrics.bevel }, palette.face_shadow);
+        _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_shadow);
+        _ = canvas.rect(.{ .x = rect.x, .y = rect.y + rect.h - default_metrics.bevel, .w = rect.w, .h = default_metrics.bevel }, palette.face_light);
+        _ = canvas.rect(.{ .x = rect.x + rect.w - default_metrics.bevel, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_light);
+    }
 
     const text_rect = rect.inset(default_metrics.text_pad_x, default_metrics.text_pad_y);
     const fitted = copyEllipsizedForCanvas(canvas, scratch, value, text_rect.w);
@@ -3044,20 +3421,37 @@ pub fn drawTextFieldEx(canvas: Canvas, rect: Rect, scratch: []u8, value: []const
         0;
     const selection_start = @min(selection.start, visible_value_end);
     const selection_end = @min(selection.end, visible_value_end);
+    const modern_caret_width = if (canvas.style != null) displayPrefixWidth(canvas, if (cursor > visible_value_end and !fitted_is_full) fitted else value[0..graphemeFloor(value, @min(cursor, visible_value_end))]) else 0;
     if (selection_start < selection_end and !disabled) {
-        const sx = text_rect.x + @as(i32, @intCast(utf8ScalarCount(value[0..selection_start]))) * canvas.font.max_advance;
-        const sw = @as(i32, @intCast(utf8ScalarCount(value[selection_start..selection_end]))) * canvas.font.max_advance;
+        const before = if (canvas.style != null) displayPrefixWidth(canvas, value[0..selection_start]) else @as(i32, @intCast(utf8ScalarCount(value[0..selection_start]))) * canvas.font.max_advance;
+        const end = if (canvas.style != null) displayPrefixWidth(canvas, value[0..selection_end]) else before + @as(i32, @intCast(utf8ScalarCount(value[selection_start..selection_end]))) * canvas.font.max_advance;
+        const sx = text_rect.x + before;
+        const sw = end - before;
         _ = canvas.rect(.{ .x = sx, .y = text_rect.y + 1, .w = sw, .h = @max(1, text_rect.h - 2) }, palette.select_bg);
     }
     if (fitted.len > 0) {
         const y = text_rect.y + @max(0, @divTrunc(text_rect.h - canvas.font.line_height, 2));
-        _ = canvas.text(text_rect.x, y, @ptrCast(scratch.ptr), if (disabled) palette.disabled_text else palette.text, if (selection_start < selection_end) palette.select_bg else bg);
+        if (canvas.style != null and !disabled and selection_start < selection_end) {
+            var displayed: [4097]u8 = undefined;
+            const n = @min(fitted.len, displayed.len - 1);
+            @memcpy(displayed[0..n], fitted[0..n]);
+            const text = displayed[0..n];
+            const start = @min(selection_start, n);
+            const end = @min(selection_end, n);
+            for ([_]TextRange{ .{ .start = 0, .end = start }, .{ .start = start, .end = end }, .{ .start = end, .end = n } }, 0..) |part, index| {
+                const offset = displayPrefixWidth(canvas, text[0..part.start]);
+                _ = canvas.textClipped(text_rect.x + offset, y, @max(0, text_rect.w - offset), scratch, text[part.start..part.end], if (index == 1) palette.select_text else palette.text, if (index == 1) palette.select_bg else bg);
+            }
+        } else {
+            _ = canvas.text(text_rect.x, y, @ptrCast(scratch.ptr), if (disabled) palette.disabled_text else palette.text, if (selection_start < selection_end) palette.select_bg else bg);
+        }
     }
 
     if (focused and !disabled and text_rect.h > 2) {
-        const caret_byte = @min(cursor, visible_value_end);
+        const caret_byte = graphemeFloor(value, @min(cursor, visible_value_end));
         const caret_chars = if (cursor > visible_value_end and !fitted_is_full) utf8ScalarCount(fitted) else utf8ScalarCount(value[0..caret_byte]);
-        const caret_text_w = @min(@as(i32, @intCast(caret_chars)) * canvas.font.max_advance, @max(0, text_rect.w - 1));
+        const caret_width = if (canvas.style != null) modern_caret_width else @as(i32, @intCast(caret_chars)) * canvas.font.max_advance;
+        const caret_text_w = @min(caret_width, @max(0, text_rect.w - 1));
         _ = canvas.rect(.{
             .x = text_rect.x + caret_text_w,
             .y = text_rect.y + 2,
@@ -3078,6 +3472,13 @@ pub fn drawTextAreaEx(canvas: Canvas, rect: Rect, scratch: []u8, value: []const 
 
 pub fn drawTextAreaExWithWrap(canvas: Canvas, rect: Rect, scratch: []u8, value: []const u8, cursor: usize, selection: TextRange, scroll_line: usize, scroll_col: usize, word_wrap: bool, focused: bool, disabled: bool, palette: Palette) i32 {
     if (rect.isEmpty()) return 0;
+    const view = textAreaViewForRect(canvas, rect);
+    const layout = textAreaLayout(value, cursor, if (word_wrap) view.visible_cols else 0, scroll_line, view.visible_rows);
+    return drawTextAreaWithLayout(canvas, rect, scratch, value, selection, scroll_col, focused, disabled, palette, &layout);
+}
+
+pub fn drawTextAreaWithLayout(canvas: Canvas, rect: Rect, scratch: []u8, value: []const u8, selection: TextRange, scroll_col: usize, focused: bool, disabled: bool, palette: Palette, layout: *const TextAreaLayout) i32 {
+    if (rect.isEmpty()) return 0;
     const bg = if (disabled) palette.face else palette.client_bg;
     drawInsetFrame(canvas, rect, palette, true);
 
@@ -3090,17 +3491,27 @@ pub fn drawTextAreaExWithWrap(canvas: Canvas, rect: Rect, scratch: []u8, value: 
     const visible_rows_raw: usize = @intCast(@max(1, @divTrunc(text_rect.h, line_h)));
     const visible_rows: usize = @min(@as(usize, 128), visible_rows_raw);
     const visible_text_cols = if (scratch.len == 0) @as(usize, 0) else @min(visible_cols, scratch.len - 1);
-    const wrap_cols = if (word_wrap) visible_cols else 0;
+    const scroll_line = layout.first_line;
     const text_color = if (disabled) palette.disabled_text else palette.text;
+    var measured_caret: ?i32 = null;
 
     var row: usize = 0;
-    while (row < visible_rows) : (row += 1) {
-        const visual_line = scroll_line + row;
-        const line_range = textAreaVisualLineRange(value, visual_line, wrap_cols);
+    while (row < @min(visible_rows, layout.range_count)) : (row += 1) {
+        const line_range = layout.ranges[row];
         const draw_start = utf8ByteIndexForColumns(value, line_range.start, line_range.end, scroll_col);
         const draw_end = utf8ByteIndexForColumns(value, draw_start, line_range.end, visible_text_cols);
         const y = text_rect.y + @as(i32, @intCast(row)) * line_h;
         if (draw_end <= draw_start) continue;
+
+        if (canvas.ctx.base.generation2 != null) {
+            const caret = if (focused and !disabled and layout.caret.line == scroll_line + row)
+                utf8ByteIndexForColumns(value, line_range.start, line_range.end, layout.caret.column)
+            else
+                null;
+            const rc = drawMeasuredTextAreaLine(canvas, scratch, value, draw_start, draw_end, selection, caret, text_rect.x, y, @min(line_h, @max(1, text_rect.bottom() - y)), disabled, palette, bg, &measured_caret);
+            if (rc != 0) return rc;
+            continue;
+        }
 
         const selected = TextRange.normalized(@min(selection.start, value.len), @min(selection.end, value.len));
         const sel_start = @max(draw_start, selected.start);
@@ -3118,13 +3529,80 @@ pub fn drawTextAreaExWithWrap(canvas: Canvas, rect: Rect, scratch: []u8, value: 
     }
 
     if (focused and !disabled) {
-        const caret = textAreaVisualPoint(value, @min(cursor, value.len), wrap_cols);
+        const caret = layout.caret;
         if (caret.line >= scroll_line and caret.line < scroll_line + visible_rows and caret.column >= scroll_col and caret.column <= scroll_col + visible_cols) {
             const row_y = text_rect.y + @as(i32, @intCast(caret.line - scroll_line)) * line_h;
-            const raw_x = text_rect.x + @as(i32, @intCast(caret.column - scroll_col)) * char_w;
+            const raw_x = measured_caret orelse text_rect.x + @as(i32, @intCast(caret.column - scroll_col)) * char_w;
             const x = @min(@max(text_rect.x, raw_x), @max(text_rect.x, text_rect.right() - 1));
             _ = canvas.rect(.{ .x = x, .y = row_y, .w = 1, .h = @min(line_h, @max(1, text_rect.bottom() - row_y)) }, palette.text);
         }
+    }
+    return 0;
+}
+
+fn measuredPrefix(rows: []const abi.FontAdvance2, end: usize) i32 {
+    var width: i32 = 0;
+    for (rows) |row| {
+        if (row.byte_end > end) break;
+        width = @intCast(row.prefix_width);
+    }
+    return width;
+}
+
+fn drawMeasuredAreaSegment(canvas: Canvas, text: []const u8, rows: []const abi.FontAdvance2, first: usize, last: usize, x: i32, y: i32, fg: u32, bg: u32) i32 {
+    if (first == last) return 0;
+    const left = measuredPrefix(rows, first);
+    return canvas.frameCommand(.{
+        .kind = abi.gui_frame_command_kind_text,
+        .x = x + left,
+        .y = y,
+        .fg = fg,
+        .bg = bg,
+        .font_id = canvas.font.id,
+        .text_w = @intCast(@max(0, measuredPrefix(rows, last) - left)),
+        .text_h = @intCast(@max(1, canvas.font.height)),
+        .baseline = canvas.font.baseline,
+        .line_height = @intCast(@max(1, canvas.font.line_height)),
+    }, text[first..last]);
+}
+
+fn drawMeasuredTextAreaLine(canvas: Canvas, _: []u8, value: []const u8, first: usize, last: usize, selection: TextRange, caret: ?usize, x: i32, y: i32, line_h: i32, disabled: bool, palette: Palette, bg: u32, caret_x: *?i32) i32 {
+    const text = value[first..last];
+    if (text.len > abi.font_metrics2_max_bytes) return abi.font_metrics2_capacity;
+    const context = canvas.ctx.base.generation2 orelse return abi.err_no_group;
+    const binding = @import("text_metrics_api.zig").provider2(context);
+    if (binding.status != 0) return binding.status;
+    var memory: [abi.font_metrics2_max_bytes]abi.FontAdvance2 = undefined;
+    var cache = text_metrics.Cache.init(
+        .{ .address = @intFromPtr(text.ptr), .length = text.len },
+        .{ .address = @intFromPtr(&memory), .length = @sizeOf(@TypeOf(memory)) },
+        memory.len,
+        binding.provider,
+    ) catch |err| return text_metrics_runtime.code(err);
+    const progress = cache.prepare(1, canvas.font.id) catch |err| return text_metrics_runtime.code(err);
+    if (progress.error_code != 0) return progress.error_code;
+    const rows = cache.rows() catch |err| return text_metrics_runtime.code(err);
+    const selected = TextRange.normalized(@min(selection.start, value.len), @min(selection.end, value.len));
+    const start = @max(first, selected.start);
+    const end = @min(last, selected.end);
+    const color = if (disabled) palette.disabled_text else palette.text;
+    if (!disabled and start < end) {
+        const left = measuredPrefix(rows, start - first);
+        const right = measuredPrefix(rows, end - first);
+        const painted = canvas.rect(.{ .x = x + left, .y = y, .w = right - left, .h = line_h }, palette.select_bg);
+        if (painted < 0) return painted;
+        var rc = drawMeasuredAreaSegment(canvas, text, rows, 0, start - first, x, y, color, bg);
+        if (rc != 0) return rc;
+        rc = drawMeasuredAreaSegment(canvas, text, rows, start - first, end - first, x, y, palette.select_text, palette.select_bg);
+        if (rc != 0) return rc;
+        rc = drawMeasuredAreaSegment(canvas, text, rows, end - first, text.len, x, y, color, bg);
+        if (rc != 0) return rc;
+    } else {
+        const rc = drawMeasuredAreaSegment(canvas, text, rows, 0, text.len, x, y, color, bg);
+        if (rc != 0) return rc;
+    }
+    if (caret) |at| {
+        if (at >= first and at <= last) caret_x.* = x + measuredPrefix(rows, at - first);
     }
     return 0;
 }
@@ -3206,13 +3684,20 @@ pub fn drawList(canvas: Canvas, rect: Rect, scratch: []u8, items: []const []cons
     return drawListEx(canvas, rect, scratch, items, selected_index, null, 0, null, row_h, palette);
 }
 
-pub fn drawListEx(canvas: Canvas, rect: Rect, scratch: []u8, items: []const []const u8, selected_index: usize, hover_index: ?usize, first_index: usize, disabled_index: ?usize, row_h: i32, palette: Palette) i32 {
+pub fn drawListEx(canvas: Canvas, rect: Rect, scratch: []u8, items: []const []const u8, selected_index: usize, hover_index: ?usize, first_index: usize, disabled_index: ?usize, row_h: i32, original_palette: Palette) i32 {
     if (rect.isEmpty()) return 0;
-    _ = canvas.rect(rect, palette.client_bg);
-    _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = rect.w, .h = default_metrics.bevel }, palette.face_shadow);
-    _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_shadow);
-    _ = canvas.rect(.{ .x = rect.x, .y = rect.y + rect.h - default_metrics.bevel, .w = rect.w, .h = default_metrics.bevel }, palette.face_light);
-    _ = canvas.rect(.{ .x = rect.x + rect.w - default_metrics.bevel, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_light);
+    const palette = if (canvas.style) |style| style.palette() else original_palette;
+    if (canvas.style) |style| {
+        if (!style.valid()) return abi.gui_frame_error_invalid;
+        const rc = modern.surface(canvas, rect, style.surface, style.line, style.radius, false);
+        if (rc < 0) return rc;
+    } else {
+        _ = canvas.rect(rect, palette.client_bg);
+        _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = rect.w, .h = default_metrics.bevel }, palette.face_shadow);
+        _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_shadow);
+        _ = canvas.rect(.{ .x = rect.x, .y = rect.y + rect.h - default_metrics.bevel, .w = rect.w, .h = default_metrics.bevel }, palette.face_light);
+        _ = canvas.rect(.{ .x = rect.x + rect.w - default_metrics.bevel, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_light);
+    }
 
     const inner = rect.inset(default_metrics.frame_inset, default_metrics.frame_inset);
     const effective_row_h = listRowHeight(row_h);
@@ -3231,9 +3716,18 @@ pub fn drawListEx(canvas: Canvas, rect: Rect, scratch: []u8, items: []const []co
         const hovered = hover_index != null and hover_index.? == item_index and !selected and !disabled;
         const bg = if (selected) palette.select_bg else palette.client_bg;
         const fg = if (disabled) palette.disabled_text else if (selected) palette.select_text else palette.text;
-        _ = canvas.rect(row, bg);
-        if (hovered) _ = canvas.rect(.{ .x = row.x + 1, .y = row.y + 1, .w = @max(0, row.w - 2), .h = @max(0, row.h - 2) }, palette.face);
-        _ = drawTextInRect(canvas, row.inset(default_metrics.text_pad_x, default_metrics.frame_inset), scratch, items[item_index], .left, fg, if (hovered) palette.face else bg);
+        const hover_bg = if (canvas.style) |style| style.hover else palette.face;
+        if (canvas.style) |style| {
+            if (selected or hovered) {
+                const fill = if (hovered) hover_bg else bg;
+                const rc = modern.surface(canvas, row, fill, fill, @max(0, style.radius - 2), false);
+                if (rc < 0) return rc;
+            }
+        } else {
+            _ = canvas.rect(row, bg);
+            if (hovered) _ = canvas.rect(.{ .x = row.x + 1, .y = row.y + 1, .w = @max(0, row.w - 2), .h = @max(0, row.h - 2) }, palette.face);
+        }
+        _ = drawTextInRect(canvas, row.inset(default_metrics.text_pad_x, default_metrics.frame_inset), scratch, items[item_index], .left, fg, if (hovered) hover_bg else bg);
     }
     return 0;
 }
@@ -3287,6 +3781,21 @@ pub fn drawToolbarButton(canvas: Canvas, rect: Rect, scratch: []u8, text: []cons
 
 pub fn drawTabBar(canvas: Canvas, item: TabBar, scratch: []u8) i32 {
     if (item.rect.isEmpty()) return 0;
+    if (canvas.style) |style| {
+        if (!style.valid()) return abi.gui_frame_error_invalid;
+        for (item.items, 0..) |tab, index| {
+            const rect = item.tabRect(index);
+            if (rect.isEmpty()) continue;
+            const selected = index == item.selected_index and tab.enabled;
+            const hot = tab.enabled and item.hover_index == index;
+            const bg = if (selected) style.tint else if (hot) style.hover else style.background;
+            const rc = modern.surface(canvas, rect.inset(2, 0), bg, if (item.focused and selected) style.accent else bg, style.radius, item.focused and selected);
+            if (rc < 0) return rc;
+            const text_rc = drawTextInRect(canvas, rect.inset(default_metrics.text_pad_x + 2, 2), scratch, tab.text, .center, if (!tab.enabled) style.disabled else if (selected) style.accent else style.muted, bg);
+            if (text_rc < 0) return text_rc;
+        }
+        return 0;
+    }
     _ = canvas.rect(item.rect, item.palette.face);
     var index: usize = 0;
     while (index < item.items.len) : (index += 1) {
@@ -3762,6 +4271,12 @@ pub fn dialogFocusStep(items: []const DialogFocusItem, current: DialogAction, di
 
 pub fn drawDialogFrame(canvas: Canvas, rect: Rect, scratch: []u8, title: []const u8, palette: Palette) i32 {
     if (rect.isEmpty()) return 0;
+    if (canvas.style) |style| {
+        if (!style.valid()) return abi.gui_frame_error_invalid;
+        const rc = modern.surface(canvas, rect, style.surface, style.line, style.radius, false);
+        if (rc < 0) return rc;
+        return drawTextInRect(canvas, dialogTitleRect(rect).inset(8, 0), scratch, title, .left, style.text, style.surface);
+    }
     _ = canvas.rect(rect, palette.face);
     _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = rect.w, .h = default_metrics.bevel }, palette.face_light);
     _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = default_metrics.bevel, .h = rect.h }, palette.face_light);
@@ -3879,8 +4394,12 @@ pub fn drawFileDialog(canvas: Canvas, rect: Rect, scratch: []u8, title: []const 
 }
 
 pub fn drawFileDialogEx(canvas: Canvas, rect: Rect, scratch: []u8, title: []const u8, path: []const u8, items: []const []const u8, selected_index: usize, hover_index: ?usize, first_index: usize, max_visible_rows: usize, mode: FileDialogMode, file_name: []const u8, ok_text: []const u8, cancel_text: []const u8, focus_action: DialogAction, pressed_action: DialogAction, palette: Palette) i32 {
+    return drawFileDialogText(canvas, rect, scratch, title, path, items, selected_index, hover_index, first_index, max_visible_rows, mode, file_name, ok_text, cancel_text, focus_action, pressed_action, palette, null, .{});
+}
+
+fn drawFileDialogText(canvas: Canvas, rect: Rect, scratch: []u8, title: []const u8, path: []const u8, items: []const []const u8, selected_index: usize, hover_index: ?usize, first_index: usize, max_visible_rows: usize, mode: FileDialogMode, file_name: []const u8, ok_text: []const u8, cancel_text: []const u8, focus_action: DialogAction, pressed_action: DialogAction, palette: Palette, text_cursor: ?usize, text_selection: TextRange) i32 {
     if (rect.isEmpty()) return 0;
-    const selected_file = if (file_name.len != 0) file_name else if (selected_index < items.len) items[selected_index] else "";
+    const selected_file = if (mode == .save or file_name.len != 0) file_name else if (selected_index < items.len) items[selected_index] else "";
     const file_label = switch (mode) {
         .open => "File:",
         .save => "Name:",
@@ -3891,7 +4410,7 @@ pub fn drawFileDialogEx(canvas: Canvas, rect: Rect, scratch: []u8, title: []cons
     _ = drawTextInRect(canvas, .{ .x = rect.x + 10, .y = rect.y + 29, .w = 44, .h = 16 }, scratch, "Path:", .left, palette.text, palette.face);
     _ = drawTextField(canvas, .{ .x = rect.x + 56, .y = rect.y + 26, .w = @max(0, rect.w - 68), .h = default_metrics.text_field_h }, scratch, path, false, true, palette);
     _ = drawTextInRect(canvas, .{ .x = rect.x + 10, .y = rect.y + 55, .w = 44, .h = 16 }, scratch, file_label, .left, palette.text, palette.face);
-    _ = drawTextField(canvas, fileDialogFileNameRect(rect), scratch, selected_file, focus_action == .select and mode == .save, file_disabled, palette);
+    _ = drawTextFieldEx(canvas, fileDialogFileNameRect(rect), scratch, selected_file, text_cursor orelse selected_file.len, text_selection, focus_action == .select and mode == .save, file_disabled, palette);
     const visible_limit = if (max_visible_rows == 0) visibleListRows(fileDialogListRect(rect), default_metrics.list_row_h) else max_visible_rows;
     _ = (List{ .rect = fileDialogListRect(rect), .items = items, .selected_index = selected_index, .hover_index = hover_index, .first_index = first_index, .focused = focus_action == .select }).draw(canvas, scratch);
     if (items.len > visible_limit and visible_limit > 0) {
@@ -3968,7 +4487,7 @@ pub fn drawInputDialog(canvas: Canvas, item: InputDialog, scratch: []u8) i32 {
     if (item.rect.isEmpty()) return 0;
     _ = drawDialogFrame(canvas, item.rect, scratch, item.title, item.palette);
     _ = drawTextInRect(canvas, inputDialogLabelRect(item.rect), scratch, item.label, .left, item.palette.text, item.palette.face);
-    _ = drawTextField(canvas, item.valueRect(), scratch, item.value, item.focus_action == .select, false, item.palette);
+    _ = drawTextFieldEx(canvas, item.valueRect(), scratch, item.value, item.value_cursor orelse item.value.len, item.value_selection, item.focus_action == .select, false, item.palette);
     const buttons = [_]DialogButton{
         .{ .action = .ok, .text = item.ok_text, .role = .default },
         .{ .action = .cancel, .text = item.cancel_text, .role = .cancel },
@@ -4088,13 +4607,17 @@ pub fn scrollbarStep(item: Scrollbar, part: ScrollbarPart) ScrollbarStep {
 }
 
 pub fn tabBarItemRect(rect: Rect, items: []const TabItem, index: usize, tab_h: i32) Rect {
+    return tabBarItemRectWithAdvance(rect, items, index, tab_h, font_w);
+}
+
+pub fn tabBarItemRectWithAdvance(rect: Rect, items: []const TabItem, index: usize, tab_h: i32, advance: i32) Rect {
     if (index >= items.len) return .{};
     var x = rect.x;
     var i: usize = 0;
     while (i < index) : (i += 1) {
-        x += tabWidth(items[i].text);
+        x += tabWidthWithAdvance(items[i].text, advance);
     }
-    const w = @min(tabWidth(items[index].text), @max(0, rect.right() - x));
+    const w = @min(tabWidthWithAdvance(items[index].text, advance), @max(0, rect.right() - x));
     return .{ .x = x, .y = rect.y, .w = w, .h = @min(tabHeight(tab_h), @max(0, rect.h)) };
 }
 
@@ -4109,6 +4632,12 @@ pub fn tabBarIndexAt(rect: Rect, items: []const TabItem, tab_h: i32, x: i32, y: 
 
 fn tabWidth(text: []const u8) i32 {
     return @max(48, textWidth(text) + default_metrics.text_pad_x * 4);
+}
+
+fn tabWidthWithAdvance(text: []const u8, advance: i32) i32 {
+    if (advance == font_w) return tabWidth(text);
+    const width = @as(i32, @intCast(@min(utf8ScalarCount(text), 4096))) * std.math.clamp(advance, 1, 256);
+    return @max(48, width + default_metrics.text_pad_x * 4);
 }
 
 fn tabHeight(tab_h: i32) i32 {
@@ -4371,6 +4900,10 @@ fn drawTextAreaSegment(canvas: Canvas, scratch: []u8, value: []const u8, start: 
 
 fn drawFocusRect(canvas: Canvas, rect: Rect, palette: Palette) void {
     if (rect.isEmpty()) return;
+    if (canvas.style) |style| {
+        _ = modern.outline(canvas, rect, style.accent, style.radius);
+        return;
+    }
     _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = rect.w, .h = 1 }, palette.text);
     _ = canvas.rect(.{ .x = rect.x, .y = rect.y, .w = 1, .h = rect.h }, palette.text);
     _ = canvas.rect(.{ .x = rect.x, .y = rect.y + rect.h - 1, .w = rect.w, .h = 1 }, palette.text);
@@ -4431,6 +4964,14 @@ fn fallbackTextWidthZ(value: [*:0]const u8, advance: i32) i32 {
     return width;
 }
 
+fn displayPrefixWidth(canvas: Canvas, value: []const u8) i32 {
+    var buffer: [4097]u8 = undefined;
+    const count = @min(value.len, buffer.len - 1);
+    @memcpy(buffer[0..count], value[0..count]);
+    buffer[count] = 0;
+    return canvas.textWidthZ(@ptrCast(&buffer));
+}
+
 fn effectiveTextAreaWrapCols(wrap_cols: usize) usize {
     if (wrap_cols == 0) return std.math.maxInt(usize) / 4;
     return @max(@as(usize, 1), wrap_cols);
@@ -4489,6 +5030,47 @@ test "layout helpers split common app regions" {
     try std.testing.expectEqual(Rect{ .x = 10, .y = 42, .w = 60, .h = 58 }, cursor.remaining());
 }
 
+test "text area shared layout preserves ranges caret and scroll extents" {
+    const values = [_][]const u8{ "", "A\nB", "AB\r\nC", "\n\n", "A\xc3\xa4\xf0\x9f\x98\x80\nXYZ", "\xc3(\x80" };
+    for (values) |value| for ([_]usize{ 0, 1, 2, 80 }) |wrap| {
+        const total = textAreaVisualLineCount(value, wrap);
+        for (0..value.len + 1) |cursor| for (0..total + 1) |first| {
+            const layout = textAreaLayout(value, cursor, wrap, first, 3);
+            try std.testing.expectEqual(total, layout.total_lines);
+            try std.testing.expectEqual(textAreaVisualMaxColumns(value, wrap), layout.max_columns);
+            try std.testing.expectEqual(textAreaVisualPoint(value, cursor, wrap), layout.caret);
+            try std.testing.expectEqual(value.len, layout.visited_bytes);
+            for (layout.ranges[0..layout.range_count], 0..) |range, row| {
+                try std.testing.expectEqual(textAreaVisualLineRange(value, first + row, wrap), range);
+            }
+        };
+    };
+}
+
+test "text area long edit wrap and scroll use one traversal per layout" {
+    var area = TextArea(65536){};
+    @memset(area.buffer[0..65535], 'A');
+    area.len = 65535;
+    area.cursor = area.len;
+    for ([_]usize{ 80, 40, 0 }) |wrap| {
+        var view = TextAreaView.init(80, 30);
+        view.wrap_cols = wrap;
+        area.ensureCursorVisible(view);
+        const layout = textAreaLayout(area.value(), area.cursor, view.effectiveWrapCols(), area.scroll_line, 30);
+        try std.testing.expectEqual(@as(usize, 65535), layout.visited_bytes);
+        try std.testing.expect(layout.caret.line >= area.scroll_line);
+        try std.testing.expect(layout.caret.line < area.scroll_line + 30);
+        for (layout.ranges[0..layout.range_count], 0..) |range, row|
+            try std.testing.expectEqual(textAreaVisualLineRange(area.value(), area.scroll_line + row, wrap), range);
+    }
+    const view = TextAreaView.init(80, 30);
+    try std.testing.expect(area.deleteBackward(view));
+    try std.testing.expect(area.insertSlice("\n", view));
+    const layout = textAreaLayout(area.value(), area.cursor, 80, area.scroll_line, 30);
+    try std.testing.expectEqual(textAreaVisualPoint(area.value(), area.cursor, 80), layout.caret);
+    try std.testing.expectEqual(@as(usize, 65535), layout.visited_bytes);
+}
+
 test "copy ellipsized keeps output nul terminated" {
     var out: [8]u8 = .{0xAA} ** 8;
     try std.testing.expectEqualStrings("R4OS", copyEllipsized(out[0..], "R4OS", 64));
@@ -4499,6 +5081,99 @@ test "copy ellipsized keeps output nul terminated" {
 
     try std.testing.expectEqualStrings("..", copyEllipsized(out[0..], "R4OS", 16));
     try std.testing.expectEqual(@as(u8, 0), out[2]);
+}
+
+const EllipsisTestMeter = struct {
+    calls: usize = 0,
+    bytes: usize = 0,
+    proportional: bool = false,
+
+    pub fn textWidthZ(self: *@This(), ptr: [*:0]const u8) i32 {
+        self.calls += 1;
+        const value = std.mem.span(ptr);
+        self.bytes += value.len;
+        var width: i32 = 0;
+        var widest: i32 = 0;
+        var previous: u8 = 0;
+        var i: usize = 0;
+        while (i < value.len) {
+            const ch = value[i];
+            i = utf8NextIndex(value, i);
+            if (ch == '\r') continue;
+            if (ch == '\n') {
+                widest = @max(widest, width);
+                width = 0;
+                previous = 0;
+                continue;
+            }
+            width += if (!self.proportional) @as(i32, 8) else switch (ch) {
+                'W' => @as(i32, 13),
+                'i', '.' => @as(i32, 3),
+                else => @as(i32, 7),
+            };
+            if (self.proportional and previous == 'A' and ch == 'V') width -= 4;
+            if (self.proportional and previous == 'V' and ch == '.') width -= 1;
+            previous = ch;
+        }
+        return @max(widest, width);
+    }
+};
+
+test "measured ellipsizing bounds font calls for a long label" {
+    var meter = EllipsisTestMeter{};
+    var out: [260]u8 = undefined;
+    const label = [_]u8{'A'} ** 256;
+    try std.testing.expectEqualStrings("A...", copyEllipsizedMeasured(&meter, &out, &label, 32));
+    try std.testing.expect(meter.calls <= 12);
+    try std.testing.expect(meter.bytes < 1100);
+    std.debug.print("font calls={d} measured bytes={d} (old calls=258)\n", .{ meter.calls, meter.bytes });
+}
+
+test "measured ellipsizing matches exhaustive proportional utf8 and newline candidates" {
+    for ([_][]const u8{ "AVWiAV", "Gr\xc3\xbc\xc3\x9feAV", "WW\niiWWWW", "W\nWWWW\niii", "A\xf0\x9f\x98\x80V", "\xc3(\x80" }) |value| {
+        for ([_]usize{ 1, 3, 8, 64 }) |capacity| for ([_]i32{ 0, 1, 6, 8, 12, 17, 32, 80 }) |width| {
+            var meter = EllipsisTestMeter{ .proportional = true };
+            var actual: [64]u8 = undefined;
+            var expected: [64]u8 = undefined;
+            var candidate: [64]u8 = undefined;
+            var expected_len: usize = 0;
+            const fits_full = value.len < capacity and meter.textWidthZ(blk: {
+                @memcpy(candidate[0..value.len], value);
+                candidate[value.len] = 0;
+                break :blk @as([*:0]const u8, @ptrCast(&candidate));
+            }) <= width and width > 0;
+            if (fits_full) {
+                @memcpy(expected[0..value.len], value);
+                expected_len = value.len;
+            } else if (width > 0) {
+                const dot_limit: usize = @min(@as(usize, 3), capacity - 1);
+                for (0..dot_limit) |dot_index| {
+                    const count: usize = dot_index + 1;
+                    @memset(candidate[0..count], '.');
+                    candidate[count] = 0;
+                    if (meter.textWidthZ(@ptrCast(&candidate)) <= width) {
+                        @memcpy(expected[0..count], candidate[0..count]);
+                        expected_len = count;
+                    }
+                }
+                if (expected_len == 3) {
+                    var keep: usize = 0;
+                    while (keep <= value.len and keep + 4 <= capacity) {
+                        const fitted = ellipsisCandidate(&candidate, value, keep);
+                        if (meter.textWidthZ(fitted.ptr) <= width) {
+                            @memcpy(expected[0..fitted.len], fitted);
+                            expected_len = fitted.len;
+                        }
+                        if (keep == value.len) break;
+                        keep = utf8NextIndex(value, keep);
+                    }
+                }
+            }
+            const fitted = copyEllipsizedMeasured(&meter, actual[0..capacity], value, width);
+            try std.testing.expectEqualStrings(expected[0..expected_len], fitted);
+            try std.testing.expectEqual(@as(u8, 0), actual[fitted.len]);
+        };
+    }
 }
 
 test "text metrics and ellipsizing keep utf8 scalars intact" {
@@ -5000,6 +5675,29 @@ test "text field edits printable keys and backspace" {
     try std.testing.expect(!field.handleKey('\n'));
 }
 
+test "password text field masks graphemes and wipes its own buffer" {
+    var field = TextField(32){};
+    try std.testing.expect(field.setPasswordMode(true));
+    try std.testing.expect(field.setExact("e\xcc\x81\xc3\xa4A"));
+    try std.testing.expectEqualStrings("e\xcc\x81\xc3\xa4A", field.value());
+    var masked: [4097]u8 = undefined;
+    const visual = passwordMask(field.value(), 3, .{ .start = 3, .end = 5 }, &masked);
+    try std.testing.expectEqualStrings("***", masked[0..visual.len]);
+    try std.testing.expectEqual(@as(usize, 1), visual.cursor);
+    try std.testing.expectEqual(TextRange{ .start = 1, .end = 2 }, visual.selection);
+    var unused_desktop: r4desk.Context = undefined;
+    try std.testing.expect(!field.copyToClipboard(&unused_desktop));
+    try std.testing.expect(!field.cutToClipboard(&unused_desktop));
+    try std.testing.expect(field.handleKey(Key.left));
+    try std.testing.expectEqual(@as(usize, 5), field.cursor);
+    field.clear();
+    try std.testing.expectEqual(@as(usize, 0), field.value().len);
+    for (field.buffer) |byte| try std.testing.expectEqual(@as(u8, 0), byte);
+    try std.testing.expect(field.setPasswordMode(false));
+    try std.testing.expect(field.setExact("normal"));
+    try std.testing.expectEqualStrings("normal", field.value());
+}
+
 test "text field keeps capacity and nul terminator" {
     var field = TextField(4){};
     field.set("R4OS");
@@ -5063,6 +5761,15 @@ test "text area selection supports copy cut paste and select all" {
     try std.testing.expectEqualStrings("Hello Desk", area.value());
     try std.testing.expect(area.handleKey(Key.ctrl_a, view));
     try std.testing.expectEqual(TextRange{ .start = 0, .end = 10 }, area.selectionRange());
+    area.set("A€🙂Z");
+    area.setSelection(1, 8);
+    const before = area;
+    try std.testing.expect(!area.pasteSliceChecked("W" ** 32, view));
+    try std.testing.expectEqualDeep(before, area);
+    try std.testing.expect(!area.pasteSliceChecked("\xc3", view));
+    try std.testing.expectEqualDeep(before, area);
+    try std.testing.expect(area.pasteSliceChecked("e\u{301}\r\n🙂", view));
+    try std.testing.expectEqualStrings("Ae\u{301}\n🙂Z", area.value());
 }
 
 test "text area maps wrapped visual lines and hit tests cells" {
@@ -5171,4 +5878,190 @@ test "text area clamps horizontal scroll without word wrap" {
     area.scrollTo(0, 99, view);
     try std.testing.expectEqual(@as(usize, 2), area.scroll_col);
     try std.testing.expectEqual(@as(usize, 6), textAreaVisualMaxColumns(area.value(), view.wrap_cols));
+}
+
+test "checked text fields preserve selected Unicode on capacity and preload errors" {
+    var field = TextField(8){};
+    try std.testing.expect(field.setExact("ä€a"));
+    field.setSelection(0, 2);
+    const before = field;
+    try std.testing.expect(!field.handleCodepointChecked(0x1f642));
+    try std.testing.expectEqualDeep(before, field);
+    try std.testing.expect(!field.setExact("ä€🙂"));
+    try std.testing.expectEqualDeep(before, field);
+    try std.testing.expect(!field.setExact("\xc1\xa1"));
+    try std.testing.expectEqualDeep(before, field);
+    try std.testing.expect(!field.handleCodepointChecked(0xd800));
+    try std.testing.expectEqualDeep(before, field);
+    try std.testing.expect(field.handleCodepointChecked('z'));
+    try std.testing.expectEqualStrings("z€a", field.value());
+    try std.testing.expect(field.handleCodepointChecked(Key.end));
+    try std.testing.expect(field.handleCodepointChecked(Key.backspace));
+    try std.testing.expect(field.handleCodepointChecked(Key.backspace));
+    try std.testing.expectEqualStrings("z", field.value());
+    try std.testing.expect(field.setExact("ä🙂"));
+    field.setSelection(3, 6);
+    try std.testing.expectEqual(@as(usize, 2), field.selectionRange().start);
+    try std.testing.expect(field.handleCodepointChecked(0x20ac));
+    try std.testing.expectEqualStrings("ä€", field.value());
+    try std.testing.expect(bounded_text.valid(field.value()));
+    field.clear();
+    field.selectAll();
+    try std.testing.expect(field.handleCodepointChecked('a'));
+    try std.testing.expect(field.handleCodepointChecked('b'));
+    try std.testing.expectEqualStrings("ab", field.value());
+    field.setSelection(1, 1);
+    try std.testing.expect(field.handleCodepointChecked('x'));
+    try std.testing.expect(field.handleCodepointChecked('y'));
+    try std.testing.expectEqualStrings("axyb", field.value());
+}
+
+fn graphemeFloor(value: []const u8, index: usize) usize {
+    return grapheme.floor(value, index) catch 0;
+}
+fn graphemeCeil(value: []const u8, index: usize) usize {
+    return grapheme.ceil(value, index) catch 0;
+}
+fn graphemePrevious(value: []const u8, index: usize) usize {
+    return grapheme.previous(value, index) catch 0;
+}
+fn graphemeNext(value: []const u8, index: usize) usize {
+    return grapheme.next(value, index) catch value.len;
+}
+
+// Input filtering is the pre-existing widget policy, distinct from Unicode
+// normalization. Check full UTF8 and budget complete original clusters before
+// any selection is removed. CRLF contributes one LF in multiline editors.
+fn editablePrefix(value: []const u8, capacity: usize, multiline: bool) ?usize {
+    if (!grapheme.valid(value)) return null;
+    var it = grapheme.Iterator{ .bytes = value };
+    var used: usize = 0;
+    var end: usize = 0;
+    while (it.next() catch return null) |range| {
+        var needed: usize = 0;
+        var i = range.start;
+        while (i < range.end) : (i += 1) {
+            const ch = value[i];
+            if (multiline and ch == '\r') {
+                if (i + 1 < range.end and value[i + 1] == '\n') i += 1;
+                needed += 1;
+            } else if ((multiline and (ch == '\n' or ch == '\t')) or (ch >= 0x20 and ch != 0x7f)) needed += 1;
+        }
+        if (needed > capacity - used) break;
+        used += needed;
+        end = range.end;
+    }
+    return if (used == 0) 0 else end;
+}
+
+/// Pure shared production-widget checks, also called by the real app fixtures.
+pub fn checkGraphemeEditing() bool {
+    const clusters = [_][]const u8{ "a\u{301}", "\u{1f1e9}\u{1f1ea}", "\u{1f469}\u{200d}\u{1f4bb}", "\u{915}\u{94d}\u{915}" };
+    const view = TextAreaView.init(2, 4);
+    for (clusters) |cluster| {
+        var field = TextField(64){};
+        if (!field.setExact(cluster)) return false;
+        if (!field.handleKey(Key.left) or field.cursor != 0) return false;
+        if (!field.handleKey(Key.right) or field.cursor != cluster.len) return false;
+        if (!field.handleKey(Key.backspace) or field.len != 0) return false;
+        field.set(cluster);
+        field.setSelection(1, cluster.len - 1);
+        if (!std.mem.eql(u8, field.clipboardValue(), cluster)) return false;
+        if (!field.handleKey(Key.delete) or field.len != 0) return false;
+        var area = TextArea(64){};
+        area.set(cluster);
+        if (!area.moveLeft(false, view) or area.cursor != 0) return false;
+        if (!area.deleteForward(view) or area.len != 0) return false;
+        area.set(cluster);
+        area.beginMouseSelection(1, view);
+        if (area.cursor != 0) return false;
+        area.setSelection(1, cluster.len);
+        if (!std.mem.eql(u8, area.selectedValue(), cluster)) return false;
+        for (0..cluster.len) |capacity| {
+            var storage: [32]u8 = .{0xa5} ** 32;
+            if (!bounded_text.labelZ(storage[0 .. capacity + 1], cluster)) return false;
+            const label = std.mem.sliceTo(storage[0 .. capacity + 1], 0);
+            if (label.len > 3 or (label.len != 0 and label[0] != '.')) return false;
+        }
+    }
+    var field = TextField(4){};
+    field.set("abc");
+    field.setSelection(1, 2);
+    const saved = field;
+    if (field.pasteSlice("\u{1f469}\u{200d}\u{1f4bb}")) return false;
+    if (!std.mem.eql(u8, &saved.buffer, &field.buffer) or field.cursor != saved.cursor or field.selection_anchor != saved.selection_anchor) return false;
+    if (field.pasteSlice("x\xc3")) return false;
+    if (!std.mem.eql(u8, &saved.buffer, &field.buffer)) return false;
+    // Inserting before an existing combining mark merges clusters. The cursor
+    // must land after the whole new cluster, not inside its unchanged bytes.
+    var merged = TextField(16){};
+    merged.set("\u{301}z");
+    merged.setSelection(0, 0);
+    if (!merged.handleCodepoint('a') or merged.cursor != "a\u{301}".len or !std.mem.eql(u8, merged.value(), "a\u{301}z")) return false;
+    var area = TextArea(8){};
+    area.set("abc");
+    area.setSelection(1, 2);
+    if (area.pasteSlice("\u{1f469}\u{200d}\u{1f4bb}", view) or !std.mem.eql(u8, area.value(), "abc")) return false;
+    if (area.pasteSlice("x\xc3", view) or !std.mem.eql(u8, area.value(), "abc")) return false;
+    // Prefix truncation cannot strand a base by cutting off its combining mark.
+    var small = TextField(3){};
+    small.set("a\u{301}z");
+    if (small.len != 0) return false;
+    const text = "x" ++ "a\u{301}" ++ "z";
+    const layout = textAreaLayout(text, text.len, 2, 0, 4);
+    if (layout.total_lines != 3 or layout.visited_bytes != text.len or layout.ranges[1].start != 1 or layout.ranges[1].end != 4) return false;
+    if (textAreaIndexForVisualPosition(text, 1, 1, 2) != 1) return false;
+    return true;
+}
+
+test "borrowed text fields and text area use the original grapheme editing contract" {
+    var field_bytes: [32]u8 = undefined;
+    var area_bytes: [64]u8 = undefined;
+    var field = borrowedTextField(&field_bytes).?;
+    var area = borrowedTextArea(&area_bytes).?;
+    try std.testing.expect(borrowedTextField(&.{}) == null);
+    var too_short: [1]u8 = undefined;
+    try std.testing.expect(borrowedTextArea(&too_short) == null);
+    try std.testing.expect(field.setExact("A\u{301}B"));
+    field.setSelection(0, 1);
+    try std.testing.expectEqualStrings("A\u{301}", field.value()[field.selectionRange().start..field.selectionRange().end]);
+    try std.testing.expect(field.pasteSlice("\u{1f600}"));
+    try std.testing.expectEqualStrings("\u{1f600}B", field.value());
+    field.selectAll();
+    const prior = field_bytes;
+    try std.testing.expect(!field.setExact("this string does not fit in the borrowed text field"));
+    try std.testing.expectEqualSlices(u8, &prior, &field_bytes);
+    area.set("first\nA\u{301}B");
+    try std.testing.expectEqualStrings("first\nA\u{301}B", area.value());
+    area.selectAll();
+    try std.testing.expect(area.pasteSlice("new\n\u{1f600}", .{}));
+    try std.testing.expectEqualStrings("new\n\u{1f600}", area.value());
+    try std.testing.expectEqual(@as(usize, 63), area.maxTextLen());
+}
+
+test "grapheme editors keep combining RI ZWJ Indic clusters exact across deletion selection capacity and layout" {
+    try std.testing.expect(checkGraphemeEditing());
+}
+
+// Legacy malformed bytes may still be displayed from a foreign source, one
+// replacement cell each. This path never admits them into an editable field.
+const DisplayIterator = struct {
+    inner: grapheme.Iterator,
+    fn next(self: *DisplayIterator) ?grapheme.Range {
+        const start = self.inner.offset;
+        return self.inner.next() catch {
+            if (self.inner.offset == start) self.inner.offset += 1;
+            self.inner.state = .{};
+            return .{ .start = start, .end = self.inner.offset };
+        };
+    }
+};
+fn displayFloor(value: []const u8, index: usize) usize {
+    return grapheme.floor(value, index) catch utf8FloorBoundary(value, index);
+}
+fn displayNext(value: []const u8, index: usize) usize {
+    return grapheme.next(value, index) catch utf8NextIndex(value, index);
+}
+fn displayPrevious(value: []const u8, index: usize) usize {
+    return grapheme.previous(value, index) catch utf8PreviousIndex(value, index);
 }

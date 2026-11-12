@@ -65,12 +65,9 @@ static inline int r4_path_byte_valid(uint8_t byte) {
     return R4_PATH_OK;
 }
 
-/* Component validation since 0.60.18: UTF-8 restricted to the BMP.  ASCII
- * keeps the reserved-character rules; multi-byte sequences must be
- * well-formed 2- or 3-byte UTF-8 without overlong forms or surrogates.
- * 4-byte sequences (non-BMP) and malformed bytes are visible errors.
- * Since 0.60.19 the CHARACTER count is reported for the Windows-parity
- * character limits (255 per component, 260 per path). */
+/* Scalar UTF-8 validation with the existing reserved ASCII rules.
+ * Supplementary scalars count as two UTF-16 units for the established
+ * component/path limits. The selected backend owns its name repertoire. */
 static inline int r4_path_segment_valid(const uint8_t *segment, size_t len, size_t *out_chars) {
     size_t i = 0u;
     size_t chars = 0u;
@@ -102,7 +99,20 @@ static inline int r4_path_segment_valid(const uint8_t *segment, size_t len, size
             ++chars;
             continue;
         }
-        return R4_PATH_INVALID_CHARACTER; /* stray continuation or non-BMP lead */
+        if (byte >= 0xF0u && byte <= 0xF4u) {
+            uint8_t b1, b2, b3;
+            if (i + 3u >= len) return R4_PATH_INVALID_CHARACTER;
+            b1 = segment[i + 1u];
+            b2 = segment[i + 2u];
+            b3 = segment[i + 3u];
+            if ((b1 & 0xC0u) != 0x80u || (b2 & 0xC0u) != 0x80u || (b3 & 0xC0u) != 0x80u) return R4_PATH_INVALID_CHARACTER;
+            if (byte == 0xF0u && b1 < 0x90u) return R4_PATH_INVALID_CHARACTER;
+            if (byte == 0xF4u && b1 > 0x8Fu) return R4_PATH_INVALID_CHARACTER;
+            i += 4u;
+            chars += 2u;
+            continue;
+        }
+        return R4_PATH_INVALID_CHARACTER;
     }
     if (out_chars != 0) *out_chars = chars;
     return R4_PATH_OK;
@@ -238,6 +248,8 @@ static inline int r4_timeout_deadline(R4Timeout timeout, R4MonotonicInstant now,
 }
 
 static inline int r4_remaining_ticks(R4Deadline deadline, R4MonotonicInstant now, uint32_t hz, uint64_t *out_ticks) {
+    if (out_ticks == 0) return R4OS_ERROR_INVALID;
+    if (now.nanoseconds >= deadline.nanoseconds) { *out_ticks = 0u; return R4OS_OK; }
     R4Duration remaining = { deadline.nanoseconds > now.nanoseconds ? deadline.nanoseconds - now.nanoseconds : 0 };
     return r4_duration_to_ticks(remaining, hz, out_ticks);
 }

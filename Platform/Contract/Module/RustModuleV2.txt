@@ -1,0 +1,199 @@
+﻿R4OS Rust module project profile v2
+==================================
+
+Current decision0.86.51/SDK0.64.70: Cargo owns full TOML/dependency/feature
+resolution; the SDK binds exact offline local inputs and optional C companions.
+The original profile was introduced in0.86.33-.36/SDK0.64.60.
+r4os-contract0.1.0 is the generated ABI crate; r4os-sdk0.1.0 is the separate
+runtime helper crate. Neither is a module or package version.
+Common entry/exit/panic, templates and Linux console/GUI/service execution
+are qualified through0.86.40/49/50. Windows remains prepared.
+
+Owners and minimum delivery
+--------------------------
+Contract/Module owns R4MF meaning, CPU/ABI and compatibility. SDK owns the
+shared parser, capability definitions, host build/startup, packaging and
+templates. The SDK alone owns build/tool profiles and selects the exact
+Contract, tools and system libraries in Profiles/Build.json, Tools.json and
+Components.json. DevKit is only a local installation/cache location.
+Consumers select an SDK profile and may pin additional libraries without
+replacing SDK system identities. Necessary project locks are derived from
+or checked against that SDK selection. The profile ownership contract is
+documented in Docs/SDK/Profiles.txt; builders migrate in R4OS0.89.26-.34.
+
+Profile ID: r4os-rust-r4x-v2. Minimum delivered combinations are Windows-
+and Linux-hosted KIND=R4X, LANGUAGE=Rust, ENTRY_MODE=app and APP_CLASS equal
+to console, gui or service. This is a support contract; actual host execution
+and cross-host reproducibility require their own evidence. Initial Windows
+preparation must not be reported as a Windows runtime result.
+
+SDK0.64.84 additionally qualifies the canonical subsystem role on normal GUI
+R4Xs. SDK0.64.85 qualifies the separate r4os-rust-r4l-v1 host provider profile
+described below. Rust lowlevel, R4D and R4P remain separately gated. Recognized
+language syntax is not an executable build capability. Native R4BUILD/R4CC
+remain separate from host Rust: VALIDATE/PLAN may understand an admitted
+Rust manifest while native BUILD reports a missing compiler capability.
+
+Project and Cargo binding
+-------------------------
+One module.R4MF still describes exactly one installed module. Its directory
+is the project root. Add LANGUAGE=Rust and exactly one canonical relative
+.rs SOURCE root. Ordered additional SOURCE entries are C companions linked
+into that same artifact; C_INCLUDE/C_DEFINE/C_FLAG retain their existing
+manifest meanings. Rust mod/include dependencies belong to the compiler; the
+build records their exact dependency inputs, not a guessed second IDE list.
+
+Cargo.toml and Cargo.lock are fixed project-root inputs. No extra R4MF key
+is needed merely to name them. Start with one local Cargo package, edition
+2024, one explicitly declared library target, [lib].path equal to SOURCE,
+and crate-type=["staticlib"]. No bin/example/test/bench/custom target may
+silently become the selected module. An empty [workspace] may isolate this
+single package from parent discovery. Metadata must identify this exact
+workspace root and exactly one member; ambiguous selection is rejected.
+Cargo resolves inherited settings from that same hashed root manifest.
+
+Cargo parses its own TOML. Compiler-free catalog plans validate R4MF and file
+presence; they do not claim to validate Cargo syntax or resolved identities.
+Locked/offline cargo metadata supplies exact packages, versions, dependency
+edges, aliases, optional dependencies and resolved features before compilation.
+The root still has one explicit staticlib target, not an implicit executable.
+
+No build.rs, proc-macro/host build step, generated-source step or arbitrary
+linker script/flag is admitted. Dependencies must be explicit, local/path or
+vendored and locked. DependencyRoot arguments may select locations for
+additional pinned libraries; they cannot override SDK-owned Contract, tools
+or system-library identities. Required paths and binding versions remain exact.
+Features/NoDefaultFeatures explicitly select root features; Cargo manifests
+own defaults and transitive feature requirements. No registry/git fetch occurs.
+Optional C sources require an explicit ZigRoot with the matched pinned version.
+The SDK uses the existing freestanding C/CPU/stack-probe contract and observes
+actual C source/header dep-info. Pure Rust consumers need no Zig installation.
+
+Cargo metadata binds the exact manifest/package/target before building.
+Normal builds use the lock without updating it and do not fetch undeclared
+dependencies. Project creation may explicitly create the initial lock.
+The compiler dependency records bind the actual Rust module/include tree;
+plans distinguish declared inputs from observed compiler inputs. Resource
+inputs also remain explicit R4MF inputs. Dependency roots outside the project
+must be the selected SDK/profile or another explicitly supported locked
+dependency; no implicit sibling-workspace or current-directory assumption.
+
+Module truth and conflicts
+--------------------------
+R4MF alone owns KIND/NAME, VERSION, APP_CLASS, role, IMPORT/EXPORT,
+TARGET/IMAGE_SCOPE, OPTIMIZE and resources. Cargo package.name and version
+describe a crate and its dependency/cache identity. They do not supply the
+R4OS module identity or metadata version and need not have identical spelling
+or version. The packager always emits module.version from R4MF VERSION.
+Cargo metadata.r4os must not redefine these module facts; reject it.
+
+The Cargo library path must equal SOURCE after canonical resolution. Missing
+lock, multiple package/target choices, unsupported dependency kinds, custom
+targets, source escape and conflicting build overrides are explicit errors.
+The SDK owns the release profile, panic=abort, target, CPU features, relocation
+and link contract. Project profile settings are explicitly replaced by the
+selected SDK release environment/flags; every actual compiler-artifact profile
+must match its optimization, overflow checks and assertion/test settings.
+Cargo config, rust-toolchain file and overriding RUSTFLAGS/linker environment
+remain rejected. The isolated build must not silently accept a conflicting
+profile. This is reproducibility policy
+for a trusted single-user system, not a security sandbox.
+
+ABI, CPU and entry
+-----------------
+Reuse Contract/Generated/SDK/Rust. Do not maintain copied ABI declarations.
+Derive the module CPU minimum and profile identity from CpuBaseline.json and
+its canonical module consumer. The kernel's code-model=kernel/static build
+is not a module profile. The exact module relocation/code model is accepted
+only after the existing ELF/R4M0 packager and real loader qualify it.
+
+R4M0:1, R4XStart:1 and existing startup metadata remain unchanged. Normal
+app startup may reuse SDK-owned internal Zig/C entry parts, but the declared
+application and its entry body must actually compile from Rust. No new R4L
+runtime or kernel loader feature is implied by adding a source language.
+The existing class-required imports and memory profile still apply.
+
+Integer/pointer C ABI calls reuse existing Rust/Zig/C interoperability proof.
+No float/vector C-ABI promise is added. Panic must not unwind through FFI;
+the actual freestanding failure path and compiler helper closure belong to
+the SDK build qualification. Kernel FPU/task/lifetime ownership is unchanged.
+
+Format and compatibility decision
+--------------------------------
+R4OS_MODULE_MANIFEST stays2; LANGUAGE=Rust is an additive admitted-language
+profile. Existing Zig/C meanings, source ordering and output bytes of their
+semantic plans stay unchanged. Old parsers already reject the unknown Rust
+value. They receive no retroactive Rust support or silent C fallback.
+
+R4MF_PLAN=1 stays the environment-neutral semantic contract view, not the
+complete Cargo build graph. An admitted Rust view can use its existing
+LANGUAGE/SOURCE/BUILD_PROFILE fields; it must not invent new plan1 keys.
+The shared host compiler emits Rust build-plan schema2/profilev2; Cargo
+identity is resolved at build time. The schema2 receipt records the complete
+resolved graph, manifests, selected/resolved features and observed inputs.
+The existing output ownership marker stays schema1; it is bookkeeping, not
+an older OS compatibility path. No profilev1 execution fallback is supplied.
+If implementation needs another semantic plan meaning, it must introduce a
+new explicit plan version and update consumers before accepting that form.
+
+The source catalog schema4 keeps its existing fields and their meanings.
+Rust-only additive details must be explicit and old Zig/C records must not
+drift. Installed MODULES.JSON schema4 remains the existing runtime catalog;
+it does not become an IDE/compiler tool inventory.
+
+Capabilities and standalone installation
+---------------------------------------
+Use one SDK capability definition for parser/build admission, template
+selection and the public host module-catalog capabilities --json interface.
+The catalog has its own schema and identifies SDK/Contract/profile, language,
+kind/class/role support, templates and exact required tool IDs/versions.
+Tool installation/availability is separate from semantic support. Reading
+capabilities must not require a Rust compiler, build or tool download.
+
+Host Zig/Clang builds, native R4CC and Rust host builds are separate rows.
+Unsupported combinations carry concrete reasons. Do not infer support from
+the mere existence of raw ABI types or a successfully compiled ELF.
+
+The SDK profile installs under a caller-selected root with shared PS7 logic
+and thin Windows/Linux starters. Use SDK-owned tool pins and isolated homes;
+no complete workspace/DevKit or global rustup/Cargo setup may be required.
+The final SDK/Contract/tool/template source identities and package hashes
+are pinned at publication. The first executable implementation requires SDK0.64.60 and its matched
+source/toolset identities. Consumers must not infer this from a Cargo crate number.
+
+Qualification
+-------------
+Reuse existing ABI, manifest and container cases. New cases cover actual
+selection/conflict gaps, not a full repeated catalog. Build, ELF/container
+and guest execution evidence are distinct. The three Rust R4X classes are
+jointly exercised on local QEMU/KVM-SMP4. Preserve exact source/tool pins and
+small reusable fixtures, remove completed source/guest copies. No normal
+STANDARD follows from this documentation decision. Later normal R4OS runtime
+changes follow the existing one-final-STANDARD/DevCenter rule.
+
+
+Standalone R4L provider profile (SDK0.64.85)
+------------------------------------------
+r4os-rust-r4l-v1 reuses the module code-generation/CPU/relocation policy,
+locked local Cargo graph and matched SDK/Contract/runtime tools. KIND=R4L
+has no APP_CLASS or ENTRY_MODE and no R4XStart/startup-info dummy. SOURCE
+is the real Rust staticlib root. The existing local contract, immutable
+baseline, bindings/conformance and API documentation are checked by the
+matched host r4l-contract-gen before compilation. IMPLEMENTATION_ZIG is
+required only for Zig; Rust requires its generated BINDING_RUST.
+
+The additive explicit R4L plan is separate from unchanged R4X plan bytes.
+It carries ordinary declared Query/API exports and project-local contract
+paths. The generic builder links r4l_entry and packages KIND=r4l with the
+normal R4M0 format. Query remains standalone descriptor revision1, never a
+kernel bridge. SDK provider helpers construct the common header/Query and
+entry; all library-specific tables and implementation bodies stay local.
+
+Every caller/session owns its allocation and callback state until real
+close/quiescence. R4X-global SDK alloc is refused for a shared provider;
+use explicit caller allocators instead. A nested generated ABI crate is a
+dependency, not a second module workspace member: explicitly exclude its
+Bindings/Rust workspace from the provider root. No unwinding crosses FFI.
+Linux guest execution is qualified; Windows tools are compiled/prepared,
+without a Windows execution claim. Platform API/ABI and R4MF/R4M0 versions
+remain unchanged; this is an additive SDK build-profile qualification.

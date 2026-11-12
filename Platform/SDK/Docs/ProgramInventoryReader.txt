@@ -1,0 +1,133 @@
+﻿ProgramInventoryReader / LifecycleReader (SDK0.64.163)
+====================================================
+
+Besitzer und Sprachen
+---------------------
+r4os/inventory_reader.zig besitzt den gemeinsamen statischen Leser ueber
+die vorhandenen program_inventory_begin/programs- und
+program_lifecycle_begin/programs-Funktionen. Keine zweite Registry, keine
+Kernelallokation fuer den Helfer, kein impliziter Wait und keine Migration
+bestehender Dienste, Diagnosen oder ACO-Worker. Query2-Factories loesen nur
+die ausgewaehlten wirklichen R4SYS-Callbacks auf; kein alter Tabellenbau.
+
+Zig: r4os.inventory_reader (Reader, Mode.full/lifecycle, fromContext2).
+C: inventory_reader.h und inventory_platform2.h. Rust: inventory,
+ProgramInventoryReader und LifecycleReader. C/Rust verwenden denselben
+Zig-Besitzer im vorhandenen SDK-Fassadenobjekt. Die vier festen C-Records
+haben Provider32, Progress32, Match24 und Reader392Bytes. Neun statische
+Funktionen stellen Initialisierung, Fortschritt, Step, Cancel, Restart,
+vollstaendige Ansicht, exakte Suche und Full-Summary bereit.
+
+Modi und Aufruferbesitz
+----------------------
+Full liest die vorhandene kohaerente Begin-Summary und volle Programrecords.
+Lifecycle verwendet ausschliesslich den leichten Epoch-/Lifecyclepfad,
+niemals als stillen Fallback die Heap-/Task-/Thread-/VMdiagnose von Full.
+Der Caller stellt privaten Speicher fuer die ganze Ergebnissicht bereit.
+Kapazitaet ist eine Recordanzahl; die Bereichslaenge sind Bytes. Der
+gesonderte Seitenlimitwert ist1..program_inventory_page_max. Nullkapazitaet
+kann ein wirklich leeres Inventar bestaetigen, kuerzt aber kein positives.
+
+Jeder Step ruft hoechstens einen synchronen Begin- oder Pagebesitzer auf.
+Private Stackseiten und Cursorkopien verhindern, dass WouldBlock eine
+halb fortgeschriebene Position oder halbe Callerrecords veroeffentlicht.
+Die SDK-Kopie in den Callerbereich erfolgt erst nach Rueckkehr des Anbieters;
+es wird kein Registrylock ueber diese Kopie, Callback oder Wait gehalten.
+Ein Pageview beziehungsweise eine endgueltige Ansicht leiht Speicher,
+uebernimmt aber keinen Prozess-/Thread-/Task-/VM-/Completionbesitzer.
+
+Status und vollstaendige Sicht
+-----------------------------
+Initial, More, WouldBlock und Restart sind keine leere Erfolgssicht. Progress
+nennt ausdruecklich staged_count, optional bekanntes Total, Snapshotgeneration,
+Fehlercode, Wiederanlaeufe und Flags Complete/Terminal/InCall/TotalKnown.
+StagedCount allein erlaubt weder eine finale Ansicht noch Missing.
+NoProvider, Failure/OOM, Capacity, Cancelled, Timeout, ClockFailed und
+InvalidProvider veroeffentlichen keine Ansicht. Der echte Providercode bleibt
+erhalten. Fehlende Funktionen werden nicht durch eine teure andere Quelle
+oder ein geratenes erfolgreiches Nullinventar ersetzt.
+
+WouldBlock behaelt den vorherigen Cursor und alle privaten gueltigen Seiten.
+Restart verwirft die gesamte Teilansicht und verlangt einen ausdruecklichen
+restart()-Aufruf; Step wiederholt nicht heimlich Begin. Restart setzt weder
+Deadline noch Pollzulassung zurueck. Der Caller bestimmt Retry/Backoff und
+seine maximale Zahl von Versuchen, ohne neue globale Test-/Warteschleife.
+
+Version/Groesse/Kind, Cursoridentitaet und Epoch, konstantes Total,
+Seitenzaehler, Fortschrittsgeneration und ganze Recordheader werden geprueft.
+Records muessen strikt steigende nichtnull Generationen und gueltige genaue
+ID/Generation-Handles besitzen. Full-Record-ID und Handle-ID stimmen ueberein.
+More benoetigt positiven Fortschritt und Rest; Complete benoetigt exakt das
+gesamte Total und kein HasMore. Widerspruechliche, verspaetete oder fremde
+Seiten werden InvalidProvider, niemals Missing. Kapazitaetsmangel bleibt
+Capacity; der Leser fordert nicht null Records an, um Rest zu verschweigen.
+
+GetView/fullView/lifecycleView beziehungsweise Rust view() ist erst nach
+Complete zulaessig. Der gesamte Aufbau bleibt bis dahin privat. Exakte Suche
+liefert Found/Missing ausschliesslich in dieser vollstaendigen Sicht und
+vergleicht nichtnull ID UND Generation; eine wiederverwendete ID allein ist
+kein Treffer. Ungueltige Identitaet oder jeder unvollstaendige/fehlgeschlagene
+Aufbau liefert Unknown. C-Matchindex und Snapshotgeneration gehoeren zusammen;
+ein Index ist kein nach einem Restart weitergueltiges Ressourcenhandle.
+
+Snapshot und Lebenszyklus
+-------------------------
+Complete bestaetigt stabile Inventarmitgliedschaft, keine atomare Aufnahme
+aller laufend veraenderlichen Programmzustaende/Heapwerte im selben Moment.
+Die Full-Summary beschreibt den kohaerenten Begin. Reihen beschreiben die
+jeweilige Anbieteraufnahme. Found/Missing ist eine Aussage zu dieser Sicht,
+keine aktuelle Liveness-, Retain-, Kill-, Reap- oder physische Retiredquittung.
+Done, close_requested, echte Observation/ProcessHandle und reale Ressourcen-
+retirement bleiben beim bestehenden Besitzer. Insbesondere rechtfertigt
+Missing nicht das Freigeben eines noch geliehenen Workers/Callbacks.
+
+Genau ein aeusseres DeadlineBudget gilt vom Begin ueber alle Seiten und
+Wiederanlaeufe. Initialisierung nimmt eine ClockSample/Timeout oder eine
+vorher gestartete absolute Frist an. Vor und nach dem wirklichen Callback
+werden Epoche, Regression und Ablauf geprueft. Keine neue Arbeit nach Ablauf.
+Poll erlaubt einen unmittelbaren Anbieteraufruf fuer die ganze Operation;
+ein erfolgreicher Begin allein ist daher terminales WouldBlock/Unknown.
+Ein zusammengesetzter Durchlauf benoetigt normalerweise Finite oder Forever.
+Keine harte Rueckkehrzusage: Eine bereits laufende Operation muss wirklich
+zurueckkehren, ehe ihre lokale Pufferleihe endet. Reentrantes Cancel setzt nur
+StopRequested/InCall; erst die echte Rueckkehr quittiert Cancelled. Es gibt
+keinen neuen asynchronen Request oder impliziten Completionowner im Leser.
+
+C/Zig halten State, Storage, Provider und Outputs exklusiv, disjunkt und
+gueltig gemappt. Zahlen-/Darstellungspruefung ersetzt keine Speicherleih-
+oder Codelebensdauer. Rust leiht MaybeUninit-Speicher exklusiv, zeigt erst
+initialisierte vollstaendige &[Record] und gibt Found als geborgten Record
+zurueck. Eine gehaltene Ansicht verhindert Restart/Mutation. Der Leser ist
+nicht Send/Sync. Nur die kanonischen versiegelten Full-/Lifecycletypen sind
+zulaessig. from_native_provider ist ausdruecklich unsafe: Callbackcode,
+Plattform-/Clientidentitaet und echte synchrone Ausgabevertraege bleiben bis
+zum Drop gueltig. Normale Verbraucher verwenden den echten Context-Konstruktor.
+
+Beispiele
+---------
+Zig (ein Schritt, keine versteckte Wiederholung):
+  const i = r4os.inventory_reader;
+  var rows: [64]r4os.abi.ProgramLifecycleSnapshot = undefined;
+  var clock = try i.PlatformClock.fromContext2(context2);
+  var sample: r4os.time_contract.checked.ClockSample = .{};
+  if (i.PlatformClock.sample(&clock,&sample) != 0) return error.NoClock;
+  var reader = try i.Reader.init(.lifecycle,
+      .{.address=@intFromPtr(&rows),.length=@sizeOf(@TypeOf(rows))},64,8,
+      try i.fromContext2(context2,.lifecycle),sample,
+      .{.kind=r4os.abi.timeout_kind_finite,.nanoseconds=2_000_000_000});
+  const step = try reader.step(false,i.PlatformClock.sample,&clock);
+  // Erst Complete erlaubt reader.lifecycleView()/findExact().
+
+Rust:
+  use core::mem::MaybeUninit;
+  use r4os_sdk::{inventory::{LifecycleReader,PlatformClock},resources::Timeout};
+  let mut rows = [MaybeUninit::uninit();64];
+  let mut clock = PlatformClock::new(context2)?;
+  let mut reader = LifecycleReader::new(context2,&mut rows,8,clock.sample()?,
+      Timeout::AfterNanos(2_000_000_000))?;
+  let step = reader.step(false,&mut ||clock.sample())?;
+  // step.complete => reader.view(); sonst kein &[Record]/Missing.
+
+Bestehende LOGSVC/SSHD/EXSVC/SVCAPPD/AUDSVC- und R4ACO-Leser bleiben bis zur
+gesonderten Verbrauchermigration unveraendert und als unabhaengige Orakel
+erhalten. Modell-, Compiler-, Gast- und reale Hardwarebelege sind verschieden.

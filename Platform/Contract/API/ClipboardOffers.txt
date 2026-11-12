@@ -1,0 +1,122 @@
+﻿Copied Clipboard Offers (protocol1)
+===================================
+
+CLIPSVC is the sole clipboard data owner. R4SYS service_call transports
+bounded copied messages; the existing R4DESK text bridge remains unchanged.
+No kernel clipboard engine, conversion, delayed rendering or caller pointer.
+Query1 consumers keep original opcodes1..5, layouts and text byte semantics.
+The typed Zig/C/Rust adapters use existing Query2 ServiceCall. An old service
+returning BadOp maps to explicit Unsupported, never a simulated typed offer.
+
+Wire and identities
+-------------------
+All fixed records are generated from ApiContract.json. Wire encoding is their
+exact little-endian x86_64 representation, without pointers or implicit tails.
+Version1 and exact size are required; all reserved/flag fields are zero.
+Only Put adds request bytes; Enumerate and Read append reply records/bytes.
+All other request/reply lengths are exact. RPC status0 means success; new
+negative errors are scoped clipboard_offer constants. Existing transport
+errors remain separate. Caller loans end at actual synchronous RPC return.
+
+Provider is the actual service ProgramProcessHandle.generation, boot-unique,
+nonzero and never guessed from a clock, PID or random value. Offer revisions
+start0 and advance without wrap for every successful legacy or typed commit.
+Stage and snapshot IDs share one never-reused provider-local sequence. They
+are copied transferable identities in this trusted single-user system; no
+authorization model is implied. Old tokens cannot follow a service restart.
+These values are boot/session identities, not persistent machine identities.
+
+Operation                       Request / response
+--------------------------------------------------------------------------
+Info64                          empty / ClipboardOfferInfo80
+Begin65                         ClipboardOfferBegin32 / ClipboardOfferLease48
+Declare66                       ClipboardOfferTransfer48 / empty
+Put67                           Transfer48 +0..4048 bytes / empty
+Commit68                        Lease48 / committed Lease48
+Abort69                         Lease48 / empty
+Snapshot70                      empty / snapshot Lease48
+Enumerate71                     Enumerate32 / Page48 +count Format24
+Read72                          Transfer48 / Chunk56 +0..4040 bytes
+Release73                       Lease48 / empty
+Status74                        Lease48 / stage/committed Lease48
+
+Lease requests use version/size/provider/id; revision/expires/state/reserved
+must be zero. Responses report authoritative values. Clients must construct
+a token request rather than sending a returned receipt unchanged. Transfer
+Declare offset0 declares one item/format's exact total size. Put repeats that
+size and appends bytes at its contiguous offset. Read uses total_bytes as
+requested maximum0..4040, with offset in the immutable snapshot. Zero requests
+metadata without implying EOF. Reply includes provider/id/revision, exact
+offset/total/returned prefix and explicit EOF only at total. No partial read
+ever combines current revisions. Reading never consumes a snapshot.
+
+Begin requires the actual provider and exact expected current revision;
+Commit checks it again. It declares an upper byte budget, not preallocation.
+Representations may be declared in any order; each pair item/format is unique.
+Every declared byte must be copied and validated before Commit publishes the
+whole offer in one owner-loop step. Empty offers clear all typed/text views.
+Declare replay with identical size and Put replay of exactly accepted bytes
+are idempotent; conflicting or out-of-order retries fail without modification.
+Commit replay returns the original receipt without a second publication,
+even if another producer has since changed current. Status resolves a known
+stage without publishing. Abort affects only an uncommitted stage. An expired
+receipt cannot prove whether an earlier uncertain Commit happened. Timeout
+never implies failed publication or successful cancellation; do not begin a
+new replacement automatically to resolve it. Begin reply loss leaves only a
+bounded expiring private stage. Snapshot reply loss leaves an expiring pin.
+
+Enumeration pages contain declaration-order Format records and stable total,
+next, revision and snapshot ID; next==total is completion. Capacity1..16.
+Missing representation is NotFound; released/expired tokens are Closed;
+wrong provider is ProviderChanged. Data remain owned by CLIPSVC after the
+producer exits. Release relinquishes a snapshot pin or a committed stage
+receipt; it never clears current clipboard or aborts a writing stage.
+
+Formats and legacy view
+-----------------------
+1 text/plain;charset=utf-8: strict UTF8, no NUL. No normalization/shaping claim.
+2 image/png: signature and first13byte IHDR with dimensions1..4096, 8bit known
+  color type, compression/filter0 and interlace0/1 checked. Encoded remainder
+  is opaque: no CRC, full PNG validity, decompression or rendering guarantee.
+3 application/x-r4os-xrgb32-v1: four LEu32 width,height,stride,flags0 then
+  exactly height*stride bytes. Dimensions1..4096; stride=width*4; XRGB32.
+4 application/x-r4os-file-list-v1: LEu32 count1..128 then repeated LEu32 byte
+  length3..1023 and strict UTF8 absolute DOS path (letter,colon,backslash).
+  NUL/CR/LF refused. Copied path syntax only; no existence, canonical identity,
+  URI conversion, FS reservation or right to overwrite is implied.
+5 application/x-r4os-text-bytes: explicit legacy nonNUL bytes, max4095.
+  Charset remains unspecified, including when bytes are invalid UTF8.
+
+Only explicitly supplied text representations of at most4095 bytes supply
+the old text view. Choose lowest item ID, preferring format1 over5 in that
+item. Longer text and image/file-only offers expose an empty legacy view;
+no silent truncation or format conversion. A legacy Write publishes format5
+and, only if its exact bytes are valid UTF8, format1. Invalid UTF8 remains
+byte-exact through legacy Read. Legacy Clear publishes an empty offer.
+Original legacy capacity, flags, nonNUL validation, whole-read semantics and
+revision32 wrap skipping0 remain. The64bit revision never wraps. Only real
+publication and provider lifecycle notify existing shared Clipboard activity;
+staging, read, abort, snapshot acquire/release and Commit replay do not wake it.
+
+Bounds and lifetime
+-------------------
+8items (IDs0..7),16representations,4stages including committed receipts,
+16snapshots;4MB copied payload per offer and32MB across all live offers.
+There is a separate256KB ceiling reserve for legacy writes; typed allocations
+cannot consume it. Fixed metadata is bounded by those object counts. Existing
+service VM profile and SDK allocator remain authoritative; OOM is Capacity.
+No success is returned with a silently shortened offer. Legacy resource
+exhaustion returns the existing service Busy result, leaving current intact.
+
+Stage/receipt/snapshot duration is30seconds from acquisition on the actual
+service monotonic clock. Expiry is not renewed by requests; expired pins and
+private data are reclaimed on the next request (no background polling worker).
+Source/generation/backend/frequency identity change or regression invalidates
+all leases while keeping current data. Unavailable clock refuses new typed
+operations. Provider restart discards all old process data and changes epoch.
+Current committed data do not expire with their receipt or producer lifetime.
+Release/Abort results are explicit; no caller destructor silently retries an
+uncertain mutation. Service stop and process teardown retain existing owners.
+
+Generation2 is provider rollout only. Applications, UI Copy/Paste paths and
+the existing ServiceLoop are not migrated by this contract.

@@ -1,0 +1,8 @@
+#include <r4os/app2.h>
+#include <r4os/r4os.h>
+static int32_t work(R4App *app){return r4sys_write_line(&app->system,"Hello from {ProjectName}");}
+
+int32_t r4_main2(const R4OS2Context *context){
+ R4App2Memory memory;int32_t rc=R4SdkApp2InitRaw(context->raw,&memory);if(rc<0)return rc;
+ R4App app;rc=r4_app_init2(context,&memory,&app);if(rc<0)return rc;return work(&app);
+}

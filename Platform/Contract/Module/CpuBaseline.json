@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "name": "r4os-avx2-v1",
+  "cpu_model": "x86_64",
+  "xcr0_mask": 7,
+  "tuning_features": ["idivq_to_divl", "macrofusion", "slow_3ops_lea", "slow_incdec"],
+  "requirements": [
+    {"name":"fpu",       "leaf":1,          "subleaf":0, "register":"edx", "bit":0,  "zig_features":["x87"]},
+    {"name":"cx8",       "leaf":1,          "subleaf":0, "register":"edx", "bit":8,  "zig_features":["cx8"]},
+    {"name":"cmov",      "leaf":1,          "subleaf":0, "register":"edx", "bit":15, "zig_features":["cmov"]},
+    {"name":"mmx",       "leaf":1,          "subleaf":0, "register":"edx", "bit":23, "zig_features":["mmx"]},
+    {"name":"fxsr",      "leaf":1,          "subleaf":0, "register":"edx", "bit":24, "zig_features":["fxsr"]},
+    {"name":"sse",       "leaf":1,          "subleaf":0, "register":"edx", "bit":25, "zig_features":["sse"]},
+    {"name":"sse2",      "leaf":1,          "subleaf":0, "register":"edx", "bit":26, "zig_features":["sse2"], "c_flag":"-msse2"},
+    {"name":"sse3",      "leaf":1,          "subleaf":0, "register":"ecx", "bit":0,  "zig_features":["sse3"]},
+    {"name":"ssse3",     "leaf":1,          "subleaf":0, "register":"ecx", "bit":9,  "zig_features":["ssse3"]},
+    {"name":"sse4_1",    "leaf":1,          "subleaf":0, "register":"ecx", "bit":19, "zig_features":["sse4_1"]},
+    {"name":"sse4_2",    "leaf":1,          "subleaf":0, "register":"ecx", "bit":20, "zig_features":["sse4_2", "crc32"]},
+    {"name":"avx",       "leaf":1,          "subleaf":0, "register":"ecx", "bit":28, "zig_features":["avx", "vzeroupper"]},
+    {"name":"avx2",      "leaf":7,          "subleaf":0, "register":"ebx", "bit":5,  "zig_features":["avx2"], "c_flag":"-mavx2"},
+    {"name":"aes",       "leaf":1,          "subleaf":0, "register":"ecx", "bit":25, "zig_features":["aes"], "c_flag":"-maes"},
+    {"name":"pclmul",    "leaf":1,          "subleaf":0, "register":"ecx", "bit":1,  "zig_features":["pclmul"], "c_flag":"-mpclmul"},
+    {"name":"xsave",     "leaf":1,          "subleaf":0, "register":"ecx", "bit":26, "zig_features":[]},
+    {"name":"long_mode", "leaf":2147483649, "subleaf":0, "register":"edx", "bit":29, "zig_features":["64bit", "nopl"]}
+  ]
+}

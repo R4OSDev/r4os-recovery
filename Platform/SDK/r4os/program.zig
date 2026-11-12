@@ -1,6 +1,8 @@
 const abi = @import("r4os_contract").abi;
 const std = @import("std");
 const vm_allocator = @import("vm_allocator.zig");
+const platform2 = @import("platform2.zig");
+const allocator_source = @import("allocator_source.zig");
 const r4xstart = @import("r4xstart.zig");
 const service_deadline = @import("service_deadline.zig");
 const time_contract = @import("time_contract.zig");
@@ -63,14 +65,13 @@ pub fn bundleValueFromR4XStart(raw: *const abi.R4XStartContext) ?Bundle {
         // R4SYS tail functions are append-only and optional. Accept the
         // stable table header; tableFn checks the exact size of each slot.
         .sys = resolveGroupTable(abi.R4XStartR4Sys, xs, .r4sys, abi.r4xstart_r4sys_magic, 1, @offsetOf(abi.R4XStartR4Sys, "write") + @sizeOf(usize)),
-        .desk = resolveGroupTable(abi.R4XStartR4Desk, xs, .r4desk, abi.r4xstart_r4desk_magic, abi.r4xstart_r4desk_version, abi.r4xstart_r4desk_size),
-        .draw = resolveGroupTable(abi.R4XStartR4Draw, xs, .r4draw, abi.r4xstart_r4draw_magic, abi.r4xstart_r4draw_version, abi.r4xstart_r4draw_size),
-        // Optional current R4NET operations are checked by exact slot size.
-        // Service requests require the generation-bound callback.
+        .desk = resolveGroupTable(abi.R4XStartR4Desk, xs, .r4desk, abi.r4xstart_r4desk_magic, 1, @offsetOf(abi.R4XStartR4Desk, "read_key") + @sizeOf(usize)),
+        .draw = resolveGroupTable(abi.R4XStartR4Draw, xs, .r4draw, abi.r4xstart_r4draw_magic, 1, @offsetOf(abi.R4XStartR4Draw, "clear") + @sizeOf(usize)),
+        // Optional groups/capabilities retain exact per-operation slot checks.
+        // A missing current callback is unavailable, never a different protocol.
         .net = resolveGroupTable(abi.R4XStartR4Net, xs, .r4net, abi.r4xstart_r4net_magic, 1, @offsetOf(abi.R4XStartR4Net, "tcp_connect") + @sizeOf(usize)),
         .audio = resolveGroupTable(abi.R4XStartR4Audio, xs, .r4audio, abi.r4xstart_r4audio_magic, abi.r4xstart_r4audio_version, abi.r4xstart_r4audio_size),
-        // Optional Recovery operations are checked by exact slot size.
-        // Retired diagnostic prefixes are never used as V2 substitutes.
+        // Diagnostic capabilities are admitted per exact current slot.
         .dev = resolveGroupTable(abi.R4XStartR4Dev, xs, .r4dev, abi.r4xstart_r4dev_magic, 1, @offsetOf(abi.R4XStartR4Dev, "memory_summary") + @sizeOf(usize)),
     };
     if (candidate.sys == null) return null;
@@ -267,6 +268,38 @@ fn tcpLifecycleTerminal(cause: u32) bool {
     };
 }
 
+test "optional FPU observation respects old table tails and typed forwarding" {
+    const Provider = struct {
+        var calls: u32 = 0;
+        fn call(request: *const abi.FpuObservationRequest, out: *abi.FpuObservationInfo) callconv(.c) i32 {
+            calls += 1;
+            if (request.operation != abi.fpu_observation_end or request.task_generation != 23 or request.token != 17) return -91;
+            out.* = .{ .task_generation = request.task_generation, .token = request.token, .flags = abi.fpu_observation_flag_closed };
+            return 7;
+        }
+    };
+    Provider.calls = 0;
+    var raw: abi.R4XStartContext = .{};
+    var table: abi.R4XStartR4Dev = .{ .size = @offsetOf(abi.R4XStartR4Dev, "fpu_observation"), .fpu_observation = @intFromPtr(&Provider.call) };
+    var bundle: Bundle = .{ .raw = &raw, .dev = &table };
+    const context = Context.initBundle(&bundle);
+    const request: abi.FpuObservationRequest = .{ .operation = abi.fpu_observation_end, .task_generation = 23, .token = 17 };
+    var info: abi.FpuObservationInfo = .{ .token = 0xabc };
+    const sentinel = info;
+    try std.testing.expectEqual(abi.err_no_fn, context.fpuObservation(&request, &info));
+    try std.testing.expectEqualSlices(u8, std.mem.asBytes(&sentinel), std.mem.asBytes(&info));
+    try std.testing.expectEqual(@as(u32, 0), Provider.calls);
+    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.fpu_observation = 0;
+    try std.testing.expectEqual(abi.err_no_fn, context.fpuObservation(&request, &info));
+    try std.testing.expectEqual(@as(u32, 0), Provider.calls);
+    table.fpu_observation = @intFromPtr(&Provider.call);
+    try std.testing.expectEqual(@as(i32, 7), context.fpuObservation(&request, &info));
+    try std.testing.expectEqual(@as(u32, 1), Provider.calls);
+    try std.testing.expectEqual(@as(u64, 23), info.task_generation);
+    try std.testing.expectEqual(@as(u64, 17), info.token);
+}
+
 pub fn entryAsm(comptime target: []const u8) []const u8 {
     return ".section .text.r4x_entry,\"ax\"\n" ++
         ".global r4x_entry\n" ++
@@ -278,6 +311,8 @@ pub const Context = struct {
     // Rein tabellenbasiert: Die Signatur-Wahrheit sind die benannten
     // Fn-Typ-Namespaces abi.R4SysFns..R4DevFns.
     bundle: ?*const Bundle = null,
+    generation2: ?*const platform2.Context = null,
+    memory2: ?*const allocator_source.Memory = null,
 
     pub fn initBundle(bundle: *const Bundle) Context {
         return .{ .bundle = bundle };
@@ -317,37 +352,60 @@ pub const Context = struct {
     // Tabellenfeld (err_no_fn). `group` ist der Bundle-Feldname
     // ("sys".."dev").
     fn unavailable(self: *const Context, comptime group: []const u8) i32 {
+        if (self.generation2) |value| return if (value.tables[groupId(group) - 1] == 0) abi.err_no_group else abi.err_no_fn;
         const b = self.bundle orelse return abi.err_no_group;
         if (@field(b.*, group) == null) return abi.err_no_group;
         return abi.err_no_fn;
     }
 
+    fn groupId(comptime group: []const u8) u32 {
+        const names = [_][]const u8{ "sys", "desk", "draw", "net", "audio", "dev" };
+        inline for (names, 1..) |name, id| if (comptime std.mem.eql(u8, name, group)) return id;
+        @compileError("unknown platform group");
+    }
+
+    fn nextFn(self: *const Context, comptime Fns: type, comptime Table: type, comptime id: u32, comptime field: []const u8) ?@field(Fns, field) {
+        // Offsets belong to the actual canonical generation2 table. Removed
+        // slots stay unavailable; no first-generation table is fabricated.
+        if (comptime !@hasField(Table, field)) return null;
+        const context = self.generation2 orelse return null;
+        var address: u64 = 0;
+        if (context.lookup(id, @offsetOf(Table, field), &address) != 0) return null;
+        return @ptrFromInt(address);
+    }
+
     fn sysFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4SysFns, field) {
+        if (self.generation2 != null) return self.nextFn(abi.R4SysFns, platform2.abi.R4XStartR4Sys2, 1, field);
         const b = self.bundle orelse return null;
         return tableFn(abi.R4SysFns, abi.R4XStartR4Sys, b.sys, field);
     }
 
     fn deskFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4DeskFns, field) {
+        if (self.generation2 != null) return self.nextFn(abi.R4DeskFns, platform2.abi.R4XStartR4Desk2, 2, field);
         const b = self.bundle orelse return null;
         return tableFn(abi.R4DeskFns, abi.R4XStartR4Desk, b.desk, field);
     }
 
     fn drawFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4DrawFns, field) {
+        if (self.generation2 != null) return self.nextFn(abi.R4DrawFns, platform2.abi.R4XStartR4Draw2, 3, field);
         const b = self.bundle orelse return null;
         return tableFn(abi.R4DrawFns, abi.R4XStartR4Draw, b.draw, field);
     }
 
     fn netFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4NetFns, field) {
+        if (self.generation2 != null) return self.nextFn(abi.R4NetFns, platform2.abi.R4XStartR4Net2, 4, field);
         const b = self.bundle orelse return null;
         return tableFn(abi.R4NetFns, abi.R4XStartR4Net, b.net, field);
     }
 
     fn audioFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4AudioFns, field) {
+        if (self.generation2 != null) return self.nextFn(abi.R4AudioFns, platform2.abi.R4XStartR4Audio2, 5, field);
         const b = self.bundle orelse return null;
         return tableFn(abi.R4AudioFns, abi.R4XStartR4Audio, b.audio, field);
     }
 
     fn devFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4DevFns, field) {
+        if (self.generation2 != null) return self.nextFn(abi.R4DevFns, platform2.abi.R4XStartR4Dev2, 6, field);
         const b = self.bundle orelse return null;
         return tableFn(abi.R4DevFns, abi.R4XStartR4Dev, b.dev, field);
     }
@@ -380,6 +438,7 @@ pub const Context = struct {
     }
 
     pub fn allocator(self: *const Context) std.mem.Allocator {
+        if (self.memory2) |memory| return vm_allocator.allocatorMapped(memory);
         // 0.56.41 (B2): Allokator ueber die R4SYS-Tabelle; ohne Tabelle
         // liefert die leere Default-Tabelle einen sauber fehlschlagenden
         // Allokator (supportsVmApi=false, vm-Felder bleiben 0).
@@ -394,6 +453,7 @@ pub const Context = struct {
     }
 
     pub fn allocatorTrim(self: *const Context) void {
+        if (self.memory2) |memory| return vm_allocator.trimMapped(memory);
         const b = self.bundle orelse return;
         const t = b.sys orelse return;
         vm_allocator.trim(t);
@@ -430,6 +490,181 @@ pub const Context = struct {
         const table_fn = self.devFn("memory_reclaim_probe") orelse return null;
         if (table_fn(requested_frames, &out) < 0) return null;
         return out;
+    }
+
+    /// Explicit bounded work; absence stays err_no_fn. Global heap usage in
+    /// the report is observational; use its exact own cleanup receipts.
+    pub fn kernelHeapCheck(self: *const Context, out: *abi.ProgramKernelHeapCheck) i32 {
+        const table_fn = self.devFn("memory_kernel_heap_check") orelse return self.unavailable("dev");
+        return table_fn(out);
+    }
+
+    /// Explicit native work. Exact task/work receipts determine cleanup;
+    /// isolated boot injections are advertised, never started here.
+    pub fn kernelSchedulerCheck(self: *const Context, selection: u32, out: *abi.ProgramKernelSchedulerCheck) i32 {
+        const table_fn = self.devFn("scheduler_kernel_check") orelse return self.unavailable("dev");
+        return table_fn(selection, out);
+    }
+
+    /// Existing bounded local USB ring/router cases; no live controller work.
+    pub fn kernelUsbCheck(self: *const Context, out: *abi.ProgramKernelUsbCheck) i32 {
+        const table_fn = self.devFn("usb_contract_check") orelse return self.unavailable("dev");
+        return table_fn(out);
+    }
+
+    /// Explicit one-request read-only NVMe IRQ proof. Missing capabilities are
+    /// unavailable; passive counter progress is not an own completion receipt.
+    pub fn kernelNvmeCheck(self: *const Context, out: *abi.ProgramKernelNvmeCheck) i32 {
+        const table_fn = self.devFn("storage_nvme_check") orelse return self.unavailable("dev");
+        return table_fn(out);
+    }
+
+    /// Explicit owned synthetic blockqueue work; raw status leaves unavailable
+    /// distinct from a passing check. This never selects a physical disk.
+    pub fn kernelBlockQueueCheck(self: *const Context, out: *abi.ProgramKernelBlockQueueCheck) i32 {
+        const table_fn = self.devFn("storage_block_queue_check") orelse return self.unavailable("dev");
+        return table_fn(out);
+    }
+
+    /// Explicit mutation requires an exact queried epoch; query is passive.
+    /// Passive capture/feature queries; register work is always explicit.
+    pub fn cpuCapabilities(self: *const Context, cpu: u32, out: *abi.CpuCapabilitiesInfo) i32 {
+        const function = self.devFn("cpu_capabilities") orelse return self.unavailable("dev");
+        return function(cpu, out);
+    }
+    pub fn cpuFeature(self: *const Context, cpu: u32, epoch: u64, index: u32, out: *abi.CpuFeatureInfo) i32 {
+        const function = self.devFn("cpu_feature") orelse return self.unavailable("dev");
+        return function(cpu, epoch, index, out);
+    }
+    pub fn cpuRegisterRead(self: *const Context, cpu: u32, epoch: u64, id: u32, out: *abi.CpuRegisterInfo) i32 {
+        const function = self.devFn("cpu_register_read") orelse return self.unavailable("dev");
+        return function(cpu, epoch, id, out);
+    }
+    pub fn cpuPowerInfo(self: *const Context, cpu: u32, epoch: u64, out: *abi.CpuPowerInfo) i32 {
+        const function = self.devFn("cpu_power_info") orelse return self.unavailable("dev");
+        return function(cpu, epoch, out);
+    }
+    pub fn cpuPerformance(self: *const Context, request: *const abi.CpuPerformanceRequest, out: *abi.CpuPerformanceInfo) i32 {
+        const function = self.devFn("cpu_performance") orelse return self.unavailable("dev");
+        return function(request, out);
+    }
+
+    pub fn cpuCppc(self: *const Context, request: *const abi.CpuPerformanceRequest, out: *abi.CpuCppcInfo) i32 {
+        const function = self.devFn("cpu_cppc") orelse return self.unavailable("dev");
+        return function(request, out);
+    }
+    pub fn cpuFirmwarePerformance(self: *const Context, request: *const abi.CpuPerformanceRequest, out: *abi.CpuFirmwareInfo) i32 {
+        const function = self.devFn("cpu_firmware_performance") orelse return self.unavailable("dev");
+        return function(request, out);
+    }
+    pub fn cpuIdleInfo(self: *const Context, cpu: u32, out: *abi.CpuIdleInfo) i32 {
+        const function = self.devFn("cpu_idle_info") orelse return self.unavailable("dev");
+        return function(cpu, out);
+    }
+    /// Passive boot/terminal MCA receipt; never initiates a hardware read.
+    pub fn cpuMachineInfo(self: *const Context, cpu: u32, out: *abi.CpuMachineInfo) i32 {
+        const function = self.devFn("cpu_machine_info") orelse return self.unavailable("dev");
+        return function(cpu, out);
+    }
+    pub fn cpuMachineBank(self: *const Context, cpu: u32, epoch: u64, sequence: u64, index: u32, out: *abi.CpuMachineBank) i32 {
+        const function = self.devFn("cpu_machine_bank") orelse return self.unavailable("dev");
+        return function(cpu, epoch, sequence, index, out);
+    }
+    /// Passive early revision/admission receipt; never loads microcode.
+    pub fn cpuMicrocodeInfo(self: *const Context, cpu: u32, out: *abi.CpuMicrocodeInfo) i32 {
+        const function = self.devFn("cpu_microcode_info") orelse return self.unavailable("dev");
+        return function(cpu, out);
+    }
+
+    /// Explicit own-task live-instruction observation; no register liveness is
+    /// promised across this ordinary SysV API call. Invoke outside the burst.
+    pub fn fpuObservation(self: *const Context, request: *const abi.FpuObservationRequest, out: *abi.FpuObservationInfo) i32 {
+        const function = self.devFn("fpu_observation") orelse return self.unavailable("dev");
+        return function(request, out);
+    }
+
+    pub fn cpuAccelerationInfo(self: *const Context, out: *abi.CpuAccelerationInfo) i32 {
+        const function = self.devFn("cpu_acceleration_info") orelse return self.unavailable("dev");
+        return function(out);
+    }
+    pub fn cpuAccelerationInfoFunction(self: *const Context) ?abi.R4DevFns.cpu_acceleration_info {
+        return self.devFn("cpu_acceleration_info");
+    }
+    pub fn entropyInfoFunction(self: *const Context) ?abi.R4SysFns.entropy_source_info {
+        return self.sysFn("entropy_source_info");
+    }
+    pub fn entropyFillFunction(self: *const Context) ?abi.R4SysFns.entropy_fill {
+        return self.sysFn("entropy_fill");
+    }
+    pub fn entropySourceInfo(self: *const Context, out: *abi.EntropySourceInfo) i32 {
+        const function = self.entropyInfoFunction() orelse return self.unavailable("sys");
+        return function(out);
+    }
+    pub fn cpuAccelerationWorkFunction(self: *const Context) ?abi.R4DevFns.cpu_acceleration_work {
+        return self.devFn("cpu_acceleration_work");
+    }
+    pub fn cpuAccelerationWork(self: *const Context, kind: u32, iterations: u32, work: ?abi.CpuPureWorkFn, context: u64, out: *abi.CpuAccelerationWork) i32 {
+        const function = self.cpuAccelerationWorkFunction() orelse return self.unavailable("dev");
+        const callback = work orelse return abi.cpu_capabilities_error_invalid;
+        return function(kind, iterations, &callback, context, out);
+    }
+    pub fn cpuPmuInfo(self: *const Context, cpu: u32, out: *abi.CpuPmuInfo) i32 {
+        const function = self.devFn("cpu_pmu_info") orelse return self.unavailable("dev");
+        return function(cpu, out);
+    }
+    /// Explicit short pure resident work, no allocation/fault/block/yield/API
+    /// call inside work. The wire borrows a copied typed callback slot; it
+    /// never exposes a host-dependent optional-by-value function ABI.
+    pub fn cpuPmuMeasure(self: *const Context, cpu: u32, epoch: u64, event: u32, iterations: u32, work: ?abi.PmuWorkFn, context: u64, out: *abi.CpuPmuResult) i32 {
+        const function = self.devFn("cpu_pmu_measure") orelse return self.unavailable("dev");
+        const callback = work orelse return abi.cpu_capabilities_error_invalid;
+        return function(cpu, epoch, event, iterations, &callback, context, out);
+    }
+    pub fn cpuPmuResult(self: *const Context, cpu: u32, epoch: u64, generation: u64, out: *abi.CpuPmuResult) i32 {
+        const function = self.devFn("cpu_pmu_result") orelse return self.unavailable("dev");
+        return function(cpu, epoch, generation, out);
+    }
+
+    pub fn cpuPerformanceHint(self: *const Context, cpu: u32, epoch: u64, out: *abi.CpuPerformanceHintInfo) i32 {
+        const function = self.devFn("cpu_performance_hint") orelse return self.unavailable("dev");
+        return function(cpu, epoch, out);
+    }
+
+    pub fn cpuPowerCapture(self: *const Context, cpu: u32, epoch: u64, out: *abi.CpuPowerInfo) i32 {
+        const function = self.devFn("cpu_power_capture") orelse return self.unavailable("dev");
+        return function(cpu, epoch, out);
+    }
+    pub fn kernelCpuRegisterCheck(self: *const Context, cpu: u32, epoch: u64, out: *abi.ProgramKernelCpuRegisterCheck) i32 {
+        const function = self.devFn("kernel_cpu_register_check") orelse return self.unavailable("dev");
+        return function(cpu, epoch, out);
+    }
+
+    pub fn cpuLifecycle(self: *const Context, operation: u32, cpu: u32, expected_epoch: u64, out: *abi.CpuLifecycleInfo) i32 {
+        const function = self.devFn("cpu_lifecycle") orelse return self.unavailable("dev");
+        return function(operation, cpu, expected_epoch, out);
+    }
+    pub fn kernelCpuLifecycleCheck(self: *const Context, out: *abi.ProgramKernelCpuLifecycleCheck) i32 {
+        const function = self.devFn("kernel_cpu_lifecycle_check") orelse return self.unavailable("dev");
+        return function(out);
+    }
+
+    pub fn kernelSmpCheck(self: *const Context, out: *abi.ProgramKernelSmpCheck) i32 {
+        const table_fn = self.devFn("smp_kernel_check") orelse return self.unavailable("dev");
+        return table_fn(out);
+    }
+
+    pub fn smpTlbSnapshot(self: *const Context, out: *abi.ProgramSmpTlbSnapshot) i32 {
+        const table_fn = self.devFn("performance_smp_tlb") orelse return self.unavailable("dev");
+        return table_fn(out);
+    }
+    pub fn cpuTopology(self: *const Context, index: u32, out: *abi.CpuTopologyInfo) i32 {
+        const table_fn = self.devFn("cpu_topology") orelse return self.unavailable("dev");
+        return table_fn(index, out);
+    }
+
+    pub fn cpuCacheTopology(self: *const Context, index: u32, ordinal: u32, out: *abi.CpuCacheTopologyInfo) i32 {
+        const table_fn = self.devFn("cpu_cache_topology") orelse return self.unavailable("dev");
+        return table_fn(index, ordinal, out);
     }
 
     pub fn memoryBackingStoreProbe(self: *const Context, path: [*:0]const u8, requested_bytes: u64, flags: u32) ?abi.ProgramMemoryBackingStoreProbe {
@@ -572,6 +807,34 @@ pub const Context = struct {
         return out;
     }
 
+    pub fn performanceInstrumentation(self: *const Context) ?abi.ProgramInstrumentationInfo {
+        var out: abi.ProgramInstrumentationInfo = .{};
+        const table_fn = self.devFn("performance_instrumentation") orelse return null;
+        if (table_fn(&out) <= 0) return null;
+        return out;
+    }
+
+    pub fn performanceLock(self: *const Context, index: u32) ?abi.ProgramLockPerformanceInfo {
+        var out: abi.ProgramLockPerformanceInfo = .{};
+        const table_fn = self.devFn("performance_lock") orelse return null;
+        if (table_fn(index, &out) <= 0) return null;
+        return out;
+    }
+
+    pub fn performanceStack(self: *const Context, index: u32) ?abi.ProgramStackPerformanceInfo {
+        var out: abi.ProgramStackPerformanceInfo = .{};
+        const table_fn = self.devFn("performance_stack") orelse return null;
+        if (table_fn(index, &out) <= 0) return null;
+        return out;
+    }
+
+    /// 1 coherent record (sequence 0: none), 0 end, negative unavailable/error.
+    /// Output is unchanged on failure, including missing optional slots.
+    pub fn stackFault(self: *const Context, index: u32, out: *abi.ProgramStackFaultInfo) i32 {
+        const table_fn = self.devFn("stack_fault") orelse return abi.err_no_fn;
+        return table_fn(index, out);
+    }
+
     pub fn performanceIrqTiming(self: *const Context, irq: u32) ?abi.ProgramIrqTimingInfo {
         var out: abi.ProgramIrqTimingInfo = .{};
         const table_fn = self.devFn("performance_irq_timing") orelse return null;
@@ -645,10 +908,36 @@ pub const Context = struct {
         return out;
     }
 
+    pub fn displayState(self: *const Context) ?abi.DisplayStateInfo {
+        var out: abi.DisplayStateInfo = .{};
+        const table_fn = self.devFn("display_state") orelse return null;
+        if (table_fn(&out) <= 0) return null;
+        return out;
+    }
+
+    pub fn driverModuleInfo(self: *const Context, owner: u32) ?abi.DriverModuleInfo {
+        var out: abi.DriverModuleInfo = .{};
+        if (self.driverModuleInfoRaw(owner, &out) != 1) return null;
+        return out;
+    }
+
+    pub fn driverModuleInfoRaw(self: *const Context, owner: u32, out: *abi.DriverModuleInfo) i32 {
+        const table_fn = self.devFn("driver_module_info") orelse return self.unavailable("dev");
+        return table_fn(owner, out);
+    }
+
     pub fn hardwareSummary(self: *const Context) ?abi.HardwareSummary {
         var out: abi.HardwareSummary = .{};
         const table_fn = self.devFn("hardware_summary") orelse return null;
         if (table_fn(&out) <= 0) return null;
+        return out;
+    }
+
+    pub fn firmwareSystemUuid(self: *const Context) ?abi.FirmwareSystemUuidInfo {
+        var out: abi.FirmwareSystemUuidInfo = .{};
+        const table_fn = self.devFn("firmware_system_uuid") orelse return null;
+        if (table_fn(&out) != 0 or out.version != 1 or out.size != @sizeOf(abi.FirmwareSystemUuidInfo) or out.source != 1)
+            return null;
         return out;
     }
 
@@ -731,6 +1020,10 @@ pub const Context = struct {
     pub fn mouseState(self: *const Context, out: *abi.Mouse) void {
         if (self.deskFn("mouse_state")) |table_fn| table_fn(out);
     }
+    pub fn mouseMotion(self: *const Context, out: *abi.MouseMotion) i32 {
+        const table_fn = self.deskFn("mouse_motion") orelse return abi.err_no_fn;
+        return table_fn(out);
+    }
 
     pub fn mouseShow(self: *const Context) void {
         if (self.deskFn("mouse_show")) |table_fn| table_fn();
@@ -741,6 +1034,7 @@ pub const Context = struct {
     }
 
     pub fn argsRaw(self: *const Context) [*:0]const u8 {
+        if (self.generation2) |context| return if (context.raw.args == 0) "" else @ptrFromInt(context.raw.args);
         const b = self.bundle orelse return "";
         if (b.raw.args == 0) return "";
         return @ptrFromInt(b.raw.args);
@@ -806,6 +1100,12 @@ pub const Context = struct {
         return table_fn(next);
     }
 
+    pub fn platformInputSnapshot(self: *const Context, out: *abi.PlatformInputSnapshot) i32 {
+        out.* = .{};
+        const table_fn = self.sysFn("platform_input_snapshot") orelse return self.unavailable("sys");
+        return table_fn(out);
+    }
+
     pub fn monotonicClock(self: *const Context, out: *abi.MonotonicClockInfo) i32 {
         out.* = .{};
         const table_fn = self.sysFn("monotonic_clock") orelse return self.unavailable("sys");
@@ -842,6 +1142,10 @@ pub const Context = struct {
     }
 
     pub fn monotonicHz(self: *const Context) u32 {
+        if (self.generation2 != null) {
+            const sample = self.clockSampleChecked() catch return 0;
+            return sample.identity.tick_hz;
+        }
         var clock: abi.MonotonicClockInfo = .{};
         if (self.monotonicClock(&clock) > 0 and clock.event_effective_hz != 0)
             return clock.event_effective_hz;
@@ -849,10 +1153,22 @@ pub const Context = struct {
     }
 
     pub fn ticksFromMilliseconds(self: *const Context, ms: u64) u64 {
+        if (self.generation2 != null) return self.ticksFromMillisecondsChecked(ms) catch 0;
         const hz_raw = self.monotonicHz();
         const hz: u64 = if (hz_raw == 0) 100 else hz_raw;
         const ticks_value = (ms * hz + 999) / 1000;
         return if (ticks_value == 0) 1 else ticks_value;
+    }
+
+    /// One real clock snapshot; no calendar query or invented tick rate.
+    pub fn clockSampleChecked(self: *const Context) time_contract.checked.Error!time_contract.checked.ClockSample {
+        var clock: abi.MonotonicClockInfo = .{};
+        if (self.monotonicClock(&clock) <= 0) return error.ClockUnavailable;
+        return time_contract.checked.ClockSample.fromInfo(clock);
+    }
+    pub fn ticksFromMillisecondsChecked(self: *const Context, ms: u64) time_contract.checked.Error!u64 {
+        const sample = try self.clockSampleChecked();
+        return time_contract.checked.millisecondsToTicks(ms, sample.identity.tick_hz);
     }
 
     pub fn monotonicBackend(self: *const Context) abi.TimeBackend {
@@ -869,13 +1185,25 @@ pub const Context = struct {
         };
     }
 
+    /// Explicit bounded orderly transition. Accepted terminal work never
+    /// returns; refusal returns its error with resources retained.
+    pub fn systemPowerTransition(self: *const Context, action: u32, timeout_ticks: u64) i32 {
+        if (action > abi.power_transition_action_poweroff) return abi.power_transition_error_invalid;
+        const function = self.sysFn("system_power_transition") orelse return self.unavailable("sys");
+        return function(action, timeout_ticks);
+    }
+
     pub fn systemHalt(self: *const Context) noreturn {
-        if (self.sysFn("system_halt")) |table_fn| table_fn();
+        if (self.sysFn("system_power_transition")) |function| {
+            _ = function(abi.power_transition_action_halt, self.ticksFromMilliseconds(5000));
+        } else if (self.sysFn("system_halt")) |table_fn| table_fn();
         while (true) self.taskYield();
     }
 
     pub fn systemReboot(self: *const Context) noreturn {
-        if (self.sysFn("system_reboot")) |table_fn| table_fn();
+        if (self.sysFn("system_power_transition")) |function| {
+            _ = function(abi.power_transition_action_reboot, self.ticksFromMilliseconds(5000));
+        } else if (self.sysFn("system_reboot")) |table_fn| table_fn();
         while (true) self.taskYield();
     }
 
@@ -935,6 +1263,25 @@ pub const Context = struct {
         return table_fn(handle, offset, out.ptr, @intCast(out.len), out_read);
     }
 
+    /// Retains terminal evidence independently of the consuming process owner.
+    pub fn programObservationRetain(self: *const Context, process: *const abi.ProgramProcessHandle, flags: u32, out: *abi.ProgramObservationHandle) i32 {
+        const callback = self.sysFn("program_observation_retain") orelse return self.unavailable("sys");
+        return callback(process, flags, out);
+    }
+    pub fn programObservationWait(self: *const Context, observation: *const abi.ProgramObservationHandle, timeout_ticks: u64, out: *abi.ProgramProcessCompletion) i32 {
+        const callback = self.sysFn("program_observation_wait") orelse return self.unavailable("sys");
+        return callback(observation, timeout_ticks, out);
+    }
+    pub fn programObservationRead(self: *const Context, observation: *const abi.ProgramObservationHandle, offset: u32, out: []u8, out_read: *u32) i32 {
+        if (out.len > std.math.maxInt(u32)) return abi.program_handle_error_output_range;
+        const callback = self.sysFn("program_observation_read") orelse return self.unavailable("sys");
+        return callback(observation, offset, out.ptr, @intCast(out.len), out_read);
+    }
+    pub fn programObservationRelease(self: *const Context, observation: *const abi.ProgramObservationHandle) i32 {
+        const callback = self.sysFn("program_observation_release") orelse return self.unavailable("sys");
+        return callback(observation);
+    }
+
     pub fn programSpawnWithConsoleHost(self: *const Context, path: [*:0]const u8, args: [*:0]const u8, policy: abi.LaunchPolicy, host: abi.ConsoleHostKind) i32 {
         const table_fn = self.deskFn("program_spawn_with_console_host") orelse return self.unavailable("desk");
         return table_fn(path, args, @intFromEnum(policy), @intFromEnum(host));
@@ -956,6 +1303,7 @@ pub const Context = struct {
     }
 
     pub fn programShouldClose(self: *const Context) bool {
+        if (self.generation2) |context| return context.shouldClose();
         const table_fn = self.sysFn("program_should_close") orelse return false;
         return table_fn() != 0;
     }
@@ -968,6 +1316,17 @@ pub const Context = struct {
     pub fn programInstance(self: *const Context, index: u32, out: *abi.ProgramInstanceInfo) i32 {
         const table_fn = self.sysFn("program_instance") orelse return self.unavailable("sys");
         return table_fn(index, out);
+    }
+
+    pub fn programLifecycleBegin(self: *const Context, cursor: *abi.ProgramInventoryCursor) i32 {
+        const table_fn = self.sysFn("program_lifecycle_begin") orelse return self.unavailable("sys");
+        return table_fn(cursor);
+    }
+
+    pub fn programLifecyclePrograms(self: *const Context, cursor: *abi.ProgramInventoryCursor, out: []abi.ProgramLifecycleSnapshot, page: *abi.ProgramInventoryPageInfo) i32 {
+        if (out.len == 0 or out.len > @as(usize, abi.program_inventory_page_max)) return abi.program_handle_error_invalid;
+        const table_fn = self.sysFn("program_lifecycle_programs") orelse return self.unavailable("sys");
+        return table_fn(cursor, out.ptr, @intCast(out.len), page);
     }
 
     pub fn programInventoryBegin(self: *const Context, cursor: *abi.ProgramInventoryCursor, out: *abi.ProgramInventorySummary) i32 {
@@ -1009,9 +1368,22 @@ pub const Context = struct {
         return table_fn(entry, arg, stack_reserve_bytes, flags, out_handle);
     }
 
+    /// Requires the module's runtime.workers=owned-v1 declaration. An older
+    /// provider returns unsupported; callers may prepare their work serially.
+    pub fn computeWorkerCreate(self: *const Context, entry: abi.ThreadEntryFn, arg: u64, stack_reserve_bytes: u64, out_handle: *abi.ProgramJoinHandle) i32 {
+        return self.threadCreateHandle(entry, arg, stack_reserve_bytes, abi.thread_create_flag_compute_worker, out_handle);
+    }
+
     pub fn threadExit(self: *const Context, exit_code: i32) noreturn {
         if (self.sysFn("thread_exit")) |table_fn| table_fn(exit_code);
         while (true) self.taskYield();
+    }
+
+    /// Terminates the entire calling program; returns only on admission error.
+    /// User callbacks/defers are not run. Reason is natural or failed.
+    pub fn programExit(self: *const Context, exit_code: i32, reason: u32) i32 {
+        const function = self.sysFn("program_exit") orelse return self.unavailable("sys");
+        return function(exit_code, reason);
     }
 
     pub fn threadJoin(self: *const Context, thread_id: u32, timeout_ticks: u64, out_exit_code: *i32) i32 {
@@ -1032,6 +1404,61 @@ pub const Context = struct {
     pub fn threadCurrent(self: *const Context) u32 {
         const table_fn = self.sysFn("thread_current") orelse return 0;
         return table_fn();
+    }
+
+    /// Borrow the current identity without creating a join lease or retaining it.
+    pub fn threadCurrentHandle(self: *const Context, out: *abi.ProgramJoinHandle) i32 {
+        const table_fn = self.sysFn("thread_current_handle") orelse return self.unavailable("sys");
+        return table_fn(out);
+    }
+
+    /// Query metadata with an empty vector; otherwise preserve unused tail words.
+    pub fn threadPlacementGet(self: *const Context, handle: *const abi.ProgramJoinHandle, info: *abi.ThreadPlacementInfo, cpus: []u64) i32 {
+        if (cpus.len > std.math.maxInt(u32)) return abi.thread_placement_error_capacity;
+        const function = self.sysFn("thread_placement_get") orelse return self.unavailable("sys");
+        return function(handle, info, if (cpus.len == 0) null else cpus.ptr, @intCast(cpus.len));
+    }
+    /// CPU sets are hard admission; preferred CPU and bounded work class are hints.
+    pub fn threadPlacementSet(self: *const Context, handle: *const abi.ProgramJoinHandle, request: *const abi.ThreadPlacementRequest, cpus: []const u64) i32 {
+        if (cpus.len > std.math.maxInt(u32)) return abi.thread_placement_error_capacity;
+        const function = self.sysFn("thread_placement_set") orelse return self.unavailable("sys");
+        return function(handle, request, if (cpus.len == 0) null else cpus.ptr, @intCast(cpus.len));
+    }
+
+    pub fn cpuCapacity(self: *const Context, out: *abi.CpuCapacity) i32 {
+        const query = self.sysFn("cpu_capacity") orelse return self.unavailable("sys");
+        return query(out);
+    }
+
+    pub fn notificationCreate(self: *const Context, output: *u64) i32 {
+        const function = self.sysFn("notification_create") orelse return self.unavailable("sys");
+        return function(output);
+    }
+    pub fn notificationQuery(self: *const Context, handle: u64, sequence: *u64) i32 {
+        const function = self.sysFn("notification_query") orelse return self.unavailable("sys");
+        return function(handle, sequence);
+    }
+    pub fn notificationNotify(self: *const Context, handle: u64, count: u32) i32 {
+        const function = self.sysFn("notification_notify") orelse return self.unavailable("sys");
+        return function(handle, count);
+    }
+    pub fn notificationWait(self: *const Context, handle: u64, observed: u64, timeout_ticks: u64) i32 {
+        const function = self.sysFn("notification_wait") orelse return self.unavailable("sys");
+        return function(handle, observed, timeout_ticks);
+    }
+    pub fn notificationClose(self: *const Context, handle: u64) i32 {
+        const function = self.sysFn("notification_close") orelse return self.unavailable("sys");
+        return function(handle);
+    }
+
+    pub fn programLocalGet(self: *const Context, key: u64, out_value: *u64) i32 {
+        const callback = self.sysFn("program_local_get") orelse return self.unavailable("sys");
+        return callback(key, out_value);
+    }
+
+    pub fn programLocalPublish(self: *const Context, key: u64, value: u64, out_value: *u64) i32 {
+        const callback = self.sysFn("program_local_publish") orelse return self.unavailable("sys");
+        return callback(key, value, out_value);
     }
 
     pub fn threadStatus(self: *const Context, thread_id: u32, out: *abi.ProgramThreadInfo) i32 {
@@ -1166,9 +1593,38 @@ pub const Context = struct {
         return table_fn();
     }
 
+    /// Exact ordinary host delivery and cancellation. Busy owns no suffix.
+    pub fn guiHostInput(self: *const Context, request: *const abi.GuiHostInputRequest, out: *abi.GuiPointerWindowIdentity) i32 {
+        const call = self.deskFn("gui_host_input") orelse return self.unavailable("desk");
+        return call(request, out);
+    }
+
+    pub fn guiPointerCaptureInfo(self: *const Context, capture: ?*const abi.GuiPointerCaptureHandle, out: *abi.GuiPointerCaptureInfo) i32 {
+        const call = self.deskFn("gui_pointer_capture_info") orelse return self.unavailable("desk");
+        return call(capture, out);
+    }
+    pub fn guiPointerCaptureAcquire(self: *const Context, window: *const abi.GuiPointerWindowIdentity, mode: u32, out: *abi.GuiPointerCaptureHandle) i32 {
+        const call = self.deskFn("gui_pointer_capture_acquire") orelse return self.unavailable("desk");
+        return call(window, mode, out);
+    }
+    pub fn guiPointerCaptureRelease(self: *const Context, capture: *const abi.GuiPointerCaptureHandle) i32 {
+        const call = self.deskFn("gui_pointer_capture_release") orelse return self.unavailable("desk");
+        return call(capture);
+    }
+    pub fn guiPointerCaptureHost(self: *const Context, request: *const abi.GuiPointerHostRequest, out: *abi.GuiPointerCaptureInfo) i32 {
+        const call = self.deskFn("gui_pointer_capture_host") orelse return self.unavailable("desk");
+        return call(request, out);
+    }
+
     pub fn guiWindowInfo(self: *const Context, out: *abi.GuiWindowInfo) i32 {
         const table_fn = self.deskFn("gui_window_info") orelse return self.unavailable("desk");
         return table_fn(out);
+    }
+
+    /// Immutable admitted metadata, readable only by the exact registered host.
+    pub fn guiWindowAppearance(self: *const Context, window: *const abi.GuiPointerWindowIdentity, out: *abi.GuiWindowAppearance) i32 {
+        const call = self.deskFn("gui_window_appearance") orelse return self.unavailable("desk");
+        return call(window, out);
     }
 
     pub fn guiSetWindowInfo(self: *const Context, instance_id: u32, info: *const abi.GuiWindowInfo) i32 {
@@ -1391,6 +1847,364 @@ pub const Context = struct {
         return table_fn(lease);
     }
 
+    pub fn gfxVirtualStart(self: *const Context, input: *const abi.GfxVirtualRequest, output: *abi.GfxVirtualStatus) i32 {
+        const callback = self.drawFn("gfx_virtual_start") orelse return self.unavailable("draw");
+        var temporary: abi.GfxVirtualStatus = .{};
+        const rc = callback(input, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+    pub fn gfxVirtualQuery(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxVirtualStatus) i32 {
+        const callback = self.drawFn("gfx_virtual_query") orelse return self.unavailable("draw");
+        var temporary: abi.GfxVirtualStatus = .{};
+        const rc = callback(request, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+    pub fn gfxVirtualClose(self: *const Context, request: *const abi.GfxBufferHandle, mode: u32) i32 {
+        const callback = self.drawFn("gfx_virtual_close") orelse return self.unavailable("draw");
+        return callback(request, mode);
+    }
+    pub fn gfxVirtualWait(self: *const Context, request: *const abi.GfxBufferHandle, until: u32, timeout_ticks: u64, output: *abi.GfxVirtualStatus) i32 {
+        const callback = self.drawFn("gfx_virtual_wait") orelse return self.unavailable("draw");
+        var temporary: abi.GfxVirtualStatus = .{};
+        const rc = callback(request, until, timeout_ticks, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxNativeStart(self: *const Context, input: *const abi.GfxNativeAllocation, output: *abi.GfxNativeStatus) i32 {
+        const callback = self.drawFn("gfx_native_start") orelse return self.unavailable("draw");
+        var temporary: abi.GfxNativeStatus = .{};
+        const rc = callback(input, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxNativeQuery(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxNativeStatus) i32 {
+        const callback = self.drawFn("gfx_native_query") orelse return self.unavailable("draw");
+        var temporary: abi.GfxNativeStatus = .{};
+        const rc = callback(request, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxNativeReceive(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxBufferReference) i32 {
+        const callback = self.drawFn("gfx_native_receive") orelse return self.unavailable("draw");
+        var temporary: abi.GfxBufferReference = .{};
+        const rc = callback(request, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxNativeClose(self: *const Context, request: *const abi.GfxBufferHandle) i32 {
+        const callback = self.drawFn("gfx_native_close") orelse return self.unavailable("draw");
+        return callback(request);
+    }
+
+    pub fn gfxNativeWait(self: *const Context, request: *const abi.GfxBufferHandle, timeout_ticks: u64, output: *abi.GfxNativeStatus) i32 {
+        const callback = self.drawFn("gfx_native_wait") orelse return self.unavailable("draw");
+        var temporary: abi.GfxNativeStatus = .{};
+        const rc = callback(request, timeout_ticks, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxBufferCreate(self: *const Context, descriptor: *const abi.GfxBufferDescriptor, output: *abi.GfxBufferReference) i32 {
+        const table_fn = self.drawFn("gfx_buffer_create") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBufferReference);
+        return table_fn(descriptor, output);
+    }
+
+    pub fn gfxBufferDescribe(self: *const Context, reference: *const abi.GfxBufferHandle, output: *abi.GfxBufferDescriptor) i32 {
+        const table_fn = self.drawFn("gfx_buffer_describe") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBufferDescriptor);
+        return table_fn(reference, output);
+    }
+
+    pub fn gfxBufferImport(self: *const Context, source_reference: *const abi.GfxBufferHandle, output: *abi.GfxBufferReference) i32 {
+        const table_fn = self.drawFn("gfx_buffer_import") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBufferReference);
+        return table_fn(source_reference, output);
+    }
+
+    pub fn gfxBufferRelease(self: *const Context, reference: *const abi.GfxBufferHandle) i32 {
+        const table_fn = self.drawFn("gfx_buffer_release") orelse return self.unavailable("draw");
+        return table_fn(reference);
+    }
+
+    pub fn gfxBufferMap(self: *const Context, reference: *const abi.GfxBufferHandle, access: u32, offset: u64, byte_length: u64, output: *abi.GfxBufferMap) i32 {
+        const table_fn = self.drawFn("gfx_buffer_map") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBufferMap);
+        return table_fn(reference, access, offset, byte_length, output);
+    }
+
+    pub fn gfxBufferUnmap(self: *const Context, lease: *const abi.GfxBufferHandle) i32 {
+        const table_fn = self.drawFn("gfx_buffer_unmap") orelse return self.unavailable("draw");
+        return table_fn(lease);
+    }
+    pub fn gfxBufferMapPersistent(self: *const Context, reference: *const abi.GfxBufferHandle, access: u32, offset: u64, byte_length: u64, output: *abi.GfxBufferMap) i32 {
+        const callback = self.drawFn("gfx_buffer_map_persistent") orelse return self.unavailable("draw");
+        var temporary: abi.GfxBufferMap = .{};
+        const rc = callback(reference, access, offset, byte_length, &temporary);
+        if (rc == abi.gfx_buffer_result_ok) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxBufferExportRaster(self: *const Context, lease: *const abi.GuiSharedRasterLease, output: *abi.GfxBufferReference) i32 {
+        const table_fn = self.drawFn("gfx_buffer_export_raster") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBufferReference);
+        return table_fn(lease, output);
+    }
+
+    pub fn gfxMemoryBudget(self: *const Context, input: *const abi.GfxDeviceBudgetRequest, output: *abi.GfxDeviceBudgetState) i32 {
+        const callback = self.drawFn("gfx_memory_budget") orelse return self.unavailable("draw");
+        var temporary: abi.GfxDeviceBudgetState = .{};
+        const rc = callback(input, &temporary);
+        if (rc == abi.gfx_buffer_result_ok) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxTelemetry(self: *const Context, input: *const abi.GfxTelemetryRequest, output: *abi.GfxTelemetryState) i32 {
+        const callback = self.drawFn("gfx_telemetry") orelse return self.unavailable("draw");
+        var temporary: abi.GfxTelemetryState = .{};
+        const rc = callback(input, &temporary);
+        if (rc == abi.gfx_buffer_result_ok) output.* = temporary;
+        return rc;
+    }
+
+    pub fn gfxBufferStats(self: *const Context, output: *abi.GfxBufferStats) i32 {
+        const table_fn = self.drawFn("gfx_buffer_stats") orelse return self.unavailable("draw");
+        var value: abi.GfxBufferStats = .{};
+        const code = table_fn(&value);
+        if (code == abi.gfx_buffer_result_ok) {
+            if (value.version != 1 or value.size < @sizeOf(abi.GfxBufferStats)) return abi.gfx_buffer_error_invalid;
+            output.* = value;
+        }
+        return code;
+    }
+
+    pub fn gfxOutputRevision(self: *const Context, output: *abi.GfxDisplayRevision) i32 {
+        const table_fn = self.drawFn("gfx_output_revision") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxDisplayRevision);
+        return table_fn(output);
+    }
+    pub fn gfxOutputInfo(self: *const Context, index: u32, output: *abi.GfxOutputInfo) i32 {
+        const table_fn = self.drawFn("gfx_output_info") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxOutputInfo);
+        return table_fn(index, output);
+    }
+    pub fn gfxOutputColor(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputColorState) i32 {
+        const table_fn = self.drawFn("gfx_output_color") orelse return self.unavailable("draw");
+        var value: abi.GfxOutputColorState = .{};
+        const code = table_fn(identity, &value);
+        if (code == abi.gfx_output_ok) {
+            if (value.version != 1 or value.size < @sizeOf(abi.GfxOutputColorState)) return abi.gfx_output_error_invalid;
+            output.* = value;
+        }
+        return code;
+    }
+    pub fn gfxOutputRefresh(self: *const Context, target: *const abi.GfxOutputTarget, output: *abi.GfxOutputRefresh) i32 {
+        const table_fn = self.drawFn("gfx_output_refresh") orelse return self.unavailable("draw");
+        var value: abi.GfxOutputRefresh = .{};
+        const code = table_fn(target, &value);
+        if (code == abi.gfx_output_ok) output.* = value;
+        return code;
+    }
+    pub fn gfxOutputPower(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputPower) i32 {
+        const table_fn = self.drawFn("gfx_output_power") orelse return self.unavailable("draw");
+        var value: abi.GfxOutputPower = .{};
+        const code = table_fn(identity, &value);
+        if (code == abi.gfx_output_ok) output.* = value;
+        return code;
+    }
+    pub fn gfxPowerRequest(self: *const Context, input: *const abi.GfxPowerRequest, output: *abi.GfxPowerRequest) i32 {
+        const table_fn = self.drawFn("gfx_power_request") orelse return self.unavailable("draw");
+        var value: abi.GfxPowerRequest = .{};
+        const code = table_fn(input, &value);
+        if (code == abi.gfx_output_ok) output.* = value;
+        return code;
+    }
+    pub fn gfxOutputBrightness(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputBrightness) i32 {
+        const table_fn = self.drawFn("gfx_output_brightness") orelse return self.unavailable("draw");
+        var value: abi.GfxOutputBrightness = .{};
+        const code = table_fn(identity, &value);
+        if (code == abi.gfx_output_ok) output.* = value;
+        return code;
+    }
+    pub fn gfxBrightnessRequest(self: *const Context, input: *const abi.GfxBrightnessRequest, output: *abi.GfxBrightnessRequest) i32 {
+        const table_fn = self.drawFn("gfx_brightness_request") orelse return self.unavailable("draw");
+        var value: abi.GfxBrightnessRequest = .{};
+        const code = table_fn(input, &value);
+        if (code == abi.gfx_output_ok) output.* = value;
+        return code;
+    }
+    pub fn gfxRefreshRequest(self: *const Context, input: *const abi.GfxRefreshRequest, output: *abi.GfxRefreshRequest) i32 {
+        const table_fn = self.drawFn("gfx_refresh_request") orelse return self.unavailable("draw");
+        var value: abi.GfxRefreshRequest = .{};
+        const code = table_fn(input, &value);
+        if (code == abi.gfx_output_ok) output.* = value;
+        return code;
+    }
+    pub fn gfxOutputMode(self: *const Context, identity: *const abi.GfxOutputId, index: u32, output: *abi.GfxOutputMode) i32 {
+        const table_fn = self.drawFn("gfx_output_mode") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxOutputMode);
+        return table_fn(identity, index, output);
+    }
+    pub fn gfxOutputEdid(self: *const Context, identity: *const abi.GfxOutputId, index: u32, output: *abi.GfxEdidBlock) i32 {
+        const table_fn = self.drawFn("gfx_output_edid") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxEdidBlock);
+        return table_fn(identity, index, output);
+    }
+    pub fn gfxAtomicTest(self: *const Context, state: *const abi.GfxAtomicState, output: *abi.GfxAtomicResult) i32 {
+        const table_fn = self.drawFn("gfx_atomic_test") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxAtomicResult);
+        return table_fn(state, output);
+    }
+    pub fn gfxAtomicTestColor(self: *const Context, request: *const abi.GfxModeColorRequest, output: *abi.GfxAtomicResult) i32 {
+        const table_fn = self.drawFn("gfx_atomic_test_color") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxAtomicResult);
+        return table_fn(request, output);
+    }
+    pub fn gfxAtomicSubmitColor(self: *const Context, request: *const abi.GfxModeColorRequest, confirmation_ms: u32, output: *abi.GfxModeStatus) i32 {
+        const table_fn = self.drawFn("gfx_atomic_submit_color") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxModeStatus);
+        return table_fn(request, confirmation_ms, output);
+    }
+    pub fn gfxAtomicCommit(self: *const Context, state: *const abi.GfxAtomicState, output: *abi.GfxAtomicResult) i32 {
+        const table_fn = self.drawFn("gfx_atomic_commit") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxAtomicResult);
+        return table_fn(state, output);
+    }
+    pub fn gfxAtomicSubmit(self: *const Context, state: *const abi.GfxAtomicState, confirmation_ms: u32, output: *abi.GfxModeStatus) i32 {
+        const table_fn = self.drawFn("gfx_atomic_submit") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxModeStatus);
+        return table_fn(state, confirmation_ms, output);
+    }
+    pub fn gfxAtomicStatus(self: *const Context, ticket: u64, output: *abi.GfxModeStatus) i32 {
+        const table_fn = self.drawFn("gfx_atomic_status") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxModeStatus);
+        return table_fn(ticket, output);
+    }
+    pub fn gfxAtomicResolve(self: *const Context, ticket: u64, action: u32, output: *abi.GfxModeStatus) i32 {
+        const table_fn = self.drawFn("gfx_atomic_resolve") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxModeStatus);
+        return table_fn(ticket, action, output);
+    }
+
+    pub fn gfxQueueOpen(self: *const Context, config: *const abi.GfxQueueConfig, output: *abi.GfxQueueHandle) i32 {
+        const table_fn = self.drawFn("gfx_queue_open") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxQueueHandle);
+        return table_fn(config, output);
+    }
+    pub fn gfxQueueBackend(self: *const Context, index: u32, output: *abi.GfxBackendBinding) i32 {
+        const table_fn = self.drawFn("gfx_queue_backend") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBackendBinding);
+        return table_fn(index, output);
+    }
+    pub fn gfxQueueBackendInfo(self: *const Context, index: u32, output: *abi.GfxBackendInfo) i32 {
+        const table_fn = self.drawFn("gfx_queue_backend_info") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxBackendInfo);
+        return table_fn(index, output);
+    }
+    pub fn gfxQueueBackendProperties(self: *const Context, binding: *const abi.GfxBackendBinding, output: *abi.GfxBackendProperties) i32 {
+        const table_fn = self.drawFn("gfx_queue_backend_properties") orelse return self.unavailable("draw");
+        var result: abi.GfxBackendProperties = .{};
+        const code = table_fn(binding, &result);
+        if (code == 1) output.* = result;
+        return code;
+    }
+
+    pub fn gfxQueueClose(self: *const Context, queue: *const abi.GfxQueueHandle) i32 {
+        const table_fn = self.drawFn("gfx_queue_close") orelse return self.unavailable("draw");
+        return table_fn(queue);
+    }
+
+    pub fn gfxQueueSubmit(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, output: *abi.GfxFenceStatus) i32 {
+        const table_fn = self.drawFn("gfx_queue_submit") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return table_fn(queue, submission, output);
+    }
+    pub fn gfxQueueSubmitRenderList(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, list: *const abi.GfxRenderList, output: *abi.GfxFenceStatus) i32 {
+        const table_fn = self.drawFn("gfx_queue_submit_render_list") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return table_fn(queue, submission, list, output);
+    }
+    pub fn gfxQueueSubmitRenderGridList(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, list: *const abi.GfxRenderGridList, output: *abi.GfxFenceStatus) i32 {
+        const callback = self.drawFn("gfx_queue_submit_render_grid_list") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return callback(queue, submission, list, output);
+    }
+
+    pub fn gfxQueueSubmitOutput(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, target: *const abi.GfxOutputTarget, output: *abi.GfxFenceStatus) i32 {
+        const callback = self.drawFn("gfx_queue_submit_output") orelse return abi.err_no_fn;
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return callback(queue, submission, target, output);
+    }
+    pub fn gfxQueueSubmitRenderColorList(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, list: *const abi.GfxRenderColorList, output: *abi.GfxFenceStatus) i32 {
+        const callback = self.drawFn("gfx_queue_submit_render_color_list") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return callback(queue, submission, list, output);
+    }
+    pub fn gfxQueueSubmitRenderColorGridList(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, list: *const abi.GfxRenderColorGridList, output: *abi.GfxFenceStatus) i32 {
+        const callback = self.drawFn("gfx_queue_submit_render_color_grid_list") orelse return self.unavailable("draw");
+        return callback(queue, submission, list, output);
+    }
+    pub fn gfxQueueSubmitNative(self: *const Context, queue: *const abi.GfxQueueHandle, submission: *const abi.GfxSubmission, native: *const abi.GfxNativeSubmission, output: *abi.GfxFenceStatus) i32 {
+        const callback = self.drawFn("gfx_queue_submit_native") orelse return self.unavailable("draw");
+        var temporary: abi.GfxFenceStatus = .{};
+        const rc = callback(queue, submission, native, &temporary);
+        if (rc == 1) output.* = temporary;
+        return rc;
+    }
+    pub fn gfxFenceQuery(self: *const Context, fence: *const abi.GfxFence, output: *abi.GfxFenceStatus) i32 {
+        const table_fn = self.drawFn("gfx_fence_query") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return table_fn(fence, output);
+    }
+
+    pub fn gfxFenceWait(self: *const Context, fence: *const abi.GfxFence, timeout_ticks: u64, wait_for: u32, output: *abi.GfxFenceStatus) i32 {
+        const table_fn = self.drawFn("gfx_fence_wait") orelse return self.unavailable("draw");
+        output.version = 1;
+        output.size = @sizeOf(abi.GfxFenceStatus);
+        return table_fn(fence, timeout_ticks, wait_for, output);
+    }
+
+    pub fn gfxFenceCancel(self: *const Context, fence: *const abi.GfxFence) i32 {
+        const table_fn = self.drawFn("gfx_fence_cancel") orelse return self.unavailable("draw");
+        return table_fn(fence);
+    }
+
+    pub fn gfxFenceRelease(self: *const Context, fence: *const abi.GfxFence) i32 {
+        const table_fn = self.drawFn("gfx_fence_release") orelse return self.unavailable("draw");
+        return table_fn(fence);
+    }
+
     pub fn guiSetTitle(self: *const Context, value: [*:0]const u8) i32 {
         const table_fn = self.deskFn("gui_set_title") orelse return self.unavailable("desk");
         return table_fn(value);
@@ -1461,6 +2275,32 @@ pub const Context = struct {
         return self.consoleWrite(.stderr, data);
     }
 
+    /// Counts complete events. An unaccepted suffix remains caller-owned.
+    pub fn consolePushEvents(self: *const Context, handle: abi.ProgramProcessHandle, events: []const abi.ConsoleInputEvent) i32 {
+        if (events.len > abi.console_input_event_batch_max) return abi.console_input_wait_error_invalid;
+        const table_fn = self.deskFn("console_push_events") orelse return self.unavailable("desk");
+        return table_fn(&handle, events.ptr, @intCast(events.len));
+    }
+
+    pub fn consoleReadEvents(self: *const Context, out: []abi.ConsoleInputEvent) i32 {
+        if (out.len > abi.console_input_event_batch_max) return abi.console_input_wait_error_invalid;
+        const table_fn = self.deskFn("console_read_events") orelse return self.unavailable("desk");
+        return table_fn(out.ptr, @intCast(out.len));
+    }
+
+    /// Snapshot metadata for the exact generation; errors leave output untouched.
+    pub fn consoleTextInfo(self: *const Context, handle: abi.ProgramProcessHandle, out: *abi.ConsoleTextInfo) i32 {
+        const table_fn = self.deskFn("console_text_info") orelse return self.unavailable("desk");
+        return table_fn(&handle, out);
+    }
+
+    /// Existing transcript bytes remain canonical UTF8. A pending prefix refuses
+    /// the switch with -2; unsupported encodings return -1.
+    pub fn consoleSetEncoding(self: *const Context, handle: abi.ProgramProcessHandle, encoding: u32) i32 {
+        const table_fn = self.deskFn("console_set_encoding") orelse return self.unavailable("desk");
+        return table_fn(&handle, encoding);
+    }
+
     pub fn consoleRead(self: *const Context, out: []u8) i32 {
         const table_fn = self.deskFn("console_read") orelse return self.unavailable("desk");
         return table_fn(out.ptr, @intCast(out.len));
@@ -1528,6 +2368,61 @@ pub const Context = struct {
         const completion_fn = self.drawFn("display_present_completion") orelse return abi.display_present_error_unavailable;
         return completion_fn(fence, out);
     }
+    pub fn supportsDisplayPresentationStats(self: *const Context) bool {
+        return self.hasDrawFn("display_presentation_stats");
+    }
+    pub fn supportsDisplayCursor(self: *const Context) bool {
+        return self.hasDrawFn("display_cursor_info") and self.hasDrawFn("display_cursor_submit") and self.hasDrawFn("display_cursor_status");
+    }
+    pub fn displayCursorInfo(self: *const Context, out: *abi.DisplayCursorInfo) i32 {
+        if (!self.supportsDisplayCursor()) return abi.err_no_fn;
+        const callback = self.drawFn("display_cursor_info") orelse return abi.err_no_fn;
+        return callback(out);
+    }
+    pub fn displayCursorSubmit(self: *const Context, input: *const abi.DisplayCursorRequest, out: *abi.DisplayCursorStatus) i32 {
+        if (!self.supportsDisplayCursor()) return abi.err_no_fn;
+        const callback = self.drawFn("display_cursor_submit") orelse return abi.err_no_fn;
+        return callback(input, out);
+    }
+    pub fn displayCursorStatus(self: *const Context, out: *abi.DisplayCursorStatus) i32 {
+        if (!self.supportsDisplayCursor()) return abi.err_no_fn;
+        const callback = self.drawFn("display_cursor_status") orelse return abi.err_no_fn;
+        return callback(out);
+    }
+    pub fn displayPresentationStats(self: *const Context, head_id: u32, out: *abi.DisplayPresentationStats) i32 {
+        const callback = self.drawFn("display_presentation_stats") orelse return abi.err_no_fn;
+        return callback(head_id, out);
+    }
+    pub fn displayPresentationInfo(self: *const Context, head_id: u32, out: *abi.DisplayPresentationInfo) i32 {
+        const callback = self.drawFn("display_presentation_info") orelse return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationInfo);
+        return callback(head_id, out);
+    }
+    pub fn displayOutputTarget(self: *const Context, adapter_id: u32, head_id: u32, out: *abi.GfxOutputTarget) i32 {
+        const callback = self.drawFn("display_output_target") orelse return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.GfxOutputTarget);
+        return callback(adapter_id, head_id, out);
+    }
+    pub fn displayOutputPresentationInfo(self: *const Context, target: *const abi.GfxOutputTarget, out: *abi.DisplayPresentationInfo) i32 {
+        const callback = self.drawFn("display_output_presentation_info") orelse return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationInfo);
+        return callback(target, out);
+    }
+    pub fn displayOutputPresentationFeedback(self: *const Context, target: *const abi.GfxOutputTarget, source: *const abi.GfxFence, out: *abi.DisplayPresentationStats) i32 {
+        const callback = self.drawFn("display_output_presentation_feedback") orelse return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationStats);
+        return callback(target, source, out);
+    }
+    pub fn displayPresentationFeedback(self: *const Context, head_id: u32, source: *const abi.GfxFence, out: *abi.DisplayPresentationStats) i32 {
+        const callback = self.drawFn("display_presentation_feedback") orelse return abi.err_no_fn;
+        out.version = 1;
+        out.size = @sizeOf(abi.DisplayPresentationStats);
+        return callback(head_id, source, out);
+    }
 
     pub fn clipboardWrite(self: *const Context, data: []const u8) i32 {
         const table_fn = self.deskFn("clipboard_write") orelse return self.unavailable("desk");
@@ -1591,8 +2486,38 @@ pub const Context = struct {
         return self.desktopActivityWait(last_seq, timeout_ticks_value, out_seq);
     }
 
+    pub fn desktopActivityNotify(self: *const Context) i32 {
+        const function = self.deskFn("desktop_activity_notify") orelse return abi.remote_frame_error_unsupported;
+        return function();
+    }
+    pub fn guiActivityWait(self: *const Context, last_seq: u64, timeout_ticks: u64, subscriptions: u32, out_seq: *u64) i32 {
+        const function = self.deskFn("gui_activity_wait") orelse return abi.err_no_fn;
+        return function(last_seq, timeout_ticks, subscriptions, out_seq);
+    }
+    pub fn guiActivityNotify(self: *const Context, categories: u32) i32 {
+        const function = self.deskFn("gui_activity_notify") orelse return abi.err_no_fn;
+        return function(categories);
+    }
+
     pub fn supportsRemoteFrameMap(self: *const Context) bool {
         return self.hasDeskFn("remote_frame_map");
+    }
+
+    pub fn remoteFrameSnapshotAcquire(self: *const Context, expected: u32, info: *abi.RemoteFrameInfo, lease: *abi.RemoteFrameLease) i32 {
+        const function = self.deskFn("remote_frame_snapshot_acquire") orelse return abi.remote_frame_error_unsupported;
+        return function(expected, info, lease);
+    }
+    pub fn remoteFrameSnapshotRelease(self: *const Context, lease: *const abi.RemoteFrameLease) i32 {
+        const function = self.deskFn("remote_frame_snapshot_release") orelse return abi.remote_frame_error_unsupported;
+        return function(lease);
+    }
+    pub fn remoteFrameSourceReset(self: *const Context) i32 {
+        const function = self.deskFn("remote_frame_source_reset") orelse return abi.remote_frame_error_unsupported;
+        return function();
+    }
+    pub fn remoteFrameCaptureStats(self: *const Context, out: *abi.RemoteFrameCaptureStats) i32 {
+        const function = self.deskFn("remote_frame_capture_stats") orelse return abi.remote_frame_error_unsupported;
+        return function(out);
     }
 
     pub fn remoteFrameMap(self: *const Context, out: *abi.RemoteFrameMapInfo) i32 {
@@ -1724,11 +2649,17 @@ pub const Context = struct {
     }
 
     pub fn systemPoweroff(self: *const Context) noreturn {
-        if (self.sysFn("system_poweroff")) |table_fn| table_fn();
+        if (self.sysFn("system_power_transition")) |function| {
+            _ = function(abi.power_transition_action_poweroff, self.ticksFromMilliseconds(5000));
+        } else if (self.sysFn("system_poweroff")) |table_fn| table_fn();
         while (true) self.taskYield();
     }
 
     pub fn taskYield(self: *const Context) void {
+        if (self.generation2) |context| {
+            _ = context.yieldCurrent();
+            return;
+        }
         if (self.sysFn("task_yield")) |table_fn| table_fn();
     }
 
@@ -1778,6 +2709,18 @@ pub const Context = struct {
         return table_fn(path, data.ptr, @intCast(data.len));
     }
 
+    /// Actual path-mount capabilities; does not require the final file to exist.
+    pub fn fileNameLimits(self: *const Context, path: [*:0]const u8, out: *abi.FileNameLimits) i32 {
+        const table_fn = self.sysFn("file_name_limits") orelse return abi.file_stream_error_unsupported;
+        return table_fn(path, out);
+    }
+
+    /// Exact installed recovery capability; no file or journal is changed.
+    pub fn systemUpdateTargetSupported(self: *const Context, path: [*:0]const u8) i32 {
+        const function = self.sysFn("system_update_target_supported") orelse return self.unavailable("sys");
+        return function(path);
+    }
+
     pub fn fileStreamBegin(self: *const Context, path: [*:0]const u8, flags: u32) i32 {
         const table_fn = self.sysFn("file_stream_begin") orelse return self.unavailable("sys");
         return table_fn(path, flags);
@@ -1803,9 +2746,25 @@ pub const Context = struct {
         return table_fn(path, out.ptr, @intCast(out.len));
     }
 
+    pub fn directoryChangeBegin(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryChangeCursor) i32 {
+        const table_fn = self.sysFn("directory_change_begin") orelse return self.unavailable("sys");
+        return table_fn(path, cursor);
+    }
+
+    pub fn directoryChangePoll(self: *const Context, cursor: *abi.DirectoryChangeCursor) i32 {
+        const table_fn = self.sysFn("directory_change_poll") orelse return self.unavailable("sys");
+        return table_fn(cursor);
+    }
+
     pub fn directoryNext(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryScanCursor, out: []u8, info: *abi.FileInfo) i32 {
         const table_fn = self.sysFn("directory_next") orelse return self.unavailable("sys");
         return table_fn(path, cursor, out.ptr, @intCast(out.len), info);
+    }
+
+    /// Empty output validates an initialized scan without consuming entries.
+    pub fn directoryBatch(self: *const Context, path: [*:0]const u8, cursor: *abi.DirectoryBatchCursor, out: []abi.DirectoryBatchEntry) i32 {
+        const table_fn = self.sysFn("directory_batch") orelse return self.unavailable("sys");
+        return table_fn(path, cursor, if (out.len == 0) null else out.ptr, @intCast(out.len));
     }
 
     pub fn dirEntry(self: *const Context, path: [*:0]const u8, index: u32, out: []u8) i32 {
@@ -1816,6 +2775,15 @@ pub const Context = struct {
     pub fn driveInfo(self: *const Context, index: u32) ?abi.DriveInfo {
         var out: abi.DriveInfo = .{};
         const table_fn = self.sysFn("drive_info") orelse return null;
+        if (table_fn(index, &out) <= 0) return null;
+        return out;
+    }
+
+    /// Same mounted request owner and scalar geometry; never executes FREE.
+    /// Free fields are unknown. No fallback to a potentially cold full query.
+    pub fn driveInfoGeometry(self: *const Context, index: u32) ?abi.DriveInfo {
+        var out: abi.DriveInfo = .{};
+        const table_fn = self.sysFn("drive_info_geometry") orelse return null;
         if (table_fn(index, &out) <= 0) return null;
         return out;
     }
@@ -2056,6 +3024,22 @@ pub const Context = struct {
         return table_fn(rate, channels, @intFromEnum(format));
     }
 
+    pub fn audioOutputInfo(self: *const Context, index: u32, out: *abi.AudioOutputInfo) i32 {
+        const callback = self.audioFn("audio_output_info") orelse return self.unavailable("audio");
+        return callback(index, out);
+    }
+
+    pub fn audioOutputCatalog(self: *const Context, outputs: []abi.AudioOutputInfo, out: *abi.AudioOutputCatalog) i32 {
+        const callback = self.audioFn("audio_output_catalog") orelse return self.unavailable("audio");
+        if (outputs.len > 0xffffffff) return abi.service_api_result_invalid;
+        return callback(outputs.ptr, @intCast(outputs.len), out);
+    }
+
+    pub fn audioSelectOutput(self: *const Context, id: *const [64]u8) i32 {
+        const callback = self.audioFn("audio_select_output") orelse return self.unavailable("audio");
+        return callback(id);
+    }
+
     pub fn audioWrite(self: *const Context, stream_id: u32, data: []const u8) i32 {
         const table_fn = self.audioFn("audio_write") orelse return self.unavailable("audio");
         return table_fn(stream_id, data.ptr, @intCast(data.len));
@@ -2064,6 +3048,21 @@ pub const Context = struct {
     pub fn audioClose(self: *const Context, stream_id: u32) i32 {
         const table_fn = self.audioFn("audio_close") orelse return self.unavailable("audio");
         return table_fn(stream_id);
+    }
+
+    pub fn audioStreamProgress(self: *const Context, stream_id: u32, generation: u64, out: *abi.AudioStreamProgress) i32 {
+        const callback = self.audioFn("audio_stream_progress") orelse return self.unavailable("audio");
+        return callback(stream_id, generation, out);
+    }
+
+    pub fn audioSetStreamExpectation(self: *const Context, stream_id: u32, input: *const abi.AudioStreamExpectation) i32 {
+        const callback = self.audioFn("audio_set_stream_expectation") orelse return self.unavailable("audio");
+        return callback(stream_id, input);
+    }
+
+    pub fn audioCloseStreamProgress(self: *const Context, stream_id: u32, generation: u64, out: *abi.AudioStreamProgress) i32 {
+        const callback = self.audioFn("audio_close_stream_progress") orelse return self.unavailable("audio");
+        return callback(stream_id, generation, out);
     }
 
     pub fn audioSetVolume(self: *const Context, stream_id: u32, fixed_volume: u32) i32 {
@@ -2285,6 +3284,24 @@ pub const Context = struct {
         return table_fn(name, out);
     }
 
+    /// Metadata and its exact current/last retained process identity. This
+    /// value does not retain a process or an observation for the caller.
+    pub fn serviceBoundDetail(self: *const Context, name: [*:0]const u8, out: *abi.ServiceDetail, process: *abi.ProgramProcessHandle) i32 {
+        const table_fn = self.sysFn("service_bound_detail") orelse return self.unavailable("sys");
+        return table_fn(name, out, process);
+    }
+
+    pub fn serviceInventoryPage(self: *const Context, cursor: *abi.ServiceInventoryCursor, rows: []abi.ServiceInventoryRow) i32 {
+        if (rows.len == 0 or rows.len > std.math.maxInt(u32)) return abi.service_api_result_invalid;
+        const table_fn = self.sysFn("service_inventory_page") orelse return self.unavailable("sys");
+        return table_fn(cursor, rows.ptr, @intCast(rows.len));
+    }
+
+    pub fn serviceControlBound(self: *const Context, request: *const abi.ServiceControlRequest) i32 {
+        const table_fn = self.sysFn("service_control_bound") orelse return self.unavailable("sys");
+        return table_fn(request);
+    }
+
     pub fn serviceStart(self: *const Context, name: [*:0]const u8, out: *abi.ServiceInfo) i32 {
         const table_fn = self.sysFn("service_start") orelse return self.unavailable("sys");
         return table_fn(name, out);
@@ -2295,12 +3312,46 @@ pub const Context = struct {
         return table_fn(name, out, timeout_ticks);
     }
 
+    pub fn serviceStopBound(self: *const Context, name: [*:0]const u8, process: *const abi.ProgramProcessHandle, out: *abi.ServiceInfo, timeout_ticks: u64) i32 {
+        const table_fn = self.sysFn("service_stop_bound") orelse return self.unavailable("sys");
+        return table_fn(name, process, out, timeout_ticks);
+    }
+
     pub fn serviceStopWithPolicy(self: *const Context, name: [*:0]const u8, out: *abi.ServiceInfo, timeout: time_contract.Timeout, policy: ServiceStopPolicy) i32 {
-        const timeout_ticks_value = time_contract.timeoutToTicks(timeout, self.monotonicHz()) catch return abi.service_api_result_invalid;
-        const stopped = self.serviceStop(name, out, timeout_ticks_value);
-        if (stopped != abi.service_api_result_timeout or policy == .graceful) return stopped;
-        if (out.instance_id == 0 or self.programKill(out.instance_id) < 0) return abi.service_api_result_stop_failed;
-        return self.serviceStatus(name, out);
+        const budget = time_contract.timeoutToTicks(timeout, self.monotonicHz()) catch return abi.service_api_result_invalid;
+        if (policy == .graceful or budget == abi.io_wait_forever) return self.serviceStop(name, out, budget);
+        const ticks_fn = self.sysFn("ticks") orelse return self.unavailable("sys");
+        const begin = ticks_fn();
+        var detail: abi.ServiceDetail = .{};
+        var process: abi.ProgramProcessHandle = .{};
+        const selected = self.serviceBoundDetail(name, &detail, &process);
+        if (selected != abi.service_api_result_ok) return selected;
+        if (detail.info.instance_id == 0) {
+            out.* = detail.info;
+            return if (detail.info.state == abi.service_state_stopped or detail.info.state == abi.service_state_disabled or detail.info.state == abi.service_state_failed) abi.service_api_result_ok else abi.service_api_result_busy;
+        }
+        const remaining = budget -| (ticks_fn() -| begin);
+        const stopped = self.serviceStopBound(name, &process, out, remaining);
+        if (stopped != abi.service_api_result_timeout) return stopped;
+        // An explicit kill policy is still tied to this exact process. A
+        // replaced registration/ID must never receive the old escalation.
+        var current: abi.ProgramProcessHandle = .{};
+        const refreshed = self.serviceBoundDetail(name, &detail, &current);
+        if (refreshed != abi.service_api_result_ok) return refreshed;
+        if (process.instance_id == 0 or !std.meta.eql(process, current)) return abi.service_api_result_busy;
+        if (detail.info.instance_id == 0) {
+            out.* = detail.info;
+            return abi.service_api_result_ok;
+        }
+        const killed = self.programHandleKill(&process);
+        const observed = self.serviceBoundDetail(name, &detail, &current);
+        if (observed != abi.service_api_result_ok) return observed;
+        if (!std.meta.eql(process, current)) return abi.service_api_result_busy;
+        out.* = detail.info;
+        if (out.instance_id == 0) return abi.service_api_result_ok;
+        // Kill acceptance does not prove physical retirement. Preserve the
+        // original wait budget; callers can observe a later actual completion.
+        return if (killed < 0 and killed != abi.program_handle_error_not_running) abi.service_api_result_stop_failed else abi.service_api_result_timeout;
     }
 
     pub fn serviceRestart(self: *const Context, name: [*:0]const u8, out: *abi.ServiceInfo) i32 {
@@ -2321,32 +3372,6 @@ pub const Context = struct {
     pub fn serviceRemove(self: *const Context, name: [*:0]const u8) i32 {
         const table_fn = self.sysFn("service_remove") orelse return self.unavailable("sys");
         return table_fn(name);
-    }
-
-    pub fn serialLinkStatus(self: *const Context, out: *abi.SerialLinkStatus) i32 {
-        const table_fn = self.netFn("serial_link_status") orelse return self.unavailable("net");
-        return table_fn(out);
-    }
-
-    pub fn serialLinkPoll(self: *const Context) i32 {
-        const table_fn = self.netFn("serial_link_poll") orelse return self.unavailable("net");
-        return table_fn();
-    }
-
-    pub fn serialLinkSendMessage(self: *const Context, data: []const u8) i32 {
-        if (data.len > abi.serial_link_payload_max) return abi.serial_link_result_too_large;
-        const table_fn = self.netFn("serial_link_send_message") orelse return self.unavailable("net");
-        return table_fn(data.ptr, @intCast(data.len));
-    }
-
-    pub fn serialLinkHostTest(self: *const Context) i32 {
-        const table_fn = self.netFn("serial_link_host_test") orelse return self.unavailable("net");
-        return table_fn();
-    }
-
-    pub fn serialLinkInbox(self: *const Context, out: *abi.SerialLinkMessage) i32 {
-        const table_fn = self.netFn("serial_link_inbox") orelse return self.unavailable("net");
-        return table_fn(out);
     }
 
     pub fn timeServiceStatus(self: *const Context, out: *abi.TimeServiceStatus) i32 {
@@ -2656,8 +3681,7 @@ pub const Context = struct {
     pub fn netServiceClientId(self: *const Context) u16 {
         // Pseudo-eindeutige Client-ID aus der Adresse des R4XStart-Kontexts;
         // der Kontext ist pro Programminstanz eindeutig.
-        const b = self.bundle orelse return 1;
-        const raw = @intFromPtr(b.raw);
+        const raw = if (self.generation2) |context| @intFromPtr(context.raw) else if (self.bundle) |b| @intFromPtr(b.raw) else return 1;
         const id: u16 = @intCast(raw & 0xFFFF);
         return if (id == 0) 1 else id;
     }
@@ -2747,10 +3771,11 @@ pub const Context = struct {
         return close_rc;
     }
 
-    // Stack-local NetSocketRequests must not disappear while the async worker
-    // still owns pointers into them. A finite caller wait may expire before a
-    // loaded worker even starts its own service timeout, so close can report
-    // BUSY. Drain that exact request without a second timeout, then retry the
+    // Stack-local NetSocketRequests must not disappear while the exact async
+    // request or its active worker still owns pointers into them. Service queue/admission/reply work shares
+    // its submission deadline, but caller wait and terminal buffer release are
+    // distinct: a finite caller wait can expire while close still reports BUSY.
+    // Drain that exact request without a second timeout, then retry the
     // release. The caller still observes its original finite timeout result.
     fn netSocketDrainAndClose(self: *const Context, request: *NetSocketRequest) void {
         while (request.active and request.request_id != 0) {
@@ -4458,6 +5483,233 @@ test "net socket drain keeps stack request alive until busy async close complete
     try std.testing.expectEqual(@as(u32, 0), guarded.request.service_handle);
 }
 
+fn testMicrocodeInfo(cpu: u32, out: *abi.CpuMicrocodeInfo) callconv(.c) i32 {
+    if (cpu != 2) return abi.cpu_capabilities_error_index;
+    out.* = .{ .cpu_index = cpu, .epoch = 0x8533, .sequence = 4, .status = abi.cpu_microcode_status_virtual_cpu, .flags = abi.cpu_microcode_flag_virtual | abi.cpu_microcode_flag_after_valid, .after_revision = 0 };
+    return 0;
+}
+
+var test_pmu_calls: u32 = 0;
+var test_pmu_callbacks: u32 = 0;
+fn testPmuWork(context: u64, iterations: u32) callconv(.c) i32 {
+    test_pmu_callbacks += 1;
+    return if (context == 0x8534 and iterations == 4096) -34 else -1;
+}
+fn testPmuInfo(cpu: u32, out: *abi.CpuPmuInfo) callconv(.c) i32 {
+    test_pmu_calls += 1;
+    if (cpu != 2) return abi.cpu_capabilities_error_index;
+    out.* = .{ .cpu_index = cpu, .epoch = 7, .counter_width = 48 };
+    return 0;
+}
+fn testPmuMeasure(cpu: u32, epoch: u64, event: u32, iterations: u32, slot: ?*const abi.PmuWorkFn, context: u64, out: *abi.CpuPmuResult) callconv(.c) i32 {
+    test_pmu_calls += 1;
+    if (cpu != 2) return abi.cpu_capabilities_error_index;
+    if (epoch != 7) return abi.cpu_capabilities_error_epoch;
+    const callback = slot orelse return abi.cpu_capabilities_error_invalid;
+    const result = callback.*(context, iterations);
+    // ABI-only peer: deliberately no physical/raw count-valid flag.
+    out.* = .{ .cpu_index = cpu, .epoch = epoch, .generation = 11, .sequence = 6, .event_id = event, .iterations = iterations, .callback_result = result, .status = abi.cpu_pmu_status_callback_aborted, .flags = abi.cpu_pmu_result_flag_callback_started | abi.cpu_pmu_result_flag_callback_returned };
+    return 0;
+}
+fn testPmuResult(cpu: u32, epoch: u64, generation: u64, out: *abi.CpuPmuResult) callconv(.c) i32 {
+    test_pmu_calls += 1;
+    if (cpu != 2) return abi.cpu_capabilities_error_index;
+    if (epoch != 7 or generation != 11) return abi.cpu_capabilities_error_epoch;
+    out.* = .{ .cpu_index = cpu, .epoch = epoch, .generation = generation, .sequence = 6, .status = abi.cpu_pmu_status_callback_aborted, .callback_result = -34 };
+    return 0;
+}
+test "PMU three optional tails preserve all old prefixes, callback transport and failed outputs" {
+    var raw: abi.R4XStartContext = .{};
+    var table: abi.R4XStartR4Dev = .{};
+    var bundle: Bundle = .{ .raw = &raw, .dev = &table };
+    const ctx = Context.initBundle(&bundle);
+    const sentinel: u64 = 0x8534_1234_9876_abcd;
+    var info: extern struct { value: abi.CpuPmuInfo = .{ .epoch = sentinel }, tail: u64 = sentinel } = .{};
+    var result: extern struct { value: abi.CpuPmuResult = .{ .epoch = sentinel }, tail: u64 = sentinel } = .{};
+    const before_info = info;
+    const before_result = result;
+    table.cpu_pmu_info = @intFromPtr(&testPmuInfo);
+    table.cpu_pmu_measure = @intFromPtr(&testPmuMeasure);
+    table.cpu_pmu_result = @intFromPtr(&testPmuResult);
+    test_pmu_calls = 0;
+    test_pmu_callbacks = 0;
+    for (680..704) |size| {
+        table.size = @intCast(size);
+        if (size < 688) try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuInfo(2, &info.value));
+        if (size < 696) try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuMeasure(2, 7, 1, 4096, testPmuWork, 0x8534, &result.value));
+        try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuResult(2, 7, 11, &result.value));
+        try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before_info), std.mem.asBytes(&info));
+        try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before_result), std.mem.asBytes(&result));
+    }
+    try std.testing.expectEqual(@as(u32, 0), test_pmu_calls);
+    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.cpu_pmu_info = 0;
+    table.cpu_pmu_measure = 0;
+    table.cpu_pmu_result = 0;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuInfo(2, &info.value));
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuMeasure(2, 7, 1, 4096, testPmuWork, 0x8534, &result.value));
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuResult(2, 7, 11, &result.value));
+    table.cpu_pmu_info = @intFromPtr(&testPmuInfo);
+    table.cpu_pmu_measure = @intFromPtr(&testPmuMeasure);
+    table.cpu_pmu_result = @intFromPtr(&testPmuResult);
+    try std.testing.expectEqual(abi.cpu_capabilities_error_invalid, ctx.cpuPmuMeasure(2, 7, 1, 4096, null, 0x8534, &result.value));
+    try std.testing.expectEqual(@as(u32, 0), test_pmu_calls);
+    try std.testing.expectEqual(abi.cpu_capabilities_error_index, ctx.cpuPmuInfo(3, &info.value));
+    try std.testing.expectEqual(abi.cpu_capabilities_error_index, ctx.cpuPmuMeasure(3, 7, 1, 4096, testPmuWork, 0x8534, &result.value));
+    try std.testing.expectEqual(abi.cpu_capabilities_error_epoch, ctx.cpuPmuMeasure(2, 8, 1, 4096, testPmuWork, 0x8534, &result.value));
+    try std.testing.expectEqual(abi.cpu_capabilities_error_epoch, ctx.cpuPmuResult(2, 8, 11, &result.value));
+    try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before_info), std.mem.asBytes(&info));
+    try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before_result), std.mem.asBytes(&result));
+    try std.testing.expectEqual(@as(u32, 0), test_pmu_callbacks);
+    info.value.size = @sizeOf(@TypeOf(info));
+    result.value.size = @sizeOf(@TypeOf(result));
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuPmuInfo(2, &info.value));
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuPmuMeasure(2, 7, 1, 4096, testPmuWork, 0x8534, &result.value));
+    try std.testing.expectEqual(@as(u32, 1), test_pmu_callbacks);
+    try std.testing.expectEqual(@as(i32, -34), result.value.callback_result);
+    try std.testing.expectEqual(@as(u32, 256), result.value.size);
+    try std.testing.expectEqual(sentinel, result.tail);
+    try std.testing.expectEqual(sentinel, info.tail);
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuPmuResult(2, 7, 11, &result.value));
+    try std.testing.expectEqual(@as(u64, 11), result.value.generation);
+    try std.testing.expectEqual(sentinel, result.tail);
+}
+test "early microcode optional slot refuses every old/truncated prefix without modifying output or tail" {
+    var raw: abi.R4XStartContext = .{};
+    var table: abi.R4XStartR4Dev = .{};
+    var bundle: Bundle = .{ .raw = &raw, .dev = &table };
+    const ctx = Context.initBundle(&bundle);
+    const sentinel: u64 = 0x8533_1234_9876_abcd;
+    var guarded: extern struct { value: abi.CpuMicrocodeInfo = .{ .epoch = sentinel }, tail: u64 = sentinel } = .{};
+    const before = guarded;
+    table.cpu_microcode_info = @intFromPtr(&testMicrocodeInfo);
+    for (672..680) |size| {
+        table.size = @intCast(size);
+        try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMicrocodeInfo(2, &guarded.value));
+        try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before), std.mem.asBytes(&guarded));
+    }
+    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.cpu_microcode_info = 0;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMicrocodeInfo(2, &guarded.value));
+    try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before), std.mem.asBytes(&guarded));
+    table.cpu_microcode_info = @intFromPtr(&testMicrocodeInfo);
+    try std.testing.expectEqual(abi.cpu_capabilities_error_index, ctx.cpuMicrocodeInfo(3, &guarded.value));
+    try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before), std.mem.asBytes(&guarded));
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuMicrocodeInfo(2, &guarded.value));
+    try std.testing.expectEqual(@as(u64, 0x8533), guarded.value.epoch);
+    try std.testing.expectEqual(abi.cpu_microcode_status_virtual_cpu, guarded.value.status);
+    try std.testing.expectEqual(@as(u32, 0), guarded.value.after_revision);
+    try std.testing.expect(guarded.value.flags & abi.cpu_microcode_flag_after_valid != 0);
+    try std.testing.expectEqual(sentinel, guarded.tail);
+}
+fn testMachineInfo(cpu: u32, out: *abi.CpuMachineInfo) callconv(.c) i32 {
+    if (cpu != 2) return abi.cpu_capabilities_error_index;
+    out.* = .{ .cpu_index = cpu, .epoch = 0x8532, .sequence = 12, .origin = 1, .stored_banks = 1 };
+    return 0;
+}
+fn testMachineBank(cpu: u32, epoch: u64, sequence: u64, index: u32, out: *abi.CpuMachineBank) callconv(.c) i32 {
+    if (cpu != 2) return abi.cpu_capabilities_error_index;
+    if (epoch != 0x8532) return abi.cpu_capabilities_error_epoch;
+    if (sequence != 12) return abi.cpu_capabilities_error_busy;
+    if (index != 0) return abi.cpu_capabilities_end;
+    out.* = .{ .cpu_index = cpu, .epoch = epoch, .sequence = sequence, .bank_index = index, .status = 0x9400000000001234 };
+    return 0;
+}
+test "MCA optional prefixes and exact snapshot identity preserve all refused outputs and tails" {
+    var raw: abi.R4XStartContext = .{};
+    var table: abi.R4XStartR4Dev = .{};
+    var bundle: Bundle = .{ .raw = &raw, .dev = &table };
+    const ctx = Context.initBundle(&bundle);
+    const sentinel: u64 = 0x8532_1234_9876_abcd;
+    var info: extern struct { value: abi.CpuMachineInfo = .{ .epoch = sentinel }, tail: u64 = sentinel } = .{};
+    var bank: extern struct { value: abi.CpuMachineBank = .{ .status = sentinel }, tail: u64 = sentinel } = .{};
+    table.cpu_machine_info = @intFromPtr(&testMachineInfo);
+    table.cpu_machine_bank = @intFromPtr(&testMachineBank);
+    for (656..664) |size| {
+        table.size = @intCast(size);
+        try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineInfo(2, &info.value));
+        try std.testing.expectEqual(sentinel, info.value.epoch);
+    }
+    for (664..672) |size| {
+        table.size = @intCast(size);
+        try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineBank(2, 0x8532, 12, 0, &bank.value));
+        try std.testing.expectEqual(sentinel, bank.value.status);
+    }
+    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.cpu_machine_info = 0;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineInfo(2, &info.value));
+    table.cpu_machine_info = @intFromPtr(&testMachineInfo);
+    try std.testing.expectEqual(abi.cpu_capabilities_error_index, ctx.cpuMachineInfo(3, &info.value));
+    try std.testing.expectEqual(sentinel, info.value.epoch);
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuMachineInfo(2, &info.value));
+    try std.testing.expectEqual(@as(u64, 0x8532), info.value.epoch);
+    table.cpu_machine_bank = 0;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineBank(2, 0x8532, 12, 0, &bank.value));
+    table.cpu_machine_bank = @intFromPtr(&testMachineBank);
+    try std.testing.expectEqual(abi.cpu_capabilities_error_index, ctx.cpuMachineBank(3, 0x8532, 12, 0, &bank.value));
+    try std.testing.expectEqual(abi.cpu_capabilities_error_epoch, ctx.cpuMachineBank(2, 0x8533, 12, 0, &bank.value));
+    try std.testing.expectEqual(abi.cpu_capabilities_error_busy, ctx.cpuMachineBank(2, 0x8532, 14, 0, &bank.value));
+    try std.testing.expectEqual(abi.cpu_capabilities_end, ctx.cpuMachineBank(2, 0x8532, 12, 1, &bank.value));
+    try std.testing.expectEqual(sentinel, bank.value.status);
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuMachineBank(2, 0x8532, 12, 0, &bank.value));
+    try std.testing.expectEqual(@as(u64, 0x9400000000001234), bank.value.status);
+    try std.testing.expectEqual(sentinel, info.tail);
+    try std.testing.expectEqual(sentinel, bank.tail);
+}
+fn testIdleInfo(cpu: u32, out: *abi.CpuIdleInfo) callconv(.c) i32 {
+    if (cpu != 2) return -4;
+    out.* = .{ .cpu_index = cpu, .epoch = 0x85_31_1234_5678, .reason = abi.cpu_idle_reason_hypervisor, .hlt_fallbacks = 91 };
+    return 0;
+}
+test "passive idle optional slot preserves failed output and hardware metrics remain unavailable" {
+    var raw: abi.R4XStartContext = .{};
+    var table: abi.R4XStartR4Dev = .{};
+    var bundle: Bundle = .{ .raw = &raw, .dev = &table };
+    const ctx = Context.initBundle(&bundle);
+    const sentinel: u64 = 0x8531_9876_1234_5678;
+    var v: extern struct { info: abi.CpuIdleInfo, tail: u64 } = .{ .info = .{ .epoch = sentinel }, .tail = sentinel };
+    table.size = 648;
+    table.cpu_idle_info = @intFromPtr(&testIdleInfo);
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuIdleInfo(2, &v.info));
+    try std.testing.expectEqual(sentinel, v.info.epoch);
+    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.cpu_idle_info = 0;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuIdleInfo(2, &v.info));
+    table.cpu_idle_info = @intFromPtr(&testIdleInfo);
+    try std.testing.expectEqual(@as(i32, -4), ctx.cpuIdleInfo(3, &v.info));
+    try std.testing.expectEqual(sentinel, v.info.epoch);
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuIdleInfo(2, &v.info));
+    try std.testing.expectEqual(@as(u64, 0x85_31_1234_5678), v.info.epoch);
+    try std.testing.expectEqual(@as(u64, 91), v.info.hlt_fallbacks);
+    try std.testing.expectEqual(@as(u64, 0), v.info.residency_ns | v.info.wake_latency_ns | v.info.energy_uj);
+    try std.testing.expectEqual(sentinel, v.tail);
+}
+fn testFirmwarePerformance(request: *const abi.CpuPerformanceRequest, out: *abi.CpuFirmwareInfo) callconv(.c) i32 {
+    out.* = .{ .cpu_index = request.cpu_index, .epoch = request.epoch, .backend = abi.cpu_firmware_backend_pss, .state = abi.cpu_performance_state_uncertain, .lease = 71, .provider_generation = 29, .firmware_generation = 30 };
+    return 0;
+}
+test "firmware transport negotiates its own optional slot and preserves an uncertain whole-domain receipt" {
+    var raw: abi.R4XStartContext = .{};
+    var table: abi.R4XStartR4Dev = .{};
+    var bundle: Bundle = .{ .raw = &raw, .dev = &table };
+    const ctx = Context.initBundle(&bundle);
+    const request: abi.CpuPerformanceRequest = .{ .cpu_index = 2, .epoch = 19 };
+    var out: abi.CpuFirmwareInfo = .{ .lease = 99 };
+    table.size = 640;
+    table.cpu_firmware_performance = @intFromPtr(&testFirmwarePerformance);
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuFirmwarePerformance(&request, &out));
+    try std.testing.expectEqual(@as(u64, 99), out.lease);
+    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.cpu_firmware_performance = 0;
+    try std.testing.expectEqual(abi.err_no_fn, ctx.cpuFirmwarePerformance(&request, &out));
+    try std.testing.expectEqual(@as(u64, 99), out.lease);
+    table.cpu_firmware_performance = @intFromPtr(&testFirmwarePerformance);
+    try std.testing.expectEqual(@as(i32, 0), ctx.cpuFirmwarePerformance(&request, &out));
+    try std.testing.expectEqual(@as(u64, 71), out.lease);
+    try std.testing.expectEqual(abi.cpu_performance_state_uncertain, out.state);
+    try std.testing.expectEqual(@as(u32, 2), out.cpu_index);
+    try std.testing.expectEqual(@as(u64, 19), out.epoch);
+}
 test "program context accepts present fields in a shorter append-only table" {
     var raw: abi.R4XStartContext = .{};
     var table: abi.R4XStartR4Sys = .{};
@@ -4521,7 +5773,6 @@ fn testNetServiceRawSend(_: u32, _: [*]const u8, _: u32) callconv(.c) i32 {
     test_net_service_raw_send_calls += 1;
     return -1;
 }
-
 fn testNetServiceRawRecv(_: u32, _: [*]u8, _: u32) callconv(.c) i32 {
     test_net_service_raw_recv_calls += 1;
     return -1;
@@ -4599,7 +5850,7 @@ test "current SDK capabilities never synthesize fonts input or a storage prefix"
     var raw: abi.R4XStartContext = .{};
     var draw: abi.R4XStartR4Draw = .{ .font_info = @intFromPtr(&currentFontInfo), .font_measure = @intFromPtr(&currentFontMeasure) };
     var desk: abi.R4XStartR4Desk = .{ .read_key = @intFromPtr(&currentByteKey) };
-    var dev: abi.R4XStartR4Dev = .{ .program_instance_storage_summary = 1 };
+    var dev: abi.R4XStartR4Dev = .{ .reserved_program_instance_storage_summary_v1 = 1 };
     const bundle: Bundle = .{ .raw = &raw, .draw = &draw, .desk = &desk, .dev = &dev };
     const ctx = Context.initBundle(&bundle);
     // Metadata queries depend on their own current callback, not a GUI setter.

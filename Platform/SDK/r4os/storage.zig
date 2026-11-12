@@ -2,6 +2,7 @@
 // this layer never talks to drivers or reinterprets filesystem internals.
 const abi = @import("r4os_contract").abi;
 const r4sys = @import("r4sys.zig");
+const platform2 = @import("platform2.zig");
 const std = @import("std");
 
 pub const Context = struct {
@@ -12,8 +13,17 @@ pub const Context = struct {
             self.sys.hasFn("storage_use_begin") and self.sys.hasFn("storage_use_end");
     }
     fn call(self: Context, comptime name: []const u8, args: anytype) i32 {
+        if (self.sys.base.generation2) |context| {
+            var address: u64 = 0;
+            if (context.lookup(1, @offsetOf(platform2.abi.R4XStartR4Sys2, name), &address) != 0)
+                return abi.storage_error_unsupported;
+            const function: @field(abi.R4SysFns, name) = @ptrFromInt(address);
+            return @call(.auto, function, args);
+        }
         if (!self.sys.hasFn(name)) return abi.storage_error_unsupported;
-        const function: @field(abi.R4SysFns, name) = @ptrFromInt(@field(self.sys.base.bundle.?.sys.?.*, name));
+        const bundle = self.sys.base.bundle orelse return abi.storage_error_unsupported;
+        const table = bundle.sys orelse return abi.storage_error_unsupported;
+        const function: @field(abi.R4SysFns, name) = @ptrFromInt(@field(table.*, name));
         return @call(.auto, function, args);
     }
     pub fn inventory(self: Context, out: *abi.StorageInventory) i32 {
@@ -73,6 +83,8 @@ pub const Context = struct {
     }
     pub fn useBegin(self: Context, path: [*:0]const u8, out: *u64) i32 {
         out.* = 0;
+        if (self.sys.base.generation2 != null and !self.sys.hasFn("storage_use_end"))
+            return abi.storage_error_unsupported;
         return self.call("storage_use_begin", .{ path, out });
     }
     pub fn useEnd(self: Context, use: *u64) i32 {
@@ -86,7 +98,9 @@ pub const Context = struct {
     // Transfer services may retain that older behavior only when both slots
     // are absent. A partially available new contract always fails closed.
     pub fn transferUseBegin(self: Context, path: [*:0]const u8, out: *u64) i32 {
-        if (!self.sys.hasFn("storage_use_begin") and !self.sys.hasFn("storage_claim_begin")) {
+        if (self.sys.base.generation2 == null and
+            !self.sys.hasFn("storage_use_begin") and !self.sys.hasFn("storage_claim_begin"))
+        {
             out.* = 0;
             return abi.storage_result_ok;
         }

@@ -17,6 +17,14 @@ pub const Devices = struct {
     pub fn performance(self: *const Devices) PerformanceView {
         return .{ .raw = self.raw };
     }
+
+    pub fn display(self: *const Devices) ?abi.DisplayStateInfo {
+        return self.raw.displayState();
+    }
+
+    pub fn driverModule(self: *const Devices, owner: u32) ?abi.DriverModuleInfo {
+        return self.raw.driverModuleInfo(owner);
+    }
 };
 
 pub const DeviceInventoryView = struct {
@@ -93,6 +101,22 @@ pub const PerformanceView = struct {
     pub fn bootPhaseClock(self: *const PerformanceView, index: u32) ?abi.ProgramBootPhaseClockInfo {
         return self.raw.performanceBootPhaseClock(index);
     }
+    pub fn instrumentation(self: *const PerformanceView) ?abi.ProgramInstrumentationInfo {
+        return self.raw.performanceInstrumentation();
+    }
+
+    pub fn lock(self: *const PerformanceView, index: u32) ?abi.ProgramLockPerformanceInfo {
+        return self.raw.performanceLock(index);
+    }
+
+    pub fn stack(self: *const PerformanceView, index: u32) ?abi.ProgramStackPerformanceInfo {
+        return self.raw.performanceStack(index);
+    }
+
+    pub fn stackFault(self: *const PerformanceView, cpu: u32, out: *abi.ProgramStackFaultInfo) i32 {
+        return self.raw.stackFault(cpu, out);
+    }
+
     pub fn irqTiming(self: *const PerformanceView, irq: u32) ?abi.ProgramIrqTimingInfo {
         return self.raw.performanceIrqTiming(irq);
     }

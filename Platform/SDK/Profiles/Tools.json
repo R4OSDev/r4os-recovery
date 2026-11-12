@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "toolsets": {
+    "core": {
+      "tools": [
+        "zig",
+        "rust",
+        "limine",
+        "qemu"
+      ]
+    },
+    "recovery": {
+      "tools": [
+        "zig",
+        "limine",
+        "qemu"
+      ]
+    },
+    "graphics": {
+      "tools": [
+        "zig",
+        "graphics",
+        "shader"
+      ]
+    }
+  },
+  "tools": {
+    "zig": {
+      "schema": 1,
+      "version": "0.16.0",
+      "hosts": {
+        "Linux": {
+          "target": "x86_64-linux",
+          "url": "https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz",
+          "sha256": "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00"
+        },
+        "Windows": {
+          "target": "x86_64-windows",
+          "url": "https://ziglang.org/download/0.16.0/zig-x86_64-windows-0.16.0.zip",
+          "sha256": "68659eb5f1e4eb1437a722f1dd889c5a322c9954607f5edcf337bc3684a75a7e"
+        }
+      }
+    },
+    "rust": {
+      "format": 1,
+      "rust_version": "1.99.0",
+      "cargo_version": "1.99.0",
+      "rustup_version": "1.29.1",
+      "manifest_sha256": "ce6dddc886364f8d786514771212cebe9b731ba82d6b859951c6b0ccc516b6a2",
+      "kernel_target": "x86_64-unknown-none",
+      "components": [
+        "rustfmt",
+        "clippy",
+        "llvm-tools-preview",
+        "rust-src"
+      ],
+      "profiles": {
+        "sdk": {
+          "id": "r4os-rust-tools-v1",
+          "required_components": [
+            "llvm-tools-preview"
+          ],
+          "optional_components": [
+            "rustfmt",
+            "clippy"
+          ],
+          "rust_src_required": false
+        },
+        "kernel": {
+          "id": "r4os-kernel-rust-tools-v1",
+          "required_components": [
+            "rustfmt",
+            "clippy",
+            "llvm-tools-preview",
+            "rust-src"
+          ],
+          "optional_components": [],
+          "rust_src_required": true
+        },
+        "development": {
+          "id": "r4os-kernel-rust-tools-v1",
+          "required_components": [
+            "rustfmt",
+            "clippy",
+            "llvm-tools-preview",
+            "rust-src"
+          ],
+          "optional_components": [],
+          "rust_src_required": true
+        }
+      },
+      "hosts": {
+        "Linux": {
+          "triple": "x86_64-unknown-linux-gnu",
+          "rustup_sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71"
+        },
+        "Windows": {
+          "triple": "x86_64-pc-windows-msvc",
+          "rustup_sha256": "6f4bef66261261fcb43131be8720bab817d403a09edec7455c371974b90bdb7e"
+        }
+      }
+    },
+    "limine": {
+      "version": "12.0.1",
+      "url": "https://github.com/Limine-Bootloader/Limine/releases/download/v12.0.1/limine-binary-12.0.1.zip",
+      "sha256": "175be9999063b7754af52b2852357f61cbe67a32ad8d3bf0d76d69c8757f9865"
+    },
+    "qemu": {
+      "hosts": {
+        "Linux": {
+          "version": "11.1.2",
+          "package": "qemu-system-x86",
+          "provider": "host-package"
+        },
+        "Windows": {
+          "version": "11.0.0",
+          "provider": "qemu-w64-installer",
+          "url": "https://qemu.weilnetz.de/w64/2026/qemu-w64-setup-20260422.exe",
+          "sha512": "64a43c0d39acddc9d30d290935a312a2b5c4fa62cffe6c27090f2a45ca6c8de0f0e8673e1e5117fb116a8742f86df92163531afc23f34758aadfc6d82c1f41a5"
+        }
+      }
+    },
+    "graphics": {
+      "rustc": "1.85.1",
+      "meson": "1.7.0",
+      "ninja": "1.12.1",
+      "bindgen": "0.71.1",
+      "cbindgen": "0.27.0",
+      "clang": "19.1.7",
+      "python_minimum": "3.10",
+      "mako_minimum": "0.8.0",
+      "nasm_minimum": "2.16"
+    },
+    "shader": {
+      "schema": 1,
+      "mesa_source_lock": "../../R4NV/Tools/Compiler/Sources.lock.json",
+      "llvm": "19.1.7",
+      "glslang": "15.2.0",
+      "llvm_spirv_pkgconfig": "19.1.0.0",
+      "spirv_tools_pkgconfig": "2025.1.1"
+    },
+    "sevenzip": {
+      "version": "26.02",
+      "bootstrap_url": "https://github.com/ip7z/7zip/releases/download/26.02/7zr.exe",
+      "bootstrap_sha256": "56b8cc9f4971cef253644fafe54063ed7fdca551d4dee0f8c6baa81b855acd72",
+      "url": "https://github.com/ip7z/7zip/releases/download/26.02/7z2602-x64.exe",
+      "sha256": "6745fa76dc2ea031596d8678f6f6b99c3c1b435b4164a63485adbbc7b8d82ef0"
+    }
+  }
+}

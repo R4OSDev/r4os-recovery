@@ -162,6 +162,7 @@ pub fn build(b: *std.Build) void {
     config.addOption(u32, "smp_fail_ap_index", smp_fail_ap_index);
     kernel_mod.addOptions("config", config);
     kernel_mod.addImport("r4os_kernel_contract", contract_kernel);
+    kernel_mod.addImport("r4os_contract2", contract.module("r4os_contract2"));
     kernel_mod.addImport("r4f_format", b.createModule(.{
         .root_source_file = b.path("kernel/font_format.zig"),
         .target = target,
@@ -346,6 +347,7 @@ fn addContractUnitTest(
     });
     root.addOptions("config", config);
     root.addImport("r4os_kernel_contract", host_contract);
+    root.addImport("r4os_contract2", contract.module("r4os_contract2"));
     const tests = b.addTest(.{ .root_module = root });
     const run = b.addRunArtifact(tests);
     test_step.dependOn(&run.step);
@@ -365,6 +367,7 @@ fn addLoaderTests(
         .optimize = optimize,
     });
     root.addOptions("config", config);
+    root.addImport("r4os_contract2", contract.module("r4os_contract2"));
     root.addImport("r4os_kernel_contract", b.createModule(.{
         .root_source_file = contract.path("Generated/Kernel/Zig/r4x_api_generated.zig"),
         .target = target,
@@ -421,6 +424,8 @@ fn addProviderNegative(
         "build-obj",
         "--dep",
         "kernel_api",
+        "--dep",
+        "contract2",
     });
     compile.addPrefixedFileArg("-Mroot=", b.path(fixture));
     compile.addArgs(&.{ "--dep", "r4os_kernel_contract" });
@@ -429,6 +434,9 @@ fn addProviderNegative(
         "-Mr4os_kernel_contract=",
         contract.path("Generated/Kernel/Zig/r4x_api_generated.zig"),
     );
+    compile.addArgs(&.{ "--dep", "r4os_base_abi" });
+    compile.addPrefixedFileArg("-Mcontract2=", contract.path("Generated/Generation2/Zig/abi.zig"));
+    compile.addPrefixedFileArg("-Mr4os_base_abi=", contract.path("Generated/SDK/Zig/package.zig"));
     compile.addArg("-fno-emit-bin");
     compile.expectExitCode(1);
     compile.expectStdErrMatch(expected_diagnostic);

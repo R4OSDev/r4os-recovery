@@ -11,6 +11,22 @@ pub const Point = struct { x: f32, y: f32 };
 pub const FillRule = enum { nonzero, evenodd };
 pub const LineJoin = enum { miter, round, bevel };
 pub const LineCap = enum { butt, round, square };
+pub const GradientKind = enum { linear, radial };
+pub const GradientStop = struct { position: f32, argb: u32 };
+pub const Gradient = struct {
+    kind: GradientKind = .linear,
+    start: Point,
+    /// Linear endpoint, or elliptical radial radii in command-local pixels.
+    end: Point,
+    stops: []const GradientStop,
+};
+
+/// Exact optional frame grammar capability; no change to old table prefixes.
+pub fn gradientsSupported(draw: *const @import("r4draw.zig").Context) bool {
+    const bundle = draw.base.bundle orelse return false;
+    const table = bundle.draw orelse return false;
+    return table.abi_version >= abi.gui_gradient_min_r4draw_version and draw.hasFn("gui_frame_append");
+}
 
 pub const Clip = struct {
     x: i32 = 0,
@@ -241,8 +257,51 @@ pub fn roundedRect(output: []u8, value: RoundedRect) Error![]const u8 {
     return output[0..@sizeOf(abi.GuiShapeResource)];
 }
 
+/// Existing v1 geometry followed by a separate paint header and bounded stops.
+/// All values are validated before writing any output bytes.
+pub fn gradientRoundedRect(output: []u8, shape: RoundedRect, paint: Gradient) Error![]const u8 {
+    if (paint.stops.len < 2 or paint.stops.len > abi.gui_gradient_max_stops) return error.InvalidValue;
+    const length = @sizeOf(abi.GuiShapeResource) + @sizeOf(abi.GuiGradientPaint) + paint.stops.len * @sizeOf(abi.GuiGradientStop);
+    if (length > output.len) return error.BufferTooSmall;
+    const maximum: f32 = @floatFromInt(abi.gui_shape_max_coordinate);
+    const header = abi.GuiGradientPaint{
+        .kind = if (paint.kind == .linear) abi.gui_gradient_kind_linear else abi.gui_gradient_kind_radial,
+        .stop_count = @intCast(paint.stops.len),
+        .start_x_bits = try bits(paint.start.x, true, maximum),
+        .start_y_bits = try bits(paint.start.y, true, maximum),
+        .end_x_bits = try bits(paint.end.x, paint.kind == .linear, maximum),
+        .end_y_bits = try bits(paint.end.y, paint.kind == .linear, maximum),
+    };
+    const minimum = 1.0 / 256.0;
+    if (paint.kind == .radial) {
+        if (paint.end.x < minimum or paint.end.y < minimum) return error.InvalidValue;
+    } else {
+        const dx = paint.end.x - paint.start.x;
+        const dy = paint.end.y - paint.start.y;
+        if (dx * dx + dy * dy < minimum * minimum) return error.InvalidValue;
+    }
+    var previous: f32 = -1;
+    for (paint.stops) |stop| {
+        if (!std.math.isFinite(stop.position) or stop.position < 0 or stop.position > 1 or stop.position <= previous) return error.InvalidValue;
+        previous = stop.position;
+    }
+    if (paint.stops[0].position != 0 or paint.stops[paint.stops.len - 1].position != 1) return error.InvalidValue;
+    var geometry: [@sizeOf(abi.GuiShapeResource)]u8 = undefined;
+    _ = try roundedRect(&geometry, shape);
+    @memcpy(output[0..geometry.len], &geometry);
+    var at = geometry.len;
+    @memcpy(output[at..][0..@sizeOf(abi.GuiGradientPaint)], std.mem.asBytes(&header));
+    at += @sizeOf(abi.GuiGradientPaint);
+    for (paint.stops) |stop| {
+        const wire = abi.GuiGradientStop{ .position_bits = @bitCast(stop.position), .argb = stop.argb };
+        @memcpy(output[at..][0..@sizeOf(abi.GuiGradientStop)], std.mem.asBytes(&wire));
+        at += @sizeOf(abi.GuiGradientStop);
+    }
+    return output[0..length];
+}
+
 pub fn command(kind: u32, x: i32, y: i32, w: u32, h: u32, resource_offset: u64, resource_bytes: u64) Error!abi.GuiFrameCommand {
-    if (kind < abi.gui_frame_command_kind_path_fill or kind > abi.gui_frame_command_kind_shadow or
+    if (((kind < abi.gui_frame_command_kind_path_fill or kind > abi.gui_frame_command_kind_shadow) and kind != abi.gui_frame_command_kind_gradient_rounded_rect) or
         w == 0 or h == 0 or w > abi.gui_shape_max_dimension or h > abi.gui_shape_max_dimension) return error.InvalidValue;
     const pixels = std.math.mul(u64, w, h) catch return error.InvalidValue;
     if (pixels > abi.gui_shape_max_pixels or resource_bytes < abi.gui_shape_resource_size) return error.InvalidValue;
@@ -264,4 +323,28 @@ test "shape builders preserve one versioned resource per logical command" {
     const shape_command = try command(abi.gui_frame_command_kind_path_fill, 0, 0, 16, 16, 7, resource.len);
     try std.testing.expectEqual(@as(u64, 7), shape_command.resource_offset);
     try std.testing.expectError(error.InvalidValue, builder.lineTo(.{ .x = 0, .y = 0 }));
+}
+
+test "gradient resources are bounded, complete and rejected without output mutation" {
+    var output: [256]u8 = .{0x5a} ** 256;
+    const stops = [_]GradientStop{ .{ .position = 0, .argb = 0xFF301452 }, .{ .position = 1, .argb = 0x809450DD } };
+    const paint = Gradient{ .start = .{ .x = 0, .y = 0 }, .end = .{ .x = 80, .y = 30 }, .stops = &stops };
+    const shape = RoundedRect{ .x = 0, .y = 0, .w = 80, .h = 30 };
+    const bytes = try gradientRoundedRect(&output, shape, paint);
+    try std.testing.expectEqual(@as(usize, 208), bytes.len);
+    _ = try command(abi.gui_frame_command_kind_gradient_rounded_rect, 0, 0, 80, 30, 0, bytes.len);
+    const original = output;
+    var invalid = paint;
+    invalid.end = invalid.start;
+    try std.testing.expectError(error.InvalidValue, gradientRoundedRect(&output, shape, invalid));
+    invalid = paint;
+    invalid.kind = .radial;
+    invalid.end.x = 0;
+    try std.testing.expectError(error.InvalidValue, gradientRoundedRect(&output, shape, invalid));
+    const bad_stops = [_]GradientStop{ .{ .position = 0, .argb = 0 }, .{ .position = std.math.nan(f32), .argb = 0 } };
+    invalid = paint;
+    invalid.stops = &bad_stops;
+    try std.testing.expectError(error.InvalidValue, gradientRoundedRect(&output, shape, invalid));
+    try std.testing.expectEqualSlices(u8, &original, &output);
+    try std.testing.expectError(error.BufferTooSmall, gradientRoundedRect(output[0..207], shape, paint));
 }

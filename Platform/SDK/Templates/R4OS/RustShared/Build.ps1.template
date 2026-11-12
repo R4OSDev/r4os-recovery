@@ -1,0 +1,12 @@
+param(
+ [Parameter(Mandatory)][string]$SdkRoot,[Parameter(Mandatory)][string]$ContractRoot,[Parameter(Mandatory)][string]$ToolsRoot,
+ [string]$ZigRoot='', [string]$InstallRoot='', [string]$CacheRoot='', [string]$OutputRoot='',
+ [string[]]$BuildArguments=@(), [string[]]$DependencyRoot=@(), [string]$DependencyRootsJson='',
+ [string]$Features='', [switch]$NoDefaultFeatures, [string]$LibraryHelpersRoot='', [switch]$Technical
+)
+$ErrorActionPreference='Stop';Set-StrictMode -Version Latest
+$arguments=@{ProjectRoot=$PSScriptRoot;SdkRoot=$SdkRoot;ContractRoot=$ContractRoot;ToolsRoot=$ToolsRoot}
+foreach($key in @('ZigRoot','InstallRoot','CacheRoot','OutputRoot','BuildArguments','DependencyRoot','DependencyRootsJson','Features','LibraryHelpersRoot')){if((Get-Variable $key -ValueOnly)){$arguments[$key]=Get-Variable $key -ValueOnly}}
+if($Technical){$arguments.Technical=$true};if($NoDefaultFeatures){$arguments.NoDefaultFeatures=$true}
+& (Join-Path $SdkRoot 'Tools/Build-Project.ps1') @arguments
+exit $LASTEXITCODE

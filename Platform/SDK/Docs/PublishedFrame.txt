@@ -1,0 +1,103 @@
+﻿Leihe vollstaendig veroeffentlichter Frames
+==========================================
+
+SDK0.64.169, Anbieterphase0.90.26, ADD-0012. Zig published_frame,
+C published_frame.h und Rust published_frame teilen einen Zig-Besitzer.
+Er verwendet den vorhandenen subsystem_host.Presenter samt Surface,
+Viewport, Damage und begrenzter Rasterarbeit. Kein zweiter Renderer,
+keine Framekopie, Registry oder Kernelressource. Die GB-/SNES-Produzenten
+und alle bisherigen Consumer bleiben bei ihren bisherigen Zugaengen.
+
+Bridge leiht ganzen Scratch von mindestens128*128u32 und Backendcode,
+Callbacktabelle und Kontext bis zum Ende des Besitzers. Init nur in
+unbenutztem, ungeliehenem Speicher. State/Quelle/Palette/Scratch/Output
+muessen mapped, disjunkt und bis zum wirklichen Return gueltig bleiben.
+Es gibt keine Selbstzeiger; der Besitzer ist zwischen Aufrufen beweglich.
+Opaque Speicher864/Align8 bleibt in Rust MaybeUninit; Padding ist kein Datum.
+
+Nur serialisierte synchrone Kopierbackends sind zulaessig: Raster sowie
+ausdruecklich gewaehltes Indexed8 und XRGB32-Nearest. Benoetigte Callbacks
+werden geprueft. Rasterbetrieb benoetigt nur BeginFull/BeginDamage/Clear/
+Raster/CommitFull/CommitDamage/Cancel, keinen unbenutzten Indexed8-Callback.
+Der alte Backendtyp behaelt sein Pflichtfeld; die neue Bruecke belegt es bei
+abgeschaltetem Indexed8 mit NoFn. Nur ausdruecklich gewaehlte Kopieroptionen
+werden an Callbacks gebunden. Retained/shared-Raster- und unbekannte Featureanforderungen
+liefern Unsupported. Es gibt keine GPU-/DMA-/Display-/PPU-Fencequittung.
+Die vorhandenen unabhaengigen Shared-Raster-Zugaenge bleiben erhalten;
+deren Besitzvertrag ist nicht Bestandteil dieser neuen Bruecke.
+
+Bind verlangt eine von0verschiedene, strikt steigende u64-Generation und
+keine aktive Leihe oder Callbackarbeit. Unbound/Running/Paused/Closed sind
+0/1/2/3. Close ist dauerhaft und idempotent. Pause erlaubt die Darstellung
+eines schon vollstaendig veroeffentlichten Frames; sie startet keinen Gast.
+Neues Bind setzt Beobachtungen zurueck, niemals den Ticketzaehler.
+
+Lease112 benennt die ganzen Pixel-/Palettenspans, Bindgeneration, Pixel-
+und Palettenrevision, Damagebaserevision, Geometrie/Stride/Format, Damage,
+Completeflag genau1 und Reservedfelder0. Der Produzent beweist die echte
+vollstaendige Veroeffentlichung und unveraenderliche Leihe; ein Pointer
+oder Completeflag kann dies nicht feststellen. working_frame darf niemals
+verliehen werden. Rust Published-Konstruktoren sind deshalb unsafe.
+
+Indexed8 verlangt ganze256u32-Farben und eine von0verschiedene Palette-
+revision. XRGB32 verlangt4Byte-Alignment und keine Palette/Palettenrevision.
+Nur dicht gepackter Stride, positive Geometrie bis i32MAX, gepruefte Span-
+und Produktarithmetik. Ganze Quellen duerfen groesser als der benutzte
+Frame sein. Padded/andere Formate werden ausdruecklich abgewiesen.
+
+Die erste Beobachtung ist Full. Rect/None nennen genau die zuletzt
+beobachtete Pixelrevision als Damagebasis; ein falscher Anschluss aendert
+keinen Zustand. Neue Geometrie/Format/Palette erzwingt volle Invalidierung
+ueber den wirklichen Presenter. Ansonsten bleiben dessen akkumuliertes
+Damage und Viewportcache erhalten. Palette-only darf bei gleicher Pixel-
+revision steigen und erzwingt volle Neufaerbung. Kleinere Revisionen und
+Geometriewechsel unter gleicher Pixelrevision werden abgewiesen.
+Exakte logische Duplikate liefern Unchanged und ein frisches aktives Ticket,
+damit auch bei Resize nochmals dargestellt werden kann. Eine andere Adresse
+desselben vollstaendigen logischen Frames ist erlaubt; Revision ist kein Hash.
+
+Jede erfolgreiche Sync verleiht genau ein von0verschiedenes u64-Ticket.
+Zaehler nie zuruecksetzen oder umwickeln; Erschoepfung wird abgewiesen.
+Present verlangt das aktive Ticket und ruft den originalen Presenter auf.
+Ergebnis kind0/1/2/3 bedeutet Unchanged/Hidden/Presented/BackendFailure;
+mode0/1/2 Full/Damage/Replace, flags1 validiert den skalaren Viewport.
+Fehler im Backend behalten ausstehendes Damage fuer einen erneuten Versuch.
+Skalare Ausgaben verleihen keine Quelle. Acquisition16, Progress72,
+Viewport32 und Presentation64 werden an der Zig/C/Rust-Grenze geprueft.
+
+Release ersetzt die wirkliche source-tragende Surface durch ein dauerhaftes
+privates Neutralpixel und loescht alle Quell-/Palettepointer. Skalare
+Geometrie/Viewport/Damage bleiben fuer die naechste vollstaendige Leihe.
+Close trennt ebenso vor Ende der Leihe. Reentrant Close waehrend Present
+meldet Busy und merkt die Bitte vor; erst nach wirklichem Backendreturn
+wird getrennt. Sync/Release/Bind waehrend der Arbeit sind Busy. Kein
+logischer Cancel/Close beendet aktive Speicher-/Codeleihen vorzeitig.
+
+Rust Bridge leiht Callbacks und ganzen Scratch, ist nicht Send. Frame leiht
+Bridge exklusiv und haelt Published mit ganzen unveraenderlichen Pixel-/
+Palettenleihen. Nur Frame kann safe darstellen; Drop trennt zuerst das
+Ticket. mem::forget(Frame) kann den Besitzer Busy belassen. Danach gibt es
+keinen safe Present- oder Ticket-Wiederaufnahmezugang: nur skalare Abfragen,
+abgewiesene weitere Bind/Sync und Close ohne Quellenzugriff sind moeglich.
+Keine gleichzeitigen oder ueberlappenden safe Callbackleihen.
+
+Fehler -401..-413: Invalid, Surface, Buffer, StaleGeneration, StaleRevision,
+StaleDamage, Busy, Closed, Exhausted, NoProvider, Unsupported, NoLease,
+ScratchSmall. Die exakten Namen und Formate stehen in published_frame.h.
+
+Native Overlays seit SDK0.64.210 / 0.90.79
+---------------------------------------
+Der native Zig-Zugang presentWithOverlay verwendet dieselbe Ticket-,
+Puffer-, Fehler- und Closepruefung wie present. Der vorhandene FrameOverlay
+wird im wirklichen Presenter nach der Kopie und vor Commit angehaengt.
+Sein Kontext und Code bleiben bis zum Return geliehen; die publizierten
+Quellen bleiben dabei unveraenderlich. Ein Overlayfehler cancelt die
+Transaktion und erhaelt Damage und Ticket fuer den definierten Wiederholfall.
+Reentrant Close bleibt Busy und trennt erst nach Rueckkehr des Callbacks.
+Die vorhandene Methode present entspricht einem fehlenden Overlay.
+
+Dies ergaenzt keine binaeren Records oder Runtime-Exporte. C-/Rust-Clients
+koennen dieselbe app-eigene Overlayarbeit im vorhandenen Commitcallback
+vor ihrem eigentlichen Commit ausfuehren. Ihre Leih-/Callbackvertraege und
+ABI bleiben erhalten. R4SNES nutzt den nativen Zugang fuer die bestehende
+FPS-Anzeige; Frame- und Overlayarbeit bleiben eine Transaktion.

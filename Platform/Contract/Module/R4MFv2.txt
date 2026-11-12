@@ -11,7 +11,7 @@ The identity is the case-insensitive pair (KIND, NAME). One module.R4MF
 describes exactly one output module.
 Unknown keys, empty values and duplicate single-value keys are errors. SOURCE,
 GUEST_FORMAT, GUEST_EXTENSION, GUEST_FEATURE, ZIG_MODULE, C_INCLUDE, C_DEFINE,
-C_FLAG, IMPORT, EXPORT and META are ordered repeatable fields. Their order is
+C_FLAG, NATIVE_ARCHIVE, IMPORT, EXPORT and META are ordered repeatable fields. Their order is
 significant and is preserved by planning and building.
 
 Fields in canonical order:
@@ -20,8 +20,8 @@ Fields in canonical order:
   KIND=R4X
   NAME=<FAT-safe ASCII module name, maximum 31 bytes>
   VERSION=<MAJOR.MINOR.PATCH>          module version, required for all kinds
-  LANGUAGE=Zig|C
-  SOURCE=<project-relative canonical path, repeated for C>
+  LANGUAGE=Zig|C|Rust
+  SOURCE=<project-relative canonical path, ordered; see language rules below>
   ENTRY_MODE=app|lowlevel              required for R4X, forbidden otherwise
   APP_CLASS=console|gui|service        required for R4X, forbidden otherwise
   MODULE_ROLE=subsystem                optional R4X role, forbidden otherwise
@@ -34,17 +34,19 @@ Fields in canonical order:
   IMAGE_SCOPE=slim|full|test|none      required for every kind
   OPTIMIZE=size|speed                  optional for every kind, default size
   PACKAGE=<group name>                 optional for R4X, no build semantics
-  ZIG_MODULE=<alias>:<relative .zig>   optional for R4X, repeatable, Zig only
-  C_INCLUDE=<relative include root>    optional, repeatable, C inputs only
-  C_DEFINE=<NAME>=<VALUE>              optional, repeatable, C inputs only
+  ZIG_MODULE=<alias>:<relative .zig>   optional for R4X/R4D, repeatable, Zig only
+  C_INCLUDE=<relative include root>    optional, repeatable, C or native Zig R4L
+  C_DEFINE=<NAME>=<VALUE>              optional, repeatable, C or native Zig R4L
   C_FLAG=<single compiler flag>        optional, repeatable, C inputs only
+  NATIVE_ARCHIVE=<logical name>        optional, repeatable, Zig R4L only
   IMPORT=<module>:<symbol>:<min-version> repeated; at least one for R4X
   EXPORT=<public-name>:<ELF-symbol>:<revision> repeated; compiled R4L only
   CONTRACT=<project-relative .json>                 compiled R4L only
   CONTRACT_BASELINE=<project-relative .json>        compiled R4L only
-  IMPLEMENTATION_ZIG=<project-relative .zig>        compiled R4L only
+  IMPLEMENTATION_ZIG=<project-relative .zig>        required for Zig R4L only
   BINDING_ZIG=<project-relative .zig>                compiled R4L only
   BINDING_C=<project-relative .h>                    compiled R4L only
+  BINDING_RUST=<project-relative .rs>                optional R4L consumer
   CONFORMANCE_ZIG=<project-relative .zig>            compiled R4L only
   CONFORMANCE_C=<project-relative .c>                compiled R4L only
   API_REFERENCE=<project-relative .md>               compiled R4L only
@@ -53,18 +55,30 @@ Fields in canonical order:
   HELP=<project-relative text path>  optional, at most once
   RESOURCE=<NAME>:<project-relative path>  optional, repeatable
 
-Zig has exactly one SOURCE. C may have multiple SOURCE fields. Sources are
-relative to the manifest directory, use forward slashes, may not escape with
-".." and must match the declared language. TARGET uses forward slashes,
+Zig has exactly one .zig root SOURCE. R4L and R4D may follow that root with
+ordered .c companion SOURCE fields linked into the same owning artifact.
+R4X and R4P with LANGUAGE=Zig still require exactly one SOURCE. LANGUAGE=C
+may have multiple .c SOURCE fields. Sources are relative to the manifest
+directory, use forward slashes and may not escape with "..". Their extensions
+must match these language rules. TARGET uses forward slashes,
 contains no dot segments and respects the current R4OS path/component limits.
 
-C_INCLUDE, C_DEFINE and C_FLAG are available only when the project contains
-C sources, including a mixed Zig/C compiled R4L. Include roots are relative
+C_INCLUDE and C_DEFINE are available when the project contains C sources,
+including mixed Zig/C R4L and R4D artifacts, or when a Zig R4L declares
+NATIVE_ARCHIVE and needs headers for @cImport. C_FLAG still requires C sources.
+Include roots are relative
 build dependencies and may deliberately use ".." to reach a package sibling;
 absolute paths, backslashes and explicit "." components are forbidden.
 C_DEFINE splits at the first "=" and requires a C identifier plus a
 whitespace-free value. C_FLAG is one whitespace-free token beginning with
 "-". Duplicate include roots, define names and flags are errors.
+
+R4D companions preserve the driver's existing entry, imports, exports and
+metadata contract. They introduce neither an APP_CLASS nor ENTRY_MODE, a
+second module, or a runtime dependency. The SDK forwards ordered C sources,
+include roots, defines and flags to the same ELF producer and R4M0 packager.
+R4MF_PLAN=1 remains an R4X contract view; accepting mixed R4D manifests does
+not add an inside-R4OS Zig/C driver compiler capability to R4BUILD.
 
 IMAGE_SCOPE decides which image a module reaches and is required for all
 four kinds. The selected sets are exact: slim images contain slim, full images
@@ -106,6 +120,18 @@ Zig identifier and unique inside the manifest. Its forward-slash path is
 resolved relative to the manifest, may deliberately reach a package sibling
 with "..", must end in .zig and must exist. The field is a build input and is
 therefore included in the machine plan. C manifests reject ZIG_MODULE.
+R4D supports the same compiled modules as R4X; this does not add runtime
+imports, an app class or an R4X entry point. R4L/R4P keep their existing
+explicit build contracts.
+
+NATIVE_ARCHIVE declares a freestanding native archive linked into the owning
+Zig R4L (since 0.79.34). Names use the NAME character/length rules and are
+case-insensitively unique. The owning build supplies exactly one tracked
+LazyPath per declaration, in manifest order, through native_archives in
+R4MFBuildOptions. Missing/extra mappings fail; no implicit host library search
+or linker flags are accepted. The archive must use R4OS-compatible ELF
+relocations and have no unresolved host-runtime dependency. Its source/tool
+preparation belongs to the library; R4M0 import/entry contracts do not change.
 
 ICON, HELP and RESOURCE (since 0.61.12) declare the R4M0 resource area of
 the built module; the binary layout lives in `ABI/R4M0.txt`. Their
@@ -244,18 +270,18 @@ A subsystem R4X additionally carries, in declaration order:
 
 The semantic R4MF plan and the SDK R4M0 packager use the same derivation.
 
-For a compiled Runtime-R4L, at least one EXPORT line is the transition marker
-from the legacy comptime path to the normal compiler path. Each line binds a
+Every compiled Runtime-R4L declares its exports explicitly. Each EXPORT line binds a
 public case-insensitive R4M0 export name to one global or weak ELF symbol and
 an export revision from 1 through 65535. Public names and ELF symbols are
 unique. The packager resolves the symbol to the final R4M0 section and offset;
 the private ELF symbol name is not stored as the public ABI name.
 
-Once EXPORT is present, all eight project-local contract fields are required
-together. Their paths may not escape the manifest directory and must use the
+Every normal Runtime-R4L requires its project-local contract, baseline,
+bindings, conformance and documentation fields. IMPLEMENTATION_ZIG is
+required for Zig; BINDING_RUST is required for Rust. Their paths may not escape the manifest directory and must use the
 declared extension. CONTRACT is the sole fachliche schema truth of that
 library, CONTRACT_BASELINE is its explicitly accepted comparison state, and
-the remaining six paths name the materialized deterministic outputs. Every
+the applicable projection/conformance paths name deterministic outputs. Every
 compiled R4L exports Query revision 1 plus at least one fachliches Interface.
 Every normal build runs R4LContractGen --check against exactly these paths and
 passes module name and all non-Query EXPORT declarations as expectations. The
@@ -264,12 +290,29 @@ contract and never writes. Intentional materialization uses the generator
 separately; an accepted ABI change additionally requires its explicit
 baseline-update flag.
 
-The R4L source is compiled as Zig or C with the normal freestanding R4OS
-userland target and packed from its ELF. Zig receives IMPLEMENTATION_ZIG as
-the `r4l_contract` module; C receives the directory of BINDING_C as an include
-root. IMPORT, TARGET, IMAGE_SCOPE, VERSION and META keep their ordinary R4MF
-meaning. R4Ls without EXPORT remain valid only as the temporary explicit
-legacy path during migration and are skipped by the compiled R4L catalog.
+BINDING_RUST declares the generated library-local Rust table/consumer source;
+it is required for Rust providers since SDK0.64.85 and optional otherwise. When present, the same generator writes/checks it against the local
+contract and unchanged baseline. The consumer package's Cargo.toml owns its
+independent crate name/version/dependencies; it is not a second loader module
+or a second provider implementation. A Rust provider consumes its generated
+table types and expectation to define its own exported implementation.
+All current first-party library contracts
+publish this projection. The field changes no runtime ABI or installed catalog.
+
+The R4L source is compiled as Zig, C or qualified host Rust with the normal
+freestanding R4OS userland target and packed from its ELF. Zig receives
+IMPLEMENTATION_ZIG as the `r4l_contract` module. C/Rust need no unused Zig
+implementation file; an explicitly declared one is still generated/checked.
+C receives BINDING_C and SDK/Contract include roots. Rust uses
+Tools/Build-RustModule.ps1 with profile r4os-rust-r4l-v1 and the matched host
+contract generator. Its ordinary r4l_entry and declared Query/API exports
+replace the R4X startup path. Caller-owned allocators/sessions/callbacks retain
+their exact close/quiescence contract; the SDK R4X-global alloc feature is
+rejected for a shared Rust R4L. Existing Zig/C companion builds remain. IMPORT, TARGET, IMAGE_SCOPE, VERSION and META keep their ordinary R4MF
+meaning. Normal Runtime-R4Ls without EXPORT are rejected by the manifest
+parser; there is no implicit legacy fallback in the compiled R4L catalog.
+Only explicitly generated fixtures carrying META=fixture.artifact-owner=...
+are exempt from the normal Runtime-R4L export and contract requirements.
 
 4. Image scope
 --------------
@@ -350,3 +393,50 @@ error for unsupported languages or profiles instead of selecting another
 project path. Historical R4CP is read only by the explicit R4BUILD CONVERT
 one-shot command; normal R4CODE and R4BUILD operation does not accept it as a
 project contract.
+
+Rust host module profile decision (0.86.33)
+-------------------------------------------
+RustModuleV2.txt defines the current additive LANGUAGE=Rust project profile,
+Cargo/manifest responsibility, minimum host R4X classes, standalone tools,
+unsupported combinations and format compatibility. SDK0.64.59 admits the three normal Rust R4X classes and validates the bounded
+single-package Cargo profile and actual source/lock files. SDK0.64.60 adds the qualified host builder/startup; native R4BUILD still
+reports its missing Rust compiler. Complete templates/final class runtime
+qualification follow separately; Windows execution remains unqualified.
+Raw generated Rust ABI bindings alone do not constitute module build support.
+Existing Zig/C projects and R4M0/R4XStart retain their contracts. SDK0.64.70
+extends the Rust build-plan/profile to2: Cargo owns TOML/locked local dependency
+and feature resolution; optional ordered C companions use the existing SOURCE/
+C_INCLUDE/C_DEFINE/C_FLAG fields. R4MF_PLAN=1 gains no new keys.
+
+Optional parallel execution owner (0.81.19)
+------------------------------------------
+META=runtime.parallel=owned-v1 declares that the module owner audited the
+reachable program, library and API state for parallel background execution.
+META=runtime.parallel=bsp or an absent key retains BSP execution. Duplicate
+or unknown values are invalid. Foreground/shell execution remains BSP;
+background child threads inherit the instance declaration, not a pathname.
+This is an ownership declaration, not a sandbox or user affinity setting.
+owned-v1 GUI drawing has one main-thread producer; other threads may use
+audited compute/IPC paths. AP VM/page-in/reclaim and per-volume I/O use the
+exact instance/task ownership established in 0.85.15. Library and
+driver callback reentrancy is never implied by merely importing an API.
+
+Optional compute workers (0.85.18)
+---------------------------------
+META=runtime.workers=owned-v1 independently declares audited compute-worker
+entry points and their reachable library/API state. Absent or bsp retains
+legacy thread admission. Duplicate or unknown values reject the module.
+The main thread does not become parallel through this declaration: foreground
+execution, shell, console input/output and prompt retain their original owner.
+thread_create and thread_create_handle accept the separate creation flag
+thread_create_flag_compute_worker. Without the declaration, or on an older
+provider, that request returns thread_error_unsupported; unknown bits do too.
+Zero flags from a main thread keep the previous scheduling contract.
+Compute descendants inherit the compute role even when created with zero
+flags; they never gain a console or GUI producer by running on the BSP.
+Their ThreadInfo.flags exposes thread_flag_compute_worker. Console reads are
+empty, writes are refused/suppressed and foreground/host/GUI producer requests
+are refused. This is an execution/ownership contract, not a security boundary.
+All workers retain the exact process generation, VM, resource, FPU and join/
+retirement owners. UP executes admitted work on its available BSP. No affinity,
+speedup, library reentrancy or device callback guarantee follows from this key.

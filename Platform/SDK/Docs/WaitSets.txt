@@ -1,0 +1,79 @@
+﻿WaitSets - explizite Query2-Adapter
+=================================
+
+SDK0.64.172 / Contract0.64.84: r4os.wait_set, r4os/wait_set_platform2.h und
+Rust wait_set::WaitSet verwenden die sechs bestehenden WaitSetslots;
+R4SYS39/SYS2rev4 haengen optional waitset_source_prepare an. Alle Funktionen werden vor Create aufgeloest; kurze oder fehlende
+Tabellen liefern err_no_group/err_no_fn ohne Legacyfallback. Context und
+Code bleiben durch den vollstaendigen Aufruf und Close geliehen.
+
+Create(capacity1..32) erzeugt einen nativen Besitzer. Der exakte erzeugende
+Task besitzt Enroll, Rearm, Remove und Wait; dieselbe Programminstanz darf
+Close zum Abbruch aus einem anderen Task aufrufen. Zig/C-Owner nicht
+duplizieren oder auf einen anderen Task verschieben. Rust WaitSet leiht
+Context und ist weder Send noch Sync. Drop versucht Close; explizites Close
+zeigt Fehler an. Releasefehler halten den wirklichen geschlossenen Record
+im Kernel bis Retry oder exaktem Taskretirement. Kein neuer SDK-Worker.
+
+notification(handle,observed,tag,stop) beobachtet die bestehende Revision
+ohne Konsum. Erst den eigentlichen Quellbesitzer bearbeiten/rescannen,
+dann Rearm mit der neuen Revision. Notificationclose liefert SourceClosed.
+Revisionsspruenge setzen Coalesced/Rescan, kleine Batches More/Rescan und
+rotieren ueber bereite Quellen. Es gibt keine verlustfreie Ereignis-FIFO.
+Bereite Stopquellen erhalten auch bei Kapazitaet1 Vorrang und Cancelled.
+
+timer(sample,absolute_ns,tag) benutzt die gemeinsame gepruefte ClockSample-
+Identitaet; faellig bleibt LevelReady bis Rearm/Remove. Clockwechsel oder
+Ruecklauf wird beim naechsten Check gelatcht, keine sofortige Unterbrechung
+zugesagt. deadline(DeadlineBudget) behaelt den einen absoluten Zeitpunkt.
+Poll/Forever werden explizit normalisiert; ein endliches u64MAX wird nie
+Forever. Abgelaufene letzte Beobachtungen groesser als die Deadline bleiben
+gueltig. Positive Tickumrechnung rundet geprueft auf.
+
+Alle Aufrufe einschliesslich Poll benoetigen schlaffaeigen Taskkontext.
+Descriptoren werden kopiert; Caller halten gemappte disjunkte Ausgaben bis
+zum wirklichen Return. Ready/Timeout/Cancel/Close bestaetigt keinen Arbeits-
+oder DMAabschluss und erlaubt keine vorzeitige Bufferfreigabe. Nur das
+angegebene Batchpraefix ist ein Ergebnis. Keine Mutex-wait-all-Semantik.
+Notification/Timer und die neuen Ressourcenadapter sind Anbieterfunktionen.
+Die Umstellung bestehender Anwendungen bleibt ein gesonderter Arbeitsschritt.
+
+Ressourcen vorbereiten
+----------------------
+prepare(context,request) beobachtet io(ID), process(vollstaendiger Handle),
+thread(vollstaendiger JoinHandle), endpoint(ID) oder guiActivity(Revision).
+C verwendet R4SdkWaitSetPrepare2 mit denselben Requestbuildern; Rust
+wait_set::prepare/io/process/thread/endpoint/gui_activity. Der neue Slot
+wird getrennt von den sechs Grundfunktionen aufgeloest. Alte Kernel koennen
+weiter Notification/Timer ausfuehren und melden fuer Prepare NoFn.
+
+WaitSourceRequest64 ist ein kurz geliehener Wert. Das bestehende Ergebnis
+WaitSource80 enthaelt einen opaken, global nie wiederverwendeten Quellenepoch
+in generation. Er ist KEINE Prozess-/Threadgeneration. Die Vorbereitung
+behaelt keine Ressource. Enroll kann nach zwischenzeitlichem Close Stale
+liefern. Nie einen Epoch selbst bauen. Legacy IO-/Endpointnummern bezeichnen
+nur die aktuelle Inkarnation; eine alte bereits recycelte ID kann keine
+historische Identitaet liefern. Vollstaendige Threadinstanz/Generationen und
+reservierte Felder werden beim Vorbereiten geprueft.
+
+IO/Process/Thread/Endpoint sind Levelquellen. Auch nach Rearm bleibt die
+Bereitschaft bis zur ausdruecklichen Besitzeroperation bestehen. Wake ist
+weder Read/Recv noch Join/Reap. Pending/Timeout/Closed gibt keine IO-/DMA-
+Puffer frei. Der aufrufende Besitzer behaelt alle Buffer bis zum wirklichen
+Resultat/Close seiner urspruenglichen Operation. Ein terminaler Threadzustand
+ist nicht die physische Retirementquittung seines Tasks.
+
+GUIActivity verwendet ausschliesslich das aktuelle Main-GUI. Ein Arbeiter
+kann IO/Thread/Notification melden; das Main pumpt die regulaeren GUIevents.
+Die vorhandene Aktivitaetsliste bezieht waehrend des neuen Abonnements die
+bestehenden Clipboard-/Directorysignale ein. Die Legacy-Maske bleibt erhalten
+und wird nach dem letzten neuen Link wiederhergestellt. Der neue Epoch und
+die nicht umbrechende Revision sind getrennt von der Legacy-GUI-Sequenz.
+
+Owner-Pump: Wait(Budget), dann die kopierten Events anhand registration/tag/
+kind/status pruefen und beim jeweiligen Besitzer Resultat/Recv/Reply oder
+GUI-Poll/Render ausfuehren. Nur Notification/GUI-Revisionsquellen werden nach
+einem Rescan mit der gesehenen Revision rearmt. Levelquellen verbraucht erst
+die Besitzeroperation. ServiceLoop und bestehende Programme werden nicht
+umgestellt. Normativer Besitzer-/Lock-/Closevertrag: Docs/API/WaitSets.txt
+im R4OS-Workspace; keine zusaetzlichen Registraturen oder Pollworker.

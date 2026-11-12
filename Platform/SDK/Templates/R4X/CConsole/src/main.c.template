@@ -1,0 +1,8 @@
+#include <r4os/app2.h>
+#include <r4os/r4os.h>
+static int32_t work(R4App *app){return r4sys_write_line(&app->system,"Hello from {ProjectName}");}
+
+
+int32_t r4_app_main(R4App2 *app2){
+ R4App app;int32_t rc=r4_app2_facade(app2,&app);if(rc<0)return rc;return work(&app);
+}

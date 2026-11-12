@@ -1,0 +1,17 @@
+[package]
+name="{CrateName}"
+version="0.1.0"
+edition="2024"
+build=false
+autobins=false
+autoexamples=false
+autotests=false
+autobenches=false
+[lib]
+path="Source/main.rs"
+crate-type=["staticlib"]
+[dependencies]
+r4os-sdk={version="=0.1.0",default-features=false}
+provider-abi={package="r4os-{ProjectNameLower}",path="Bindings/Rust"}
+[workspace]
+exclude=["Bindings/Rust"]

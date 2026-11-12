@@ -1,0 +1,10 @@
+#![no_std]
+use r4os_sdk::{abi,technical2::Driver};
+unsafe extern "C" fn init(api:*const abi::DriverApi2)->i32{
+ let driver=match unsafe{Driver::from_raw(api)}{Ok(v)=>v,Err(n)=>return n};
+ driver.log(c"{ProjectName}: initialized");0
+}
+// Add exact device matching/admission and explicit resource retirement here.
+// The default misc entry shell allocates no DMA/IRQ/callback backing.
+unsafe extern "C" fn shutdown()->i32{0}
+r4os_sdk::driver_entry2!(init,shutdown);

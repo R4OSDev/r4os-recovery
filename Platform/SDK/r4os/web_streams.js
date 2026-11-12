@@ -1,19 +1,75 @@
 (function (global) {
   'use strict';
 
-  // The whole platform program is released with its document. Strong maps
-  // keep internal slots alive while queued R4JS promise jobs still own only a
-  // reader, writer or controller; document teardown bounds their lifetime.
-  const readableState = new Map();
-  const readerState = new Map();
-  const controllerState = new Map();
-  const byobRequestState = new Map();
-  const writableState = new Map();
-  const writerState = new Map();
-  const writableControllerState = new Map();
-  const transformState = new Map();
-  const transformControllerState = new Map();
+  // Internal slots follow reachable owners and queued jobs through WeakMap
+  // ephemerons. Closed objects retain their state while referenced, and an
+  // unreachable owner/state cycle can be collected within the same document.
+  const readableState = new WeakMap();
+  const readerState = new WeakMap();
+  const controllerState = new WeakMap();
+  const byobRequestState = new WeakMap();
+  const writableState = new WeakMap();
+  const writerState = new WeakMap();
+  const writableControllerState = new WeakMap();
+  const transformState = new WeakMap();
+  const transformControllerState = new WeakMap();
   const activePipeThroughOperations = new Set();
+
+  // Geometrically grown ring: removing a head releases its reference without
+  // moving the remaining entries. Backing arrays retain the runtime's limit.
+  class StreamQueue {
+    constructor() { this.items = []; this.head = 0; this.length = 0; }
+    peek() { return this.length ? this.items[this.head] : undefined; }
+    push(value) {
+      if (this.length === this.items.length) {
+        const items = new Array(this.items.length ? this.items.length * 2 : 8);
+        for (let index = 0; index < this.length; index += 1) items[index] = this.items[(this.head + index) % this.items.length];
+        this.items = items;
+        this.head = 0;
+      }
+      this.items[(this.head + this.length) % this.items.length] = value;
+      this.length += 1;
+    }
+    shift() {
+      if (!this.length) return undefined;
+      const value = this.items[this.head];
+      this.items[this.head] = undefined;
+      this.length -= 1;
+      this.head = this.length ? (this.head + 1) % this.items.length : 0;
+      return value;
+    }
+    clear() { this.items = []; this.head = 0; this.length = 0; }
+  }
+
+  const transferBuffer = ArrayBuffer.prototype.transfer;
+  const typedPrototype = Object.getPrototypeOf(Uint8Array.prototype);
+  const typedTag = Object.getOwnPropertyDescriptor(typedPrototype, Symbol.toStringTag).get;
+  const viewConstructors = { Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, Float16Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array };
+  const typedBuffer = Object.getOwnPropertyDescriptor(typedPrototype, 'buffer').get;
+  const typedOffset = Object.getOwnPropertyDescriptor(typedPrototype, 'byteOffset').get;
+  const typedLength = Object.getOwnPropertyDescriptor(typedPrototype, 'byteLength').get;
+  const dataBuffer = Object.getOwnPropertyDescriptor(DataView.prototype, 'buffer').get;
+  const dataOffset = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteOffset').get;
+  const dataLength = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteLength').get;
+  function describeView(view) {
+    if (!ArrayBuffer.isView(view)) throw typeError('An ArrayBuffer view is required');
+    const tag = typedTag.call(view);
+    const constructor = tag === undefined ? DataView : viewConstructors[tag];
+    return {
+      buffer: (tag === undefined ? dataBuffer : typedBuffer).call(view),
+      byteOffset: (tag === undefined ? dataOffset : typedOffset).call(view),
+      byteLength: (tag === undefined ? dataLength : typedLength).call(view),
+      constructor: constructor, elementSize: tag === undefined ? 1 : constructor.BYTES_PER_ELEMENT
+    };
+  }
+  function viewFor(request, buffer, byteLength) {
+    return new request.viewConstructor(buffer, request.byteOffset, byteLength / request.elementSize);
+  }
+  function transferPullInto(state, request, buffer) {
+    const transferred = transferBuffer.call(buffer === undefined ? request.view.buffer : buffer);
+    request.view = viewFor(request, transferred, request.byteLength);
+    invalidateByobRequest(state);
+  }
 
   function typeError(message) { return new TypeError(message); }
   function promiseCall(callback, receiver, args) {
@@ -42,22 +98,16 @@
     return state;
   }
   function byteView(value) {
-    if (!ArrayBuffer.isView(value)) throw typeError('Byte stream chunk must be an ArrayBuffer view');
-    if (value.byteLength === 0) throw typeError('Byte stream chunk must not be empty');
-    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
-  }
-  function emptyView(view) {
-    if (typeof view.subarray === 'function') return view.subarray(0, 0);
-    return new Uint8Array(view.buffer, view.byteOffset, 0);
+    const view = describeView(value);
+    if (view.byteLength === 0) throw typeError('Byte stream chunk must not be empty');
+    return new Uint8Array(transferBuffer.call(view.buffer), view.byteOffset, view.byteLength);
   }
   function filledView(request) {
-    const view = request.view;
-    if (typeof view.subarray === 'function') return view.subarray(0, request.offset);
-    return new Uint8Array(view.buffer, view.byteOffset, request.offset);
+    return viewFor(request, request.view.buffer, request.offset);
   }
   function copyBytes(target, targetOffset, source, sourceOffset, count) {
-    const targetBytes = new Uint8Array(target.buffer, target.byteOffset, target.byteLength);
-    for (let index = 0; index < count; index += 1) targetBytes[targetOffset + index] = source[sourceOffset + index];
+    const targetBytes = new Uint8Array(target.buffer, target.byteOffset + targetOffset, count);
+    targetBytes.set(new Uint8Array(source.buffer, source.byteOffset + sourceOffset, count));
   }
   function invalidateByobRequest(state) {
     if (!state.byobRequest) return;
@@ -66,30 +116,45 @@
     state.byobRequest = null;
   }
   function currentPullInto(state) {
-    const request = state.readRequests.length ? state.readRequests[0] : null;
+    const request = state.readRequests.length ? state.readRequests.peek() : null;
     return request && request.kind !== 'default' ? request : null;
   }
   function finishPullInto(state, request, done) {
-    if (state.readRequests[0] === request) state.readRequests.shift();
-    invalidateByobRequest(state);
-    request.resolve(result(request.offset === 0 ? emptyView(request.view) : filledView(request), done));
+    transferPullInto(state, request);
+    if (state.readRequests.peek() === request) state.readRequests.shift();
+    request.resolve(result(filledView(request), done));
   }
   function fillPullInto(state, request, source, sourceOffset) {
     const available = source.length - sourceOffset;
-    const capacity = request.view.byteLength - request.offset;
-    const count = Math.min(available, capacity);
+    const capacity = request.byteLength - request.offset;
+    let count = Math.min(available, capacity);
+    // Commit whole elements only; bytes after the aligned prefix stay queued.
+    if (request.offset + count >= request.minimum) count -= (request.offset + count) % request.elementSize;
     copyBytes(request.view, request.offset, source, sourceOffset, count);
     request.offset += count;
-    if (request.offset >= request.minimum || request.offset === request.view.byteLength) finishPullInto(state, request, false);
+    if (request.offset >= request.minimum) finishPullInto(state, request, false);
     return count;
   }
-  function drainByteQueueInto(state, request) {
-    while (state.queue.length && state.readRequests[0] === request) {
-      const entry = state.queue[0];
-      const used = fillPullInto(state, request, entry.value, entry.offset);
-      entry.offset += used;
-      state.queueTotalSize -= used;
-      if (entry.offset === entry.value.length) state.queue.shift();
+  function drainByteQueue(state) {
+    while (state.queue.length && state.readRequests.length) {
+      const request = state.readRequests.peek();
+      const entry = state.queue.peek();
+      if (request.kind === 'default') {
+        state.queue.shift();
+        state.queueTotalSize -= entry.value.length - entry.offset;
+        state.readRequests.shift().resolve(result(entry.value.subarray(entry.offset), false));
+      } else {
+        const used = fillPullInto(state, request, entry.value, entry.offset);
+        entry.offset += used;
+        state.queueTotalSize -= used;
+        if (entry.offset === entry.value.length) state.queue.shift();
+      }
+    }
+    if (state.closeRequested && state.queue.length === 0) {
+      const pending = currentPullInto(state);
+      if (pending && pending.offset > 0 && pending.offset < pending.minimum) {
+        errorReadable(state, typeError('Byte stream ended before the requested minimum'));
+      } else closeReadable(state);
     }
   }
   function settleClosed(state) {
@@ -106,20 +171,26 @@
   }
   function closeReadable(state) {
     if (state.state !== 'readable') return;
-    state.state = 'closed';
-    while (state.readRequests.length) {
-      const request = state.readRequests.shift();
-      if (request.kind && request.kind !== 'default') request.resolve(result(request.offset ? filledView(request) : emptyView(request.view), request.offset === 0));
-      else request.resolve(result(undefined, true));
+    const pending = currentPullInto(state);
+    if (pending && pending.offset % pending.elementSize !== 0) {
+      const reason = typeError('Byte stream closed with an incomplete element');
+      errorReadable(state, reason);
+      throw reason;
     }
-    invalidateByobRequest(state);
+    state.state = 'closed';
+    // BYOB readers wait for the source to relinquish its pending view with
+    // respond(0). Default readers have no caller-supplied buffer to return.
+    if (!pending || pending.kind !== 'byob') {
+      while (state.readRequests.length) state.readRequests.shift().resolve(result(undefined, true));
+      invalidateByobRequest(state);
+    }
     settleClosed(state);
   }
   function errorReadable(state, reason) {
     if (state.state !== 'readable') return;
     state.state = 'errored';
     state.storedError = reason;
-    state.queue.length = 0;
+    state.queue.clear();
     state.queueTotalSize = 0;
     while (state.readRequests.length) state.readRequests.shift().reject(reason);
     invalidateByobRequest(state);
@@ -150,18 +221,12 @@
   function enqueue(state, chunk) {
     if (state.closeRequested || state.state !== 'readable') throw typeError('Readable stream cannot enqueue');
     if (state.byteStream) {
-      let bytes = byteView(chunk);
+      const bytes = byteView(chunk);
       const pullInto = currentPullInto(state);
-      let offset = 0;
-      if (pullInto) offset = fillPullInto(state, pullInto, bytes, 0);
-      if (offset < bytes.length && state.readRequests.length && state.readRequests[0].kind === 'default') {
-        state.readRequests.shift().resolve(result(bytes.subarray(offset), false));
-        offset = bytes.length;
-      }
-      if (offset < bytes.length) {
-        state.queue.push({ value: bytes, offset: offset, size: bytes.length - offset });
-        state.queueTotalSize += bytes.length - offset;
-      }
+      if (pullInto && state.byobRequest) transferPullInto(state, pullInto);
+      state.queue.push({ value: bytes, offset: 0 });
+      state.queueTotalSize += bytes.length;
+      drainByteQueue(state);
     } else if (state.readRequests.length) {
       state.readRequests.shift().resolve(result(chunk, false));
     } else {
@@ -179,17 +244,19 @@
     requestPull(state);
   }
   function cancelReadable(state, reason) {
-    state.queue.length = 0;
+    state.queue.clear();
     state.queueTotalSize = 0;
     if (state.state === 'closed') return Promise.resolve(undefined);
     if (state.state === 'errored') return Promise.reject(state.storedError);
+    while (state.readRequests.length) state.readRequests.shift().resolve(result(undefined, true));
+    invalidateByobRequest(state);
     closeReadable(state);
     return promiseCall(state.cancelAlgorithm, state.underlyingSource, [reason]).then(function () { return undefined; });
   }
   function readFrom(state) {
     if (state.queue.length) {
       const entry = state.queue.shift();
-      state.queueTotalSize -= entry.size;
+      state.queueTotalSize -= state.byteStream ? entry.value.length - entry.offset : entry.size;
       while (state.capacityWaiters.length) state.capacityWaiters.shift()(undefined);
       if (state.closeRequested && state.queue.length === 0) closeReadable(state);
       else requestPull(state);
@@ -204,6 +271,11 @@
       request.view = new Uint8Array(state.autoAllocateChunkSize);
       request.offset = 0;
       request.minimum = 1;
+      request.viewConstructor = Uint8Array;
+      request.elementSize = 1;
+      request.byteOffset = 0;
+      request.byteLength = state.autoAllocateChunkSize;
+      request.bufferByteLength = state.autoAllocateChunkSize;
     }
     state.readRequests.push(request);
     while (state.capacityWaiters.length) state.capacityWaiters.shift()(undefined);
@@ -212,23 +284,34 @@
   }
 
   function readInto(state, view, minimum) {
-    if (!state.byteStream) return Promise.reject(typeError('BYOB requires a byte stream'));
-    if (!ArrayBuffer.isView(view) || view.byteLength === 0) return Promise.reject(typeError('BYOB view must be a non-empty ArrayBuffer view'));
-    const elementSize = Number(view.BYTES_PER_ELEMENT || 1);
-    const minElements = minimum === undefined ? 1 : Number(minimum);
-    if (!Number.isInteger(minElements) || minElements <= 0 || minElements * elementSize > view.byteLength) return Promise.reject(new RangeError('Invalid BYOB minimum'));
-    if (state.state === 'errored') return Promise.reject(state.storedError);
-    if (state.state === 'closed') return Promise.resolve(result(emptyView(view), true));
-    const request = Promise.withResolvers();
-    request.kind = 'byob';
-    request.view = view;
-    request.offset = 0;
-    request.minimum = minElements * elementSize;
-    state.readRequests.push(request);
-    drainByteQueueInto(state, request);
-    if (state.closeRequested && state.queue.length === 0 && state.readRequests[0] === request) finishPullInto(state, request, true);
-    else requestPull(state);
-    return request.promise;
+    let queued = false;
+    try {
+      if (!state.byteStream) throw typeError('BYOB requires a byte stream');
+      const description = describeView(view);
+      if (description.byteLength === 0) throw typeError('BYOB view must not be empty');
+      const minElements = minimum === undefined ? 1 : Number(minimum);
+      if (!Number.isInteger(minElements) || minElements <= 0 || minElements * description.elementSize > description.byteLength) throw new RangeError('Invalid BYOB minimum');
+      if (state.state === 'errored') return Promise.reject(state.storedError);
+      const request = Promise.withResolvers();
+      request.kind = 'byob';
+      request.viewConstructor = description.constructor;
+      request.elementSize = description.elementSize;
+      request.byteOffset = description.byteOffset;
+      request.byteLength = description.byteLength;
+      request.bufferByteLength = description.buffer.byteLength;
+      request.view = viewFor(request, transferBuffer.call(description.buffer), request.byteLength);
+      request.offset = 0;
+      request.minimum = minElements * request.elementSize;
+      if (state.state === 'closed' && state.readRequests.length === 0) return Promise.resolve(result(filledView(request), true));
+      state.readRequests.push(request);
+      queued = true;
+      drainByteQueue(state);
+      requestPull(state);
+      return request.promise;
+    } catch (reason) {
+      if (queued) errorReadable(state, reason);
+      return Promise.reject(reason);
+    }
   }
 
   class ReadableStreamDefaultController {
@@ -256,20 +339,44 @@
       if (!request.active) throw typeError('BYOB request is no longer active');
       const count = Number(bytesWritten);
       const pullInto = request.pullInto;
-      if (!Number.isInteger(count) || count < 0 || count > pullInto.view.byteLength - pullInto.offset) throw new RangeError('Invalid byte count');
-      if (count === 0 && request.stream.state === 'readable') throw typeError('A readable byte stream must respond with bytes');
-      pullInto.offset += count;
-      if (pullInto.offset >= pullInto.minimum || pullInto.offset === pullInto.view.byteLength || request.stream.state === 'closed') finishPullInto(request.stream, pullInto, request.stream.state === 'closed' && pullInto.offset === 0);
+      if (pullInto.view.buffer.byteLength === 0) throw typeError('BYOB buffer has been detached');
+      if (!Number.isInteger(count) || count < 0 || count > pullInto.byteLength - pullInto.offset) throw new RangeError('Invalid byte count');
+      if (request.stream.state === 'closed' ? count !== 0 : count === 0) throw typeError('Byte count does not match stream state');
+      transferPullInto(request.stream, pullInto);
+      respondPullInto(request.stream, pullInto, count);
     }
     respondWithNewView(view) {
       const request = requireByobRequest(this);
       if (!request.active) throw typeError('BYOB request is no longer active');
-      if (!ArrayBuffer.isView(view) || view.byteLength === 0) throw typeError('Replacement view must be a non-empty ArrayBuffer view');
+      const replacement = describeView(view);
+      if (replacement.buffer.byteLength === 0) throw typeError('Replacement buffer has been detached');
+      if (request.stream.state === 'closed' ? replacement.byteLength !== 0 : replacement.byteLength === 0) throw typeError('Replacement length does not match stream state');
       const pullInto = request.pullInto;
-      const expectedOffset = pullInto.view.byteOffset + pullInto.offset;
-      if (view.buffer !== pullInto.view.buffer || view.byteOffset !== expectedOffset || view.byteLength > pullInto.view.byteLength - pullInto.offset) throw new RangeError('Replacement view must cover the pending BYOB region');
-      this.respond(view.byteLength);
+      if (replacement.byteOffset !== pullInto.byteOffset + pullInto.offset || replacement.buffer.byteLength !== pullInto.bufferByteLength || replacement.byteLength > pullInto.byteLength - pullInto.offset) throw new RangeError('Replacement view must cover the pending BYOB region');
+      transferPullInto(request.stream, pullInto, replacement.buffer);
+      respondPullInto(request.stream, pullInto, replacement.byteLength);
     }
+  }
+
+  function respondPullInto(state, request, count) {
+    request.offset += count;
+    if (state.state === 'closed') {
+      while (state.readRequests.length) finishPullInto(state, state.readRequests.peek(), true);
+      return;
+    }
+    if (request.offset >= request.minimum) {
+      const remainder = request.offset % request.elementSize;
+      if (remainder) {
+        const tail = new Uint8Array(remainder);
+        copyBytes(tail, 0, new Uint8Array(request.view.buffer), request.byteOffset + request.offset - remainder, remainder);
+        state.queue.push({ value: tail, offset: 0 });
+        state.queueTotalSize += remainder;
+        request.offset -= remainder;
+      }
+      finishPullInto(state, request, false);
+      drainByteQueue(state);
+    }
+    requestPull(state);
   }
 
   class ReadableByteStreamController {
@@ -440,8 +547,8 @@
         underlyingSource: underlyingSource,
         pullAlgorithm: typeof underlyingSource.pull === 'function' ? underlyingSource.pull : null,
         cancelAlgorithm: typeof underlyingSource.cancel === 'function' ? underlyingSource.cancel : function () {},
-        queue: [], queueTotalSize: 0, readRequests: [], highWaterMark: highWaterMark,
-        sizeAlgorithm: sizeAlgorithm, started: false, pulling: false, pullAgain: false, closeRequested: false, capacityWaiters: []
+        queue: new StreamQueue(), queueTotalSize: 0, readRequests: new StreamQueue(), highWaterMark: highWaterMark,
+        sizeAlgorithm: sizeAlgorithm, started: false, pulling: false, pullAgain: false, closeRequested: false, capacityWaiters: new StreamQueue()
       };
       readableState.set(this, state);
       controllerState.set(controller, state);
@@ -494,41 +601,62 @@
         if (sourceFinished) return Promise.resolve(undefined);
         if (leftCanceled && rightCanceled && !cancelStarted) {
           cancelStarted = true;
-          reader.cancel([leftReason, rightReason]).then(cancelCompletion.resolve, cancelCompletion.reject);
+          reader.cancel([leftReason, rightReason]).then(function () {
+            sourceFinished = true; releaseReader(); cancelCompletion.resolve(undefined);
+          }, function (reason) {
+            sourceFinished = true; releaseReader(); cancelCompletion.reject(reason);
+          });
         }
         return cancelCompletion.promise;
       }
+      let reading = null;
+      function releaseReader() { try { reader.releaseLock(); } catch (_) {} }
+      function finishSource(reason, failed) {
+        if (sourceFinished) return;
+        sourceFinished = true;
+        if (failed) {
+          if (!leftCanceled) leftController.error(reason);
+          if (!rightCanceled) rightController.error(reason);
+        } else {
+          if (!leftCanceled) closeBranch(leftController);
+          if (!rightCanceled) closeBranch(rightController);
+        }
+        if (!cancelStarted) cancelCompletion.resolve(undefined);
+        releaseReader();
+      }
+      function closeBranch(controller) {
+        try {
+          controller.close();
+          if (byteStream && controller.byobRequest) controller.byobRequest.respond(0);
+        } catch (reason) { controller.error(reason); }
+      }
+      function pullBranch() {
+        if (sourceFinished || cancelStarted) return Promise.resolve(undefined);
+        if (reading) return reading;
+        reading = reader.read().then(function (item) {
+          if (sourceFinished || cancelStarted) return;
+          if (item.done) { finishSource(undefined, false); return; }
+          let rightValue = item.value;
+          if (byteStream && !leftCanceled && !rightCanceled) {
+            rightValue = new Uint8Array(item.value.byteLength);
+            rightValue.set(item.value);
+          }
+          if (!leftCanceled) leftController.enqueue(item.value);
+          if (!rightCanceled) rightController.enqueue(rightValue);
+        }).catch(function (reason) { finishSource(reason, true); }).then(function () { reading = null; });
+        return reading;
+      }
       const branchSource = byteStream ? { type: 'bytes' } : {};
       branchSource.start = function (controller) { leftController = controller; };
+      branchSource.pull = pullBranch;
       branchSource.cancel = function (reason) { leftCanceled = true; leftReason = reason; return cancelSourceWhenUnused(); };
       const rightSource = byteStream ? { type: 'bytes' } : {};
       rightSource.start = function (controller) { rightController = controller; };
+      rightSource.pull = pullBranch;
       rightSource.cancel = function (reason) { rightCanceled = true; rightReason = reason; return cancelSourceWhenUnused(); };
       const left = new ReadableStream(branchSource);
       const right = new ReadableStream(rightSource);
-      (async function () {
-        try {
-          while (true) {
-            const item = await reader.read();
-            if (item.done) {
-              sourceFinished = true;
-              if (!leftCanceled) leftController.close();
-              if (!rightCanceled) rightController.close();
-              cancelCompletion.resolve(undefined);
-              break;
-            }
-            if (!leftCanceled) leftController.enqueue(item.value);
-            if (!rightCanceled) rightController.enqueue(byteStream ? new Uint8Array(item.value) : item.value);
-            if (leftCanceled && rightCanceled) break;
-          }
-        } catch (reason) {
-          sourceFinished = true;
-          if (!leftCanceled) leftController.error(reason);
-          if (!rightCanceled) rightController.error(reason);
-          cancelCompletion.reject(reason);
-        }
-        finally { try { reader.releaseLock(); } catch (_) {} }
-      })();
+      reader.closed.catch(function (reason) { finishSource(reason, true); });
       return [left, right];
     }
     values(options) {

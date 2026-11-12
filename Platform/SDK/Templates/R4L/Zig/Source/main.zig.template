@@ -26,3 +26,5 @@ test "provider exports the generated API table" {
     try std.testing.expectEqual(@as(i64, 42), {ProjectNameLower}_add_impl(19, 23));
     try std.testing.expectEqual(contract.api_v1_header.interface_id_lo, {ProjectNameLower}_api_v1.header.interface_id_lo);
 }
+
+pub export var {ProjectNameLower}_query2: r4os.platform2.abi.R4LQuery2 align(8) linksection(".data.r4l_exports") = .{};

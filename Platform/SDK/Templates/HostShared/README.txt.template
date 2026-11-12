@@ -1,0 +1,23 @@
+{DisplayName}: {ProjectName}
+Build.ps1/.sh/.bat use the explicitly selected SDK, Contract and matched ToolsRoot.
+C/Zig additionally select ZigRoot; Rust uses the existing pinned tool installer.
+module.R4MF owns source, role, dependencies, resource names, entry and target.
+Component versions are selected by the caller; no IDE/project selection state
+is stored by the SDK. Technical exports require -Technical.
+
+Use SDK Tools/New-Project.ps1 -TemplateId {TemplateId} -Directory <new path>
+-ContractRoot <contract> -ToolsRoot <tools>. Rust's existing New-RustProject
+command delegates to this same creator. The local R4L contract/baseline and
+bindings are generated only during initial creation, with fresh interface IDs.
+Change them later through the original library-contract generator/checks.
+
+Resources and callback backing stay with their exact owner until actual close.
+Stop/timeout/Drop alone do not prove asynchronous or hardware completion.
+Driver templates are real R4D entry shells; supply device matching, admission,
+DMA/IRQ/reset and retirement in the driver owner. Default misc selects no
+physical device. Resident R4P templates close their own role explicitly through
+op1; the current loader does not automatically invoke ProtocolShutdown/unload.
+Subsystem templates provide the canonical host/launch/window shell; implement
+its actual guest decoder with the shared video/audio/runtime/persistence API.
+GUI starts through Desktop, services through SERVMAN, lowlevel keeps its raw
+context entry. No direct Rust SIMD/FP or physical hardware readiness is implied.

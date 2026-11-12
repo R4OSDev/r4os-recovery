@@ -2,6 +2,7 @@
 #define R4OS_APP_AUDIO_H
 
 #include "app_services.h"
+#include "data_helpers.h"
 
 typedef struct R4AudioFacade { R4App *app; } R4AudioFacade;
 typedef struct R4AdvancedAudio { R4App *app; } R4AdvancedAudio;
@@ -38,13 +39,15 @@ typedef struct R4AudioStream {
     uint32_t stream_id;
     uint8_t owned;
     uint8_t reserved[3];
+    uint32_t frame_bytes;
 } R4AudioStream;
 
 typedef enum R4AudioResultKind {
     R4_AUDIO_RESULT_OK = 0,
     R4_AUDIO_RESULT_TIMED_OUT = 1,
     R4_AUDIO_RESULT_NO_SERVICE = 2,
-    R4_AUDIO_RESULT_FAILED = 3
+    R4_AUDIO_RESULT_FAILED = 3,
+    R4_AUDIO_RESULT_BUSY = 4
 } R4AudioResultKind;
 
 typedef struct R4AudioResult {
@@ -63,13 +66,18 @@ static inline void r4_audio_copy_bytes(void *destination, const void *source, ui
 }
 
 static inline int r4_audio_available(const R4AudioFacade *audio) {
-    if (audio == 0 || audio->app == 0 || audio->app->audio.table == 0) return 0;
-    const R4XStartR4Sys *sys = audio->app->system.table;
-    return sys != 0 && sys->service_open != 0u && sys->service_close != 0u && sys->service_call != 0u && audio->app->audio.table->audio_open_stream != 0u;
+    if (audio == 0 || audio->app == 0) return 0;
+    return R4SYS_HAS(&audio->app->system,service_open) && R4SYS_HAS(&audio->app->system,service_close) && R4SYS_HAS(&audio->app->system,service_call);
 }
 
 static inline int r4_audio_response_valid(const R4AudioWireResult *response, uint16_t action) {
     return response->magic == R4OS_AUDIO_SERVICE_RESULT_MAGIC && response->version == R4OS_AUDIO_SERVICE_RESULT_VERSION && response->action == action;
+}
+
+/* Acceptance belongs to the same SDK owner used by Zig and safe Rust. */
+static inline int r4_audio_stream_reply_valid(const R4AudioWireResult *response, uint16_t action, uint32_t stream_id, uint32_t maximum_bytes, uint64_t frame_bytes) {
+    R4SdkDataSlot checked = R4SdkData_audioStreamReplyValid(0u, (const uint8_t *)response, sizeof(*response), action, stream_id, maximum_bytes, frame_bytes);
+    return checked.status == 0 && (checked.flags & R4SDKDATA_PRESENT) != 0u && checked.bits != 0u;
 }
 
 static inline int r4_audio_master_state_valid(const R4AudioServiceMasterState *state) {
@@ -107,7 +115,7 @@ static inline R4AudioResult r4_audio_set_master_state(R4AudioFacade *audio, uint
 static inline R4AudioResult r4_audio_open_stream(R4AudioFacade *audio, uint32_t rate, uint16_t channels, uint16_t format, uint32_t fixed_volume, R4Timeout timeout, R4AudioStream *out) {
     if (out != 0) *out = (R4AudioStream){0};
     if (!r4_audio_available(audio) || out == 0) return r4_audio_result(R4_AUDIO_RESULT_NO_SERVICE, R4OS_ERR_NO_FN, 0u);
-    if (rate == 0u || channels == 0u || format != R4_AUDIO_FORMAT_S16LE) return r4_audio_result(R4_AUDIO_RESULT_FAILED, R4OS_SERVICE_API_RESULT_INVALID, 0u);
+    if (rate == 0u || rate > 192000u || channels == 0u || channels > 2u || format != R4_AUDIO_FORMAT_S16LE) return r4_audio_result(R4_AUDIO_RESULT_FAILED, R4OS_SERVICE_API_RESULT_INVALID, 0u);
     R4Services services = r4_app_services(audio->app);
     R4ServiceConnection connection;
     int32_t opened = r4_services_open(&services, "AUDSVC", &connection);
@@ -118,35 +126,52 @@ static inline R4AudioResult r4_audio_open_stream(R4AudioFacade *audio, uint32_t 
     R4AudioWireResult response = {0};
     R4ServiceCallResult call = r4_service_connection_call_struct(&connection, R4OS_AUDIO_SERVICE_OP_OPEN_STREAM, &request, sizeof(request), &response, sizeof(response), timeout);
     if (call.kind == R4_SERVICE_CALL_TIMED_OUT) { (void)r4_service_connection_close(&connection); return r4_audio_result(R4_AUDIO_RESULT_TIMED_OUT, R4OS_SERVICE_API_RESULT_TIMEOUT, 0u); }
-    if (call.kind != R4_SERVICE_CALL_RESPONSE || !r4_audio_response_valid(&response, R4OS_AUDIO_SERVICE_OP_OPEN_STREAM) || response.result < 0 || response.stream_id == 0u) {
-        int32_t raw = call.kind == R4_SERVICE_CALL_RESPONSE ? (response.result < 0 ? response.result : R4OS_SERVICE_API_RESULT_INVALID) : call.raw_code;
+    const int valid = call.kind == R4_SERVICE_CALL_RESPONSE && r4_audio_stream_reply_valid(&response, R4OS_AUDIO_SERVICE_OP_OPEN_STREAM, 0u, 0u, 0u);
+    if (!valid || response.result < 0) {
+        int32_t raw = call.kind == R4_SERVICE_CALL_RESPONSE ? (valid ? response.result : R4OS_SERVICE_API_RESULT_INVALID) : call.raw_code;
         (void)r4_service_connection_close(&connection); return r4_audio_result(R4_AUDIO_RESULT_FAILED, raw, 0u);
     }
-    out->connection = connection; out->stream_id = response.stream_id; out->owned = 1u;
+    out->connection = connection; out->stream_id = response.stream_id; out->owned = 1u; out->frame_bytes=(uint32_t)channels*2u;
     return r4_audio_result(R4_AUDIO_RESULT_OK, R4OS_OK, 0u);
 }
 
-static inline R4AudioResult r4_audio_stream_write(R4AudioStream *stream, const uint8_t *data, uint32_t data_len, R4Timeout timeout) {
+static inline R4AudioResult r4_audio_stream_write_bounded(R4AudioStream *stream, const uint8_t *data, uint32_t data_len, R4Timeout timeout, uint32_t max_calls) {
     if (!r4_audio_stream_valid(stream)) return r4_audio_result(R4_AUDIO_RESULT_FAILED, R4OS_ERR_CLOSED, 0u);
     if (data_len != 0u && data == 0) return r4_audio_result(R4_AUDIO_RESULT_FAILED, R4OS_SERVICE_API_RESULT_INVALID, 0u);
-    uint32_t offset = 0u;
+    if (!stream->frame_bytes || data_len%stream->frame_bytes) return r4_audio_result(R4_AUDIO_RESULT_FAILED,R4OS_SERVICE_API_RESULT_INVALID,0u);
+    uint32_t offset = 0u,calls=0u;
+    if (!data_len) return r4_audio_result(R4_AUDIO_RESULT_OK,R4OS_OK,0u);
+    R4SdkRpcBudget operation;
+    R4SysMonotonicClockFn clock = R4SYS_HAS(&stream->connection.app->system,monotonic_clock) ? (R4SysMonotonicClockFn)(uintptr_t)R4SYS_SLOT(&stream->connection.app->system,monotonic_clock) : 0;
+    int32_t admitted = R4SdkRpcBudgetInit(clock,&timeout,&operation);
+    if (admitted) return r4_audio_result(R4_AUDIO_RESULT_FAILED,admitted,0u);
     while (offset < data_len) {
+        if(calls++==max_calls)return r4_audio_result(R4_AUDIO_RESULT_BUSY,R4OS_SERVICE_API_RESULT_BUSY,offset);
+        uint64_t remaining;
+        admitted = R4SdkRpcBudgetRemaining(&operation,&remaining);
+        if (admitted) return r4_audio_result(admitted==R4OS_SERVICE_API_RESULT_TIMEOUT ? R4_AUDIO_RESULT_TIMED_OUT : R4_AUDIO_RESULT_FAILED,admitted,offset);
         uint8_t payload[R4OS_SERVICE_API_MAX_PAYLOAD];
         const uint32_t capacity = R4OS_SERVICE_API_MAX_PAYLOAD - (uint32_t)sizeof(R4AudioWireWriteRequest);
         uint32_t chunk = data_len - offset; if (chunk > capacity) chunk = capacity;
         R4AudioWireWriteRequest request = {0}; request.magic = R4OS_AUDIO_SERVICE_REQUEST_MAGIC; request.version = R4OS_AUDIO_SERVICE_REQUEST_VERSION; request.stream_id = stream->stream_id; request.byte_count = chunk;
         r4_audio_copy_bytes(payload, &request, (uint32_t)sizeof(request)); r4_audio_copy_bytes(payload + sizeof(request), data + offset, chunk);
         R4AudioWireResult response = {0};
-        R4ServiceCallResult call = r4_service_connection_call_struct(&stream->connection, R4OS_AUDIO_SERVICE_OP_WRITE_STREAM, payload, (uint32_t)sizeof(request) + chunk, &response, sizeof(response), timeout);
+        R4ServiceCallResult call = r4_service_connection_call_ticks(&stream->connection, R4OS_AUDIO_SERVICE_OP_WRITE_STREAM, payload, (uint32_t)sizeof(request) + chunk, &response, sizeof(response), remaining);
         if (call.kind == R4_SERVICE_CALL_TIMED_OUT) return r4_audio_result(R4_AUDIO_RESULT_TIMED_OUT, R4OS_SERVICE_API_RESULT_TIMEOUT, offset);
-        if (call.kind != R4_SERVICE_CALL_RESPONSE || !r4_audio_response_valid(&response, R4OS_AUDIO_SERVICE_OP_WRITE_STREAM) || response.result < 0 || response.bytes == 0u || response.bytes > chunk) {
-            int32_t raw = call.kind == R4_SERVICE_CALL_RESPONSE ? (response.result < 0 ? response.result : R4OS_SERVICE_API_RESULT_INVALID) : call.raw_code;
+        if (call.kind == R4_SERVICE_CALL_RESPONSE && (call.bytes != sizeof(response) || !r4_audio_stream_reply_valid(&response, R4OS_AUDIO_SERVICE_OP_WRITE_STREAM, stream->stream_id, chunk, stream->frame_bytes)))
+            return r4_audio_result(R4_AUDIO_RESULT_FAILED,R4OS_SERVICE_API_RESULT_INVALID,offset);
+        if(call.kind==R4_SERVICE_CALL_RESPONSE && response.result==R4OS_SERVICE_API_RESULT_BUSY)
+            return r4_audio_result(R4_AUDIO_RESULT_BUSY,R4OS_SERVICE_API_RESULT_BUSY,offset);
+        if (call.kind != R4_SERVICE_CALL_RESPONSE || response.result < 0) {
+            int32_t raw = call.kind == R4_SERVICE_CALL_RESPONSE ? response.result : call.raw_code;
             return r4_audio_result(R4_AUDIO_RESULT_FAILED, raw, offset);
         }
         offset += response.bytes;
     }
     return r4_audio_result(R4_AUDIO_RESULT_OK, R4OS_OK, offset);
 }
+static inline R4AudioResult r4_audio_stream_write(R4AudioStream *s,const uint8_t *p,uint32_t n,R4Timeout t){return r4_audio_stream_write_bounded(s,p,n,t,UINT32_MAX);}
+static inline R4AudioResult r4_audio_stream_write_once(R4AudioStream *s,const uint8_t *p,uint32_t n,R4Timeout t){return r4_audio_stream_write_bounded(s,p,n,t,1u);}
 
 static inline R4AudioResult r4_audio_stream_control(R4AudioStream *stream, uint16_t op, uint32_t volume, R4Timeout timeout, int closes) {
     if (!r4_audio_stream_valid(stream)) return r4_audio_result(R4_AUDIO_RESULT_FAILED, R4OS_ERR_CLOSED, 0u);
@@ -154,8 +179,9 @@ static inline R4AudioResult r4_audio_stream_control(R4AudioStream *stream, uint1
     R4AudioWireResult response = {0};
     R4ServiceCallResult call = r4_service_connection_call_struct(&stream->connection, op, &request, sizeof(request), &response, sizeof(response), timeout);
     if (call.kind == R4_SERVICE_CALL_TIMED_OUT) return r4_audio_result(R4_AUDIO_RESULT_TIMED_OUT, R4OS_SERVICE_API_RESULT_TIMEOUT, 0u);
-    if (call.kind != R4_SERVICE_CALL_RESPONSE || !r4_audio_response_valid(&response, op) || response.result < 0) return r4_audio_result(R4_AUDIO_RESULT_FAILED, call.kind == R4_SERVICE_CALL_RESPONSE ? (response.result < 0 ? response.result : R4OS_SERVICE_API_RESULT_INVALID) : call.raw_code, 0u);
-    if (closes) { stream->stream_id = 0u; stream->owned = 0u; (void)r4_service_connection_close(&stream->connection); }
+    const int valid = call.kind == R4_SERVICE_CALL_RESPONSE && r4_audio_stream_reply_valid(&response, op, stream->stream_id, 0u, 0u);
+    if (!valid || response.result < 0) return r4_audio_result(R4_AUDIO_RESULT_FAILED, call.kind == R4_SERVICE_CALL_RESPONSE ? (valid ? response.result : R4OS_SERVICE_API_RESULT_INVALID) : call.raw_code, 0u);
+    if (closes) { stream->stream_id = 0u; stream->owned = 0u; stream->frame_bytes=0u; (void)r4_service_connection_close(&stream->connection); }
     return r4_audio_result(R4_AUDIO_RESULT_OK, R4OS_OK, 0u);
 }
 
@@ -163,15 +189,15 @@ static inline R4AudioResult r4_audio_stream_set_volume(R4AudioStream *stream, ui
 static inline R4AudioResult r4_audio_stream_close(R4AudioStream *stream, R4Timeout timeout) { return r4_audio_stream_control(stream, R4OS_AUDIO_SERVICE_OP_CLOSE_STREAM, 0x00010000u, timeout, 1); }
 
 /* Advanced synth surface: deliberately separate from the normal PCM lifecycle. */
-static inline int32_t r4_audio_sid_acquire(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->sid_acquire != 0 ? ((R4AudioSidAcquireFn)(uintptr_t)audio->app->audio.table->sid_acquire)() : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_sid_write_register(R4AdvancedAudio *audio, uint32_t handle, uint8_t reg, uint8_t value) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->sid_write_register != 0 ? ((R4AudioSidWriteRegisterFn)(uintptr_t)audio->app->audio.table->sid_write_register)(handle, reg, value) : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_sid_release(R4AdvancedAudio *audio, uint32_t handle) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->sid_release != 0 ? ((R4AudioSidReleaseFn)(uintptr_t)audio->app->audio.table->sid_release)(handle) : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_midi_open_synth(R4AdvancedAudio *audio, const uint8_t *backend) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->midi_open_synth != 0 ? ((R4AudioMidiOpenSynthFn)(uintptr_t)audio->app->audio.table->midi_open_synth)(backend) : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_midi_send(R4AdvancedAudio *audio, uint32_t handle, uint8_t channel, uint8_t status, uint8_t data1, uint8_t data2) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->midi_send != 0 ? ((R4AudioMidiSendFn)(uintptr_t)audio->app->audio.table->midi_send)(handle, channel, status, data1, data2) : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_midi_close(R4AdvancedAudio *audio, uint32_t handle) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->midi_close != 0 ? ((R4AudioMidiCloseFn)(uintptr_t)audio->app->audio.table->midi_close)(handle) : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_opl3_write_register(R4AdvancedAudio *audio, uint8_t bank, uint8_t reg, uint8_t value) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->opl3_write_register != 0 ? ((R4AudioOpl3WriteRegisterFn)(uintptr_t)audio->app->audio.table->opl3_write_register)(bank, reg, value) : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_opl3_reset(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->opl3_reset != 0 ? ((R4AudioOpl3ResetFn)(uintptr_t)audio->app->audio.table->opl3_reset)() : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_opl3_render_block(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->opl3_render_block != 0 ? ((R4AudioOpl3RenderBlockFn)(uintptr_t)audio->app->audio.table->opl3_render_block)() : R4OS_ERR_NO_FN; }
-static inline int32_t r4_audio_opl3_stop(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && audio->app->audio.table != 0 && audio->app->audio.table->opl3_stop != 0 ? ((R4AudioOpl3StopFn)(uintptr_t)audio->app->audio.table->opl3_stop)() : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_sid_acquire(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, sid_acquire) != 0 ? ((R4AudioSidAcquireFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, sid_acquire))() : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_sid_write_register(R4AdvancedAudio *audio, uint32_t handle, uint8_t reg, uint8_t value) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, sid_write_register) != 0 ? ((R4AudioSidWriteRegisterFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, sid_write_register))(handle, reg, value) : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_sid_release(R4AdvancedAudio *audio, uint32_t handle) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, sid_release) != 0 ? ((R4AudioSidReleaseFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, sid_release))(handle) : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_midi_open_synth(R4AdvancedAudio *audio, const uint8_t *backend) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, midi_open_synth) != 0 ? ((R4AudioMidiOpenSynthFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, midi_open_synth))(backend) : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_midi_send(R4AdvancedAudio *audio, uint32_t handle, uint8_t channel, uint8_t status, uint8_t data1, uint8_t data2) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, midi_send) != 0 ? ((R4AudioMidiSendFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, midi_send))(handle, channel, status, data1, data2) : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_midi_close(R4AdvancedAudio *audio, uint32_t handle) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, midi_close) != 0 ? ((R4AudioMidiCloseFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, midi_close))(handle) : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_opl3_write_register(R4AdvancedAudio *audio, uint8_t bank, uint8_t reg, uint8_t value) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, opl3_write_register) != 0 ? ((R4AudioOpl3WriteRegisterFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, opl3_write_register))(bank, reg, value) : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_opl3_reset(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, opl3_reset) != 0 ? ((R4AudioOpl3ResetFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, opl3_reset))() : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_opl3_render_block(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, opl3_render_block) != 0 ? ((R4AudioOpl3RenderBlockFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, opl3_render_block))() : R4OS_ERR_NO_FN; }
+static inline int32_t r4_audio_opl3_stop(R4AdvancedAudio *audio) { return audio != 0 && audio->app != 0 && r4audio_available(&audio->app->audio) && R4AUDIO_SLOT(&audio->app->audio, opl3_stop) != 0 ? ((R4AudioOpl3StopFn)(uintptr_t)R4AUDIO_SLOT(&audio->app->audio, opl3_stop))() : R4OS_ERR_NO_FN; }
 
 #endif
