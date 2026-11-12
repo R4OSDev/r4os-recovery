@@ -1,0 +1,77 @@
+const std = @import("std");
+pub fn build(b: *std.Build) void {
+    const sdk_build = b.lazyImport(@This(), "r4os_sdk") orelse return;
+    const sdk_dependency = b.dependencyFromBuildZig(sdk_build, .{});
+    const sdk = sdk_build.sdk(b, sdk_dependency, .{});
+    const nv_package = b.dependency("r4nv", .{});
+    const nv_path = nv_package.namedLazyPath("binding");
+    const amd_package = b.dependency("r4amd", .{});
+    const amd_path = amd_package.namedLazyPath("binding");
+    const caller_path = b.path("../Shared/Native/caller.zig");
+    const artifact = sdk.addR4MFWithOptions(b.path("module.R4MF"), .{ .zig_module_roots = &.{ nv_path, amd_path, caller_path } });
+    const host = sdk.createR4osModule(b.graph.host, .Debug);
+    const caller = b.createModule(.{ .root_source_file = caller_path, .target = b.graph.host });
+    caller.addImport("r4os", host);
+    const nv = b.createModule(.{ .root_source_file = nv_path, .target = b.graph.host });
+    nv.addImport("r4os", host);
+    const amd = b.createModule(.{ .root_source_file = amd_path, .target = b.graph.host });
+    amd.addImport("r4os", host);
+    const implementation = b.createModule(.{ .root_source_file = b.path("Contract/Generated/implementation_abi.zig"), .target = b.graph.host });
+    implementation.addImport("r4os", host);
+    const binding = b.createModule(.{ .root_source_file = b.path("Bindings/Zig/r4gfx_abi.zig"), .target = b.graph.host });
+    binding.addImport("r4os", host);
+    const provider = b.createModule(.{ .root_source_file = b.path("Source/main.zig"), .target = b.graph.host });
+    provider.addImport("r4os", host);
+    provider.addImport("library_caller", caller);
+    provider.addImport("r4l_contract", implementation);
+    provider.addImport("r4nv_binding", nv);
+    provider.addImport("r4amd_binding", amd);
+    const amd_implementation = b.createModule(.{ .root_source_file = amd_package.namedLazyPath("implementation"), .target = b.graph.host });
+    amd_implementation.addImport("r4os", host);
+    const amd_providers = b.createModule(.{ .root_source_file = amd_package.namedLazyPath("providers"), .target = b.graph.host });
+    amd_providers.addImport("r4l_contract", amd_implementation);
+    provider.addImport("r4amd_providers", amd_providers);
+    provider.addObjectFile(amd_package.namedLazyPath("image_host_archive"));
+    provider.addImport("r4gfx_binding", binding);
+    const transfer = b.createModule(.{ .root_source_file = b.path("Display/transfer.zig"), .target = b.graph.host });
+    transfer.addImport("r4os", host);
+    transfer.addImport("r4gfx", binding);
+    provider.addImport("r4gfx_transfer", transfer);
+    const profile_fixtures = b.createModule(.{ .root_source_file = b.path("Tests/Color/fixtures.zig"), .target = b.graph.host });
+    provider.addImport("profile_fixtures", profile_fixtures);
+    const nv_implementation = b.createModule(.{ .root_source_file = nv_package.namedLazyPath("implementation"), .target = b.graph.host });
+    nv_implementation.addImport("r4os", host);
+    const nv_backend = b.createModule(.{ .root_source_file = nv_package.namedLazyPath("backend"), .target = b.graph.host });
+    nv_backend.addImport("r4l_contract", nv_implementation);
+    provider.addImport("r4nv_backend", nv_backend);
+    const nv_render = b.createModule(.{ .root_source_file = nv_package.namedLazyPath("render_encoder"), .target = b.graph.host });
+    nv_render.addImport("r4l_contract", nv_implementation);
+    provider.addImport("r4nv_render_encoder", nv_render);
+    const libraries = sdk_build.systemLibrariesBuild(sdk_dependency) orelse return;
+    libraries.addR4gfxHostColor(b, provider, b.path("."));
+    const conformance = b.createModule(.{ .root_source_file = b.path("Tests/Generated/contract_conformance.zig"), .target = b.graph.host });
+    conformance.addImport("implementation", implementation);
+    conformance.addImport("binding", binding);
+    conformance.addIncludePath(b.path("Bindings/C"));
+    conformance.addIncludePath(sdk.profile.c_include_root);
+    conformance.addIncludePath(sdk.profile.contract_c_include_root);
+    conformance.addIncludePath(sdk.profile.contract_c_include_root2);
+    conformance.addCSourceFile(.{ .file = b.path("Tests/Generated/contract_conformance.c"), .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror" } });
+    const step = b.step("test", "R4GFX layout, transactional software access and C/Zig ABI conformance");
+    const provider_filter = b.option([]const u8, "provider-test-filter", "Run only matching existing provider tests without rebuilding the module");
+    const display_filter = b.option([]const u8, "display-test-filter", "Run only matching existing display tests without rebuilding the module");
+    if (provider_filter != null and display_filter != null) @panic("Select either provider-test-filter or display-test-filter");
+    const display_tests = b.createModule(.{ .root_source_file = b.path("display_tests.zig"), .target = b.graph.host, .optimize = .ReleaseSafe });
+    display_tests.addImport("r4os", host);
+    for ([_]*std.Build.Module{ provider, conformance, display_tests }) |module| {
+        if (provider_filter != null and module != provider) continue;
+        if (display_filter != null and module != display_tests) continue;
+        const run = b.addRunArtifact(b.addTest(.{ .root_module = module, .filters = if (display_filter) |filter| &.{filter} else if (provider_filter) |filter| &.{filter} else &.{} }));
+        step.dependOn(&run.step);
+        b.getInstallStep().dependOn(&run.step);
+    }
+    if (provider_filter == null and display_filter == null) {
+        if (artifact.verification) |verification| step.dependOn(verification);
+        artifact.output.addStepDependencies(step);
+    }
+}

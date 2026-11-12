@@ -1,0 +1,1842 @@
+{
+  "schema_version": 1,
+  "module_name": "R4ACO",
+  "zig_client": "R4Aco",
+  "c_prefix": "r4aco",
+  "c_header": "r4aco.h",
+  "description": "Pinned Mesa26.2.2 SPIR-V/NIR/ACO compiler and cache for Picasso gfx902 and Raven2 gfx909, with bounded isolated jobs. CPU compilation never admits a GPU.",
+  "interfaces": [
+    {
+      "export_name": "INFO_V1",
+      "symbol": "r4aco_info_v1",
+      "zig_name": "info_v1",
+      "zig_type": "InfoV1",
+      "c_type": "R4AcoInfoV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 1094930225,
+      "interface_id_hi": 1379159891,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "get_info",
+          "c_name": "r4aco_get_info",
+          "symbol": "r4aco_get_info_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "output",
+              "type": {
+                "name": "R4AcoInfo",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller buffer; changed only on success."
+            },
+            {
+              "name": "output_bytes",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Allocated output bytes, at least the fixed structure size."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4ACO_STATUS",
+            "ownership": "No retained memory, allocation, hardware access or shared mutable state."
+          },
+          "description": "Return source/build identity. Capability bit0 reports CPU shader compilation only. Source compatibility and compiler availability never admit a physical GPU."
+        }
+      ],
+      "description": "Independent immutable library identity, append-only interface."
+    },
+    {
+      "export_name": "COMPILER_V1",
+      "symbol": "r4aco_compiler_v1",
+      "zig_name": "compiler_v1",
+      "zig_type": "CompilerV1",
+      "c_type": "R4AcoCompilerV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 1094930226,
+      "interface_id_hi": 1379159891,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "compile",
+          "c_name": "r4aco_compile",
+          "symbol": "r4aco_compile_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4AcoRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "runtime"
+            },
+            {
+              "name": "request",
+              "type": {
+                "name": "R4AcoRequest",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4AcoBinary",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "blocking",
+            "threading": "thread_safe",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ACO_STATUS",
+            "ownership": "Caller-owned inputs and buffers stay alive through worker join. The library retains no pointer after normal completion or its abort callback. All callbacks belong to the admitted job."
+          },
+          "description": "Blocking CPU compilation exclusively on an isolated worker, never a frame/paint/IRQ callback. Busy returns immediately. Abort/OOM discards the entire private compilation allocation graph and terminates that worker; joining remains the caller's responsibility."
+        },
+        {
+          "name": "cache_write",
+          "c_name": "r4aco_cache_write",
+          "symbol": "r4aco_cache_write_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "key",
+              "type": {
+                "name": "R4AcoCacheKey",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "key"
+            },
+            {
+              "name": "binary",
+              "type": {
+                "name": "R4AcoBinary",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "binary"
+            },
+            {
+              "name": "code",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "code_length",
+              "description": "code"
+            },
+            {
+              "name": "code_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "code length"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "bytes"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4ACO_STATUS",
+            "ownership": "No retained pointers, allocation, filesystem or device access."
+          },
+          "description": "Serialize explicit little-endian scalar metadata and original ACO output into caller storage; checksummed and compiler-bound. No filesystem access. Outputs unchanged on error."
+        },
+        {
+          "name": "cache_read",
+          "c_name": "r4aco_cache_read",
+          "symbol": "r4aco_cache_read_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "key",
+              "type": {
+                "name": "R4AcoCacheKey",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "key"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "length",
+              "description": "bytes"
+            },
+            {
+              "name": "length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "length"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4AcoBinary",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            },
+            {
+              "name": "code",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "code"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4ACO_STATUS",
+            "ownership": "No retained pointers, allocation, filesystem or device access."
+          },
+          "description": "Validate the complete cache identity, metadata and digest before publishing any code. Corruption, old compiler, wrong ASIC/layout/epoch are cache misses; never GPU submissions."
+        }
+      ],
+      "description": "Pinned Mesa26.2.2 SPIR-V/NIR/ACO for Picasso/Raven2 native buffer ABI1 and combined 2D texture ABI2. Vertex, fragment, compute. CPU compilation only."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4AcoInfo",
+      "size": 32,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "mesa_major",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "mesa_major"
+        },
+        {
+          "name": "mesa_minor",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "mesa_minor"
+        },
+        {
+          "name": "mesa_patch",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "mesa_patch"
+        },
+        {
+          "name": "implementation_stage",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "implementation_stage"
+        },
+        {
+          "name": "capability_flags",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Zero in 0.80.2; does not advertise GPU execution or runtime compilation."
+        },
+        {
+          "name": "reserved",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        }
+      ],
+      "description": "Fixed ABI1 source/build identity, not a measured hardware profile."
+    },
+    {
+      "name": "R4AcoDigest",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "h0",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h0"
+        },
+        {
+          "name": "h1",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h1"
+        },
+        {
+          "name": "h2",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h2"
+        },
+        {
+          "name": "h3",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h3"
+        }
+      ],
+      "description": "SHA-256 bytes, no host pointer or padding."
+    },
+    {
+      "name": "R4AcoRuntime",
+      "size": 72,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "user",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "user"
+        },
+        {
+          "name": "owner_generation",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "owner generation"
+        },
+        {
+          "name": "allocate",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "allocate"
+        },
+        {
+          "name": "release",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "release"
+        },
+        {
+          "name": "clock_ns",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "clock ns"
+        },
+        {
+          "name": "abort_worker",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "abort worker"
+        },
+        {
+          "name": "owner_retired",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "owner retired"
+        },
+        {
+          "name": "cancelled",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "cancelled"
+        }
+      ],
+      "description": "Callbacks are borrowed for the entire compile. One isolated SIMD-capable worker; abort_worker must terminate it without unwinding or returning. owner_retired must prove exact program retirement before replacing a previous owner. Callbacks use the x86_64 C ABI; alloc(user,bytes,alignment)->address; release(user,address,bytes,alignment); clock(user)->ns; abort(user,status); retired(user,generation)->0/1; cancelled(user)->0/1."
+    },
+    {
+      "name": "R4AcoRequest",
+      "size": 88,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "stage",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "device_id",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device id"
+        },
+        {
+          "name": "chip_revision",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chip revision"
+        },
+        {
+          "name": "flags",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "flags"
+        },
+        {
+          "name": "word_count",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "word count"
+        },
+        {
+          "name": "entry_length",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "entry length"
+        },
+        {
+          "name": "words",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "words"
+        },
+        {
+          "name": "entry",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "entry"
+        },
+        {
+          "name": "budget_bytes",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "budget bytes"
+        },
+        {
+          "name": "deadline_ns",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "deadline ns"
+        },
+        {
+          "name": "code",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code"
+        },
+        {
+          "name": "code_capacity",
+          "offset": 72,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code capacity"
+        },
+        {
+          "name": "log_capacity",
+          "offset": 76,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log capacity"
+        },
+        {
+          "name": "log",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log"
+        }
+      ],
+      "description": "1002:15D8, external ASIC revision 0x41..0x48 selects Picasso gfx902; 0x81..0x88 selects Raven2 gfx909. Both use GFX9 wave64; native ACO receives the exact Mesa family and compiler errata. Cache keys and returned gfx_profile distinguish the families. Flags0 selects buffer resource ABI1; request_textures selects ABI2 with four combined 2D textures in set1. Other flags rejected. SPIR-V<=65536 bytes, entry1..63 UTF-8 bytes; budget1..256MB; code<=16MB, log<=1MB. All input/output spans disjoint. Deadline uses caller clock; allocation/pass checkpoints cooperate with cancellation; parent retains worker and buffers until join."
+    },
+    {
+      "name": "R4AcoSymbols",
+      "size": 256,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "s0",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s1",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s2",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s3",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s4",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s5",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s6",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s7",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s8",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s9",
+          "offset": 72,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s10",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s11",
+          "offset": 88,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s12",
+          "offset": 96,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s13",
+          "offset": 104,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s14",
+          "offset": 112,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s15",
+          "offset": 120,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s16",
+          "offset": 128,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s17",
+          "offset": 136,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s18",
+          "offset": 144,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s19",
+          "offset": 152,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s20",
+          "offset": 160,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s21",
+          "offset": 168,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s22",
+          "offset": 176,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s23",
+          "offset": 184,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s24",
+          "offset": 192,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s25",
+          "offset": 200,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s26",
+          "offset": 208,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s27",
+          "offset": 216,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s28",
+          "offset": 224,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s29",
+          "offset": 232,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s30",
+          "offset": 240,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        },
+        {
+          "name": "s31",
+          "offset": 248,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Low32: ACO symbol kind (1 scratch_lo,2 scratch_hi,3 constant-data offset); high32: code dword offset. Remaining entries zero."
+        }
+      ],
+      "description": "At most32 original ACO symbols, low32 kind and high32 code DWORD offset. Kinds1/2 identify scratch descriptor address words when present. Kind3 annotates a PC-relative constant-data offset already resolved by ACO fix_constaddrs; consumers MUST NOT add the load address again."
+    },
+    {
+      "name": "R4AcoBinary",
+      "size": 424,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "status",
+          "offset": 8,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "status"
+        },
+        {
+          "name": "stage",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "device_id",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device id"
+        },
+        {
+          "name": "chip_revision",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chip revision"
+        },
+        {
+          "name": "gfx_profile",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "gfx profile"
+        },
+        {
+          "name": "resource_abi",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "resource abi"
+        },
+        {
+          "name": "code_bytes",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code bytes"
+        },
+        {
+          "name": "exec_bytes",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "exec bytes"
+        },
+        {
+          "name": "sgprs",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "sgprs"
+        },
+        {
+          "name": "vgprs",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vgprs"
+        },
+        {
+          "name": "lds_bytes",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "lds bytes"
+        },
+        {
+          "name": "scratch_bytes_per_wave",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "scratch bytes per wave"
+        },
+        {
+          "name": "float_mode",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "float mode"
+        },
+        {
+          "name": "user_sgprs",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "user sgprs"
+        },
+        {
+          "name": "input_vgprs",
+          "offset": 64,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "input vgprs"
+        },
+        {
+          "name": "workgroup_x",
+          "offset": 68,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "workgroup x"
+        },
+        {
+          "name": "workgroup_y",
+          "offset": 72,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "workgroup y"
+        },
+        {
+          "name": "workgroup_z",
+          "offset": 76,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "workgroup z"
+        },
+        {
+          "name": "spi_ps_input_ena",
+          "offset": 80,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "spi ps input ena"
+        },
+        {
+          "name": "spi_ps_input_addr",
+          "offset": 84,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "spi ps input addr"
+        },
+        {
+          "name": "spi_shader_col_format",
+          "offset": 88,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "spi shader col format"
+        },
+        {
+          "name": "symbol_count",
+          "offset": 92,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "symbol count"
+        },
+        {
+          "name": "inputs_read",
+          "offset": 96,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "inputs read"
+        },
+        {
+          "name": "outputs_written",
+          "offset": 104,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "outputs written"
+        },
+        {
+          "name": "source_hash",
+          "offset": 112,
+          "type": {
+            "name": "R4AcoDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source hash"
+        },
+        {
+          "name": "symbols",
+          "offset": 144,
+          "type": {
+            "name": "R4AcoSymbols",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "symbols"
+        },
+        {
+          "name": "peak_bytes",
+          "offset": 400,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "peak bytes"
+        },
+        {
+          "name": "elapsed_ns",
+          "offset": 408,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "elapsed ns"
+        },
+        {
+          "name": "log_length",
+          "offset": 416,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log length"
+        },
+        {
+          "name": "reserved",
+          "offset": 420,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        }
+      ],
+      "description": "Actual ACO code/configuration and complete bounded fixup list. No BO, GPU address or hardware capability. rsrc registers are encoded by R4AMD from this configuration. Failed compile initializes status/log only; code and successful metadata become valid only on status0."
+    },
+    {
+      "name": "R4AcoCacheKey",
+      "size": 136,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "vendor_id",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vendor id"
+        },
+        {
+          "name": "device_id",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device id"
+        },
+        {
+          "name": "chip_revision",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chip revision"
+        },
+        {
+          "name": "gfx_profile",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "gfx profile"
+        },
+        {
+          "name": "stage",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "resource_abi",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "resource abi"
+        },
+        {
+          "name": "command_abi",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "command abi"
+        },
+        {
+          "name": "driver_version",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "driver version"
+        },
+        {
+          "name": "format",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "format"
+        },
+        {
+          "name": "reserved",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        },
+        {
+          "name": "device_generation",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device generation"
+        },
+        {
+          "name": "reset_generation",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reset generation"
+        },
+        {
+          "name": "pipeline_layout",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pipeline layout"
+        },
+        {
+          "name": "source_hash",
+          "offset": 72,
+          "type": {
+            "name": "R4AcoDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source hash"
+        },
+        {
+          "name": "pipeline_hash",
+          "offset": 104,
+          "type": {
+            "name": "R4AcoDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pipeline hash"
+        }
+      ],
+      "description": "Exact compiler/profile/ASIC/driver/command/resource/pipeline/generation identity. Compiler identity is embedded and verified by the cache implementation; no user-provided compiler digest is trusted."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "info_version",
+      "c_name": "R4ACO_INFO_VERSION",
+      "type": "u32",
+      "value": 1,
+      "description": "Fixed info structure version."
+    },
+    {
+      "zig_name": "status_ok",
+      "c_name": "R4ACO_STATUS_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "Success."
+    },
+    {
+      "zig_name": "compiler_revision",
+      "c_name": "R4ACO_COMPILER_REVISION",
+      "type": "u32",
+      "value": 1,
+      "description": "Fixed native shader ABI1 and cache schema."
+    },
+    {
+      "zig_name": "capability_cpu_compile",
+      "c_name": "R4ACO_CAPABILITY_CPU_COMPILE",
+      "type": "u32",
+      "value": 1,
+      "description": "CPU shader compilation. No hardware rendering or device admission."
+    },
+    {
+      "zig_name": "request_textures",
+      "c_name": "R4ACO_REQUEST_TEXTURES",
+      "type": "u32",
+      "value": 1,
+      "description": "Request flag bit0 selects native resource ABI2: unchanged sixteen set0 buffer descriptors plus four set1 combined 2D image/sampler records at byte256+64*binding. Each record contains eight image DWORDs, four sampler DWORDs and sixteen reserved bytes. Supports sample, explicit-LOD sample and texel fetch; no arrays, shadow, MSAA or nonuniform descriptors. Flag0 retains resource ABI1."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "status_invalid",
+      "c_name": "R4ACO_STATUS_INVALID",
+      "type": "i32",
+      "value": -1,
+      "description": "Invalid argument, source or overlapping buffers. Compile status/log follow the compile publication rules; cache outputs remain unchanged."
+    },
+    {
+      "zig_name": "status_unsupported",
+      "c_name": "R4ACO_STATUS_UNSUPPORTED",
+      "type": "i32",
+      "value": -2,
+      "description": "Profile, stage or shader feature outside the fixed native ABI."
+    },
+    {
+      "zig_name": "status_busy",
+      "c_name": "R4ACO_STATUS_BUSY",
+      "type": "i32",
+      "value": -3,
+      "description": "Another non-retired compiler owner is active."
+    },
+    {
+      "zig_name": "status_memory",
+      "c_name": "R4ACO_STATUS_MEMORY",
+      "type": "i32",
+      "value": -4,
+      "description": "The job allocation budget or allocator is exhausted."
+    },
+    {
+      "zig_name": "status_cancelled",
+      "c_name": "R4ACO_STATUS_CANCELLED",
+      "type": "i32",
+      "value": -5,
+      "description": "Cooperative deadline/cancellation reached."
+    },
+    {
+      "zig_name": "status_compiler",
+      "c_name": "R4ACO_STATUS_COMPILER",
+      "type": "i32",
+      "value": -6,
+      "description": "NIR/ACO/runtime failure; worker terminated."
+    },
+    {
+      "zig_name": "status_capacity",
+      "c_name": "R4ACO_STATUS_CAPACITY",
+      "type": "i32",
+      "value": -7,
+      "description": "Caller output or bounded compiler metadata capacity is insufficient."
+    },
+    {
+      "zig_name": "status_cache_miss",
+      "c_name": "R4ACO_STATUS_CACHE_MISS",
+      "type": "i32",
+      "value": -8,
+      "description": "Cache identity, checksum or executable metadata mismatch."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "hardware",
+      "text": "Only AMDGPU.R4D owns hardware. The foundation interface touches no device."
+    },
+    {
+      "name": "provider",
+      "text": "Table pointers live for the loaded provider generation. No pointer is retained from the caller."
+    }
+  ]
+}

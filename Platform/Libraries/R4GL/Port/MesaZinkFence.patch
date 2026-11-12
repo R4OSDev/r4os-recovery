@@ -1,0 +1,46 @@
+--- a/src/gallium/drivers/zink/zink_fence.c
++++ b/src/gallium/drivers/zink/zink_fence.c
+@@ -262,13 +262,41 @@
+    struct zink_context *ctx = zink_context(pctx);
+    struct zink_tc_fence *mfence = (struct zink_tc_fence *)pfence;
+ 
+-   if (mfence->deferred_ctx == pctx || !mfence->sem)
++   if (mfence->deferred_ctx == pctx)
+       return;
+ 
++   VkSemaphore semaphore = mfence->sem;
++#ifdef R4OS_OPENGL
++   if (!semaphore) {
++      /* Ordinary EGL fences retain a submitted Gallium batch rather than an
++       * exported semaphore. Order the next consumer batch on the screen's
++       * real timeline; never silently drop a pending cross-context wait. */
++      struct zink_screen *screen = zink_screen(pctx->screen);
++      util_queue_fence_wait(&mfence->ready); /* CPU submission, not GPU idle. */
++      if (!mfence->fence || screen->device_lost || mfence->fence->completed)
++         return;
++      struct zink_fence *fence = mfence->fence;
++      struct zink_batch_state *batch = zink_batch_state(fence);
++      if (zink_batch_submit_count_diff(batch->usage.submit_count, mfence->submit_count) > 1 ||
++          !fence->submitted)
++         return; /* The exact original batch has already completed. */
++      if (!screen->sem || !fence->batch_id) {
++         screen->device_lost = true;
++         return;
++      }
++      if (zink_screen_check_last_finished(screen, fence->batch_id))
++         return;
++      semaphore = screen->sem;
++      value = fence->batch_id;
++   }
++#else
++   if (!semaphore)
++      return;
++#endif
+    mfence->deferred_ctx = pctx;
+    /* this will be applied on the next submit */
+    VkPipelineStageFlags flag = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+-   util_dynarray_append(&ctx->bs->wait_semaphores, mfence->sem);
++   util_dynarray_append(&ctx->bs->wait_semaphores, semaphore);
+    util_dynarray_append(&ctx->bs->wait_semaphore_stages, flag);
+    util_dynarray_append(&ctx->bs->wait_semaphore_values, value);
+    pipe_reference(NULL, &mfence->reference);

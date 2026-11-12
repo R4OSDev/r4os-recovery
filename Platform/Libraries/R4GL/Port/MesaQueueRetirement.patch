@@ -1,0 +1,29 @@
+--- a/src/util/u_queue.c
++++ b/src/util/u_queue.c
+@@ -545,8 +545,14 @@
+ util_queue_finish_execute(void *data, void *gdata, int num_thread)
+ {
+    util_barrier *barrier = data;
++#ifdef R4OS_OPENGL
++   /* The condition-variable barrier still has waking peers when its last
++    * arrival returns. Its caller owns destruction after all job fences. */
++   util_barrier_wait(barrier);
++#else
+    if (util_barrier_wait(barrier))
+       util_barrier_destroy(barrier);
++#endif
+ }
+ 
+ void
+@@ -752,6 +758,11 @@
+       util_queue_fence_destroy(&fences[i]);
+    }
+ 
++#ifdef R4OS_OPENGL
++   /* Every callback has returned from the barrier before signalling its
++    * fence. No worker can still access this stack-owned barrier now. */
++   util_barrier_destroy(&barrier);
++#endif
+    free(fences);
+ }
+ 

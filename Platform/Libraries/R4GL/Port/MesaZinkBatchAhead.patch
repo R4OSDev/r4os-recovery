@@ -1,0 +1,48 @@
+--- a/src/gallium/drivers/zink/zink_context.c
++++ b/src/gallium/drivers/zink/zink_context.c
+@@ -4103,6 +4103,28 @@
+    util_queue_fence_wait(&ctx->unsync_fence);
+    R4GL_RUNTIME("zink-after-unsync-wait");
+    util_queue_fence_reset(&ctx->flush_fence);
++   struct zink_batch_state *next_bs = NULL;
++#ifdef R4OS_OPENGL
++   struct zink_screen *native_screen = zink_screen(ctx->base.screen);
++   if (!native_screen->device_lost &&
++       native_screen->info.driver_props.driverID == VK_DRIVER_ID_MESA_NVK) {
++      /* NVK begins its command buffers lazily, including their native BO/VA
++       * creation. Prepare the next recording batch before submitting the
++       * current one: native mapping may need the serialized RM exchange and
++       * must not turn this flush into an implicit wait for its own GPU work.
++       * Restore the current batch for its exact queries, submission and CPU
++       * flush receipt. The new recording batch stays owned even on loss. */
++      struct zink_batch_state *submitted_bs = ctx->bs;
++      R4GL_RUNTIME(native_screen->threaded_submit ? "zink-next-nvk-threaded" : "zink-next-nvk-direct");
++      R4GL_RUNTIME("zink-before-prepare-next-batch");
++      zink_start_batch(ctx);
++      next_bs = ctx->bs;
++      ctx->bs = submitted_bs;
++      if (native_screen->device_lost)
++         submitted_bs->is_device_lost = true;
++      R4GL_RUNTIME("zink-after-prepare-next-batch");
++   }
++#endif
+    R4GL_RUNTIME("zink-before-end-batch");
+    zink_end_batch(ctx);
+    R4GL_RUNTIME("zink-after-end-batch");
+@@ -4113,10 +4135,15 @@
+ 
+    if (ctx->bs->is_device_lost) {
+       check_device_lost(ctx);
++      if (next_bs)
++         ctx->bs = next_bs;
+    } else {
+       struct zink_screen *screen = zink_screen(ctx->base.screen);
+       R4GL_RUNTIME("zink-before-start-batch");
+-      zink_start_batch(ctx);
++      if (next_bs)
++         ctx->bs = next_bs;
++      else
++         zink_start_batch(ctx);
+       R4GL_RUNTIME("zink-after-start-batch");
+       if (screen->info.have_EXT_transform_feedback && ctx->num_so_targets)
+          ctx->dirty_so_targets = true;

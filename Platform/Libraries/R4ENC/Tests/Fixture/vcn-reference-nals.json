@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "generator": "FFmpeg7.1.5 / libx264 / libx265; synthetic black320x192,30fps,3frames,QP26,no B pictures",
+  "physical_gpu_execution": false,
+  "scope": "Reference Annex-B VCL envelope, not GPU encoding or comparison of compressed pixels. HEVC IDR_N_LP20 is deliberately rejected because production VCN1 commands select IDR_W_RADL19. P/TRAIL_R1 accepted. Host-generated production headers separately parsed with FFmpeg.",
+  "records": [
+    {
+      "codec": 1,
+      "input_sha256": "9b720a7dba3c9c25debeb0c59b8349532045cc228a7a69fc511d28d4fdf23d5f",
+      "vcl_units": 3,
+      "frames": [
+        {
+          "width": 320,
+          "height": 192,
+          "pict_type": "I",
+          "side_data_list": [
+            {
+              "side_data_type": "H.26[45] User Data Unregistered SEI message"
+            }
+          ]
+        },
+        {
+          "width": 320,
+          "height": 192,
+          "pict_type": "P"
+        },
+        {
+          "width": 320,
+          "height": 192,
+          "pict_type": "P"
+        }
+      ],
+      "decoded_framemd5_sha256": "ffdd58855604d08f1edc2c5ab938cfe0bd5922d9862939a729744944f43f72da"
+    },
+    {
+      "codec": 2,
+      "input_sha256": "f4152d8499ccd947e52f2477da18323c9e4987b1e74e530928f0f9806f2b29da",
+      "vcl_units": 3,
+      "frames": [
+        {
+          "width": 320,
+          "height": 192,
+          "pict_type": "I",
+          "side_data_list": [
+            {
+              "side_data_type": "H.26[45] User Data Unregistered SEI message"
+            }
+          ]
+        },
+        {
+          "width": 320,
+          "height": 192,
+          "pict_type": "P"
+        },
+        {
+          "width": 320,
+          "height": 192,
+          "pict_type": "P"
+        }
+      ],
+      "decoded_framemd5_sha256": "ffdd58855604d08f1edc2c5ab938cfe0bd5922d9862939a729744944f43f72da"
+    }
+  ],
+  "fixture_sha256": "347203c0c74ded9b5ffd8dc0117c51088d0afd260c9a9623be3b1b679f7fa76a",
+  "commands": [
+    "ffmpeg -f lavfi -i color=black:size=320x192:rate=30 -frames:v 3 -c:v libx264 -profile:v baseline -pix_fmt yuv420p -x264-params bframes=0:scenecut=0 -qp 26 -f h264 reference.h264",
+    "ffmpeg -f lavfi -i color=black:size=320x192:rate=30 -frames:v 3 -c:v libx265 -profile:v main -pix_fmt yuv420p -x265-params bframes=0:scenecut=0:log-level=error:pools=none:frame-threads=1 -qp 26 -f hevc reference.hevc"
+  ],
+  "format": "VCNREF01 then little-endian uint32 codec,key,accepted,byte_length and Annex-B VCL; only VCLs retained from reference clips; no third-party media"
+}

@@ -1,0 +1,20 @@
+--- a/libavutil/log.c
++++ b/libavutil/log.c
+@@ -170,6 +170,9 @@
+ 
+ static void check_color_terminal(void)
+ {
++#ifdef R4OS_VIDEO
++    use_color = 0; /* R4OS native diagnostics are plain console text. */
++#else
+     char *term = getenv("TERM");
+ 
+ #if defined(_WIN32) && HAVE_SETCONSOLETEXTATTRIBUTE && HAVE_GETSTDHANDLE
+@@ -201,6 +204,7 @@
+ 
+     if (getenv("AV_LOG_FORCE_256COLOR") || term && strstr(term, "256color"))
+         use_color *= 256;
++#endif
+ }
+ 
+ static void ansi_fputs(int level, int tint, const char *str, int local_use_color)

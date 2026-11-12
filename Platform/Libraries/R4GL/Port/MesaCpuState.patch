@@ -1,0 +1,133 @@
+diff --git a/src/util/u_cpu_detect.c b/src/util/u_cpu_detect.c
+index 451881d..8e25433 100644
+--- a/src/util/u_cpu_detect.c
++++ b/src/util/u_cpu_detect.c
+@@ -106,14 +106,31 @@
+ 
+ DEBUG_GET_ONCE_BOOL_OPTION(dump_cpu, "GALLIUM_DUMP_CPU", false)
+ 
+-static
+-struct util_cpu_caps_t util_cpu_caps;
++#ifdef R4OS_OPENGL
++#include "r4gl_state.h"
++static const char cpu_state_key;
++static void cpu_state_initialize(void *data)
++{
++   struct _util_cpu_caps_state_t *state = data;
++   state->once_flag = (once_flag)ONCE_FLAG_INIT;
++}
++struct _util_cpu_caps_state_t *r4gl_util_cpu_state(void)
++{
++   return r4gl_process_state(&cpu_state_key, sizeof(struct _util_cpu_caps_state_t),
++                            _Alignof(struct _util_cpu_caps_state_t), cpu_state_initialize);
++}
++/* No shared detection scratch. Only this process's call_once writer mutates
++ * caps; readers are admitted after detect_done's release publication. */
++#define util_cpu_caps (r4gl_util_cpu_state()->caps)
++#else
++static struct util_cpu_caps_t util_cpu_caps;
+ 
+ /* Do not try to access _util_cpu_caps_state directly, call to util_get_cpu_caps instead */
+ struct _util_cpu_caps_state_t _util_cpu_caps_state = {
+    .once_flag = ONCE_FLAG_INIT,
+    .detect_done = 0,
+ };
++#endif
+ 
+ #if DETECT_ARCH_X86 || DETECT_ARCH_X86_64
+ static int has_cpuid(void);
+@@ -522,6 +539,14 @@ get_cpu_topology(bool zen)
+ 
+    memset(util_cpu_caps.cpu_to_L3, 0xff, sizeof(util_cpu_caps.cpu_to_L3));
+ 
++#ifdef R4OS_OPENGL
++   /* One unbound scheduling bucket, NOT an assertion about physical L3s.
++    * R4OS exposes capacity but no affinity/cache or heterogeneous-core map.
++    * Preserve invalid CPU mappings and NULL affinity; never pin/probe CPUs. */
++   (void)zen;
++   return;
++#else
++
+ #if DETECT_OS_LINUX
+    uint64_t big_cap = 0;
+    unsigned num_big_cpus = 0;
+@@ -670,6 +695,7 @@ get_cpu_topology(bool zen)
+       }
+    }
+ #endif
++#endif
+ }
+ 
+ static
+@@ -773,7 +799,14 @@ _util_cpu_detect_once(void)
+    memset(&util_cpu_caps, 0, sizeof util_cpu_caps);
+ 
+    /* Count the number of CPUs in system */
+-#if DETECT_OS_WINDOWS
++#if defined(R4OS_OPENGL)
++   uint32_t available, configured;
++   if (!r4gl_cpu_capacity(&available, &configured) || !available ||
++       available > configured || configured > UTIL_MAX_CPUS)
++      abort(); /* Required native capacity failed; do not invent a CPU count. */
++   available_cpus = available;
++   total_cpus = configured;
++#elif DETECT_OS_WINDOWS
+    {
+       SYSTEM_INFO system_info;
+       GetSystemInfo(&system_info);
+@@ -915,7 +948,7 @@ _util_cpu_detect_once(void)
+             util_cpu_caps.has_avx2 = (regs7[1] >> 5) & 1;
+ 
+             // check for avx512
+-            if (xgetbv() & (0x7 << 5)) { // OPMASK: upper-256 enabled by OS
++            if ((xgetbv() & 0xe6) == 0xe6) { // XMM/YMM, opmask, ZMM state all enabled
+                util_cpu_caps.has_avx512f    = (regs7[1] >> 16) & 1;
+                util_cpu_caps.has_avx512dq   = (regs7[1] >> 17) & 1;
+                util_cpu_caps.has_avx512ifma = (regs7[1] >> 21) & 1;
+@@ -1011,8 +1044,11 @@ _util_cpu_detect_once(void)
+       printf("util_cpu_caps.num_L3_caches = %u\n", util_cpu_caps.num_L3_caches);
+       printf("util_cpu_caps.num_cpu_mask_bits = %u\n", util_cpu_caps.num_cpu_mask_bits);
+    }
+-   _util_cpu_caps_state.caps = util_cpu_caps;
+-
+    /* This must happen at the end as it's used to guard everything else */
++#ifdef R4OS_OPENGL
++   p_atomic_set(&r4gl_util_cpu_state()->detect_done, 1);
++#else
++   _util_cpu_caps_state.caps = util_cpu_caps;
+    p_atomic_set(&_util_cpu_caps_state.detect_done, 1);
++#endif
+ }
+diff --git a/src/util/u_cpu_detect.h b/src/util/u_cpu_detect.h
+index a4f47f6..23e6993 100644
+--- a/src/util/u_cpu_detect.h
++++ b/src/util/u_cpu_detect.h
+@@ -143,10 +143,20 @@ struct _util_cpu_caps_state_t {
+ 
+ #define U_CPU_INVALID_L3 0xffff
+ 
++#ifdef R4OS_OPENGL
++struct _util_cpu_caps_state_t *r4gl_util_cpu_state(void);
++#endif
++
+ static inline const struct util_cpu_caps_t *
+ util_get_cpu_caps(void)
+ {
+    extern void _util_cpu_detect_once(void);
++#ifdef R4OS_OPENGL
++   struct _util_cpu_caps_state_t *state = r4gl_util_cpu_state();
++   if (unlikely(!p_atomic_read(&state->detect_done)))
++      call_once(&state->once_flag, _util_cpu_detect_once);
++   return &state->caps;
++#else
+    extern struct _util_cpu_caps_state_t _util_cpu_caps_state;
+ 
+    /* On most CPU architectures, an atomic read is simply a regular memory
+@@ -158,6 +168,7 @@ util_get_cpu_caps(void)
+       call_once(&_util_cpu_caps_state.once_flag, _util_cpu_detect_once);
+ 
+    return &_util_cpu_caps_state.caps;
++#endif
+ }
+ 
+ #ifdef __cplusplus

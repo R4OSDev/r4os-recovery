@@ -1,0 +1,20 @@
+--- a/src/egl/main/egldisplay.h
++++ b/src/egl/main/egldisplay.h
+@@ -55,6 +55,7 @@
+    _EGL_PLATFORM_SURFACELESS,
+    _EGL_PLATFORM_DEVICE,
+    _EGL_PLATFORM_WINDOWS,
++   _EGL_PLATFORM_R4OS,
+ 
+    _EGL_NUM_PLATFORMS,
+    _EGL_INVALID_PLATFORM = -1
+--- a/src/egl/main/egldisplay.c
++++ b/src/egl/main/egldisplay.c
+@@ -86,6 +86,7 @@
+    {_EGL_PLATFORM_SURFACELESS, "surfaceless"},
+    {_EGL_PLATFORM_DEVICE, "device"},
+    {_EGL_PLATFORM_WINDOWS, "windows"},
++   {_EGL_PLATFORM_R4OS, "r4os"},
+ };
+ 
+ /**

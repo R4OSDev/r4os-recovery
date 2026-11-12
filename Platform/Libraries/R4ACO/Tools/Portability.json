@@ -1,0 +1,2543 @@
+{
+  "schema": 1,
+  "module": "R4ACO",
+  "profile": "mesa",
+  "generators": [
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/process_shader_stats.py",
+        "${source}/src/util/shader_stats.rnc",
+        "${source}/src/util/shader_stats.xml"
+      ],
+      "outputs": [
+        "src/util/shader_stats.h"
+      ],
+      "capture": "src/util/shader_stats.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format/u_format_table.py",
+        "${source}/src/util/format/u_format.yaml",
+        "--enums"
+      ],
+      "outputs": [
+        "src/util/format/u_format_gen.h"
+      ],
+      "capture": "src/util/format/u_format_gen.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/builtin_types_h.py",
+        "src/compiler/builtin_types.h"
+      ],
+      "outputs": [
+        "src/compiler/builtin_types.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_builder_opcodes_h.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_builder_opcodes.h"
+      ],
+      "capture": "src/compiler/nir/nir_builder_opcodes.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_opcodes_h.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_opcodes.h"
+      ],
+      "capture": "src/compiler/nir/nir_opcodes.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_intrinsics_h.py",
+        "--out",
+        "src/compiler/nir/nir_intrinsics.h"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_intrinsics.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_intrinsics_indices_h.py",
+        "--out",
+        "src/compiler/nir/nir_intrinsics_indices.h"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_intrinsics_indices.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/amd/compiler/aco_opcodes_h.py"
+      ],
+      "outputs": [
+        "src/amd/compiler/aco_opcodes.h"
+      ],
+      "capture": "src/amd/compiler/aco_opcodes.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/amd/compiler/aco_builder_h.py"
+      ],
+      "outputs": [
+        "src/amd/compiler/aco_builder.h"
+      ],
+      "capture": "src/amd/compiler/aco_builder.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/amd/registers/makeregheader.py",
+        "${source}/src/amd/registers/gfx6.json",
+        "${source}/src/amd/registers/gfx7.json",
+        "${source}/src/amd/registers/gfx8.json",
+        "${source}/src/amd/registers/gfx81.json",
+        "${source}/src/amd/registers/gfx9.json",
+        "${source}/src/amd/registers/gfx940.json",
+        "${source}/src/amd/registers/gfx10.json",
+        "${source}/src/amd/registers/gfx103.json",
+        "${source}/src/amd/registers/gfx11.json",
+        "${source}/src/amd/registers/gfx115.json",
+        "${source}/src/amd/registers/gfx12.json",
+        "${source}/src/amd/registers/pkt3.json",
+        "${source}/src/amd/registers/gfx10-rsrc.json",
+        "${source}/src/amd/registers/gfx11-rsrc.json",
+        "${source}/src/amd/registers/gfx12-rsrc.json",
+        "${source}/src/amd/registers/registers-manually-defined.json",
+        "--sort",
+        "address",
+        "--guard",
+        "AMDGFXREGS_H"
+      ],
+      "outputs": [
+        "src/amd/common/amdgfxregs.h"
+      ],
+      "capture": "src/amd/common/amdgfxregs.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/amd/compiler/aco_opcodes_cpp.py"
+      ],
+      "outputs": [
+        "src/amd/compiler/aco_opcodes.cpp"
+      ],
+      "capture": "src/amd/compiler/aco_opcodes.cpp"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/builtin_types_c.py",
+        "src/compiler/builtin_types.c"
+      ],
+      "outputs": [
+        "src/compiler/builtin_types.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/glsl/ir_expression_operation.py",
+        "enum"
+      ],
+      "outputs": [
+        "src/compiler/ir_expression_operation.h"
+      ],
+      "capture": "src/compiler/ir_expression_operation.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_constant_expressions.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_constant_expressions.c"
+      ],
+      "capture": "src/compiler/nir/nir_constant_expressions.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_opcodes_c.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_opcodes.c"
+      ],
+      "capture": "src/compiler/nir/nir_opcodes.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_opt_algebraic.py",
+        "--out",
+        "src/compiler/nir/nir_opt_algebraic.c"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_opt_algebraic.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_intrinsics_c.py",
+        "--out",
+        "src/compiler/nir/nir_intrinsics.c"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_intrinsics.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/spirv/vtn_gather_types_c.py",
+        "${source}/src/compiler/spirv/spirv.core.grammar.json",
+        "src/compiler/spirv/vtn_gather_types.c"
+      ],
+      "outputs": [
+        "src/compiler/spirv/vtn_gather_types.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/spirv/spirv_info_gen.py",
+        "--json",
+        "${source}/src/compiler/spirv/spirv.core.grammar.json",
+        "--out-h",
+        "src/compiler/spirv/spirv_info.h",
+        "--out-c",
+        "src/compiler/spirv/spirv_info.c"
+      ],
+      "outputs": [
+        "src/compiler/spirv/spirv_info.h",
+        "src/compiler/spirv/spirv_info.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/spirv/vtn_generator_ids_h.py",
+        "${source}/src/compiler/spirv/spir-v.xml",
+        "src/compiler/spirv/vtn_generator_ids.h"
+      ],
+      "outputs": [
+        "src/compiler/spirv/vtn_generator_ids.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format/u_format_table.py",
+        "${source}/src/util/format/u_format.yaml"
+      ],
+      "outputs": [
+        "src/util/format/u_format_table.c"
+      ],
+      "capture": "src/util/format/u_format_table.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format/u_format_table.py",
+        "${source}/src/util/format/u_format.yaml",
+        "--header"
+      ],
+      "outputs": [
+        "src/util/format/u_format_pack.h"
+      ],
+      "capture": "src/util/format/u_format_pack.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format_srgb.py"
+      ],
+      "outputs": [
+        "src/util/format_srgb.c"
+      ],
+      "capture": "src/util/format_srgb.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/amd/common/gfx10_format_table.py",
+        "${source}/src/util/format/u_format.yaml",
+        "${source}/src/amd/registers/gfx10-rsrc.json",
+        "${source}/src/amd/registers/gfx11-rsrc.json"
+      ],
+      "outputs": [
+        "src/amd/common/gfx10_format_table.c"
+      ],
+      "capture": "src/amd/common/gfx10_format_table.c"
+    }
+  ],
+  "flags": [
+    "-I${source}/src/amd",
+    "-I${generated}/src/amd",
+    "-I${source}/src/amd/compiler",
+    "-I${generated}/src/amd/compiler",
+    "-I${source}/src/amd/common",
+    "-I${source}/src/amd/common/nir",
+    "-I${generated}/src/amd/common",
+    "-DR4OS_FREESTANDING=1"
+  ],
+  "units": [
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_isel_cfg_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_isel_cfg.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_isel_setup_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_isel_setup.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_isel_helpers_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_isel_helpers.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_nir_alu_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_nir_alu.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_ps_prolog_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_ps_prolog.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_dominance_cpp",
+      "source": "src/amd/compiler/aco_dominance.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_dead_code_analysis_cpp",
+      "source": "src/amd/compiler/aco_dead_code_analysis.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_interface_cpp",
+      "source": "src/amd/compiler/aco_interface.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_form_hard_clauses_cpp",
+      "source": "src/amd/compiler/aco_form_hard_clauses.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_insert_delay_alu_cpp",
+      "source": "src/amd/compiler/aco_insert_delay_alu.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_insert_fp_mode_cpp",
+      "source": "src/amd/compiler/aco_insert_fp_mode.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_assembler_cpp",
+      "source": "src/amd/compiler/aco_assembler.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_insert_exec_mask_cpp",
+      "source": "src/amd/compiler/aco_insert_exec_mask.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_reduce_assign_cpp",
+      "source": "src/amd/compiler/aco_reduce_assign.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_insert_waitcnt_cpp",
+      "source": "src/amd/compiler/aco_insert_waitcnt.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_insert_nops_cpp",
+      "source": "src/amd/compiler/aco_insert_NOPs.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_live_var_analysis_cpp",
+      "source": "src/amd/compiler/aco_live_var_analysis.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_lower_branches_cpp",
+      "source": "src/amd/compiler/aco_lower_branches.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_lower_phis_cpp",
+      "source": "src/amd/compiler/aco_lower_phis.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_lower_subdword_cpp",
+      "source": "src/amd/compiler/aco_lower_subdword.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_lower_to_cssa_cpp",
+      "source": "src/amd/compiler/aco_lower_to_cssa.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_register_allocation_cpp",
+      "source": "src/amd/compiler/aco_register_allocation.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_optimizer_postra_cpp",
+      "source": "src/amd/compiler/aco_optimizer_postRA.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_lower_to_hw_instr_cpp",
+      "source": "src/amd/compiler/aco_lower_to_hw_instr.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_opt_value_numbering_cpp",
+      "source": "src/amd/compiler/aco_opt_value_numbering.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_optimizer_cpp",
+      "source": "src/amd/compiler/aco_optimizer.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_print_ir_cpp",
+      "source": "src/amd/compiler/aco_print_ir.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_reindex_ssa_cpp",
+      "source": "src/amd/compiler/aco_reindex_ssa.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_repair_ssa_cpp",
+      "source": "src/amd/compiler/aco_repair_ssa.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_scheduler_ilp_cpp",
+      "source": "src/amd/compiler/aco_scheduler_ilp.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_scheduler_cpp",
+      "source": "src/amd/compiler/aco_scheduler.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_ssa_elimination_cpp",
+      "source": "src/amd/compiler/aco_ssa_elimination.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_spill_preserved_cpp",
+      "source": "src/amd/compiler/aco_spill_preserved.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_statistics_cpp",
+      "source": "src/amd/compiler/aco_statistics.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_opcodes_cpp",
+      "source": "src/amd/compiler/aco_opcodes.cpp",
+      "language": "cpp",
+      "generated_source": true
+    },
+    {
+      "name": "src_amd_compiler_aco_spill_cpp",
+      "source": "src/amd/compiler/aco_spill.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_validate_cpp",
+      "source": "src/amd/compiler/aco_validate.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_ps_epilog_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_ps_epilog.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_trap_handler_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_trap_handler.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_nir_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_nir.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_vs_prolog_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_vs_prolog.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_ir_cpp",
+      "source": "src/amd/compiler/aco_ir.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_instruction_selection_aco_select_nir_intrinsics_cpp",
+      "source": "src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_compiler_aco_print_asm_cpp",
+      "source": "src/amd/compiler/aco_print_asm.cpp",
+      "language": "cpp",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_builtin_builder_c",
+      "source": "src/compiler/nir/nir_builtin_builder.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_builder_c",
+      "source": "src/compiler/nir/nir_builder.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_convert_address_format_c",
+      "source": "src/compiler/nir/nir_convert_address_format.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_clone_c",
+      "source": "src/compiler/nir/nir_clone.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_control_flow_c",
+      "source": "src/compiler/nir/nir_control_flow.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_c",
+      "source": "src/compiler/nir/nir.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_clip_cull_distance_io_utils_c",
+      "source": "src/compiler/nir/nir_clip_cull_distance_io_utils.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_dominance_c",
+      "source": "src/compiler/nir/nir_dominance.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_dominance_lca_c",
+      "source": "src/compiler/nir/nir_dominance_lca.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_fixup_is_exported_c",
+      "source": "src/compiler/nir/nir_fixup_is_exported.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_divergence_analysis_c",
+      "source": "src/compiler/nir/nir_divergence_analysis.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_downgrade_pls_vars_c",
+      "source": "src/compiler/nir/nir_downgrade_pls_vars.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_deref_c",
+      "source": "src/compiler/nir/nir_deref.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_format_convert_c",
+      "source": "src/compiler/nir/nir_format_convert.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_functions_c",
+      "source": "src/compiler/nir/nir_functions.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_gather_info_c",
+      "source": "src/compiler/nir/nir_gather_info.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_from_ssa_c",
+      "source": "src/compiler/nir/nir_from_ssa.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_gather_types_c",
+      "source": "src/compiler/nir/nir_gather_types.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_gather_tcs_info_c",
+      "source": "src/compiler/nir/nir_gather_tcs_info.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_group_loads_c",
+      "source": "src/compiler/nir/nir_opt_group_loads.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_gather_xfb_info_c",
+      "source": "src/compiler/nir/nir_gather_xfb_info.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_gather_output_deps_c",
+      "source": "src/compiler/nir/nir_gather_output_deps.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_gs_count_vertices_c",
+      "source": "src/compiler/nir/nir_gs_count_vertices.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_io_add_xfb_info_c",
+      "source": "src/compiler/nir/nir_io_add_xfb_info.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_instr_set_c",
+      "source": "src/compiler/nir/nir_instr_set.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_inline_sysval_c",
+      "source": "src/compiler/nir/nir_inline_sysval.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_inline_uniforms_c",
+      "source": "src/compiler/nir/nir_inline_uniforms.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_liveness_c",
+      "source": "src/compiler/nir/nir_liveness.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_legacy_c",
+      "source": "src/compiler/nir/nir_legacy.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_loop_analyze_c",
+      "source": "src/compiler/nir/nir_loop_analyze.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_abort_c",
+      "source": "src/compiler/nir/nir_lower_abort.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_linking_helpers_c",
+      "source": "src/compiler/nir/nir_linking_helpers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_alu_c",
+      "source": "src/compiler/nir/nir_lower_alu.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_amul_c",
+      "source": "src/compiler/nir/nir_lower_amul.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_alpha_c",
+      "source": "src/compiler/nir/nir_lower_alpha.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_alu_width_c",
+      "source": "src/compiler/nir/nir_lower_alu_width.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_atomics_to_ssbo_c",
+      "source": "src/compiler/nir/nir_lower_atomics_to_ssbo.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_array_deref_of_vec_c",
+      "source": "src/compiler/nir/nir_lower_array_deref_of_vec.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_bitmap_c",
+      "source": "src/compiler/nir/nir_lower_bitmap.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_bool_to_float_c",
+      "source": "src/compiler/nir/nir_lower_bool_to_float.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_blend_c",
+      "source": "src/compiler/nir/nir_lower_blend.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_bool_to_int32_c",
+      "source": "src/compiler/nir/nir_lower_bool_to_int32.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_calls_to_builtins_c",
+      "source": "src/compiler/nir/nir_lower_calls_to_builtins.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_cl_images_c",
+      "source": "src/compiler/nir/nir_lower_cl_images.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_clamp_color_outputs_c",
+      "source": "src/compiler/nir/nir_lower_clamp_color_outputs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_clip_disable_c",
+      "source": "src/compiler/nir/nir_lower_clip_disable.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_clip_halfz_c",
+      "source": "src/compiler/nir/nir_lower_clip_halfz.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_clip_c",
+      "source": "src/compiler/nir/nir_lower_clip.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_const_arrays_to_uniforms_c",
+      "source": "src/compiler/nir/nir_lower_const_arrays_to_uniforms.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_continue_constructs_c",
+      "source": "src/compiler/nir/nir_lower_continue_constructs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_convert_alu_types_c",
+      "source": "src/compiler/nir/nir_lower_convert_alu_types.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_variable_initializers_c",
+      "source": "src/compiler/nir/nir_lower_variable_initializers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_discard_if_c",
+      "source": "src/compiler/nir/nir_lower_discard_if.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_fb_read_c",
+      "source": "src/compiler/nir/nir_lower_fb_read.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_double_ops_c",
+      "source": "src/compiler/nir/nir_lower_double_ops.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_cooperative_matrix_c",
+      "source": "src/compiler/nir/nir_lower_cooperative_matrix.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_flatshade_c",
+      "source": "src/compiler/nir/nir_lower_flatshade.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_floats_c",
+      "source": "src/compiler/nir/nir_lower_floats.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_explicit_io_c",
+      "source": "src/compiler/nir/nir_lower_explicit_io.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_flrp_c",
+      "source": "src/compiler/nir/nir_lower_flrp.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_fragcoord_wtrans_c",
+      "source": "src/compiler/nir/nir_lower_fragcoord_wtrans.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_frag_coord_to_pixel_coord_c",
+      "source": "src/compiler/nir/nir_lower_frag_coord_to_pixel_coord.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_fp16_conv_c",
+      "source": "src/compiler/nir/nir_lower_fp16_conv.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_global_vars_to_local_c",
+      "source": "src/compiler/nir/nir_lower_global_vars_to_local.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_fragcolor_c",
+      "source": "src/compiler/nir/nir_lower_fragcolor.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_frexp_c",
+      "source": "src/compiler/nir/nir_lower_frexp.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_goto_ifs_c",
+      "source": "src/compiler/nir/nir_lower_goto_ifs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_gs_intrinsics_c",
+      "source": "src/compiler/nir/nir_lower_gs_intrinsics.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_halt_to_return_c",
+      "source": "src/compiler/nir/nir_lower_halt_to_return.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_helper_writes_c",
+      "source": "src/compiler/nir/nir_lower_helper_writes.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_load_const_to_scalar_c",
+      "source": "src/compiler/nir/nir_lower_load_const_to_scalar.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_idiv_c",
+      "source": "src/compiler/nir/nir_lower_idiv.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_locals_to_regs_c",
+      "source": "src/compiler/nir/nir_lower_locals_to_regs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_image_atomics_to_global_c",
+      "source": "src/compiler/nir/nir_lower_image_atomics_to_global.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_image_c",
+      "source": "src/compiler/nir/nir_lower_image.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_indirect_derefs_to_if_else_trees_c",
+      "source": "src/compiler/nir/nir_lower_indirect_derefs_to_if_else_trees.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_input_attachments_c",
+      "source": "src/compiler/nir/nir_lower_input_attachments.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_interpolation_c",
+      "source": "src/compiler/nir/nir_lower_interpolation.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_int64_c",
+      "source": "src/compiler/nir/nir_lower_int64.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_int_to_float_c",
+      "source": "src/compiler/nir/nir_lower_int_to_float.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_io_array_vars_to_elements_c",
+      "source": "src/compiler/nir/nir_lower_io_array_vars_to_elements.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_io_indirect_loads_c",
+      "source": "src/compiler/nir/nir_lower_io_indirect_loads.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_io_c",
+      "source": "src/compiler/nir/nir_lower_io.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_io_vars_to_temporaries_c",
+      "source": "src/compiler/nir/nir_lower_io_vars_to_temporaries.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_io_to_scalar_c",
+      "source": "src/compiler/nir/nir_lower_io_to_scalar.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_io_vars_to_scalar_c",
+      "source": "src/compiler/nir/nir_lower_io_vars_to_scalar.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_is_helper_invocation_c",
+      "source": "src/compiler/nir/nir_lower_is_helper_invocation.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_multiview_c",
+      "source": "src/compiler/nir/nir_lower_multiview.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_mediump_c",
+      "source": "src/compiler/nir/nir_lower_mediump.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_mem_access_bit_sizes_c",
+      "source": "src/compiler/nir/nir_lower_mem_access_bit_sizes.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_memcpy_c",
+      "source": "src/compiler/nir/nir_lower_memcpy.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_memory_model_c",
+      "source": "src/compiler/nir/nir_lower_memory_model.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_packing_c",
+      "source": "src/compiler/nir/nir_lower_packing.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_passthrough_edgeflags_c",
+      "source": "src/compiler/nir/nir_lower_passthrough_edgeflags.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_non_uniform_access_c",
+      "source": "src/compiler/nir/nir_lower_non_uniform_access.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_patch_vertices_c",
+      "source": "src/compiler/nir/nir_lower_patch_vertices.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_pntc_ytransform_c",
+      "source": "src/compiler/nir/nir_lower_pntc_ytransform.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_phis_to_scalar_c",
+      "source": "src/compiler/nir/nir_lower_phis_to_scalar.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_point_smooth_c",
+      "source": "src/compiler/nir/nir_lower_point_smooth.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_point_size_c",
+      "source": "src/compiler/nir/nir_lower_point_size.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_poly_line_smooth_c",
+      "source": "src/compiler/nir/nir_lower_poly_line_smooth.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_reg_intrinsics_to_ssa_c",
+      "source": "src/compiler/nir/nir_lower_reg_intrinsics_to_ssa.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_readonly_images_to_tex_c",
+      "source": "src/compiler/nir/nir_lower_readonly_images_to_tex.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_printf_c",
+      "source": "src/compiler/nir/nir_lower_printf.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_returns_c",
+      "source": "src/compiler/nir/nir_lower_returns.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_sample_shading_c",
+      "source": "src/compiler/nir/nir_lower_sample_shading.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_samplers_c",
+      "source": "src/compiler/nir/nir_lower_samplers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_robust_access_c",
+      "source": "src/compiler/nir/nir_lower_robust_access.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_scratch_c",
+      "source": "src/compiler/nir/nir_lower_scratch.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_single_sampled_c",
+      "source": "src/compiler/nir/nir_lower_single_sampled.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_scratch_to_var_c",
+      "source": "src/compiler/nir/nir_lower_scratch_to_var.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_ssbo_c",
+      "source": "src/compiler/nir/nir_lower_ssbo.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_system_values_c",
+      "source": "src/compiler/nir/nir_lower_system_values.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_task_shader_c",
+      "source": "src/compiler/nir/nir_lower_task_shader.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_subgroups_c",
+      "source": "src/compiler/nir/nir_lower_subgroups.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_terminate_to_demote_c",
+      "source": "src/compiler/nir/nir_lower_terminate_to_demote.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_shader_calls_c",
+      "source": "src/compiler/nir/nir_lower_shader_calls.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_tess_coord_z_c",
+      "source": "src/compiler/nir/nir_lower_tess_coord_z.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_tex_shadow_c",
+      "source": "src/compiler/nir/nir_lower_tex_shadow.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_texcoord_replace_c",
+      "source": "src/compiler/nir/nir_lower_texcoord_replace.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_texcoord_replace_late_c",
+      "source": "src/compiler/nir/nir_lower_texcoord_replace_late.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_two_sided_color_c",
+      "source": "src/compiler/nir/nir_lower_two_sided_color.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_undef_to_zero_c",
+      "source": "src/compiler/nir/nir_lower_undef_to_zero.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_tex_c",
+      "source": "src/compiler/nir/nir_lower_tex.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_var_copies_c",
+      "source": "src/compiler/nir/nir_lower_var_copies.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_vars_to_ssa_c",
+      "source": "src/compiler/nir/nir_lower_vars_to_ssa.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_view_index_to_device_index_c",
+      "source": "src/compiler/nir/nir_lower_view_index_to_device_index.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_vec_to_regs_c",
+      "source": "src/compiler/nir/nir_lower_vec_to_regs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_vec3_to_vec4_c",
+      "source": "src/compiler/nir/nir_lower_vec3_to_vec4.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_viewport_transform_c",
+      "source": "src/compiler/nir/nir_lower_viewport_transform.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_wpos_center_c",
+      "source": "src/compiler/nir/nir_lower_wpos_center.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_wpos_ytransform_c",
+      "source": "src/compiler/nir/nir_lower_wpos_ytransform.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_wrmasks_c",
+      "source": "src/compiler/nir/nir_lower_wrmasks.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_bit_size_c",
+      "source": "src/compiler/nir/nir_lower_bit_size.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_ubo_vec4_c",
+      "source": "src/compiler/nir/nir_lower_ubo_vec4.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_uniforms_to_ubo_c",
+      "source": "src/compiler/nir/nir_lower_uniforms_to_ubo.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_metadata_c",
+      "source": "src/compiler/nir/nir_metadata.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_mod_analysis_c",
+      "source": "src/compiler/nir/nir_mod_analysis.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_sysvals_to_varyings_c",
+      "source": "src/compiler/nir/nir_lower_sysvals_to_varyings.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_workgroup_size_c",
+      "source": "src/compiler/nir/nir_lower_workgroup_size.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_move_vec_src_uses_to_dest_c",
+      "source": "src/compiler/nir/nir_move_vec_src_uses_to_dest.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_move_output_stores_to_end_c",
+      "source": "src/compiler/nir/nir_move_output_stores_to_end.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_access_c",
+      "source": "src/compiler/nir/nir_opt_access.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_normalize_cubemap_coords_c",
+      "source": "src/compiler/nir/nir_normalize_cubemap_coords.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_normalize_sin_cos_c",
+      "source": "src/compiler/nir/nir_normalize_sin_cos.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_barriers_c",
+      "source": "src/compiler/nir/nir_opt_barriers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_barycentric_c",
+      "source": "src/compiler/nir/nir_opt_barycentric.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_clip_cull_const_c",
+      "source": "src/compiler/nir/nir_opt_clip_cull_const.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_call_c",
+      "source": "src/compiler/nir/nir_opt_call.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_combine_stores_c",
+      "source": "src/compiler/nir/nir_opt_combine_stores.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_comparison_pre_c",
+      "source": "src/compiler/nir/nir_opt_comparison_pre.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_constant_folding_c",
+      "source": "src/compiler/nir/nir_opt_constant_folding.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_copy_propagate_c",
+      "source": "src/compiler/nir/nir_opt_copy_propagate.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_cse_c",
+      "source": "src/compiler/nir/nir_opt_cse.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_dce_c",
+      "source": "src/compiler/nir/nir_opt_dce.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_dead_cf_c",
+      "source": "src/compiler/nir/nir_opt_dead_cf.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_copy_prop_vars_c",
+      "source": "src/compiler/nir/nir_opt_copy_prop_vars.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_fp_math_ctrl_c",
+      "source": "src/compiler/nir/nir_opt_fp_math_ctrl.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_dead_write_vars_c",
+      "source": "src/compiler/nir/nir_opt_dead_write_vars.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_frag_coord_to_pixel_coord_c",
+      "source": "src/compiler/nir/nir_opt_frag_coord_to_pixel_coord.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_find_array_copies_c",
+      "source": "src/compiler/nir/nir_opt_find_array_copies.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_gcm_c",
+      "source": "src/compiler/nir/nir_opt_gcm.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_fragdepth_c",
+      "source": "src/compiler/nir/nir_opt_fragdepth.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_generate_bfi_c",
+      "source": "src/compiler/nir/nir_opt_generate_bfi.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_idiv_const_c",
+      "source": "src/compiler/nir/nir_opt_idiv_const.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_licm_c",
+      "source": "src/compiler/nir/nir_opt_licm.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_if_c",
+      "source": "src/compiler/nir/nir_opt_if.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_large_constants_c",
+      "source": "src/compiler/nir/nir_opt_large_constants.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_load_skip_helpers_c",
+      "source": "src/compiler/nir/nir_opt_load_skip_helpers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_intrinsics_c",
+      "source": "src/compiler/nir/nir_opt_intrinsics.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_loop_c",
+      "source": "src/compiler/nir/nir_opt_loop.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_loop_unroll_c",
+      "source": "src/compiler/nir/nir_opt_loop_unroll.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_memcpy_c",
+      "source": "src/compiler/nir/nir_opt_memcpy.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_move_c",
+      "source": "src/compiler/nir/nir_opt_move.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_move_to_top_c",
+      "source": "src/compiler/nir/nir_opt_move_to_top.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_move_discards_to_top_c",
+      "source": "src/compiler/nir/nir_opt_move_discards_to_top.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_mqsad_c",
+      "source": "src/compiler/nir/nir_opt_mqsad.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_load_store_vectorize_c",
+      "source": "src/compiler/nir/nir_opt_load_store_vectorize.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_non_uniform_access_c",
+      "source": "src/compiler/nir/nir_opt_non_uniform_access.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_offsets_c",
+      "source": "src/compiler/nir/nir_opt_offsets.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_phi_precision_c",
+      "source": "src/compiler/nir/nir_opt_phi_precision.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_peephole_select_c",
+      "source": "src/compiler/nir/nir_opt_peephole_select.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_phi_to_bool_c",
+      "source": "src/compiler/nir/nir_opt_phi_to_bool.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_ray_queries_c",
+      "source": "src/compiler/nir/nir_opt_ray_queries.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_preamble_c",
+      "source": "src/compiler/nir/nir_opt_preamble.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_reassociate_c",
+      "source": "src/compiler/nir/nir_opt_reassociate.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_reassociate_bfi_c",
+      "source": "src/compiler/nir/nir_opt_reassociate_bfi.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_rematerialize_compares_c",
+      "source": "src/compiler/nir/nir_opt_rematerialize_compares.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_remove_phis_c",
+      "source": "src/compiler/nir/nir_opt_remove_phis.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_shrink_stores_c",
+      "source": "src/compiler/nir/nir_opt_shrink_stores.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_sink_c",
+      "source": "src/compiler/nir/nir_opt_sink.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_shared_vars_to_subgroup_c",
+      "source": "src/compiler/nir/nir_opt_shared_vars_to_subgroup.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_shrink_vectors_c",
+      "source": "src/compiler/nir/nir_opt_shrink_vectors.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_undef_c",
+      "source": "src/compiler/nir/nir_opt_undef.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_uniform_atomics_c",
+      "source": "src/compiler/nir/nir_opt_uniform_atomics.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_uniform_subgroup_c",
+      "source": "src/compiler/nir/nir_opt_uniform_subgroup.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_uub_c",
+      "source": "src/compiler/nir/nir_opt_uub.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_vectorize_c",
+      "source": "src/compiler/nir/nir_opt_vectorize.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_vectorize_io_c",
+      "source": "src/compiler/nir/nir_opt_vectorize_io.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_vectorize_io_vars_c",
+      "source": "src/compiler/nir/nir_opt_vectorize_io_vars.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_phi_builder_c",
+      "source": "src/compiler/nir/nir_phi_builder.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_passthrough_tcs_c",
+      "source": "src/compiler/nir/nir_passthrough_tcs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_passthrough_gs_c",
+      "source": "src/compiler/nir/nir_passthrough_gs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_propagate_invariant_c",
+      "source": "src/compiler/nir/nir_propagate_invariant.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_recompute_io_bases_c",
+      "source": "src/compiler/nir/nir_recompute_io_bases.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_range_analysis_c",
+      "source": "src/compiler/nir/nir_range_analysis.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_varyings_c",
+      "source": "src/compiler/nir/nir_opt_varyings.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_remove_dead_variables_c",
+      "source": "src/compiler/nir/nir_remove_dead_variables.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_print_c",
+      "source": "src/compiler/nir/nir_print.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_remove_outputs_c",
+      "source": "src/compiler/nir/nir_remove_outputs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_remove_tex_shadow_c",
+      "source": "src/compiler/nir/nir_remove_tex_shadow.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_repair_ssa_c",
+      "source": "src/compiler/nir/nir_repair_ssa.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_scale_fdiv_c",
+      "source": "src/compiler/nir/nir_scale_fdiv.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_schedule_c",
+      "source": "src/compiler/nir/nir_schedule.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_separate_merged_clip_cull_io_c",
+      "source": "src/compiler/nir/nir_separate_merged_clip_cull_io.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_shader_bisect_c",
+      "source": "src/compiler/nir/nir_shader_bisect.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_search_c",
+      "source": "src/compiler/nir/nir_search.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_split_conversions_c",
+      "source": "src/compiler/nir/nir_split_conversions.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_split_per_member_structs_c",
+      "source": "src/compiler/nir/nir_split_per_member_structs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_split_64bit_vec3_and_vec4_c",
+      "source": "src/compiler/nir/nir_split_64bit_vec3_and_vec4.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_serialize_c",
+      "source": "src/compiler/nir/nir_serialize.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_sweep_c",
+      "source": "src/compiler/nir/nir_sweep.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_split_var_copies_c",
+      "source": "src/compiler/nir/nir_split_var_copies.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_to_lcssa_c",
+      "source": "src/compiler/nir/nir_to_lcssa.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_use_dominance_c",
+      "source": "src/compiler/nir/nir_use_dominance.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_trivialize_registers_c",
+      "source": "src/compiler/nir/nir_trivialize_registers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_split_vars_c",
+      "source": "src/compiler/nir/nir_split_vars.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_worklist_c",
+      "source": "src/compiler/nir/nir_worklist.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_unlower_io_to_vars_c",
+      "source": "src/compiler/nir/nir_unlower_io_to_vars.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_gl_spirv_c",
+      "source": "src/compiler/spirv/gl_spirv.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_lower_atomics_c",
+      "source": "src/compiler/nir/nir_lower_atomics.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_validate_c",
+      "source": "src/compiler/nir/nir_validate.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_amd_c",
+      "source": "src/compiler/spirv/vtn_amd.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_alu_c",
+      "source": "src/compiler/spirv/vtn_alu.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_cfg_c",
+      "source": "src/compiler/spirv/vtn_cfg.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_cmat_c",
+      "source": "src/compiler/spirv/vtn_cmat.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_debug_c",
+      "source": "src/compiler/spirv/vtn_debug.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_glsl450_c",
+      "source": "src/compiler/spirv/vtn_glsl450.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_opencl_c",
+      "source": "src/compiler/spirv/vtn_opencl.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_subgroup_c",
+      "source": "src/compiler/spirv/vtn_subgroup.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_spirv_to_nir_c",
+      "source": "src/compiler/spirv/spirv_to_nir.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_structured_cfg_c",
+      "source": "src/compiler/spirv/vtn_structured_cfg.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_bitscan_c",
+      "source": "src/util/bitscan.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_shader_enums_c",
+      "source": "src/compiler/shader_enums.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_dag_c",
+      "source": "src/util/dag.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_blob_c",
+      "source": "src/util/blob.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_half_float_c",
+      "source": "src/util/half_float.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_memstream_c",
+      "source": "src/util/memstream.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_hash_table_c",
+      "source": "src/util/hash_table.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_ralloc_c",
+      "source": "src/util/ralloc.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_rgtc_c",
+      "source": "src/util/rgtc.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_set_c",
+      "source": "src/util/set.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_glsl_types_c",
+      "source": "src/compiler/glsl_types.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_dynarray_c",
+      "source": "src/util/u_dynarray.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_debug_c",
+      "source": "src/util/u_debug.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_math_c",
+      "source": "src/util/u_math.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_string_c",
+      "source": "src/util/u_string.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_softfloat_c",
+      "source": "src/util/softfloat.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_double_c",
+      "source": "src/util/double.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_spirv_vtn_variables_c",
+      "source": "src/compiler/spirv/vtn_variables.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_fast_idiv_by_const_c",
+      "source": "src/util/fast_idiv_by_const.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_printf_c",
+      "source": "src/util/u_printf.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_range_minimum_query_c",
+      "source": "src/util/range_minimum_query.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_float8_c",
+      "source": "src/util/float8.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_vector_c",
+      "source": "src/util/u_vector.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_simple_mtx_c",
+      "source": "src/util/simple_mtx.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_u_worklist_c",
+      "source": "src/util/u_worklist.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_rb_tree_c",
+      "source": "src/util/rb_tree.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_blake3_blake3_c",
+      "source": "src/util/blake3/blake3.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_c",
+      "source": "src/util/format/u_format.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_mesa_blake3_c",
+      "source": "src/util/mesa-blake3.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_blake3_blake3_portable_c",
+      "source": "src/util/blake3/blake3_portable.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_blake3_blake3_dispatch_c",
+      "source": "src/util/blake3/blake3_dispatch.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_builtin_types_c",
+      "source": "src/compiler/builtin_types.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_compiler_nir_nir_intrinsics_c",
+      "source": "src/compiler/nir/nir_intrinsics.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_compiler_nir_nir_opcodes_c",
+      "source": "src/compiler/nir/nir_opcodes.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_compiler_spirv_spirv_info_c",
+      "source": "src/compiler/spirv/spirv_info.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_compiler_spirv_vtn_gather_types_c",
+      "source": "src/compiler/spirv/vtn_gather_types.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_amd_common_ac_shader_args_c",
+      "source": "src/amd/common/ac_shader_args.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_ac_formats_c",
+      "source": "src/amd/common/ac_formats.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_ac_shader_util_c",
+      "source": "src/amd/common/ac_shader_util.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_ac_descriptors_c",
+      "source": "src/amd/common/ac_descriptors.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_assign_io_locations_c",
+      "source": "src/amd/common/nir/ac_nir_assign_io_locations.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_create_gs_copy_shader_c",
+      "source": "src/amd/common/nir/ac_nir_create_gs_copy_shader.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_cull_c",
+      "source": "src/amd/common/nir/ac_nir_cull.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_fixup_smem_loads_null_prt_c",
+      "source": "src/amd/common/nir/ac_nir_fixup_smem_loads_null_prt.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_esgs_io_to_mem_c",
+      "source": "src/amd/common/nir/ac_nir_lower_esgs_io_to_mem.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_global_access_c",
+      "source": "src/amd/common/nir/ac_nir_lower_global_access.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_image_opcodes_cdna_c",
+      "source": "src/amd/common/nir/ac_nir_lower_image_opcodes_cdna.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_image_tex_c",
+      "source": "src/amd/common/nir/ac_nir_lower_image_tex.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_legacy_gs_c",
+      "source": "src/amd/common/nir/ac_nir_lower_legacy_gs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_intrinsics_to_args_c",
+      "source": "src/amd/common/nir/ac_nir_lower_intrinsics_to_args.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_legacy_vs_c",
+      "source": "src/amd/common/nir/ac_nir_lower_legacy_vs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_mem_access_bit_sizes_c",
+      "source": "src/amd/common/nir/ac_nir_lower_mem_access_bit_sizes.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_ngg_gs_c",
+      "source": "src/amd/common/nir/ac_nir_lower_ngg_gs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_ngg_mesh_c",
+      "source": "src/amd/common/nir/ac_nir_lower_ngg_mesh.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_ps_early_c",
+      "source": "src/amd/common/nir/ac_nir_lower_ps_early.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_ngg_c",
+      "source": "src/amd/common/nir/ac_nir_lower_ngg.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_resinfo_c",
+      "source": "src/amd/common/nir/ac_nir_lower_resinfo.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_ps_late_c",
+      "source": "src/amd/common/nir/ac_nir_lower_ps_late.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_sample_mask_in_c",
+      "source": "src/amd/common/nir/ac_nir_lower_sample_mask_in.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_taskmesh_io_to_mem_c",
+      "source": "src/amd/common/nir/ac_nir_lower_taskmesh_io_to_mem.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_tex_coords_c",
+      "source": "src/amd/common/nir/ac_nir_lower_tex_coords.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_compiler_nir_nir_opt_algebraic_c",
+      "source": "src/compiler/nir/nir_opt_algebraic.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_compiler_nir_nir_constant_expressions_c",
+      "source": "src/compiler/nir/nir_constant_expressions.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_lower_tess_io_to_mem_c",
+      "source": "src/amd/common/nir/ac_nir_lower_tess_io_to_mem.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_meta_ps_resolve_c",
+      "source": "src/amd/common/nir/ac_nir_meta_ps_resolve.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_meta_cs_clear_copy_buffer_c",
+      "source": "src/amd/common/nir/ac_nir_meta_cs_clear_copy_buffer.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_opt_flip_if_for_mem_loads_c",
+      "source": "src/amd/common/nir/ac_nir_opt_flip_if_for_mem_loads.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_meta_cs_blit_c",
+      "source": "src/amd/common/nir/ac_nir_meta_cs_blit.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_opt_shared_append_c",
+      "source": "src/amd/common/nir/ac_nir_opt_shared_append.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_opt_outputs_c",
+      "source": "src/amd/common/nir/ac_nir_opt_outputs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_surface_c",
+      "source": "src/amd/common/nir/ac_nir_surface.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_prerast_utils_c",
+      "source": "src/amd/common/nir/ac_nir_prerast_utils.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_nir_ac_nir_c",
+      "source": "src/amd/common/nir/ac_nir.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_table_c",
+      "source": "src/util/format/u_format_table.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_util_crc32_c",
+      "source": "src/util/crc32.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_helpers_c",
+      "source": "src/util/helpers.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_etc_c",
+      "source": "src/util/format/u_format_etc.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_latc_c",
+      "source": "src/util/format/u_format_latc.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_other_c",
+      "source": "src/util/format/u_format_other.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_rgtc_c",
+      "source": "src/util/format/u_format_rgtc.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_fxt1_c",
+      "source": "src/util/format/u_format_fxt1.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_bptc_c",
+      "source": "src/util/format/u_format_bptc.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_amd_common_gfx10_format_table_c",
+      "source": "src/amd/common/gfx10_format_table.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_util_format_srgb_c",
+      "source": "src/util/format_srgb.c",
+      "language": "c",
+      "generated_source": true
+    },
+    {
+      "name": "src_util_format_u_format_yuv_c",
+      "source": "src/util/format/u_format_yuv.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_zs_c",
+      "source": "src/util/format/u_format_zs.c",
+      "language": "c",
+      "generated_source": false
+    },
+    {
+      "name": "src_util_format_u_format_s3tc_c",
+      "source": "src/util/format/u_format_s3tc.c",
+      "language": "c",
+      "generated_source": false
+    }
+  ],
+  "followup": "0.80.14",
+  "scope": "Complete native SPIR-V/NIR/ACO source closure and fixed Picasso CPU compiler. No GPU execution claim.",
+  "output_stage": "Compiler"
+}

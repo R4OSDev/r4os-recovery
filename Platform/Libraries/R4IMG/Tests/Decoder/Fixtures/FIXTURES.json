@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "project": "web-platform-tests",
+    "repository": "https://github.com/web-platform-tests/wpt.git",
+    "commit": "4a5810a124fa0523dd2494996bf1542d4b67f394",
+    "license": "BSD-3-Clause",
+    "notice": "LICENSE-WPT-BSD-3-Clause.txt"
+  },
+  "fixtures": [
+    {
+      "file": "baseline.jpg",
+      "upstream_path": "dom/nodes/Document-contentType/resources/t.jpg",
+      "transformation": "Byte-for-byte copy.",
+      "sha256": "683731a42754a930c9faba2e72b8b682f3f6491ccbe479cd3a639c2257823078"
+    },
+    {
+      "file": "progressive.jpg",
+      "upstream_path": "html/canvas/element/manual/wide-gamut-canvas/resources/pattern-srgb.jpg",
+      "transformation": "Byte-for-byte copy.",
+      "sha256": "5dbeba1579ab681f16c61db8ed76c51598f8235174c8e8a4c29e9201643dbef9"
+    },
+    {
+      "file": "rgba.png",
+      "upstream_path": "html/semantics/embedded-content/the-img-element/resources/blue-10.png",
+      "transformation": "Byte-for-byte copy.",
+      "sha256": "4581b3578f5f3a8ebd1d9378931a46e22dacab34eb1d4139fdc6391dd248caaa"
+    },
+    {
+      "file": "transparent.png",
+      "byte_identical_upstream_path": "html/canvas/element/compositing/2d.composite.canvas.clear.png",
+      "transformation": "Byte-for-byte copy; the same bytes occur in multiple WPT reference images.",
+      "sha256": "110e1327a718bf9cb1a94fbe06368942b3a8f9deca7a372f867aa230f3cf0f61"
+    },
+    {
+      "file": "basic.svg",
+      "source": "Original R4OS conformance fixture.",
+      "sha256": "be13a53eabe6e041d9d849206c3fdbdd643d3929124c5eb2b293fbae75a3f092"
+    }
+  ],
+  "generated_at_test_time": [
+    "A deterministic BMP fixture."
+  ]
+}

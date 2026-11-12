@@ -1,0 +1,31 @@
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -3099,6 +3099,12 @@
+    }
+ 
+    if ((!screen->info.have_EXT_line_rasterization ||
++#ifdef R4OS_OPENGL
++        /* A driver may expose only a subset of native stippled line modes.
++         * Use Zink's existing GS/FS lowering for the complete GL operation. */
++        !screen->info.line_rast_feats.stippledRectangularLines ||
++        !screen->info.line_rast_feats.stippledSmoothLines ||
++#endif
+         !screen->info.line_rast_feats.stippledBresenhamLines) &&
+        screen->info.feats.features.geometryShader &&
+        screen->info.feats.features.sampleRateShading) {
+@@ -3663,9 +3669,12 @@
+    R4GL_REQUIRE(i->have_EXT_custom_border_color && i->border_color_feats.customBorderColorWithoutFormat);
+    R4GL_REQUIRE(i->have_EXT_provoking_vertex && i->have_EXT_border_color_swizzle);
+    R4GL_REQUIRE(i->have_EXT_line_rasterization && i->line_rast_feats.rectangularLines &&
+-       i->line_rast_feats.bresenhamLines && i->line_rast_feats.smoothLines &&
+-       i->line_rast_feats.stippledRectangularLines && i->line_rast_feats.stippledBresenhamLines &&
+-       i->line_rast_feats.stippledSmoothLines);
++       i->line_rast_feats.bresenhamLines && i->line_rast_feats.smoothLines);
++   /* Match init_driver_workarounds: unsupported native stipple modes need
++    * actual geometry/sample-shading support for the existing shader path. */
++   R4GL_REQUIRE((i->line_rast_feats.stippledRectangularLines &&
++       i->line_rast_feats.stippledBresenhamLines && i->line_rast_feats.stippledSmoothLines) ||
++       (f->geometryShader && f->sampleRateShading));
+    R4GL_REQUIRE(i->have_EXT_transform_feedback && i->have_EXT_conditional_rendering);
+    R4GL_REQUIRE(i->have_EXT_depth_clip_enable && i->depth_clip_enable_feats.depthClipEnable);
+    R4GL_REQUIRE(i->have_EXT_vertex_attribute_divisor && i->maint5_feats.maintenance5);

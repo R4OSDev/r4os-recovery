@@ -1,0 +1,275 @@
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -1062,6 +1062,10 @@
+        (screen->info.db_props.maxDescriptorBufferBindings >= 2 &&
+         screen->info.db_props.maxSamplerDescriptorBufferBindings >= 2)) &&
+       screen->info.have_EXT_descriptor_indexing;
++#ifdef R4OS_OPENGL
++   /* Bindless handles have no fixed per-binding shader key. */
++   if (screen->r4gl_emulate_border_swizzle) caps->bindless_texture = false;
++#endif
+ 
+    caps->texture_buffer_offset_alignment =
+       screen->info.props.limits.minTexelBufferOffsetAlignment;
+@@ -3328,6 +3332,12 @@
+    default:
+       break;
+    }
++#ifdef R4OS_OPENGL
++   screen->r4gl_emulate_border_swizzle = !screen->info.have_EXT_border_color_swizzle;
++   if (screen->r4gl_emulate_border_swizzle)
++      screen->driver_compiler_workarounds.needs_zs_shader_swizzle = true;
++#endif
++
+ }
+ 
+ static void
+@@ -3667,7 +3677,9 @@
+    R4GL_REQUIRE(i->props.limits.maxPerStageDescriptorSamplers >= 16);
+    R4GL_REQUIRE(i->feats12.scalarBlockLayout || i->have_EXT_scalar_block_layout);
+    R4GL_REQUIRE(i->have_EXT_custom_border_color && i->border_color_feats.customBorderColorWithoutFormat);
+-   R4GL_REQUIRE(i->have_EXT_provoking_vertex && i->have_EXT_border_color_swizzle);
++   R4GL_REQUIRE(i->have_EXT_provoking_vertex);
++   /* Missing border-color swizzle uses identity Vulkan views plus the
++    * per-binding shader mapping installed in init_driver_workarounds. */
+    R4GL_REQUIRE(i->have_EXT_line_rasterization && i->line_rast_feats.rectangularLines &&
+        i->line_rast_feats.bresenhamLines && i->line_rast_feats.smoothLines);
+    /* Match init_driver_workarounds: unsupported native stipple modes need
+--- a/src/gallium/drivers/zink/zink_types.h
++++ b/src/gallium/drivers/zink/zink_types.h
+@@ -1388,6 +1388,7 @@
+    struct pipe_screen base;
+ #ifdef R4OS_OPENGL
+    unsigned r4gl_initialized;
++   bool r4gl_emulate_border_swizzle;
+ #endif
+ 
+    const char *vendor_name;
+@@ -1651,6 +1652,9 @@
+    /* Optional sampler view returning red (depth) in all channels, for shader rewrites. */
+    struct zink_surface *zs_view;
+    struct zink_zs_swizzle swizzle;
++#ifdef R4OS_OPENGL
++   bool r4gl_identity_swizzle;
++#endif
+    struct zink_resource *import2d;
+ };
+ 
+--- a/src/gallium/drivers/zink/zink_shader_keys.h
++++ b/src/gallium/drivers/zink/zink_shader_keys.h
+@@ -76,6 +76,9 @@
+ struct zink_zs_swizzle_key {
+    /* Mask of sampler views with zs_view, i.e. have swizzles other than GL_RED for depth */
+    uint32_t mask;
++#ifdef R4OS_OPENGL
++   uint32_t r4gl_identity_mask;
++#endif
+    struct zink_zs_swizzle swizzle[32];
+ };
+ 
+--- a/src/gallium/drivers/zink/zink_context.c
++++ b/src/gallium/drivers/zink/zink_context.c
+@@ -522,7 +522,11 @@
+       }
+       if (screen->info.have_EXT_custom_border_color &&
+           (screen->info.border_color_feats.customBorderColorWithoutFormat || state->border_color_format)) {
+-         if (!screen->info.have_EXT_border_color_swizzle) {
++         if (!screen->info.have_EXT_border_color_swizzle
++#ifdef R4OS_OPENGL
++             && !screen->r4gl_emulate_border_swizzle
++#endif
++             ) {
+             static bool warned = false;
+             warn_missing_feature(warned, "VK_EXT_border_color_swizzle");
+          }
+@@ -1309,7 +1313,21 @@
+          ivci.components.a = zink_component_mapping(swizzle[3]);
+       }
+       assert(ivci.format);
+-
++#ifdef R4OS_OPENGL
++      if (screen->r4gl_emulate_border_swizzle) {
++         VkComponentSwizzle *mapping = (VkComponentSwizzle *)&ivci.components;
++         for (unsigned i = 0; i < 4; i++) {
++            const unsigned component = mapping[i] == VK_COMPONENT_SWIZZLE_IDENTITY ? i :
++               mapping[i] == VK_COMPONENT_SWIZZLE_ZERO ? PIPE_SWIZZLE_0 :
++               mapping[i] == VK_COMPONENT_SWIZZLE_ONE ? PIPE_SWIZZLE_1 :
++               mapping[i] - VK_COMPONENT_SWIZZLE_R;
++            assert(component <= PIPE_SWIZZLE_1);
++            sampler_view->swizzle.s[i] = component;
++            sampler_view->r4gl_identity_swizzle |= component != i;
++            mapping[i] = VK_COMPONENT_SWIZZLE_R + i;
++         }
++      }
++#endif
+       sampler_view->ivci = ivci;
+    } else {
+       if (zink_descriptor_mode == ZINK_DESCRIPTOR_MODE_DB) {
+@@ -2393,6 +2411,9 @@
+    }
+    assert(slot < 32);
+    ctx->di.zs_swizzle[stage].mask &= ~BITFIELD_BIT(slot);
++#ifdef R4OS_OPENGL
++   ctx->di.zs_swizzle[stage].r4gl_identity_mask &= ~BITFIELD_BIT(slot);
++#endif
+ }
+ 
+ ALWAYS_INLINE static void
+@@ -2407,6 +2428,9 @@
+       unbind_samplerview_res(ctx, stage, slot, sv->import2d);
+    assert(slot < 32);
+    ctx->di.zs_swizzle[stage].mask &= ~BITFIELD_BIT(slot);
++#ifdef R4OS_OPENGL
++   ctx->di.zs_swizzle[stage].r4gl_identity_mask &= ~BITFIELD_BIT(slot);
++#endif
+ }
+ 
+ static void
+@@ -2430,6 +2454,9 @@
+    bool general_layout = zink_screen(ctx->base.screen)->driver_workarounds.general_layout;
+    const uint32_t mask = BITFIELD_RANGE(start_slot, num_views);
+    uint32_t shadow_mask = ctx->di.zs_swizzle[shader_type].mask;
++#ifdef R4OS_OPENGL
++   const uint32_t identity_mask = ctx->di.zs_swizzle[shader_type].r4gl_identity_mask;
++#endif
+    ctx->di.cubes[shader_type] &= ~mask;
+ 
+    bool update = false;
+@@ -2505,16 +2532,29 @@
+                if (!a)
+                   update = true;
+                zink_batch_resource_usage_set(ctx->bs, res, false, false);
+-               if (b->zs_view) {
++               if (b->zs_view
++#ifdef R4OS_OPENGL
++                   || b->r4gl_identity_swizzle
++#endif
++                   ) {
+                   assert(start_slot + i < 32); //bitfield size
+                   ctx->di.zs_swizzle[shader_type].mask |= BITFIELD_BIT(start_slot + i);
+                   /* this is already gonna be slow, so don't bother trying to micro-optimize */
+                   shadow_update |= memcmp(&ctx->di.zs_swizzle[shader_type].swizzle[start_slot + i],
+                                           &b->swizzle, sizeof(struct zink_zs_swizzle));
+                   memcpy(&ctx->di.zs_swizzle[shader_type].swizzle[start_slot + i], &b->swizzle, sizeof(struct zink_zs_swizzle));
++#ifdef R4OS_OPENGL
++                  if (b->r4gl_identity_swizzle)
++                     ctx->di.zs_swizzle[shader_type].r4gl_identity_mask |= BITFIELD_BIT(start_slot + i);
++                  else
++                     ctx->di.zs_swizzle[shader_type].r4gl_identity_mask &= ~BITFIELD_BIT(start_slot + i);
++#endif
+                } else {
+                   assert(start_slot + i < 32); //bitfield size
+                   ctx->di.zs_swizzle[shader_type].mask &= ~BITFIELD_BIT(start_slot + i);
++#ifdef R4OS_OPENGL
++                  ctx->di.zs_swizzle[shader_type].r4gl_identity_mask &= ~BITFIELD_BIT(start_slot + i);
++#endif
+                }
+             }
+             res->sampler_binds[shader_type] |= BITFIELD_BIT(start_slot + i);
+@@ -2543,6 +2583,9 @@
+       if (!screen->info.have_EXT_non_seamless_cube_map)
+          update_nonseamless_shader_key(ctx, shader_type);
+       shadow_update |= shadow_mask != ctx->di.zs_swizzle[shader_type].mask;
++#ifdef R4OS_OPENGL
++      shadow_update |= identity_mask != ctx->di.zs_swizzle[shader_type].r4gl_identity_mask;
++#endif
+       zink_set_zs_needs_shader_swizzle_key(ctx, shader_type, shadow_update);
+    }
+ }
+--- a/src/gallium/drivers/zink/zink_compiler.c
++++ b/src/gallium/drivers/zink/zink_compiler.c
+@@ -3675,6 +3675,84 @@
+    const struct zink_zs_swizzle_key *swizzle;
+ };
+ 
++#ifdef R4OS_OPENGL
++/* GFX9's Vulkan border-color contract only defines identity view mappings.
++ * Keep that view identity and apply the GL mapping to sampled values in NIR.
++ * Keys remain per-stage/per-binding, including sampler arrays and gathers. */
++static nir_def *
++r4gl_swizzle_constant(nir_builder *b, nir_tex_instr *tex, unsigned components, bool one)
++{
++   nir_def *scalar = nir_alu_type_get_base_type(tex->dest_type) == nir_type_float ?
++      nir_imm_floatN_t(b, one ? 1.0 : 0.0, tex->def.bit_size) :
++      nir_imm_intN_t(b, one ? 1 : 0, tex->def.bit_size);
++   return nir_replicate(b, scalar, components);
++}
++static bool
++r4gl_lower_identity_swizzle(nir_builder *b, nir_tex_instr *tex,
++                            const struct lower_zs_swizzle_state *state)
++{
++   const struct zink_zs_swizzle_key *key = state->swizzle;
++   if (!key || !key->r4gl_identity_mask || tex->is_shadow ||
++       nir_tex_instr_is_query(tex) || tex->sampler_dim == GLSL_SAMPLER_DIM_BUF)
++      return false;
++   const int source = nir_tex_instr_src_index(tex, nir_tex_src_texture_deref);
++   if (source < 0) return false; /* Bindless is not advertised for this path. */
++   nir_deref_instr *deref = nir_def_as_deref(tex->src[source].src.ssa);
++   nir_variable *var = nir_deref_instr_get_variable(deref);
++   if (!var || var->data.binding < state->base_sampler_id) return false;
++   const unsigned first = var->data.binding - state->base_sampler_id;
++   const unsigned count = glsl_type_is_array(var->type) ? glsl_get_aoa_size(var->type) : 1;
++   if (first >= 32 || !count || count > 32 - first) return false;
++   const uint32_t candidates = key->r4gl_identity_mask & (BITFIELD_MASK(count) << first);
++   if (!candidates) return false;
++   b->cursor = nir_after_instr(&tex->instr);
++   nir_def *index = nir_imm_int(b, first);
++   for (nir_deref_instr *at = deref; at->deref_type != nir_deref_type_var;
++        at = nir_deref_instr_parent(at)) {
++      assert(at->deref_type == nir_deref_type_array);
++      const unsigned stride = glsl_type_is_array(at->type) ? glsl_get_aoa_size(at->type) : 1;
++      index = nir_iadd(b, index, nir_imul_imm(b, at->arr.index.ssa, stride));
++   }
++   nir_def *gathers[4] = {0};
++   if (tex->op == nir_texop_tg4) {
++      const unsigned original = tex->component;
++      gathers[original] = &tex->def;
++      for (unsigned slot = first; slot < first + count; slot++) {
++         if (!(candidates & BITFIELD_BIT(slot))) continue;
++         const unsigned component = key->swizzle[slot].s[original];
++         if (component >= 4 || gathers[component]) continue;
++         nir_tex_instr *copy = nir_instr_as_tex(nir_instr_clone(b->shader, &tex->instr));
++         copy->component = component;
++         nir_builder_instr_insert(b, &copy->instr);
++         gathers[component] = &copy->def;
++      }
++   }
++   nir_def *result = &tex->def;
++   for (unsigned slot = first; slot < first + count; slot++) {
++      if (!(candidates & BITFIELD_BIT(slot))) continue;
++      const uint8_t *s = key->swizzle[slot].s;
++      nir_def *mapped;
++      if (tex->op == nir_texop_tg4) {
++         const unsigned component = s[tex->component];
++         if (component < 4) mapped = gathers[component];
++         else mapped = r4gl_swizzle_constant(b, tex, 4, component == PIPE_SWIZZLE_1);
++      } else {
++         nir_def *values[5];
++         assert(tex->def.num_components >= 4 && tex->def.num_components <= 5);
++         for (unsigned channel = 0; channel < 4; channel++) {
++            if (s[channel] < 4) values[channel] = nir_channel(b, &tex->def, s[channel]);
++            else values[channel] = r4gl_swizzle_constant(b, tex, 1, s[channel] == PIPE_SWIZZLE_1);
++         }
++         if (tex->def.num_components == 5) values[4] = nir_channel(b, &tex->def, 4);
++         mapped = nir_vec(b, values, tex->def.num_components);
++      }
++      result = nir_bcsel(b, nir_ieq_imm(b, index, slot), mapped, result);
++   }
++   nir_def_rewrite_uses_after(&tex->def, result);
++   return true;
++}
++#endif
++
+ static bool
+ lower_zs_swizzle_tex_instr(nir_builder *b, nir_instr *instr, void *data)
+ {
+@@ -3684,6 +3762,9 @@
+    if (instr->type != nir_instr_type_tex)
+       return false;
+    nir_tex_instr *tex = nir_instr_as_tex(instr);
++#ifdef R4OS_OPENGL
++   if (r4gl_lower_identity_swizzle(b, tex, state)) return true;
++#endif
+    if (tex->op == nir_texop_txs || tex->op == nir_texop_lod ||
+        (!tex->is_shadow && state->shadow_only) || tex->is_new_style_shadow)
+       return false;

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "name": "OpenH264",
+      "version": "2.6.0",
+      "url": "https://github.com/cisco/openh264/archive/refs/tags/v2.6.0.tar.gz",
+      "sha256": "558544ad358283a7ab2930d69a9ceddf913f4a51ee9bf1bfb9e377322af81a69",
+      "license": "BSD-2-Clause (Cisco source license; no Cisco binary distribution)",
+      "scope": "H.264 encoder, common and processing code, x86 SIMD; no decoder, host platform or global thread pool execution"
+    }
+  ]
+}

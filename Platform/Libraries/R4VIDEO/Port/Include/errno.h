@@ -1,0 +1,34 @@
+/* Copyright 2026 R4. SPDX-License-Identifier: Apache-2.0 */
+#include "c_runtime.h"
+#define EAGAIN 11
+#define EIO 5
+#define EBUSY 16
+#define EDOM 33
+#define ENOENT 2
+#define EILSEQ 84
+#define EPIPE 32
+#define ENOSPC 28
+#define ENOTSUP 95
+#define EOVERFLOW 75
+#define E2BIG 7
+#define EACCES 13
+#define EBADF 9
+#define ECHILD 10
+#define EFAULT 14
+#define EFBIG 27
+#define EISDIR 21
+#define EMFILE 24
+#define EMLINK 31
+#define ENAMETOOLONG 36
+#define ENFILE 23
+#define ENODEV 19
+#define ENOEXEC 8
+#define ENOLCK 37
+#define ENOTDIR 20
+#define ENOTEMPTY 39
+#define ENOTTY 25
+#define ENXIO 6
+#define EROFS 30
+#define ESPIPE 29
+#define ESRCH 3
+#define EXDEV 18

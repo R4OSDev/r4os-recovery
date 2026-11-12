@@ -1,0 +1,16 @@
+/.zig-cache/
+/zig-out/
+/zig-pkg/
+**/.zig-cache/
+**/zig-out/
+**/zig-pkg/
+
+*.exe
+*.obj
+*.o
+*.pdb
+*.pyc
+**/__pycache__/
+
+.DS_Store
+Thumbs.db

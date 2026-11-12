@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "purpose": "14 small linear CPU/f64 reference images; f32 command model is a separate consumer",
+  "width": 32,
+  "height": 24,
+  "stride": 128,
+  "scene_count": 14,
+  "fixture_sha256": "ec2e7f0ab8270c6b058a8e5d5b904cd31d379d3b0b5671d4e1512b7ecdf52543",
+  "sources": [
+    {
+      "path": "Temp/gfx-render-texture-20260913/Reference.zig",
+      "sha256": "56b2b2c2bf108d59aa0ac54f7161323f847fb6f3ba441071733566fb0fc2a17e"
+    },
+    {
+      "path": "Temp/gfx-render-texture-20260913/Reference.ps1",
+      "sha256": "2f919cdaa84f8d1229925e3d9fa0a893a3ea5ba8b2f75a883f37ccfe463b9afd"
+    },
+    {
+      "path": "Repositories/Libraries/R4NV/Source/render_reference_cases.zig",
+      "sha256": "77ecdccef8125bb0df8685838c04e9fce1fed2efc3b9603064f9eba29f9082c7"
+    },
+    {
+      "path": "Repositories/Libraries/R4GFX/Source/cpu_render.zig",
+      "sha256": "380415d2586c199294171725df334e21d878360f4d7b30f692370267dd203a5b"
+    },
+    {
+      "path": "Repositories/Libraries/R4GFX/Contract/Generated/implementation_abi.zig",
+      "sha256": "9d06ddb691c5bf6ffacee98e0c3367ed80370b6f9a9e167dc55f5ec59f20840c"
+    }
+  ],
+  "images": [
+    {
+      "name": "bilinear-crop.ppm",
+      "sha256": "16ebf2925d8ac5fa2d7ac56ed8f134972f017b93ca6d4d458b9a3cca0bf6d91a"
+    },
+    {
+      "name": "bilinear-one-to-one.ppm",
+      "sha256": "ecbc931e4b705a351049c457c8350451888d1b22fa6368477faa3011d438a2b5"
+    },
+    {
+      "name": "bilinear-over-scissor.ppm",
+      "sha256": "77c8722968bf5aa4d692d092818c40bedd3004672259233cee4c9c4a01a27c45"
+    },
+    {
+      "name": "bilinear-r8.ppm",
+      "sha256": "4f6c1523d1d1f19cfa1de9b96418626448cc5894da2b80ab4127c19abbf38c0a"
+    },
+    {
+      "name": "bilinear-xrgb.ppm",
+      "sha256": "a01b87324c31688be4defcf84eaa797ab3abe9acc2fb8979098e47d0e5a5cd0f"
+    },
+    {
+      "name": "nearest-crop.ppm",
+      "sha256": "2a7ecf81c128f5fdf07d83666190c215f9c457824e2d59c6729fd9600122162e"
+    },
+    {
+      "name": "nearest-over.ppm",
+      "sha256": "2fb40f152ab0f582f2b163681bb252571624f631544adfacd612a6842c04d60c"
+    },
+    {
+      "name": "one-texel-crop.ppm",
+      "sha256": "b93350f337d3b9e150ae68cfceca10baed4b9ccbb08a57849361605f6a5deb71"
+    },
+    {
+      "name": "signed-clipped.ppm",
+      "sha256": "0435952349c8dd46e976d84421afd43431cf56647be13a2ee05e3f9375d7a342"
+    },
+    {
+      "name": "solid-over.ppm",
+      "sha256": "4d86acc606c6702588a718da6e85ad823bc16d288ea30e9c84a968b0237403da"
+    },
+    {
+      "name": "solid-replace.ppm",
+      "sha256": "fe848ccd5540f6b151d166bf5a93c0b8ddb8d0cd51dc2c9249394c11d23a2959"
+    },
+    {
+      "name": "srgb-decode.ppm",
+      "sha256": "13ea0aa63967c49f432a0afa2c1d808fead757cb6c700c0a92cc203718002f3c"
+    },
+    {
+      "name": "srgb-encode-over.ppm",
+      "sha256": "803361e084aa6735c443aa0730801c96a23dfd0c19e17bdbc58f3fc3a8e02e12"
+    },
+    {
+      "name": "zero-alpha-decode.ppm",
+      "sha256": "e1d740d08847f7a1857f90abe3ebfa45e16988990deae326d5bfe78859ccd690"
+    }
+  ]
+}

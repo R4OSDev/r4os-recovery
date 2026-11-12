@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "mesa_lock": "../../R4NV/Tools/Compiler/Sources.lock.json",
+  "compiler_abi": 1,
+  "graphics_constants_abi": 4,
+  "target": "x86_64-unknown-none-elf",
+  "rust_version": "1.85.1",
+  "archives": [
+    {
+      "directory": "rust-src-1.85.1",
+      "filename": "rust-src-1.85.1.tar.xz",
+      "url": "https://static.rust-lang.org/dist/2025-03-18/rust-src-1.85.1.tar.xz",
+      "sha256": "b5a5539009d477a07c2535aefc39cd69ad526a74eab65886a26e2c3021020827",
+      "license": "MIT OR Apache-2.0; component notices in source archive"
+    },
+    {
+      "directory": "compiler_builtins-0.1.140",
+      "filename": "compiler_builtins-0.1.140.tar.gz",
+      "url": "https://static.crates.io/crates/compiler_builtins/compiler_builtins-0.1.140.crate",
+      "sha256": "df14d41c5d172a886df3753d54238eefb0f61c96cbd8b363c33ccc92c457bee3",
+      "license": "MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0)"
+    },
+    {
+      "directory": "hashbrown-0.15.2",
+      "filename": "hashbrown-0.15.2.tar.gz",
+      "url": "https://static.crates.io/crates/hashbrown/hashbrown-0.15.2.crate",
+      "sha256": "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289",
+      "license": "MIT OR Apache-2.0",
+      "features": []
+    }
+  ],
+  "bundled": [
+    {
+      "path": "ThirdParty/stb/stb_sprintf.h",
+      "version": "1.10",
+      "revision": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
+      "url": "https://raw.githubusercontent.com/nothings/stb/2c980bb59875b0d32144a71867fbdebb2f77cd20/stb_sprintf.h",
+      "sha256": "e0b8c56e1084602290b9a17ef59f429b5293deb8cb9d8b0f20a14abc39b56520",
+      "license": "MIT OR Unlicense"
+    }
+  ]
+}

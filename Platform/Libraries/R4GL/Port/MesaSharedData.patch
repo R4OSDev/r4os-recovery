@@ -1,0 +1,648 @@
+diff --git a/src/gallium/auxiliary/indices/u_indices_gen.py b/src/gallium/auxiliary/indices/u_indices_gen.py
+index 4c5fc17..4d6d69f 100644
+--- a/src/gallium/auxiliary/indices/u_indices_gen.py
++++ b/src/gallium/auxiliary/indices/u_indices_gen.py
+@@ -25,6 +25,7 @@ copyright = '''
+ '''
+ 
+ import argparse
++import io
+ import itertools
+ import typing as T
+ 
+@@ -90,11 +91,7 @@ def prolog(f: 'T.TextIO') -> None:
+ 
+ #include "c99_compat.h"
+ 
+-static u_translate_func translate[IN_COUNT][OUT_COUNT][PV_COUNT][PV_COUNT][PR_COUNT][PRIM_COUNT];
+-static u_generate_func  generate[OUT_COUNT][PV_COUNT][PV_COUNT][PRIM_COUNT];
+ 
+-static u_translate_func translate_quads[IN_COUNT][OUT_COUNT][PV_COUNT][PV_COUNT][PR_COUNT][PRIM_COUNT];
+-static u_generate_func  generate_quads[OUT_COUNT][PV_COUNT][PV_COUNT][PRIM_COUNT];
+ 
+ 
+ ''')
+@@ -429,15 +426,19 @@ def emit_all_inits(f: 'T.TextIO'):
+         init(f,intype, outtype, inpv, outpv, pr, prim, OUT_QUADS)
+ 
+ def emit_init(f: 'T.TextIO'):
+-    f.write('void u_index_init( void )\n')
+-    f.write('{\n')
+-    f.write('  static int firsttime = 1;\n')
+-    f.write('  if (!firsttime) return;\n')
+-    f.write('  firsttime = 0;\n')
+-    emit_all_inits(f)
+-    f.write('}\n')
+-
+-
++    assignments = io.StringIO()
++    emit_all_inits(assignments)
++    entries = dict(line.strip().removesuffix(';').split(' = ', 1)
++                   for line in assignments.getvalue().splitlines() if line.strip())
++    # Fully initialized constant tables: callers need no shared lazy writes.
++    for declaration in ['u_translate_func translate[IN_COUNT][OUT_COUNT][PV_COUNT][PV_COUNT][PR_COUNT][PRIM_COUNT]', 'u_generate_func  generate[OUT_COUNT][PV_COUNT][PV_COUNT][PRIM_COUNT]', 'u_translate_func translate_quads[IN_COUNT][OUT_COUNT][PV_COUNT][PV_COUNT][PR_COUNT][PRIM_COUNT]', 'u_generate_func  generate_quads[OUT_COUNT][PV_COUNT][PV_COUNT][PRIM_COUNT]']:
++        name = declaration.split()[1].split('[')[0]
++        f.write('static const ' + declaration + ' = {\n')
++        for lhs, rhs in entries.items():
++            if lhs.startswith(name + '['):
++                f.write('  ' + lhs[len(name):] + ' = ' + rhs + ',\n')
++        f.write('};\n')
++    f.write('void u_index_init(void) {}\n')
+ 
+ 
+ def epilog(f: 'T.TextIO') -> None:
+diff --git a/src/gallium/auxiliary/indices/u_unfilled_gen.py b/src/gallium/auxiliary/indices/u_unfilled_gen.py
+index 3c5590d..df57b51 100644
+--- a/src/gallium/auxiliary/indices/u_unfilled_gen.py
++++ b/src/gallium/auxiliary/indices/u_unfilled_gen.py
+@@ -25,6 +25,7 @@ copyright = '''
+ '''
+ 
+ import argparse
++import io
+ import itertools
+ import typing as T
+ 
+@@ -72,8 +73,6 @@ def prolog(f: 'T.TextIO'):
+ #include "pipe/p_defines.h"
+ #include "util/u_memory.h"
+ 
+-static u_generate_func generate_line[OUT_COUNT][PRIM_COUNT];
+-static u_translate_func translate_line[IN_COUNT][OUT_COUNT][PRIM_COUNT];
+ 
+ ''')
+ 
+@@ -224,15 +223,19 @@ def emit_all_inits(f: 'T.TextIO'):
+         init(f, intype, outtype, prim)
+ 
+ def emit_init(f: 'T.TextIO'):
+-    f.write('void u_unfilled_init( void )\n')
+-    f.write('{\n')
+-    f.write('  static int firsttime = 1;\n')
+-    f.write('  if (!firsttime) return;\n')
+-    f.write('  firsttime = 0;\n')
+-    emit_all_inits(f)
+-    f.write('}\n')
+-
+-
++    assignments = io.StringIO()
++    emit_all_inits(assignments)
++    entries = dict(line.strip().removesuffix(';').split(' = ', 1)
++                   for line in assignments.getvalue().splitlines() if line.strip())
++    # Fully initialized constant tables: callers need no shared lazy writes.
++    for declaration in ['u_generate_func generate_line[OUT_COUNT][PRIM_COUNT]', 'u_translate_func translate_line[IN_COUNT][OUT_COUNT][PRIM_COUNT]']:
++        name = declaration.split()[1].split('[')[0]
++        f.write('static const ' + declaration + ' = {\n')
++        for lhs, rhs in entries.items():
++            if lhs.startswith(name + '['):
++                f.write('  ' + lhs[len(name):] + ' = ' + rhs + ',\n')
++        f.write('};\n')
++    f.write('void u_unfilled_init(void) {}\n')
+ 
+ 
+ def epilog(f: 'T.TextIO'):
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_info.c b/src/gallium/auxiliary/tgsi/tgsi_info.c
+index a1cd957..8e37fe2 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_info.c
++++ b/src/gallium/auxiliary/tgsi/tgsi_info.c
+@@ -53,21 +53,15 @@ static const struct tgsi_opcode_info opcode_info[TGSI_OPCODE_LAST] =
+ const struct tgsi_opcode_info *
+ tgsi_get_opcode_info(enum tgsi_opcode opcode)
+ {
+-   static bool firsttime = 1;
+ 
+    ASSERT_BITFIELD_SIZE(struct tgsi_opcode_info, opcode, TGSI_OPCODE_LAST - 1);
+    ASSERT_BITFIELD_SIZE(struct tgsi_opcode_info, output_mode,
+                         TGSI_OUTPUT_OTHER);
+ 
+-   if (firsttime) {
+-      unsigned i;
+-      firsttime = 0;
+-      for (i = 0; i < ARRAY_SIZE(opcode_info); i++)
+-         assert(opcode_info[i].opcode == i);
+-   }
+-   
+-   if (opcode < TGSI_OPCODE_LAST)
++   if (opcode < TGSI_OPCODE_LAST) {
++      assert(opcode_info[opcode].opcode == opcode);
+       return &opcode_info[opcode];
++   }
+ 
+    assert( 0 );
+    return NULL;
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_strings.c b/src/gallium/auxiliary/tgsi/tgsi_strings.c
+index 1e21c55..bf03e5e 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_strings.c
++++ b/src/gallium/auxiliary/tgsi/tgsi_strings.c
+@@ -32,7 +32,7 @@
+ #include "tgsi_strings.h"
+ 
+ 
+-const char *tgsi_processor_type_names[8] =
++const char *const tgsi_processor_type_names[8] =
+ {
+    "VERT",
+    "TESS_CTRL",
+@@ -44,7 +44,7 @@ const char *tgsi_processor_type_names[8] =
+    "MESH"
+ };
+ 
+-static const char *tgsi_file_names[] =
++static const char *const tgsi_file_names[] =
+ {
+    "NULL",
+    "CONST",
+@@ -63,7 +63,7 @@ static const char *tgsi_file_names[] =
+    "HWATOMIC",
+ };
+ 
+-const char *tgsi_semantic_names[TGSI_SEMANTIC_COUNT] =
++const char *const tgsi_semantic_names[TGSI_SEMANTIC_COUNT] =
+ {
+    "POSITION",
+    "COLOR",
+@@ -114,7 +114,7 @@ const char *tgsi_semantic_names[TGSI_SEMANTIC_COUNT] =
+    "VIEWPORT_MASK",
+ };
+ 
+-const char *tgsi_texture_names[TGSI_TEXTURE_COUNT] =
++const char *const tgsi_texture_names[TGSI_TEXTURE_COUNT] =
+ {
+    "BUFFER",
+    "1D",
+@@ -137,7 +137,7 @@ const char *tgsi_texture_names[TGSI_TEXTURE_COUNT] =
+    "UNKNOWN",
+ };
+ 
+-const char *tgsi_property_names[TGSI_PROPERTY_COUNT] =
++const char *const tgsi_property_names[TGSI_PROPERTY_COUNT] =
+ {
+    "GS_INPUT_PRIMITIVE",
+    "GS_OUTPUT_PRIMITIVE",
+@@ -170,7 +170,7 @@ const char *tgsi_property_names[TGSI_PROPERTY_COUNT] =
+    "SEPARABLE_PROGRAM",
+ };
+ 
+-const char *tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT] =
++const char *const tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT] =
+ {
+    "UNORM",
+    "SNORM",
+@@ -179,7 +179,7 @@ const char *tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT] =
+    "FLOAT"
+ };
+ 
+-const char *tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT] =
++const char *const tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT] =
+ {
+    "CONSTANT",
+    "LINEAR",
+@@ -187,16 +187,16 @@ const char *tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT] =
+    "COLOR"
+ };
+ 
+-const char *tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT] =
++const char *const tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT] =
+ {
+    "CENTER",
+    "CENTROID",
+    "SAMPLE",
+ };
+ 
+-const char *tgsi_invariant_name = "INVARIANT";
++const char *const tgsi_invariant_name = "INVARIANT";
+ 
+-const char *tgsi_primitive_names[MESA_PRIM_COUNT] =
++const char *const tgsi_primitive_names[MESA_PRIM_COUNT] =
+ {
+    "POINTS",
+    "LINES",
+@@ -215,19 +215,19 @@ const char *tgsi_primitive_names[MESA_PRIM_COUNT] =
+    "PATCHES",
+ };
+ 
+-const char *tgsi_fs_coord_origin_names[2] =
++const char *const tgsi_fs_coord_origin_names[2] =
+ {
+    "UPPER_LEFT",
+    "LOWER_LEFT"
+ };
+ 
+-const char *tgsi_fs_coord_pixel_center_names[2] =
++const char *const tgsi_fs_coord_pixel_center_names[2] =
+ {
+    "HALF_INTEGER",
+    "INTEGER"
+ };
+ 
+-const char *tgsi_immediate_type_names[6] =
++const char *const tgsi_immediate_type_names[6] =
+ {
+    "FLT32",
+    "UINT32",
+@@ -237,7 +237,7 @@ const char *tgsi_immediate_type_names[6] =
+    "INT64",
+ };
+ 
+-const char *tgsi_memory_names[4] =
++const char *const tgsi_memory_names[4] =
+ {
+    "COHERENT",
+    "RESTRICT",
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_strings.h b/src/gallium/auxiliary/tgsi/tgsi_strings.h
+index fd19376..7246bab 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_strings.h
++++ b/src/gallium/auxiliary/tgsi/tgsi_strings.h
+@@ -38,31 +38,31 @@ extern "C" {
+ #endif
+ 
+ 
+-extern const char *tgsi_processor_type_names[MESA_SHADER_MESH_STAGES];
++extern const char *const tgsi_processor_type_names[MESA_SHADER_MESH_STAGES];
+ 
+-extern const char *tgsi_semantic_names[TGSI_SEMANTIC_COUNT];
++extern const char *const tgsi_semantic_names[TGSI_SEMANTIC_COUNT];
+ 
+-extern const char *tgsi_texture_names[TGSI_TEXTURE_COUNT];
++extern const char *const tgsi_texture_names[TGSI_TEXTURE_COUNT];
+ 
+-extern const char *tgsi_property_names[TGSI_PROPERTY_COUNT];
++extern const char *const tgsi_property_names[TGSI_PROPERTY_COUNT];
+ 
+-extern const char *tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT];
++extern const char *const tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT];
+ 
+-extern const char *tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT];
++extern const char *const tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT];
+ 
+-extern const char *tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT];
++extern const char *const tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT];
+ 
+-extern const char *tgsi_invariant_name;
++extern const char *const tgsi_invariant_name;
+ 
+-extern const char *tgsi_primitive_names[MESA_PRIM_COUNT];
++extern const char *const tgsi_primitive_names[MESA_PRIM_COUNT];
+ 
+-extern const char *tgsi_fs_coord_origin_names[2];
++extern const char *const tgsi_fs_coord_origin_names[2];
+ 
+-extern const char *tgsi_fs_coord_pixel_center_names[2];
++extern const char *const tgsi_fs_coord_pixel_center_names[2];
+ 
+-extern const char *tgsi_immediate_type_names[6];
++extern const char *const tgsi_immediate_type_names[6];
+ 
+-extern const char *tgsi_memory_names[4];
++extern const char *const tgsi_memory_names[4];
+ 
+ 
+ const char *
+diff --git a/src/gallium/auxiliary/translate/translate_sse.c b/src/gallium/auxiliary/translate/translate_sse.c
+index 2fe1913..95e0bc7 100644
+--- a/src/gallium/auxiliary/translate/translate_sse.c
++++ b/src/gallium/auxiliary/translate/translate_sse.c
+@@ -83,7 +83,7 @@ enum
+ };
+ 
+ #define C(v) {(float)(v), (float)(v), (float)(v), (float)(v)}
+-static float consts[NUM_FLOAT_CONSTS][4] = {
++static const float consts[NUM_FLOAT_CONSTS][4] = {
+    {0, 0, 0, 1},
+    C(1.0 / 127.0),
+    C(1.0 / 255.0),
+@@ -97,7 +97,7 @@ static float consts[NUM_FLOAT_CONSTS][4] = {
+ 
+ #undef C
+ 
+-static unsigned uconsts[NUM_UNSIGNED_CONSTS][4] = {
++static const unsigned uconsts[NUM_UNSIGNED_CONSTS][4] = {
+    {0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff},
+ };
+ 
+diff --git a/src/gallium/auxiliary/util/u_blitter.c b/src/gallium/auxiliary/util/u_blitter.c
+index 0e2c0a7..a74111a 100644
+--- a/src/gallium/auxiliary/util/u_blitter.c
++++ b/src/gallium/auxiliary/util/u_blitter.c
+@@ -1441,7 +1441,7 @@ static void blitter_draw(struct blitter_context_priv *ctx,
+        * dEQP-GLES3.functional.fbo.blit.rect.nearest_consistency_* require
+        * that the last vert of the two tris be the same.
+        */
+-      static uint8_t indices[6] = { 0, 1, 2, 0, 3, 2 };
++      static const uint8_t indices[6] = { 0, 1, 2, 0, 3, 2 };
+       util_draw_elements_instanced(pipe, indices, 1, 0,
+                                    MESA_PRIM_TRIANGLES, 0, 6,
+                                    0, num_instances);
+diff --git a/src/gallium/auxiliary/util/u_dump_state.c b/src/gallium/auxiliary/util/u_dump_state.c
+index 5a96683..bcf5a2c 100644
+--- a/src/gallium/auxiliary/util/u_dump_state.c
++++ b/src/gallium/auxiliary/util/u_dump_state.c
+@@ -44,13 +44,10 @@
+ static inline void
+ util_stream_writef(FILE *stream, const char *format, ...)
+ {
+-   static char buf[1024];
+-   unsigned len;
+    va_list ap;
+    va_start(ap, format);
+-   len = vsnprintf(buf, sizeof(buf), format, ap);
++   vfprintf(stream, format, ap);
+    va_end(ap);
+-   fwrite(buf, len, 1, stream);
+ }
+ 
+ static void
+diff --git a/src/gallium/auxiliary/util/u_vbuf.c b/src/gallium/auxiliary/util/u_vbuf.c
+index 882f683..77c653f 100644
+--- a/src/gallium/auxiliary/util/u_vbuf.c
++++ b/src/gallium/auxiliary/util/u_vbuf.c
+@@ -487,7 +487,7 @@ u_vbuf_translate_buffers(struct u_vbuf *mgr, struct translate_key *key,
+                                     : sizeof(double)*4;
+ 
+          if (!vb->buffer.resource) {
+-            static uint64_t dummy_buf[4] = { 0 };
++            static const uint64_t dummy_buf[4] = { 0 };
+             tr->set_buffer(tr, i, dummy_buf, 0, 0);
+             continue;
+          }
+diff --git a/src/mesa/glapi/glapi/gen/gl_enums.py b/src/mesa/glapi/glapi/gen/gl_enums.py
+index 070442f..528912e 100644
+--- a/src/mesa/glapi/glapi/gen/gl_enums.py
++++ b/src/mesa/glapi/glapi/gen/gl_enums.py
+@@ -78,9 +78,15 @@ static int compar_nr( const int *a, enum_elt *b )
+ {
+    return a[0] - b->n;
+ }
++#if defined(R4OS_OPENGL)
++
++
++static _Thread_local char token_tmp[20];
++#else
+ 
+ 
+ static char token_tmp[20];
++#endif
+ 
+ /**
+  * This function always returns a string. If the number is a valid enum, it
+diff --git a/src/mesa/glapi/shared-glapi/core.c b/src/mesa/glapi/shared-glapi/core.c
+index 04a0caa..d8e7c7b 100644
+--- a/src/mesa/glapi/shared-glapi/core.c
++++ b/src/mesa/glapi/shared-glapi/core.c
+@@ -260,8 +260,12 @@ _mesa_glapi_get_context(void)
+ void
+ _mesa_glapi_set_dispatch(struct _glapi_table *tbl)
+ {
++#if defined(R4OS_OPENGL) && !defined(_GLAPI_ENTRY_ARCH_TLS_H)
++   /* Generated C entrypoints need no executable patching or shared once. */
++#else
+    static once_flag flag = ONCE_FLAG_INIT;
+    call_once(&flag, entry_patch_public);
++#endif
+ 
+    _mesa_glapi_tls_Dispatch =
+       tbl ? tbl : (struct _glapi_table *)table_noop_array;
+diff --git a/src/mesa/main/debug_output.c b/src/mesa/main/debug_output.c
+index 2fa6980..88e21ae 100644
+--- a/src/mesa/main/debug_output.c
++++ b/src/mesa/main/debug_output.c
+@@ -195,7 +195,7 @@ gl_enum_to_debug_severity(GLenum e)
+ void
+ _mesa_debug_get_id(GLuint *id)
+ {
+-   if (!(*id)) {
++   if (!p_atomic_read(id)) {
+       /* Don't update *id if we raced with some other thread. */
+       p_atomic_cmpxchg(id, 0, p_atomic_inc_return(&PrevDynamicID));
+    }
+diff --git a/src/mesa/program/prog_instruction.c b/src/mesa/program/prog_instruction.c
+index 8cd0cc6..3517292 100644
+--- a/src/mesa/program/prog_instruction.c
++++ b/src/mesa/program/prog_instruction.c
+@@ -158,7 +158,11 @@ _mesa_opcode_string(enum prog_opcode opcode)
+    if (opcode < MAX_OPCODE)
+       return InstInfo[opcode].Name;
+    else {
++#if defined(R4OS_OPENGL)
++      static _Thread_local char s[20];
++#else
+       static char s[20];
++#endif
+       snprintf(s, sizeof(s), "OP%u", opcode);
+       return s;
+    }
+diff --git a/src/mesa/program/prog_print.c b/src/mesa/program/prog_print.c
+index ca2508b..7387e31 100644
+--- a/src/mesa/program/prog_print.c
++++ b/src/mesa/program/prog_print.c
+@@ -67,7 +67,11 @@ _mesa_register_file_name(gl_register_file f)
+       return "UNDEFINED";
+    default:
+       {
++#if defined(R4OS_OPENGL)
++         static _Thread_local char s[20];
++#else
+          static char s[20];
++#endif
+          snprintf(s, sizeof(s), "FILE%u", f);
+          return s;
+       }
+@@ -363,7 +367,11 @@ static const char *
+ reg_string(gl_register_file f, GLint index, gl_prog_print_mode mode,
+            GLboolean relAddr, const struct gl_program *prog)
+ {
++#if defined(R4OS_OPENGL)
++   static _Thread_local char str[100];
++#else
+    static char str[100];
++#endif
+    const char *addr = relAddr ? "ADDR+" : "";
+ 
+    str[0] = 0;
+@@ -427,7 +435,11 @@ const char *
+ _mesa_swizzle_string(GLuint swizzle, GLuint negateMask, GLboolean extended)
+ {
+    static const char swz[] = "xyzw01!?";  /* See SWIZZLE_x definitions */
++#if defined(R4OS_OPENGL)
++   static _Thread_local char s[20];
++#else
+    static char s[20];
++#endif
+    GLuint i = 0;
+ 
+    if (!extended && swizzle == SWIZZLE_NOOP && negateMask == 0)
+@@ -485,7 +497,11 @@ _mesa_print_swizzle(GLuint swizzle)
+ const char *
+ _mesa_writemask_string(GLuint writeMask)
+ {
++#if defined(R4OS_OPENGL)
++   static _Thread_local char s[10];
++#else
+    static char s[10];
++#endif
+    GLuint i = 0;
+ 
+    if (writeMask == WRITEMASK_XYZW)
+@@ -780,7 +796,11 @@ _mesa_print_program(const struct gl_program *prog)
+ static const char *
+ binary(GLbitfield64 val)
+ {
++#if defined(R4OS_OPENGL)
++   static _Thread_local char buf[80];
++#else
+    static char buf[80];
++#endif
+    GLint i, len = 0;
+    for (i = 63; i >= 0; --i) {
+       if (val & (BITFIELD64_BIT(i)))
+diff --git a/src/mesa/state_tracker/st_atifs_to_nir.c b/src/mesa/state_tracker/st_atifs_to_nir.c
+index 23a1222..4ea3ce7 100644
+--- a/src/mesa/state_tracker/st_atifs_to_nir.c
++++ b/src/mesa/state_tracker/st_atifs_to_nir.c
+@@ -91,7 +91,7 @@ apply_swizzle(struct st_translate *t,
+    if (swizzle == GL_SWIZZLE_STR_ATI) {
+       return src;
+    } else if (swizzle == GL_SWIZZLE_STQ_ATI) {
+-      static unsigned xywz[4] = { 0, 1, 3, 2 };
++      static const unsigned xywz[4] = { 0, 1, 3, 2 };
+       return nir_swizzle(t->b, src, xywz, 4);
+    } else {
+       nir_def *rcp = nir_frcp(t->b, nir_channel(t->b, src,
+diff --git a/src/util/lut.c b/src/util/lut.c
+index 560353e..97b2466 100644
+--- a/src/util/lut.c
++++ b/src/util/lut.c
+@@ -15,7 +15,7 @@
+  *
+  * https://github.com/intel/intel-graphics-compiler/blob/eb7d24be2244c6e2225d7b33eefcd6ec62b6f80e/visa/iga/IGALibrary/api/iga_bxml_enums.cpp
+  */
+-const char *util_lut3_to_str[256] = {
++const char *const util_lut3_to_str[256] = {
+    [0x00] = "zeros",
+    [0x01] = "~a & ~b & ~c",
+    [0x02] = "a & ~b & ~c",
+diff --git a/src/util/lut.h b/src/util/lut.h
+index 335f79a..5335bf3 100644
+--- a/src/util/lut.h
++++ b/src/util/lut.h
+@@ -110,7 +110,7 @@ util_lut3_swap_sources(util_lut3 l, unsigned a, unsigned b)
+ }
+ 
+ /* Finding minimal string forms of LUTs is tricky, so we precompute. */
+-extern const char *util_lut3_to_str[256];
++extern const char *const util_lut3_to_str[256];
+ 
+ #ifdef __cplusplus
+ } /* extern "C" */
+diff --git a/src/util/u_math.c b/src/util/u_math.c
+index 722eac7..147859a 100644
+--- a/src/util/u_math.c
++++ b/src/util/u_math.c
+@@ -45,6 +45,82 @@
+ #endif
+ 
+ 
++#if defined(R4OS_OPENGL)
++/* Round-to-nearest IEEE binary32 log2(1 + i/256), i=0..256.
++ * Precomputed from the original formula; independent of caller FP state. */
++_Static_assert(LOG2_TABLE_SCALE == 256 && LOG2_TABLE_SIZE == 257, "native log2 table size");
++const float log2_table[LOG2_TABLE_SIZE] = {
++   0x0.0p+0f, 0x1.709c460000000p-8f, 0x1.6fe50c0000000p-7f, 0x1.1363120000000p-6f,
++   0x1.6e79680000000p-6f, 0x1.c9363c0000000p-6f, 0x1.11cd1e0000000p-5f, 0x1.3ed30a0000000p-5f,
++   0x1.6bad380000000p-5f, 0x1.985bfc0000000p-5f, 0x1.c4dfac0000000p-5f, 0x1.f138980000000p-5f,
++   0x1.0eb38a0000000p-4f, 0x1.24b5b80000000p-4f, 0x1.3aa2fe0000000p-4f, 0x1.507b840000000p-4f,
++   0x1.663f700000000p-4f, 0x1.7beeea0000000p-4f, 0x1.918a160000000p-4f, 0x1.a7111e0000000p-4f,
++   0x1.bc84240000000p-4f, 0x1.d1e34e0000000p-4f, 0x1.e72ec20000000p-4f, 0x1.fc66a00000000p-4f,
++   0x1.08c5880000000p-3f, 0x1.134e1c0000000p-3f, 0x1.1dcd1a0000000p-3f, 0x1.2842940000000p-3f,
++   0x1.32ae9e0000000p-3f, 0x1.3d11460000000p-3f, 0x1.476aa00000000p-3f, 0x1.51baba0000000p-3f,
++   0x1.5c01a40000000p-3f, 0x1.663f700000000p-3f, 0x1.70742e0000000p-3f, 0x1.7a9fec0000000p-3f,
++   0x1.84c2be0000000p-3f, 0x1.8edcae0000000p-3f, 0x1.98edd00000000p-3f, 0x1.a2f6320000000p-3f,
++   0x1.acf5e20000000p-3f, 0x1.b6ecf20000000p-3f, 0x1.c0db6c0000000p-3f, 0x1.cac1640000000p-3f,
++   0x1.d49ee40000000p-3f, 0x1.de73fe0000000p-3f, 0x1.e840be0000000p-3f, 0x1.f205340000000p-3f,
++   0x1.fbc16c0000000p-3f, 0x1.02baba0000000p-2f, 0x1.0790ae0000000p-2f, 0x1.0c62980000000p-2f,
++   0x1.11307e0000000p-2f, 0x1.15fa680000000p-2f, 0x1.1ac05c0000000p-2f, 0x1.1f82600000000p-2f,
++   0x1.24407a0000000p-2f, 0x1.28fab40000000p-2f, 0x1.2db1100000000p-2f, 0x1.3263960000000p-2f,
++   0x1.37124c0000000p-2f, 0x1.3bbd3a0000000p-2f, 0x1.4064640000000p-2f, 0x1.4507d00000000p-2f,
++   0x1.49a7840000000p-2f, 0x1.4e43880000000p-2f, 0x1.52dbe00000000p-2f, 0x1.5770920000000p-2f,
++   0x1.5c01a40000000p-2f, 0x1.608f1c0000000p-2f, 0x1.6518fe0000000p-2f, 0x1.699f520000000p-2f,
++   0x1.6e221c0000000p-2f, 0x1.72a1640000000p-2f, 0x1.771d2c0000000p-2f, 0x1.7b957a0000000p-2f,
++   0x1.800a560000000p-2f, 0x1.847bc40000000p-2f, 0x1.88e9c80000000p-2f, 0x1.8d54680000000p-2f,
++   0x1.91bba80000000p-2f, 0x1.961f900000000p-2f, 0x1.9a80240000000p-2f, 0x1.9edd680000000p-2f,
++   0x1.a337600000000p-2f, 0x1.a78e140000000p-2f, 0x1.abe1880000000p-2f, 0x1.b031be0000000p-2f,
++   0x1.b47ec00000000p-2f, 0x1.b8c88e0000000p-2f, 0x1.bd0f2e0000000p-2f, 0x1.c152a60000000p-2f,
++   0x1.c592fa0000000p-2f, 0x1.c9d0300000000p-2f, 0x1.ce0a4a0000000p-2f, 0x1.d2414c0000000p-2f,
++   0x1.d6753e0000000p-2f, 0x1.daa6220000000p-2f, 0x1.ded3fe0000000p-2f, 0x1.e2fed40000000p-2f,
++   0x1.e726aa0000000p-2f, 0x1.eb4b840000000p-2f, 0x1.ef6d680000000p-2f, 0x1.f38c560000000p-2f,
++   0x1.f7a8560000000p-2f, 0x1.fbc16c0000000p-2f, 0x1.ffd79a0000000p-2f, 0x1.01f5720000000p-1f,
++   0x1.03fda80000000p-1f, 0x1.0604720000000p-1f, 0x1.0809d00000000p-1f, 0x1.0a0dc40000000p-1f,
++   0x1.0c10500000000p-1f, 0x1.0e11780000000p-1f, 0x1.10113c0000000p-1f, 0x1.120f9e0000000p-1f,
++   0x1.140ca00000000p-1f, 0x1.1608440000000p-1f, 0x1.18028c0000000p-1f, 0x1.19fb7c0000000p-1f,
++   0x1.1bf3120000000p-1f, 0x1.1de9520000000p-1f, 0x1.1fde3e0000000p-1f, 0x1.21d1d60000000p-1f,
++   0x1.23c41e0000000p-1f, 0x1.25b5160000000p-1f, 0x1.27a4c00000000p-1f, 0x1.2993200000000p-1f,
++   0x1.2b80340000000p-1f, 0x1.2d6c020000000p-1f, 0x1.2f56880000000p-1f, 0x1.313fc80000000p-1f,
++   0x1.3327c60000000p-1f, 0x1.350e840000000p-1f, 0x1.36f4000000000p-1f, 0x1.38d83e0000000p-1f,
++   0x1.3abb400000000p-1f, 0x1.3c9d060000000p-1f, 0x1.3e7d940000000p-1f, 0x1.405ce80000000p-1f,
++   0x1.423b080000000p-1f, 0x1.4417f20000000p-1f, 0x1.45f3aa0000000p-1f, 0x1.47ce300000000p-1f,
++   0x1.49a7840000000p-1f, 0x1.4b7fac0000000p-1f, 0x1.4d56a60000000p-1f, 0x1.4f2c740000000p-1f,
++   0x1.5101180000000p-1f, 0x1.52d4940000000p-1f, 0x1.54a6e80000000p-1f, 0x1.5678180000000p-1f,
++   0x1.5848220000000p-1f, 0x1.5a170a0000000p-1f, 0x1.5be4d00000000p-1f, 0x1.5db1780000000p-1f,
++   0x1.5f7d000000000p-1f, 0x1.61476a0000000p-1f, 0x1.6310b80000000p-1f, 0x1.64d8ee0000000p-1f,
++   0x1.66a0080000000p-1f, 0x1.68660c0000000p-1f, 0x1.6a2afa0000000p-1f, 0x1.6beed20000000p-1f,
++   0x1.6db1960000000p-1f, 0x1.6f73480000000p-1f, 0x1.7133ea0000000p-1f, 0x1.72f37a0000000p-1f,
++   0x1.74b1fe0000000p-1f, 0x1.766f720000000p-1f, 0x1.782bdc0000000p-1f, 0x1.79e73a0000000p-1f,
++   0x1.7ba1900000000p-1f, 0x1.7d5adc0000000p-1f, 0x1.7f13220000000p-1f, 0x1.80ca620000000p-1f,
++   0x1.82809e0000000p-1f, 0x1.8435d60000000p-1f, 0x1.85ea0c0000000p-1f, 0x1.879d400000000p-1f,
++   0x1.894f740000000p-1f, 0x1.8b00aa0000000p-1f, 0x1.8cb0e40000000p-1f, 0x1.8e60200000000p-1f,
++   0x1.900e620000000p-1f, 0x1.91bba80000000p-1f, 0x1.9367f60000000p-1f, 0x1.95134e0000000p-1f,
++   0x1.96bdae0000000p-1f, 0x1.9867180000000p-1f, 0x1.9a0f8e0000000p-1f, 0x1.9bb7100000000p-1f,
++   0x1.9d5da00000000p-1f, 0x1.9f033e0000000p-1f, 0x1.a0a7ee0000000p-1f, 0x1.a24bae0000000p-1f,
++   0x1.a3ee800000000p-1f, 0x1.a590640000000p-1f, 0x1.a7315e0000000p-1f, 0x1.a8d16c0000000p-1f,
++   0x1.aa70900000000p-1f, 0x1.ac0eca0000000p-1f, 0x1.adac1e0000000p-1f, 0x1.af488c0000000p-1f,
++   0x1.b0e4120000000p-1f, 0x1.b27eb40000000p-1f, 0x1.b418740000000p-1f, 0x1.b5b1500000000p-1f,
++   0x1.b749480000000p-1f, 0x1.b8e0620000000p-1f, 0x1.ba769c0000000p-1f, 0x1.bc0bf60000000p-1f,
++   0x1.bda0720000000p-1f, 0x1.bf34120000000p-1f, 0x1.c0c6d40000000p-1f, 0x1.c258bc0000000p-1f,
++   0x1.c3e9ca0000000p-1f, 0x1.c579fe0000000p-1f, 0x1.c7095a0000000p-1f, 0x1.c897e00000000p-1f,
++   0x1.ca258e0000000p-1f, 0x1.cbb2660000000p-1f, 0x1.cd3e6a0000000p-1f, 0x1.cec99a0000000p-1f,
++   0x1.d053f60000000p-1f, 0x1.d1dd820000000p-1f, 0x1.d3663c0000000p-1f, 0x1.d4ee240000000p-1f,
++   0x1.d6753e0000000p-1f, 0x1.d7fb8a0000000p-1f, 0x1.d981060000000p-1f, 0x1.db05b60000000p-1f,
++   0x1.dc899a0000000p-1f, 0x1.de0cb40000000p-1f, 0x1.df8f020000000p-1f, 0x1.e110860000000p-1f,
++   0x1.e291420000000p-1f, 0x1.e411360000000p-1f, 0x1.e590640000000p-1f, 0x1.e70eca0000000p-1f,
++   0x1.e88c6c0000000p-1f, 0x1.ea09480000000p-1f, 0x1.eb85600000000p-1f, 0x1.ed00b40000000p-1f,
++   0x1.ee7b480000000p-1f, 0x1.eff5180000000p-1f, 0x1.f16e280000000p-1f, 0x1.f2e6780000000p-1f,
++   0x1.f45e080000000p-1f, 0x1.f5d4da0000000p-1f, 0x1.f74af00000000p-1f, 0x1.f8c0460000000p-1f,
++   0x1.fa34e20000000p-1f, 0x1.fba8c00000000p-1f, 0x1.fd1be40000000p-1f, 0x1.fe8e500000000p-1f,
++   0x1.0000000000000p+0f,
++};
++void
++util_init_math(void)
++{
++}
++#else
+ /** log2(x), for x in [1.0, 2.0) */
+ float log2_table[LOG2_TABLE_SIZE];
+ 
+@@ -71,6 +147,8 @@ util_init_math(void)
+    }
+ }
+ 
++#endif
++
+ /**
+  * Fetches the contents of the fpstate (mxcsr on x86, fpscr/fpcr on arm) register.
+  *
+diff --git a/src/util/u_math.h b/src/util/u_math.h
+index fbcf263..37e0d3b 100644
+--- a/src/util/u_math.h
++++ b/src/util/u_math.h
+@@ -104,7 +104,11 @@ util_get_float32_exponent(float x)
+ #define LOG2_TABLE_SIZE_LOG2 8
+ #define LOG2_TABLE_SCALE (1 << LOG2_TABLE_SIZE_LOG2)
+ #define LOG2_TABLE_SIZE (LOG2_TABLE_SCALE + 1)
++#if defined(R4OS_OPENGL)
++extern const float log2_table[LOG2_TABLE_SIZE];
++#else
+ extern float log2_table[LOG2_TABLE_SIZE];
++#endif
+ 
+ 
+ /**

@@ -1,0 +1,439 @@
+diff --git a/src/egl/main/egllog.c b/src/egl/main/egllog.c
+index 4fdce41..8f16da8 100644
+--- a/src/egl/main/egllog.c
++++ b/src/egl/main/egllog.c
+@@ -49,6 +49,21 @@
+ #define MAXSTRING          1000
+ #define FALLBACK_LOG_LEVEL _EGL_WARNING
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_egl_logging {
++   EGLint level;
++   const char *invalid_value;
++   unsigned warned;
++};
++static const char logging_key;
++static void logging_init(void *data);
++static struct r4gl_egl_logging *logging_state(void)
++{
++   return r4gl_process_state(&logging_key, sizeof(struct r4gl_egl_logging),
++                            _Alignof(struct r4gl_egl_logging), logging_init);
++}
++#else
+ static struct {
+    simple_mtx_t mutex;
+ 
+@@ -59,8 +74,9 @@ static struct {
+    .initialized = EGL_FALSE,
+    .level = FALLBACK_LOG_LEVEL,
+ };
++#endif
+ 
+-static const char *level_strings[] = {
++static const char *const level_strings[] = {
+    [_EGL_FATAL] = "fatal",
+    [_EGL_WARNING] = "warning",
+    [_EGL_INFO] = "info",
+@@ -86,6 +102,26 @@ _eglDefaultLogger(EGLint level, const char *msg)
+ /**
+  * Initialize the logging facility.
+  */
++#if defined(R4OS_OPENGL)
++static void
++logging_init(void *data)
++{
++   struct r4gl_egl_logging *state = data;
++   const char *value = os_get_option_cached("EGL_LOG_LEVEL");
++   state->level = FALLBACK_LOG_LEVEL;
++   if (!value)
++      return;
++   for (unsigned i = 0; i < ARRAY_SIZE(level_strings); i++) {
++      if (strcasecmp(value, level_strings[i]) == 0) {
++         state->level = i;
++         return;
++      }
++   }
++   /* Options retain this string through the final Mesa callbacks. Logging
++    * cannot run until this initializer has returned and published state. */
++   state->invalid_value = value;
++}
++#else
+ static void
+ _eglInitLogger(void)
+ {
+@@ -117,6 +153,7 @@ _eglInitLogger(void)
+               log_env, level_strings[FALLBACK_LOG_LEVEL]);
+    }
+ }
++#endif
+ 
+ /**
+  * Return the log level.
+@@ -124,7 +161,11 @@ _eglInitLogger(void)
+ EGLint
+ _eglGetLogLevel(void)
+ {
++#if defined(R4OS_OPENGL)
++   return logging_state()->level;
++#else
+    return logging.level;
++#endif
+ }
+ 
+ /**
+@@ -138,6 +179,17 @@ _eglLog(EGLint level, const char *fmtStr, ...)
+    char msg[MAXSTRING];
+    int ret;
+ 
++#if defined(R4OS_OPENGL)
++   struct r4gl_egl_logging *state = logging_state();
++   if (state->invalid_value && p_atomic_cmpxchg(&state->warned, 0, 1) == 0) {
++      /* Mark before the recursive call. No initializer or EGL mutex spans
++       * a logger callback; every formatted message uses caller-stack data. */
++      _eglLog(_EGL_WARNING, "Unrecognized EGL_LOG_LEVEL value '%s'; using warning.",
++              state->invalid_value);
++   }
++   if (level > state->level || level < 0)
++      return;
++#else
+    /* one-time initialization; a little race here is fine */
+    if (!logging.initialized)
+       _eglInitLogger();
+@@ -145,6 +197,7 @@ _eglLog(EGLint level, const char *fmtStr, ...)
+       return;
+ 
+    simple_mtx_lock(&logging.mutex);
++#endif
+ 
+    va_start(args, fmtStr);
+    ret = vsnprintf(msg, MAXSTRING, fmtStr, args);
+@@ -154,7 +207,9 @@ _eglLog(EGLint level, const char *fmtStr, ...)
+ 
+    _eglDefaultLogger(level, msg);
+ 
++#if !defined(R4OS_OPENGL)
+    simple_mtx_unlock(&logging.mutex);
++#endif
+ 
+    if (level == _EGL_FATAL)
+       exit(1); /* or abort()? */
+diff --git a/src/gallium/drivers/softpipe/sp_clear.c b/src/gallium/drivers/softpipe/sp_clear.c
+index feed7c2..368814b 100644
+--- a/src/gallium/drivers/softpipe/sp_clear.c
++++ b/src/gallium/drivers/softpipe/sp_clear.c
+@@ -59,7 +59,7 @@ softpipe_clear(struct pipe_context *pipe, unsigned buffers,
+    uint64_t cv;
+    uint i;
+ 
+-   if (unlikely(sp_debug & SP_DBG_NO_RAST))
++   if (unlikely(SP_DEBUG_FOR(pipe->screen) & SP_DBG_NO_RAST))
+       return;
+ 
+    if (!softpipe_check_render_cond(softpipe))
+diff --git a/src/gallium/drivers/softpipe/sp_screen.c b/src/gallium/drivers/softpipe/sp_screen.c
+index 449ab0c..839bdf3 100644
+--- a/src/gallium/drivers/softpipe/sp_screen.c
++++ b/src/gallium/drivers/softpipe/sp_screen.c
+@@ -58,8 +58,17 @@ static const struct debug_named_value sp_debug_options[] = {
+    DEBUG_NAMED_VALUE_END
+ };
+ 
++#if !defined(R4OS_OPENGL)
+ int sp_debug;
+-DEBUG_GET_ONCE_FLAGS_OPTION(sp_debug, "SOFTPIPE_DEBUG", sp_debug_options, 0)
++#endif
++DEBUG_GET_ONCE_FLAGS_OPTION(sp_flags, "SOFTPIPE_DEBUG", sp_debug_options, 0)
++
++#if defined(R4OS_OPENGL)
++int r4gl_sp_debug_flags(void)
++{
++   return debug_get_option_sp_flags();
++}
++#endif
+ 
+ static const char *
+ softpipe_get_vendor(struct pipe_screen *screen)
+@@ -444,7 +453,11 @@ softpipe_create_screen(struct sw_winsys *winsys)
+    if (!screen)
+       return NULL;
+ 
+-   sp_debug = debug_get_option_sp_debug();
++#if defined(R4OS_OPENGL)
++   screen->debug_flags = debug_get_option_sp_flags();
++#else
++   sp_debug = debug_get_option_sp_flags();
++#endif
+ 
+    screen->winsys = winsys;
+ 
+@@ -459,7 +472,7 @@ softpipe_create_screen(struct sw_winsys *winsys)
+    screen->base.is_format_supported = softpipe_is_format_supported;
+    screen->base.context_create = softpipe_create_context;
+    screen->base.flush_frontbuffer = softpipe_flush_frontbuffer;
+-   screen->use_llvm = sp_debug & SP_DBG_USE_LLVM;
++   screen->use_llvm = SP_DEBUG_FOR(&screen->base) & SP_DBG_USE_LLVM;
+ 
+    for (unsigned i = 0; i <= MESA_SHADER_COMPUTE; i++)
+       screen->base.nir_options[i] = &sp_compiler_options;
+diff --git a/src/gallium/drivers/softpipe/sp_screen.h b/src/gallium/drivers/softpipe/sp_screen.h
+index 06ac15b..b033143 100644
+--- a/src/gallium/drivers/softpipe/sp_screen.h
++++ b/src/gallium/drivers/softpipe/sp_screen.h
+@@ -47,6 +47,9 @@ struct softpipe_screen {
+     */
+    unsigned timestamp;
+    bool use_llvm;
++#if defined(R4OS_OPENGL)
++   unsigned debug_flags;
++#endif
+ };
+ 
+ static inline struct softpipe_screen *
+@@ -66,6 +69,13 @@ enum sp_debug_flag {
+    SP_DBG_NO_RAST         = BITFIELD_BIT(7),
+ };
+ 
++#if defined(R4OS_OPENGL)
++int r4gl_sp_debug_flags(void);
++#define sp_debug r4gl_sp_debug_flags()
++#define SP_DEBUG_FOR(screen) (softpipe_screen(screen)->debug_flags)
++#else
+ extern int sp_debug;
++#define SP_DEBUG_FOR(screen) sp_debug
++#endif
+ 
+ #endif /* SP_SCREEN_H */
+diff --git a/src/gallium/drivers/softpipe/sp_setup.c b/src/gallium/drivers/softpipe/sp_setup.c
+index 4bc0dfc..67b90a6 100644
+--- a/src/gallium/drivers/softpipe/sp_setup.c
++++ b/src/gallium/drivers/softpipe/sp_setup.c
+@@ -759,7 +759,7 @@ sp_setup_tri(struct setup_context *setup,
+    print_vertex(setup, v2);
+ #endif
+ 
+-   if (unlikely(sp_debug & SP_DBG_NO_RAST) ||
++   if (unlikely(SP_DEBUG_FOR(setup->softpipe->pipe.screen) & SP_DBG_NO_RAST) ||
+        setup->softpipe->rasterizer->rasterizer_discard)
+       return;
+    
+@@ -1015,7 +1015,7 @@ sp_setup_line(struct setup_context *setup,
+    print_vertex(setup, v1);
+ #endif
+ 
+-   if (unlikely(sp_debug & SP_DBG_NO_RAST) ||
++   if (unlikely(SP_DEBUG_FOR(setup->softpipe->pipe.screen) & SP_DBG_NO_RAST) ||
+        setup->softpipe->rasterizer->rasterizer_discard)
+       return;
+ 
+@@ -1163,7 +1163,7 @@ sp_setup_point(struct setup_context *setup,
+ 
+    assert(sinfo->valid);
+ 
+-   if (unlikely(sp_debug & SP_DBG_NO_RAST) ||
++   if (unlikely(SP_DEBUG_FOR(setup->softpipe->pipe.screen) & SP_DBG_NO_RAST) ||
+        setup->softpipe->rasterizer->rasterizer_discard)
+       return;
+ 
+diff --git a/src/gallium/drivers/softpipe/sp_state_shader.c b/src/gallium/drivers/softpipe/sp_state_shader.c
+index 47ef0a4..6ba91e0 100644
+--- a/src/gallium/drivers/softpipe/sp_state_shader.c
++++ b/src/gallium/drivers/softpipe/sp_state_shader.c
+@@ -155,7 +155,7 @@ softpipe_create_fs_state(struct pipe_context *pipe,
+    struct sp_fragment_shader *state = CALLOC_STRUCT(sp_fragment_shader);
+ 
+    softpipe_create_shader_state(pipe, &state->shader, templ,
+-                                sp_debug & SP_DBG_FS);
++                                SP_DEBUG_FOR(pipe->screen) & SP_DBG_FS);
+ 
+    /* draw's fs state */
+    state->draw_shader = draw_create_fragment_shader(softpipe->draw,
+@@ -240,7 +240,7 @@ softpipe_create_vs_state(struct pipe_context *pipe,
+       goto fail;
+ 
+    softpipe_create_shader_state(pipe, &state->shader, templ,
+-                                sp_debug & SP_DBG_VS);
++                                SP_DEBUG_FOR(pipe->screen) & SP_DBG_VS);
+    if (!state->shader.tokens)
+       goto fail;
+ 
+@@ -301,7 +301,7 @@ softpipe_create_gs_state(struct pipe_context *pipe,
+       goto fail;
+ 
+    softpipe_create_shader_state(pipe, &state->shader, templ,
+-                                sp_debug & SP_DBG_GS);
++                                SP_DEBUG_FOR(pipe->screen) & SP_DBG_GS);
+ 
+    if (state->shader.tokens) {
+       state->draw_data = draw_create_geometry_shader(softpipe->draw,
+@@ -407,7 +407,7 @@ softpipe_create_compute_state(struct pipe_context *pipe,
+    if (templ->ir_type == PIPE_SHADER_IR_NIR) {
+       nir_shader *s = (void *)templ->prog;
+ 
+-      if (sp_debug & SP_DBG_CS)
++      if (SP_DEBUG_FOR(pipe->screen) & SP_DBG_CS)
+          nir_print_shader(s, stderr);
+ 
+       state->tokens = (void *)nir_to_tgsi(s, pipe->screen);
+@@ -417,7 +417,7 @@ softpipe_create_compute_state(struct pipe_context *pipe,
+       state->tokens = tgsi_dup_tokens(templ->prog);
+    }
+ 
+-   if (sp_debug & SP_DBG_CS)
++   if (SP_DEBUG_FOR(pipe->screen) & SP_DBG_CS)
+       tgsi_dump(state->tokens, 0);
+ 
+    softpipe_shader_db(pipe, state->tokens);
+diff --git a/src/mesa/state_tracker/st_atom_rasterizer.c b/src/mesa/state_tracker/st_atom_rasterizer.c
+index 086a914..33b49b2 100644
+--- a/src/mesa/state_tracker/st_atom_rasterizer.c
++++ b/src/mesa/state_tracker/st_atom_rasterizer.c
+@@ -130,7 +130,7 @@ st_update_rasterizer(struct st_context *st)
+    /* _NEW_POLYGON
+     */
+    {
+-      if (ST_DEBUG & DEBUG_WIREFRAME) {
++      if (ST_DEBUG_FOR(st) & DEBUG_WIREFRAME) {
+          raster->fill_front = PIPE_POLYGON_MODE_LINE;
+          raster->fill_back = PIPE_POLYGON_MODE_LINE;
+       }
+diff --git a/src/mesa/state_tracker/st_cb_readpixels.c b/src/mesa/state_tracker/st_cb_readpixels.c
+index bf6b062..c055d3d 100644
+--- a/src/mesa/state_tracker/st_cb_readpixels.c
++++ b/src/mesa/state_tracker/st_cb_readpixels.c
+@@ -357,7 +357,7 @@ try_cached_readpixels(struct st_context *st, struct gl_renderbuffer *rb,
+    struct pipe_resource *dst = NULL;
+    const struct pipe_surface *surface = &rb->surface;
+ 
+-   if (ST_DEBUG & DEBUG_NOREADPIXCACHE)
++   if (ST_DEBUG_FOR(st) & DEBUG_NOREADPIXCACHE)
+       return NULL;
+ 
+    /* Reset cache after invalidation or switch of parameters. */
+diff --git a/src/mesa/state_tracker/st_cb_texture.c b/src/mesa/state_tracker/st_cb_texture.c
+index 99249aa..91d3ee7 100644
+--- a/src/mesa/state_tracker/st_cb_texture.c
++++ b/src/mesa/state_tracker/st_cb_texture.c
+@@ -304,7 +304,7 @@ copy_to_staging_dest(struct gl_context * ctx, struct pipe_resource *dst,
+          goto end;
+       }
+ 
+-      if (ST_DEBUG & DEBUG_FALLBACK)
++      if (ST_DEBUG_FOR(st) & DEBUG_FALLBACK)
+          debug_printf("%s: fallback format translation\n", __func__);
+ 
+       dstMesaFormat = _mesa_format_from_format_and_type(format, type);
+@@ -2839,7 +2839,7 @@ fallback_copy_texsubimage(struct gl_context *ctx,
+    unsigned dst_depth = 1;
+    struct pipe_transfer *transfer;
+ 
+-   if (ST_DEBUG & DEBUG_FALLBACK)
++   if (ST_DEBUG_FOR(st) & DEBUG_FALLBACK)
+       debug_printf("%s: fallback processing\n", __func__);
+ 
+    if (_mesa_fb_orientation(ctx->ReadBuffer) == Y_0_TOP) {
+diff --git a/src/mesa/state_tracker/st_context.c b/src/mesa/state_tracker/st_context.c
+index cb3775d..00cebb9 100644
+--- a/src/mesa/state_tracker/st_context.c
++++ b/src/mesa/state_tracker/st_context.c
+@@ -449,6 +449,12 @@ st_create_context_priv(struct gl_context *ctx, struct pipe_context *pipe,
+    struct pipe_screen *screen = pipe->screen;
+    struct st_context *st = CALLOC_STRUCT( st_context);
+ 
++   if (!st)
++      return NULL;
++#if defined(R4OS_OPENGL)
++   st->debug_flags = ST_DEBUG;
++#endif
++
+    st->options = *options;
+ 
+    ctx->st_opts = &st->options;
+diff --git a/src/mesa/state_tracker/st_context.h b/src/mesa/state_tracker/st_context.h
+index f72a92e..11a7137 100644
+--- a/src/mesa/state_tracker/st_context.h
++++ b/src/mesa/state_tracker/st_context.h
+@@ -127,6 +127,9 @@ struct st_context
+    struct pipe_screen *screen;
+    struct pipe_context *pipe;
+    struct cso_context *cso_context;
++#if defined(R4OS_OPENGL)
++   unsigned debug_flags;
++#endif
+ 
+    /* The list of state update functions. */
+    st_update_func_t update_functions[ST_NUM_ATOMS];
+diff --git a/src/mesa/state_tracker/st_debug.c b/src/mesa/state_tracker/st_debug.c
+index da6dc4c..cc69f56 100644
+--- a/src/mesa/state_tracker/st_debug.c
++++ b/src/mesa/state_tracker/st_debug.c
+@@ -41,7 +41,9 @@
+ 
+ 
+ 
++#if !defined(R4OS_OPENGL)
+ int ST_DEBUG = 0;
++#endif
+ 
+ static const struct debug_named_value st_debug_flags[] = {
+    { "mesa",     DEBUG_MESA, NULL },
+@@ -58,9 +60,20 @@ static const struct debug_named_value st_debug_flags[] = {
+ 
+ DEBUG_GET_ONCE_FLAGS_OPTION(st_debug, "ST_DEBUG", st_debug_flags, 0)
+ 
++#if defined(R4OS_OPENGL)
++int r4gl_st_debug_flags(void)
++{
++   return debug_get_option_st_debug();
++}
++#endif
++
+ 
+ void
+ st_debug_init(void)
+ {
++#if defined(R4OS_OPENGL)
++   (void)debug_get_option_st_debug();
++#else
+    ST_DEBUG = debug_get_option_st_debug();
++#endif
+ }
+diff --git a/src/mesa/state_tracker/st_debug.h b/src/mesa/state_tracker/st_debug.h
+index 7999dd5..bc1c6a5 100644
+--- a/src/mesa/state_tracker/st_debug.h
++++ b/src/mesa/state_tracker/st_debug.h
+@@ -43,7 +43,15 @@ struct st_context;
+ #define DEBUG_NOREADPIXCACHE  BITFIELD_BIT(6)
+ #define DEBUG_PRINT_XFB       BITFIELD_BIT(7)
+ 
++#if defined(R4OS_OPENGL)
++int r4gl_st_debug_flags(void);
++#define ST_DEBUG r4gl_st_debug_flags()
++/* Context creation snapshots process options; draw paths perform no lookup. */
++#define ST_DEBUG_FOR(st) ((st)->debug_flags)
++#else
+ extern int ST_DEBUG;
++#define ST_DEBUG_FOR(st) ST_DEBUG
++#endif
+ 
+ void st_debug_init( void );
+ 
+diff --git a/src/mesa/state_tracker/st_program.c b/src/mesa/state_tracker/st_program.c
+index e582b06..7b1ff9f 100644
+--- a/src/mesa/state_tracker/st_program.c
++++ b/src/mesa/state_tracker/st_program.c
+@@ -500,12 +500,12 @@ st_create_nir_shader(struct st_context *st, struct pipe_shader_state *state)
+       nir_index_ssa_defs(impl);
+    }
+ 
+-   if (ST_DEBUG & DEBUG_PRINT_IR) {
++   if (ST_DEBUG_FOR(st) & DEBUG_PRINT_IR) {
+       fprintf(stderr, "NIR before handing off to driver:\n");
+       nir_print_shader(nir, stderr);
+    }
+ 
+-   if (ST_DEBUG & DEBUG_PRINT_XFB) {
++   if (ST_DEBUG_FOR(st) & DEBUG_PRINT_XFB) {
+       if (nir->info.io_lowered) {
+          if (nir->xfb_info && nir->xfb_info->output_count) {
+             fprintf(stderr, "XFB info before handing off to driver:\n");

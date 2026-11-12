@@ -1,0 +1,25 @@
+{
+  "scope": "Original C layouts with physically verified completion2/exclusive-end semantics; two successes and two independent engine/microcode errors. Synthetic vectors, separate actual capture.",
+  "source": {
+    "path": "Original/Nvidia/OpenGpuDoc/classes/video/nvenc_drv.h",
+    "bytes": 275485,
+    "sha256": "04ba0a17c2a50e6102f7511c6294c2b61d99fdd1b6651410a3d63c4924da323d",
+    "origin": {
+      "id": "nvidia-open-gpu-doc",
+      "revision": "9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+      "url": "https://codeload.github.com/NVIDIA/open-gpu-doc/tar.gz/9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+      "archive_sha256": "901999de58461d953531f55445a3f653ca76ff58cec722bedb9f064d25808707",
+      "sha256": "04ba0a17c2a50e6102f7511c6294c2b61d99fdd1b6651410a3d63c4924da323d"
+    }
+  },
+  "generator": "Tests/nvenc_status_reference.c",
+  "generator_sha256": "609c3f0e535dc5ced47c58e4f16fe51bbd6023ae9d60c8ae7fe75202eade0e6b",
+  "bytes": 576,
+  "sha256": "45d2f9530df5b62acab0e445d834fff6240456c44263715f323c7220e477869e",
+  "records": [
+    "IDR",
+    "P",
+    "Engine error",
+    "Microcode error"
+  ]
+}

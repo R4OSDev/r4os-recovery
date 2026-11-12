@@ -1,0 +1,16 @@
+[package]
+name="r4os-library-helpers-probe"
+version="0.1.0"
+edition="2024"
+build=false
+autobins=false
+autoexamples=false
+autotests=false
+autobenches=false
+[lib]
+path="src/main.rs"
+crate-type=["staticlib"]
+[dependencies]
+r4os-sdk={version="=0.1.0",features=["alloc"]}
+r4os-library-helpers={path="../../Rust",version="=0.1.0"}
+[workspace]

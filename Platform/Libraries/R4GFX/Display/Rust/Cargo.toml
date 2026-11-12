@@ -1,0 +1,15 @@
+[package]
+name = "r4os-display-geometry"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+build = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]

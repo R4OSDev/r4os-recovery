@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "provider": "Zig 0.16.0 bundled musl",
+  "target": "x86_64-freestanding-none",
+  "license": "MIT",
+  "c_units": [
+    "lib/libc/musl/src/stdlib/strtod.c",
+    "lib/libc/musl/src/internal/floatscan.c",
+    "lib/libc/musl/src/internal/shgetc.c",
+    "lib/libc/musl/src/internal/intscan.c"
+  ],
+  "adapted_units": [
+    {
+      "original": "lib/libc/musl/src/stdio/vfscanf.c",
+      "local": "format_scan.c",
+      "changes": "private narrow string scanner; checked widths/growth; shared float policy; reject wide and long-double formats"
+    }
+  ],
+  "files": [
+    {
+      "path": "lib/libc/musl/src/stdlib/strtod.c",
+      "sha256": "4b1945084cb6bf53a6d5684ca3bfd0c824eab9cbdb2b2fdfc9811fb526dd67ab"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/floatscan.c",
+      "sha256": "13a007ee0be8682efa12c80e088a1758a425d8be1842980609f20c0f9d6d9ad5"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/shgetc.c",
+      "sha256": "0b076498bc7e64f0756692f431bf5d39ea3964a175b9eba4ce6cfe23d4c76dd2"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/shgetc.h",
+      "sha256": "8bf68f99a81d25c7a7b17b3f862498c94e5dbd6d2daa2a94765ef7a5d950563d"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/floatscan.h",
+      "sha256": "84b09ffb83d5bf7d0751f8cf21b7a1ab241576057b275339807b6a3af0f07f6b"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/intscan.c",
+      "sha256": "ed96c758c94666f2557059bd8fca26db8340b9e6b417852f1599e7c30f67deca"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/intscan.h",
+      "sha256": "0fda860250bd54a01384bb693be886e5f64fe01316d2be8e21b4db72244220f9"
+    },
+    {
+      "path": "lib/libc/musl/src/stdio/vfscanf.c",
+      "sha256": "d4940fce26d88baa8d0c0f84fb68230c93323f518d0153f0dd293b5c78113b0c"
+    },
+    {
+      "path": "lib/libc/musl/COPYRIGHT",
+      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+    }
+  ]
+}

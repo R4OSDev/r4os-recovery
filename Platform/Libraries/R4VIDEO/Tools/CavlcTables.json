@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "ffmpeg": "9.0.1",
+  "sha256": "ed122237dbd672bab25bbbe42d71ea30f24d94f9edd73bdeb1d8227dbf5729b3",
+  "bytes": 306155,
+  "derivation": "Pinned FFmpeg h264_cavlc.c initializer and vlc.c, emitted by CavlcTables.c; immutable target table data, LGPL-2.1-or-later."
+}

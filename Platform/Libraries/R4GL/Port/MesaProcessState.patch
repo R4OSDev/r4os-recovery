@@ -1,0 +1,382 @@
+--- a/src/compiler/glsl/builtin_functions.cpp
++++ b/src/compiler/glsl/builtin_functions.cpp
+@@ -100,7 +100,14 @@
+ 
+ using namespace ir_builder;
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#include <new>
++static simple_mtx_t *r4gl_builtins_mutex();
++#define builtins_lock (*r4gl_builtins_mutex())
++#else
+ static simple_mtx_t builtins_lock = SIMPLE_MTX_INITIALIZER;
++#endif
+ 
+ /**
+  * Availability predicates:
+@@ -9590,8 +9597,40 @@
+ /******************************************************************************/
+ 
+ /* The singleton instance of builtin_builder. */
++#if defined(R4OS_OPENGL)
++struct r4gl_builtin_state {
++   simple_mtx_t mutex;
++   builtin_builder builder;
++   uint32_t users;
++};
++static const char r4gl_builtin_key = 0;
++static void r4gl_builtin_destroy();
++static void r4gl_builtin_init(void *data)
++{
++   auto *state = new(data) r4gl_builtin_state{};
++   simple_mtx_init(&state->mutex, mtx_plain);
++   if (atexit(r4gl_builtin_destroy) != 0)
++      abort();
++}
++static r4gl_builtin_state *r4gl_builtins()
++{
++   return static_cast<r4gl_builtin_state *>(r4gl_process_state(
++      &r4gl_builtin_key, sizeof(r4gl_builtin_state), alignof(r4gl_builtin_state),
++      r4gl_builtin_init));
++}
++static simple_mtx_t *r4gl_builtins_mutex() { return &r4gl_builtins()->mutex; }
++static void r4gl_builtin_destroy()
++{
++   auto *state = r4gl_builtins();
++   state->builder.~builtin_builder();
++   simple_mtx_destroy(&state->mutex);
++}
++#define builtins (r4gl_builtins()->builder)
++#define builtin_users (r4gl_builtins()->users)
++#else
+ static builtin_builder builtins;
+ static uint32_t builtin_users = 0;
++#endif
+ 
+ /**
+  * External API (exposing the built-in module to the rest of the compiler):
+--- a/src/compiler/glsl_types.c
++++ b/src/compiler/glsl_types.c
+@@ -33,9 +33,7 @@
+ #include "util/u_string.h"
+ #include "util/simple_mtx.h"
+ 
+-static simple_mtx_t glsl_type_cache_mutex = SIMPLE_MTX_INITIALIZER;
+-
+-static struct {
++struct glsl_type_cache_data {
+    void *mem_ctx;
+ 
+    /* Use a linear (arena) allocator for all the new types, since
+@@ -55,7 +53,31 @@
+    struct hash_table *struct_types;
+    struct hash_table *interface_types;
+    struct hash_table *subroutine_types;
+-} glsl_type_cache;
++};
++
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_type_state {
++   simple_mtx_t mutex;
++   struct glsl_type_cache_data cache;
++};
++static const char r4gl_type_key;
++static void r4gl_type_init(void *data)
++{
++   struct r4gl_type_state *state = data;
++   simple_mtx_init(&state->mutex, mtx_plain);
++}
++static struct r4gl_type_state *r4gl_types(void)
++{
++   return r4gl_process_state(&r4gl_type_key, sizeof(struct r4gl_type_state),
++                            _Alignof(struct r4gl_type_state), r4gl_type_init);
++}
++#define glsl_type_cache (r4gl_types()->cache)
++#define glsl_type_cache_mutex (r4gl_types()->mutex)
++#else
++static simple_mtx_t glsl_type_cache_mutex = SIMPLE_MTX_INITIALIZER;
++static struct glsl_type_cache_data glsl_type_cache;
++#endif
+ 
+ static const glsl_type *
+ make_vector_matrix_type(linear_ctx *lin_ctx, uint32_t gl_type,
+--- a/src/compiler/nir/nir.h
++++ b/src/compiler/nir/nir.h
+@@ -5158,6 +5158,11 @@
+ static inline bool
+ should_skip_nir(const char *name)
+ {
++#if defined(R4OS_OPENGL)
++   const char *list = os_get_option_cached("NIR_SKIP");
++   if (!list)
++      list = "";
++#else
+    static const char *list = NULL;
+    if (!list) {
+       /* Comma separated list of names to skip. */
+@@ -5165,6 +5170,7 @@
+       if (!list)
+          list = "";
+    }
++#endif
+ 
+    if (!list[0])
+       return false;
+--- a/src/egl/main/egldevice.c
++++ b/src/egl/main/egldevice.c
+@@ -106,12 +106,30 @@
+    return (cur != NULL);
+ }
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++static const _EGLDevice r4gl_software_device_template = {
++   .extensions = "EGL_MESA_device_software",
++   .MESA_device_software = EGL_TRUE,
++};
++static const char r4gl_software_device_key;
++static void r4gl_software_device_init(void *data)
++{
++   *(_EGLDevice *)data = r4gl_software_device_template;
++}
++_EGLDevice *r4gl_egl_software_device(void)
++{
++   return r4gl_process_state(&r4gl_software_device_key, sizeof(_EGLDevice),
++                            _Alignof(_EGLDevice), r4gl_software_device_init);
++}
++#else
+ _EGLDevice _eglSoftwareDevice = {
+    /* TODO: EGL_EXT_device_drm support for KMS + llvmpipe */
+    .extensions = "EGL_MESA_device_software EGL_EXT_device_drm_render_node",
+    .MESA_device_software = EGL_TRUE,
+    .EXT_device_drm_render_node = EGL_TRUE,
+ };
++#endif
+ 
+ #ifdef HAVE_LIBDRM
+ extern const _EGLDriver _eglDriver;
+--- a/src/egl/main/egldevice.h
++++ b/src/egl/main/egldevice.h
+@@ -40,7 +40,12 @@
+ extern "C" {
+ #endif
+ 
++#if defined(R4OS_OPENGL)
++_EGLDevice *r4gl_egl_software_device(void);
++#define _eglSoftwareDevice (*r4gl_egl_software_device())
++#else
+ extern _EGLDevice _eglSoftwareDevice;
++#endif
+ 
+ void
+ _eglFiniDevice(void);
+--- a/src/egl/main/eglglobals.c
++++ b/src/egl/main/eglglobals.c
+@@ -45,12 +45,21 @@
+ #include <sys/mman.h>
+ #endif
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_egl_state {
++   simple_mtx_t mutex;
++   struct _egl_global global;
++   EGLBoolean registered;
++};
++static const struct _egl_global r4gl_egl_template = {
++#else
+ static simple_mtx_t _eglGlobalMutex = SIMPLE_MTX_INITIALIZER;
+-
+ struct _egl_global _eglGlobal = {
+    .Mutex = &_eglGlobalMutex,
+    .DisplayList = NULL,
+    .DeviceList = &_eglSoftwareDevice,
++#endif
+ 
+ #if USE_LIBGLVND
+    .ClientOnlyExtensionString =
+@@ -100,6 +109,24 @@
+    .debugTypesEnabled = _EGL_DEBUG_BIT_CRITICAL | _EGL_DEBUG_BIT_ERROR,
+ };
+ 
++#if defined(R4OS_OPENGL)
++static const char r4gl_egl_key;
++static void r4gl_egl_init(void *data)
++{
++   struct r4gl_egl_state *state = data;
++   state->global = r4gl_egl_template;
++   simple_mtx_init(&state->mutex, mtx_plain);
++   state->global.Mutex = &state->mutex;
++   state->global.DeviceList = &_eglSoftwareDevice;
++}
++static struct r4gl_egl_state *r4gl_egl(void)
++{
++   return r4gl_process_state(&r4gl_egl_key, sizeof(struct r4gl_egl_state),
++                            _Alignof(struct r4gl_egl_state), r4gl_egl_init);
++}
++struct _egl_global *r4gl_egl_global(void) { return &r4gl_egl()->global; }
++#endif
++
+ static void
+ _eglAtExit(void)
+ {
+@@ -110,13 +137,19 @@
+ void
+ _eglRegisterAtExit(void)
+ {
+-   static EGLBoolean registered = EGL_FALSE;
++#if defined(R4OS_OPENGL)
++   EGLBoolean *registered = &r4gl_egl()->registered;
++#else
++   static EGLBoolean registered_storage = EGL_FALSE;
++   EGLBoolean *registered = &registered_storage;
++#endif
+ 
+    simple_mtx_lock(_eglGlobal.Mutex);
+ 
+-   if (!registered) {
+-      atexit(_eglAtExit);
+-      registered = EGL_TRUE;
++   if (!*registered) {
++      if (atexit(_eglAtExit) != 0)
++         abort();
++      *registered = EGL_TRUE;
+    }
+ 
+    simple_mtx_unlock(_eglGlobal.Mutex);
+--- a/src/egl/main/eglglobals.h
++++ b/src/egl/main/eglglobals.h
+@@ -69,7 +69,12 @@
+    unsigned int debugTypesEnabled;
+ };
+ 
++#if defined(R4OS_OPENGL)
++struct _egl_global *r4gl_egl_global(void);
++#define _eglGlobal (*r4gl_egl_global())
++#else
+ extern struct _egl_global _eglGlobal;
++#endif
+ 
+ extern void
+ _eglRegisterAtExit(void);
+--- a/src/util/texcompress_astc_luts.cpp
++++ b/src/util/texcompress_astc_luts.cpp
+@@ -28,6 +28,11 @@
+ #include <vector>
+ 
+ #include "texcompress_astc_luts.h"
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#include <new>
++#include <cstdlib>
++#endif
+ 
+ namespace Granite
+ {
+@@ -363,10 +368,27 @@
+ 	}
+ }
+ 
++#if defined(R4OS_OPENGL)
++static const char r4gl_astc_key = 0;
++static void r4gl_astc_destroy() { get_astc_luts().~ASTCLutHolder(); }
++static void r4gl_astc_init(void *data)
++{
++   new(data) ASTCLutHolder;
++   if (atexit(r4gl_astc_destroy) != 0)
++      abort();
++}
++#endif
++
+ ASTCLutHolder &get_astc_luts()
+ {
++#if defined(R4OS_OPENGL)
++   return *static_cast<ASTCLutHolder *>(r4gl_process_state(
++      &r4gl_astc_key, sizeof(ASTCLutHolder), alignof(ASTCLutHolder),
++      r4gl_astc_init));
++#else
+ 	static ASTCLutHolder holder;
+ 	return holder;
++#endif
+ }
+ 
+ ASTCLutHolder::ASTCLutHolder()
+--- a/src/util/u_debug.h
++++ b/src/util/u_debug.h
+@@ -459,7 +459,35 @@
+    } \
+    return value; \
+ }
+-
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++/* Debug options are cached once per calling process, never in shared R4L BSS. */
++#define R4GL_PROCESS_OPTION(suffix, type, expression) \
++typedef type r4gl_option_type_ ## suffix; \
++static const char r4gl_option_key_ ## suffix = 0; \
++static void r4gl_option_init_ ## suffix(void *data) \
++{ \
++   *(r4gl_option_type_ ## suffix *)data = (expression); \
++} \
++static type debug_get_option_ ## suffix(void) \
++{ \
++   return *(r4gl_option_type_ ## suffix *)r4gl_process_state( \
++      &r4gl_option_key_ ## suffix, sizeof(r4gl_option_type_ ## suffix), \
++      __alignof__(r4gl_option_type_ ## suffix), r4gl_option_init_ ## suffix); \
++}
++#undef DEBUG_GET_ONCE_OPTION
++#undef DEBUG_GET_ONCE_BOOL_OPTION
++#undef DEBUG_GET_ONCE_NUM_OPTION
++#undef DEBUG_GET_ONCE_FLAGS_OPTION
++#define DEBUG_GET_ONCE_OPTION(suffix, name, dfault) \
++   R4GL_PROCESS_OPTION(suffix, const char *, debug_get_option_cached(name, dfault))
++#define DEBUG_GET_ONCE_BOOL_OPTION(suffix, name, dfault) \
++   R4GL_PROCESS_OPTION(suffix, bool, debug_parse_bool_option(debug_get_option_cached(name, NULL), dfault))
++#define DEBUG_GET_ONCE_NUM_OPTION(suffix, name, dfault) \
++   R4GL_PROCESS_OPTION(suffix, int64_t, debug_parse_num_option(debug_get_option_cached(name, NULL), dfault))
++#define DEBUG_GET_ONCE_FLAGS_OPTION(suffix, name, flags, dfault) \
++   R4GL_PROCESS_OPTION(suffix, uint64_t, debug_parse_flags_option(name, debug_get_option_cached(name, NULL), flags, dfault))
++#endif
+ 
+ #ifdef __cplusplus
+ }
+--- a/src/util/u_queue.c
++++ b/src/util/u_queue.c
+@@ -56,12 +56,35 @@
+  * are using the static variables.
+  */
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_queue_state {
++   once_flag atexit_once;
++   struct list_head head;
++   mtx_t mutex;
++};
++static const char r4gl_queue_key;
++static void r4gl_queue_init(void *data)
++{
++   struct r4gl_queue_state *state = data;
++   list_inithead(&state->head);
++}
++static struct r4gl_queue_state *r4gl_queues(void)
++{
++   return r4gl_process_state(&r4gl_queue_key, sizeof(struct r4gl_queue_state),
++                            _Alignof(struct r4gl_queue_state), r4gl_queue_init);
++}
++#define atexit_once_flag (r4gl_queues()->atexit_once)
++#define queue_list (r4gl_queues()->head)
++#define exit_mutex (r4gl_queues()->mutex)
++#else
+ static once_flag atexit_once_flag = ONCE_FLAG_INIT;
+ static struct list_head queue_list = {
+    .next = &queue_list,
+    .prev = &queue_list,
+ };
+ static mtx_t exit_mutex;
++#endif
+ 
+ static void
+ atexit_handler(void)

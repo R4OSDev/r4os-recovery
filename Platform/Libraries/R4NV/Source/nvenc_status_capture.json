@@ -1,0 +1,17 @@
+{
+  "decoded_pattern_passed": true,
+  "captured": "2026-10-05",
+  "provenance": "OssiPC physical run DB, roadmap0.82.31; ExFiles/Reports/OssiGPU.txt",
+  "picture_index": 0,
+  "sha256": "3cde319b7cdbaf77bd9230bea8f1977f08b4ae5c294173140bdbe6f9565f1fbf",
+  "driver": "0.1.221",
+  "exclusive_end": 38400,
+  "bytes": 144,
+  "scope": "Actual C7B7 status after native GR preparation and one successfully independently decoded318x190 IDR; no P/sequence claim.",
+  "completion_word": 2,
+  "encoded_sha256": "4be5b16bd1ad3afebe15d7d93ab8fbdb586b36f035e820f979988ed479d2479e",
+  "slice_bytes": 38400,
+  "bitstream_capacity": 1048535,
+  "macroblocks": 240,
+  "header_bits": 28
+}

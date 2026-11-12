@@ -1,0 +1,48 @@
+{
+  "scope": "Two complete244-byte command streams from original C7B7/C9B7/C56F macros: shared plane bases, watchdog/GPTIMER, no MEPRED methods, zero CEA. Synthetic P-frame operands; no physical P-frame claim.",
+  "bytes": 488,
+  "sha256": "aed65a4162aa104424e12de316ab8407b156d48ec20c258ff6b9baaef9ec5277",
+  "sources": [
+    {
+      "path": "Original/Nvidia/OpenGpuDoc/classes/video/clc7b7.h",
+      "bytes": 25672,
+      "sha256": "3830711dde51bda28d5364c569034a7e83686ec66c4abf5e545fb44b656f6428",
+      "origin": {
+        "id": "nvidia-open-gpu-doc",
+        "revision": "9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+        "url": "https://codeload.github.com/NVIDIA/open-gpu-doc/tar.gz/9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+        "archive_sha256": "901999de58461d953531f55445a3f653ca76ff58cec722bedb9f064d25808707",
+        "sha256": "3830711dde51bda28d5364c569034a7e83686ec66c4abf5e545fb44b656f6428"
+      }
+    },
+    {
+      "path": "Original/Nvidia/OpenGpuDoc/classes/video/clc9b7.h",
+      "bytes": 27162,
+      "sha256": "a1740b9752fd129b510869a19dd820f3f39122bef2a8fa6b731f8b30d4b21b46",
+      "origin": {
+        "id": "nvidia-open-gpu-doc",
+        "revision": "9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+        "url": "https://codeload.github.com/NVIDIA/open-gpu-doc/tar.gz/9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+        "archive_sha256": "901999de58461d953531f55445a3f653ca76ff58cec722bedb9f064d25808707",
+        "sha256": "a1740b9752fd129b510869a19dd820f3f39122bef2a8fa6b731f8b30d4b21b46"
+      }
+    }
+  ],
+  "nvtypes": {
+    "path": "ExFiles/Reference/GFX/Nvidia/OpenKernelModules-570.144/src/common/sdk/nvidia/inc/nvtypes.h",
+    "pin": "NVIDIA 570.144, 8ec351aeb96a93a4bb69ccc12a542bf8a8df2b6f",
+    "sha256": "3fd5e2c20b1432421a214b12e52778f48f7914b87645d4736cf55324d25c9d3c"
+  },
+  "generator": "Tests/nvenc_methods_reference.c",
+  "generator_sha256": "2ef652b42def643f18ccd92579c7bb02ef36e7e091bf4b1aaa6d21167e8be4d1",
+  "channel_binding": {
+    "subchannel": 0,
+    "engine_sw": 31,
+    "source": "ExFiles/Reference/GFX/0.82.30/NvdecBindingSource/clc56f.h",
+    "license": "MIT",
+    "sha256": "8b7a6d6d5d5e3538f2f3e3b975d00c4aa94bd2480008c49aefcfc2566e3f658e",
+    "commit": "8ec351aeb96a93a4bb69ccc12a542bf8a8df2b6f",
+    "embedded_in_each_command_stream": true
+  },
+  "recipe": "Compile Tests/nvenc_methods_reference.c with original video and NVIDIA SDK include directories."
+}

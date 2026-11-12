@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "upstream": "https://gitlab.freedesktop.org/emersion/libdisplay-info",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2022 The libdisplay-info Contributors",
+  "timingCount": 154,
+  "source": "ExFiles/Reference/GFX/LibdisplayInfo/cta-vic-table.c",
+  "sourceSha256": "7dd1e3b58fadf6fdb2f86cdf00eef8939c7fb667db74781989fdf8d271c92acc",
+  "transformation": "Generated integer Timing records, full-frame vertical totals including the interlace half-line; no parser implementation copied.",
+  "fixtures": [
+    {
+      "file": "qemu.edid",
+      "source": "ExFiles/Reference/GFX/LibdisplayInfo/test/data/qemu.edid",
+      "sha256": "e2020bcce3f0c2edfbd7be364150dd7d45e737f75df86433308bcba84f9079c1",
+      "license": "MIT",
+      "transformation": "none"
+    },
+    {
+      "file": "hisense-55u8k.edid",
+      "source": "ExFiles/Reference/GFX/LibdisplayInfo/test/data/hisense-55u8k.edid",
+      "sha256": "868a5ea969931438bead5ae8f8b3f555946f282e6b24e690b875dd36a66d650d",
+      "license": "MIT",
+      "transformation": "none"
+    },
+    {
+      "file": "apple-xdr-dp.edid",
+      "source": "ExFiles/Reference/GFX/LibdisplayInfo/test/data/apple-xdr-dp.edid",
+      "sha256": "272dab96a48cc8d3b02cff93e946e92cc5131eadb99ecd918043ece09b0ed093",
+      "license": "MIT",
+      "transformation": "none"
+    },
+    {
+      "file": "ossipc-hisense-base.bin",
+      "source": "ExFiles/Reference/GFX/Baseline/OssiPC/edid-base.bin",
+      "sha256": "81029e300854aa6c43e3e30ca8062ba32dffbf1d5fcd0e6c7d2c8da5202c7b78",
+      "license": "Original R4OS hardware measurement",
+      "transformation": "none; previously captured 128-byte base only, no new connection"
+    }
+  ],
+  "hdmi_forum_facts": {
+    "source": "ExFiles/Reference/GFX/LibdisplayInfo/cta.c",
+    "sha256": "7b6226116c50cb79ed9793fd1e33a525bbae9c710a26595bcfe890ec8c84391f",
+    "transformation": "HF-VSDB data[5] bits7/3 provide independent SCDC/low-rate scrambling facts. Original bounded parser and extension transaction; no upstream parser code copied."
+  }
+}

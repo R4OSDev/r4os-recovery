@@ -1,0 +1,525 @@
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -62,8 +62,10 @@
+ #endif
+ #endif
+ 
++#ifndef R4OS_OPENGL
+ static int num_screens = 0;
+ bool zink_tracing = false;
++#endif
+ 
+ #if DETECT_OS_WINDOWS
+ #include <io.h>
+@@ -124,10 +126,12 @@
+    DEBUG_NAMED_VALUE_END
+ };
+ 
+-DEBUG_GET_ONCE_FLAGS_OPTION(zink_debug, "ZINK_DEBUG", zink_debug_options, 0)
+-
++DEBUG_GET_ONCE_FLAGS_OPTION(zink_debug_setting, "ZINK_DEBUG", zink_debug_options, 0)
++
++#ifndef R4OS_OPENGL
+ uint32_t
+ zink_debug;
++#endif
+ 
+ 
+ static const struct debug_named_value
+@@ -138,9 +142,11 @@
+    DEBUG_NAMED_VALUE_END
+ };
+ 
+-DEBUG_GET_ONCE_FLAGS_OPTION(zink_descriptor_mode, "ZINK_DESCRIPTORS", zink_descriptor_options, ZINK_DESCRIPTOR_MODE_AUTO)
+-
++DEBUG_GET_ONCE_FLAGS_OPTION(zink_descriptor_setting, "ZINK_DESCRIPTORS", zink_descriptor_options, ZINK_DESCRIPTOR_MODE_AUTO)
++
++#ifndef R4OS_OPENGL
+ enum zink_descriptor_mode zink_descriptor_mode;
++#endif
+ 
+ struct zink_device {
+    unsigned refcount;
+@@ -150,6 +156,50 @@
+    simple_mtx_t queue_lock;
+ };
+ 
++#ifdef R4OS_OPENGL
++#include "r4gl_state.h"
++#include "r4gl_vulkan.h"
++_Static_assert(offsetof(struct zink_screen, base) == 0, "Gallium screen must be the leading member");
++struct r4gl_zink_state {
++   int screen_count;
++   bool tracing;
++   uint32_t debug;
++   r4gl_zink_descriptor_mode_type descriptors;
++   simple_mtx_t devices_gate, instance_gate, create_gate;
++   struct set devices;
++   struct zink_instance_info info;
++   unsigned references;
++   VkInstance vk_instance;
++};
++static const char r4gl_zink_key;
++static void r4gl_zink_init(void *data)
++{
++   struct r4gl_zink_state *s = data;
++   memset(s, 0, sizeof(*s));
++   simple_mtx_init(&s->devices_gate, mtx_plain);
++   simple_mtx_init(&s->instance_gate, mtx_plain);
++   simple_mtx_init(&s->create_gate, mtx_plain);
++   s->debug = debug_get_option_zink_debug_setting();
++   s->descriptors = debug_get_option_zink_descriptor_setting();
++}
++static struct r4gl_zink_state *r4gl_zink_state(void)
++{
++   return r4gl_process_state(&r4gl_zink_key, sizeof(struct r4gl_zink_state),
++                            _Alignof(struct r4gl_zink_state), r4gl_zink_init);
++}
++uint32_t *r4gl_zink_debug(void) { return &r4gl_zink_state()->debug; }
++bool r4gl_zink_tracing(void) { return __atomic_load_n(&r4gl_zink_state()->tracing, __ATOMIC_RELAXED); }
++r4gl_zink_descriptor_mode_type *r4gl_zink_descriptor_mode(void)
++{ return &r4gl_zink_state()->descriptors; }
++#define num_screens (r4gl_zink_state()->screen_count)
++#define device_lock (r4gl_zink_state()->devices_gate)
++#define device_table (r4gl_zink_state()->devices)
++#define instance_lock (r4gl_zink_state()->instance_gate)
++/* Avoid macros named instance/instance_info: those are screen members too. */
++#define r4gl_instance_info (r4gl_zink_state()->info)
++#define instance_refcount (r4gl_zink_state()->references)
++#define r4gl_instance (r4gl_zink_state()->vk_instance)
++#else
+ static simple_mtx_t device_lock = SIMPLE_MTX_INITIALIZER;
+ static struct set device_table;
+ 
+@@ -157,6 +207,9 @@
+ static struct zink_instance_info instance_info;
+ static unsigned instance_refcount;
+ static VkInstance instance;
++#define r4gl_instance_info instance_info
++#define r4gl_instance instance
++#endif
+ 
+ static const char *
+ zink_get_vendor(struct pipe_screen *pscreen)
+@@ -978,7 +1031,12 @@
+    caps->conditional_render = true;
+ 
+    caps->glsl_feature_level_compatibility =
+-   caps->glsl_feature_level = 460;
++   caps->glsl_feature_level =
++#ifdef R4OS_OPENGL
++      330; /* Initial native profile; later versions need separate admission. */
++#else
++      460;
++#endif
+ 
+    caps->compute = true;
+ 
+@@ -1604,6 +1662,9 @@
+       VKSCR(DestroyDebugUtilsMessengerEXT)(screen->instance, screen->debugUtilsCallbackHandle, NULL);
+    }
+ 
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 16)
++#endif
+    util_vertex_state_cache_deinit(&screen->vertex_state_cache);
+ 
+    if (screen->gfx_push_constant_layout)
+@@ -1628,9 +1689,18 @@
+ #endif
+    disk_cache_destroy(screen->disk_cache);
+ 
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 2)
++#endif
+    zink_bo_deinit(screen);
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 1)
++#endif
+    util_live_shader_cache_deinit(&screen->shaders);
+ 
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 32)
++#endif
+    zink_descriptor_layouts_deinit(screen);
+ 
+    if (screen->sem)
+@@ -1658,6 +1728,7 @@
+             if (!zdev->refcount) {
+                VKSCR(DestroyDevice)(zdev->dev, NULL);
+                _mesa_set_remove(&device_table, entry);
++               simple_mtx_destroy(&zdev->queue_lock);
+                free(zdev);
+                break;
+             }
+@@ -1670,10 +1741,16 @@
+    }
+ 
+    simple_mtx_lock(&instance_lock);
+-   if (screen->instance && --instance_refcount == 0)
+-      VKSCR(DestroyInstance)(instance, NULL);
++   if (screen->instance && --instance_refcount == 0) {
++      VKSCR(DestroyInstance)(r4gl_instance, NULL);
++      r4gl_instance = VK_NULL_HANDLE;
++      memset(&r4gl_instance_info, 0, sizeof(r4gl_instance_info));
++   }
+    simple_mtx_unlock(&instance_lock);
+ 
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 8)
++#endif
+    util_idalloc_mt_fini(&screen->buffer_ids);
+ 
+    if (screen->loader_lib)
+@@ -1687,7 +1764,22 @@
+    if (screen->drm_fd != -1)
+       close(screen->drm_fd);
+ 
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 4)
++#endif
+    slab_destroy_parent(&screen->transfer_pool);
++#ifdef R4OS_OPENGL
++   if (screen->r4gl_initialized & 8) {
++      simple_mtx_destroy(&screen->free_batch_states_lock);
++      simple_mtx_destroy(&screen->active_batch_states_lock);
++      simple_mtx_destroy(&screen->dt_lock);
++      simple_mtx_destroy(&screen->semaphores_lock);
++   }
++   if (screen->r4gl_initialized & 64)
++      simple_mtx_destroy(&screen->copy_context_lock);
++   if (screen->debug_mem_sizes)
++      simple_mtx_destroy(&screen->debug_mem_lock);
++#endif
+    ralloc_free(screen);
+    glsl_type_singleton_decref();
+ }
+@@ -2806,15 +2898,33 @@
+    }
+ 
+    VkResult result = VKSCR(CreateDevice)(screen->pdev, dci, NULL, &dev);
+-   if (result != VK_SUCCESS)
++   if (result != VK_SUCCESS) {
+       mesa_loge("ZINK: vkCreateDevice failed (%s)", vk_Result_to_str(result));
++      simple_mtx_unlock(&device_lock);
++      return NULL;
++   }
+ 
+    struct zink_device *zdev = malloc(sizeof(struct zink_device));
++   if (!zdev) {
++      PFN_vkDestroyDevice destroy = (PFN_vkDestroyDevice)
++         screen->vk_GetDeviceProcAddr(dev, "vkDestroyDevice");
++      destroy(dev, NULL);
++      simple_mtx_unlock(&device_lock);
++      return NULL;
++   }
+    zdev->refcount = 1;
+    zdev->pdev = screen->pdev;
+    zdev->dev = dev;
+    simple_mtx_init(&zdev->queue_lock, mtx_plain);
+-   _mesa_set_add(&device_table, zdev);
++   if (!_mesa_set_add(&device_table, zdev)) {
++      PFN_vkDestroyDevice destroy = (PFN_vkDestroyDevice)
++         screen->vk_GetDeviceProcAddr(dev, "vkDestroyDevice");
++      destroy(dev, NULL);
++      simple_mtx_destroy(&zdev->queue_lock);
++      free(zdev);
++      simple_mtx_unlock(&device_lock);
++      return NULL;
++   }
+    simple_mtx_unlock(&device_lock);
+    return zdev;
+ }
+@@ -3408,9 +3518,12 @@
+    screen->drm_fd = -1;
+ 
+    glsl_type_singleton_init_or_ref();
+-   zink_debug = debug_get_option_zink_debug();
++#ifndef R4OS_OPENGL
++   zink_debug = debug_get_option_zink_debug_setting();
+    if (zink_descriptor_mode == ZINK_DESCRIPTOR_MODE_AUTO)
+-      zink_descriptor_mode = debug_get_option_zink_descriptor_mode();
++      zink_descriptor_mode = debug_get_option_zink_descriptor_setting();
++
++#endif
+ 
+    screen->threaded = util_get_cpu_caps()->nr_cpus > 1 && debug_get_bool_option("GALLIUM_THREAD", util_get_cpu_caps()->nr_cpus > 1);
+    if (zink_debug & ZINK_DEBUG_FLUSHSYNC)
+@@ -3422,6 +3535,9 @@
+ 
+    u_trace_state_init();
+ 
++#ifdef R4OS_OPENGL
++   screen->vk_GetInstanceProcAddr = r4gl_native_vulkan_proc;
++#else
+    screen->loader_lib = util_dl_open(VK_LIBNAME);
+    if (!screen->loader_lib) {
+       if (!screen->driver_name_is_inferred)
+@@ -3438,6 +3554,9 @@
+       goto fail;
+    }
+ 
++#endif
++
++#ifndef R4OS_OPENGL
+    if (config) {
+       driParseConfigFiles(config->options, config->options_info,
+                           &(driConfigFileParseParams) { .driverName = "zink" });
+@@ -3447,21 +3566,27 @@
+       screen->driconf.zink_shader_object_enable = driQueryOptionb(config->options, "zink_shader_object_enable");
+    }
+ 
++#endif
+    simple_mtx_lock(&instance_lock);
+    if (++instance_refcount == 1) {
+-      instance_info.loader_version = zink_get_loader_version(screen);
+-      instance_info.no_device_select = zink_picks_device(dev_major, adapter_luid);
+-      instance = zink_create_instance(screen, &instance_info);
+-   }
+-   if (!instance) {
++      r4gl_instance_info.loader_version = zink_get_loader_version(screen);
++      r4gl_instance_info.no_device_select = zink_picks_device(dev_major, adapter_luid);
++      r4gl_instance = zink_create_instance(screen, &r4gl_instance_info);
++   }
++   if (!r4gl_instance) {
++#ifdef R4OS_OPENGL
++      --instance_refcount;
++      memset(&r4gl_instance_info, 0, sizeof(r4gl_instance_info));
++#else
+       /* We don't decrement instance_refcount here. This prevents us from trying
+        * to create another instance on subsequent calls.
+        */
++#endif
+       simple_mtx_unlock(&instance_lock);
+       goto fail;
+    }
+-   screen->instance = instance;
+-   screen->instance_info = &instance_info;
++   screen->instance = r4gl_instance;
++   screen->instance_info = &r4gl_instance_info;
+    simple_mtx_unlock(&instance_lock);
+ 
+    if (zink_debug & ZINK_DEBUG_VALIDATION) {
+@@ -3480,6 +3605,12 @@
+                                                       screen->vk_GetInstanceProcAddr,
+                                                       screen->instance);
+ 
++#ifdef R4OS_OPENGL
++   screen->vk_GetDeviceProcAddr = (PFN_vkGetDeviceProcAddr)
++      screen->vk_GetInstanceProcAddr(screen->instance, "vkGetDeviceProcAddr");
++   if (!screen->vk_GetDeviceProcAddr)
++      goto fail;
++#endif
+    zink_verify_instance_extensions(screen);
+ 
+    if (screen->instance_info->have_EXT_debug_utils &&
+@@ -3512,6 +3643,30 @@
+       goto fail;
+    }
+ 
++#ifdef R4OS_OPENGL
++   const struct zink_device_info *i = &screen->info;
++   const VkPhysicalDeviceFeatures *f = &i->feats.features;
++   /* Pbuffers need no swapchain. Mutable swapchain formats belong to the
++    * later native window admission, not to the render-device baseline. */
++#define R4GL_REQUIRE(test) do { if (!(test)) { \
++   mesa_loge("R4GL: Zink GL 3.3 requirement failed: %s", #test); \
++   goto fail; } } while (0)
++   R4GL_REQUIRE(f->logicOp && f->fillModeNonSolid && f->alphaToOne && f->shaderClipDistance);
++   R4GL_REQUIRE(f->independentBlend && f->depthClamp && f->geometryShader);
++   R4GL_REQUIRE(f->shaderTessellationAndGeometryPointSize && f->dualSrcBlend);
++   R4GL_REQUIRE(i->props.limits.maxPerStageDescriptorSamplers >= 16);
++   R4GL_REQUIRE(i->feats12.scalarBlockLayout || i->have_EXT_scalar_block_layout);
++   R4GL_REQUIRE(i->have_EXT_custom_border_color && i->border_color_feats.customBorderColorWithoutFormat);
++   R4GL_REQUIRE(i->have_EXT_provoking_vertex && i->have_EXT_border_color_swizzle);
++   R4GL_REQUIRE(i->have_EXT_line_rasterization && i->line_rast_feats.rectangularLines &&
++       i->line_rast_feats.bresenhamLines && i->line_rast_feats.smoothLines &&
++       i->line_rast_feats.stippledRectangularLines && i->line_rast_feats.stippledBresenhamLines &&
++       i->line_rast_feats.stippledSmoothLines);
++   R4GL_REQUIRE(i->have_EXT_transform_feedback && i->have_EXT_conditional_rendering);
++   R4GL_REQUIRE(i->have_EXT_depth_clip_enable && i->depth_clip_enable_feats.depthClipEnable);
++   R4GL_REQUIRE(i->have_EXT_vertex_attribute_divisor && i->maint5_feats.maintenance5);
++#undef R4GL_REQUIRE
++#endif
+    if (!screen->info.rb2_feats.nullDescriptor) {
+       mesa_loge("Zink requires the nullDescriptor feature of KHR/EXT robustness2.");
+       goto fail;
+@@ -3595,7 +3750,7 @@
+    disable_features(screen);
+ 
+    struct zink_device *zdev = zink_create_logical_device(screen);
+-   if (!zdev->dev)
++   if (!zdev || !zdev->dev)
+       goto fail;
+    screen->dev = zdev->dev;
+    screen->queue_lock = &zdev->queue_lock;
+@@ -3641,6 +3796,9 @@
+ #endif // VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
+ 
+    check_base_requirements(screen);
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 1;
++#endif
+    util_live_shader_cache_init(&screen->shaders, zink_create_gfx_shader_state, zink_delete_shader_state);
+ 
+    for (unsigned i = 0; i < ARRAY_SIZE(screen->base.nir_options); i++)
+@@ -3708,6 +3866,9 @@
+ 
+    if (!zink_screen_resource_init(&screen->base))
+       goto fail;
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 2;
++#endif
+    if (!zink_bo_init(screen)) {
+       if (!screen->driver_name_is_inferred)
+          mesa_loge("ZINK: failed to initialize suballocator");
+@@ -3726,6 +3887,9 @@
+       goto fail;
+    populate_format_props(screen);
+ 
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 4;
++#endif
+    slab_create_parent(&screen->transfer_pool, sizeof(struct zink_transfer), 16);
+ 
+    screen->driconf.inline_uniforms = debug_get_bool_option("ZINK_INLINE_UNIFORMS", screen->is_cpu);
+@@ -3806,12 +3970,18 @@
+    simple_mtx_init(&screen->active_batch_states_lock, mtx_plain);
+    simple_mtx_init(&screen->dt_lock, mtx_plain);
+ 
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 8;
++#endif
+    util_idalloc_mt_init_tc(&screen->buffer_ids);
+ 
+    simple_mtx_init(&screen->semaphores_lock, mtx_plain);
+    util_dynarray_init(&screen->semaphores, screen);
+    util_dynarray_init(&screen->fd_semaphores, screen);
+ 
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 16;
++#endif
+    util_vertex_state_cache_init(&screen->vertex_state_cache,
+                                 zink_create_vertex_state, zink_vertex_state_destroy);
+    screen->base.create_vertex_state = zink_cache_create_vertex_state;
+@@ -3827,6 +3997,9 @@
+       goto fail;
+    }
+ 
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 32;
++#endif
+    if (!zink_descriptor_layouts_init(screen)) {
+       if (!screen->driver_name_is_inferred)
+          mesa_loge("ZINK: failed to initialize descriptor layouts");
+@@ -3834,6 +4007,9 @@
+    }
+ 
+    simple_mtx_init(&screen->copy_context_lock, mtx_plain);
++#ifdef R4OS_OPENGL
++   screen->r4gl_initialized |= 64;
++#endif
+ 
+    init_optimal_keys(screen);
+ 
+@@ -3842,8 +4018,13 @@
+    zink_init_screen_caps(screen);
+ 
+    screen->screen_id = p_atomic_inc_return(&num_screens);
+-   zink_tracing = screen->instance_info->have_EXT_debug_utils &&
++   bool tracing = screen->instance_info->have_EXT_debug_utils &&
+                   (u_trace_is_enabled(U_TRACE_TYPE_PERFETTO) || u_trace_is_enabled(U_TRACE_TYPE_MARKERS));
++#ifdef R4OS_OPENGL
++   __atomic_store_n(&r4gl_zink_state()->tracing, tracing, __ATOMIC_RELAXED);
++#else
++   zink_tracing = tracing;
++#endif
+ 
+    simple_mtx_lock(screen->queue_lock);
+    screen->frame_marker_emitted = zink_screen_debug_marker_begin(screen, "frame");
+@@ -3859,12 +4040,18 @@
+ struct pipe_screen *
+ zink_create_screen(struct sw_winsys *winsys, const struct pipe_screen_config *config)
+ {
++#ifdef R4OS_OPENGL
++   simple_mtx_lock(&r4gl_zink_state()->create_gate);
++#endif
+    struct zink_screen *ret = zink_internal_create_screen(config, -1, -1, 0);
++#ifdef R4OS_OPENGL
++   simple_mtx_unlock(&r4gl_zink_state()->create_gate);
++#endif
+    if (ret) {
+       ret->drm_fd = -1;
+    }
+ 
+-   return &ret->base;
++   return ret ? &ret->base : NULL;
+ }
+ 
+ static inline int
+@@ -3936,7 +4123,7 @@
+       goto fail;
+    }
+ 
+-   return &ret->base;
++   return ret ? &ret->base : NULL;
+ 
+ fail:
+    zink_destroy_screen(&ret->base);
+--- a/src/gallium/drivers/zink/zink_types.h
++++ b/src/gallium/drivers/zink/zink_types.h
+@@ -120,8 +120,15 @@
+ extern "C" {
+ #endif
+ 
++#ifdef R4OS_OPENGL
++uint32_t *r4gl_zink_debug(void);
++bool r4gl_zink_tracing(void);
++#define zink_debug (*r4gl_zink_debug())
++#define zink_tracing (r4gl_zink_tracing())
++#else
+ extern uint32_t zink_debug;
+ extern bool zink_tracing;
++#endif
+ 
+ #ifdef __cplusplus
+ }
+@@ -190,7 +197,19 @@
+ };
+ 
+ /* the current mode */
++#ifdef R4OS_OPENGL
++typedef enum zink_descriptor_mode r4gl_zink_descriptor_mode_type;
++#ifdef __cplusplus
++extern "C" {
++#endif
++r4gl_zink_descriptor_mode_type *r4gl_zink_descriptor_mode(void);
++#ifdef __cplusplus
++}
++#endif
++#define zink_descriptor_mode (*r4gl_zink_descriptor_mode())
++#else
+ extern enum zink_descriptor_mode zink_descriptor_mode;
++#endif
+ 
+ /* indexing for descriptor template management */
+ enum zink_descriptor_size_index {
+@@ -238,7 +257,7 @@
+    ZINK_ALLOC_NO_SUBALLOC = 1<<1,
+ };
+ 
+-enum zink_debug {
++enum zink_debug_flags {
+    ZINK_DEBUG_NIR = (1<<0),
+    ZINK_DEBUG_SPIRV = (1<<1),
+    ZINK_DEBUG_TGSI = (1<<2),
+@@ -1367,6 +1386,9 @@
+ 
+ struct zink_screen {
+    struct pipe_screen base;
++#ifdef R4OS_OPENGL
++   unsigned r4gl_initialized;
++#endif
+ 
+    const char *vendor_name;
+    const char *device_name;

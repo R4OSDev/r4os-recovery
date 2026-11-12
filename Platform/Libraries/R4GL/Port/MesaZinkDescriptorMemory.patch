@@ -1,0 +1,17 @@
+--- a/src/gallium/drivers/zink/zink_resource.c
++++ b/src/gallium/drivers/zink/zink_resource.c
+@@ -1302,7 +1302,13 @@
+-   if (templ->usage == PIPE_USAGE_STAGING)
++   /* Descriptor buffers stay mapped while batches and bindless tables write
++    * them. Their GPU address must refer to that same coherent CPU allocation,
++    * even when DEVICE_LOCAL_VISIBLE falls back to unmappable device memory.
++    * A staging transfer cannot publish these persistent descriptor writes. */
++   if (templ->bind & ZINK_BIND_DESCRIPTOR)
++      alloc_info->flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
++   else if (templ->usage == PIPE_USAGE_STAGING)
+       alloc_info->flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    else if (templ->usage == PIPE_USAGE_STREAM)
+       alloc_info->flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    else if (templ->usage == PIPE_USAGE_IMMUTABLE)
+       alloc_info->flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    else

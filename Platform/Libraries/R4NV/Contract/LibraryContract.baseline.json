@@ -1,0 +1,3474 @@
+{
+  "schema_version": 1,
+  "module_name": "R4NV",
+  "zig_client": "R4Nv",
+  "c_prefix": "r4nv",
+  "c_header": "r4nv.h",
+  "description": "NVIDIA backend command encoding and explicit software/driver protocol pairing. Physical GPU ownership remains in NVIDIA.R4D.",
+  "interfaces": [
+    {
+      "export_name": "BACKEND_V1",
+      "symbol": "r4nv_backend_v1",
+      "zig_name": "backend_v1",
+      "zig_type": "BackendV1",
+      "c_type": "R4NvBackendV1",
+      "abi_major": 1,
+      "revision": 3,
+      "interface_id_lo": 5923445542285037124,
+      "interface_id_hi": 5923446628608850225,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "negotiate",
+          "c_name": "r4nv_negotiate",
+          "symbol": "r4nv_negotiate_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "profile",
+              "type": {
+                "name": "R4NvDeviceProfile",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "profile"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NvFeatures",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure encoding into caller-owned output. No allocation, hardware access or retained pointers."
+          },
+          "description": "Validates a driver-supplied profile; reported features describe encoding support, not physical qualification."
+        },
+        {
+          "name": "encode_copy",
+          "c_name": "r4nv_encode_copy",
+          "symbol": "r4nv_encode_copy_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "request",
+              "type": {
+                "name": "R4NvCopy",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "commands",
+              "type": {
+                "name": "u32",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "commands"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure encoding into caller-owned output. No allocation, hardware access or retained pointers."
+          },
+          "description": "Encodes virtual CE copies and system-scope semaphore release. Validation precedes every output write."
+        },
+        {
+          "name": "encode_copy_layout",
+          "c_name": "r4nv_encode_copy_layout",
+          "symbol": "r4nv_encode_copy_layout_impl",
+          "slot": 2,
+          "since_revision": 2,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "request",
+              "type": {
+                "name": "R4NvCopyLayout",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "commands",
+              "type": {
+                "name": "u32",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "commands"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure encoding into caller-owned output. No allocation, hardware access or retained pointers."
+          },
+          "description": "Encodes pitch/blocklinear conversion through C6B5/C7B5, bounded by max_layout_command_words. Original encode_copy and its limits remain available. No retained state or device access."
+        },
+        {
+          "name": "image_layout",
+          "c_name": "r4nv_image_layout",
+          "symbol": "r4nv_image_layout_impl",
+          "slot": 3,
+          "since_revision": 3,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "profile",
+              "type": {
+                "name": "R4NvDeviceProfile",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "profile"
+            },
+            {
+              "name": "request",
+              "type": {
+                "name": "R4NvImageRequest",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NvImagePlan",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure metadata negotiation; no allocation, maps, hardware access or retained pointers."
+          },
+          "description": "Checks known C797/SM86 image layouts against texture/render/scanout use. Suggests an explicit compatible CE conversion for known readable views; never guesses an unknown modifier."
+        }
+      ],
+      "description": "Versioned, allocation-free NVIDIA encoding backend."
+    },
+    {
+      "export_name": "SHADER_V1",
+      "symbol": "r4nv_shader_v1",
+      "zig_name": "shader_v1",
+      "zig_type": "ShaderV1",
+      "c_type": "R4NvShaderV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 5923445542570443858,
+      "interface_id_hi": 5923446628608850228,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "shader_info",
+          "c_name": "r4nv_shader_info",
+          "symbol": "r4nv_shader_info_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "profile",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "profile"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NvShaderInfo",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Bounded pure operation over caller-owned storage. No allocation, I/O, GPU access, retained pointer or compilation. Rejection preserves all outputs."
+          },
+          "description": "Returns metadata for a pinned fixed shader, including the matched solid vertex/fragment pair, without publishing rendering capability."
+        },
+        {
+          "name": "shader_cache_write",
+          "c_name": "r4nv_shader_cache_write",
+          "symbol": "r4nv_shader_cache_write_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "profile",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "profile"
+            },
+            {
+              "name": "key",
+              "type": {
+                "name": "R4NvShaderKey",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "key"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "bytes"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Bounded pure operation over caller-owned storage. No allocation, I/O, GPU access, retained pointer or compilation. Rejection preserves all outputs."
+          },
+          "description": "Writes the checked key, compiler identity, original NVIDIA header and machine code with an integrity digest. No compiler work or hardware submission. Output bytes, written count and key must not overlap."
+        },
+        {
+          "name": "shader_cache_read",
+          "c_name": "r4nv_shader_cache_read",
+          "symbol": "r4nv_shader_cache_read_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "key",
+              "type": {
+                "name": "R4NvShaderKey",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "key"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "length",
+              "description": "bytes"
+            },
+            {
+              "name": "length",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "length"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NvShaderView",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Bounded pure operation over caller-owned storage. No allocation, I/O, GPU access, retained pointer or compilation. Rejection preserves all outputs."
+          },
+          "description": "Returns a view only after exact key/compiler/layout/length/integrity and fixed-program matching. Incompatible or damaged cache data returns CACHE_MISS with output unchanged. The input key must come from the current driver/renderer, not the cached entry."
+        }
+      ],
+      "description": "Independent fixed-shader metadata and executable byte-cache boundary. BACKEND_V1 remains unchanged; native rendering, GPU memory and compilation are separate owners."
+    },
+    {
+      "export_name": "RENDER_V1",
+      "symbol": "r4nv_render_v1",
+      "zig_name": "render_v1",
+      "zig_type": "RenderV1",
+      "c_type": "R4NvRenderV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 5923445542554059858,
+      "interface_id_hi": 5923446628608850228,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "render_info",
+          "c_name": "r4nv_render_info",
+          "symbol": "r4nv_render_info_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "graphics_class",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "graphics_class"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NvRenderInfo",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure bounded encoding. Caller owns all inputs and outputs; no retained pointers, GPU allocation, execution or wait."
+          },
+          "description": "Query one pinned C597/SM75,C797/SM86,C997/SM89 or CD97/SM120 encoder profile."
+        },
+        {
+          "name": "render_upload",
+          "c_name": "r4nv_render_upload",
+          "symbol": "r4nv_render_upload_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "graphics_class",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "graphics_class"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "bytes"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure bounded encoding. Caller owns all inputs and outputs; no retained pointers, GPU allocation, execution or wait."
+          },
+          "description": "Write the matched immutable shader headers/code into caller storage. At least render_info.program_bytes are required; written is set only on success."
+        },
+        {
+          "name": "encode_yuv",
+          "c_name": "r4nv_encode_yuv",
+          "symbol": "r4nv_encode_yuv_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "request",
+              "type": {
+                "name": "R4NvYuvRender",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "commands",
+              "type": {
+                "name": "u32",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "commands"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "packets",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "packet_capacity",
+              "description": "packets"
+            },
+            {
+              "name": "packet_capacity",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "packet_capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NV_STATUS",
+            "ownership": "Pure bounded encoding. Caller owns all inputs and outputs; no retained pointers, GPU allocation, execution or wait."
+          },
+          "description": "Encode a bounded draw list and draw_count*packet_bytes bytes of TIC/CBuf/vertex data. capacity counts u32 command words; packet_capacity counts bytes. Native engine_graphics owns completion and its release sequence. Does not submit or claim a render result."
+        }
+      ],
+      "description": "Pure public fixed-render encoder for the native graphics producer. Color and YUV metadata policy remain with R4GFX. The canonical BO/VA and native queue owners retain all GPU resources through physical drain. No driver-private implementation imports are required by consumers."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4NvDeviceProfile",
+      "size": 48,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "vendor_id",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vendor_id"
+        },
+        {
+          "name": "copy_class",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "copy_class"
+        },
+        {
+          "name": "rm_release",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "rm_release"
+        },
+        {
+          "name": "command_abi",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "command_abi"
+        },
+        {
+          "name": "adapter_id",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "adapter_id"
+        },
+        {
+          "name": "flags",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "flags"
+        },
+        {
+          "name": "device_generation",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device_generation"
+        },
+        {
+          "name": "reset_generation",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reset_generation"
+        }
+      ],
+      "description": "Exact live driver binding plus its pinned command/firmware profile."
+    },
+    {
+      "name": "R4NvFeatures",
+      "size": 48,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "command_abi",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "command_abi"
+        },
+        {
+          "name": "features",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "features"
+        },
+        {
+          "name": "copy_class",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "copy_class"
+        },
+        {
+          "name": "gpu_address_bits",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "gpu_address_bits"
+        },
+        {
+          "name": "max_command_words",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_command_words"
+        },
+        {
+          "name": "reserved",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        },
+        {
+          "name": "max_copy_bytes",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_copy_bytes"
+        },
+        {
+          "name": "max_rows",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_rows"
+        }
+      ],
+      "description": "Actual encoder limits; no rendering or hardware validation claim."
+    },
+    {
+      "name": "R4NvCopy",
+      "size": 64,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "source",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source"
+        },
+        {
+          "name": "target",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "target"
+        },
+        {
+          "name": "bytes",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "bytes"
+        },
+        {
+          "name": "semaphore",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "semaphore"
+        },
+        {
+          "name": "copy_class",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "copy_class"
+        },
+        {
+          "name": "rows",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "rows"
+        },
+        {
+          "name": "source_pitch",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source_pitch"
+        },
+        {
+          "name": "target_pitch",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "target_pitch"
+        },
+        {
+          "name": "point",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "point"
+        },
+        {
+          "name": "flags",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Zero for independent CE subchannel0; COPY_FLAG_GRAPHICS_CHANNEL selects CE subchannel4 alongside GR0/compute1. Reject other bits. Encoding feature negotiation and driver engine ownership remain separate."
+        }
+      ],
+      "description": "GPU virtual operands supplied by the owning driver. Zero rows denotes a linear transfer; otherwise bytes per row."
+    },
+    {
+      "name": "R4NvDriverProfile",
+      "size": 32,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "vendor_id",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vendor_id"
+        },
+        {
+          "name": "copy_class",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "copy_class"
+        },
+        {
+          "name": "rm_release",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "rm_release"
+        },
+        {
+          "name": "command_abi",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "command_abi"
+        },
+        {
+          "name": "reserved0",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved0"
+        },
+        {
+          "name": "reserved1",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved1"
+        }
+      ],
+      "description": "Immutable driver protocol payload in GfxBackendProfile.data. Version 1, size 32, vendor 0x10de and actual allocated copy-engine class; reserved fields zero. Identity/revision are BACKEND_V1. Kernel-assigned adapter and generations come from the accompanying binding, never these bytes."
+    },
+    {
+      "name": "R4NvCopyBlock",
+      "size": 24,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "enabled",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "enabled"
+        },
+        {
+          "name": "width",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "width"
+        },
+        {
+          "name": "height",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "height"
+        },
+        {
+          "name": "x",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "x"
+        },
+        {
+          "name": "y",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "y"
+        },
+        {
+          "name": "log2_gobs",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log2_gobs"
+        }
+      ],
+      "description": "Optional 2D blocklinear plane. enabled is zero or one; all other fields zero when disabled. Width/pitch and x are bytes with remapping disabled; height/y are rows. 512-byte GOBs, one GOB wide, log2_gobs 0..5, depth one, no compression."
+    },
+    {
+      "name": "R4NvCopyLayout",
+      "size": 112,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "copy",
+          "offset": 0,
+          "type": {
+            "name": "R4NvCopy",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "copy"
+        },
+        {
+          "name": "source_block",
+          "offset": 64,
+          "type": {
+            "name": "R4NvCopyBlock",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source_block"
+        },
+        {
+          "name": "target_block",
+          "offset": 88,
+          "type": {
+            "name": "R4NvCopyBlock",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "target_block"
+        }
+      ],
+      "description": "Independent copy-layout request; original R4NvCopy remains unchanged. Block operands are plane-base addresses aligned to 512; pitched operands already include logical x/y offsets. Both full plane spans and all transfer bounds must fit; aliases are rejected before command writes."
+    },
+    {
+      "name": "R4NvDigest",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "word0",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "word0"
+        },
+        {
+          "name": "word1",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "word1"
+        },
+        {
+          "name": "word2",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "word2"
+        },
+        {
+          "name": "word3",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "word3"
+        }
+      ],
+      "description": "32-byte identity; each word is the little-endian value of eight consecutive digest bytes. No pointer or padding."
+    },
+    {
+      "name": "R4NvShaderKey",
+      "size": 120,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "vendor_id",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vendor_id"
+        },
+        {
+          "name": "device_id",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device_id"
+        },
+        {
+          "name": "graphics_class",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "graphics_class"
+        },
+        {
+          "name": "shader_model",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "shader_model"
+        },
+        {
+          "name": "rm_release",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "rm_release"
+        },
+        {
+          "name": "command_abi",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "command_abi"
+        },
+        {
+          "name": "shader_abi",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "shader_abi"
+        },
+        {
+          "name": "resource_abi",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "resource_abi"
+        },
+        {
+          "name": "input_format",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "input_format"
+        },
+        {
+          "name": "output_format",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "output_format"
+        },
+        {
+          "name": "driver_build",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "driver_build"
+        },
+        {
+          "name": "device_uuid",
+          "offset": 56,
+          "type": {
+            "name": "R4NvDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device_uuid"
+        },
+        {
+          "name": "pipeline_state",
+          "offset": 88,
+          "type": {
+            "name": "R4NvDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pipeline_state"
+        }
+      ],
+      "description": "Version1 exact-size key from the actual driver/renderer. Nonzero artifact-version token, device identity, input/output format and complete pipeline-state digest. Only SM86/AMPERE_B is supported. Keys contain no GPU addresses or live resource handles; GPU allocations still require current-generation binding by the renderer."
+    },
+    {
+      "name": "R4NvShaderInfo",
+      "size": 88,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "profile",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "profile"
+        },
+        {
+          "name": "stage",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "shader_model",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "shader_model"
+        },
+        {
+          "name": "registers",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "registers"
+        },
+        {
+          "name": "code_bytes",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code_bytes"
+        },
+        {
+          "name": "instructions",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "instructions"
+        },
+        {
+          "name": "scratch_bytes",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "scratch_bytes"
+        },
+        {
+          "name": "stack_bytes",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stack_bytes"
+        },
+        {
+          "name": "header_bytes",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "header_bytes"
+        },
+        {
+          "name": "resource_abi",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "resource_abi"
+        },
+        {
+          "name": "max_warps_per_sm",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_warps_per_sm"
+        },
+        {
+          "name": "reserved",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        },
+        {
+          "name": "compiler_id",
+          "offset": 56,
+          "type": {
+            "name": "R4NvDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "compiler_id"
+        }
+      ],
+      "description": "Fixed shader metadata and source/toolchain identity. Stage0 is vertex; stage4 is fragment. Header is128 little-endian bytes; code is SM86 machine code. Encoding support is not GPU qualification."
+    },
+    {
+      "name": "R4NvShaderView",
+      "size": 104,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "info",
+          "offset": 0,
+          "type": {
+            "name": "R4NvShaderInfo",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "info"
+        },
+        {
+          "name": "header_address",
+          "offset": 88,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "header_address"
+        },
+        {
+          "name": "code_address",
+          "offset": 96,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code_address"
+        }
+      ],
+      "description": "Borrowed byte ranges inside the caller-owned immutable cache input. Keep that storage alive until the renderer has copied/uploaded both ranges. Addresses have byte alignment and must not be cast to aligned u32 pointers without checking. No pointer is retained by the library."
+    },
+    {
+      "name": "R4NvImageView",
+      "size": 64,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "width",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "width"
+        },
+        {
+          "name": "height",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "height"
+        },
+        {
+          "name": "format",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "format"
+        },
+        {
+          "name": "location",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "location"
+        },
+        {
+          "name": "modifier",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "modifier"
+        },
+        {
+          "name": "byte_length",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "byte_length"
+        },
+        {
+          "name": "pitch",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pitch"
+        },
+        {
+          "name": "alignment",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "alignment"
+        },
+        {
+          "name": "usage",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "usage"
+        },
+        {
+          "name": "reserved",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        }
+      ],
+      "description": "Single-plane image metadata, no CPU/GPU address. Location0=system,1=device-local; modifier0=linear. Runtime must authenticate ownership/generations and physical mapping."
+    },
+    {
+      "name": "R4NvImageRequest",
+      "size": 80,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "view",
+          "offset": 0,
+          "type": {
+            "name": "R4NvImageView",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "view"
+        },
+        {
+          "name": "uses",
+          "offset": 64,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "uses"
+        },
+        {
+          "name": "preference",
+          "offset": 68,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "preference"
+        },
+        {
+          "name": "flags",
+          "offset": 72,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "flags"
+        },
+        {
+          "name": "reserved",
+          "offset": 76,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        }
+      ],
+      "description": "Prepare an image for texture1/render-target2/scanout4. Preference0=preserve suitable layout,1=linear,2=blocklinear; flags1 forces a separate copy. Render+scanout requires the later inactive-image lease and is unsupported here."
+    },
+    {
+      "name": "R4NvImagePlan",
+      "size": 64,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "action",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "action"
+        },
+        {
+          "name": "layout",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "layout"
+        },
+        {
+          "name": "reasons",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reasons"
+        },
+        {
+          "name": "supported_uses",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "supported_uses"
+        },
+        {
+          "name": "modifier",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "modifier"
+        },
+        {
+          "name": "pitch",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pitch"
+        },
+        {
+          "name": "byte_length",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "byte_length"
+        },
+        {
+          "name": "allocation_bytes",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "allocation_bytes"
+        },
+        {
+          "name": "log2_gobs",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log2_gobs"
+        },
+        {
+          "name": "reserved",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved"
+        }
+      ],
+      "description": "Action0=reuse,1=convert through CE; layout0=linear,1=blocklinear. Unknown/undecodable modifiers fail without a plan. Proposed bytes include the pinned native64KB allocation granule; no allocation or GPU qualification occurs here."
+    },
+    {
+      "name": "R4NvArchitecture",
+      "size": 120,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "vendor_id",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vendor_id"
+        },
+        {
+          "name": "device_id",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device_id"
+        },
+        {
+          "name": "chipset",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chipset"
+        },
+        {
+          "name": "pci_revision",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pci_revision"
+        },
+        {
+          "name": "pci_domain",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pci_domain"
+        },
+        {
+          "name": "pci_bus",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pci_bus"
+        },
+        {
+          "name": "pci_device",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pci_device"
+        },
+        {
+          "name": "pci_function",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pci_function"
+        },
+        {
+          "name": "gpc_count",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "gpc_count"
+        },
+        {
+          "name": "tpc_count",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "tpc_count"
+        },
+        {
+          "name": "shader_model",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "shader_model"
+        },
+        {
+          "name": "mp_per_tpc",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "mp_per_tpc"
+        },
+        {
+          "name": "max_warps_per_mp",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_warps_per_mp"
+        },
+        {
+          "name": "rm_release",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "rm_release"
+        },
+        {
+          "name": "vram_bytes",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vram_bytes"
+        },
+        {
+          "name": "va_start",
+          "offset": 72,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "va_start"
+        },
+        {
+          "name": "va_end",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "va_end"
+        },
+        {
+          "name": "memory_generation",
+          "offset": 88,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "memory_generation"
+        },
+        {
+          "name": "bind_alignment",
+          "offset": 96,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "bind_alignment"
+        },
+        {
+          "name": "flags",
+          "offset": 100,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "flags"
+        },
+        {
+          "name": "graphics_class",
+          "offset": 104,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "graphics_class"
+        },
+        {
+          "name": "compute_class",
+          "offset": 108,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "compute_class"
+        },
+        {
+          "name": "copy_class",
+          "offset": 112,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "copy_class"
+        },
+        {
+          "name": "gpfifo_class",
+          "offset": 116,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "gpfifo_class"
+        }
+      ],
+      "description": "Hardware and native memory-path facts in GfxBackendProperties: BACKEND_V1 identity, data_bytes120, exact-size layout unchanged. Payload version equals properties revision. Revision1 requires flags0; revision2 permits ARCHITECTURE_HOST_COHERENT; revision3 additionally permits ARCHITECTURE_IMAGE_LAYOUTS. Identity from captured PCI/PMC; active GPC/TPC from acknowledged firmware post-init; VRAM from acknowledged static data; VA bounds from native address-space receipt. Architecture classes do not authorize GPU execution. Host-coherence bit covers canonical system BOs and acknowledged native mapping policy only; no BAR mapping, sparse, Vulkan qualification or physical-test claim. PCI domain remains zero; memory_generation matches enclosing backend inventory. Unknown/incomplete facts remain unavailable. Old readers reject unknown property revisions; backend registration/profile and all existing runtime functions remain unchanged."
+    },
+    {
+      "name": "R4NvNativeSubmitHeader",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "engine_mask",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "engine_mask"
+        },
+        {
+          "name": "push_count",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "push_count"
+        },
+        {
+          "name": "reserved0",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved0"
+        },
+        {
+          "name": "reserved1",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reserved1"
+        }
+      ],
+      "description": "Native GfxSubmission operation10 payload, BACKEND_V1 driver profile revision1. Version1 exact32-byte header followed by push_count R4NvNativePush16 records; exact total byte count, reserved fields zero. Payload contains GPU addresses only; all command/resource storage must also be listed as canonical retained GfxNativeResource bindings. The engine mask requests instantiated engines, never architecture-class availability. Unsupported bits fail. Completion means actual engine drain and system-memory ordering, not command fetch. Vulkan resource/cache barriers remain in the native command stream."
+    },
+    {
+      "name": "R4NvNativePush",
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "address",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "address"
+        },
+        {
+          "name": "byte_length",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "byte_length"
+        },
+        {
+          "name": "flags",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "flags"
+        }
+      ],
+      "description": "One subroutine-level GPFIFO push, backed by retained GPU-VA resources. Flags1=incomplete method sequence, flags2=no prefetch/SYNC_WAIT. Unknown bits fail; final push cannot remain incomplete. Addresses/counts are 4-byte aligned and must fit the instantiated FIFO. No CPU pointer or opcode validation interface."
+    },
+    {
+      "name": "R4NvRenderInfo",
+      "size": 32,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "graphics_class",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "graphics_class"
+        },
+        {
+          "name": "shader_model",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "shader_model"
+        },
+        {
+          "name": "program_bytes",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "program_bytes"
+        },
+        {
+          "name": "packet_bytes",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "packet_bytes"
+        },
+        {
+          "name": "max_command_words",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_command_words"
+        },
+        {
+          "name": "max_draws",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_draws"
+        }
+      ],
+      "description": "Version1/size32. Encoder storage limits only; never evidence of physical GPU availability. Program upload address requires128-byte alignment, packet address256-byte alignment; shader/packet/target addresses are below2^40."
+    },
+    {
+      "name": "R4NvRenderRect",
+      "size": 16,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "x"
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "y"
+        },
+        {
+          "name": "width",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "width"
+        },
+        {
+          "name": "height",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "height"
+        }
+      ],
+      "description": "Fixed nonempty signed rectangle; source coordinates are absolute coded luma samples."
+    },
+    {
+      "name": "R4NvRenderPlane",
+      "size": 40,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "address",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "address"
+        },
+        {
+          "name": "byte_length",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "byte_length"
+        },
+        {
+          "name": "modifier",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "modifier"
+        },
+        {
+          "name": "width",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "width"
+        },
+        {
+          "name": "height",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "height"
+        },
+        {
+          "name": "pitch",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pitch"
+        },
+        {
+          "name": "format",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "format"
+        }
+      ],
+      "description": "An already acknowledged GPU view, not a BO or a CPU pointer. Explicit DRM fourcc and modifier0=linear or NVIDIA blocklinear0x0300000000606010 plus log2 GOB height0..5. Source storage R8,GR88,R16,GR1616 is sampled as unsigned integers. Address/extent/pitch bounds are validated. The caller must retain and loan the underlying canonical BO/VA to the native queue."
+    },
+    {
+      "name": "R4NvYuvDraw",
+      "size": 232,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "luma",
+          "offset": 0,
+          "type": {
+            "name": "R4NvRenderPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "luma"
+        },
+        {
+          "name": "chroma",
+          "offset": 40,
+          "type": {
+            "name": "R4NvRenderPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chroma"
+        },
+        {
+          "name": "second_chroma",
+          "offset": 80,
+          "type": {
+            "name": "R4NvRenderPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "second_chroma"
+        },
+        {
+          "name": "target",
+          "offset": 120,
+          "type": {
+            "name": "R4NvRenderPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "target"
+        },
+        {
+          "name": "source_rect",
+          "offset": 160,
+          "type": {
+            "name": "R4NvRenderRect",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source_rect"
+        },
+        {
+          "name": "destination",
+          "offset": 176,
+          "type": {
+            "name": "R4NvRenderRect",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "destination"
+        },
+        {
+          "name": "scissor",
+          "offset": 192,
+          "type": {
+            "name": "R4NvRenderRect",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "scissor"
+        },
+        {
+          "name": "format",
+          "offset": 208,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "format"
+        },
+        {
+          "name": "filter",
+          "offset": 212,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "filter"
+        },
+        {
+          "name": "blend",
+          "offset": 216,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "blend"
+        },
+        {
+          "name": "opacity",
+          "offset": 220,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "opacity"
+        },
+        {
+          "name": "chroma_x",
+          "offset": 224,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chroma_x"
+        },
+        {
+          "name": "chroma_y",
+          "offset": 228,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chroma_y"
+        }
+      ],
+      "description": "Fixed232-byte draw. format1=NV12,2=P010,3=YUV420P; second_chroma is all-zero for two-plane formats. filter0=nearest,1=linear RGB bilinear; chroma reconstruction is bilinear before transfer decoding. blend0=replace,1=OVER into linear optical FP16. opacity0..65535, normalized through float vertex attributes to match COLOR_V1. chroma_x/y are IEEE754 binary32 bit patterns: x0 or0.5; y0,0.5 or1. Crop preserves this coded chroma phase. P010 low6 bits are discarded before interpolation."
+    },
+    {
+      "name": "R4NvYuvRender",
+      "size": 72,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "graphics_class",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "graphics_class"
+        },
+        {
+          "name": "draw_count",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "draw_count"
+        },
+        {
+          "name": "draws",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "draws"
+        },
+        {
+          "name": "program_address",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "program_address"
+        },
+        {
+          "name": "program_bytes",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "program_bytes"
+        },
+        {
+          "name": "packet_address",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "packet_address"
+        },
+        {
+          "name": "packet_bytes",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "packet_bytes"
+        },
+        {
+          "name": "color_program",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "color_program"
+        },
+        {
+          "name": "yuv_matrix",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "yuv_matrix"
+        }
+      ],
+      "description": "Version1/size72. draws borrows1..16 R4NvYuvDraw values. All draws share source views, target, format, filter, blend and chroma phase; crop, geometry, scissor and opacity may vary. color_program borrows64 aligned u32 words using COLOR CBuf2/resource ABI4, source opaque/full-range; yuv_matrix borrows12 aligned IEEE754 binary32 words, row-major affine normalized YCbCr-to-electrical-RGB3x4. Inputs are copied during the call and never retained. GPU addresses are distinct from these CPU pointers. Outputs remain unchanged on every failure; all output spans must be disjoint from each other and input spans."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "command_abi",
+      "c_name": "R4NV_COMMAND_ABI",
+      "type": "u32",
+      "value": 1,
+      "description": "command_abi"
+    },
+    {
+      "zig_name": "rm_release",
+      "c_name": "R4NV_RM_RELEASE",
+      "type": "u32",
+      "value": 570144,
+      "description": "rm_release"
+    },
+    {
+      "zig_name": "feature_copy_linear",
+      "c_name": "R4NV_FEATURE_COPY_LINEAR",
+      "type": "u32",
+      "value": 1,
+      "description": "feature_copy_linear"
+    },
+    {
+      "zig_name": "feature_copy_rows",
+      "c_name": "R4NV_FEATURE_COPY_ROWS",
+      "type": "u32",
+      "value": 2,
+      "description": "feature_copy_rows"
+    },
+    {
+      "zig_name": "max_command_words",
+      "c_name": "R4NV_MAX_COMMAND_WORDS",
+      "type": "u32",
+      "value": 19,
+      "description": "max_command_words"
+    },
+    {
+      "zig_name": "status_ok",
+      "c_name": "R4NV_STATUS_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "status_ok"
+    },
+    {
+      "zig_name": "feature_copy_layout",
+      "c_name": "R4NV_FEATURE_COPY_LAYOUT",
+      "type": "u32",
+      "value": 4,
+      "description": "feature_copy_layout"
+    },
+    {
+      "zig_name": "max_layout_command_words",
+      "c_name": "R4NV_MAX_LAYOUT_COMMAND_WORDS",
+      "type": "u32",
+      "value": 37,
+      "description": "max_layout_command_words"
+    },
+    {
+      "zig_name": "shader_abi",
+      "c_name": "R4NV_SHADER_ABI",
+      "type": "u32",
+      "value": 1,
+      "description": "shader_abi"
+    },
+    {
+      "zig_name": "shader_resource_abi",
+      "c_name": "R4NV_SHADER_RESOURCE_ABI",
+      "type": "u32",
+      "value": 4,
+      "description": "Graphics constants ABI4 preserves CBuf1 texture handle/bounds/logical grid and adds the fixed color fragment CBuf2 with256 bytes of userland-supplied matrices, transfer/range/white/tone coefficients. Earlier resource keys are unsupported; existing table and payload layouts remain unchanged."
+    },
+    {
+      "zig_name": "shader_model_sm86",
+      "c_name": "R4NV_SHADER_MODEL_SM86",
+      "type": "u32",
+      "value": 86,
+      "description": "shader_model_sm86"
+    },
+    {
+      "zig_name": "shader_graphics_class_ampere_b",
+      "c_name": "R4NV_SHADER_GRAPHICS_CLASS_AMPERE_B",
+      "type": "u32",
+      "value": 51095,
+      "description": "shader_graphics_class_ampere_b"
+    },
+    {
+      "zig_name": "shader_cache_header_bytes",
+      "c_name": "R4NV_SHADER_CACHE_HEADER_BYTES",
+      "type": "u32",
+      "value": 384,
+      "description": "shader_cache_header_bytes"
+    },
+    {
+      "zig_name": "shader_cache_max_bytes",
+      "c_name": "R4NV_SHADER_CACHE_MAX_BYTES",
+      "type": "u32",
+      "value": 16384,
+      "description": "Maximum serialized fixed-shader cache entry:16KB, including the384-byte cache header. Caller supplies and retains the actual buffer capacity; short buffers are rejected before writes."
+    },
+    {
+      "zig_name": "shader_profile_rectangle_vertex",
+      "c_name": "R4NV_SHADER_PROFILE_RECTANGLE_VERTEX",
+      "type": "u32",
+      "value": 1,
+      "description": "shader_profile_rectangle_vertex"
+    },
+    {
+      "zig_name": "shader_profile_texture_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_TEXTURE_FRAGMENT",
+      "type": "u32",
+      "value": 2,
+      "description": "shader_profile_texture_fragment"
+    },
+    {
+      "zig_name": "shader_profile_srgb_decode_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_SRGB_DECODE_FRAGMENT",
+      "type": "u32",
+      "value": 3,
+      "description": "shader_profile_srgb_decode_fragment"
+    },
+    {
+      "zig_name": "shader_profile_srgb_encode_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_SRGB_ENCODE_FRAGMENT",
+      "type": "u32",
+      "value": 4,
+      "description": "shader_profile_srgb_encode_fragment"
+    },
+    {
+      "zig_name": "shader_profile_solid_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_SOLID_FRAGMENT",
+      "type": "u32",
+      "value": 5,
+      "description": "shader_profile_solid_fragment"
+    },
+    {
+      "zig_name": "shader_profile_solid_vertex",
+      "c_name": "R4NV_SHADER_PROFILE_SOLID_VERTEX",
+      "type": "u32",
+      "value": 6,
+      "description": "Solid rectangle vertex shader with position/tint outputs matching the solid fragment shader."
+    },
+    {
+      "zig_name": "feature_image_layout",
+      "c_name": "R4NV_FEATURE_IMAGE_LAYOUT",
+      "type": "u32",
+      "value": 8,
+      "description": "feature_image_layout"
+    },
+    {
+      "zig_name": "image_use_texture",
+      "c_name": "R4NV_IMAGE_USE_TEXTURE",
+      "type": "u32",
+      "value": 1,
+      "description": "image_use_texture"
+    },
+    {
+      "zig_name": "image_use_render_target",
+      "c_name": "R4NV_IMAGE_USE_RENDER_TARGET",
+      "type": "u32",
+      "value": 2,
+      "description": "image_use_render_target"
+    },
+    {
+      "zig_name": "image_use_scanout",
+      "c_name": "R4NV_IMAGE_USE_SCANOUT",
+      "type": "u32",
+      "value": 4,
+      "description": "image_use_scanout"
+    },
+    {
+      "zig_name": "image_prefer_compatible",
+      "c_name": "R4NV_IMAGE_PREFER_COMPATIBLE",
+      "type": "u32",
+      "value": 0,
+      "description": "image_prefer_compatible"
+    },
+    {
+      "zig_name": "image_prefer_linear",
+      "c_name": "R4NV_IMAGE_PREFER_LINEAR",
+      "type": "u32",
+      "value": 1,
+      "description": "image_prefer_linear"
+    },
+    {
+      "zig_name": "image_prefer_blocklinear",
+      "c_name": "R4NV_IMAGE_PREFER_BLOCKLINEAR",
+      "type": "u32",
+      "value": 2,
+      "description": "image_prefer_blocklinear"
+    },
+    {
+      "zig_name": "image_force_copy",
+      "c_name": "R4NV_IMAGE_FORCE_COPY",
+      "type": "u32",
+      "value": 1,
+      "description": "image_force_copy"
+    },
+    {
+      "zig_name": "image_action_reuse",
+      "c_name": "R4NV_IMAGE_ACTION_REUSE",
+      "type": "u32",
+      "value": 0,
+      "description": "image_action_reuse"
+    },
+    {
+      "zig_name": "image_action_convert",
+      "c_name": "R4NV_IMAGE_ACTION_CONVERT",
+      "type": "u32",
+      "value": 1,
+      "description": "image_action_convert"
+    },
+    {
+      "zig_name": "image_reason_location",
+      "c_name": "R4NV_IMAGE_REASON_LOCATION",
+      "type": "u32",
+      "value": 1,
+      "description": "image_reason_location"
+    },
+    {
+      "zig_name": "image_reason_pitch",
+      "c_name": "R4NV_IMAGE_REASON_PITCH",
+      "type": "u32",
+      "value": 2,
+      "description": "image_reason_pitch"
+    },
+    {
+      "zig_name": "image_reason_modifier",
+      "c_name": "R4NV_IMAGE_REASON_MODIFIER",
+      "type": "u32",
+      "value": 4,
+      "description": "image_reason_modifier"
+    },
+    {
+      "zig_name": "image_reason_usage",
+      "c_name": "R4NV_IMAGE_REASON_USAGE",
+      "type": "u32",
+      "value": 8,
+      "description": "image_reason_usage"
+    },
+    {
+      "zig_name": "image_reason_forced",
+      "c_name": "R4NV_IMAGE_REASON_FORCED",
+      "type": "u32",
+      "value": 16,
+      "description": "image_reason_forced"
+    },
+    {
+      "zig_name": "image_reason_preference",
+      "c_name": "R4NV_IMAGE_REASON_PREFERENCE",
+      "type": "u32",
+      "value": 32,
+      "description": "image_reason_preference"
+    },
+    {
+      "zig_name": "shader_profile_color_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_COLOR_FRAGMENT",
+      "type": "u32",
+      "value": 7,
+      "description": "Fixed RGB color transform: sRGB/linear/PQ/HLG, two matrices, explicit range/alpha, white scaling, optional output tone/gamut mapping and ordered dither; CBuf2 ABI4."
+    },
+    {
+      "zig_name": "shader_profile_yuv_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_YUV_FRAGMENT",
+      "type": "u32",
+      "value": 8,
+      "description": "Integer NV12/P010/YUV420P plane sampling, CBuf3 phase/matrix and common CBuf2 color. Nearest/bilinear image resampling in linear RGB. Pair with rectangle vertex profile1."
+    },
+    {
+      "zig_name": "shader_profile_encode_fragment",
+      "c_name": "R4NV_SHADER_PROFILE_ENCODE_FRAGMENT",
+      "type": "u32",
+      "value": 9,
+      "description": "Integer NV12/I420 input packing into row-major16x16 byte tiles with edge replication; CBuf3 geometry. Pair with solid vertex profile6. This wire profile does not certify physical NVENC layout support."
+    },
+    {
+      "zig_name": "native_submit_version",
+      "c_name": "R4NV_NATIVE_SUBMIT_VERSION",
+      "type": "u32",
+      "value": 1,
+      "description": "Native submission protocol version1; hardware publication bounds are independent of resource-list size."
+    },
+    {
+      "zig_name": "native_engine_graphics",
+      "c_name": "R4NV_NATIVE_ENGINE_GRAPHICS",
+      "type": "u32",
+      "value": 1,
+      "description": "Native submission protocol version1; hardware publication bounds are independent of resource-list size."
+    },
+    {
+      "zig_name": "native_push_incomplete",
+      "c_name": "R4NV_NATIVE_PUSH_INCOMPLETE",
+      "type": "u32",
+      "value": 1,
+      "description": "Native submission protocol version1; hardware publication bounds are independent of resource-list size."
+    },
+    {
+      "zig_name": "native_push_no_prefetch",
+      "c_name": "R4NV_NATIVE_PUSH_NO_PREFETCH",
+      "type": "u32",
+      "value": 2,
+      "description": "Native submission protocol version1; hardware publication bounds are independent of resource-list size."
+    },
+    {
+      "zig_name": "native_push_limit",
+      "c_name": "R4NV_NATIVE_PUSH_LIMIT",
+      "type": "u32",
+      "value": 510,
+      "description": "Native submission protocol version1; hardware publication bounds are independent of resource-list size."
+    },
+    {
+      "zig_name": "native_engine_compute",
+      "c_name": "R4NV_NATIVE_ENGINE_COMPUTE",
+      "type": "u32",
+      "value": 2,
+      "description": "Additional instantiated engine on a graphics native queue. Graphics bit1 remains mandatory. The first submission fixes the queue engine set; later submissions may request subsets. Unsupported topology, class or RM allocation fails before publication. These bits do not promise Vulkan features."
+    },
+    {
+      "zig_name": "native_engine_copy",
+      "c_name": "R4NV_NATIVE_ENGINE_COPY",
+      "type": "u32",
+      "value": 4,
+      "description": "Additional instantiated engine on a graphics native queue. Graphics bit1 remains mandatory. The first submission fixes the queue engine set; later submissions may request subsets. Unsupported topology, class or RM allocation fails before publication. These bits do not promise Vulkan features."
+    },
+    {
+      "zig_name": "native_engine_video",
+      "c_name": "R4NV_NATIVE_ENGINE_VIDEO",
+      "type": "u32",
+      "value": 8,
+      "description": "Separate NVDEC native queue. This bit must appear alone; it cannot be combined with graphics, compute or copy. The first submission fixes the queue engine family. Actual engine topology, class and RM allocation must succeed before publication. Queue completion proves engine drain and memory ordering only; a codec must independently validate NVDEC picture status before exposing output. Older drivers reject this bit."
+    },
+    {
+      "zig_name": "native_engine_encode",
+      "c_name": "R4NV_NATIVE_ENGINE_ENCODE",
+      "type": "u32",
+      "value": 16,
+      "description": "Separate NVENC native queue. This bit must appear alone and cannot share a timeline with NVDEC, graphics, compute or copy. Actual engine topology, class and RM allocation must succeed before publication. Queue completion proves physical drain and memory ordering only; the encoder must validate NVENC status and bounded bitstream length before exposing a packet. Older drivers reject this bit."
+    },
+    {
+      "zig_name": "architecture_version",
+      "c_name": "R4NV_ARCHITECTURE_VERSION",
+      "type": "u32",
+      "value": 3,
+      "description": "Architecture properties revision3 retains the exact120-byte layout. Revision1 has flags0; revision2 permits HOST_COHERENT; revision3 additionally permits IMAGE_LAYOUTS. Unknown revisions or flags must be rejected. These facts do not admit a Vulkan device or claim physical qualification."
+    },
+    {
+      "zig_name": "architecture_host_coherent",
+      "c_name": "R4NV_ARCHITECTURE_HOST_COHERENT",
+      "type": "u32",
+      "value": 1,
+      "description": "Architecture properties revision2 retains the exact120-byte layout. Flag bit0 guarantees CPU-cache coherent system-BO mappings on the native x86_64 path: WB canonical RAM, cached RM registration, GPU-uncached VA and acknowledged CPU-snoop mappings. It does not describe VRAM/BAR maps, GPU barriers or physical test status. Revision1 has flags0 and carries no such guarantee."
+    },
+    {
+      "zig_name": "architecture_image_layouts",
+      "c_name": "R4NV_ARCHITECTURE_IMAGE_LAYOUTS",
+      "type": "u32",
+      "value": 2,
+      "description": "Revision3: native RM virtual ranges support uncompressed NVIDIA PTE kinds1..6 in GART and VRAM. Use R4DRAW36 range flags bit0 plus kind in bits8..15. Allocation type/depth/packing and format must agree, and RM ACK must preserve the exact kind. Binding uses virtual page kind. No compression, sparse or Vulkan feature claim."
+    },
+    {
+      "zig_name": "copy_flag_graphics_channel",
+      "c_name": "R4NV_COPY_FLAG_GRAPHICS_CHANNEL",
+      "type": "u32",
+      "value": 1,
+      "description": "Select copy subchannel4 on a GR channel with an instantiated paired CE. Zero flags retain independent CE subchannel0; other bits are invalid. Requires FEATURE_COPY_GRAPHICS_CHANNEL encoding support and a real driver paired CE."
+    },
+    {
+      "zig_name": "feature_copy_graphics_channel",
+      "c_name": "R4NV_FEATURE_COPY_GRAPHICS_CHANNEL",
+      "type": "u32",
+      "value": 16,
+      "description": "Encoder accepts COPY_FLAG_GRAPHICS_CHANNEL for linear, pitched and supported blocklinear copies. This does not assert hardware support or physical execution."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "status_invalid",
+      "c_name": "R4NV_STATUS_INVALID",
+      "type": "i32",
+      "value": -1,
+      "description": "status_invalid"
+    },
+    {
+      "zig_name": "status_unsupported",
+      "c_name": "R4NV_STATUS_UNSUPPORTED",
+      "type": "i32",
+      "value": -2,
+      "description": "status_unsupported"
+    },
+    {
+      "zig_name": "status_capacity",
+      "c_name": "R4NV_STATUS_CAPACITY",
+      "type": "i32",
+      "value": -3,
+      "description": "status_capacity"
+    },
+    {
+      "zig_name": "status_cache_miss",
+      "c_name": "R4NV_STATUS_CACHE_MISS",
+      "type": "i32",
+      "value": -4,
+      "description": "Incompatible or damaged executable cache; discard it and rebuild from the current fixed program. Output remains unchanged."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "hardware",
+      "text": "The library creates command words only. NVIDIA.R4D validates mappings, current generation, channel state and completion; only that driver submits or frees GPU resources."
+    },
+    {
+      "name": "outputs",
+      "text": "Inputs are immutable for the call. Output commands and written count must be separate from each other and request metadata. Rejection leaves both outputs unchanged."
+    },
+    {
+      "name": "version",
+      "text": "BACKEND_V1 is independent of R4GFX and the platform ABI. Optional consumers validate the library header and negotiate the actual driver profile; absent/incompatible backends keep software available."
+    },
+    {
+      "name": "shader_cache",
+      "text": "Immutable byte caches bind exact driver/GPU/compiler/ABI/format/pipeline identities. No executable GPU address survives in a cache. Renderer-owned native shader/pipeline allocations must be recreated or validated after device/reset generation changes."
+    }
+  ]
+}

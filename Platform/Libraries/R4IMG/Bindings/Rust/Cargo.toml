@@ -1,0 +1,10 @@
+[package]
+name = "r4os-r4img"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+r4os-sdk = { version = "=0.1.0", default-features = false }
+
+[workspace]

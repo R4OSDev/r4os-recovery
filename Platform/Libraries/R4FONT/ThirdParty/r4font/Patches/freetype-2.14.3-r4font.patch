@@ -1,0 +1,128 @@
+diff --git a/src/sfnt/sfwoff2.c b/src/sfnt/sfwoff2.c
+index 013e30fc..ceaee017 100644
+--- a/src/sfnt/sfwoff2.c
++++ b/src/sfnt/sfwoff2.c
+@@ -37,8 +37,8 @@
+ #undef  FT_COMPONENT
+ #define FT_COMPONENT  sfwoff2
+ 
+-  /* An arbitrary, heuristic size limit (67MByte) for expanded WOFF2 data. */
+-#define MAX_SFNT_SIZE  ( 1 << 26 )
++  /* R4FONT keeps reconstructed web fonts inside a documented 32MiB cap. */
++#define MAX_SFNT_SIZE  ( 1 << 25 )
+ 
+ #define READ_255USHORT( var )  FT_SET_ERROR( Read255UShort( stream, &var ) )
+ 
+@@ -304,25 +304,91 @@
+   }
+ 
+ 
++  static void*
++  woff2_brotli_alloc( void*   opaque,
++                      size_t  size )
++  {
++    FT_Memory  memory  = (FT_Memory)opaque;
++    FT_Long    ft_size = (FT_Long)size;
++
++
++    if ( !memory || ft_size <= 0 || (size_t)ft_size != size )
++      return NULL;
++
++    return memory->alloc( memory, ft_size );
++  }
++
++
++  static void
++  woff2_brotli_free( void*  opaque,
++                     void*  block )
++  {
++    FT_Memory  memory = (FT_Memory)opaque;
++
++
++    if ( memory && block )
++      memory->free( memory, block );
++  }
++
++
+   static FT_Error
+   woff2_decompress( FT_Byte*        dst,
+                     FT_ULong        dst_size,
+                     const FT_Byte*  src,
+-                    FT_ULong        src_size )
++                    FT_ULong        src_size,
++                    FT_Memory       memory )
+   {
+-    /* this cast is only of importance on 32bit systems; */
+-    /* we don't validate it                              */
+-    FT_Offset            uncompressed_size = (FT_Offset)dst_size;
+-    BrotliDecoderResult  result;
+-
++    BrotliDecoderState*  state;
++    BrotliDecoderResult  result = BROTLI_DECODER_RESULT_ERROR;
++    size_t               available_in  = (size_t)src_size;
++    size_t               available_out = (size_t)dst_size;
++    const uint8_t*       next_in        = src;
++    uint8_t*             next_out       = dst;
++    size_t               total_out      = 0;
++
++
++    state = BrotliDecoderCreateInstance( woff2_brotli_alloc,
++                                         woff2_brotli_free,
++                                         memory );
++    if ( !state )
++      return FT_THROW( Out_Of_Memory );
++
++    for (;;)
++    {
++      size_t          previous_in  = available_in;
++      size_t          previous_out = available_out;
++      const uint8_t*  previous_src = next_in;
++      uint8_t*        previous_dst = next_out;
++
++
++      result = BrotliDecoderDecompressStream( state,
++                                              &available_in,
++                                              &next_in,
++                                              &available_out,
++                                              &next_out,
++                                              &total_out );
++      if ( result == BROTLI_DECODER_RESULT_SUCCESS ||
++           result == BROTLI_DECODER_RESULT_ERROR   )
++        break;
++
++      if ( ( result == BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT &&
++             available_in == 0 )                                ||
++           ( result == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT &&
++             available_out == 0 )                               ||
++           ( previous_in  == available_in  && previous_src == next_in &&
++             previous_out == available_out && previous_dst == next_out ) )
++      {
++        result = BROTLI_DECODER_RESULT_ERROR;
++        break;
++      }
++    }
+ 
+-    result = BrotliDecoderDecompress( src_size,
+-                                      src,
+-                                      &uncompressed_size,
+-                                      dst );
++    BrotliDecoderDestroyInstance( state );
+ 
+     if ( result != BROTLI_DECODER_RESULT_SUCCESS ||
+-         uncompressed_size != dst_size           )
++         available_in != 0                        ||
++         available_out != 0                       ||
++         total_out != (size_t)dst_size             )
+     {
+       FT_ERROR(( "woff2_decompress: Stream length mismatch.\n" ));
+       return FT_THROW( Invalid_Table );
+@@ -2265,7 +2331,8 @@
+     error = woff2_decompress( uncompressed_buf,
+                               woff2.uncompressed_size,
+                               stream->cursor,
+-                              woff2.totalCompressedSize );
++                              woff2.totalCompressedSize,
++                              memory );
+ 
+     FT_FRAME_EXIT();
+ 

@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "module": "R4AMD",
+  "profile": "mesa",
+  "generators": [
+    {
+      "arguments": [
+        "${source}/src/amd/registers/makeregheader.py",
+        "--guard",
+        "R4AMD_GFX9_REGS",
+        "${source}/src/amd/registers/gfx9.json"
+      ],
+      "outputs": [
+        "amdgfx9regs.h"
+      ],
+      "capture": "amdgfx9regs.h"
+    }
+  ],
+  "flags": [
+    "-I${source}/src/amd/addrlib/inc",
+    "-I${source}/src/amd/addrlib/src",
+    "-I${source}/src/amd/addrlib/src/core",
+    "-I${source}/src/amd/addrlib/src/chip/gfx9",
+    "-DLITTLEENDIAN_CPU",
+    "-DDEBUG=0",
+    "-DADDR_FASTCALL=",
+    "-I${source}/src/amd/addrlib/src/chip/r800",
+    "-I${source}/src/amd/addrlib/src/chip/gfx10",
+    "-I${source}/src/amd/addrlib/src/chip/gfx11",
+    "-I${source}/src/amd/addrlib/src/chip/gfx12",
+    "-I${unit}/Bindings/C",
+    "-I${unit}/Port",
+    "-DADDR_ALLOW_TLS=0"
+  ],
+  "units": [
+    {
+      "name": "addr_addrinterface",
+      "source": "src/amd/addrlib/src/addrinterface.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrelemlib",
+      "source": "src/amd/addrlib/src/core/addrelemlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrlib",
+      "source": "src/amd/addrlib/src/core/addrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrlib1",
+      "source": "src/amd/addrlib/src/core/addrlib1.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrlib2",
+      "source": "src/amd/addrlib/src/core/addrlib2.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrlib3",
+      "source": "src/amd/addrlib/src/core/addrlib3.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrobject",
+      "source": "src/amd/addrlib/src/core/addrobject.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_addrswizzler",
+      "source": "src/amd/addrlib/src/core/addrswizzler.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_coord",
+      "source": "src/amd/addrlib/src/core/coord.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_gfx10addrlib",
+      "source": "src/amd/addrlib/src/gfx10/gfx10addrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_gfx11addrlib",
+      "source": "src/amd/addrlib/src/gfx11/gfx11addrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_gfx12addrlib",
+      "source": "src/amd/addrlib/src/gfx12/gfx12addrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_gfx9addrlib",
+      "source": "src/amd/addrlib/src/gfx9/gfx9addrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_ciaddrlib",
+      "source": "src/amd/addrlib/src/r800/ciaddrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_egbaddrlib",
+      "source": "src/amd/addrlib/src/r800/egbaddrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_siaddrlib",
+      "source": "src/amd/addrlib/src/r800/siaddrlib.cpp",
+      "language": "cpp"
+    },
+    {
+      "name": "addr_bridge",
+      "source": "Port/addr_bridge.cpp",
+      "language": "cpp",
+      "owner_source": true
+    },
+    {
+      "name": "image_descriptors",
+      "source": "Port/image_descriptors.cpp",
+      "language": "cpp",
+      "owner_source": true
+    },
+    {
+      "name": "render_state",
+      "source": "Port/render_state.cpp",
+      "language": "cpp",
+      "owner_source": true
+    }
+  ],
+  "followup": "Physical validation only 0.80.39; renderer uses descriptors in 0.80.14.",
+  "scope": "Complete linked AddrLib implementation and source-derived GFX9 image bridge. Public runtime admits only the selected Picasso GC9.1 profile; no hardware capability from CPU geometry.",
+  "output_stage": "AddrLib"
+}

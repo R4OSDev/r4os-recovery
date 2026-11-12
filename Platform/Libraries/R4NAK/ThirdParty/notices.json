@@ -1,0 +1,2077 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "source": "R4NAK native compiler / original notices",
+      "sha256": "bed7b56e5d3c0c024242b2a3881c0d6c5bb0df75f20070422176028a612492d5"
+    },
+    {
+      "source": "Mesa docs/license.rst",
+      "sha256": "29a0f352dca2c1aed8909a99420452653325f6491f2483b4a13a0bfca5160a80"
+    },
+    {
+      "source": "Mesa licenses/Apache-2.0",
+      "sha256": "bce168b3472f8d580a979d981d36675038266788443426f7ea588bb09a4b933f"
+    },
+    {
+      "source": "Mesa licenses/BSL-1.0",
+      "sha256": "b0dfb76edd30bf4fada055b25d6c939478a3c3c7f1d1f42213d3394ef2174082"
+    },
+    {
+      "source": "Mesa licenses/GPL-1.0-or-later",
+      "sha256": "8dcf727cb7f0ad5f5f70b87b31591b38ce52109e62a8430beeb517ace0066518"
+    },
+    {
+      "source": "Mesa licenses/GPL-2.0-only",
+      "sha256": "6af5e910823a25876866f11577dfe8110701107e96e70c3ccb7c77db6bb8146d"
+    },
+    {
+      "source": "Mesa licenses/MIT",
+      "sha256": "2ff46cf3b88343c155a4388b9aa1b1754fccbd348346b63153743fd9902cfa03"
+    },
+    {
+      "source": "Mesa licenses/SGI-B-2.0",
+      "sha256": "512330d19c40b33f9b68c69897be7c03a47829c62befcf05e5e4ff2495d64379"
+    },
+    {
+      "source": "Mesa src/compiler/builtin_types.py",
+      "sha256": "fe5bb50ffb9a1e1f41a396bef874d4a6f60b0269e9494be082dda6d6d7c176c9"
+    },
+    {
+      "source": "Mesa src/compiler/builtin_types_c.py",
+      "sha256": "7d188887f614fd1bd98b373daa9296ca75f19f22d39e630faee6c85df1f9950a"
+    },
+    {
+      "source": "Mesa src/compiler/builtin_types_h.py",
+      "sha256": "68e1da1fedfce6f30e32a4c71db005c0afd181fa679d2e401b4917b63b75dd9c"
+    },
+    {
+      "source": "Mesa src/compiler/clc/clc.c",
+      "sha256": "e1123b2ab5195bf7a33e9584eb4d3e2e6bb73b8ca306c38b0f4b5493c3b1f251"
+    },
+    {
+      "source": "Mesa src/compiler/clc/mesa_clc.c",
+      "sha256": "adb5e52bf301ed117df77c6faeef7313d33272a01b13ba62436b90c4df49f089"
+    },
+    {
+      "source": "Mesa src/compiler/clc/nir_load_libclc.c",
+      "sha256": "5fa54dbba544cc99cc4267e361bfcf3f138bede06ed711a1801955d42baf8e48"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/ast.h",
+      "sha256": "6862765686cb7168edc0a27445f6671f163254c122d5ade7bf3e6bdac43dd8d7"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/builtin_functions.h",
+      "sha256": "f64b9ba679bef2df5894183a949e6409c89e5abbaff1abcc3f7e819820e69a75"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir.h",
+      "sha256": "6d68d84dc3d2e4f2fb35ed9189f721b0287c3f1c1b2cc0d68258d9d13cc9520c"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_detect_function_recursion.c",
+      "sha256": "7dc7f8f5d22918e8c2e9b7d07a2025d02a05dd5a1e0bdd54f1efe00395fc53d0"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_link_atomics.c",
+      "sha256": "96836d49a71c1681b73a9e1c96ba2c5b0a55da3d2ee3919832e005988ce07eff"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_link_functions.c",
+      "sha256": "b7be971f5fed000631a9f1cc5e07550565860ac05d0e10b6c7fc1a85b5c6cdeb"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_link_interface_blocks.c",
+      "sha256": "da7015707659b9d1ef562db5bfe7f6404f7c354de11715707ac0b3d62a7085ee"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_link_uniform_blocks.c",
+      "sha256": "2ec334a27480333aac00d58854e48bd0d50320fbbf324ca1f5cb70174f0a9a76"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_link_varyings.c",
+      "sha256": "0acbc3e938fe3437575dda8b6d1e0496d1e714640e16afe274d26b79403f4651"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_link_varyings.h",
+      "sha256": "8acf7ba81f697ab5cbd22bc447cacc107c4abfa410ed522dc656c61f123a2d33"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_linker.h",
+      "sha256": "f037861a2fa90e9354ffcf686ad533218825fe8e91d1f3b7fdf651f022c435de"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_atomics.c",
+      "sha256": "1623a1877b4acfe2c08a7eff1b13de0bfbb7ff3c503be0ef2f78a255097fa77c"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_blend_equation_advanced.c",
+      "sha256": "eab5bda8521b4267e615f7b69e2397f9aa4615ff89787338ce43be972899898d"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_buffers.c",
+      "sha256": "febca91d3d9846428c01a6bed539302d96a9cdfe806f33ced1078510950928e7"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_discard_flow.c",
+      "sha256": "a951b780198656827cd7c431760db7182d5542096aaff5b1d688eeca8540db5e"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_images.c",
+      "sha256": "5cf034b872d331da9bcc1bde8655079492454988636017495d3f8fc8cabcc5d4"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_named_interface_blocks.c",
+      "sha256": "cf6cbc04639e807d463fdef480ca10b57d895caf16d86a6d0a534035bf65d533"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_packed_varyings.c",
+      "sha256": "ab0ee3b380530947bcb0e6981151644b619f65c5adfb4b9b16e63e101462b3cb"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_samplers.c",
+      "sha256": "58392e8e0d10f7ff1db8ccaca0977d59bfb39ea2d3bc0186874672b60b3d662e"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_samplers_as_deref.c",
+      "sha256": "fa919212423efeef4fdf510f42c1b8feb325c48e1111efeae2141a2b7c57dccd"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/gl_nir_lower_xfb_varying.c",
+      "sha256": "6f0aef02c87309bc4b7953c36341642ee5a9fe49653a1a0e5d59937e640120ca"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/glcpp/glcpp.c",
+      "sha256": "59b5406d7a1d9e6c834d8dc3709af7ca2bb09a08fe8c8855693d26d6410e48e9"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/glcpp/pp_standalone_scaffolding.c",
+      "sha256": "7f8c11528bad798e138d750824d137935b728540fe3bd5c7620f1047a6f31d3a"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/glcpp/tests/glcpp_test.py",
+      "sha256": "858b575f586fbf9dbef54d5210771177f4beeb0c2740b95af258c1632cccbecf"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/glcpp/tests/glcpp_test.py",
+      "sha256": "97aec47597e991f8521fe041f9ef8983c0b08285f2e5e6a670d3835cb7a9f451"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/glcpp/tests/glcpp_test.py",
+      "sha256": "e549b7af9f57e03258849796598dafd4eea06c9ae2d75d995f7f2d449e6bf3ec"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/glcpp/tests/glcpp_test.py",
+      "sha256": "b08fa9556025d1ef3bc1e9ad2a7d128d2522bfc92d58cbc7b4783d1cbec34542"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/ir_builder.h",
+      "sha256": "877fe0abdb8b4b79a0a718cef9cbdef7116dd51cac22b720eaea5e74a19fba8d"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/ir_expression_operation.py",
+      "sha256": "f74deabab1474c4e8b5d4a5cda84a59a781e0900f8cdcc2cb6fc4bd0f4aa968c"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/ir_expression_operation.py",
+      "sha256": "3a487a74732a8365953cb33a428aada713dc52ad61a66c5d71b11036bbb89b15"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/ir_list.h",
+      "sha256": "050f1d308911f0b7698f1158f07bb1aa3a283429d9750008f275f7f2ae7a0665"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/linker_util.h",
+      "sha256": "269afb69b2a0e8ac120fe8ca641bce2622356a07f6717277b39732971b334d2b"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/serialize.h",
+      "sha256": "602d2559e94dfd4b2aaa56ebf4b9ab390de2671b147c4e27870339aa006a49cc"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/shader_cache.h",
+      "sha256": "8025f41dd3c3ed3ce49db9f08d884d7d75c71b25f1d6e4ae992ccd1e6189e76e"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/standalone.h",
+      "sha256": "440aebad624e612b38d2cee98e619a6d39395a1b05902e1932acfeeb8d8d52f6"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/standalone_scaffolding.h",
+      "sha256": "84129559b84172a44ba1c5aa35f03312c98ca934491925c9c259dd3aae60d294"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/string_to_uint_map.h",
+      "sha256": "c2f6d719a9025d20cd7aba74790ac6655d0af265fa6bb84f8f407d46736c43f1"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/tests/lower_precision_test.py",
+      "sha256": "0ed1d14d6c9ab9d316f6cfeb3da0922dd76635f3658707c5a716423f1120aca3"
+    },
+    {
+      "source": "Mesa src/compiler/glsl/tests/warnings_test.py",
+      "sha256": "45377ff4a943942a4618360897c2e4c0b96b453513fd10ae96a40d5030014abb"
+    },
+    {
+      "source": "Mesa src/compiler/isaspec/decode.py",
+      "sha256": "5bc87241bab6fefb404597a47e405ba31dabd22e0a68d935e512e045af4774df"
+    },
+    {
+      "source": "Mesa src/compiler/isaspec/decode.py",
+      "sha256": "5972ad79194183a825702ab696bbb76747ee6bb94aaa1cf5c5d089c9ea4025df"
+    },
+    {
+      "source": "Mesa src/compiler/isaspec/isa.py",
+      "sha256": "f2cb38019bba25ea527c21424cf9a10af7cde2a56cc10a3dd5eba076aa94d77b"
+    },
+    {
+      "source": "Mesa src/compiler/isaspec/isaspec.c",
+      "sha256": "e4c390a48c0d71456b2bc2a78d8f415b6054b30cca02e1b32681c3044dd596cf"
+    },
+    {
+      "source": "Mesa src/compiler/libcl/assert.h",
+      "sha256": "f9b177864210dc5bb38575ec8d55f2b408368372879cb9f19cf2d3dd6647a448"
+    },
+    {
+      "source": "Mesa src/compiler/libcl/libcl_vk.h",
+      "sha256": "b3943531916022fbd17e74e1d519f7c3b5beda14ba86bbe77c51827a50e02e57"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir.h",
+      "sha256": "561daf7419360cf14e1b609c214db1b599cc9766e5275dc204ca127370a20789"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_algebraic.py",
+      "sha256": "c9b14c048058636910d33b790adc707a8bf3b03f3c2199fa9f6ad9a849fba9cc"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_blend_equation_advanced_helper.h",
+      "sha256": "0815ea484ddd9cba43181bf523c893c6f241ab9efed5a32ddcc468c06bc51612"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_builder.c",
+      "sha256": "552ceae13632739cc709042f061fcd4c57dea2a86c49038abfe4ca043f48a1a1"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_builder.h",
+      "sha256": "daf97d3261c2d51f8c8c63b47b23ae045de79c0cff072a62a8b22ccf850d9044"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_builder_opcodes_h.py",
+      "sha256": "b1cf1997dd06a00a9468c75c78b5ff02d87aa5a43e706e37ab01f1bdd7b84fe7"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_builtin_builder.c",
+      "sha256": "041a5ebb171fe869acf6a934cc43353efca6b189d3e7922197349a440d85b8eb"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_builtin_builder.h",
+      "sha256": "09be3792e54b13bae0fdc84ab6592c4e8d5c9f170ecec3cead76d13db67e1455"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_clip_cull_distance_io_utils.c",
+      "sha256": "510392486a17a81e8bf38a6bc4ffe6833609419d630b6d4a0ce65f206371b6d7"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_clone.c",
+      "sha256": "8791df5cb08a004d2a8899c6a50749dbabb69aec35da9729b1270f1ce9ec37c7"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_constant_expressions.py",
+      "sha256": "e9ec55f6b1c489a4821a8599dfe0b6dcd54c608bf339142d03e5cc548f2b89ce"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_conversion_builder.h",
+      "sha256": "a15d7a111dd6c882991b82f023c3133cfda3dd44f0544116c4643a0b9acdfd00"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_convert_address_format.c",
+      "sha256": "27afbffc7eaff66076120845a33e0b856374542a0e0e07113909f16979462bad"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_defines.h",
+      "sha256": "821c6b319b9c714be0aaa82434d504ac183291a221de3af0ba7308779a75f15b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_divergence_analysis.c",
+      "sha256": "7fe0c4350acebcc47b8333846d378bde29e162ffc14bd628a37bff11aabfe3f6"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_dominance_lca.c",
+      "sha256": "f357b62d8e8ce09daaf7490e0e61f3ebdb6b75765da9c8a3ebbbf5f9af8673ab"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_downgrade_pls_vars.c",
+      "sha256": "42bd63aca726338c5135451443baab106ef00469250df2f0631ff6b55d2d45e0"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_from_ssa.c",
+      "sha256": "bd3d2c85442514a4e00c00f6461282092411b9284f6d460958c6a07ca6fc040f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_gather_output_deps.c",
+      "sha256": "3bc3165c342aa1e960e3723baa2df91becf335647c6dd4d5528b0f0a2165dc34"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_inline_sysval.c",
+      "sha256": "92d128a9c7d3d6b049818e9cbbaa0997c1fab5c7a2a3cd38261764f9c19b3bd8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_inline_uniforms.c",
+      "sha256": "e4246d7277e91053e3f524e2c5cbdca5aed6fb89736e6c7d505a65d74c1ed9be"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_instr_set.c",
+      "sha256": "2a8d3ba3057e62787e3727095fe615bf6956a5b00173e6f4780c7575ccce5529"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_intrinsics.py",
+      "sha256": "dc6ebfde587dfafc596771c80c68f0f4d0e8a62a1a011cfe559cf1bbc14192d3"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_intrinsics_c.py",
+      "sha256": "31279e12ebd426fb9c4a8e379e7d5d7a718c95276d1698b0f43f5abaeb1d1cc8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_intrinsics_indices_h.py",
+      "sha256": "2786e44ae999a0aa33bec846ce270b4ce888a0290639a8818f95d0e9505107c8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_io_add_xfb_info.c",
+      "sha256": "85039819327c03cdcc9cd60e0c9881666cd0a7259a286b975342bc8520d42183"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_legacy.c",
+      "sha256": "0e7df73a5a99de42a766c08050d01a857ae5d3aa929d955986ddd96f488a2010"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_legacy.h",
+      "sha256": "68b34e2c47eef77f4cb3f3d671501b3f33bd402eb85de0c88315ae3ef82cdda8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_loop_analyze.c",
+      "sha256": "69e7aaac6d511df71baf428ddd8a8dab978ecb50f70fa3aa2bac8c4c21d089e3"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_loop_analyze.h",
+      "sha256": "7140cd42a428c089c356b171b0620e22b0aabb910a6dc5232e374e5aa9d65e23"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_abort.c",
+      "sha256": "0868eeff86b3290b2531554af0b77a35409a73cac35b30518d96a7e5d542ed9f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_alpha.c",
+      "sha256": "9a80953b84b5c102629e8ebb3394690be29f3745c160b67dec305d6a17f17ca7"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_alu.c",
+      "sha256": "75858ce57544c0b7d21a47ff171cb9ed09b6ab376602cc28dc468c63e15f7f93"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_amul.c",
+      "sha256": "81ddb3823560c7aa999d5960616ef73974f0316ee1149d428888ffcb5fbf5a62"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_atomics.c",
+      "sha256": "6bffaa9180ad15f60172ac2932f654a344a05b2c971670ca2805d164aa805325"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_atomics_to_ssbo.c",
+      "sha256": "0af68ad7d34d1c6f0760e52d9aa6a66b515435162ebbed48ec1ae9fda805d6ac"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_bitmap.c",
+      "sha256": "a9e49fc72ab0106db264c0ac27b1f05502cfc08645647d4b1746e0110219e7c4"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_blend.c",
+      "sha256": "83b87f53cadc7620191874587e1f45b6e158fe90127b71c8a8c66921b8235cdf"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_blend.h",
+      "sha256": "91d1aec62902fcce8f07aa7e87cbe5f37587d04cf9f0ff1200d17fa272397bd3"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_cl_images.c",
+      "sha256": "f73e293daa12abe52dd73882816fe4002b4f6e69065892abd57881180fb26bf2"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_clip.c",
+      "sha256": "b900f25abf18ec317a82242ac1fdf53d8f2cca4bf72e2779a347a50618cf1cee"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_clip_disable.c",
+      "sha256": "47e96d4d558e4c1762ef8233909b914c417a13f63d74003c1241dcc18937f4db"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_clip_halfz.c",
+      "sha256": "e399a479f1ec0f8b3d6981ae2c796c96ab108e2768f98f24747e01bcea9e7d0c"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_const_arrays_to_uniforms.c",
+      "sha256": "4a7ee493d082140bb88854a49a0e614a46fe76e1d81f0c89b2966303b05d1ef1"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_continue_constructs.c",
+      "sha256": "a93554fdac275978af5f79424a5cf32e8ee4f806002938ab1b540f336c28e29c"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_cooperative_matrix.c",
+      "sha256": "9affa0bf950dffd1de68226e4e3a687529cdf50c5d6d6a45b821c7b7dd9256e8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_discard_if.c",
+      "sha256": "72c05430e87931394a55aa4dbca3c55d98655b55c914168de03780f2e2facbc4"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_double_ops.c",
+      "sha256": "7d5adddf2c915eadbbb0587eea3993cae38588abd3730bf646f0533965cdf3aa"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_flatshade.c",
+      "sha256": "9e896bc2c79229fd697665f8c38ddf6ebbd3477012b079c7dfa79b15d438ed3a"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_floats.c",
+      "sha256": "d10527466e3fb2a4203f4ad6745b19214ac930ad135f05c121f0a384a435394d"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_fp16_conv.c",
+      "sha256": "1750fa45d279a9115a13c385c91a375fb5f7d3c570c6074359af120662a0a81d"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_frag_coord_to_pixel_coord.c",
+      "sha256": "c00eae6abae0c259f6ba71016d3d6534cbbb6c7473a8bb302897064a873a63b1"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_fragcoord_wtrans.c",
+      "sha256": "1bffc1f9c310e15a3b24b1ecf3ccd4149e5950af3cc6cc36f22d33649472f39e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_frexp.c",
+      "sha256": "9df9373ea382bcbdeb4825e573285b09c1169029c3cbe75627e8008056805667"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_goto_ifs.c",
+      "sha256": "4e9abaa08436d1722a235a5236ac6ac30c4cdf656c8bfc47886bb97e816c6428"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_halt_to_return.c",
+      "sha256": "7791362b56816fa9a7a2752c5a635543fc1107bcd2c59ad75c8be112e90468c8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_helper_writes.c",
+      "sha256": "f82ad9198dccb295ffe42497f05257f8d409b91a2e63d3a6da078337c73ae86b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_image.c",
+      "sha256": "de7a264e32b57592c844cee6c79e170411465986b4c45827fe770250277f2d63"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_image_atomics_to_global.c",
+      "sha256": "da397034a1def7a071f529e867fe952e255f4e7ad7664bdaba29e92c9416e425"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_int_to_float.c",
+      "sha256": "9ae01dcaba452bb91fc7438aa3f41a69aee109f5c0305ace1b91f0b1a42d493e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_interpolation.c",
+      "sha256": "e6fe05a09ed5866ab0a65f514e77eb22fc602743e874c7206304a3fe9e560406"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_io_array_vars_to_elements.c",
+      "sha256": "1a0da1334e05bd5926cc8f5c1aa811ab737d1a10cac5188c3a7f0856817ba259"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_io_to_scalar.c",
+      "sha256": "a38a0203a8e3ffe83a864786db1bdbc821a4757ae9841cf6053b86e647a8246f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_is_helper_invocation.c",
+      "sha256": "23ff5ff01422c7ba1c0c14c29f4333d6b5c65d59651343058f891559e8ed92c2"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_load_const_to_scalar.c",
+      "sha256": "7f8246e9246c7bfb2dcb128a636884e87144fa1f6b9764a152d29e0c0687c62e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_mediump.c",
+      "sha256": "2a7e53ed310e1ab3209394e31672c460dc4bd0052a7c7d2acc77b9518cdf9558"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_mem_access_bit_sizes.c",
+      "sha256": "8d5961ea37dd6ba810ddea7a07a2ad2104a66b99375de2f5ef5471085836a2f3"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_memory_model.c",
+      "sha256": "ec00c43d80dc679ca2c6767d202583003346ed5c76fc9cb00f979c94fd28edc9"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_multiview.c",
+      "sha256": "44054ec9cb7b6b03e1ed421f062d0e2546e4b7f09d19dbe185db48c4c1239115"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_pntc_ytransform.c",
+      "sha256": "ff0817ab5b21903e2fa045298937ebc4441db9d549cf91986cf6750cf54472d7"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_point_size.c",
+      "sha256": "cea5155e2f94b87583ebc87758c925cc6ab47d79d6ca1d8dc793b72c0c32f55b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_point_smooth.c",
+      "sha256": "b6222ad4f128789351ef23a99a6a607f09e1e1be0c02cdfb68c89eb486e20630"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_printf.c",
+      "sha256": "62858a8f8ff7a5e958229cb8257493386a7c0ec58ebc589ab14c8b92e7358cba"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_reg_intrinsics_to_ssa.c",
+      "sha256": "188819f43d962bc0f95511d8daf3ffcbe8c6ade54e5fcfa67628623840d8c91b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_robust_access.c",
+      "sha256": "c0cd9955a236cef650f26a56e233788a2f34816109c40b55f7da1c9ed13b2680"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_sample_shading.c",
+      "sha256": "7fc5c23ad8899556a35c8f72fca292ac4adc302bb318f315ace3159e1e6ea8a6"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_ssbo.c",
+      "sha256": "43ae64a0d8cf66743a790223b926e6412706acd61e1daf660b175e8f295c99b4"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_subgroups.c",
+      "sha256": "4cdabe0bf8b4e4d2ac3934d60c1d6ef41e8a44188c29c0580442ea280cf12f46"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_sysvals_to_varyings.c",
+      "sha256": "d67c80a134e8f09bb323afcddbe8d48496c43e1a72e28b57245f0601d2f20030"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_task_shader.c",
+      "sha256": "45796affc67f8a7f442a8090782f0f0a352fdcc7cb9356b3f5a006c5cbbbca9e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_terminate_to_demote.c",
+      "sha256": "e94060b2b15ba21e1c686c8a01ccbfc9625f5b50452cd2ce4cc0c434da0e3cc3"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_tex.c",
+      "sha256": "dceb4e4a5b8811c5d7ef1aecd17d1b7f0053d69cf7952c63b84482a232cfccd1"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_tex_shadow.c",
+      "sha256": "3c8c5d31a9e857d6225c69867568fb426668f75f0fbb03b47303576b73fbe55c"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_texcoord_replace.c",
+      "sha256": "640b7c686280c2dc62ba743d81748d99fbbd44f1a280a49a04cc6ba783a8b6f3"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_texcoord_replace_late.c",
+      "sha256": "e241ec2c3903794bc8efe35bd577c9ba5dc0cb3e3c38e29e7604eacc98e25d8b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_two_sided_color.c",
+      "sha256": "95e73672e2e12b81762c5c221fad94f1f0b5ab7f3c8f5ef1b4908e377391f425"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_ubo_vec4.c",
+      "sha256": "fbacf87a1da41f19a1196a171b0fb3f36ca810fcc17a66f320c98e4f1b0b99ed"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_undef_to_zero.c",
+      "sha256": "222a123ed90f68a92f59484a1cb46967e8c96e02943c4a4c101d6814f49c2774"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_uniforms_to_ubo.c",
+      "sha256": "8dea72068b32059bc6546d1e835935063bd8276b04107935781028865e1576ec"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_view_index_to_device_index.c",
+      "sha256": "6d29529351069f1340c2d97658ab4cbf587773f26b9b7d098a62eed2b621c97d"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_viewport_transform.c",
+      "sha256": "da26490a2fc3b8c6dee6d59962101297935be90259856ddf6769b6787662e56f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_workgroup_size.c",
+      "sha256": "ba7462ce405359d22dd93f55f396cf6e863c3b2868159c266c0314668ba5c966"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_wpos_center.c",
+      "sha256": "b1584019d9b793d0455695cd20d3c420f9aa5604bcc5b5d7c4fe6283175eaad2"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_lower_wrmasks.c",
+      "sha256": "269ee4b7ce0b96ce3682c0409c937f5477d1cdb5a58641362fad85b6f5083248"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_mod_analysis.c",
+      "sha256": "df2c9aefdeaa50165350568ff2d81cf8be7db1f43d309f0769a7f1a246e81066"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_move_output_stores_to_end.c",
+      "sha256": "174a54b744729867252f665e9890983e395f83f627ce99133b568cffaada8632"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_normalize_sin_cos.c",
+      "sha256": "edfe33ada95c5bc5b26c1d6d4686a65b922b349cad61a32b5008ba1ab4e1c91b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opcodes.py",
+      "sha256": "e64ce57fd9724e4a620343a8f56a9a6d841baa208a13bebbe229fac2b564f547"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opcodes_h.py",
+      "sha256": "ad2a1cdf3bf8ee1c03697495040b47c3ddcd779d56dc855760f3545e191abc33"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_access.c",
+      "sha256": "83d096cdc66eee843e19b38fbe1558fe4207d03dbc51a54c23973b87b066640e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_algebraic.py",
+      "sha256": "ae270b00a0aff9c43d569d056a05509bc39d9249a48ebb016e3f2bb702b21482"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_barycentric.c",
+      "sha256": "6c136eaca19dcb1eeab1d52c2aa9a9b037a97fa1c80808241c206b69ea87914b"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_call.c",
+      "sha256": "1d78f69f6eaf935d7964b873c152e0ebef98e7d8cba1f0dacfba0f9fe0f35c9e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_cse.c",
+      "sha256": "5e0a1b68f6deeb342ca410820941e2aff96485a2bd3943e5bb9a06c4938613ba"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_dce.c",
+      "sha256": "209a5bdca003d93277dcc12698d307bd7ba71e77686ea2774da50711ef1207a9"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_fp_math_ctrl.c",
+      "sha256": "626af1652b5a715d1f6ce22b2d8f261651d3db4b0e646fcf40c92c49587dc11e"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_frag_coord_to_pixel_coord.c",
+      "sha256": "b94abc91c3f05db7872d97cf80179aeb3a1d9c6dcd86717864189bad3a86e899"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_fragdepth.c",
+      "sha256": "1ce089c30fbf8d8846ad0b0e6fad7d28115b6b3ffccfb9cfe2c923c2c1e7ce6f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_load_skip_helpers.c",
+      "sha256": "ba554dc66f0d6376696a1f96748ba7ea04cff2c06e915c202ed9b36d5193c3e0"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_move.c",
+      "sha256": "ba6e16f4d86e3b6d490f0f884d575e8b71c546f4cdd81574468806d0e1fe3782"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_non_uniform_access.c",
+      "sha256": "50d8598345b719219d01d624e935e7f0504171b7b181f5d2c4d1f6522f092ec4"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_offsets.c",
+      "sha256": "c3c9fc1882b88fa512dcc1555ca794007f674f903cf0b3027a20d98579058499"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_phi_precision.c",
+      "sha256": "941a59e0c0d80eaf9e3e258d38bc6305baf9d1dcd8e47715002b425fc1a677c0"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_preamble.c",
+      "sha256": "2b4f2e274841df5a9018633e225a268ebbf446824748705c3f246c0b9f26a8f9"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_remove_phis.c",
+      "sha256": "f15e3709b4eb79272aafdf10db0d0653894df9cef0229905b197ec75f3466689"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_shared_vars_to_subgroup.c",
+      "sha256": "644a027a59b938240b3bb62f9da677472a3963582dfaccb130f143653a0929a5"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_sink.c",
+      "sha256": "696b4e86bf0f537d6b35f9608b99a3b8fc50a012c58f9624f35ddae1eb2d9b75"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_uub.c",
+      "sha256": "a09c3c4eab794dd22978b0e277d78b982716634a22ba5fa6727ec49181f56d75"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_varyings.c",
+      "sha256": "f3e9415b9bfd72c348de59c40e1de78d1c0ff0cf2dea6c2c763d89f05e54cea2"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_vectorize.c",
+      "sha256": "0473f66878e0521bc5f5f4496a83e982811e6278b4963cec96ab672dde75662f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_opt_vectorize_io.c",
+      "sha256": "f9473ecafcecbbd4bb7d322b4f44c6fb94cd3ed3b1f6d3b68c18cfd1f3a9ef25"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_passthrough_gs.c",
+      "sha256": "24bd9f649d48e79694aed8776bc05b396696267daab90ce4df4442e8483767e4"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_passthrough_tcs.c",
+      "sha256": "fccbd3dc8fc9ffb839d51756866bade6f6126510b52a668c918c126038e915dc"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_precompiled.h",
+      "sha256": "7abdd78e29f453ad8c225ef81dca7c85f0ef81b3721665ae8a6d768b35806926"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_remove_tex_shadow.c",
+      "sha256": "4795dffd31d6abb519e29961ac4ec12a85d1c03ddb7191083b747a262750f233"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_scale_fdiv.c",
+      "sha256": "c5b268cd73c675ea50a60806b30e395f126f789cfdafafd9aac4b8e931ecaf00"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_schedule.c",
+      "sha256": "655cd7f94352d28e191880128928e1ac62fe0789ef80361135bb337a68e5fbdb"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_search_helpers.h",
+      "sha256": "a1827de0bbb009c4226cc0e0093cdb8f70e708365305dfcfbda9e6b967cf656c"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_serialize.c",
+      "sha256": "4d7b3b456ce37253a31e29b8635a112e7496378ba26e104663f244d9bc90d3e0"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_split_64bit_vec3_and_vec4.c",
+      "sha256": "27929bd8230002a2c2e5af66de2a3cef395da447627012adb4ee4973e4727380"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_split_conversions.c",
+      "sha256": "f8e30df72877ce12a8737ae35ca38ae348283c740e2aa4bb55138b3462b67764"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_tcs_info.h",
+      "sha256": "6eee72bbec3ff3cc8987012bbd91fd8a72261bdfbabde25bf2d8405f2e8af7a8"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_to_lcssa.c",
+      "sha256": "10c35dd9b164e4e77dacdb6355f6d2a56fe58b8c6a7b8cf9380f9087a9865db6"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_unlower_io_to_vars.c",
+      "sha256": "2b1cee416a47fa60c5e3ddedd6e5a4846f6f90efee9a502af2c257ae11c6533f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_use_dominance.c",
+      "sha256": "dbc8d70d7716b5ca15d4d7831940a9e6c0d255237429f404a2cb64120af44da7"
+    },
+    {
+      "source": "Mesa src/compiler/nir/nir_vla.h",
+      "sha256": "509404495989080e7bbae4ca4b876bba06d3040d2ebb4413f29baad96e17c59f"
+    },
+    {
+      "source": "Mesa src/compiler/nir/tests/algebraic_parser_test.py",
+      "sha256": "ff6f13fb7863b2ff7e57d80874f0d3c6aac02ff8cff1ea6e82b4c37971597d47"
+    },
+    {
+      "source": "Mesa src/compiler/nir/tests/nir_opt_varyings_test.h",
+      "sha256": "95630309a4191dc375f9b06851c900f6020569682c59d115921596d13ab103ad"
+    },
+    {
+      "source": "Mesa src/compiler/nir/tests/nir_test.h",
+      "sha256": "0ec971042a0b71ec7ae84853282c846dc0f3bdd91ccf192bd481e1df58c3b0d8"
+    },
+    {
+      "source": "Mesa src/compiler/rust/acorn/lib.rs",
+      "sha256": "a6c26f9bb021f8f90f1fe7aa213d99f613734fc6dc38329d40757cc78679fed9"
+    },
+    {
+      "source": "Mesa src/compiler/rust/as_slice.rs",
+      "sha256": "49d010d24ae81a258e1513b5769087ed9e17189db793a3b6d602b2f4338a5c61"
+    },
+    {
+      "source": "Mesa src/compiler/rust/bindings.h",
+      "sha256": "8e753e065086d6a8f591422e488cccfc4b8e0d1ee9b8a4e767784438e8dce347"
+    },
+    {
+      "source": "Mesa src/compiler/rust/cfg.rs",
+      "sha256": "8df63d8533b679cb3d19fd9b36e5bd2a9549e05ff3263138b9b739b01e29ff31"
+    },
+    {
+      "source": "Mesa src/compiler/rust/dataflow.rs",
+      "sha256": "d22b26b3b081d45bbe67af7916f886cc34dc06db4e3aee6809be52acaafcf950"
+    },
+    {
+      "source": "Mesa src/compiler/rust/depth_first_search.rs",
+      "sha256": "e1157565fe0d2a7bcd5d71457bf7fd6cc5b2076eb4795359aea10f5eab6da954"
+    },
+    {
+      "source": "Mesa src/compiler/rust/float16.rs",
+      "sha256": "3054dd085c136d17af8704c5ae697e0af9c9b6226ff8e57087405e14d2953da0"
+    },
+    {
+      "source": "Mesa src/compiler/rust/lib.rs",
+      "sha256": "00c50191b3e9d4f4ac506b48685681eb28cdbdf45a3e675ba6508dc28b3f9a61"
+    },
+    {
+      "source": "Mesa src/compiler/rust/rust_helpers.c",
+      "sha256": "90af1f4bada2b0f5e110e793c563ee8f656ce00c73d884b6dcd1aba56891f0c4"
+    },
+    {
+      "source": "Mesa src/compiler/shader_enums.c",
+      "sha256": "df429f9a351df73575a54d30735ba6c76407b2b1414d69fd8a675315a50457ce"
+    },
+    {
+      "source": "Mesa src/compiler/shader_enums.h",
+      "sha256": "06bee5c16661f080df017cafeba688189bf7893de532f2e03c35ef67fa330a12"
+    },
+    {
+      "source": "Mesa src/compiler/shader_info.h",
+      "sha256": "e5cd7a6edd099437340aac082cebc9d9ba5d98f93e72e44c449ea9b090e0c5a0"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/GLSL.ext.AMD.h",
+      "sha256": "b1922c91841b7b61752f80b3cb53b814f6b9d41cad8f623bbcb288897419b13a"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/GLSL.std.450.h",
+      "sha256": "b1dd4354483e3ca0f27e3d44966a4f0cc3b908286dabba0476848e1ae5dba27d"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/NonSemanticShaderDebugInfo100.h",
+      "sha256": "fd609bd1e02b73461c082b1f163c4b66760bbf6475c3d44bf11c5cb70453ab9f"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/OpenCL.std.h",
+      "sha256": "e9d7d2a69b16b4ac4c24ced9462ae68ac226f2b6a8fac3b445ac45884ecb7ca7"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/gl_spirv.c",
+      "sha256": "dce512af9b6efc47a29405c2f78928f791dd0345720447fd429d75d93dd8f27a"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/nir_spirv.h",
+      "sha256": "9bfb2860bf04ccce262cced2b228bb4dd781b722fa67c62879855a705e17387a"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/spirv.h",
+      "sha256": "7e45d3348e70b954dbb423a36c6584c23172bd61e4d51869a06a41002021022b"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/spirv_info_gen.py",
+      "sha256": "34b3730785f1a6d2386ce6a3b88be56978a57fc8531b63bdf3d7006492922fc7"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/spirv_internal_exts.h",
+      "sha256": "473698f8ae86298c497651c128b0aabd1f61538fce3d85daed64bb72530d533c"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/spirv_to_nir.c",
+      "sha256": "6c52adf6db24cc8d07811571b972d80d5c18d6dc5f6916ad77202011a7d3acd5"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/tests/helpers.h",
+      "sha256": "f3b4f3c494f5ae74bc9c12078690e9d760a6936e6596b2cd031acdae69fc3819"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_alu.c",
+      "sha256": "2c4564c784eafbeb1b6de49d5be3de278213fe184aa6463b14a7ceb37f7d1779"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_amd.c",
+      "sha256": "e3c1f9bd6b2c04edbfdd1331c3d5f3170d472c96f03682cd3e1ca61821761b50"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_bindgen2.c",
+      "sha256": "a0197346652c1cd8842693a1e54770ef8151b21dd5e064ddb8fbce2b5653ed5a"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_debug.c",
+      "sha256": "e5ac9da09a161d9680b161de8885783ff0ad61038a9da61a4ffc553f547146cc"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_generator_ids_h.py",
+      "sha256": "6bb9509f5abf9e52b174d6b517f697e8291783166b639a744d04a048dbf4bace"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_opencl.c",
+      "sha256": "9604fdc669f7ac5dd11cd0dc490e6edde1f946343e6d610c9c8cf56fd545598a"
+    },
+    {
+      "source": "Mesa src/compiler/spirv/vtn_structured_cfg.c",
+      "sha256": "99e7c2330d69bcd892fc5a492b6a1357c4927122f163ad9a29413d85bfc1ace1"
+    },
+    {
+      "source": "Mesa src/util/anon_file.c",
+      "sha256": "946f35223dcc53792933de7e1abb9b9f2ad1b35e8615dc4c32080e60376590a4"
+    },
+    {
+      "source": "Mesa src/util/anon_file.h",
+      "sha256": "99c3e5e165a8c9f1c2ceee8065c91f148e23f69b8fe33204c8f15d1d744489d0"
+    },
+    {
+      "source": "Mesa src/util/bfloat.h",
+      "sha256": "17ed38c6b8346631dbda2d5f117eb4dcbad5eb1783e886913b47ce0ef86aee95"
+    },
+    {
+      "source": "Mesa src/util/bitpack_helpers.h",
+      "sha256": "50eff9ec386d33d2f292407ebe943905bdc684ce011ba8975df06b517a549a87"
+    },
+    {
+      "source": "Mesa src/util/bitscan.c",
+      "sha256": "93cf4d71d55653e73e574e9d2babd096e7604c71ac18d9998d5942bf01d9ebab"
+    },
+    {
+      "source": "Mesa src/util/bitset.h",
+      "sha256": "848faec495dd0bdec4178349defc005ee22bae42e8fddedc8b78ae99925cf992"
+    },
+    {
+      "source": "Mesa src/util/blend.h",
+      "sha256": "88b963a956f21a3a978ecadcfd2aae9c52ba3adc65b9e2ed3d2f25948cd4f86d"
+    },
+    {
+      "source": "Mesa src/util/cache_ops.h",
+      "sha256": "8d3b71248ec5dbbd392b1c01cf279687d5c16234d3e38bf0989bae206767ff7b"
+    },
+    {
+      "source": "Mesa src/util/cache_ops_aarch64.c",
+      "sha256": "9012136307cecd5d453723d49ec833066aa9ebea812c1487a9a1e0eebabd94a3"
+    },
+    {
+      "source": "Mesa src/util/cnd_monotonic.c",
+      "sha256": "c772da8c7055eb6238eef52053ea7263c245db43bbd969dd13b0125536a5b5dd"
+    },
+    {
+      "source": "Mesa src/util/detect.h",
+      "sha256": "f6a0d6a72d48a44cd62257af442228d64a805b099149e6e93cb0f769691e838c"
+    },
+    {
+      "source": "Mesa src/util/detect_os.h",
+      "sha256": "9d431ea4be17ad9d26d18831424eab7f9c282daf45fc4665a4e8bd85722e0e60"
+    },
+    {
+      "source": "Mesa src/util/double.c",
+      "sha256": "46f6e59c760d9684e401f3a054ad447a32ad0cfcab7e1540641423bbf28991e3"
+    },
+    {
+      "source": "Mesa src/util/driconf.h",
+      "sha256": "beff16751fae4be4646510b849dea114d44cd47fe456e41a0c3fa08b6dfd48be"
+    },
+    {
+      "source": "Mesa src/util/driconf_static.py",
+      "sha256": "42e2ce062cfe9e09a42def9eff7684f944257cca1f0da503fca8b5cd09ded38b"
+    },
+    {
+      "source": "Mesa src/util/driconf_static.py",
+      "sha256": "736ae7646b85dd413ceea5c6b50c0a8b75481e1cb28bdbe75bb6ec6048921818"
+    },
+    {
+      "source": "Mesa src/util/drirc_gen.py",
+      "sha256": "5ca04e27dc30123e63eb54e61becacd5f61124a176fe9d91a93200010c73df91"
+    },
+    {
+      "source": "Mesa src/util/enum_operators.h",
+      "sha256": "482a3b4cbef1094f2f0ffb320f1dd0fce8809f3d56ab866b4b1f2b164fa95c56"
+    },
+    {
+      "source": "Mesa src/util/fast_idiv_by_const.c",
+      "sha256": "089b2ad3b244bf4911575e3db362ce174bc8b29d9871973f1566cb9c090a43d7"
+    },
+    {
+      "source": "Mesa src/util/fast_idiv_by_const.c",
+      "sha256": "a7455cc4ac4d431ae24f151e61698936426ca5b276b69468966336f6cff8b1f4"
+    },
+    {
+      "source": "Mesa src/util/fast_urem_by_const.h",
+      "sha256": "e3dd8f67eab9869c1fc4937d718a76d7e8954621dbf67909d002eebca3589d91"
+    },
+    {
+      "source": "Mesa src/util/format/format_utils.h",
+      "sha256": "5abf398b5ec4600a7d6c46ad8a50012424816cd297f17c50052245acb6cbe624"
+    },
+    {
+      "source": "Mesa src/util/format/texcompress_bptc_tmp.h",
+      "sha256": "3de9961ac27560ca4519f30af32003bd7f8d8fbc683b5f71d336c451ca1482ff"
+    },
+    {
+      "source": "Mesa src/util/format/texcompress_etc_tmp.h",
+      "sha256": "1a292e16b498f944b9ff9fe94b0bd5dcc5f8edac40497dcea3622e1727186d12"
+    },
+    {
+      "source": "Mesa src/util/format/texcompress_s3tc_tmp.h",
+      "sha256": "fc63d320b93b4c3b04a9659235d7d25e67179b10df05204a65259fc0ceb54d35"
+    },
+    {
+      "source": "Mesa src/util/format/u_format.c",
+      "sha256": "1ee15c2c55585a6448592d66367105c1fe9b30981ddb4406876ec0da956b9638"
+    },
+    {
+      "source": "Mesa src/util/format/u_format.h",
+      "sha256": "272d2f37024ea4be50e9ada15385f18c9e7a72c1e1b01c913e1b610737b043f7"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_bptc.c",
+      "sha256": "c1d7bbc9324727ea54f0d32aba0932b04f1f6f929de2e4c3af670f7d0299e33d"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_bptc.h",
+      "sha256": "ab9764a007a733f2f890fb39a82dfa7d5e7974a2cd46b9d3f92f8195eafe8c33"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_etc.h",
+      "sha256": "1151d2bcbbea0994b847f00309919910b580972567ed65f08e85a95a7d3214ee"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_fxt1.c",
+      "sha256": "10a5b20c5df29db0621ca3bf67b807a12cb07a092615b29c5882372bcb10b88e"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_latc.c",
+      "sha256": "0b5bfdab59c891eb196de2094a31bd5eb8a3c6e67d13432224cd00d39490656e"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_latc.h",
+      "sha256": "483d507468ccc0e339116d2a71ec578f5cde557c27c126dc52c5af68e7081dac"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_parse.py",
+      "sha256": "712c2e6c4c0a63ad13c603ab2c1826508de3b067d35d2b5542029ef1e8cf260e"
+    },
+    {
+      "source": "Mesa src/util/format/u_format_unpack_neon.c",
+      "sha256": "a306b3de1b485715c48769dbd9588381c416719e7ff0a2e917bed715e7e3c063"
+    },
+    {
+      "source": "Mesa src/util/format/u_formats.h",
+      "sha256": "2a3f268c8d297fa25d21056ef600ad41a867489ebb8fa2cd56265454d5ff46af"
+    },
+    {
+      "source": "Mesa src/util/format_r11g11b10f.h",
+      "sha256": "221c6ac06bbc28584a47011247db44d063eb04104ccc037788ba9749be179cc6"
+    },
+    {
+      "source": "Mesa src/util/fossilize_db.c",
+      "sha256": "d9191ece5e59988e2ad2c63b0ab0ef5d98d1b188b19f263e58255f950c71e9ad"
+    },
+    {
+      "source": "Mesa src/util/futex.c",
+      "sha256": "a02373770e610eef7e891d7f1694e7b2e3369f6a623f7937f8b0c38956957a04"
+    },
+    {
+      "source": "Mesa src/util/futex.h",
+      "sha256": "ca6aa7b94bfac24f13963645bdb551d10fd37d0ccfa4683f82118fe35db2500a"
+    },
+    {
+      "source": "Mesa src/util/gamma_format.h",
+      "sha256": "be3d9715a6c0c94a9ffd6e090e398a885377b8129f84ff951042ebdf54ec575b"
+    },
+    {
+      "source": "Mesa src/util/gen_zipped_xml_file.py",
+      "sha256": "c135596231bacca966bdece7c8d68130a761bd064e6a6811617668b44659fbcb"
+    },
+    {
+      "source": "Mesa src/util/glheader.h",
+      "sha256": "7336ad65506490247f11f37aea80367e259f33d4130c52a1e27dbae1c10e8625"
+    },
+    {
+      "source": "Mesa src/util/glsl2spirv.py",
+      "sha256": "cc380ca592edf7b33dc62d9fd724b906f76244a31c076b5016deee66ed7fce6f"
+    },
+    {
+      "source": "Mesa src/util/half_float.c",
+      "sha256": "5d8c17e38c0df8e3e0dc6ae6f2dc2d04f65465008682dee96a94f42799631b02"
+    },
+    {
+      "source": "Mesa src/util/half_float.h",
+      "sha256": "b4cd7d2880522902284756068ce414876420e4250617270263f6675f7fec36a0"
+    },
+    {
+      "source": "Mesa src/util/hash_table.c",
+      "sha256": "bbd6e95b31fd01bc2283c6060dda01ba3f926e23af71d1d6bc5ee31c90e45ac5"
+    },
+    {
+      "source": "Mesa src/util/hash_table.h",
+      "sha256": "0e6d5d746455fb0638380c0f72dd7ee3ec7164a8091fe4ced6eff407fa55b188"
+    },
+    {
+      "source": "Mesa src/util/hex.h",
+      "sha256": "c3918b9d63460e090deb5dd3bf8bce8ade2a4b49d5abf8d008ae2c12186b7c17"
+    },
+    {
+      "source": "Mesa src/util/libdrm.h",
+      "sha256": "f6f1fce70a29ecf56e2854f8c41d3c9cf786bcd4264f358749fca631f17bb9fe"
+    },
+    {
+      "source": "Mesa src/util/libsync.h",
+      "sha256": "7c5e368d3249ea1334f14f2a1e9e7c385ebdc816375906e39b550e6fdba2236f"
+    },
+    {
+      "source": "Mesa src/util/list.h",
+      "sha256": "5e440b642bce3465837714c8efae0415b9410be043ef47d1c3a7cf4f623cc21c"
+    },
+    {
+      "source": "Mesa src/util/log.c",
+      "sha256": "fe106c9d53e90725c26924a3a33ad115af0363e1687edd4d2bd0cc9fc2f91a2c"
+    },
+    {
+      "source": "Mesa src/util/log.h",
+      "sha256": "015a7f4845be38fbc475d05ef90685587f4fc9e699fb42f03de9798d50d9d456"
+    },
+    {
+      "source": "Mesa src/util/lut.c",
+      "sha256": "7c5593ef38c1faf59da519d12c1168436f010deafc45347c080076499e02f69a"
+    },
+    {
+      "source": "Mesa src/util/lut.h",
+      "sha256": "2833ba2a16a3f60a08e5b73ef9781d9727607993d0cb9faf9154beaba9b195f1"
+    },
+    {
+      "source": "Mesa src/util/memstream.c",
+      "sha256": "3ba639508429c5dd16f16af2e8aadffef70fd956e89d0b9f7a278a01587232e2"
+    },
+    {
+      "source": "Mesa src/util/mesa_cache_db.c",
+      "sha256": "39804d1e2956a409633d671c214abba985d6e9278a8408eeeec043204b970b34"
+    },
+    {
+      "source": "Mesa src/util/mesa_cache_db_multipart.c",
+      "sha256": "1e344e290fbbbda6924d0991ccd3ef84cc22ce01fcb008eeb8bad1e9a3adfcfd"
+    },
+    {
+      "source": "Mesa src/util/os_file.c",
+      "sha256": "11efdbca5ca0fe907a2a2bd4f9fbd744374cd3cabca3126594afde38cf051f01"
+    },
+    {
+      "source": "Mesa src/util/os_file.h",
+      "sha256": "28d31167bd42cd6d68760704da909fffdb567db89702da519570fa18f64262d8"
+    },
+    {
+      "source": "Mesa src/util/os_file_notify.h",
+      "sha256": "223abbcc6a4c0ce33f148a3e00435a76f6d74e06efd205436fa956ea4b52e2bb"
+    },
+    {
+      "source": "Mesa src/util/os_memory_aligned.h",
+      "sha256": "9b25078716484ec703c90ae6818d5a7a2f05833ad2c4b8090fc403a249dd1d7f"
+    },
+    {
+      "source": "Mesa src/util/os_memory_fd.c",
+      "sha256": "5bdc685342cd711eae75b66b1db157b23f255862fa02b53dec381266a0ed86fc"
+    },
+    {
+      "source": "Mesa src/util/os_mman.h",
+      "sha256": "69de349b684a0f7dc9bfb4d84efbcf32bc622b89486fd577ac7ce950bef286d9"
+    },
+    {
+      "source": "Mesa src/util/os_socket.h",
+      "sha256": "e5be765fb38fbf32b0a6187cd51b8045930f2f8a99d829b6571a7b615aa1b01e"
+    },
+    {
+      "source": "Mesa src/util/parson.c",
+      "sha256": "068aad55322eed791d02e718354d36543866aaa3bb4d28b03c9424b8ded483ba"
+    },
+    {
+      "source": "Mesa src/util/pb_slab.c",
+      "sha256": "9e95ef08a94c9ffb86c38aa17fd9fc3d1ff97a8a095352e53f0bf27afcf4de2f"
+    },
+    {
+      "source": "Mesa src/util/perf/cpu_trace.h",
+      "sha256": "0e29862cfe8b1be14a80ccbf826139cea094103af2f573d01e62c900f60f053b"
+    },
+    {
+      "source": "Mesa src/util/perf/u_gpuvis.c",
+      "sha256": "faa24da0dfed02a724dc755ffb8fa993ef93c0a8a8e91392cede29c5c0b15ffd"
+    },
+    {
+      "source": "Mesa src/util/perf/u_perfetto.h",
+      "sha256": "2449b3a8352bf38508bd30d579280c27878c5ff0ea0213bd834c7b4958bbe493"
+    },
+    {
+      "source": "Mesa src/util/perf/u_perfetto_renderpass.h",
+      "sha256": "b1f16cfdd582bd8ea31b780d4bd723a1667ab6eef708cf38fb861f046a943865"
+    },
+    {
+      "source": "Mesa src/util/perf/u_sysprof.c",
+      "sha256": "6f6f0846061bb1087876d569faec435b700df57c61b936013bf630cdd0e1023e"
+    },
+    {
+      "source": "Mesa src/util/perf/u_trace.c",
+      "sha256": "2fdda42260d6864962960fc8c81b4743ab9b591c1710b41b76e014d74fee2bde"
+    },
+    {
+      "source": "Mesa src/util/perf/u_trace.py",
+      "sha256": "5dc6ffbb8b3b4c04100abcc2070e81f7db3f50fed512b1cf12ae9ac6c57b5a6e"
+    },
+    {
+      "source": "Mesa src/util/perf/u_trace.py",
+      "sha256": "0933e271f22b20c42a2a95a73c53266e798b5cbcd2ff39bcf042c22f35065eba"
+    },
+    {
+      "source": "Mesa src/util/perf/u_trace_compare.py",
+      "sha256": "031017b092bfe36c87433c2f278801308f4617b52b722af2149a7f4cb886acde"
+    },
+    {
+      "source": "Mesa src/util/process_shader_stats.py",
+      "sha256": "330c19cde988881d1a37d0bf874edb58fb2a80c42938436baec57b5dbfbc78e2"
+    },
+    {
+      "source": "Mesa src/util/ptralloc.h",
+      "sha256": "7c9d163050b85978b5e34e35298e500ff16a3a7cae34a691ef92c3c6c604ef31"
+    },
+    {
+      "source": "Mesa src/util/rand_xor.c",
+      "sha256": "6a9da82fe089791db4cef74a9f4196e4db9ae00b0b36b4a24c7f245514f04eda"
+    },
+    {
+      "source": "Mesa src/util/rb_tree.c",
+      "sha256": "893d78d7fd44251b3b0059017cb7bca3cc76e9bf0d112fe3d05ec09149ca77ab"
+    },
+    {
+      "source": "Mesa src/util/reallocarray.h",
+      "sha256": "4534585501ae90b692a3cc03487a4b2a5b8636dfd9329209334a7b1fbe71d065"
+    },
+    {
+      "source": "Mesa src/util/register_allocate.c",
+      "sha256": "50c00ff4a0b015218314333343d6ff66051206d22e1410734fe9ad7712566789"
+    },
+    {
+      "source": "Mesa src/util/rgtc.c",
+      "sha256": "11ddb588d88e7ab5ec4f3ab7b46e295cb7f9404c37ec9a3041627887571c364b"
+    },
+    {
+      "source": "Mesa src/util/rgtc.h",
+      "sha256": "cebe61468aa7265357be6d3adf98c0e5d23e736360ae178b5a4d2b7bc7087234"
+    },
+    {
+      "source": "Mesa src/util/rwlock.c",
+      "sha256": "a0f9c32391e290cde9fc1e5f76df9a7a72cf80808fd5756f1f8cfa50f014e99b"
+    },
+    {
+      "source": "Mesa src/util/set.c",
+      "sha256": "b7fa92f5904916cc609c48fa9b215b8f943bba6680865b91fce5af2c28a3e40b"
+    },
+    {
+      "source": "Mesa src/util/set.h",
+      "sha256": "4cf762030d6b683177d9da9d3b288ce6d6476ca6696413d7c5f10af4bada1bff"
+    },
+    {
+      "source": "Mesa src/util/simple_mtx.c",
+      "sha256": "9891dab8fd28b246fd851598448ddfa377706b6823b4a1c5863366c35fdbf791"
+    },
+    {
+      "source": "Mesa src/util/slab.c",
+      "sha256": "0ddbc5de5facd1dc93a81f82754ab03da0734022b6ebb2e750a11494faf5aa61"
+    },
+    {
+      "source": "Mesa src/util/softfloat.c",
+      "sha256": "118fa4595807d9be57419b1bd8e15c9132a73388660f26265f14e5696bb474e8"
+    },
+    {
+      "source": "Mesa src/util/softfloat.h",
+      "sha256": "3d772c32e49ad1d0f77b19e0938e9630434d0adc1fa10ab249cea2cf4d961e48"
+    },
+    {
+      "source": "Mesa src/util/streaming-load-memcpy.c",
+      "sha256": "ec8ab4872991b470f8bea65c6c59f8bd84a90b02e59892e7a22dbfa081e1e494"
+    },
+    {
+      "source": "Mesa src/util/string_buffer.c",
+      "sha256": "a13a692dafe7e1184f2ac2e410114767d64dea877e38184ed5ec410c979360b2"
+    },
+    {
+      "source": "Mesa src/util/strndup.c",
+      "sha256": "f550a724af386f7f00787232ec04406ef8dde53d9182e500cdb4c1dfb69d1047"
+    },
+    {
+      "source": "Mesa src/util/strndup.h",
+      "sha256": "395bb965e0e9045095a85df191f6e81efe7245dce87f6ff8c47dbed2d81aef90"
+    },
+    {
+      "source": "Mesa src/util/strtod.c",
+      "sha256": "75d0726652532afffea6e6275481d6d256f9b5599186d9cf29244cfffee5651b"
+    },
+    {
+      "source": "Mesa src/util/tests/hash_table/clear.c",
+      "sha256": "afa680f78616a03693c1ab61922e2920e1212e952c75b470dd5fe7e962dc2a96"
+    },
+    {
+      "source": "Mesa src/util/tests/hash_table/collision.c",
+      "sha256": "26cff5bebfa9ed67fb1ac9bcece6d10abfe1e9f7d21cc7e3cc57085f685f934f"
+    },
+    {
+      "source": "Mesa src/util/tests/hash_table/delete_and_lookup.c",
+      "sha256": "5d0c63b9a9d0778f4ce9bc1e593c3ac3ec65c09158225b9350f214bb14e55aa0"
+    },
+    {
+      "source": "Mesa src/util/tests/hash_table/remove_null.c",
+      "sha256": "c20d71fe2db6c017e194642b4e0f411e5bbeeafe96d72b7c5bc9a22a64906ad3"
+    },
+    {
+      "source": "Mesa src/util/texcompress_astc.h",
+      "sha256": "f1d102d1c39f998cf8ba59020dc941db4deed046cebb97f66110e1b252e6ad9c"
+    },
+    {
+      "source": "Mesa src/util/texcompress_astc_luts.h",
+      "sha256": "f27ca651eb19bbda69a330d9b42cd1c90e2cb9557445e2d46dae0750c295703b"
+    },
+    {
+      "source": "Mesa src/util/texcompress_astc_luts_wrap.h",
+      "sha256": "0fe8a6abd434d0a419e4fff8208e0cebe5d02d98ec5e875c9c94ec3cc32d07e9"
+    },
+    {
+      "source": "Mesa src/util/timespec.h",
+      "sha256": "fb980e7929ab909c8fbed7b4e05faca36e7c551ebbc61475af9288f446d71bd6"
+    },
+    {
+      "source": "Mesa src/util/tools/find_hash_func.c",
+      "sha256": "428b66575248768888e86f680b396fbe53b61a89fe7ec34df1fabbc288a32251"
+    },
+    {
+      "source": "Mesa src/util/u_atomic.c",
+      "sha256": "37216e33f3da6180391989424780cc2764e45865bd6f4cc814bf8076ff06b677"
+    },
+    {
+      "source": "Mesa src/util/u_atomic.h",
+      "sha256": "b5b35cc47076b1723eec53e905b3cace6defdacd312f9dfeb047ff69fb9d961b"
+    },
+    {
+      "source": "Mesa src/util/u_call_once.c",
+      "sha256": "eda4c218ab64adadb52e1d4227b6fca7360c6e121c649aa06eeeef2bcd1180d3"
+    },
+    {
+      "source": "Mesa src/util/u_call_once.h",
+      "sha256": "0db87d97f1cd997a088ebec4ae68ff4ece570e557e50a0a13fa2c0d0bd4e7bc7"
+    },
+    {
+      "source": "Mesa src/util/u_cpu_detect.c",
+      "sha256": "4f3c39e5c5f6c6fea6d070f6c9fa1bff75e3cb1726d3cc28123315f26e59948c"
+    },
+    {
+      "source": "Mesa src/util/u_cpu_detect.h",
+      "sha256": "4482157d3ad2120a2a8fcba4a75367b8870b961466c1f03c08af5c81de46e9d8"
+    },
+    {
+      "source": "Mesa src/util/u_debug.c",
+      "sha256": "a33256bfc7d810489018a8b1b39f69bb456b2d9b0abeff87ab476275d3812017"
+    },
+    {
+      "source": "Mesa src/util/u_dl.c",
+      "sha256": "e847eca66ffbe4477c3cf32244d106b876ad761f36cd83ed22d775a8c955bc3b"
+    },
+    {
+      "source": "Mesa src/util/u_dl.h",
+      "sha256": "709854f10e1f2f38578d85dce113f79de5ea525932dc8c6107ac6f1857b7e759"
+    },
+    {
+      "source": "Mesa src/util/u_drm.h",
+      "sha256": "89cd2bc07fd38333fe422410a73cff47386a5219958b72a09505530a495a5839"
+    },
+    {
+      "source": "Mesa src/util/u_dynarray.h",
+      "sha256": "3643c62279991422795ca54314e015bac7e72fb48204a15e12c9b29be369870d"
+    },
+    {
+      "source": "Mesa src/util/u_endian.h",
+      "sha256": "db719069f09f45c7095881cc281c9d4d3ee77a4c35bf47b026a8be3d9fbc8f56"
+    },
+    {
+      "source": "Mesa src/util/u_gralloc/u_gralloc.c",
+      "sha256": "b75d150b48437bc9ec718b4e6430419bbf413ff3001143bced9ee78b386d651f"
+    },
+    {
+      "source": "Mesa src/util/u_gralloc/u_gralloc_cros_api.c",
+      "sha256": "1c9863145cda007dae5c8f8304b3bf4425a086066158b13211f79416c49f38c5"
+    },
+    {
+      "source": "Mesa src/util/u_gralloc/u_gralloc_internal.c",
+      "sha256": "c6cd93427aeb84bb5c317268e692c8f2edc787ad97b2c23fe8e3289f65d98bb1"
+    },
+    {
+      "source": "Mesa src/util/u_gralloc/u_gralloc_internal.h",
+      "sha256": "cefe61c37714a34d8b70b1b10c2b46fd10b556cc68b9ac858d6610f3bd8fc156"
+    },
+    {
+      "source": "Mesa src/util/u_gralloc/u_gralloc_libdrm.h",
+      "sha256": "181ecde283307683a7eb1777a96ed760bb2dd9edf92b4a4fb27e7254ca158b29"
+    },
+    {
+      "source": "Mesa src/util/u_hexdump.h",
+      "sha256": "8d0bbf1afe7cefccf0b23738dd871e84ad37cd799e56b529694ae7a1e4441a15"
+    },
+    {
+      "source": "Mesa src/util/u_idalloc.c",
+      "sha256": "5a898f10280b2947aa0549175765176354aa506d8e5dfcd31214850a335a8e24"
+    },
+    {
+      "source": "Mesa src/util/u_memset.h",
+      "sha256": "b1d2e9f52e46669b502bb273da4eefdcba1b5bf447c5dcfc4f2aa5d3d6385da6"
+    },
+    {
+      "source": "Mesa src/util/u_mm.c",
+      "sha256": "3e42347aa54703e42f2a14c77077519ac3b514a9b4ad2e67f68f98d3617f1ff9"
+    },
+    {
+      "source": "Mesa src/util/u_mm.h",
+      "sha256": "f9f9641f3e7ef6dad92780aadbb0140a7b3c3b2967a6f713e12604e3e22096ba"
+    },
+    {
+      "source": "Mesa src/util/u_pointer.h",
+      "sha256": "8a1aae7dab07f7ccf027ac3bce35945bc35b4ddd0e220485ac20318b3a405999"
+    },
+    {
+      "source": "Mesa src/util/u_printf.c",
+      "sha256": "1a17b5c3871e194bed249a7e2c8b2c271f71be18a8a1fb7fa51cb9936936362e"
+    },
+    {
+      "source": "Mesa src/util/u_printf.h",
+      "sha256": "9f37c398c11223e6a7f0e5494d7233303fd5dbe297bde5128a13dc8baa3ec226"
+    },
+    {
+      "source": "Mesa src/util/u_process.c",
+      "sha256": "84185084187a56e70471ee09c586ac58a28e57152dc43822b2b27240a40349e1"
+    },
+    {
+      "source": "Mesa src/util/u_queue.c",
+      "sha256": "65e0fc4d4feb47d42eb4d449bd16fa98854ab4209da7268920956044b69ee44a"
+    },
+    {
+      "source": "Mesa src/util/u_range_remap.c",
+      "sha256": "b9c5f98eecc4bb39a6cb32a48ea0ee2aafd6786783b9c3ec6855aba98cca3e88"
+    },
+    {
+      "source": "Mesa src/util/u_shader_variant_cache.c",
+      "sha256": "da749a607d0a1532a8def2c57bb5a8987f25e5889edaa3ce1e87881359e127ed"
+    },
+    {
+      "source": "Mesa src/util/u_string.c",
+      "sha256": "cadaf9e78fe50b2f9f867b41f6b8aeff14d7c1fa7000f232576174fbab4a3ad5"
+    },
+    {
+      "source": "Mesa src/util/u_stub.h",
+      "sha256": "057c60eb1179e6edf731ef4c19fbcb9453fa10d88731819d6ca695480df9f5c6"
+    },
+    {
+      "source": "Mesa src/util/u_stub_gfx_compute.h",
+      "sha256": "d5e2e148ea19b155e901b8098b0b28e85e464075425373da209e08c4702e2fb0"
+    },
+    {
+      "source": "Mesa src/util/u_sync_provider.c",
+      "sha256": "43d275fefcafc76fa1920297b3d93157c2be821f24bb6fd1656a6d374d102a7e"
+    },
+    {
+      "source": "Mesa src/util/u_thread.c",
+      "sha256": "4cf10cfc7faa5d97fe46036fc00f6b1e8d2c576083801c6136e30f093631b8a6"
+    },
+    {
+      "source": "Mesa src/util/u_thread.h",
+      "sha256": "d2f5df5c3f6e43cf2c13a00822b7b0ffe6c6554982a902ac46ed0c9032a54586"
+    },
+    {
+      "source": "Mesa src/util/u_tristate.h",
+      "sha256": "c57a0207dd618ee7e278b52dcd014bad9a59df611b8acc538136b793446b177b"
+    },
+    {
+      "source": "Mesa src/util/u_worklist.c",
+      "sha256": "99be43dce7cd6bab5099377c0725e27d807e8425bf4dd246f3117368fe63272c"
+    },
+    {
+      "source": "Mesa src/util/u_ycbcr.h",
+      "sha256": "63956475254e72ddecaf38a134dd7608c213c7c710b61f0cfc1dab573291c019"
+    },
+    {
+      "source": "Mesa src/util/vl_bitstream.h",
+      "sha256": "42ea66f412de09a146ae8aacdbc16f7179b89b1e7b1139f3185e36b1cb9ce033"
+    },
+    {
+      "source": "Mesa src/util/vl_rbsp.h",
+      "sha256": "74692f2073d4a4e8e3a0186624a3f8d835e6a258f84e642d6491903868bb999a"
+    },
+    {
+      "source": "Mesa src/util/vl_vlc.h",
+      "sha256": "04bdc429f116e1fc8b3618103b43a8a573b1ee6b65c80d8b59b7c6891861c850"
+    },
+    {
+      "source": "Mesa src/util/vl_zscan_data.c",
+      "sha256": "48f66337fc80d4f6527c266de405d958799f58d820577599620e3b7c9bdf32a3"
+    },
+    {
+      "source": "Mesa src/util/xxd.py",
+      "sha256": "a54545275d4bbb3babb808159223891eaaabef1871c41d0fe1d818883adc7c85"
+    },
+    {
+      "source": "Mesa src/util/xxhash.h",
+      "sha256": "64ff347a61e8f111098afc7d01b15b09ec1029bbe180953e538f9f18854f145c"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/latencies/lat_rs_gen.py",
+      "sha256": "8571164a83374efec132a4bf2ffd87b9523cb77651823b2634c7affb9cdce74e"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/latencies/lat_rs_gen.py",
+      "sha256": "f6be6183ed3f509d256c5a12ac648c35ddc43afa67d7ed9d31b22f8ec2d41ed3"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/latencies/lib_rs_gen.py",
+      "sha256": "284085029a8595cc1ea8031b13d03218b4e6af8c0d721618f042be30f63c29c7"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak/opt_instr_sched_common.rs",
+      "sha256": "4628a7eea52564995e657ce865baaa5a61367e410ce8c063b830be564748d09c"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak/opt_jump_thread.rs",
+      "sha256": "0878d1b43527acefd51599841a4cad15815848c4cff8cafba637b192ef8d4660"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak/opt_prmt.rs",
+      "sha256": "b1a3adc22887a13fe66c1ada4a0f4e81d68470f3c19cd4ad936243621d35b06d"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak/sm120_instr_latencies.rs",
+      "sha256": "2a034eb859b97853921fd48f0e20a043e95bc09863d535b9f24b61c79a518add"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak/union_find.rs",
+      "sha256": "f75791d18044858b03026d97c34f0ecda6042903133a42076cd60a093db4bc7f"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak_nir_algebraic.py",
+      "sha256": "b2e5f54cb5007c2ccc51de169e46290358446bde02d6d8a0297db2a43456d5d6"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak_nir_lower_cmat.c",
+      "sha256": "a1b5afb9fca371081b01681832f9837fd2aa33780482ff47a6b2d4e889c1e60b"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak_nir_lower_mesh_intrinsics.c",
+      "sha256": "36c4688f11e59e2c7074cefbd358ca02341da7421c953c113064d1f3ecb761c9"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak_nir_lower_shared_atomics.c",
+      "sha256": "0da7954389dcd81704c65b2e8207548ccb4297b4da1d100beb70c6a54c90fb1a"
+    },
+    {
+      "source": "Mesa src/nouveau/compiler/nak_nir_rematerialize_load_const.c",
+      "sha256": "4cba79df33710fc6bbd73c8e0dd0edde3624ee508b7f573d7b308408aa87aa61"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/drf.h",
+      "sha256": "d7c6daebcf285503ce6846aae821db011c7dd0a60becf8ec770da9bdabbfd012"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nv_push_dump.c",
+      "sha256": "f996e9ade804fbfc7f1bb6aa508a07d6977c9fd1e1df963c341e90b98c6a5857"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl0039.h",
+      "sha256": "6c5f37f17eec4adc0d6885cb48f98b9f5b6bbda64ec21fdee1de5facac82046f"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl0042.h",
+      "sha256": "1374eeb7e666f53c9ea168649b460f982857327d35f5c89c978e663c0db2b0b4"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl502d.h",
+      "sha256": "14b5147518920e55e6c65a82114fba5d79cb6fe90655d6a2a67a9439433ec20c"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl5039.h",
+      "sha256": "b5724dcb18329b81d5f9e482fad87bfb12906af24e513489d66c7f1436ba0532"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl50c0.h",
+      "sha256": "615e591ecbc3eaf447b37131a9bff91ab05ba5ec46653ffaf29f39dd1d4a3cc8"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl85b5.h",
+      "sha256": "b7c4f6f8cd5592c9666a9f763c884772dac2f11d0c63afe9744ab14c5c74f500"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cl9097tex.h",
+      "sha256": "6533cd0ce04c4dc6a0bf823b25bedb8a8c2279aa17dbcdb1776f5aceafd5c5d3"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cla040.h",
+      "sha256": "23b2def01617928b12a337872df4a1c689f0b516e642a36ea12e0246147fa4fd"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/cla0c0qmd.h",
+      "sha256": "492fd5ca1a58acbff23fba755cf1b5ea5b8430b5fac8cb78e8ccd87ffdcba0b2"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc5b0.h",
+      "sha256": "daa7bd1b54a6846b3697f6fad5118b2faa40b8c838ff26c4d265c2c6c2d6b15b"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc5c0qmd.h",
+      "sha256": "cb368174aa6584438083869b533129e0cee31d2bef8933e40ad2c89a1355b4a7"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc6b0.h",
+      "sha256": "c669e7929ea56b27b498c2af64e78143701d36b3142f741857df2455034e39a7"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc86f.h",
+      "sha256": "ec3c05da946c9fb0f1cf7ba77b5e9939867a497220a9b5e454db64a174feadb3"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc8b5.h",
+      "sha256": "7c5e5c58b25fea6d078a20ad6b93e376f541820311722e096df83a3e9fae38af"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc96f.h",
+      "sha256": "816485e6c7e7c17b6a5a3e538fac239226676a80bbefbe3d08eb41bd1ab33c6e"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc997tex.h",
+      "sha256": "1450185d8892e81c3dc097d95f0b793c7c4260966cf38c050c97881ba966a1b7"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc9b0.h",
+      "sha256": "21ea7e28bb57d49898fc73db2f085ef0ed85d6f7828d0bcbf863c826a88b705d"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc9c0.h",
+      "sha256": "fa46acab968ebfa985c8fcfe20a7b88467fab8036188619efa65c6b7324857c0"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clc9d1.h",
+      "sha256": "80bff550479f56d5a5c2a54cb908240708e89abc4f7989516ef5146efcb9de30"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clca6f.h",
+      "sha256": "53e7bd929be935bcfcc5b1c4b723a4e41973730ea8a3fde184bd8bd6696c612a"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/classes/clcdc0.h",
+      "sha256": "86bfd79d9550347074b869a35c84a7fa561987ac49e6a11e54c7e02c86d2a0e7"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/g_nv_name_released.h",
+      "sha256": "c2f1e8c2210b3edda328e4316d3ea34c03634659c0b4d6724f8b9f64ebd9dabf"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/hwref/ampere/ga100/dev_fault.h",
+      "sha256": "072aecdeed72d83530af1be867ab7d023d01b2a9780ef2b6263732fc262f02bf"
+    },
+    {
+      "source": "Mesa src/nouveau/headers/nvidia/hwref/volta/gv100/dev_fb.h",
+      "sha256": "b2e1f344b3090188a5ae24ac8bfc28e858da698006273de54cae98d6d0e9c8e6"
+    },
+    {
+      "source": "Mesa src/nouveau/nil/copy.rs",
+      "sha256": "66536150b1133effd93a97645359f1250a6eddb60452db3757729e91328a64e8"
+    },
+    {
+      "source": "Mesa src/nouveau/nil/nil_bindings.h",
+      "sha256": "aad28279b8789fd59414fc7199bf31262f12624927848408b299bb35af48c56d"
+    },
+    {
+      "source": "Mesa src/nouveau/nil/nil_format_table_gen.py",
+      "sha256": "e7f24d87f5cbd435188e8a0d8787ce532b3707dc26f88099fba24d40d27f11ce"
+    },
+    {
+      "source": "Mesa src/nouveau/nil/nil_format_table_gen.py",
+      "sha256": "703988956263fb8640f8ac0f53706f0ecc22f5cf904fd482029e344a8516f74c"
+    },
+    {
+      "source": "Mesa src/nouveau/nil/su_info.rs",
+      "sha256": "a9c7953da5e54931cffa9916e786bf746c811e85cec7d7e99aa6d33d742e7a24"
+    },
+    {
+      "source": "Mesa include/CL/cl.h",
+      "sha256": "071d5204d0c0b779c2bfe81b8ecbaebffe2ce0d41b327827f16c6657fd430797"
+    },
+    {
+      "source": "Mesa include/CL/cl_ext_intel.h",
+      "sha256": "7e966cce6b851c7dc17fd4843509e570c8558415737673a02782aa5f20f4c6e5"
+    },
+    {
+      "source": "Mesa include/CL/cl_function_types.h",
+      "sha256": "591429d5b34153777d71d9b42d5441960a7cbb4e46c4bd0ec4fa3a07dcc04001"
+    },
+    {
+      "source": "Mesa include/CL/cl_half.h",
+      "sha256": "5a53a8f5295571fdd1d71094af981a1f05405b089623701713cc20ff5e6ccdf0"
+    },
+    {
+      "source": "Mesa include/CL/cl_version.h",
+      "sha256": "0240cec7dba6607152d666fadba045fc9bd6b51fa7eca174b5b51002ffc74370"
+    },
+    {
+      "source": "Mesa include/CL_intel/cl_ext_private.h",
+      "sha256": "6db85781c13fded3ca6285f8301993b2fed52dde034273745a0a75a28fe4c760"
+    },
+    {
+      "source": "Mesa include/EGL/egl.h",
+      "sha256": "e3b26c62a8b050f7e53c28a026ae58b7dedda912035a4170914a5bae5f58ddb9"
+    },
+    {
+      "source": "Mesa include/EGL/eglext_angle.h",
+      "sha256": "df0375efd4c9c298bc3953c29279eb56fdfea16b126400e376955bf2b19abedd"
+    },
+    {
+      "source": "Mesa include/EGL/eglmesaext.h",
+      "sha256": "9327655319d0d4b67778a8b29811d9b0524ab6571b77345d3455a440ab1f7871"
+    },
+    {
+      "source": "Mesa include/EGL/eglplatform.h",
+      "sha256": "4c161ffa310e57ca2023b8065e96c8f4617a5231b0e142c1187c3b0381a9b183"
+    },
+    {
+      "source": "Mesa include/GL/gl.h",
+      "sha256": "3c5b41d15d98aaa5f44754e630603811330eba4a849c843ea5045d734f706e42"
+    },
+    {
+      "source": "Mesa include/GL/glcorearb.h",
+      "sha256": "ec1b7a05b185504e74ac1d35bc90b2007aed4cce8908ebc1572047fe49cb5209"
+    },
+    {
+      "source": "Mesa include/GL/glx.h",
+      "sha256": "72d34e12aa5c4a404e220c53138bcae9cf35d537dab85202ce7b71ac951c9160"
+    },
+    {
+      "source": "Mesa include/GL/internal/dri_interface.h",
+      "sha256": "243a41ec93b61d010a91fc13604200bcfe9358bca0951cca6ad208d413ce4268"
+    },
+    {
+      "source": "Mesa include/GL/mesa_glinterop.h",
+      "sha256": "e6a16179ea8ec9dee42fd0c855b9314030671d7b88bb0462227897da0a54be03"
+    },
+    {
+      "source": "Mesa include/GLES/egl.h",
+      "sha256": "d5a021e0a3c0e1cbf0b03f77d1deb0bc46286f3c5876c4a12f8dcdcd07a4aa03"
+    },
+    {
+      "source": "Mesa include/GLES/glplatform.h",
+      "sha256": "3fd4bc0fa79b9de66bf5c7fb9e2e1c8d06e147b69e9942f4ee655350b7d1bf50"
+    },
+    {
+      "source": "Mesa include/GLES3/gl3ext.h",
+      "sha256": "4ca8691c16024c1d141f87932243026e4df3c296efa72ac43074cde12c3825ca"
+    },
+    {
+      "source": "Mesa include/KHR/khrplatform.h",
+      "sha256": "fd7c88f69e70ffa778137ba0bc8267fa8dd83189365d9ff5a2533161432b3d0b"
+    },
+    {
+      "source": "Mesa include/android_stub/android/data_space.h",
+      "sha256": "768f8c7388691bf175d55d8107d3bb9cd7c64ac1f74411309d0b138fa9895cb0"
+    },
+    {
+      "source": "Mesa include/android_stub/android/hardware_buffer.h",
+      "sha256": "0a482956cdefef7b857c207289fcf91b92f4c4003e79fdd0d6e5021d6ec60305"
+    },
+    {
+      "source": "Mesa include/android_stub/android/log.h",
+      "sha256": "623d3727872cbcb7ff339b9a151f6f1a6eeb5bdf9f0afe2d7d51b2804fb6591c"
+    },
+    {
+      "source": "Mesa include/android_stub/android/native_window.h",
+      "sha256": "41845febcd9458cc67174fa6c5de8d6070fdab00f336f834d22135c0e7e29ecd"
+    },
+    {
+      "source": "Mesa include/android_stub/android/sync.h",
+      "sha256": "303fa7752cb17bbc3bd241ac04852f4514ea41e665360657e39888fe331bf335"
+    },
+    {
+      "source": "Mesa include/android_stub/backtrace/Backtrace.h",
+      "sha256": "324242fc42ca1fe5892a57220c8a8720f68f1d5923bd69f0fc4e63f2b032656f"
+    },
+    {
+      "source": "Mesa include/android_stub/backtrace/BacktraceMap.h",
+      "sha256": "112331fa20ed11a2311644f2b9cef74da0274eac198f18ec6b16bac4e6f82613"
+    },
+    {
+      "source": "Mesa include/android_stub/hardware/fb.h",
+      "sha256": "b017391556bb0ba3f5a7f174556f221e676665fc84a7f1762dac518d02880126"
+    },
+    {
+      "source": "Mesa include/android_stub/hardware/gralloc1.h",
+      "sha256": "1a6d45f82689dd204ca86c5a6dc8b06244cd1ddd46fb9bdbbc82f0b62fdcdd97"
+    },
+    {
+      "source": "Mesa include/android_stub/nativebase/nativebase.h",
+      "sha256": "75dbadc0b3159a276c67a0bf4f5e7fb11b02fec4223eae12aa3a64e195a4fca6"
+    },
+    {
+      "source": "Mesa include/android_stub/ndk/sync.h",
+      "sha256": "2e8ff7156f9a9d8a70cc5ec4d847fd8571b5f7141b02372803ab0f1f39c93568"
+    },
+    {
+      "source": "Mesa include/android_stub/system/graphics.h",
+      "sha256": "b9fc24a6ca136cc571f5237f1b82536034946353b635870a7640a1443eb2e209"
+    },
+    {
+      "source": "Mesa include/c99_compat.h",
+      "sha256": "7e959e87da69c172c5c4e2cd887a1e198016172e310c63ab3566d976264d670d"
+    },
+    {
+      "source": "Mesa include/drm-uapi/amdgpu_drm.h",
+      "sha256": "7ad5f0222b8dec0ca0a6f98a6b75bc45743094899192250b911b55425314f1dc"
+    },
+    {
+      "source": "Mesa include/drm-uapi/asahi_drm.h",
+      "sha256": "98cdf5225dfd09d64039619bf0b0b5effdadefdb54691e6ec5f88646412b164a"
+    },
+    {
+      "source": "Mesa include/drm-uapi/d3dkmthk.h",
+      "sha256": "f0de19612619fbce6c24e11fa02492425a7f821ee227c9a6bbb10b01f61aa30c"
+    },
+    {
+      "source": "Mesa include/drm-uapi/d3dkmthk.h",
+      "sha256": "78e31033f42be3ca9ee067c84a4d14dd37b1a3380b721c99f3b5e16e58ac24aa"
+    },
+    {
+      "source": "Mesa include/drm-uapi/dma-buf.h",
+      "sha256": "0b347a9fa1105916f5d6a0b417cbec0ab4d35c5ca18bac8e6c8f827bf7e03ebe"
+    },
+    {
+      "source": "Mesa include/drm-uapi/drm.h",
+      "sha256": "dca8b9ad8b9cab4ad216de1bcb2afafe33dd3d38d26f3e3d21ab8a57ec6c0d83"
+    },
+    {
+      "source": "Mesa include/drm-uapi/drm_fourcc.h",
+      "sha256": "1088a5724845c71931c61fed324416b8764bf5e5e758e51d133697709954c29c"
+    },
+    {
+      "source": "Mesa include/drm-uapi/drm_mode.h",
+      "sha256": "d8ae67502c6507d1135b380b558a9b211180ff47185f837eb69caadc1ba6f5a5"
+    },
+    {
+      "source": "Mesa include/drm-uapi/ethosu_accel.h",
+      "sha256": "3ec0d32b2f9b7eba7ea9e6e5d3cca159b6cb9e4eeac1bb271785e249f2e5c83e"
+    },
+    {
+      "source": "Mesa include/drm-uapi/etnaviv_drm.h",
+      "sha256": "037c5373c25a152d32718f75c5a3169571f4c61ad9834da68c9a668d255ebc44"
+    },
+    {
+      "source": "Mesa include/drm-uapi/gpu_scheduler.h",
+      "sha256": "0ec62b90bc1fc0b94df8bab12f725f9393e0c7339898a1537f44a850ee4dadaa"
+    },
+    {
+      "source": "Mesa include/drm-uapi/i915_drm.h",
+      "sha256": "52547d9c093d4a25d4d4050c329ff882b6e8c8bb263f191d8335e66f383e72d5"
+    },
+    {
+      "source": "Mesa include/drm-uapi/lima_drm.h",
+      "sha256": "e322dd624dbb5571cd5e0fc01e162c742415dcccb37272e31612f5fb6849a843"
+    },
+    {
+      "source": "Mesa include/drm-uapi/lima_drm.h",
+      "sha256": "f2a2b57923e357e5bf896fcbf9d3ae8376a0b32570b3febbeae56338e9a6d4c2"
+    },
+    {
+      "source": "Mesa include/drm-uapi/msm_drm.h",
+      "sha256": "017108463d6141ccdb6971b40a9f96d1e38ea3b96fbe60441a1eb19b0686609b"
+    },
+    {
+      "source": "Mesa include/drm-uapi/nouveau_drm.h",
+      "sha256": "d60c99747015ace950ba839759f1aeeff26bfade86a85b9504fa35ab1394296a"
+    },
+    {
+      "source": "Mesa include/drm-uapi/panfrost_drm.h",
+      "sha256": "efe0bf8c80116c03330287a9b4962da3f4588c0001f45d8a6a51f769b535fb1d"
+    },
+    {
+      "source": "Mesa include/drm-uapi/panthor_drm.h",
+      "sha256": "e48638d3579013946e775ff6f50e405de954ccbb66d6b457ae76a61f36a71f54"
+    },
+    {
+      "source": "Mesa include/drm-uapi/pvr_drm.h",
+      "sha256": "566cb8b8e8f5f8e457e8cda6e672bf9c30aeabd43d4a95ef7a0a5d228d37cae4"
+    },
+    {
+      "source": "Mesa include/drm-uapi/pvr_drm.h",
+      "sha256": "d19e4395d73c286adfc2a2a9bed3809422deb1a447aedea582185e86bfe7e54f"
+    },
+    {
+      "source": "Mesa include/drm-uapi/radeon_drm.h",
+      "sha256": "31f613c7ca13328e32e9cf2b7b5e739fc771f03c38d55805fab5a4a4f9e87c5a"
+    },
+    {
+      "source": "Mesa include/drm-uapi/rknpu_ioctl.h",
+      "sha256": "c266020fbe1d71de2881e793ae6d8913cf6c7c6ed16e5d791b67616548675582"
+    },
+    {
+      "source": "Mesa include/drm-uapi/rknpu_ioctl.h",
+      "sha256": "13dae0dbe98dcb6a5902f8a76024c440ca958db27944a5b9492fb5fbdb00a1af"
+    },
+    {
+      "source": "Mesa include/drm-uapi/rocket_accel.h",
+      "sha256": "cb0a7ec4ce3a635e745d821736f4d68036ce60f6903980952d38cf3b1f280d2a"
+    },
+    {
+      "source": "Mesa include/drm-uapi/sync_file.h",
+      "sha256": "11cff492b3764295f6eec4d261ba52fda14b7db039be5deba7f7b2298dbed3d7"
+    },
+    {
+      "source": "Mesa include/drm-uapi/tegra_drm.h",
+      "sha256": "795d07eb208cd2dfd7852f3c7f0e4b210f5e6fcf848636cf30511f9ef33f4e3e"
+    },
+    {
+      "source": "Mesa include/drm-uapi/v3d_drm.h",
+      "sha256": "1740fffa258a9de232c7b508834c4459a7c08763389ddfa2c86db6be603a5547"
+    },
+    {
+      "source": "Mesa include/drm-uapi/virtgpu_drm.h",
+      "sha256": "41429a6464f8858af83e20448d9002f8ef04c4fef75de1a4a0530b22482f44fb"
+    },
+    {
+      "source": "Mesa include/drm-uapi/xe_drm.h",
+      "sha256": "ccb0221fd419c26644ffaaddd7b009b3688f437bbf195f63e5ff4095d7bfa301"
+    },
+    {
+      "source": "Mesa include/kopper_interface.h",
+      "sha256": "c9124d143cefd8c435cf3d0aa0aa04e2089662ce15cbf4245f0e281f8ee09be5"
+    },
+    {
+      "source": "Mesa include/no_extern_c.h",
+      "sha256": "1ac80b4a132c3684b22e1e058486ab197f4dadc1ad7f64223c8399da197cf09c"
+    },
+    {
+      "source": "Mesa include/renderdoc_app.h",
+      "sha256": "aee1e2ddd0dd6ad6966eb5e83fa56402d91e0a361692235e62173a29738748d3"
+    },
+    {
+      "source": "Mesa include/tensorflow/lite/builtin_ops.h",
+      "sha256": "d6c33ca0bd3240801c9dc33d073430a3dd4d01d5fa8199a9804fe019bc40a42c"
+    },
+    {
+      "source": "Mesa include/tensorflow/lite/c/c_api.h",
+      "sha256": "682a5910bb8a2091ca23f8351112ba3654db42070663d8e9e9f6b667ff356bd5"
+    },
+    {
+      "source": "Mesa include/tensorflow/lite/c/common.h",
+      "sha256": "66974064e6bef124c8e857e16f84c75fda2579562daaae9a118014ec3eb4ca06"
+    },
+    {
+      "source": "Mesa include/tensorflow/lite/core/async/c/types.h",
+      "sha256": "436b7db3b5500c2471a8ddc5340d739be288f5b5ea196e168f2754532becc4a1"
+    },
+    {
+      "source": "Mesa include/tensorflow/lite/core/c/builtin_op_data.h",
+      "sha256": "8e7ce2c16799d5e30f6218a1ae3502747da730e6c19e82f90abf80eb2d498f64"
+    },
+    {
+      "source": "Mesa include/vk_video/vulkan_video_codec_av1std.h",
+      "sha256": "38632387deb5c8e6c7594106b3ea88781d16dee36263d9b0d0f6ebac5c2dbbd0"
+    },
+    {
+      "source": "Mesa include/vulkan/vk_icd.h",
+      "sha256": "e05c98c3ace3e52a3f82e831551e839ba9dfb903a8f1164376a89023aece367f"
+    },
+    {
+      "source": "Mesa include/vulkan/vk_platform.h",
+      "sha256": "e5bacdf3529a63389f85c04dd4282d79112fde417e24235b1b4da7b4e806e579"
+    },
+    {
+      "source": "rust-src-1.85.1/COPYRIGHT",
+      "sha256": "2679f2546b55215df8fa6d4121f07312708b5dba037b8e9bcf57897895fa57c8"
+    },
+    {
+      "source": "rust-src-1.85.1/LICENSE-APACHE",
+      "sha256": "85ad950cce8752f716dbf49be95b2639172cb49f291336d57f1fdc9989e38179"
+    },
+    {
+      "source": "rust-src-1.85.1/LICENSE-MIT",
+      "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/LICENSE.txt",
+      "sha256": "5b284361cd0d1f3ea41cf1744ae7d9dd92c2cccae101cc1e1d593970a7a76dbd"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/acos.rs",
+      "sha256": "74344ebf347f27ca446e00f1c1921f705546f4b20e0fb31c183cd2c8464b1bc5"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/acosf.rs",
+      "sha256": "0c3d0381d2cd647be68590170490be5f624c962d9f95eb698489e578c1de8f05"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/atan2.rs",
+      "sha256": "11f476f899dacfef801a097465ad0755ad4546afe03b02c9a17aa38e228344e1"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/cbrt.rs",
+      "sha256": "11a1dc1ce0b6b2879da93a266c5aebe81c4324e749c77a2ce3048b5b24ab58c0"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/cos.rs",
+      "sha256": "f53a3c97c9531345379adbe79db501062242feefd51de57162178585ea62788f"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/exp.rs",
+      "sha256": "15e78071c8347a689c48ec92bbdd5eba7bd8dc74f86ee3e7ad31d34b24fefe83"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/exp2.rs",
+      "sha256": "b24dea27b63aa91f44ce04d53d6e84d8b7a76faef78a2224ed2a751a6aa6c0bd"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/exp2f.rs",
+      "sha256": "9b9ce313edd1fd1cdd9e16ec7ffe26e9b4ea644d4da334618edef2ef79d180fd"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/fmaf.rs",
+      "sha256": "c9479241e4e7e711c5cf43e95b86a79af7209b5ea23b8c55f8b95f1788eb5a82"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/k_cos.rs",
+      "sha256": "50dc54cee8b36780c535e15a6d30d75226fe2bdb81d450e375118e42bd3bc659"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/k_sin.rs",
+      "sha256": "a04bfa8426560b34a6dc330fb3f55ebc8def1092f0cf2faf86093bcd5d7c82aa"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/k_tan.rs",
+      "sha256": "68726120d836ef745923a5412ad99f724cec7a97e053c0b1c1dd6639336c167e"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/k_tanf.rs",
+      "sha256": "5a534ed1f9266ed799e9f2e3f830f15411762021829da121b23df5edc498c6b6"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/rem_pio2.rs",
+      "sha256": "370d3d0ecd600731cb6b225e4a037d18d9ab48fac6a463563f088227c2fd0964"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/sin.rs",
+      "sha256": "aa31720e0a22f01d45849f4f5badc7a75fbabc8073b08df329baa9305cf2c682"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/libm/src/math/tan.rs",
+      "sha256": "3c85590cea896eaab7cb8a8f4474902c6b44fb0d67ee569737cac1942f9933a9"
+    },
+    {
+      "source": "compiler_builtins-0.1.140/src/probestack.rs",
+      "sha256": "a01e6ce9e0c0a2f9a09ff33c54f0b12dbbbd1c2a85231ce81731f7492ada99d4"
+    },
+    {
+      "source": "hashbrown-0.15.2/LICENSE-APACHE",
+      "sha256": "954f335b8baf5e1a5748b3a1bf6eeb2ec0b28ae19813f02063d64be005765a76"
+    },
+    {
+      "source": "hashbrown-0.15.2/LICENSE-MIT",
+      "sha256": "ae9791f02f2bbe0ce17b434753af97be6e5284b6f8e9f22db3c1f0f11b2e015a"
+    },
+    {
+      "source": "stb_sprintf.h original license",
+      "sha256": "10ed5a55912965c9846c947486fc42a537c6e7f92dbabd68bf26963da320e46d"
+    }
+  ]
+}

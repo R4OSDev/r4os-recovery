@@ -1,0 +1,3 @@
+*.bin binary
+*.zig text eol=lf
+*.json text eol=lf

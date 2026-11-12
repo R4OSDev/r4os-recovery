@@ -1,0 +1,296 @@
+--- a/src/mesa/main/renderbuffer.c
++++ b/src/mesa/main/renderbuffer.c
+@@ -540,6 +540,11 @@
+       if (stTexObj->surface_based)
+          format = stTexObj->surface_format;
+    }
++#if defined(R4OS_OPENGL)
++   else if (p_atomic_read(&rb->R4OSImageSibling)) {
++      format = rb->surface.format;
++   }
++#endif
+ 
+    if (util_format_is_depth_or_stencil(format)) {
+       rb->format_srgb = format;
+--- a/src/mesa/state_tracker/st_cb_copyimage.c
++++ b/src/mesa/state_tracker/st_cb_copyimage.c
+@@ -718,6 +718,23 @@
+       dst_level = 0;
+    }
+ 
++#if defined(R4OS_OPENGL)
++   if (src_image) {
++      src_level = st_r4os_image_level(src_image);
++      src_z = st_r4os_image_layer(src_image, orig_src_z);
++   } else {
++      src_level = src_renderbuffer->surface.level;
++      src_z += src_renderbuffer->surface.first_layer;
++   }
++   if (dst_image) {
++      dst_level = st_r4os_image_level(dst_image);
++      dst_z = st_r4os_image_layer(dst_image, orig_dst_z);
++   } else {
++      dst_level = dst_renderbuffer->surface.level;
++      dst_z += dst_renderbuffer->surface.first_layer;
++   }
++#endif
++
+    u_box_3d(src_x, src_y, src_z, src_width, src_height, src_depth, &box);
+ 
+    if ((src_image && st_compressed_format_fallback(st, src_image->TexFormat)) ||
+--- a/src/mesa/state_tracker/st_cb_eglimage.c
++++ b/src/mesa/state_tracker/st_cb_eglimage.c
+@@ -429,13 +429,30 @@
+       struct pipe_surface surf_tmpl;
+ 
+       u_surface_default_template(&surf_tmpl, stimg.texture);
++#if defined(R4OS_OPENGL)
++      surf_tmpl.format = stimg.format;
++#endif
+       surf_tmpl.level = stimg.level;
+       surf_tmpl.first_layer = stimg.layer;
+       surf_tmpl.last_layer = stimg.layer;
+ 
+       rb->Format = st_pipe_format_to_mesa_format(surf_tmpl.format);
+       rb->_BaseFormat = st_pipe_format_to_base_format(surf_tmpl.format);
++#if defined(R4OS_OPENGL)
++      rb->_BaseFormat = _mesa_get_format_base_format(rb->Format);
++#endif
+       rb->InternalFormat = rb->_BaseFormat;
++#if defined(R4OS_OPENGL)
++      /* Keep the source's sized format for image-copy compatibility and the
++       * view's format when the underlying allocation is reinterpreted. */
++      if (stimg.internalformat)
++         rb->InternalFormat = stimg.internalformat;
++      rb->NumSamples = stimg.texture->nr_samples;
++      rb->NumStorageSamples = stimg.texture->nr_storage_samples;
++      rb->format_linear = util_format_linear(stimg.format);
++      rb->format_srgb = util_format_is_depth_or_stencil(stimg.format) ?
++         stimg.format : util_format_srgb(stimg.format);
++#endif
+ 
+       st_set_ws_renderbuffer_surface(rb, &surf_tmpl);
+ #if defined(R4OS_OPENGL)
+@@ -461,7 +478,9 @@
+ #if defined(R4OS_OPENGL)
+        && !(texObj->Target == GL_TEXTURE_2D &&
+             (stimg->texture->target == PIPE_TEXTURE_CUBE ||
+-             stimg->texture->target == PIPE_TEXTURE_3D))
++             stimg->texture->target == PIPE_TEXTURE_3D ||
++             stimg->texture->target == PIPE_TEXTURE_2D_ARRAY ||
++             stimg->texture->target == PIPE_TEXTURE_CUBE_ARRAY))
+ #endif
+        ) {
+       _mesa_error(ctx, GL_INVALID_OPERATION, __func__);
+--- a/src/mesa/state_tracker/st_cb_texture.c
++++ b/src/mesa/state_tracker/st_cb_texture.c
+@@ -1948,9 +1948,13 @@
+    /* Set up the surface */
+    unsigned level = stObj->pt != stImage->pt
+       ? 0 : texImage->TexObject->Attrib.MinLevel + texImage->Level;
++#if defined(R4OS_OPENGL)
++   level = st_r4os_image_level(texImage);
++   zoffset = st_r4os_image_layer(texImage, zoffset);
++#else
++   zoffset += texImage->Face + texImage->TexObject->Attrib.MinLayer;
++#endif
+    unsigned max_layer = util_max_layer(texture, level);
+-
+-   zoffset += texImage->Face + texImage->TexObject->Attrib.MinLayer;
+ 
+    struct pipe_surface templ;
+    memset(&templ, 0, sizeof(templ));
+@@ -2043,6 +2047,9 @@
+       struct pipe_sampler_state sampler = {0};
+       const struct pipe_sampler_state *samplers[1] = {&sampler};
+       unsigned level = texImage->TexObject->Attrib.MinLevel + texImage->Level;
++#if defined(R4OS_OPENGL)
++      level = st_r4os_image_level(texImage);
++#endif
+       unsigned max_layer = util_max_layer(texture, level);
+ 
+       u_sampler_view_default_template(&templ, texture, src_format);
+@@ -2051,7 +2058,11 @@
+       templ.u.tex.first_level = level;
+       templ.u.tex.last_level = templ.u.tex.first_level;
+ 
++#if defined(R4OS_OPENGL)
++      zoffset = st_r4os_image_layer(texImage, zoffset);
++#else
+       zoffset += texImage->Face + texImage->TexObject->Attrib.MinLayer;
++#endif
+       templ.u.tex.first_layer = MIN2(zoffset, max_layer);
+       templ.u.tex.last_layer = MIN2(zoffset + depth - 1, max_layer);
+ 
+@@ -2181,6 +2192,10 @@
+ 
+    if (stObj->pt == texImage->pt)
+       dst_level = texImage->TexObject->Attrib.MinLevel + texImage->Level;
++#if defined(R4OS_OPENGL)
++   dst_level = st_r4os_image_level(texImage);
++   dstz = st_r4os_image_layer(texImage, 0);
++#endif
+ 
+    assert(!_mesa_is_format_etc2(texImage->TexFormat) &&
+           !_mesa_is_format_astc_2d(texImage->TexFormat) &&
+@@ -2577,8 +2592,14 @@
+    /* Set up the surface. */
+    level = stObj->pt != stImage->pt
+       ? 0 : texImage->TexObject->Attrib.MinLevel + texImage->Level;
++#if defined(R4OS_OPENGL)
++   level = st_r4os_image_level(texImage);
++#endif
+    max_layer = util_max_layer(texture, level);
+    layer = z + texImage->Face + texImage->TexObject->Attrib.MinLayer;
++#if defined(R4OS_OPENGL)
++   layer = st_r4os_image_layer(texImage, z);
++#endif
+ 
+    memset(&templ, 0, sizeof(templ));
+    templ.format = copy_format;
+@@ -2794,6 +2815,10 @@
+    blit.src.box.y = yoffset_g;
+    blit.dst.box.y = 0;
+    blit.src.box.z = texImage->Face + texImage->TexObject->Attrib.MinLayer + zoffset_g;
++#if defined(R4OS_OPENGL)
++   blit.src.level = st_r4os_image_level(texImage);
++   blit.src.box.z = st_r4os_image_layer(texImage, zoffset_g);
++#endif
+    blit.dst.box.z = 0;
+    blit.src.box.width = blit.dst.box.width = width;
+    blit.src.box.height = blit.dst.box.height = height_g;
+@@ -3109,6 +3134,10 @@
+    blit.dst.box.y = destY;
+    blit.dst.box.z = stImage->Face + slice +
+                     texImage->TexObject->Attrib.MinLayer;
++#if defined(R4OS_OPENGL)
++   blit.dst.level = st_r4os_image_level(texImage);
++   blit.dst.box.z = st_r4os_image_layer(texImage, slice);
++#endif
+    blit.dst.box.width = width;
+    blit.dst.box.height = height;
+    blit.dst.box.depth = 1;
+@@ -3803,6 +3832,10 @@
+          struct gl_texture_image *origImage =
+             origTexObj->Image[face][level];
+          pipe_resource_reference(&stImage->pt, tex->pt);
++#if defined(R4OS_OPENGL)
++         if (orig->level_override >= 0)
++            stImage->R4OSImageSibling = true;
++#endif
+          if (origImage &&
+              origImage->compressed_data) {
+             pipe_reference(NULL,
+@@ -3813,6 +3846,11 @@
+    }
+ 
+    tex->surface_based = GL_TRUE;
++#if defined(R4OS_OPENGL)
++   /* A view of immutable EGLImage storage is still the same physical image. */
++   tex->level_override = orig->level_override;
++   tex->layer_override = orig->layer_override;
++#endif
+    tex->surface_format =
+       st_mesa_format_to_pipe_format(st_context(ctx), image->TexFormat);
+ 
+@@ -3917,6 +3955,11 @@
+       level = find_mipmap_level(texImage, pt);
+    }
+ 
++#if defined(R4OS_OPENGL)
++   level = st_r4os_image_level(texImage);
++   box.z = st_r4os_image_layer(texImage,
++                              texObj->Target == GL_TEXTURE_1D_ARRAY ? yoffset : zoffset);
++#endif
+    assert(level <= pt->last_level);
+ 
+    if (pipe->clear_texture) {
+--- a/src/mesa/state_tracker/st_pbo_compute.c
++++ b/src/mesa/state_tracker/st_pbo_compute.c
+@@ -1257,6 +1257,10 @@
+    enum pipe_format dst_format, src_format;
+    unsigned level = (texImage->pt != stObj->pt ? 0 : texImage->Level) + texImage->TexObject->Attrib.MinLevel;
+    unsigned layer = texImage->Face + texImage->TexObject->Attrib.MinLayer;
++#if defined(R4OS_OPENGL)
++   level = st_r4os_image_level(texImage);
++   layer = st_r4os_image_layer(texImage, 0);
++#endif
+    enum pipe_texture_target view_target;
+ 
+    assert(!_mesa_is_format_etc2(texImage->TexFormat) &&
+--- a/src/mesa/state_tracker/st_texture.c
++++ b/src/mesa/state_tracker/st_texture.c
+@@ -295,6 +295,9 @@
+    struct gl_texture_object *stObj = stImage->TexObject;
+    GLuint level;
+    void *map;
++#if defined(R4OS_OPENGL)
++   const unsigned logical_slice = z;
++#endif
+ 
+    DBG("%s \n", __func__);
+ 
+@@ -314,6 +317,10 @@
+    }
+ 
+    z += stImage->Face;
++#if defined(R4OS_OPENGL)
++   level = st_r4os_image_level(stImage);
++   z = st_r4os_image_layer(stImage, logical_slice);
++#endif
+ 
+    map = pipe_texture_map_3d(st->pipe, stImage->pt, level, usage,
+                               x, y, z, w, h, d, transfer);
+@@ -330,12 +337,18 @@
+                        struct gl_texture_image *stImage, unsigned slice)
+ {
+    struct pipe_context *pipe = st->pipe;
++#if !defined(R4OS_OPENGL)
+    struct gl_texture_object *stObj = stImage->TexObject;
++#endif
+    struct pipe_transfer **transfer;
+ 
++#if defined(R4OS_OPENGL)
++   transfer = &stImage->transfer[st_r4os_image_layer(stImage, slice)].transfer;
++#else
+    if (stObj->Immutable)
+       slice += stObj->Attrib.MinLayer;
+    transfer = &stImage->transfer[slice + stImage->Face].transfer;
++#endif
+ 
+    DBG("%s\n", __func__);
+ 
+--- a/src/mesa/state_tracker/st_texture.h
++++ b/src/mesa/state_tracker/st_texture.h
+@@ -37,6 +37,31 @@
+ 
+ 
+ struct pipe_resource;
++
++#if defined(R4OS_OPENGL)
++/* EGLImage imports expose one physical image as logical 2D level zero.
++ * Use the same address for transfers, copies and clears as sampler/FBO views.
++ * Ordinary immutable texture views retain their MinLevel/MinLayer offsets. */
++static inline unsigned
++st_r4os_image_level(const struct gl_texture_image *image)
++{
++   const struct gl_texture_object *obj = image->TexObject;
++   if (obj->surface_based && obj->level_override >= 0)
++      return obj->level_override;
++   /* A loose single-level resource stores its GL image at physical level 0;
++    * a retained mip tree keeps its levels even if obj->pt has been replaced. */
++   return (image->pt && image->pt->last_level ? image->Level : 0) + obj->Attrib.MinLevel;
++}
++
++static inline unsigned
++st_r4os_image_layer(const struct gl_texture_image *image, unsigned slice)
++{
++   const struct gl_texture_object *obj = image->TexObject;
++   if (obj->surface_based && obj->layer_override >= 0)
++      return obj->layer_override + slice;
++   return image->Face + obj->Attrib.MinLayer + slice;
++}
++#endif
+ 
+ 
+ struct st_texture_image_transfer

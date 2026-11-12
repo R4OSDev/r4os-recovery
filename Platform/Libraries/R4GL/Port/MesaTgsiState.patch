@@ -1,0 +1,246 @@
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_exec.c b/src/gallium/auxiliary/tgsi/tgsi_exec.c
+index eaaa1e1..5b16c7b 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_exec.c
++++ b/src/gallium/auxiliary/tgsi/tgsi_exec.c
+@@ -1636,7 +1636,6 @@ store_dest_dstret(struct tgsi_exec_machine *mach,
+                  const struct tgsi_full_dst_register *reg,
+                  unsigned chan_index)
+ {
+-   static union tgsi_exec_channel null;
+    union tgsi_exec_channel *dst;
+    int offset = 0;  /* indirection offset */
+    int index;
+@@ -1680,7 +1679,7 @@ store_dest_dstret(struct tgsi_exec_machine *mach,
+ 
+    switch (reg->Register.File) {
+    case TGSI_FILE_NULL:
+-      dst = &null;
++      dst = &mach->Null;
+       break;
+ 
+    case TGSI_FILE_OUTPUT:
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_exec.h b/src/gallium/auxiliary/tgsi/tgsi_exec.h
+index 6e08cf9..be0717d 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_exec.h
++++ b/src/gallium/auxiliary/tgsi/tgsi_exec.h
+@@ -299,6 +299,9 @@ struct tgsi_exec_machine
+    alignas(16)
+    struct tgsi_exec_vector       Temps[TGSI_EXEC_NUM_TEMPS];
+ 
++   /* Discard writes belong to this interpreter, including concurrent draws. */
++   union tgsi_exec_channel       Null;
++
+    unsigned                       ImmsReserved;
+    float4                         *Imms;
+ 
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_ureg.c b/src/gallium/auxiliary/tgsi/tgsi_ureg.c
+index 92be2f9..cf2b458 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_ureg.c
++++ b/src/gallium/auxiliary/tgsi/tgsi_ureg.c
+@@ -76,8 +76,10 @@ union tgsi_any_token {
+ struct ureg_tokens {
+    union tgsi_any_token *tokens;
+    unsigned size;
+-   unsigned order;
+    unsigned count;
++   /* Failed emitters still write their bounded instruction/declaration.
++    * Keep that discard storage in its owning domain, never in shared data. */
++   union tgsi_any_token error_tokens[32];
+ };
+ 
+ #define UREG_MAX_INPUT (4 * PIPE_MAX_SHADER_INPUTS)
+@@ -210,15 +212,18 @@ struct ureg_program
+    bool precise;
+ };
+ 
+-static union tgsi_any_token error_tokens[32];
++static bool tokens_failed(const struct ureg_tokens *tokens)
++{
++   return tokens->tokens == tokens->error_tokens;
++}
+ 
+ static void tokens_error( struct ureg_tokens *tokens )
+ {
+-   if (tokens->tokens && tokens->tokens != error_tokens)
++   if (tokens->tokens && !tokens_failed(tokens))
+       FREE(tokens->tokens);
+ 
+-   tokens->tokens = error_tokens;
+-   tokens->size = ARRAY_SIZE(error_tokens);
++   tokens->tokens = tokens->error_tokens;
++   tokens->size = ARRAY_SIZE(tokens->error_tokens);
+    tokens->count = 0;
+ }
+ 
+@@ -226,22 +231,40 @@ static void tokens_error( struct ureg_tokens *tokens )
+ static void tokens_expand( struct ureg_tokens *tokens,
+                            unsigned count )
+ {
+-   unsigned old_size = tokens->size * sizeof(unsigned);
++   size_t old_size = (size_t)tokens->size * sizeof(tokens->tokens[0]);
++   unsigned new_size = MAX2(tokens->size, 2);
+ 
+-   if (tokens->tokens == error_tokens) {
++   if (tokens_failed(tokens)) {
+       return;
+    }
+ 
+-   while (tokens->count + count > tokens->size) {
+-      tokens->size = (1 << ++tokens->order);
++   if (count > UINT_MAX - tokens->count) {
++      tokens_error(tokens);
++      return;
++   }
++   unsigned required = tokens->count + count;
++   while (new_size < required) {
++      if (new_size > UINT_MAX / 2) {
++         new_size = required;
++         break;
++      }
++      new_size *= 2;
+    }
+ 
+-   tokens->tokens = REALLOC(tokens->tokens, 
+-                            old_size,
+-                            tokens->size * sizeof(unsigned));
+-   if (tokens->tokens == NULL) {
++   if ((size_t)new_size > SIZE_MAX / sizeof(tokens->tokens[0])) {
+       tokens_error(tokens);
++      return;
++   }
++   union tgsi_any_token *expanded = REALLOC(tokens->tokens, old_size,
++                                (size_t)new_size * sizeof(tokens->tokens[0]));
++   if (!expanded) {
++      /* Failed realloc preserves the old allocation. Release it through the
++       * owner before replacing the pointer with its discard buffer. */
++      tokens_error(tokens);
++      return;
+    }
++   tokens->tokens = expanded;
++   tokens->size = new_size;
+ }
+ 
+ static void set_bad( struct ureg_program *ureg )
+@@ -251,28 +274,46 @@ static void set_bad( struct ureg_program *ureg )
+ 
+ 
+ 
+-static union tgsi_any_token *get_tokens( struct ureg_program *ureg,
++static union tgsi_any_token *reserve_tokens( struct ureg_program *ureg,
+                                          unsigned domain,
+                                          unsigned count )
+ {
+    struct ureg_tokens *tokens = &ureg->domain[domain];
+    union tgsi_any_token *result;
+ 
+-   if (tokens->count + count > tokens->size) 
++   if (tokens_failed(tokens))
++      return NULL;
++   if (count > tokens->size - tokens->count)
+       tokens_expand(tokens, count);
++   if (tokens_failed(tokens))
++      return NULL;
+ 
+    result = &tokens->tokens[tokens->count];
+    tokens->count += count;
+    return result;
+ }
+ 
++/* Individual emitters reserve at most five tokens. Bulk instruction copying
++ * must use reserve_tokens and propagate failure instead of this discard path. */
++static union tgsi_any_token *get_tokens(struct ureg_program *ureg,
++                                       unsigned domain, unsigned count)
++{
++   struct ureg_tokens *tokens = &ureg->domain[domain];
++   assert(count <= ARRAY_SIZE(tokens->error_tokens));
++   union tgsi_any_token *result = reserve_tokens(ureg, domain, count);
++   if (result)
++      return result;
++   tokens->count = count;
++   return tokens->error_tokens;
++}
++
+ 
+ static union tgsi_any_token *retrieve_token( struct ureg_program *ureg,
+                                             unsigned domain,
+                                             unsigned nr )
+ {
+-   if (ureg->domain[domain].tokens == error_tokens)
+-      return &error_tokens[0];
++   if (tokens_failed(&ureg->domain[domain]))
++      return &ureg->domain[domain].error_tokens[0];
+ 
+    return &ureg->domain[domain].tokens[nr];
+ }
+@@ -2072,10 +2113,17 @@ static void emit_decls( struct ureg_program *ureg )
+  */
+ static void copy_instructions( struct ureg_program *ureg )
+ {
++   if (tokens_failed(&ureg->domain[DOMAIN_INSN]) ||
++       tokens_failed(&ureg->domain[DOMAIN_DECL]))
++      return;
+    unsigned nr_tokens = ureg->domain[DOMAIN_INSN].count;
+-   union tgsi_any_token *out = get_tokens( ureg,
++   if (!nr_tokens)
++      return;
++   union tgsi_any_token *out = reserve_tokens( ureg,
+                                            DOMAIN_DECL,
+                                            nr_tokens );
++   if (!out)
++      return;
+ 
+    memcpy(out,
+           ureg->domain[DOMAIN_INSN].tokens,
+@@ -2108,6 +2156,8 @@ emit_header( struct ureg_program *ureg )
+ const struct tgsi_token *ureg_finalize( struct ureg_program *ureg )
+ {
+    const struct tgsi_token *tokens;
++   if (tokens_failed(&ureg->domain[0]) || tokens_failed(&ureg->domain[1]))
++      return NULL;
+ 
+    switch (ureg->processor) {
+    case MESA_SHADER_VERTEX:
+@@ -2126,10 +2176,8 @@ const struct tgsi_token *ureg_finalize( struct ureg_program *ureg )
+    copy_instructions( ureg );
+    fixup_header_size( ureg );
+ 
+-   if (ureg->domain[0].tokens == error_tokens ||
+-       ureg->domain[1].tokens == error_tokens) {
++   if (tokens_failed(&ureg->domain[0]) || tokens_failed(&ureg->domain[1])) {
+       debug_printf("%s: error in generated shader\n", __func__);
+-      assert(0);
+       return NULL;
+    }
+ 
+@@ -2200,16 +2248,18 @@ const struct tgsi_token *ureg_get_tokens( struct ureg_program *ureg,
+ {
+    const struct tgsi_token *tokens;
+ 
+-   ureg_finalize(ureg);
+-
+-   tokens = &ureg->domain[DOMAIN_DECL].tokens[0].token;
++   tokens = ureg_finalize(ureg);
++   if (!tokens) {
++      if (nr_tokens)
++         *nr_tokens = 0;
++      return NULL;
++   }
+ 
+    if (nr_tokens)
+       *nr_tokens = ureg->domain[DOMAIN_DECL].count;
+ 
+    ureg->domain[DOMAIN_DECL].tokens = NULL;
+    ureg->domain[DOMAIN_DECL].size = 0;
+-   ureg->domain[DOMAIN_DECL].order = 0;
+    ureg->domain[DOMAIN_DECL].count = 0;
+ 
+    return tokens;
+@@ -2439,7 +2489,7 @@ void ureg_destroy( struct ureg_program *ureg )
+ 
+    for (i = 0; i < ARRAY_SIZE(ureg->domain); i++) {
+       if (ureg->domain[i].tokens &&
+-          ureg->domain[i].tokens != error_tokens)
++          !tokens_failed(&ureg->domain[i]))
+          FREE(ureg->domain[i].tokens);
+    }
+ 

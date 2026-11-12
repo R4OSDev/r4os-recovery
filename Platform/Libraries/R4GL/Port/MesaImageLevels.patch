@@ -1,0 +1,176 @@
+--- a/src/mesa/state_tracker/st_cb_texture.c
++++ b/src/mesa/state_tracker/st_cb_texture.c
+@@ -3311,6 +3311,124 @@
+ }
+ 
+ 
++#if defined(R4OS_OPENGL)
++/* Exported images need stable storage through BaseLevel/MaxLevel changes.
++ * Reserve the complete compatible mip tree before publishing the first
++ * external reference, including matching images outside the active range. */
++GLboolean
++st_r4os_prepare_egl_image(struct gl_context *ctx, struct gl_texture_object *obj,
++                           GLuint face, GLuint level)
++{
++   if (obj->Immutable || obj->surface_based)
++      return GL_TRUE;
++   struct st_context *st = st_context(ctx);
++   struct gl_texture_image *selected = obj->Image[face][level];
++   struct gl_texture_image *root = selected;
++   const unsigned faces = _mesa_num_tex_faces(obj->Target);
++
++   /* Prefer the lowest defined compatible image. Extrapolating 2x2 at level
++    * one as a 4x4 root would lose a known non-power-of-two 5x5 level zero. */
++   for (unsigned l = 0; l < level; l++) {
++      struct gl_texture_image *img = obj->Image[face][l];
++      if (img && img->Width && !img->Border &&
++          img->TexFormat == selected->TexFormat &&
++          u_minify(img->Width, level - l) == selected->Width &&
++          u_minify(img->Height, level - l) == selected->Height &&
++          u_minify(img->Depth, level - l) == selected->Depth) {
++         root = img;
++         break;
++      }
++   }
++
++   unsigned width, height;
++   uint16_t depth, layers;
++   st_gl_texture_dims_to_pipe_dims(obj->Target, root->Width, root->Height,
++                                   root->Depth, &width, &height, &depth, &layers);
++   if (root->pt && st_texture_match_image(st, root->pt, root)) {
++      width = root->pt->width0;
++      height = root->pt->height0;
++      depth = root->pt->depth0;
++   } else {
++      width = width > 1 ? width << root->Level : 1;
++      height = height > 1 ? height << root->Level : 1;
++      depth = depth > 1 ? depth << root->Level : 1;
++      if (width == 1 && height == 1 && depth == 1) {
++         width <<= root->Level;
++         if (obj->Target == GL_TEXTURE_CUBE_MAP)
++            height = width;
++      }
++   }
++   unsigned last = _mesa_get_tex_max_num_levels(obj->Target, width, height, depth) - 1;
++   struct pipe_resource shape = {
++      .target = gl_target_to_pipe(obj->Target),
++      .format = st_mesa_format_to_pipe_format(st, selected->TexFormat),
++      .width0 = width, .height0 = height, .depth0 = depth,
++      .array_size = layers, .last_level = last,
++      .nr_samples = selected->NumSamples,
++   };
++   if (!st_texture_match_image(st, &shape, selected))
++      return GL_FALSE;
++
++   struct pipe_resource *storage = NULL;
++   /* Previously exported compatible images must agree on one allocation.
++    * A failed preparation never silently moves an existing external alias. */
++   for (unsigned f = 0; f < faces; f++)
++      for (unsigned l = 0; l < MAX_TEXTURE_LEVELS; l++) {
++         struct gl_texture_image *img = obj->Image[f][l];
++         if (!img || !img->R4OSImageSibling ||
++             !st_texture_match_image(st, &shape, img))
++            continue;
++         struct pipe_resource *pt = img->pt;
++         if (!pt || pt->target != shape.target || pt->width0 != width ||
++             pt->height0 != height || pt->depth0 != depth ||
++             pt->array_size != layers || pt->last_level < last ||
++             (storage && storage != pt))
++            return GL_FALSE;
++         storage = pt;
++      }
++   if (!storage && root->pt) {
++      struct pipe_resource *pt = root->pt;
++      if (pt->target == shape.target && pt->format == shape.format &&
++          pt->width0 == width && pt->height0 == height && pt->depth0 == depth &&
++          pt->array_size == layers && pt->last_level >= last &&
++          pt->nr_samples == selected->NumSamples)
++         storage = pt;
++   }
++   if (storage) {
++      struct pipe_resource *owned = NULL;
++      pipe_resource_reference(&owned, storage);
++      storage = owned;
++   } else {
++      /* Allocation precedes all object/image mutation. */
++      GLuint bindings = default_bindings(st, shape.format);
++      if (obj->IsProtected)
++         bindings |= PIPE_BIND_PROTECTED;
++      storage = st_texture_create(st, shape.target, shape.format, last,
++                                   width, height, depth, layers,
++                                   selected->NumSamples, 0, bindings, false,
++                                   PIPE_COMPRESSION_FIXED_RATE_NONE);
++      if (!storage)
++         return GL_FALSE;
++   }
++   pipe_resource_reference(&obj->pt, storage);
++   st_texture_release_all_sampler_views(st, obj);
++   for (unsigned f = 0; f < faces; f++)
++      for (unsigned l = 0; l < MAX_TEXTURE_LEVELS; l++) {
++         struct gl_texture_image *img = obj->Image[f][l];
++         if (img && img->Width && img->pt != storage &&
++             st_texture_match_image(st, storage, img)) {
++            copy_image_data_to_texture(st, obj, l, img);
++            _mesa_update_fbo_texture(ctx, obj, f, l);
++         }
++      }
++   pipe_resource_reference(&storage, NULL);
++   _mesa_dirty_texobj(ctx, obj);
++   obj->needs_validation = true;
++   ST_SET_FRAMEBUFFER_STATES(ctx->NewDriverState);
++   return GL_TRUE;
++}
++#endif
++
+ /**
+  * Called during state validation.  When this function is finished,
+  * the texture object should be ready for rendering.
+@@ -3358,12 +3476,35 @@
+    if (!firstImage)
+       return false;
+ 
++#if defined(R4OS_OPENGL)
++   /* A compatible exported allocation owns its image locations independently
++    * of the current sampler range. Never replace it with an older mip tree. */
++   struct pipe_resource *shared = NULL;
++   for (unsigned f = 0; f < nr_faces && !shared; f++)
++      for (unsigned l = 0; l < MAX_TEXTURE_LEVELS; l++) {
++         struct gl_texture_image *img = tObj->Image[f][l];
++         if (img && img->R4OSImageSibling && img->pt &&
++             st_texture_match_image(st, img->pt, firstImage)) {
++            shared = img->pt;
++            break;
++         }
++      }
++   if (shared && tObj->pt != shared) {
++      pipe_resource_reference(&tObj->pt, shared);
++      st_texture_release_all_sampler_views(st, tObj);
++   }
++#endif
++
+    /* If both firstImage and tObj point to a texture which can contain
+     * all active images, favour firstImage.  Note that because of the
+     * completeness requirement, we know that the image dimensions
+     * will match.
+     */
+-   if (firstImage->pt &&
++   if (
++#if defined(R4OS_OPENGL)
++       !shared &&
++#endif
++       firstImage->pt &&
+        firstImage->pt != tObj->pt &&
+        (!tObj->pt || firstImage->pt->last_level >= tObj->pt->last_level)) {
+       pipe_resource_reference(&tObj->pt, firstImage->pt);
+--- a/src/mesa/state_tracker/st_cb_texture.h
++++ b/src/mesa/state_tracker/st_cb_texture.h
+@@ -61,6 +61,9 @@
+ void st_FreeTextureImageBuffer(struct gl_context *ctx,
+                                struct gl_texture_image *texImage);
+ #if defined(R4OS_OPENGL)
++GLboolean st_r4os_prepare_egl_image(struct gl_context *ctx,
++                                    struct gl_texture_object *texObj,
++                                    GLuint face, GLuint level);
+ GLboolean st_r4os_orphan_egl_images(struct gl_context *ctx,
+                                    struct gl_texture_object *texObj);
+ #endif

@@ -1,0 +1,181 @@
+--- a/libavcodec/hevc/hevcdec.c
++++ b/libavcodec/hevc/hevcdec.c
+@@ -562,7 +562,7 @@
+ 
+ static enum AVPixelFormat get_format(HEVCContext *s, const HEVCSPS *sps)
+ {
+-#define HWACCEL_MAX (CONFIG_HEVC_DXVA2_HWACCEL + \
++#define HWACCEL_MAX (1 + CONFIG_HEVC_DXVA2_HWACCEL + \
+                      CONFIG_HEVC_D3D11VA_HWACCEL * 2 + \
+                      CONFIG_HEVC_D3D12VA_HWACCEL + \
+                      CONFIG_HEVC_NVDEC_HWACCEL + \
+@@ -579,6 +579,9 @@
+ 
+     switch (sps->pix_fmt) {
+     case AV_PIX_FMT_YUV420P:
++#ifdef R4OS_VIDEO
++        *fmt++=AV_PIX_FMT_R4OS_NVDEC;
++#endif
+     case AV_PIX_FMT_YUVJ420P:
+ #if CONFIG_HEVC_DXVA2_HWACCEL
+         *fmt++ = AV_PIX_FMT_DXVA2_VLD;
+@@ -607,6 +610,9 @@
+ #endif
+         break;
+     case AV_PIX_FMT_YUV420P10:
++#ifdef R4OS_VIDEO
++        *fmt++=AV_PIX_FMT_R4OS_NVDEC;
++#endif
+ #if CONFIG_HEVC_DXVA2_HWACCEL
+         *fmt++ = AV_PIX_FMT_DXVA2_VLD;
+ #endif
+@@ -4247,6 +4253,12 @@
+                              FF_CODEC_CAP_INIT_CLEANUP,
+     .p.profiles            = NULL_IF_CONFIG_SMALL(ff_hevc_profiles),
+     .hw_configs            = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++        &(const AVCodecHWConfigInternal) {
++            .public = {.pix_fmt=AV_PIX_FMT_R4OS_NVDEC, .methods=AV_CODEC_HW_CONFIG_METHOD_INTERNAL, .device_type=AV_HWDEVICE_TYPE_NONE},
++            .hwaccel=&ff_hevc_r4os_vcn_hwaccel,
++        },
++#endif
+ #if CONFIG_HEVC_DXVA2_HWACCEL
+                                HWACCEL_DXVA2(hevc),
+ #endif
+--- a/libavcodec/vp9.c
++++ b/libavcodec/vp9.c
+@@ -164,7 +164,7 @@
+ 
+ static int update_size(AVCodecContext *avctx, int w, int h)
+ {
+-#define HWACCEL_MAX (CONFIG_VP9_DXVA2_HWACCEL + \
++#define HWACCEL_MAX (1 + CONFIG_VP9_DXVA2_HWACCEL + \
+                      CONFIG_VP9_D3D11VA_HWACCEL * 2 + \
+                      CONFIG_VP9_D3D12VA_HWACCEL + \
+                      CONFIG_VP9_NVDEC_HWACCEL + \
+@@ -189,6 +189,9 @@
+         switch (s->pix_fmt) {
+         case AV_PIX_FMT_YUV420P:
+         case AV_PIX_FMT_YUV420P10:
++#ifdef R4OS_VIDEO
++            *fmtp++=AV_PIX_FMT_R4OS_NVDEC;
++#endif
+ #if CONFIG_VP9_DXVA2_HWACCEL
+             *fmtp++ = AV_PIX_FMT_DXVA2_VLD;
+ #endif
+@@ -1932,6 +1935,12 @@
+     .p.profiles            = NULL_IF_CONFIG_SMALL(ff_vp9_profiles),
+     .bsfs                  = "vp9_superframe_split",
+     .hw_configs            = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++        &(const AVCodecHWConfigInternal) {
++            .public = {.pix_fmt=AV_PIX_FMT_R4OS_NVDEC, .methods=AV_CODEC_HW_CONFIG_METHOD_INTERNAL, .device_type=AV_HWDEVICE_TYPE_NONE},
++            .hwaccel=&ff_vp9_r4os_vcn_hwaccel,
++        },
++#endif
+ #if CONFIG_VP9_DXVA2_HWACCEL
+                                HWACCEL_DXVA2(vp9),
+ #endif
+--- a/libavcodec/mpeg12dec.c
++++ b/libavcodec/mpeg12dec.c
+@@ -799,6 +799,9 @@
+ };
+ 
+ static const enum AVPixelFormat mpeg2_hwaccel_pixfmt_list_420[] = {
++#ifdef R4OS_VIDEO
++    AV_PIX_FMT_R4OS_NVDEC,
++#endif
+ #if CONFIG_MPEG2_NVDEC_HWACCEL
+     AV_PIX_FMT_CUDA,
+ #endif
+@@ -2704,6 +2707,12 @@
+     .p.max_lowres   = 3,
+     .p.profiles     = NULL_IF_CONFIG_SMALL(ff_mpeg2_video_profiles),
+     .hw_configs     = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++        &(const AVCodecHWConfigInternal) {
++            .public = {.pix_fmt=AV_PIX_FMT_R4OS_NVDEC, .methods=AV_CODEC_HW_CONFIG_METHOD_INTERNAL, .device_type=AV_HWDEVICE_TYPE_NONE},
++            .hwaccel=&ff_mpeg2_r4os_vcn_hwaccel,
++        },
++#endif
+ #if CONFIG_MPEG2_DXVA2_HWACCEL
+                         HWACCEL_DXVA2(mpeg2),
+ #endif
+--- a/libavcodec/vc1dec.c
++++ b/libavcodec/vc1dec.c
+@@ -53,6 +53,9 @@
+ 
+ 
+ static const enum AVPixelFormat vc1_hwaccel_pixfmt_list_420[] = {
++#ifdef R4OS_VIDEO
++    AV_PIX_FMT_R4OS_NVDEC,
++#endif
+ #if CONFIG_VC1_DXVA2_HWACCEL
+     AV_PIX_FMT_DXVA2_VLD,
+ #endif
+@@ -1402,6 +1405,12 @@
+     .flush          = ff_mpeg_flush,
+     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY,
+     .hw_configs     = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++        &(const AVCodecHWConfigInternal) {
++            .public = {.pix_fmt=AV_PIX_FMT_R4OS_NVDEC, .methods=AV_CODEC_HW_CONFIG_METHOD_INTERNAL, .device_type=AV_HWDEVICE_TYPE_NONE},
++            .hwaccel=&ff_vc1_r4os_vcn_hwaccel,
++        },
++#endif
+ #if CONFIG_VC1_DXVA2_HWACCEL
+                         HWACCEL_DXVA2(vc1),
+ #endif
+@@ -1441,6 +1450,12 @@
+     .flush          = ff_mpeg_flush,
+     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY,
+     .hw_configs     = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++        &(const AVCodecHWConfigInternal) {
++            .public = {.pix_fmt=AV_PIX_FMT_R4OS_NVDEC, .methods=AV_CODEC_HW_CONFIG_METHOD_INTERNAL, .device_type=AV_HWDEVICE_TYPE_NONE},
++            .hwaccel=&ff_wmv3_r4os_vcn_hwaccel,
++        },
++#endif
+ #if CONFIG_WMV3_DXVA2_HWACCEL
+                         HWACCEL_DXVA2(wmv3),
+ #endif
+--- a/libavcodec/mjpegdec.c
++++ b/libavcodec/mjpegdec.c
+@@ -751,6 +751,9 @@
+             s->avctx->pix_fmt = s->hwaccel_pix_fmt;
+         } else {
+             enum AVPixelFormat pix_fmts[] = {
++#ifdef R4OS_VIDEO
++                AV_PIX_FMT_R4OS_NVDEC,
++#endif
+ #if CONFIG_MJPEG_NVDEC_HWACCEL
+                 AV_PIX_FMT_CUDA,
+ #endif
+@@ -2981,6 +2984,12 @@
+                       FF_CODEC_CAP_SKIP_FRAME_FILL_PARAM |
+                       FF_CODEC_CAP_ICC_PROFILES,
+     .hw_configs     = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++        &(const AVCodecHWConfigInternal) {
++            .public = {.pix_fmt=AV_PIX_FMT_R4OS_NVDEC, .methods=AV_CODEC_HW_CONFIG_METHOD_INTERNAL, .device_type=AV_HWDEVICE_TYPE_NONE},
++            .hwaccel=&ff_mjpeg_r4os_vcn_hwaccel,
++        },
++#endif
+ #if CONFIG_MJPEG_NVDEC_HWACCEL
+                         HWACCEL_NVDEC(mjpeg),
+ #endif
+--- a/libavcodec/hwaccels.h
++++ b/libavcodec/hwaccels.h
+@@ -40,6 +40,12 @@
+ extern const struct FFHWAccel ff_h264_nvdec_hwaccel;
+ #ifdef R4OS_VIDEO
+ extern const struct FFHWAccel ff_h264_r4os_nvdec_hwaccel;
++extern const struct FFHWAccel ff_hevc_r4os_vcn_hwaccel;
++extern const struct FFHWAccel ff_vp9_r4os_vcn_hwaccel;
++extern const struct FFHWAccel ff_mpeg2_r4os_vcn_hwaccel;
++extern const struct FFHWAccel ff_vc1_r4os_vcn_hwaccel;
++extern const struct FFHWAccel ff_wmv3_r4os_vcn_hwaccel;
++extern const struct FFHWAccel ff_mjpeg_r4os_vcn_hwaccel;
+ #endif
+ extern const struct FFHWAccel ff_h264_vaapi_hwaccel;
+ extern const struct FFHWAccel ff_h264_vdpau_hwaccel;

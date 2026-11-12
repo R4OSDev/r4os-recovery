@@ -1,0 +1,206 @@
+--- a/src/compiler/glsl_types.c
++++ b/src/compiler/glsl_types.c
+@@ -33,9 +33,7 @@
+ #include "util/u_string.h"
+ #include "util/simple_mtx.h"
+ 
+-static simple_mtx_t glsl_type_cache_mutex = SIMPLE_MTX_INITIALIZER;
+-
+-static struct {
++struct r4aco_glsl_type_cache {
+    void *mem_ctx;
+ 
+    /* Use a linear (arena) allocator for all the new types, since
+@@ -55,7 +53,23 @@
+    struct hash_table *struct_types;
+    struct hash_table *interface_types;
+    struct hash_table *subroutine_types;
+-} glsl_type_cache;
++};
++
++/* R4OS: mutable type interning belongs to one compilation job. A failed
++ * worker can retire its entire arena without leaving shared dangling types.
++ * Other library callers are excluded by the public compilation owner. */
++struct r4aco_glsl_state {
++   struct r4aco_glsl_type_cache cache;
++   simple_mtx_t mutex;
++};
++extern void *r4aco_port_state(unsigned slot, size_t size, size_t alignment);
++static struct r4aco_glsl_state *r4aco_glsl_state(void)
++{
++   return r4aco_port_state(0, sizeof(struct r4aco_glsl_state),
++                          _Alignof(struct r4aco_glsl_state));
++}
++#define glsl_type_cache (r4aco_glsl_state()->cache)
++#define glsl_type_cache_mutex (r4aco_glsl_state()->mutex)
+ 
+ static const glsl_type *
+ make_vector_matrix_type(linear_ctx *lin_ctx, uint32_t gl_type,
+--- a/src/util/u_printf.c
++++ b/src/util/u_printf.c
+@@ -376,12 +376,19 @@
+    return hash;
+ }
+ 
+-static struct {
+-   uint32_t users;
+-   struct hash_table_u64 *ht;
+-} u_printf_cache = {0};
+-
+-static simple_mtx_t u_printf_lock = SIMPLE_MTX_INITIALIZER;
++/* R4OS: printf metadata is owned by the active compilation job. */
++struct r4aco_printf_state {
++   struct { uint32_t users; struct hash_table_u64 *ht; } cache;
++   simple_mtx_t mutex;
++};
++extern void *r4aco_port_state(unsigned slot, size_t size, size_t alignment);
++static struct r4aco_printf_state *r4aco_printf_state(void)
++{
++   return r4aco_port_state(2, sizeof(struct r4aco_printf_state),
++                          _Alignof(struct r4aco_printf_state));
++}
++#define u_printf_cache (r4aco_printf_state()->cache)
++#define u_printf_lock (r4aco_printf_state()->mutex)
+ 
+ void
+ u_printf_singleton_init_or_ref(void)
+--- a/src/compiler/nir/nir.c
++++ b/src/compiler/nir/nir.c
+@@ -130,8 +130,7 @@
+ void
+ nir_process_debug_variable(void)
+ {
+-   static once_flag flag = ONCE_FLAG_INIT;
+-   call_once(&flag, nir_process_debug_variable_once);
++   /* R4OS ABI1 has no environment-driven debug configuration. */
+ }
+ #endif
+ 
+--- a/src/compiler/spirv/spirv_to_nir.c
++++ b/src/compiler/spirv/spirv_to_nir.c
+@@ -243,8 +243,7 @@
+ static void
+ mesa_spirv_debug_init(void)
+ {
+-   static once_flag initialized_debug_flag = ONCE_FLAG_INIT;
+-   call_once(&initialized_debug_flag, initialize_mesa_spirv_debug);
++   /* R4OS ABI1 has no environment-driven debug configuration. */
+ }
+ 
+ #ifndef NDEBUG
+--- a/src/amd/compiler/aco_ir.cpp
++++ b/src/amd/compiler/aco_ir.cpp
+@@ -20,7 +20,7 @@
+ 
+ thread_local aco::monotonic_buffer_resource* instruction_buffer = nullptr;
+ 
+-uint64_t debug_flags = 0;
++uint64_t debug_flags = DEBUG_VALIDATE_IR | DEBUG_VALIDATE_RA | DEBUG_VALIDATE_OPT;
+ 
+ static const struct debug_control aco_debug_options[] = {
+    {"validateir", DEBUG_VALIDATE_IR},
+@@ -57,7 +57,7 @@
+ void
+ init()
+ {
+-   call_once(&init_once_flag, init_once);
++   /* R4OS: immutable validated compiler policy, no process-global once owner. */
+ }
+ 
+ void
+--- a/src/amd/compiler/aco_print_asm.cpp
++++ b/src/amd/compiler/aco_print_asm.cpp
+@@ -97,7 +97,7 @@
+    }
+ }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_FREESTANDING)
+ /**
+  * Determines the GPU type to use for CLRXdisasm
+  */
+@@ -177,7 +177,7 @@
+ print_asm_clrx(Program* program, enum radeon_family family, std::vector<uint32_t>& binary,
+                unsigned exec_size, FILE* output)
+ {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_FREESTANDING)
+    return true;
+ #else
+    char path[] = "/tmp/fileXXXXXX";
+@@ -421,7 +421,7 @@
+    }
+ #endif
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_FREESTANDING)
+    /* Check if CLRX disassembler binary is available and can disassemble the program */
+    return to_clrx_device_name(program->gfx_level, family) &&
+           system("clrxdisasm --version > /dev/null 2>&1") == 0;
+--- a/src/amd/compiler/aco_interface.cpp
++++ b/src/amd/compiler/aco_interface.cpp
+@@ -15,6 +15,8 @@
+ #include <vector>
+ 
+ using namespace aco;
++
++extern "C" void r4aco_port_check();
+ 
+ namespace {
+ 
+@@ -70,6 +72,7 @@
+    ASSERTED bool is_valid = validate_cfg(program.get());
+    assert(is_valid);
+ 
++   r4aco_port_check();
+    dominator_tree(program.get());
+    if (program->should_repair_ssa)
+       repair_ssa(program.get());
+@@ -97,6 +100,7 @@
+    insert_exec_mask(program.get());
+    validate(program.get());
+ 
++   r4aco_port_check();
+    /* spilling and scheduling */
+    live_var_analysis(program.get());
+    if (program->collect_statistics)
+@@ -125,6 +129,7 @@
+       schedule_program(program.get());
+    validate(program.get());
+ 
++   r4aco_port_check();
+    /* Register Allocation */
+    register_allocation(program.get());
+ 
+@@ -145,6 +150,7 @@
+ 
+    spill_preserved(program.get());
+ 
++   r4aco_port_check();
+    /* Lower to HW Instructions */
+    ssa_elimination(program.get());
+    lower_to_hw_instr(program.get());
+@@ -163,6 +169,7 @@
+    if (program->needs_fp_mode_insertion)
+       insert_fp_mode(program.get());
+ 
++   r4aco_port_check();
+    insert_waitcnt(program.get());
+    insert_NOPs(program.get());
+    if (program->gfx_level >= GFX11)
+@@ -177,6 +184,7 @@
+    if (program->collect_statistics || (debug_flags & DEBUG_PERF_INFO))
+       collect_preasm_stats(program.get());
+ 
++   r4aco_port_check();
+    return llvm_ir;
+ }
+ 
+@@ -346,6 +354,7 @@
+    lower_branches(program.get());
+    validate(program.get());
+ 
++   r4aco_port_check();
+    insert_waitcnt(program.get());
+    insert_NOPs(program.get());
+ 

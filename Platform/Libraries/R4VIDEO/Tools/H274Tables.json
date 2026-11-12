@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "ffmpeg": "9.0.1",
+  "sha256": "31615d9efd44cdaab08cfa0653c095436388d6224a0bd9af3b2335f2aa27ab24",
+  "bytes": 2283720,
+  "derivation": "All 13x13 film-grain planes from pinned FFmpeg h274.c init_slice, emitted by H274Tables.c; immutable target data, LGPL-2.1-or-later."
+}

@@ -1,0 +1,349 @@
+diff --git a/src/util/perf/u_trace.c b/src/util/perf/u_trace.c
+index d047016..0d3bbd6 100644
+--- a/src/util/perf/u_trace.c
++++ b/src/util/perf/u_trace.c
+@@ -40,7 +40,20 @@ struct u_trace_state {
+    FILE *trace_file;
+    enum u_trace_type enabled_traces;
+ };
++typedef struct u_trace_state u_trace_state_data;
++#if defined(R4OS_OPENGL)
++static const char trace_state_key;
++static void u_trace_state_init_once(void *data);
++static u_trace_state_data *
++r4gl_trace_state(void)
++{
++   return r4gl_process_state(&trace_state_key, sizeof(u_trace_state_data),
++      _Alignof(u_trace_state_data), u_trace_state_init_once);
++}
++#define u_trace_state (*r4gl_trace_state())
++#else
+ static struct u_trace_state u_trace_state = { .once = UTIL_ONCE_FLAG_INIT };
++#endif
+ 
+ #ifdef HAVE_PERFETTO
+ /**
+@@ -163,7 +176,7 @@ print_txt_event(struct u_trace_context *utctx,
+       utctx->indentation++;
+ }
+ 
+-static struct u_trace_printer txt_printer = {
++static const struct u_trace_printer txt_printer = {
+    .start = &print_txt_start,
+    .end = &print_txt_start,
+    .start_of_frame = &print_txt_start,
+@@ -221,7 +234,7 @@ print_csv_event(struct u_trace_context *utctx,
+    }
+ }
+ 
+-static struct u_trace_printer csv_printer = {
++static const struct u_trace_printer csv_printer = {
+    .start = print_csv_start,
+    .end = print_csv_end,
+    .start_of_frame = &print_csv_start_of_frame,
+@@ -293,7 +306,7 @@ print_json_event(struct u_trace_context *utctx,
+    fprintf(utctx->out, "}\n}\n");
+ }
+ 
+-static struct u_trace_printer json_printer = {
++static const struct u_trace_printer json_printer = {
+    .start = print_json_start,
+    .end = print_json_end,
+    .start_of_frame = &print_json_start_of_frame,
+@@ -326,26 +339,40 @@ trace_file_fini(void)
+ }
+ 
+ static void
++#if defined(R4OS_OPENGL)
++u_trace_state_init_once(void *data)
++{
++   u_trace_state_data *state = data;
++#else
+ u_trace_state_init_once(void)
+ {
+-   u_trace_state.enabled_traces =
++   u_trace_state_data *state = &u_trace_state;
++#endif
++   state->enabled_traces =
+       debug_get_flags_option("MESA_GPU_TRACES", config_control, 0);
+    const char *tracefile_name = debug_get_option_trace_file();
+    if (tracefile_name && __normal_user()) {
+-      u_trace_state.trace_file = fopen(tracefile_name, "w");
+-      if (u_trace_state.trace_file != NULL) {
+-         atexit(trace_file_fini);
++      state->trace_file = fopen(tracefile_name, "w");
++      if (state->trace_file != NULL) {
++         if (atexit(trace_file_fini) != 0) {
++            fclose(state->trace_file);
++            state->trace_file = NULL;
++         }
+       }
+    }
+-   if (!u_trace_state.trace_file) {
+-      u_trace_state.trace_file = stdout;
++   if (!state->trace_file) {
++      state->trace_file = stdout;
+    }
+ }
+ 
+ void
+ u_trace_state_init(void)
+ {
++#if defined(R4OS_OPENGL)
++   (void)r4gl_trace_state();
++#else
+    util_call_once(&u_trace_state.once, u_trace_state_init_once);
++#endif
+ }
+ 
+ bool
+diff --git a/src/util/perf/u_trace.h b/src/util/perf/u_trace.h
+index b8ad95e..1b04128 100644
+--- a/src/util/perf/u_trace.h
++++ b/src/util/perf/u_trace.h
+@@ -248,7 +248,7 @@ struct u_trace_context {
+    uint64_t max_indirect_size_bytes;
+ 
+    FILE *out;
+-   struct u_trace_printer *out_printer;
++   const struct u_trace_printer *out_printer;
+ 
+    /* Once u_trace_flush() is called u_trace_chunk's are queued up to
+     * render tracepoints on a queue.  The per-chunk queue jobs block until
+diff --git a/src/util/u_printf.c b/src/util/u_printf.c
+index fb5fd7d..d5ecaaa 100644
+--- a/src/util/u_printf.c
++++ b/src/util/u_printf.c
+@@ -356,6 +356,41 @@ u_printf_deserialize_info(void *mem_ctx,
+  *
+  * Post-condition: hash is nonzero. This is convenient.
+  */
++#if defined(R4OS_OPENGL)
++static bool
++printf_try_hash(const u_printf_info *info, uint32_t *result)
++{
++   struct blob blob;
++   blob_init(&blob);
++   u_printf_serialize_info(&blob, info, 1);
++   if (blob.out_of_memory) {
++      blob_finish(&blob);
++      return false;
++   }
++   uint32_t hash = XXH32(blob.data, blob.size, 0);
++   blob_finish(&blob);
++
++   /* Force things away from zero. This weakens the hash only slightly, as
++    * there's only a 2^-31 probability of hashing to either hash=0 or hash=1.
++    */
++   if (hash == 0) {
++      hash = 1;
++   }
++
++   assert(hash != 0);
++   *result = hash;
++   return true;
++}
++
++uint32_t
++u_printf_hash(const u_printf_info *info)
++{
++   uint32_t hash;
++   if (!printf_try_hash(info, &hash))
++      abort();
++   return hash;
++}
++#else
+ uint32_t
+ u_printf_hash(const u_printf_info *info)
+ {
+@@ -375,17 +410,69 @@ u_printf_hash(const u_printf_info *info)
+    assert(hash != 0);
+    return hash;
+ }
++#endif
++
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_printf_state {
++   struct {
++      uint32_t users;
++      struct hash_table_u64 *ht;
++   } cache;
++   simple_mtx_t mutex;
++};
++static const char printf_state_key;
++static void
++printf_state_init(void *data)
++{
++   struct r4gl_printf_state *state = data;
++   simple_mtx_init(&state->mutex, mtx_plain);
++}
++static struct r4gl_printf_state *
++printf_state(void)
++{
++   return r4gl_process_state(&printf_state_key, sizeof(struct r4gl_printf_state),
++      _Alignof(struct r4gl_printf_state), printf_state_init);
++}
++#define u_printf_cache (printf_state()->cache)
++#define u_printf_lock (printf_state()->mutex)
+ 
++bool
++r4gl_printf_try_init_or_ref(void)
++{
++   struct r4gl_printf_state *state = printf_state();
++   simple_mtx_lock(&state->mutex);
++   if (state->cache.users == UINT32_MAX) {
++      simple_mtx_unlock(&state->mutex);
++      return false;
++   }
++   if (!state->cache.users) {
++      state->cache.ht = _mesa_hash_table_u64_create(NULL);
++      if (!state->cache.ht) {
++         simple_mtx_unlock(&state->mutex);
++         return false;
++      }
++   }
++   state->cache.users++;
++   simple_mtx_unlock(&state->mutex);
++   return true;
++}
++#else
+ static struct {
+    uint32_t users;
+    struct hash_table_u64 *ht;
+ } u_printf_cache = {0};
+ 
+ static simple_mtx_t u_printf_lock = SIMPLE_MTX_INITIALIZER;
++#endif
+ 
+ void
+ u_printf_singleton_init_or_ref(void)
+ {
++#if defined(R4OS_OPENGL)
++   if (!r4gl_printf_try_init_or_ref())
++      abort();
++#else
+    simple_mtx_lock(&u_printf_lock);
+ 
+    if ((u_printf_cache.users++) == 0) {
+@@ -393,6 +480,7 @@ u_printf_singleton_init_or_ref(void)
+    }
+ 
+    simple_mtx_unlock(&u_printf_lock);
++#endif
+ }
+ 
+ void
+@@ -424,6 +512,61 @@ u_printf_singleton_search_locked(uint32_t hash)
+    return _mesa_hash_table_u64_search(u_printf_cache.ht, hash);
+ }
+ 
++#if defined(R4OS_OPENGL)
++static bool
++printf_try_add_locked(const u_printf_info *info)
++{
++   assert_singleton_exists_and_is_locked();
++   uint32_t hash;
++   if (!printf_try_hash(info, &hash))
++      return false;
++   const u_printf_info *cached = u_printf_singleton_search_locked(hash);
++   if (cached) {
++      assert(!strcmp(cached->strings, info->strings) && "assume no collisions");
++      return true;
++   }
++
++   /* Keep the unpublished clone's children together so every allocation or
++    * insertion failure can discard it without exposing partial metadata. */
++   u_printf_info *clone = rzalloc(u_printf_cache.ht, u_printf_info);
++   if (!clone)
++      return false;
++   clone->num_args = info->num_args;
++   clone->string_size = info->string_size;
++   if (info->num_args) {
++      clone->arg_sizes = ralloc_memdup(clone, info->arg_sizes,
++         sizeof(info->arg_sizes[0]) * info->num_args);
++      if (!clone->arg_sizes)
++         goto fail;
++   }
++   clone->strings = ralloc_memdup(clone, info->strings, info->string_size);
++   if (info->string_size && !clone->strings)
++      goto fail;
++
++   /* The native target is x86_64, where Mesa's u64 table uses pointer keys.
++    * Its void wrapper discards insertion failure; inspect the real result. */
++   STATIC_ASSERT(sizeof(void *) == 8);
++   if (!_mesa_hash_table_insert(&u_printf_cache.ht->table,
++                               (void *)(uintptr_t)hash, clone))
++      goto fail;
++   return true;
++fail:
++   ralloc_free(clone);
++   return false;
++}
++
++bool
++r4gl_printf_try_add(const u_printf_info *info, unsigned count)
++{
++   simple_mtx_t *mutex = &u_printf_lock;
++   simple_mtx_lock(mutex);
++   bool success = true;
++   for (unsigned i = 0; i < count && success; i++)
++      success = printf_try_add_locked(&info[i]);
++   simple_mtx_unlock(mutex);
++   return success;
++}
++#else
+ static void
+ u_printf_singleton_add_locked(const u_printf_info *info)
+ {
+@@ -454,6 +597,7 @@ u_printf_singleton_add_locked(const u_printf_info *info)
+ 
+    _mesa_hash_table_u64_insert(u_printf_cache.ht, hash, clone);
+ }
++#endif
+ 
+ const u_printf_info *
+ u_printf_singleton_search(uint32_t hash)
+@@ -464,6 +608,14 @@ u_printf_singleton_search(uint32_t hash)
+    return info;
+ }
+ 
++#if defined(R4OS_OPENGL)
++void
++u_printf_singleton_add(const u_printf_info *info, unsigned count)
++{
++   if (!r4gl_printf_try_add(info, count))
++      abort();
++}
++#else
+ void
+ u_printf_singleton_add(const u_printf_info *info, unsigned count)
+ {
+@@ -474,6 +626,8 @@ u_printf_singleton_add(const u_printf_info *info, unsigned count)
+    simple_mtx_unlock(&u_printf_lock);
+ }
+ 
++#endif
++
+ void
+ u_printf_singleton_add_serialized(const void *data, size_t data_size)
+ {
+diff --git a/src/util/u_printf.h b/src/util/u_printf.h
+index e99eed4..d0c83f7 100644
+--- a/src/util/u_printf.h
++++ b/src/util/u_printf.h
+@@ -52,6 +52,14 @@ u_printf_info *u_printf_deserialize_info(void *mem_ctx,
+ uint32_t u_printf_hash(const u_printf_info *info);
+ 
+ void u_printf_singleton_init_or_ref(void);
++#if defined(R4OS_OPENGL)
++/* Native frontend admission may report allocation failure without acquiring
++ * a reference. The upstream void entrypoint aborts on this failure. */
++bool r4gl_printf_try_init_or_ref(void);
++/* Each successful entry is retained; failure publishes no partial entry.
++ * Hold a cache reference while adding or using returned metadata. */
++bool r4gl_printf_try_add(const u_printf_info *info, unsigned count);
++#endif
+ void u_printf_singleton_decref(void);
+ void u_printf_singleton_add(const u_printf_info *info, unsigned count);
+ void u_printf_singleton_add_serialized(const void *data, size_t data_size);

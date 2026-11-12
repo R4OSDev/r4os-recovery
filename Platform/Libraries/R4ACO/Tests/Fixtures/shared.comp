@@ -1,0 +1,10 @@
+#version 450
+layout(local_size_x=128) in;
+layout(set=0,binding=0,std430) writeonly buffer Destination { uint data[]; } dst;
+shared uint values[128];
+void main() {
+   uint lane=gl_LocalInvocationID.x;
+   values[lane]=lane*3u+7u;
+   barrier();
+   dst.data[gl_GlobalInvocationID.x]=values[(lane+1u)&127u];
+}

@@ -1,0 +1,27 @@
+--- a/src/gallium/drivers/zink/zink_kopper.c
++++ b/src/gallium/drivers/zink/zink_kopper.c
+@@ -728,10 +728,24 @@
+ kill_swapchain(struct zink_context *ctx, struct zink_resource *res)
+ {
+    struct zink_screen *screen = zink_screen(ctx->base.screen);
++#ifdef R4OS_OPENGL
++   /* A lost device cannot allocate a replacement. Keep the old object's
++    * ownership until ordinary context/surface retirement, and report loss. */
++   if (screen->device_lost)
++      return;
++#endif
+    /* dead swapchain */
+    mesa_loge("zink: swapchain killed %p\n", res);
+    zink_batch_reference_resource(ctx, res);
+    struct pipe_resource *pres = screen->base.resource_create(&screen->base, &res->base.b);
++#ifdef R4OS_OPENGL
++   if (!pres) {
++      res->obj->dt->is_kill = true;
++      res->obj->dt->r4os_result = screen->device_lost ? VK_ERROR_DEVICE_LOST :
++         VK_ERROR_OUT_OF_DEVICE_MEMORY;
++      return;
++   }
++#endif
+    zink_resource_object_reference(screen, &res->obj, zink_resource(pres)->obj);
+    res->rebind_count++;
+    res->layout = VK_IMAGE_LAYOUT_UNDEFINED;

@@ -1,0 +1,1645 @@
+{
+  "schema_version": 1,
+  "module_name": "R4NAK",
+  "zig_client": "R4Nak",
+  "c_prefix": "r4nak",
+  "c_header": "r4nak.h",
+  "description": "Freestanding Mesa SPIR-V/NIR/NAK compiler, executable byte cache and format helpers. Independent R4L, no host runtime and no GPU ownership.",
+  "interfaces": [
+    {
+      "export_name": "COMPILER_V1",
+      "symbol": "r4nak_compiler_v1",
+      "zig_name": "compiler_v1",
+      "zig_type": "CompilerV1",
+      "c_type": "R4NakCompilerV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 5923445452241588045,
+      "interface_id_hi": 5785239056949456945,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "compile",
+          "c_name": "r4nak_compile",
+          "symbol": "r4nak_compile_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4NakRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "runtime"
+            },
+            {
+              "name": "request",
+              "type": {
+                "name": "R4NakRequest",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NakBinary",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4NAK_STATUS",
+            "ownership": "Caller owns inputs, output and worker. Compilation holds one library-wide owner; contention returns busy without waiting. Cache and format functions retain nothing."
+          },
+          "description": "Run only on a disposable worker with at least1MB stack; panic/OOM/cancel terminates that worker after freeing its job allocations. Parent must join before touching or freeing buffers. No longjmp across Rust, no frame-path compilation."
+        },
+        {
+          "name": "cache_write",
+          "c_name": "r4nak_cache_write",
+          "symbol": "r4nak_cache_write_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "key",
+              "type": {
+                "name": "R4NakCacheKey",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "key"
+            },
+            {
+              "name": "binary",
+              "type": {
+                "name": "R4NakBinary",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "binary"
+            },
+            {
+              "name": "code",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "code_length",
+              "description": "code"
+            },
+            {
+              "name": "code_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "code_length"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "bytes"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "written"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NAK_STATUS",
+            "ownership": "Caller owns inputs, output and worker. Compilation holds one library-wide owner; contention returns busy without waiting. Cache and format functions retain nothing."
+          },
+          "description": "Serialize exact identity, metadata, shader header and code; no allocation or file access."
+        },
+        {
+          "name": "cache_read",
+          "c_name": "r4nak_cache_read",
+          "symbol": "r4nak_cache_read_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "key",
+              "type": {
+                "name": "R4NakCacheKey",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "key"
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "length",
+              "description": "bytes"
+            },
+            {
+              "name": "length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "length"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NakBinary",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            },
+            {
+              "name": "code",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "capacity",
+              "description": "code"
+            },
+            {
+              "name": "capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "capacity"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NAK_STATUS",
+            "ownership": "Caller owns inputs, output and worker. Compilation holds one library-wide owner; contention returns busy without waiting. Cache and format functions retain nothing."
+          },
+          "description": "Incompatible or damaged cache returns cache_miss without modifying outputs; owner discards/recompiles the file. No GPU resource is resurrected."
+        },
+        {
+          "name": "format_info",
+          "c_name": "r4nak_format_info",
+          "symbol": "r4nak_format_info_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "format",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "format"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4NakFormat",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4NAK_STATUS",
+            "ownership": "Caller owns inputs, output and worker. Compilation holds one library-wide owner; contention returns busy without waiting. Cache and format functions retain nothing."
+          },
+          "description": "Query the pinned Mesa format table through stable R4GFX fourcc values."
+        }
+      ],
+      "description": "Runtime compiler and cache ABI1."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4NakHeader",
+      "size": 128,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "w0",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w0"
+        },
+        {
+          "name": "w1",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w1"
+        },
+        {
+          "name": "w2",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w2"
+        },
+        {
+          "name": "w3",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w3"
+        },
+        {
+          "name": "w4",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w4"
+        },
+        {
+          "name": "w5",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w5"
+        },
+        {
+          "name": "w6",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w6"
+        },
+        {
+          "name": "w7",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w7"
+        },
+        {
+          "name": "w8",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w8"
+        },
+        {
+          "name": "w9",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w9"
+        },
+        {
+          "name": "w10",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w10"
+        },
+        {
+          "name": "w11",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w11"
+        },
+        {
+          "name": "w12",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w12"
+        },
+        {
+          "name": "w13",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w13"
+        },
+        {
+          "name": "w14",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w14"
+        },
+        {
+          "name": "w15",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w15"
+        },
+        {
+          "name": "w16",
+          "offset": 64,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w16"
+        },
+        {
+          "name": "w17",
+          "offset": 68,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w17"
+        },
+        {
+          "name": "w18",
+          "offset": 72,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w18"
+        },
+        {
+          "name": "w19",
+          "offset": 76,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w19"
+        },
+        {
+          "name": "w20",
+          "offset": 80,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w20"
+        },
+        {
+          "name": "w21",
+          "offset": 84,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w21"
+        },
+        {
+          "name": "w22",
+          "offset": 88,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w22"
+        },
+        {
+          "name": "w23",
+          "offset": 92,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w23"
+        },
+        {
+          "name": "w24",
+          "offset": 96,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w24"
+        },
+        {
+          "name": "w25",
+          "offset": 100,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w25"
+        },
+        {
+          "name": "w26",
+          "offset": 104,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w26"
+        },
+        {
+          "name": "w27",
+          "offset": 108,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w27"
+        },
+        {
+          "name": "w28",
+          "offset": 112,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w28"
+        },
+        {
+          "name": "w29",
+          "offset": 116,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w29"
+        },
+        {
+          "name": "w30",
+          "offset": 120,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w30"
+        },
+        {
+          "name": "w31",
+          "offset": 124,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "w31"
+        }
+      ],
+      "description": "Opaque 32-word native NAK program header; owned by output and included in executable cache integrity."
+    },
+    {
+      "name": "R4NakDigest",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "h0",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h0"
+        },
+        {
+          "name": "h1",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h1"
+        },
+        {
+          "name": "h2",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h2"
+        },
+        {
+          "name": "h3",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "h3"
+        }
+      ],
+      "description": "SHA-256 stored as 32 little-endian bytes."
+    },
+    {
+      "name": "R4NakRuntime",
+      "size": 72,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "user",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "user"
+        },
+        {
+          "name": "owner_generation",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "owner_generation"
+        },
+        {
+          "name": "allocate",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "allocate"
+        },
+        {
+          "name": "release",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "release"
+        },
+        {
+          "name": "clock_ns",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "clock_ns"
+        },
+        {
+          "name": "abort_worker",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "abort_worker"
+        },
+        {
+          "name": "owner_retired",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "owner_retired"
+        },
+        {
+          "name": "cancelled",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "cancelled"
+        }
+      ],
+      "description": "Version1 callbacks use C ABI. allocate(user,bytes,alignment)->u64, release(user,address,bytes,alignment), clock_ns(user)->u64 monotonic; abort_worker(user,status:i32) must terminate the current disposable worker without unwinding or returning. owner_retired(user,generation)->u32 returns1 only after that exact program generation is fully retired; unknown remains0. cancelled(user)->u32 is optional. Allocations belong to the caller program; callbacks and input live through worker retirement."
+    },
+    {
+      "name": "R4NakRequest",
+      "size": 88,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "words",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "words"
+        },
+        {
+          "name": "word_count",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "word_count"
+        },
+        {
+          "name": "stage",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "sm",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "sm"
+        },
+        {
+          "name": "entry_length",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "entry_length"
+        },
+        {
+          "name": "entry",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "entry"
+        },
+        {
+          "name": "budget_bytes",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "budget_bytes"
+        },
+        {
+          "name": "deadline_ns",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "deadline_ns"
+        },
+        {
+          "name": "code",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code"
+        },
+        {
+          "name": "code_capacity",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code_capacity"
+        },
+        {
+          "name": "log",
+          "offset": 72,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log"
+        },
+        {
+          "name": "log_capacity",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log_capacity"
+        }
+      ],
+      "description": "SPIR-V words:5..16384, id bound1..16384, version1.0..1.6. Entry1..63 UTF-8 bytes. Budget includes tracking overhead and is1..256MB; zero deadline means no deadline. Caller-owned disjoint immutable input and writable code/log/result buffers. VS0, FS4, CS5 with stage I/O and local arithmetic/control flow. Resources requiring device/pipeline lowering return unsupported; GPU execution belongs to the driver."
+    },
+    {
+      "name": "R4NakBinary",
+      "size": 232,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "status",
+          "offset": 8,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "status"
+        },
+        {
+          "name": "sm",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "sm"
+        },
+        {
+          "name": "stage",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "gprs",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "gprs"
+        },
+        {
+          "name": "code_bytes",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "code_bytes"
+        },
+        {
+          "name": "instructions",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "instructions"
+        },
+        {
+          "name": "slm_bytes",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "slm_bytes"
+        },
+        {
+          "name": "crs_bytes",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "crs_bytes"
+        },
+        {
+          "name": "control_barriers",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "control_barriers"
+        },
+        {
+          "name": "max_warps",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "max_warps"
+        },
+        {
+          "name": "header",
+          "offset": 48,
+          "type": {
+            "name": "R4NakHeader",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "header"
+        },
+        {
+          "name": "peak_bytes",
+          "offset": 176,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "peak_bytes"
+        },
+        {
+          "name": "elapsed_ns",
+          "offset": 184,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "elapsed_ns"
+        },
+        {
+          "name": "log_length",
+          "offset": 192,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "log_length"
+        },
+        {
+          "name": "source_hash",
+          "offset": 200,
+          "type": {
+            "name": "R4NakDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source_hash"
+        }
+      ],
+      "description": "One CPU compilation result. Code is executable GPU machine code but never installed or submitted by this library. Source hash binds words, entry, stage and target. Status is readable only after the compiler worker joins; abnormal termination records a negative status then exits the worker."
+    },
+    {
+      "name": "R4NakCacheKey",
+      "size": 136,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "vendor_id",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "vendor_id"
+        },
+        {
+          "name": "device_id",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device_id"
+        },
+        {
+          "name": "chipset",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "chipset"
+        },
+        {
+          "name": "sm",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "sm"
+        },
+        {
+          "name": "stage",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "stage"
+        },
+        {
+          "name": "driver_version",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "driver_version"
+        },
+        {
+          "name": "command_abi",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "command_abi"
+        },
+        {
+          "name": "resource_abi",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "resource_abi"
+        },
+        {
+          "name": "constants_abi",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "constants_abi"
+        },
+        {
+          "name": "format",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "format"
+        },
+        {
+          "name": "device_generation",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "device_generation"
+        },
+        {
+          "name": "reset_generation",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "reset_generation"
+        },
+        {
+          "name": "pipeline_layout",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pipeline_layout"
+        },
+        {
+          "name": "source_hash",
+          "offset": 72,
+          "type": {
+            "name": "R4NakDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "source_hash"
+        },
+        {
+          "name": "pipeline_hash",
+          "offset": 104,
+          "type": {
+            "name": "R4NakDigest",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "pipeline_hash"
+        }
+      ],
+      "description": "Exact caller device/driver/pipeline identity; nonzero driver/ABI/generations required, constantsABI4, vendor10de. Compiler/source-lock identity is appended by R4NAK, never supplied by caller. Cache data contains no GPU virtual addresses."
+    },
+    {
+      "name": "R4NakFormat",
+      "size": 40,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "version"
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "size"
+        },
+        {
+          "name": "format",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "format"
+        },
+        {
+          "name": "block_bits",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "block_bits"
+        },
+        {
+          "name": "block_width",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "block_width"
+        },
+        {
+          "name": "block_height",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "block_height"
+        },
+        {
+          "name": "channels",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "channels"
+        },
+        {
+          "name": "is_float",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "is_float"
+        },
+        {
+          "name": "is_unorm",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "is_unorm"
+        },
+        {
+          "name": "is_srgb",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "is_srgb"
+        }
+      ],
+      "description": "Mesa format description for established R4GFX fourcc values. Format availability does not imply hardware support."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "compiler_revision",
+      "c_name": "R4NAK_COMPILER_REVISION",
+      "type": "u32",
+      "value": 1,
+      "description": "R4NAK0.1.1 source/compiler port revision; changes invalidate executable caches."
+    },
+    {
+      "zig_name": "status_ok",
+      "c_name": "R4NAK_STATUS_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "Successful operation."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "status_invalid",
+      "c_name": "R4NAK_STATUS_INVALID",
+      "type": "i32",
+      "value": -1,
+      "description": "Invalid arguments or SPIR-V frontend failure."
+    },
+    {
+      "zig_name": "status_unsupported",
+      "c_name": "R4NAK_STATUS_UNSUPPORTED",
+      "type": "i32",
+      "value": -2,
+      "description": "Target/stage/resource lowering is outside ABI1."
+    },
+    {
+      "zig_name": "status_capacity",
+      "c_name": "R4NAK_STATUS_CAPACITY",
+      "type": "i32",
+      "value": -3,
+      "description": "Output buffer is too small."
+    },
+    {
+      "zig_name": "status_cache_miss",
+      "c_name": "R4NAK_STATUS_CACHE_MISS",
+      "type": "i32",
+      "value": -4,
+      "description": "Cache is missing, incompatible or corrupt; output unchanged."
+    },
+    {
+      "zig_name": "status_busy",
+      "c_name": "R4NAK_STATUS_BUSY",
+      "type": "i32",
+      "value": -5,
+      "description": "Another active compiler job owns the library; retry asynchronously."
+    },
+    {
+      "zig_name": "status_memory",
+      "c_name": "R4NAK_STATUS_MEMORY",
+      "type": "i32",
+      "value": -6,
+      "description": "Job allocation budget exceeded or allocator failed."
+    },
+    {
+      "zig_name": "status_compiler",
+      "c_name": "R4NAK_STATUS_COMPILER",
+      "type": "i32",
+      "value": -7,
+      "description": "Compiler assertion or Rust panic; disposable worker terminated."
+    },
+    {
+      "zig_name": "status_cancelled",
+      "c_name": "R4NAK_STATUS_CANCELLED",
+      "type": "i32",
+      "value": -8,
+      "description": "Cooperative cancellation or deadline reached."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "worker",
+      "text": "Compiler calls run outside interactive frame paths on a dedicated worker. Return and abnormal exit both release compiler memory/owner; caller always joins. Whole-program forced exit uses exact program generation retirement before later jobs can reclaim a stale owner; never call old allocator callbacks after retirement."
+    },
+    {
+      "name": "cache",
+      "text": "Caller owns filesystem, file naming and atomic replacement. Cache functions are pure byte operations; caller discards misses and queues compilation. Payload SHA-256 detects accidental corruption; it is not a signature or trust boundary."
+    },
+    {
+      "name": "fallback",
+      "text": "R4NAK is optional. Missing library, busy worker, unsupported resources or failed compilation keeps the existing software renderer available."
+    }
+  ]
+}

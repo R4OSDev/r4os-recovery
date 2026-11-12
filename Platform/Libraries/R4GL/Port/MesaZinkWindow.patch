@@ -1,0 +1,227 @@
+--- a/include/kopper_interface.h
++++ b/include/kopper_interface.h
+@@ -36,6 +36,9 @@
+ 
+ #include "mesa_interface.h"
+ #include <vulkan/vulkan_core.h>
++#ifdef R4OS_OPENGL
++#include <r4os/abi_generated.h>
++#endif
+ 
+ typedef struct __DRIkopperExtensionRec          __DRIkopperExtension;
+ typedef struct __DRIkopperLoaderExtensionRec    __DRIkopperLoaderExtension;
+@@ -95,6 +98,12 @@
+ 
+ struct kopper_loader_info {
+    struct kopper_vk_surface_create_storage bos;
++#ifdef R4OS_OPENGL
++   /* Native identity is private loader data, not a Vulkan structure type.
++    * Copies keep the R4X context and hash key alive with the displaytarget. */
++   uint64_t r4os_application;
++   R4WindowGraphicsSurface r4os_surface;
++#endif
+    int has_alpha;
+    int initial_swap_interval;
+    bool present_opaque;
+--- a/src/gallium/drivers/zink/zink_kopper.c
++++ b/src/gallium/drivers/zink/zink_kopper.c
+@@ -29,6 +29,18 @@
+ #include "zink_surface.h"
+ #include "zink_resource.h"
+ #include "zink_kopper.h"
++#ifdef R4OS_OPENGL
++#include "r4gl_vulkan.h"
++#include "r4vk_wsi.h"
++static uint32_t r4os_window_hash(const void *key)
++{
++   return _mesa_hash_data(key, sizeof(R4WindowGraphicsSurface));
++}
++static bool r4os_window_equal(const void *a, const void *b)
++{
++   return memcmp(a, b, sizeof(R4WindowGraphicsSurface)) == 0;
++}
++#endif
+ 
+ static void
+ zink_kopper_set_present_mode_for_interval(struct kopper_displaytarget *cdt, int interval)
+@@ -52,7 +64,12 @@
+           cdt->type != KOPPER_WAYLAND)
+          cdt->present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+       else
++#ifdef R4OS_OPENGL
++         cdt->present_mode = cdt->present_modes & BITFIELD_BIT(VK_PRESENT_MODE_MAILBOX_KHR) ?
++            VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_FIFO_KHR;
++#else
+          cdt->present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
++#endif
+    } else if (interval > 0) {
+       cdt->present_mode = VK_PRESENT_MODE_FIFO_KHR;
+    }
+@@ -63,6 +80,10 @@
+ static void
+ init_dt_type(struct kopper_displaytarget *cdt)
+ {
++#ifdef R4OS_OPENGL
++   cdt->type = KOPPER_R4OS;
++   return;
++#endif
+    VkStructureType type = cdt->info.bos.sType;
+    switch (type) {
+ #ifdef VK_USE_PLATFORM_XCB_KHR
+@@ -92,6 +113,17 @@
+    VkResult error = VK_SUCCESS;
+ 
+    init_dt_type(cdt);
++#ifdef R4OS_OPENGL
++   PFN_r4vkCreateWindowSurface create = (PFN_r4vkCreateWindowSurface)
++      r4gl_native_vulkan_proc(screen->instance, R4VK_WINDOW_SURFACE_ENTRYPOINT);
++   if (!create) return VK_NULL_HANDLE;
++   const R4VkWindowSurfaceCreateInfo info = {
++      .version = R4VK_WINDOW_SURFACE_VERSION, .size = sizeof(info),
++      .application = (const void *)(uintptr_t)cdt->info.r4os_application,
++      .window_id = cdt->info.r4os_surface.window_id,
++   };
++   error = create(screen->instance, &info, NULL, &surface);
++#else
+    VkStructureType type = cdt->info.bos.sType;
+    switch (type) {
+ #ifdef VK_USE_PLATFORM_XCB_KHR
+@@ -122,6 +154,7 @@
+    default:
+       UNREACHABLE("unsupported!");
+    }
++#endif
+    if (error != VK_SUCCESS) {
+       return VK_NULL_HANDLE;
+    }
+@@ -214,6 +247,11 @@
+ {
+    struct hash_entry *he = NULL;
+    switch (cdt->type) {
++#ifdef R4OS_OPENGL
++   case KOPPER_R4OS:
++      he = _mesa_hash_table_search(&screen->dts, &cdt->info.r4os_surface);
++      break;
++#endif
+ #ifdef VK_USE_PLATFORM_XCB_KHR
+    case KOPPER_X11: {
+       VkXcbSurfaceCreateInfoKHR *xcb = (VkXcbSurfaceCreateInfoKHR *)&cdt->info.bos;
+@@ -311,6 +349,9 @@
+ 
+    /* different display platforms have, by vulkan spec, different sizing methodologies */
+    switch (cdt->type) {
++#ifdef R4OS_OPENGL
++   case KOPPER_R4OS:
++#endif
+    case KOPPER_X11:
+    case KOPPER_WIN32:
+       /* With Xcb, minImageExtent, maxImageExtent, and currentExtent must always equal the window size.
+@@ -439,6 +480,11 @@
+       simple_mtx_lock(&screen->dt_lock);
+       if (unlikely(!screen->dts.table)) {
+          switch (k.type) {
++#ifdef R4OS_OPENGL
++         case KOPPER_R4OS:
++            _mesa_hash_table_init(&screen->dts, screen, r4os_window_hash, r4os_window_equal);
++            break;
++#endif
+          case KOPPER_X11:
+             _mesa_hash_table_init(&screen->dts, screen, NULL, _mesa_key_pointer_equal);
+             break;
+@@ -495,6 +541,11 @@
+ 
+    simple_mtx_lock(&screen->dt_lock);
+    switch (cdt->type) {
++#ifdef R4OS_OPENGL
++   case KOPPER_R4OS:
++      _mesa_hash_table_insert(&screen->dts, &cdt->info.r4os_surface, cdt);
++      break;
++#endif
+ #ifdef VK_USE_PLATFORM_XCB_KHR
+    case KOPPER_X11: {
+       VkXcbSurfaceCreateInfoKHR *xcb = (VkXcbSurfaceCreateInfoKHR *)&cdt->info.bos;
+@@ -529,7 +580,11 @@
+     * means we can't do async submit on Wayland.
+     */
+    cdt->async = util_queue_is_initialized(&screen->flush_queue) &&
+-                cdt->type != KOPPER_WAYLAND;
++                cdt->type != KOPPER_WAYLAND
++#ifdef R4OS_OPENGL
++                && cdt->type != KOPPER_R4OS
++#endif
++                ;
+ 
+    *stride = cdt->stride;
+    return cdt;
+@@ -698,6 +753,10 @@
+                        res->base.b.height0 != cswap->scci.imageExtent.height;
+    struct zink_screen *zscreen = zink_screen(kopper_get_zink_screen(ctx->base.screen));
+    VkResult ret = kopper_acquire(zscreen, res, timeout);
++#ifdef R4OS_OPENGL
++   cdt->r4os_result = ret;
++   if (ret == VK_ERROR_DEVICE_LOST) zscreen->device_lost = true;
++#endif
+    if (ret == VK_SUCCESS || ret == VK_SUBOPTIMAL_KHR) {
+       if (cswap != cdt->swapchain) {
+          ctx->swapchain_size = cdt->swapchain->scci.imageExtent;
+@@ -785,6 +844,12 @@
+       cpi->info.waitSemaphoreCount = 0;
+    }
+    VkResult error2 = VKSCR(QueuePresentKHR)(screen->queue, &cpi->info);
++#ifdef R4OS_OPENGL
++   cdt->r4os_result = error2;
++   if (error2 == VK_ERROR_DEVICE_LOST) screen->device_lost = true;
++   if (error2 == VK_ERROR_OUT_OF_DATE_KHR && cdt->swapchain == swapchain)
++      cpi->res->obj->new_dt = true;
++#endif
+    zink_screen_debug_marker_end(screen, screen->frame_marker_emitted);
+    zink_screen_debug_marker_begin(screen, "frame");
+    simple_mtx_unlock(screen->queue_lock);
+@@ -855,6 +920,9 @@
+ 
+    struct zink_kopper_present_info *cpi = malloc(sizeof(struct zink_kopper_present_info));
+    if (!cpi) {
++#ifdef R4OS_OPENGL
++      cdt->r4os_result = VK_ERROR_OUT_OF_HOST_MEMORY;
++#endif
+       mesa_loge("ZINK: failed to allocate cpi!");
+       return;
+    }
+--- a/src/gallium/drivers/zink/zink_kopper.h
++++ b/src/gallium/drivers/zink/zink_kopper.h
+@@ -74,7 +74,10 @@
+ enum kopper_type {
+    KOPPER_X11,
+    KOPPER_WAYLAND,
+-   KOPPER_WIN32
++   KOPPER_WIN32,
++#ifdef R4OS_OPENGL
++   KOPPER_R4OS,
++#endif
+ };
+ 
+ struct kopper_displaytarget
+@@ -99,6 +102,9 @@
+    VkImageFormatListCreateInfo format_list;
+    enum kopper_type type;
+    bool is_kill;
++#ifdef R4OS_OPENGL
++   VkResult r4os_result; /* synchronous native presentation result */
++#endif
+    VkPresentModeKHR present_mode;
+    unsigned readback_counter;
+ 
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -2004,7 +2004,11 @@
+ 
+    if (!zink_kopper_acquired(res->obj->dt, res->obj->dt_idx)) {
+       /* swapbuffers to an undefined surface: acquire and present garbage */
++#ifdef R4OS_OPENGL
++      if (!zink_kopper_acquire(ctx, res, UINT64_MAX)) return;
++#else
+       zink_kopper_acquire(ctx, res, UINT64_MAX);
++#endif
+       zink_resource_reference(&ctx->needs_present, res);
+       /* set batch usage to submit acquire semaphore */
+       zink_batch_resource_usage_set(ctx->bs, res, true, false);

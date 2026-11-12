@@ -1,0 +1,395 @@
+--- a/src/gallium/include/frontend/api.h
++++ b/src/gallium/include/frontend/api.h
+@@ -29,6 +29,9 @@
+ 
+ #include "util/format/u_formats.h"
+ #include "util/mesa-blake3.h"
++#if defined(R4OS_OPENGL)
++#include "pipe/p_defines.h"
++#endif
+ 
+ struct st_context;
+ 
+@@ -139,8 +142,12 @@
+    /* this is owned by the caller */
+    struct pipe_resource *texture;
+ 
+-   /* format only differs from texture->format for multi-planar (YUV): */
++   /* The image view format may differ from its allocation's format. */
+    enum pipe_format format;
++#if defined(R4OS_OPENGL)
++   /* Logical image shape, independent of the backing miptree/layer array. */
++   enum pipe_texture_target r4os_target;
++#endif
+ 
+    unsigned level;
+    unsigned layer;
+--- a/src/mesa/main/teximage.c
++++ b/src/mesa/main/teximage.c
+@@ -3546,52 +3546,39 @@
+       return;
+    }
+ 
++   /* Hold the acquired resource until commit. Lookup/format/target failure
++    * must leave the previous image, storage and mutability unchanged. */
++   struct st_egl_image stimg;
++   bool native_supported;
++   if (!st_get_egl_image(ctx, image, PIPE_BIND_SAMPLER_VIEW, tex_compression,
++                        caller, &stimg, &native_supported)) {
++      _mesa_unlock_texture(ctx, texObj);
++      return;
++   }
++
++   if (tex_storage && stimg.imported_dmabuf &&
++       !(target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES)) {
++      _mesa_error(ctx, GL_INVALID_OPERATION,
++                  "%s(texture is imported from dmabuf)", caller);
++      goto release_image;
++   }
++
+    texImage = _mesa_get_tex_image(ctx, texObj, target, 0);
+    if (!texImage) {
+       _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", caller);
+-   } else {
+-      st_FreeTextureImageBuffer(ctx, texImage);
+-
+-      texObj->External = GL_TRUE;
+-
+-      struct st_egl_image stimg;
+-      bool native_supported;
+-      if (!st_get_egl_image(ctx, image, PIPE_BIND_SAMPLER_VIEW, tex_compression,
+-                            caller, &stimg, &native_supported)) {
+-         _mesa_unlock_texture(ctx, texObj);
+-         return;
+-      }
+-
+-      if (tex_storage) {
+-         /* EXT_EGL_image_storage
+-          * If the EGL image was created using EGL_EXT_image_dma_buf_import,
+-          * then the following applies:
+-          *    - <target> must be GL_TEXTURE_2D or GL_TEXTURE_EXTERNAL_OES.
+-          *    Otherwise, the error INVALID_OPERATION is generated.
+-          */
+-         if (stimg.imported_dmabuf &&
+-             !(target == GL_TEXTURE_2D || target == GL_TEXTURE_EXTERNAL_OES)) {
+-            _mesa_error(ctx, GL_INVALID_OPERATION,
+-                        "%s(texture is imported from dmabuf)", caller);
+-            pipe_resource_reference(&stimg.texture, NULL);
+-            _mesa_unlock_texture(ctx, texObj);
+-            return;
+-         }
+-         st_bind_egl_image(ctx, texObj, texImage, &stimg, true, native_supported);
+-      } else {
+-         st_bind_egl_image(ctx, texObj, texImage, &stimg,
+-                           target != GL_TEXTURE_EXTERNAL_OES, native_supported);
+-      }
+-
+-      pipe_resource_reference(&stimg.texture, NULL);
+-
+-      _mesa_dirty_texobj(ctx, texObj);
+-   }
++      goto release_image;
++   }
++   if (!st_bind_egl_image(ctx, texObj, texImage, &stimg,
++                          tex_storage || target != GL_TEXTURE_EXTERNAL_OES,
++                          native_supported))
++      goto release_image;
+ 
+    if (tex_storage)
+       _mesa_set_texture_view_state(ctx, texObj, target, 1);
+-
+    _mesa_update_fbo_texture(ctx, texObj, 0, 0);
++
++release_image:
++   pipe_resource_reference(&stimg.texture, NULL);
+ 
+    _mesa_unlock_texture(ctx, texObj);
+ }
+--- a/src/mesa/state_tracker/st_cb_eglimage.c
++++ b/src/mesa/state_tracker/st_cb_eglimage.c
+@@ -359,6 +359,17 @@
+       return false;
+    }
+ 
++#if defined(R4OS_OPENGL)
++   if (!out->texture || out->r4os_target != PIPE_TEXTURE_2D ||
++       out->format <= PIPE_FORMAT_NONE || out->format >= PIPE_FORMAT_COUNT ||
++       out->level > out->texture->last_level ||
++       out->layer > util_max_layer(out->texture, out->level)) {
++      pipe_resource_reference(&out->texture, NULL);
++      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(invalid image view)", error);
++      return false;
++   }
++#endif
++
+    if (!is_fmt_as_r8_g8b8_supported(screen, out, usage, native_supported) &&
+        !is_fmt_as_r10_g10b10_supported(screen, out, usage, native_supported) &&
+        !is_i420_as_r8_g8_b8_420_supported(screen, out, usage, native_supported) &&
+@@ -462,7 +473,7 @@
+    }
+ }
+ 
+-void
++bool
+ st_bind_egl_image(struct gl_context *ctx,
+                   struct gl_texture_object *texObj,
+                   struct gl_texture_image *texImage,
+@@ -474,17 +485,17 @@
+    GLenum internalFormat;
+    mesa_format texFormat;
+ 
+-   if (stimg->texture->target != gl_target_to_pipe(texObj->Target)
+ #if defined(R4OS_OPENGL)
+-       && !(texObj->Target == GL_TEXTURE_2D &&
+-            (stimg->texture->target == PIPE_TEXTURE_CUBE ||
+-             stimg->texture->target == PIPE_TEXTURE_3D ||
+-             stimg->texture->target == PIPE_TEXTURE_2D_ARRAY ||
+-             stimg->texture->target == PIPE_TEXTURE_CUBE_ARRAY))
++   /* Native KHR images are individual planes, even when their storage is
++    * a whole cube/3D/array allocation. Do not expose its other layers. */
++   bool target_matches = stimg->r4os_target == PIPE_TEXTURE_2D &&
++      (texObj->Target == GL_TEXTURE_2D || texObj->Target == GL_TEXTURE_EXTERNAL_OES);
++#else
++   bool target_matches = stimg->texture->target == gl_target_to_pipe(texObj->Target);
+ #endif
+-       ) {
++   if (!target_matches) {
+       _mesa_error(ctx, GL_INVALID_OPERATION, __func__);
+-      return;
++      return false;
+    }
+ 
+    if (stimg->internalformat) {
+@@ -498,58 +509,50 @@
+          internalFormat = GL_RGB;
+    }
+ 
+-   /* switch to surface based */
+-   if (!texObj->surface_based) {
+-      _mesa_clear_texture_object(ctx, texObj, NULL);
+-      texObj->surface_based = GL_TRUE;
+-   }
+-
+-   /* TODO RequiredTextureImageUnits should probably be reset back
+-    * to 1 somewhere if different texture is bound??
+-    */
++   unsigned required_units = 1;
+    if (!native_supported) {
+       switch (stimg->format) {
+       case PIPE_FORMAT_Y8U8V8_420_UNORM_PACKED:
+          assert(stimg->texture->format == PIPE_FORMAT_R8G8B8_420_UNORM_PACKED);
+          texFormat = MESA_FORMAT_R8G8B8X8_UNORM;
+-         texObj->RequiredTextureImageUnits = 1;
++         required_units = 1;
+          break;
+       case PIPE_FORMAT_Y10U10V10_420_UNORM_PACKED:
+          assert(stimg->texture->format == PIPE_FORMAT_R10G10B10_420_UNORM_PACKED);
+          texFormat = MESA_FORMAT_R10G10B10X2_UNORM;
+-         texObj->RequiredTextureImageUnits = 1;
++         required_units = 1;
+          break;
+       case PIPE_FORMAT_NV12:
+       case PIPE_FORMAT_NV21:
+          if (stimg->texture->format == PIPE_FORMAT_R8_G8B8_420_UNORM ||
+              stimg->texture->format == PIPE_FORMAT_R8_B8G8_420_UNORM) {
+             texFormat = MESA_FORMAT_R8G8B8X8_UNORM;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             texFormat = MESA_FORMAT_R_UNORM8;
+-            texObj->RequiredTextureImageUnits = 2;
++            required_units = 2;
+          }
+          break;
+       case PIPE_FORMAT_NV16:
+          if (stimg->texture->format == PIPE_FORMAT_R8_G8B8_422_UNORM ||
+              stimg->texture->format == PIPE_FORMAT_R8_B8G8_422_UNORM) {
+             texFormat = MESA_FORMAT_R8G8B8X8_UNORM;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             texFormat = MESA_FORMAT_R_UNORM8;
+-            texObj->RequiredTextureImageUnits = 2;
++            required_units = 2;
+          }
+          break;
+       case PIPE_FORMAT_NV61:
+       case PIPE_FORMAT_NV24:
+       case PIPE_FORMAT_NV42:
+          texFormat = MESA_FORMAT_R_UNORM8;
+-         texObj->RequiredTextureImageUnits = 2;
++         required_units = 2;
+          break;
+       case PIPE_FORMAT_NV15:
+          if (stimg->texture->format == PIPE_FORMAT_R10_G10B10_420_UNORM) {
+             texFormat = MESA_FORMAT_R10G10B10X2_UNORM;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             UNREACHABLE("NV15 emulation requires R10_G10B10_420_UNORM support");
+          }
+@@ -557,7 +560,7 @@
+       case PIPE_FORMAT_NV20:
+          if (stimg->texture->format == PIPE_FORMAT_R10_G10B10_422_UNORM) {
+             texFormat = MESA_FORMAT_R10G10B10X2_UNORM;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             UNREACHABLE("NV20 emulation requires R10_G10B10_422_UNORM support");
+          }
+@@ -567,46 +570,46 @@
+       case PIPE_FORMAT_P016:
+       case PIPE_FORMAT_P030:
+          texFormat = MESA_FORMAT_R_UNORM16;
+-         texObj->RequiredTextureImageUnits = 2;
++         required_units = 2;
+          break;
+       case PIPE_FORMAT_Y210:
+          if (stimg->texture->format == PIPE_FORMAT_X6R10X6G10_X6R10X6B10_422_UNORM) {
+             texFormat = MESA_FORMAT_RG_RB_UNORM10;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             texFormat = MESA_FORMAT_RG_UNORM16;
+-            texObj->RequiredTextureImageUnits = 2;
++            required_units = 2;
+          }
+          break;
+       case PIPE_FORMAT_Y212:
+       case PIPE_FORMAT_Y216:
+          if (stimg->texture->format == PIPE_FORMAT_R16G16_R16B16_422_UNORM) {
+             texFormat = MESA_FORMAT_RG_RB_UNORM16;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             texFormat = MESA_FORMAT_RG_UNORM16;
+-            texObj->RequiredTextureImageUnits = 2;
++            required_units = 2;
+          }
+          break;
+       case PIPE_FORMAT_Y410:
+          texFormat = MESA_FORMAT_B10G10R10A2_UNORM;
+          internalFormat = GL_RGBA;
+-         texObj->RequiredTextureImageUnits = 1;
++         required_units = 1;
+          break;
+       case PIPE_FORMAT_Y412:
+       case PIPE_FORMAT_Y416:
+          texFormat = MESA_FORMAT_RGBA_UNORM16;
+          internalFormat = GL_RGBA;
+-         texObj->RequiredTextureImageUnits = 1;
++         required_units = 1;
+          break;
+       case PIPE_FORMAT_IYUV:
+          if (stimg->texture->format == PIPE_FORMAT_R8_G8_B8_420_UNORM ||
+              stimg->texture->format == PIPE_FORMAT_R8_B8_G8_420_UNORM) {
+             texFormat = MESA_FORMAT_R8G8B8X8_UNORM;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             texFormat = MESA_FORMAT_R_UNORM8;
+-            texObj->RequiredTextureImageUnits = 3;
++            required_units = 3;
+          }
+          break;
+       case PIPE_FORMAT_Y10X6_U10X6_V10X6_420_UNORM:
+@@ -619,7 +622,7 @@
+       case PIPE_FORMAT_Y16_U16_V16_422_UNORM:
+       case PIPE_FORMAT_Y16_U16_V16_444_UNORM:
+          texFormat = MESA_FORMAT_R_UNORM16;
+-         texObj->RequiredTextureImageUnits = 3;
++         required_units = 3;
+          break;
+       case PIPE_FORMAT_YUYV:
+       case PIPE_FORMAT_YVYU:
+@@ -627,29 +630,29 @@
+       case PIPE_FORMAT_VYUY:
+          if (stimg->texture->format == PIPE_FORMAT_R8G8_R8B8_UNORM) {
+             texFormat = MESA_FORMAT_RG_RB_UNORM8;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else if (stimg->texture->format == PIPE_FORMAT_R8B8_R8G8_UNORM) {
+             texFormat = MESA_FORMAT_RB_RG_UNORM8;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else if (stimg->texture->format == PIPE_FORMAT_G8R8_B8R8_UNORM) {
+             texFormat = MESA_FORMAT_GR_BR_UNORM8;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else if (stimg->texture->format == PIPE_FORMAT_B8R8_G8R8_UNORM) {
+             texFormat = MESA_FORMAT_BR_GR_UNORM8;
+-            texObj->RequiredTextureImageUnits = 1;
++            required_units = 1;
+          } else {
+             texFormat = MESA_FORMAT_RG_UNORM8;
+-            texObj->RequiredTextureImageUnits = 2;
++            required_units = 2;
+          }
+          break;
+       case PIPE_FORMAT_AYUV:
+          texFormat = MESA_FORMAT_R8G8B8A8_UNORM;
+          internalFormat = GL_RGBA;
+-         texObj->RequiredTextureImageUnits = 1;
++         required_units = 1;
+          break;
+       case PIPE_FORMAT_XYUV:
+          texFormat = MESA_FORMAT_R8G8B8X8_UNORM;
+-         texObj->RequiredTextureImageUnits = 1;
++         required_units = 1;
+          break;
+       default:
+          UNREACHABLE("unexpected emulated format");
+@@ -666,11 +669,22 @@
+          internalFormat = stimg->internalformat;
+          if (internalFormat == GL_NONE) {
+             _mesa_error(ctx, GL_INVALID_OPERATION, __func__);
+-            return;
++            return false;
+          }
+       }
+    }
+-   assert(texFormat != MESA_FORMAT_NONE);
++   if (texFormat == MESA_FORMAT_NONE) {
++      _mesa_error(ctx, GL_INVALID_OPERATION, __func__);
++      return false;
++   }
++
++   /* All fallible work precedes this commit. Retain the base image structure
++    * while clearing the old storage, including any previously defined mips. */
++   _mesa_clear_texture_object(ctx, texObj, texImage);
++   st_FreeTextureImageBuffer(ctx, texImage);
++   texObj->surface_based = GL_TRUE;
++   texObj->External = GL_TRUE;
++   texObj->RequiredTextureImageUnits = required_units;
+ 
+ 
+    /* Minify texture size based on level set on the EGLImage. */
+@@ -703,8 +717,7 @@
+       break;
+    }
+ 
+-   if (stimg->yuv_range == __DRI_YUV_FULL_RANGE)
+-      texObj->yuv_full_range = true;
++   texObj->yuv_full_range = stimg->yuv_range == __DRI_YUV_FULL_RANGE;
+ 
+    texObj->CompressionRate = stimg->texture->compression_rate;
+ 
+@@ -713,6 +726,7 @@
+    _mesa_update_texture_object_swizzle(ctx, texObj);
+ 
+    _mesa_dirty_texobj(ctx, texObj);
++   return true;
+ }
+ 
+ bool
+--- a/src/mesa/state_tracker/st_cb_eglimage.h
++++ b/src/mesa/state_tracker/st_cb_eglimage.h
+@@ -37,7 +37,7 @@
+ bool st_get_egl_image(struct gl_context *ctx, GLeglImageOES image_handle,
+                       unsigned usage, bool tex_compression, const char *error,
+                       struct st_egl_image *out, bool *native_supported);
+-void st_bind_egl_image(struct gl_context *ctx,
++bool st_bind_egl_image(struct gl_context *ctx,
+                        struct gl_texture_object *texObj,
+                        struct gl_texture_image *texImage,
+                        struct st_egl_image *stimg,

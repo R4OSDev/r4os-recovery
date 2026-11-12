@@ -1,0 +1,44 @@
+﻿R4OS Runtime Libraries - Herkunft
+==================================
+
+Kanonischer Quellstand der Uebernahme:
+
+    Repository: R4mbo/R4OS
+    Commit:     259cbfac272c47ac1a7828de973512d17b29ae10
+    Archivkopf: 2c0ca0473b5eeb5f3417db82fa666368ed67d5df
+
+Bytegenau uebernommene Einheiten:
+
+    Code/System/Libraries/R4STD/   31 Dateien
+    Code/System/Libraries/R4IMG/   32 Dateien
+    Code/System/Libraries/R4FONT/  440 Dateien
+
+Git-Baumidentitaeten im Quellcommit:
+
+    R4STD   8f756113c1f6c58a1c2c3f36cbd89af7a604e148
+    R4IMG   34577d65631d81d438d24322a4aae78e3235c0c0
+    R4FONT  e8fc1282f1b58963f65decdd8e21673fe2dd7ddb
+
+Vor den Grenzanpassungen wurden Quelle und Ziel fuer jede Einheit vollstaendig
+byteweise verglichen. Abweichungen danach beschraenken sich auf die explizite
+SDK-/Contract-Anbindung sowie repo-neutrale Build- und Dokumentationspfade.
+Die Librarycontracts, Baselines, generierten Bindings, Providerquellen,
+Drittquellen und fachlichen Tests bleiben Eigentum der jeweiligen Library.
+
+Explizite Buildbasis:
+
+    SDK       Commit 210372f305086b3528f6bd386e23e6901975c153
+    Contract  Commit 5521df06871b4cee158e44853db01380934d6c4c
+
+Der Windows-Einzel- und Gesamtbuild erzeugt byteidentische Runtime-Artefakte
+zum letzten abgenommenen Altprojektstand:
+
+    R4STD.R4L   25CD0DB2554FBE1D8729333FE5A48F11E932101023D5D62835FBD50D2A3C7021
+    R4IMG.R4L   CCEAE3FD1D220F69E9CF44F7037C4B9CF5B663C1086EE817DA0968B35845EEB6
+    R4FONT.R4L  C62A8F3CC35F83294FE2E7C0309328966FFE9AA8AB0023EF7D4E0155D0ABABD4
+
+Die vorhandenen `source.owner=Code/System/Libraries/...`-Metadaten bleiben
+fuer diesen reinen Transfer bewusst als Bestandteil dieser byteidentischen
+Artefakte erhalten. Sie werden nicht zur Pfadauflösung verwendet. Eine
+Umbenennung erfolgt erst mit einer normalen Libraryversion, weil sie das
+Runtime-Artefakt veraendern wuerde.

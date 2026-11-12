@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "module_name": "R4GL",
+  "zig_client": "R4Gl",
+  "c_prefix": "r4gl",
+  "c_header": "r4gl.h",
+  "description": "Native EGL/OpenGL bootstrap and process lifecycle. Mesa owns GL/EGL semantics; R4OS owns presentation and resources.",
+  "interfaces": [
+    {
+      "export_name": "EGL_V1",
+      "symbol": "r4gl_egl_v1",
+      "zig_name": "egl_v1",
+      "zig_type": "EglV1",
+      "c_type": "R4GlEglV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 13876142848226376,
+      "interface_id_hi": 54203681887055,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "open",
+          "c_name": "r4gl_open",
+          "symbol": "r4gl_open_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4GlRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Startup descriptor; copied on success."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4GlLoader",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Borrowed resolver address, written only on success."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4GL",
+            "ownership": "Process-owned runtime. Keep this R4L generation loaded until all GL/EGL calls, objects and thread cleanup have finished."
+          },
+          "description": "Bind the actual selected startup generation and immutable platform imports. Start1 requires original R4SYS23/DRAW/DEV; Start2 requires actual SYS2/DRAW2/DEV2. Zink additionally imports independent R4VK:VULKAN_V1:1, plus technical Query2 under Start2. No EGL context/device is created. Matching opens remain idempotent until finish; selected profile stays immutable."
+        },
+        {
+          "name": "release_thread",
+          "c_name": "r4gl_release_thread",
+          "symbol": "r4gl_release_thread_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "owner_thread",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4GL",
+            "ownership": "Process-owned runtime. Keep this R4L generation loaded until all GL/EGL calls, objects and thread cleanup have finished."
+          },
+          "description": "After the thread stops using GL/EGL, run its language TLS destructors, EGL unbinding and raw TLS retirement. Call before an application-created thread returns. Library-created C11 workers do this automatically."
+        },
+        {
+          "name": "finish",
+          "c_name": "r4gl_finish",
+          "symbol": "r4gl_finish_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "timeout_ns",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Window-lease polling budget; clamped to five seconds. Zero skips lease waiting. Worker joins and finalizers may still block."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4GL",
+            "ownership": "Process-owned runtime. Keep this R4L generation loaded until all GL/EGL calls, objects and thread cleanup have finished."
+          },
+          "description": "After joining application GL threads, releasing their TLS, destroying all GL/EGL objects and terminating displays, close worker admission, drain/join window retirement, run process finalizers and close native streams/options. Busy retains ownership for retry; no API reentry except finish/release_thread once called. Closed is idempotent; reopening requires a new process."
+        }
+      ],
+      "description": "Process binding for native EGL profiles. This interface version is independent of EGL/GL versions."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4GlRuntime",
+      "size": 24,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "At least 24 bytes."
+        },
+        {
+          "name": "application",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Opaque address of the actual admitted Start1 or Start2 record. The library copies it into stable process-owned storage; immutable import/name backing follows the process lifetime. No new context is interpreted as the legacy layout."
+        },
+        {
+          "name": "profile",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "0 selects CPU softpipe. 1 selects the initial Zink/R4VK pbuffer profile and requires the optional R4VK import. No implicit fallback or hardware claim: eglInitialize validates the actual device. Other values are rejected."
+        },
+        {
+          "name": "reserved",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be zero."
+        }
+      ],
+      "description": "Caller startup descriptor. R4GL retains its own process snapshot, not the descriptor or a stack Bundle."
+    },
+    {
+      "name": "R4GlLoader",
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "16 bytes."
+        },
+        {
+          "name": "get_proc_address",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "PFNEGLGETPROCADDRESSPROC-compatible resolver for EGL and GL symbols, using the ordinary x86_64 C ABI. Null on unavailable symbol or after finish begins."
+        }
+      ],
+      "description": "Resolve standard API commands; use eglQueryString/glGetString and context creation for supported versions/extensions. A resolved symbol alone does not admit a feature."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "success",
+      "c_name": "R4GL_SUCCESS",
+      "type": "i32",
+      "value": 0,
+      "description": "Operation complete."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "error_initialization",
+      "c_name": "R4GL_ERROR_INITIALIZATION",
+      "type": "i32",
+      "value": -1,
+      "description": "Invalid/unavailable startup or unbound process. Open leaves output unchanged."
+    },
+    {
+      "zig_name": "error_busy",
+      "c_name": "R4GL_ERROR_BUSY",
+      "type": "i32",
+      "value": -2,
+      "description": "Cleanup is incomplete or concurrent; retain the R4L and retry after users stop."
+    },
+    {
+      "zig_name": "error_io",
+      "c_name": "R4GL_ERROR_IO",
+      "type": "i32",
+      "value": -3,
+      "description": "Cleanup completed with a native stream flush/close error. The runtime is closed."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "threads",
+      "text": "Mutable Mesa state belongs to the calling process and exact thread generation. EGL context currentness and sharing follow EGL rules. Application-created threads explicitly release_thread before returning; callers serialize open/finish and quiesce GL/EGL before finish."
+    },
+    {
+      "name": "presentation",
+      "text": "EGL_DEFAULT_DISPLAY uses the explicitly selected native profile. Window handles identify the creating process WINSVC surface. Zink window integration retains canonical broker/BO/fence identities and requires an actually admitted Vulkan backend; unsupported hardware remains unavailable. No host window, Linux FD or GPU handle is fabricated."
+    },
+    {
+      "name": "fatal",
+      "text": "An unrecoverable native runtime failure terminates the calling process through R4SYS program_exit. It does not run foreign callbacks in kernel cleanup. Ordinary EGL/GL errors remain standard error returns."
+    },
+    {
+      "name": "profile",
+      "text": "Softpipe without LLVM/JIT: EGL 1.5, up to GL 3.3 Core, output-qualified swap intervals 0..1 with firmware fallback 0. Zink: an initial GL 3.3 pbuffer path over the imported R4VK ICD, admitted only after its actual Vulkan features/limits pass. Native Zink windows and positive rendering qualification remain roadmap work. No-device is EGL_NOT_INITIALIZED and permits another initialize attempt; profiles never switch implicitly."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+--- a/src/amd/addrlib/src/core/addrcommon.h
++++ b/src/amd/addrlib/src/core/addrcommon.h
+@@ -25,7 +25,7 @@
+     #include <string.h>
+ #endif
+ 
+-#if defined(__GNUC__)
++#if defined(__GNUC__) && DEBUG
+     #include <signal.h>
+ #endif
+ 

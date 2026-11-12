@@ -1,0 +1,84 @@
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -774,6 +774,65 @@
+    caps->max_subgroups = screen->info.props13.maxComputeWorkgroupSubgroups;
+ }
+ 
++#ifdef R4OS_OPENGL
++/* R4OS AMD Core admission, in addition to the common GL 3.3 checks and
++ * Mesa's final GL extension/limit version computation. The pinned Zink
++ * VP_ZINK_requirements.json gl40..gl46 baseline supplies these requirements.
++ * Existing native providers retain their separately qualified ceiling. */
++static unsigned
++r4gl_native_core_glsl(struct zink_screen *screen)
++{
++   const struct zink_device_info *i = &screen->info;
++   const VkPhysicalDeviceFeatures *f = &i->feats.features;
++   const VkPhysicalDeviceLimits *l = &i->props.limits;
++   if (i->props.vendorID != 0x1002 ||
++       i->driver_props.driverID != VK_DRIVER_ID_MESA_RADV)
++      return 330;
++#define R4GL_CORE_REQUIRE(test) do { if (!(test)) { \
++   mesa_loge("R4GL: AMD Core 4.6 requirement failed: %s", #test); \
++   return 330; } } while (0)
++   R4GL_CORE_REQUIRE(i->have_vulkan13 && i->feats13.maintenance4);
++   R4GL_CORE_REQUIRE(f->sampleRateShading && f->tessellationShader && f->imageCubeArray);
++   R4GL_CORE_REQUIRE(f->shaderFloat64 && f->multiViewport);
++   R4GL_CORE_REQUIRE(l->maxImageDimension1D >= 16384 && l->maxImageDimension2D >= 16384 &&
++      l->maxImageDimension3D >= 2048 && l->maxImageDimensionCube >= 16384 &&
++      l->maxImageArrayLayers >= 2048 && l->maxViewports >= 16);
++   R4GL_CORE_REQUIRE(i->have_EXT_image_2d_view_of_3d && i->view2d_feats.image2DViewOf3D);
++   R4GL_CORE_REQUIRE(f->shaderStorageImageExtendedFormats && f->shaderStorageImageWriteWithoutFormat &&
++      f->vertexPipelineStoresAndAtomics && f->fragmentStoresAndAtomics && i->feats11.shaderDrawParameters);
++   R4GL_CORE_REQUIRE(f->robustBufferAccess && f->multiDrawIndirect &&
++      (i->rb2_feats.robustImageAccess2 || screen->driver_compiler_workarounds.lower_robustImageAccess2));
++   R4GL_CORE_REQUIRE(i->feats12.samplerMirrorClampToEdge && f->shaderCullDistance);
++   R4GL_CORE_REQUIRE(f->samplerAnisotropy && f->depthBiasClamp &&
++      i->have_KHR_draw_indirect_count && i->feats12.drawIndirectCount);
++   const struct {
++      VkFormat format;
++      VkFormatFeatureFlags linear, optimal, buffer;
++   } formats[] = {
++      {VK_FORMAT_R32G32B32_SFLOAT, 0, 0, VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT},
++      {VK_FORMAT_R32G32B32_SINT, 0, 0, VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT},
++      {VK_FORMAT_R32G32B32_UINT, 0, 0, VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT},
++      {VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, 0},
++      {VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, 0},
++      {VK_FORMAT_R16_UNORM, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, 0},
++      {VK_FORMAT_R16G16_UNORM, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, 0},
++      {VK_FORMAT_R16_SNORM, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, 0},
++      {VK_FORMAT_R16G16_SNORM, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, 0},
++      {VK_FORMAT_D32_SFLOAT_S8_UINT, 0, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, 0},
++      {VK_FORMAT_B10G11R11_UFLOAT_PACK32, 0, 0, VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT},
++   };
++   for (unsigned n = 0; n < ARRAY_SIZE(formats); n++) {
++      VkFormatProperties p;
++      VKSCR(GetPhysicalDeviceFormatProperties)(screen->pdev, formats[n].format, &p);
++      R4GL_CORE_REQUIRE((p.linearTilingFeatures & formats[n].linear) == formats[n].linear &&
++         (p.optimalTilingFeatures & formats[n].optimal) == formats[n].optimal &&
++         (p.bufferFeatures & formats[n].buffer) == formats[n].buffer);
++   }
++#undef R4GL_CORE_REQUIRE
++   return 460;
++}
++#endif
++
+ static void
+ zink_init_screen_caps(struct zink_screen *screen)
+ {
+@@ -1030,12 +1089,11 @@
+ 
+    caps->conditional_render = true;
+ 
+-   caps->glsl_feature_level_compatibility =
+-   caps->glsl_feature_level =
+ #ifdef R4OS_OPENGL
+-      330; /* Initial native profile; later versions need separate admission. */
++   caps->glsl_feature_level_compatibility = 330;
++   caps->glsl_feature_level = r4gl_native_core_glsl(screen);
+ #else
+-      460;
++   caps->glsl_feature_level_compatibility = caps->glsl_feature_level = 460;
+ #endif
+ 
+    caps->compute = true;

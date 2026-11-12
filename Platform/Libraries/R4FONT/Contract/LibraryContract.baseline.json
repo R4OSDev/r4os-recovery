@@ -1,0 +1,1384 @@
+{
+  "schema_version": 1,
+  "module_name": "R4FONT",
+  "zig_client": "R4Font",
+  "c_prefix": "r4font",
+  "c_header": "r4font.h",
+  "description": "Unabhaengige Runtime-R4L fuer TTF-, OTF/CFF-, WOFF-, WOFF2- und TTC-Fonts mit Metriken, Kerning und Alpha8-Rasterung.",
+  "interfaces": [
+    {
+      "export_name": "API_V1",
+      "symbol": "r4font_api_v1",
+      "zig_name": "api_v1",
+      "zig_type": "ApiV1",
+      "c_type": "R4FontApiV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 533639803261034520,
+      "interface_id_hi": 13858875034217581555,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "sniff",
+          "c_name": "r4font_sniff",
+          "symbol": "r4font_sniff_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "length",
+              "description": "Caller-eigene Fontsignatur."
+            },
+            {
+              "name": "length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Anzahl lesbarer Bytes."
+            },
+            {
+              "name": "output_format",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Erkannte R4FONT_FORMAT-Kennung."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Die Eingabe wird nur waehrend des Aufrufs gelesen."
+          },
+          "description": "Erkennt das Fontcontainerformat anhand seiner Signatur."
+        },
+        {
+          "name": "decoder_create",
+          "c_name": "r4font_decoder_create",
+          "symbol": "r4font_decoder_create_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "allocator",
+              "type": {
+                "name": "R4FontAllocator",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "handle",
+              "description": "Allocatorbeschreibung; ihre Adressen bleiben bis decoder_destroy gueltig."
+            },
+            {
+              "name": "allocation_limit",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Maximale providerseitig angeforderte Speichermenge."
+            },
+            {
+              "name": "output_decoder",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Neues opakes Decoderhandle."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Der Provider speichert eine Kopie der Allocatorbeschreibung bis decoder_destroy."
+          },
+          "description": "Erzeugt einen voneinander unabhaengigen Decoder."
+        },
+        {
+          "name": "decoder_destroy",
+          "c_name": "r4font_decoder_destroy",
+          "symbol": "r4font_decoder_destroy_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "decoder",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Decoderhandle."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Nach Rueckkehr ist das Decoderhandle ungueltig; alle Faces muessen zuvor geschlossen sein."
+          },
+          "description": "Zerstoert Decoder und providerseitigen Zustand."
+        },
+        {
+          "name": "decoder_diagnostics",
+          "c_name": "r4font_decoder_diagnostics",
+          "symbol": "r4font_decoder_diagnostics_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "decoder",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Decoderhandle."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4FontDiagnostics",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Diagnoseausgabe."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Die Diagnose wird kopiert und behaelt keine Pointer."
+          },
+          "description": "Liest die Speicherdiagnose eines Decoders."
+        },
+        {
+          "name": "decoder_open_face",
+          "c_name": "r4font_decoder_open_face",
+          "symbol": "r4font_decoder_open_face_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "decoder",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Decoderhandle."
+            },
+            {
+              "name": "bytes",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "handle",
+              "length_by": "length",
+              "description": "Caller-eigene Fontdaten; bleiben bis face_close unveraendert gueltig."
+            },
+            {
+              "name": "length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Anzahl lesbarer Fontbytes."
+            },
+            {
+              "name": "face_index",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Faceindex innerhalb eines Containers."
+            },
+            {
+              "name": "output_face",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Neues opakes Facehandle."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Die Fontdaten bleiben caller-owned und werden bis face_close nur geborgt."
+          },
+          "description": "Oeffnet ein Face aus caller-eigenen Fontdaten."
+        },
+        {
+          "name": "face_close",
+          "c_name": "r4font_face_close",
+          "symbol": "r4font_face_close_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "face",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Facehandle."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Nach Rueckkehr ist das Facehandle ungueltig."
+          },
+          "description": "Schliesst ein Face."
+        },
+        {
+          "name": "face_info",
+          "c_name": "r4font_face_info",
+          "symbol": "r4font_face_info_impl",
+          "slot": 6,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "face",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Facehandle."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4FontFaceInfo",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Metadatenausgabe."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Familien- und Stiladressen bleiben provider-owned und gelten bis face_close."
+          },
+          "description": "Liest feste Face-Metadaten und geborgte Namen."
+        },
+        {
+          "name": "glyph_index",
+          "c_name": "r4font_glyph_index",
+          "symbol": "r4font_glyph_index_impl",
+          "slot": 7,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "face",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Facehandle."
+            },
+            {
+              "name": "codepoint",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Unicode-Codepoint."
+            },
+            {
+              "name": "output_glyph",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Glyphenindexausgabe."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Die Ausgabe wird kopiert."
+          },
+          "description": "Loest einen Codepoint auf einen Glyphenindex auf."
+        },
+        {
+          "name": "glyph_metrics",
+          "c_name": "r4font_glyph_metrics",
+          "symbol": "r4font_glyph_metrics_impl",
+          "slot": 8,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "face",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Facehandle."
+            },
+            {
+              "name": "glyph",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Glyphenindex."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4FontGlyphMetrics",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Metrikausgabe."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Die Ausgabe wird kopiert."
+          },
+          "description": "Liest unskalierte Glyphenmetriken."
+        },
+        {
+          "name": "kerning",
+          "c_name": "r4font_kerning",
+          "symbol": "r4font_kerning_impl",
+          "slot": 9,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "face",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Facehandle."
+            },
+            {
+              "name": "left_glyph",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Linker Glyphenindex."
+            },
+            {
+              "name": "right_glyph",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Rechter Glyphenindex."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4FontKerning",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Kerningausgabe."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Die Ausgabe wird kopiert."
+          },
+          "description": "Liest das Kerning eines Glyphenpaares."
+        },
+        {
+          "name": "rasterize",
+          "c_name": "r4font_rasterize",
+          "symbol": "r4font_rasterize_impl",
+          "slot": 10,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "face",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gueltiges Facehandle."
+            },
+            {
+              "name": "glyph",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Glyphenindex."
+            },
+            {
+              "name": "pixel_height",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Gewuenschte Pixelhoehe."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": true
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Optionaler caller-eigener Alpha8-Puffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Kapazitaet des Ausgabepuffers."
+            },
+            {
+              "name": "output_raster",
+              "type": {
+                "name": "R4FontRaster",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Rastermetadaten."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4FONT_STATUS",
+            "ownership": "Pixelpuffer und Metadatenausgabe bleiben caller-owned."
+          },
+          "description": "Rastert eine Glyphe als Alpha8."
+        }
+      ],
+      "description": "Versionierte R4FONT-V1-Funktionstabelle."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4FontAllocator",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "user",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Opaker Caller-Kontext als x86_64-Adresse."
+        },
+        {
+          "name": "alloc",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "C-ABI-Allokationsfunktion als x86_64-Adresse."
+        },
+        {
+          "name": "realloc",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "C-ABI-Reallokationsfunktion als x86_64-Adresse."
+        },
+        {
+          "name": "free",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "C-ABI-Freigabefunktion als x86_64-Adresse."
+        }
+      ],
+      "description": "Feste V1-Allocatorbeschreibung."
+    },
+    {
+      "name": "R4FontDiagnostics",
+      "size": 56,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "current_bytes",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Aktuell angeforderte Bytes."
+        },
+        {
+          "name": "peak_bytes",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Hoechster Speicherstand."
+        },
+        {
+          "name": "allocation_count",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Erfolgreiche Allokationen."
+        },
+        {
+          "name": "reallocation_count",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Erfolgreiche Reallokationen."
+        },
+        {
+          "name": "reallocation_failure_count",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Fehlgeschlagene Reallokationen."
+        },
+        {
+          "name": "allocation_limit",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Konfiguriertes Speicherlimit."
+        },
+        {
+          "name": "allocation_failed",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Eins nach einem Allokationsfehler."
+        },
+        {
+          "name": "reserved",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        }
+      ],
+      "description": "Feste Decoderdiagnose der V1-ABI."
+    },
+    {
+      "name": "R4FontFaceInfo",
+      "size": 56,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "face_count",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Anzahl Faces im Container."
+        },
+        {
+          "name": "face_index",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Index des geoeffneten Faces."
+        },
+        {
+          "name": "glyph_count",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Glyphenanzahl."
+        },
+        {
+          "name": "units_per_em",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Fontunits pro Em."
+        },
+        {
+          "name": "ascender",
+          "offset": 16,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Ascender in Fontunits."
+        },
+        {
+          "name": "descender",
+          "offset": 20,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Descender in Fontunits."
+        },
+        {
+          "name": "line_height",
+          "offset": 24,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Zeilenhoehe in Fontunits."
+        },
+        {
+          "name": "max_advance",
+          "offset": 28,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Maximaler Vorschub."
+        },
+        {
+          "name": "style_flags",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "R4FONT_STYLE-Bitmaske."
+        },
+        {
+          "name": "reserved",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        },
+        {
+          "name": "family_address",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Provider-owned nullterminierter Familienname."
+        },
+        {
+          "name": "style_address",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Provider-owned nullterminierter Stilname."
+        }
+      ],
+      "description": "Feste Face-Metadaten der V1-ABI."
+    },
+    {
+      "name": "R4FontGlyphMetrics",
+      "size": 28,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "glyph_index",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Glyphenindex."
+        },
+        {
+          "name": "advance_x",
+          "offset": 4,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Horizontaler Vorschub."
+        },
+        {
+          "name": "advance_y",
+          "offset": 8,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Vertikaler Vorschub."
+        },
+        {
+          "name": "bearing_x",
+          "offset": 12,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Horizontales Bearing."
+        },
+        {
+          "name": "bearing_y",
+          "offset": 16,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Vertikales Bearing."
+        },
+        {
+          "name": "width",
+          "offset": 20,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Glyphenbreite."
+        },
+        {
+          "name": "height",
+          "offset": 24,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Glyphenhoehe."
+        }
+      ],
+      "description": "Feste unskalierte Glyphenmetriken der V1-ABI."
+    },
+    {
+      "name": "R4FontKerning",
+      "size": 8,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Horizontales Kerning."
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Vertikales Kerning."
+        }
+      ],
+      "description": "Feste Kerningausgabe der V1-ABI."
+    },
+    {
+      "name": "R4FontRaster",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "glyph_index",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Glyphenindex."
+        },
+        {
+          "name": "width",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Rasterbreite."
+        },
+        {
+          "name": "height",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Rasterhoehe."
+        },
+        {
+          "name": "left",
+          "offset": 12,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Linker Offset."
+        },
+        {
+          "name": "top",
+          "offset": 16,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Oberer Offset."
+        },
+        {
+          "name": "advance_x_26_6",
+          "offset": 20,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Horizontaler Vorschub in 26.6."
+        },
+        {
+          "name": "required_bytes",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Benoetigte oder geschriebene Alpha8-Bytes."
+        }
+      ],
+      "description": "Feste Rastermetadaten der V1-ABI."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "status_ok",
+      "c_name": "R4FONT_STATUS_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "Operation erfolgreich."
+    },
+    {
+      "zig_name": "format_unknown",
+      "c_name": "R4FONT_FORMAT_UNKNOWN",
+      "type": "u32",
+      "value": 0,
+      "description": "Unbekanntes Format."
+    },
+    {
+      "zig_name": "format_ttf",
+      "c_name": "R4FONT_FORMAT_TTF",
+      "type": "u32",
+      "value": 1,
+      "description": "TrueType/SFNT."
+    },
+    {
+      "zig_name": "format_otf_cff",
+      "c_name": "R4FONT_FORMAT_OTF_CFF",
+      "type": "u32",
+      "value": 2,
+      "description": "OpenType mit CFF."
+    },
+    {
+      "zig_name": "format_woff",
+      "c_name": "R4FONT_FORMAT_WOFF",
+      "type": "u32",
+      "value": 3,
+      "description": "WOFF."
+    },
+    {
+      "zig_name": "format_woff2",
+      "c_name": "R4FONT_FORMAT_WOFF2",
+      "type": "u32",
+      "value": 4,
+      "description": "WOFF2."
+    },
+    {
+      "zig_name": "format_collection",
+      "c_name": "R4FONT_FORMAT_COLLECTION",
+      "type": "u32",
+      "value": 5,
+      "description": "TrueType Collection."
+    },
+    {
+      "zig_name": "style_italic",
+      "c_name": "R4FONT_STYLE_ITALIC",
+      "type": "u32",
+      "value": 1,
+      "description": "Italic-Stilbit."
+    },
+    {
+      "zig_name": "style_bold",
+      "c_name": "R4FONT_STYLE_BOLD",
+      "type": "u32",
+      "value": 2,
+      "description": "Bold-Stilbit."
+    },
+    {
+      "zig_name": "max_source_bytes",
+      "c_name": "R4FONT_MAX_SOURCE_BYTES",
+      "type": "u64",
+      "value": 8388608,
+      "description": "Maximale Quellgroesse."
+    },
+    {
+      "zig_name": "max_reconstructed_bytes",
+      "c_name": "R4FONT_MAX_RECONSTRUCTED_BYTES",
+      "type": "u64",
+      "value": 33554432,
+      "description": "Maximale rekonstruierte Groesse."
+    },
+    {
+      "zig_name": "max_raster_dimension",
+      "c_name": "R4FONT_MAX_RASTER_DIMENSION",
+      "type": "u32",
+      "value": 512,
+      "description": "Maximale Rasterdimension."
+    },
+    {
+      "zig_name": "default_allocation_limit",
+      "c_name": "R4FONT_DEFAULT_ALLOCATION_LIMIT",
+      "type": "u64",
+      "value": 67108864,
+      "description": "Standard-Allokationslimit."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "status_invalid_argument",
+      "c_name": "R4FONT_STATUS_INVALID_ARGUMENT",
+      "type": "i32",
+      "value": -1,
+      "description": "Ungueltiges Argument oder Handle."
+    },
+    {
+      "zig_name": "status_out_of_memory",
+      "c_name": "R4FONT_STATUS_OUT_OF_MEMORY",
+      "type": "i32",
+      "value": -2,
+      "description": "Allokation fehlgeschlagen."
+    },
+    {
+      "zig_name": "status_unsupported_format",
+      "c_name": "R4FONT_STATUS_UNSUPPORTED_FORMAT",
+      "type": "i32",
+      "value": -3,
+      "description": "Fontformat wird nicht unterstuetzt."
+    },
+    {
+      "zig_name": "status_invalid_font",
+      "c_name": "R4FONT_STATUS_INVALID_FONT",
+      "type": "i32",
+      "value": -4,
+      "description": "Fontdaten sind ungueltig."
+    },
+    {
+      "zig_name": "status_invalid_face_index",
+      "c_name": "R4FONT_STATUS_INVALID_FACE_INDEX",
+      "type": "i32",
+      "value": -5,
+      "description": "Faceindex ist ungueltig."
+    },
+    {
+      "zig_name": "status_invalid_glyph",
+      "c_name": "R4FONT_STATUS_INVALID_GLYPH",
+      "type": "i32",
+      "value": -6,
+      "description": "Glyphenindex ist ungueltig."
+    },
+    {
+      "zig_name": "status_buffer_too_small",
+      "c_name": "R4FONT_STATUS_BUFFER_TOO_SMALL",
+      "type": "i32",
+      "value": -7,
+      "description": "Ausgabepuffer ist zu klein."
+    },
+    {
+      "zig_name": "status_too_large",
+      "c_name": "R4FONT_STATUS_TOO_LARGE",
+      "type": "i32",
+      "value": -8,
+      "description": "Quelle oder Raster ueberschreitet die Grenze."
+    },
+    {
+      "zig_name": "status_decoder_failure",
+      "c_name": "R4FONT_STATUS_DECODER_FAILURE",
+      "type": "i32",
+      "value": -9,
+      "description": "Decoderzustand ist unerwartet fehlgeschlagen."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "Decoderhandle",
+      "text": "Ein Decoderhandle gehoert dem Caller, wird mit decoder_destroy geschlossen und darf erst nach allen zugehoerigen Faces zerstoert werden."
+    },
+    {
+      "name": "Facehandle",
+      "text": "Ein Facehandle gehoert dem Caller und wird mit face_close geschlossen; es ist an Decoder und Providergeneration gebunden."
+    },
+    {
+      "name": "Fontdaten",
+      "text": "decoder_open_face kopiert Fontdaten nicht. Der Caller haelt sie bis face_close unveraendert und lesbar."
+    },
+    {
+      "name": "Allocator",
+      "text": "Die Library kopiert Callbackadressen und Userkontext. Sie bleiben bis decoder_destroy gueltig; Allokationen werden ueber denselben Allocator freigegeben."
+    },
+    {
+      "name": "Namen",
+      "text": "Familien- und Stilnamen bleiben provider-owned, nullterminiert und nur bis face_close gueltig."
+    },
+    {
+      "name": "Providergeneration",
+      "text": "API-Tabelle, Funktionspointer und alle Handles gelten nur fuer die geladene R4FONT-Providergeneration."
+    }
+  ]
+}

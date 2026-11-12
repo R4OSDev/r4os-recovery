@@ -1,0 +1,85 @@
+{
+  "schema_version": 2,
+  "generator": {
+    "file": "R4FONT/Tests/Tools/generate_minimal_fonts.py",
+    "sha256": "fcabeb65cadafefc697d2525e33c79c24fc89cf1efcc8d7552a38ae6cae45541",
+    "runtime": "Python 3 standard library only",
+    "check": "python R4FONT/Tests/Tools/generate_minimal_fonts.py --check"
+  },
+  "upstream": {
+    "web-platform-tests": {
+      "repository": "https://github.com/web-platform-tests/wpt.git",
+      "commit": "4a5810a124fa0523dd2494996bf1542d4b67f394",
+      "license": "BSD-3-Clause",
+      "notice": "LICENSE-WPT-BSD-3-Clause"
+    }
+  },
+  "fixtures": [
+    {
+      "file": "sample-glyf.ttf",
+      "source": "web-platform-tests/fetch/orb/resources/font.ttf",
+      "transformation": "Byte-for-byte copy of the pinned WPT source fixture.",
+      "sha256": "c64ae78b59eabae0333e85a2793676da2f5138d178cb5d6c2725a06100d59711",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2010 Philip Taylor",
+      "notice": "LICENSE-sample-glyf-MIT"
+    },
+    {
+      "file": "sample-cff.otf",
+      "source": "web-platform-tests/svg/import/woffs/embeded-text-text-06.woff",
+      "transformation": "Byte-for-byte copy; the upstream .woff filename contains an OTTO/CFF SFNT fixture.",
+      "sha256": "d3d9be013e07bca43241b1b5854f6b92fdffe308ddeea38980eb647debbe555e",
+      "license": "BSD-3-Clause",
+      "copyright": "Copyright (c) web-platform-tests contributors",
+      "notice": "LICENSE-WPT-BSD-3-Clause"
+    },
+    {
+      "file": "sample-cff.woff",
+      "source": "web-platform-tests/css/css-values/resources/ExTest.woff",
+      "transformation": "Byte-for-byte copy of the pinned WPT source fixture.",
+      "sha256": "781efabf88863bd8c99a468762447da21e849960711ae4df5c8027daa0a20395",
+      "license": "BSD-3-Clause",
+      "copyright": "Copyright (c) web-platform-tests contributors",
+      "notice": "LICENSE-WPT-BSD-3-Clause"
+    },
+    {
+      "file": "sample-glyf.woff2",
+      "source": "web-platform-tests/css/css-values/resources/IcTestFullWidth.woff2",
+      "transformation": "Byte-for-byte copy of the pinned WPT source fixture.",
+      "sha256": "92b738c5fde3db7065342c6b3d1797abe3cc7322250533aea1613e8f05493b3a",
+      "license": "BSD-3-Clause",
+      "copyright": "Copyright (c) web-platform-tests contributors",
+      "notice": "LICENSE-WPT-BSD-3-Clause"
+    },
+    {
+      "file": "sample-kern.woff",
+      "source": "R4FONT/Tests/Tools/generate_minimal_fonts.py",
+      "transformation": "Deterministically constructs a minimal TrueType SFNT with .notdef/A/V/T and a legacy kern v0 pair A/V=-115, then wraps every table uncompressed in WOFF 1.0.",
+      "sha256": "7b3d154069c22520cc6a571e946a71baf72571ca5c26ce75fe254c59cdd1c759",
+      "license": "BSD-3-Clause",
+      "copyright": "Copyright (c) 2026 R4OS contributors",
+      "notice": "LICENSE-R4FONT-FIXTURES-BSD-3-Clause",
+      "expectations": {
+        "glyph_A": 1,
+        "glyph_V": 2,
+        "kerning_x": -115,
+        "kerning_y": 0
+      }
+    },
+    {
+      "file": "sample-gpos.woff",
+      "source": "R4FONT/Tests/Tools/generate_minimal_fonts.py",
+      "transformation": "Deterministically constructs a minimal TrueType SFNT with .notdef/A/V/T and a GPOS 1.0 DFLT/kern PairPos Format 1 pair A/T=-93, then wraps every table uncompressed in WOFF 1.0.",
+      "sha256": "a3d37564a48e1faa3c98f4212c18f4788929ed05746770908a6e72eea6e53b48",
+      "license": "BSD-3-Clause",
+      "copyright": "Copyright (c) 2026 R4OS contributors",
+      "notice": "LICENSE-R4FONT-FIXTURES-BSD-3-Clause",
+      "expectations": {
+        "glyph_A": 1,
+        "glyph_T": 3,
+        "kerning_x": -93,
+        "kerning_y": 0
+      }
+    }
+  ]
+}

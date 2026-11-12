@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "mesa": "26.2.2",
+  "files": [
+    {
+      "source": "include/EGL/egl.h",
+      "target": "Bindings/C/EGL/egl.h",
+      "sha256": "f5f41711f5d7517eb50d63726d786d471a3e84a52b94fd9aca9b6262b629347c"
+    },
+    {
+      "source": "include/EGL/eglext.h",
+      "target": "Bindings/C/EGL/eglext.h",
+      "sha256": "efc117e5cbbf21fa4f2e9dbfb3899eedb3235c0152a2f6d9ca4510b7505e400f"
+    },
+    {
+      "source": "include/EGL/eglplatform.h",
+      "target": "Bindings/C/EGL/eglplatform.h",
+      "sha256": "25b5391655effcf363a38fa00c3154f356a3eab3d35dc067847875513cf1e441"
+    },
+    {
+      "source": "include/GL/glcorearb.h",
+      "target": "Bindings/C/GL/glcorearb.h",
+      "sha256": "087622fc4b933fc0e5e4f7aa6071111720acd085de039159de0f2d06b91d7486"
+    },
+    {
+      "source": "include/KHR/khrplatform.h",
+      "target": "Bindings/C/KHR/khrplatform.h",
+      "sha256": "7b1e01aaa7ad8f6fc34b5c7bdf79ebf5189bb09e2c4d2e79fc5d350623d11e83"
+    }
+  ]
+}

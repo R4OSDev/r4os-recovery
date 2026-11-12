@@ -1,0 +1,661 @@
+diff --git a/src/gallium/drivers/softpipe/sp_tex_sample.c b/src/gallium/drivers/softpipe/sp_tex_sample.c
+index 8956159..0b72bd6 100644
+--- a/src/gallium/drivers/softpipe/sp_tex_sample.c
++++ b/src/gallium/drivers/softpipe/sp_tex_sample.c
+@@ -2305,6 +2305,24 @@ mip_filter_none_no_filter_select(const struct sp_sampler_view *sp_sview,
+ /* For anisotropic filtering */
+ #define WEIGHT_LUT_SIZE 1024
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++static const char r4gl_filter_key;
++static void r4gl_filter_init(void *data)
++{
++   float *weights = data;
++   for (unsigned i = 0; i < WEIGHT_LUT_SIZE; ++i) {
++      const float alpha = 2;
++      const float r2 = (float)i / (float)(WEIGHT_LUT_SIZE - 1);
++      weights[i] = expf(-alpha * r2);
++   }
++}
++static const float *r4gl_filter_weights(void)
++{
++   return r4gl_process_state(&r4gl_filter_key, WEIGHT_LUT_SIZE * sizeof(float),
++                            _Alignof(float), r4gl_filter_init);
++}
++#else
+ static const float *weightLut = NULL;
+ 
+ /**
+@@ -2326,6 +2344,7 @@ create_filter_table(void)
+       weightLut = lut;
+    }
+ }
++#endif
+ 
+ 
+ /**
+@@ -2441,7 +2460,12 @@ img_filter_2d_ewa(const struct sp_sampler_view *sp_sview,
+                 * should not happen, though
+                 */
+                const int qClamped = q >= 0.0F ? q : 0;
+-               const float weight = weightLut[qClamped];
++               const float weight =
++#if defined(R4OS_OPENGL)
++                  sp_samp->ewa_weights[qClamped];
++#else
++                  weightLut[qClamped];
++#endif
+ 
+                weight_buffer[buffer_next] = weight;
+                s_buffer[buffer_next] = (u + 0.5f) / width;
+@@ -3538,9 +3562,13 @@ softpipe_create_sampler_state(struct pipe_context *pipe,
+          samp->min_img_filter = PIPE_TEX_FILTER_NEAREST;
+ 
+          /* on first access create the lookup table containing the filter weights. */
++#if defined(R4OS_OPENGL)
++        samp->ewa_weights = r4gl_filter_weights();
++#else
+         if (!weightLut) {
+            create_filter_table();
+         }
++#endif
+       }
+       break;
+    }
+diff --git a/src/gallium/drivers/softpipe/sp_tex_sample.h b/src/gallium/drivers/softpipe/sp_tex_sample.h
+index 1226dbf..460453d 100644
+--- a/src/gallium/drivers/softpipe/sp_tex_sample.h
++++ b/src/gallium/drivers/softpipe/sp_tex_sample.h
+@@ -147,6 +147,10 @@ struct sp_sampler {
+    wrap_linear_func linear_texcoord_p;
+ 
+    const struct sp_filter_funcs *filter_funcs;
++#if defined(R4OS_OPENGL)
++   /* Resolved once at sampler creation; no registry lookup in an EWA tap. */
++   const float *ewa_weights;
++#endif
+ };
+ 
+ 
+diff --git a/src/mesa/main/context.c b/src/mesa/main/context.c
+index cfbdedc..8ebcedf 100644
+--- a/src/mesa/main/context.c
++++ b/src/mesa/main/context.c
+@@ -154,6 +154,22 @@
+ #include "state_tracker/st_cb_texture.h"
+ #include "state_tracker/st_cb_flush.h"
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_mesa_state {
++   util_once_flag once;
++   int debug[2];
++};
++static const char r4gl_mesa_key;
++static void r4gl_mesa_init(void *data) { (void)data; }
++static struct r4gl_mesa_state *r4gl_mesa(void)
++{
++   return r4gl_process_state(&r4gl_mesa_key, sizeof(struct r4gl_mesa_state),
++                            _Alignof(struct r4gl_mesa_state), r4gl_mesa_init);
++}
++int *r4gl_mesa_debug_state(void) { return r4gl_mesa()->debug; }
++#endif
++
+ #ifndef MESA_VERBOSE
+ int MESA_VERBOSE = 0;
+ #endif
+@@ -164,7 +180,45 @@ int MESA_DEBUG_FLAGS = 0;
+ 
+ 
+ /* ubyte -> float conversion */
++#if defined(R4OS_OPENGL)
++/* Same float divisions as one_time_init, evaluated without mutable globals. */
++const GLfloat _mesa_ubyte_to_float_color_tab[256] = {
++   0.0F / 255.0F, 1.0F / 255.0F, 2.0F / 255.0F, 3.0F / 255.0F, 4.0F / 255.0F, 5.0F / 255.0F, 6.0F / 255.0F, 7.0F / 255.0F,
++   8.0F / 255.0F, 9.0F / 255.0F, 10.0F / 255.0F, 11.0F / 255.0F, 12.0F / 255.0F, 13.0F / 255.0F, 14.0F / 255.0F, 15.0F / 255.0F,
++   16.0F / 255.0F, 17.0F / 255.0F, 18.0F / 255.0F, 19.0F / 255.0F, 20.0F / 255.0F, 21.0F / 255.0F, 22.0F / 255.0F, 23.0F / 255.0F,
++   24.0F / 255.0F, 25.0F / 255.0F, 26.0F / 255.0F, 27.0F / 255.0F, 28.0F / 255.0F, 29.0F / 255.0F, 30.0F / 255.0F, 31.0F / 255.0F,
++   32.0F / 255.0F, 33.0F / 255.0F, 34.0F / 255.0F, 35.0F / 255.0F, 36.0F / 255.0F, 37.0F / 255.0F, 38.0F / 255.0F, 39.0F / 255.0F,
++   40.0F / 255.0F, 41.0F / 255.0F, 42.0F / 255.0F, 43.0F / 255.0F, 44.0F / 255.0F, 45.0F / 255.0F, 46.0F / 255.0F, 47.0F / 255.0F,
++   48.0F / 255.0F, 49.0F / 255.0F, 50.0F / 255.0F, 51.0F / 255.0F, 52.0F / 255.0F, 53.0F / 255.0F, 54.0F / 255.0F, 55.0F / 255.0F,
++   56.0F / 255.0F, 57.0F / 255.0F, 58.0F / 255.0F, 59.0F / 255.0F, 60.0F / 255.0F, 61.0F / 255.0F, 62.0F / 255.0F, 63.0F / 255.0F,
++   64.0F / 255.0F, 65.0F / 255.0F, 66.0F / 255.0F, 67.0F / 255.0F, 68.0F / 255.0F, 69.0F / 255.0F, 70.0F / 255.0F, 71.0F / 255.0F,
++   72.0F / 255.0F, 73.0F / 255.0F, 74.0F / 255.0F, 75.0F / 255.0F, 76.0F / 255.0F, 77.0F / 255.0F, 78.0F / 255.0F, 79.0F / 255.0F,
++   80.0F / 255.0F, 81.0F / 255.0F, 82.0F / 255.0F, 83.0F / 255.0F, 84.0F / 255.0F, 85.0F / 255.0F, 86.0F / 255.0F, 87.0F / 255.0F,
++   88.0F / 255.0F, 89.0F / 255.0F, 90.0F / 255.0F, 91.0F / 255.0F, 92.0F / 255.0F, 93.0F / 255.0F, 94.0F / 255.0F, 95.0F / 255.0F,
++   96.0F / 255.0F, 97.0F / 255.0F, 98.0F / 255.0F, 99.0F / 255.0F, 100.0F / 255.0F, 101.0F / 255.0F, 102.0F / 255.0F, 103.0F / 255.0F,
++   104.0F / 255.0F, 105.0F / 255.0F, 106.0F / 255.0F, 107.0F / 255.0F, 108.0F / 255.0F, 109.0F / 255.0F, 110.0F / 255.0F, 111.0F / 255.0F,
++   112.0F / 255.0F, 113.0F / 255.0F, 114.0F / 255.0F, 115.0F / 255.0F, 116.0F / 255.0F, 117.0F / 255.0F, 118.0F / 255.0F, 119.0F / 255.0F,
++   120.0F / 255.0F, 121.0F / 255.0F, 122.0F / 255.0F, 123.0F / 255.0F, 124.0F / 255.0F, 125.0F / 255.0F, 126.0F / 255.0F, 127.0F / 255.0F,
++   128.0F / 255.0F, 129.0F / 255.0F, 130.0F / 255.0F, 131.0F / 255.0F, 132.0F / 255.0F, 133.0F / 255.0F, 134.0F / 255.0F, 135.0F / 255.0F,
++   136.0F / 255.0F, 137.0F / 255.0F, 138.0F / 255.0F, 139.0F / 255.0F, 140.0F / 255.0F, 141.0F / 255.0F, 142.0F / 255.0F, 143.0F / 255.0F,
++   144.0F / 255.0F, 145.0F / 255.0F, 146.0F / 255.0F, 147.0F / 255.0F, 148.0F / 255.0F, 149.0F / 255.0F, 150.0F / 255.0F, 151.0F / 255.0F,
++   152.0F / 255.0F, 153.0F / 255.0F, 154.0F / 255.0F, 155.0F / 255.0F, 156.0F / 255.0F, 157.0F / 255.0F, 158.0F / 255.0F, 159.0F / 255.0F,
++   160.0F / 255.0F, 161.0F / 255.0F, 162.0F / 255.0F, 163.0F / 255.0F, 164.0F / 255.0F, 165.0F / 255.0F, 166.0F / 255.0F, 167.0F / 255.0F,
++   168.0F / 255.0F, 169.0F / 255.0F, 170.0F / 255.0F, 171.0F / 255.0F, 172.0F / 255.0F, 173.0F / 255.0F, 174.0F / 255.0F, 175.0F / 255.0F,
++   176.0F / 255.0F, 177.0F / 255.0F, 178.0F / 255.0F, 179.0F / 255.0F, 180.0F / 255.0F, 181.0F / 255.0F, 182.0F / 255.0F, 183.0F / 255.0F,
++   184.0F / 255.0F, 185.0F / 255.0F, 186.0F / 255.0F, 187.0F / 255.0F, 188.0F / 255.0F, 189.0F / 255.0F, 190.0F / 255.0F, 191.0F / 255.0F,
++   192.0F / 255.0F, 193.0F / 255.0F, 194.0F / 255.0F, 195.0F / 255.0F, 196.0F / 255.0F, 197.0F / 255.0F, 198.0F / 255.0F, 199.0F / 255.0F,
++   200.0F / 255.0F, 201.0F / 255.0F, 202.0F / 255.0F, 203.0F / 255.0F, 204.0F / 255.0F, 205.0F / 255.0F, 206.0F / 255.0F, 207.0F / 255.0F,
++   208.0F / 255.0F, 209.0F / 255.0F, 210.0F / 255.0F, 211.0F / 255.0F, 212.0F / 255.0F, 213.0F / 255.0F, 214.0F / 255.0F, 215.0F / 255.0F,
++   216.0F / 255.0F, 217.0F / 255.0F, 218.0F / 255.0F, 219.0F / 255.0F, 220.0F / 255.0F, 221.0F / 255.0F, 222.0F / 255.0F, 223.0F / 255.0F,
++   224.0F / 255.0F, 225.0F / 255.0F, 226.0F / 255.0F, 227.0F / 255.0F, 228.0F / 255.0F, 229.0F / 255.0F, 230.0F / 255.0F, 231.0F / 255.0F,
++   232.0F / 255.0F, 233.0F / 255.0F, 234.0F / 255.0F, 235.0F / 255.0F, 236.0F / 255.0F, 237.0F / 255.0F, 238.0F / 255.0F, 239.0F / 255.0F,
++   240.0F / 255.0F, 241.0F / 255.0F, 242.0F / 255.0F, 243.0F / 255.0F, 244.0F / 255.0F, 245.0F / 255.0F, 246.0F / 255.0F, 247.0F / 255.0F,
++   248.0F / 255.0F, 249.0F / 255.0F, 250.0F / 255.0F, 251.0F / 255.0F, 252.0F / 255.0F, 253.0F / 255.0F, 254.0F / 255.0F, 255.0F / 255.0F,
++};
++#else
+ GLfloat _mesa_ubyte_to_float_color_tab[256];
++#endif
+ 
+ 
+ /**********************************************************************/
+@@ -194,7 +248,9 @@ one_time_fini(void)
+ static void
+ one_time_init(const char *extensions_override)
+ {
++#if !defined(R4OS_OPENGL)
+    GLuint i;
++#endif
+ 
+    STATIC_ASSERT(sizeof(GLbyte) == 1);
+    STATIC_ASSERT(sizeof(GLubyte) == 1);
+@@ -215,11 +271,14 @@ one_time_init(const char *extensions_override)
+    _mesa_one_time_init_extension_overrides(extensions_override);
+ 
+ 
++#if !defined(R4OS_OPENGL)
+    for (i = 0; i < 256; i++) {
+       _mesa_ubyte_to_float_color_tab[i] = (float) i / 255.0F;
+    }
++#endif
+ 
+-   atexit(one_time_fini);
++   if (atexit(one_time_fini) != 0)
++      abort();
+ 
+ #if MESA_DEBUG
+    if (MESA_VERBOSE != 0) {
+@@ -243,8 +302,13 @@ one_time_init(const char *extensions_override)
+ void
+ _mesa_initialize(const char *extensions_override)
+ {
+-   static util_once_flag once = UTIL_ONCE_FLAG_INIT;
+-   util_call_once_data(&once,
++#if defined(R4OS_OPENGL)
++   util_once_flag *once = &r4gl_mesa()->once;
++#else
++   static util_once_flag storage = UTIL_ONCE_FLAG_INIT;
++   util_once_flag *once = &storage;
++#endif
++   util_call_once_data(once,
+       (util_call_once_data_func)one_time_init, extensions_override);
+ }
+ 
+diff --git a/src/mesa/main/extensions.c b/src/mesa/main/extensions.c
+index ad9617d..efdbdcb 100644
+--- a/src/mesa/main/extensions.c
++++ b/src/mesa/main/extensions.c
+@@ -38,14 +38,38 @@
+ #include "macros.h"
+ #include "mtypes.h"
+ 
++#define MAX_UNRECOGNIZED_EXTENSIONS 16
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_extension_state {
++   struct gl_extensions enables, disables;
++   struct {
++      char *env;
++      const char *names[MAX_UNRECOGNIZED_EXTENSIONS];
++   } unknown;
++   bool warned;
++};
++static const char r4gl_extension_key;
++static void r4gl_extension_init(void *data) { (void)data; }
++static struct r4gl_extension_state *r4gl_extensions(void)
++{
++   return r4gl_process_state(&r4gl_extension_key, sizeof(struct r4gl_extension_state),
++                            _Alignof(struct r4gl_extension_state), r4gl_extension_init);
++}
++struct gl_extensions *r4gl_extension_overrides(bool enables)
++{
++   struct r4gl_extension_state *state = r4gl_extensions();
++   return enables ? &state->enables : &state->disables;
++}
++#define unrecognized_extensions (r4gl_extensions()->unknown)
++#else
+ struct gl_extensions _mesa_extension_override_enables;
+ struct gl_extensions _mesa_extension_override_disables;
+-
+-#define MAX_UNRECOGNIZED_EXTENSIONS 16
+ static struct {
+    char *env;
+    const char *names[MAX_UNRECOGNIZED_EXTENSIONS];
+ } unrecognized_extensions;
++#endif
+ 
+ /**
+  * Given a member \c x of struct gl_extensions, return offset of
+@@ -141,6 +165,7 @@ static void
+ free_unknown_extensions_strings(void)
+ {
+    free(unrecognized_extensions.env);
++   unrecognized_extensions.env = NULL;
+    for (int i = 0; i < MAX_UNRECOGNIZED_EXTENSIONS; ++i)
+       unrecognized_extensions.names[i] = NULL;
+ }
+@@ -212,10 +237,14 @@ _mesa_one_time_init_extension_overrides(const char *override)
+ 
+       if (!recognized && enable) {
+          if (unknown_ext >= MAX_UNRECOGNIZED_EXTENSIONS) {
+-            static bool warned;
+-
+-            if (!warned) {
+-               warned = true;
++#if defined(R4OS_OPENGL)
++            bool *warned = &r4gl_extensions()->warned;
++#else
++            static bool storage;
++            bool *warned = &storage;
++#endif
++            if (!*warned) {
++               *warned = true;
+                _mesa_problem(NULL, "Trying to enable too many unknown extension. "
+                                    "Only the first %d will be honoured",
+                                    MAX_UNRECOGNIZED_EXTENSIONS);
+diff --git a/src/mesa/main/extensions.h b/src/mesa/main/extensions.h
+index 8f84891..5c3d285 100644
+--- a/src/mesa/main/extensions.h
++++ b/src/mesa/main/extensions.h
+@@ -113,8 +113,14 @@ _mesa_has_##name_str(const struct gl_context *ctx) \
+  *
+  * Use it with care and keep access read-only.
+  */
++#if defined(R4OS_OPENGL)
++struct gl_extensions *r4gl_extension_overrides(bool enables);
++#define _mesa_extension_override_enables (*r4gl_extension_overrides(true))
++#define _mesa_extension_override_disables (*r4gl_extension_overrides(false))
++#else
+ extern struct gl_extensions _mesa_extension_override_enables;
+ extern struct gl_extensions _mesa_extension_override_disables;
++#endif
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/src/mesa/main/formats.c b/src/mesa/main/formats.c
+index 81df221..0214ead 100644
+--- a/src/mesa/main/formats.c
++++ b/src/mesa/main/formats.c
+@@ -31,6 +31,7 @@
+ #include "glformats.h"
+ #include "c11/threads.h"
+ #include "util/hash_table.h"
++#include "util/simple_mtx.h"
+ 
+ /**
+  * Information about texture formats.
+@@ -448,13 +449,37 @@ _mesa_format_to_array_format(mesa_format format)
+    return _mesa_format_info_to_array_format(info);
+ }
+ 
+-static struct hash_table *format_array_format_table;
+-static once_flag format_array_format_table_exists = ONCE_FLAG_INIT;
++struct format_array_cache {
++   simple_mtx_t mutex;
++   struct hash_table *table;
++};
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++static const char r4gl_format_key;
++static void r4gl_format_init(void *data)
++{
++   struct format_array_cache *cache = data;
++   simple_mtx_init(&cache->mutex, mtx_plain);
++}
++static struct format_array_cache *format_array_cache(void)
++{
++   return r4gl_process_state(&r4gl_format_key, sizeof(struct format_array_cache),
++                            _Alignof(struct format_array_cache), r4gl_format_init);
++}
++#else
++static struct format_array_cache global_format_cache = {
++   .mutex = SIMPLE_MTX_INITIALIZER,
++};
++static struct format_array_cache *format_array_cache(void) { return &global_format_cache; }
++#endif
+ 
+ static void
+ format_array_format_table_destroy(void)
+ {
+-   _mesa_hash_table_destroy(format_array_format_table, NULL);
++   struct format_array_cache *cache = format_array_cache();
++   _mesa_hash_table_destroy(cache->table, NULL);
++   cache->table = NULL;
++   simple_mtx_destroy(&cache->mutex);
+ }
+ 
+ static bool
+@@ -463,19 +488,19 @@ array_formats_equal(const void *a, const void *b)
+    return (intptr_t)a == (intptr_t)b;
+ }
+ 
+-static void
++static struct hash_table *
+ format_array_format_table_init(void)
+ {
+    const struct mesa_format_info *info;
+    mesa_array_format array_format;
+    unsigned f;
+ 
+-   format_array_format_table = _mesa_hash_table_create(NULL, NULL,
+-                                                       array_formats_equal);
++   struct hash_table *table = _mesa_hash_table_create(NULL, NULL,
++                                                    array_formats_equal);
+ 
+-   if (!format_array_format_table) {
++   if (!table) {
+       _mesa_error_no_memory(__func__);
+-      return;
++      return NULL;
+    }
+ 
+    for (f = 1; f < MESA_FORMAT_COUNT; ++f) {
+@@ -490,13 +515,22 @@ format_array_format_table_init(void)
+          continue;
+ 
+       array_format = _mesa_format_info_to_array_format(info);
+-      _mesa_hash_table_insert_pre_hashed(format_array_format_table,
++      if (!_mesa_hash_table_insert_pre_hashed(table,
+                                          array_format,
+                                          (void *)(intptr_t)array_format,
+-                                         (void *)(intptr_t)f);
++                                         (void *)(intptr_t)f)) {
++         _mesa_hash_table_destroy(table, NULL);
++         _mesa_error_no_memory(__func__);
++         return NULL;
++      }
+    }
+ 
+-   atexit(format_array_format_table_destroy);
++   if (atexit(format_array_format_table_destroy) != 0) {
++      _mesa_hash_table_destroy(table, NULL);
++      _mesa_error_no_memory(__func__);
++      return NULL;
++   }
++   return table;
+ }
+ 
+ mesa_format
+@@ -506,15 +540,24 @@ _mesa_format_from_array_format(uint32_t array_format)
+ 
+    assert(_mesa_format_is_mesa_array_format(array_format));
+ 
+-   call_once(&format_array_format_table_exists, format_array_format_table_init);
+-
+-   if (!format_array_format_table) {
+-      static const once_flag once_flag_init = ONCE_FLAG_INIT;
+-      format_array_format_table_exists = once_flag_init;
+-      return MESA_FORMAT_NONE;
++   struct format_array_cache *cache = format_array_cache();
++   struct hash_table *table = p_atomic_read(&cache->table);
++   if (!table) {
++      simple_mtx_lock(&cache->mutex);
++      table = cache->table;
++      if (!table) {
++         table = format_array_format_table_init();
++         /* Publish only a complete table. OOM leaves a retryable empty cache,
++          * without resetting a once flag while another caller is waiting. */
++         if (table)
++            p_atomic_set(&cache->table, table);
++      }
++      simple_mtx_unlock(&cache->mutex);
+    }
++   if (!table)
++      return MESA_FORMAT_NONE;
+ 
+-   entry = _mesa_hash_table_search_pre_hashed(format_array_format_table,
++   entry = _mesa_hash_table_search_pre_hashed(table,
+                                               array_format,
+                                               (void *)(intptr_t)array_format);
+    if (entry)
+@@ -1149,4 +1192,3 @@ _mesa_format_matches_format_and_type(mesa_format mformat,
+ 
+    return other_format == mformat;
+ }
+-
+diff --git a/src/mesa/main/macros.h b/src/mesa/main/macros.h
+index 16268d4..7fb85f8 100644
+--- a/src/mesa/main/macros.h
++++ b/src/mesa/main/macros.h
+@@ -45,7 +45,11 @@
+ /*@{*/
+ 
+ /** Convert GLubyte in [0,255] to GLfloat in [0.0,1.0] */
++#if defined(R4OS_OPENGL)
++extern const GLfloat _mesa_ubyte_to_float_color_tab[256];
++#else
+ extern GLfloat _mesa_ubyte_to_float_color_tab[256];
++#endif
+ #define UBYTE_TO_FLOAT(u) _mesa_ubyte_to_float_color_tab[(unsigned int)(u)]
+ 
+ /** Convert GLfloat in [0.0,1.0] to GLubyte in [0,255] */
+diff --git a/src/mesa/main/mtypes.h b/src/mesa/main/mtypes.h
+index 5822d53..ca44d7e 100644
+--- a/src/mesa/main/mtypes.h
++++ b/src/mesa/main/mtypes.h
+@@ -3660,8 +3660,20 @@ struct gl_context
+ };
+ 
+ #ifndef NDEBUG
++#if defined(R4OS_OPENGL)
++#ifdef __cplusplus
++extern "C" {
++#endif
++int *r4gl_mesa_debug_state(void);
++#ifdef __cplusplus
++}
++#endif
++#define MESA_VERBOSE (r4gl_mesa_debug_state()[0])
++#define MESA_DEBUG_FLAGS (r4gl_mesa_debug_state()[1])
++#else
+ extern int MESA_VERBOSE;
+ extern int MESA_DEBUG_FLAGS;
++#endif
+ #else
+ # define MESA_VERBOSE 0
+ # define MESA_DEBUG_FLAGS 0
+diff --git a/src/mesa/main/version.c b/src/mesa/main/version.c
+index ccce19d..fb56e92 100644
+--- a/src/mesa/main/version.c
++++ b/src/mesa/main/version.c
+@@ -36,7 +36,39 @@
+ 
+ #include "state_tracker/st_context.h"
+ 
++struct gl_override_info {
++   int version;
++   bool fc_suffix;
++   bool compat_suffix;
++};
++static const struct gl_override_info override_defaults[] = {
++   [API_OPENGL_COMPAT] = { -1, false, false},
++   [API_OPENGLES]      = { -1, false, false},
++   [API_OPENGLES2]     = { -1, false, false},
++   [API_OPENGL_CORE]   = { -1, false, false},
++};
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_version_state {
++   simple_mtx_t mutex;
++   struct gl_override_info values[API_OPENGL_LAST + 1];
++};
++static const char r4gl_version_key;
++static void r4gl_version_init(void *data)
++{
++   struct r4gl_version_state *state = data;
++   STATIC_ASSERT(sizeof(state->values) == sizeof(override_defaults));
++   memcpy(state->values, override_defaults, sizeof(override_defaults));
++   simple_mtx_init(&state->mutex, mtx_plain);
++}
++static struct r4gl_version_state *r4gl_version(void)
++{
++   return r4gl_process_state(&r4gl_version_key, sizeof(struct r4gl_version_state),
++                            _Alignof(struct r4gl_version_state), r4gl_version_init);
++}
++#else
+ static simple_mtx_t override_lock = SIMPLE_MTX_INITIALIZER;
++#endif
+ 
+ /**
+  * Scans 'string' to see if it ends with 'ending'.
+@@ -67,20 +99,21 @@ get_gl_override(gl_api api, int *version, bool *fwd_context,
+       ? "MESA_GL_VERSION_OVERRIDE" : "MESA_GLES_VERSION_OVERRIDE";
+    const char *version_str;
+    int major, minor, n;
+-   static struct override_info {
+-      int version;
+-      bool fc_suffix;
+-      bool compat_suffix;
+-   } override[] = {
++#if defined(R4OS_OPENGL)
++   struct r4gl_version_state *state = r4gl_version();
++   struct gl_override_info *override = state->values;
++   simple_mtx_t *lock = &state->mutex;
++#else
++   static struct gl_override_info override[] = {
+       [API_OPENGL_COMPAT] = { -1, false, false},
+       [API_OPENGLES]      = { -1, false, false},
+       [API_OPENGLES2]     = { -1, false, false},
+       [API_OPENGL_CORE]   = { -1, false, false},
+    };
+-
+-   STATIC_ASSERT(ARRAY_SIZE(override) == API_OPENGL_LAST + 1);
+-
+-   simple_mtx_lock(&override_lock);
++   simple_mtx_t *lock = &override_lock;
++#endif
++   STATIC_ASSERT(ARRAY_SIZE(override_defaults) == API_OPENGL_LAST + 1);
++   simple_mtx_lock(lock);
+ 
+    if (api == API_OPENGLES)
+       goto exit;
+@@ -119,7 +152,7 @@ exit:
+    *fwd_context = override[api].fc_suffix;
+    *compat_context = override[api].compat_suffix;
+ 
+-   simple_mtx_unlock(&override_lock);
++   simple_mtx_unlock(lock);
+ }
+ 
+ /**
+diff --git a/src/mesa/state_tracker/st_cb_drawtex.c b/src/mesa/state_tracker/st_cb_drawtex.c
+index 1398c34..75c5a4f 100644
+--- a/src/mesa/state_tracker/st_cb_drawtex.c
++++ b/src/mesa/state_tracker/st_cb_drawtex.c
+@@ -52,8 +52,17 @@ struct cached_shader
+  * Most of the time there'll only be one cached shader.
+  * XXX This should be per-st_context state.
+  */
++#if defined(R4OS_OPENGL)
++struct st_drawtex_cache {
++   struct cached_shader shaders[MAX_SHADERS];
++   GLuint count;
++};
++#define CachedShaders (st->drawtex_cache->shaders)
++#define NumCachedShaders (st->drawtex_cache->count)
++#else
+ static struct cached_shader CachedShaders[MAX_SHADERS];
+ static GLuint NumCachedShaders = 0;
++#endif
+ 
+ static gl_vert_attrib
+ slot_to_vert_attrib(gl_varying_slot slot)
+@@ -78,6 +87,14 @@ lookup_shader(struct st_context *st,
+ {
+    GLuint i, j;
+ 
++#if defined(R4OS_OPENGL)
++   if (!st->drawtex_cache) {
++      st->drawtex_cache = CALLOC_STRUCT(st_drawtex_cache);
++      if (!st->drawtex_cache)
++         return NULL;
++   }
++#endif
++
+    /* look for existing shader with same attributes */
+    for (i = 0; i < NumCachedShaders; i++) {
+       if (CachedShaders[i].num_attribs == num_attribs) {
+@@ -112,6 +129,11 @@ lookup_shader(struct st_context *st,
+       st_nir_make_passthrough_vs(st, "st/drawtex VS", num_attribs, inputs,
+                                  slots, 0);
+ 
++#if defined(R4OS_OPENGL)
++   if (!CachedShaders[i].handle)
++      return NULL;
++#endif
++
+    NumCachedShaders++;
+ 
+    return CachedShaders[i].handle;
+@@ -246,11 +268,25 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
+ #undef SET_ATTRIB
+    }
+ 
++#if defined(R4OS_OPENGL)
++   void *native_vs = lookup_shader(st, numAttribs, slots);
++   if (!native_vs) {
++      pipe_resource_release(pipe, releasebuf);
++      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glDrawTexOES(shader)");
++      return;
++   }
++#endif
++
+    /* Save only states that have no st_atom — they can't be re-derived. */
+    cso_save_state(cso, CSO_BIT_STREAM_OUTPUTS);
+ 
+    {
+-      void *vs = lookup_shader(st, numAttribs, slots);
++      void *vs =
++#if defined(R4OS_OPENGL)
++         native_vs;
++#else
++         lookup_shader(st, numAttribs, slots);
++#endif
+       cso_set_vertex_shader_handle(cso, vs);
+    }
+    cso_set_tessctrl_shader_handle(cso, NULL);
+@@ -322,8 +358,16 @@ void
+ st_destroy_drawtex(struct st_context *st)
+ {
+    GLuint i;
++#if defined(R4OS_OPENGL)
++   if (!st->drawtex_cache)
++      return;
++#endif
+    for (i = 0; i < NumCachedShaders; i++) {
+       st->pipe->delete_vs_state(st->pipe, CachedShaders[i].handle);
+    }
+    NumCachedShaders = 0;
++#if defined(R4OS_OPENGL)
++   FREE(st->drawtex_cache);
++   st->drawtex_cache = NULL;
++#endif
+ }
+diff --git a/src/mesa/state_tracker/st_context.h b/src/mesa/state_tracker/st_context.h
+index 6e97ddd..f72a92e 100644
+--- a/src/mesa/state_tracker/st_context.h
++++ b/src/mesa/state_tracker/st_context.h
+@@ -260,6 +260,11 @@ struct st_context
+       struct st_bitmap_cache cache;
+    } bitmap;
+ 
++#if defined(R4OS_OPENGL)
++   /** DrawTex shader handles belong to this pipe context. Allocated on demand. */
++   struct st_drawtex_cache *drawtex_cache;
++#endif
++
+    /** for glDraw/CopyPixels */
+    struct {
+       void *zs_shaders[6];

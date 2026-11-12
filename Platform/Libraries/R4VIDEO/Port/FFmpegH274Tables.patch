@@ -1,0 +1,62 @@
+--- a/libavcodec/h274.c
++++ b/libavcodec/h274.c
+@@ -41,10 +41,16 @@
+ typedef struct H274FilmGrainDatabase {
+     // Database of film grain patterns, lazily computed as-needed
+     int8_t db[13 /* h */][13 /* v */][64][64];
++#ifndef R4OS_VIDEO
+     atomic_uint residency[6];
++#endif
+ } H274FilmGrainDatabase;
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_h274_tables.h"
++#else
+ static H274FilmGrainDatabase film_grain_db;
++#endif
+ 
+ static const int8_t Gaussian_LUT[2048+4];
+ static const uint32_t Seed_LUT[256];
+@@ -58,6 +64,7 @@
+     *state = (x << 1) | (feedback & 1u);
+ }
+ 
++#ifndef R4OS_VIDEO
+ static void init_slice_c(int8_t out[64][64], uint8_t h, uint8_t v)
+ {
+     static const uint8_t deblock_factors[13] = {
+@@ -139,6 +146,11 @@
+     ff_mutex_unlock(&mutex);
+ }
+ 
++#else
++static void init_slice(uint8_t h, uint8_t v) { (void)h; (void)v; }
++#endif
++
++#ifndef R4OS_TABLEGEN
+ // Computes the average of an 8x8 block
+ static uint16_t avg_8x8_c(const uint8_t *in, int in_stride)
+ {
+@@ -316,6 +328,8 @@
+ }
+ 
+ // These tables are all taken from the SMPTE RDD 5-2006 specification
++#endif /* !R4OS_TABLEGEN */
++
+ static const int8_t Gaussian_LUT[2048+4] = {
+     -11, 12, 103, -11, 42, -35, 12, 59, 77, 98, -87, 3, 65, -78, 45, 56, -51, 21,
+     13, -11, -20, -19, 33, -127, 17, -6, -105, 18, 19, 71, 48, -10, -38, 42,
+@@ -829,6 +843,7 @@
+ #endif
+ };
+ 
++#ifndef R4OS_TABLEGEN
+ static av_always_inline void bswap16_buf_if_be(H274HashContext *s, const int ps, const uint8_t **src, const int w)
+ {
+ #if HAVE_BIGENDIAN
+@@ -1009,3 +1024,5 @@
+ fail:
+     return err;
+ }
++
++#endif /* !R4OS_TABLEGEN */

@@ -1,0 +1,487 @@
+diff --git a/src/mesa/main/atifragshader.c b/src/mesa/main/atifragshader.c
+index 4f0af87..c58e75f 100644
+--- a/src/mesa/main/atifragshader.c
++++ b/src/mesa/main/atifragshader.c
+@@ -21,6 +21,9 @@
+  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  */
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#endif
+ #include "util/glheader.h"
+ #include "main/context.h"
+ #include "main/hash.h"
+@@ -38,7 +41,23 @@
+ 
+ #define MESA_DEBUG_ATI_FS 0
+ 
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct ati_fragment_shader r4gl_DummyShader_template = {0};
++static void r4gl_DummyShader_init(void *data)
++{
++   *(struct ati_fragment_shader *)data = r4gl_DummyShader_template;
++}
++static struct ati_fragment_shader *r4gl_get_DummyShader(void)
++{
++   return r4gl_process_state(&r4gl_DummyShader_template, sizeof(struct ati_fragment_shader),
++                            _Alignof(struct ati_fragment_shader), r4gl_DummyShader_init);
++}
++#define DummyShader (*r4gl_get_DummyShader())
++#else
+ static struct ati_fragment_shader DummyShader;
++#endif
+ 
+ 
+ /**
+diff --git a/src/mesa/main/bufferobj.c b/src/mesa/main/bufferobj.c
+index 3c60ed8..02b9cca 100644
+--- a/src/mesa/main/bufferobj.c
++++ b/src/mesa/main/bufferobj.c
+@@ -30,6 +30,9 @@
+  * \author Brian Paul, Ian Romanick
+  */
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#endif
+ #include <stdbool.h>
+ #include <inttypes.h>  /* for PRId64 macro */
+ #include "util/u_debug.h"
+@@ -671,10 +674,29 @@ buffer_usage_warning(struct gl_context *ctx, GLuint *id, const char *fmt, ...)
+  * Used as a placeholder for buffer objects between glGenBuffers() and
+  * glBindBuffer() so that glIsBuffer() can work correctly.
+  */
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct gl_buffer_object r4gl_DummyBufferObject_template = {
++   .MinMaxCacheMutex = SIMPLE_MTX_INITIALIZER,
++   .RefCount = 1000*1000*1000,  /* never delete */
++};
++static void r4gl_DummyBufferObject_init(void *data)
++{
++   *(struct gl_buffer_object *)data = r4gl_DummyBufferObject_template;
++}
++static struct gl_buffer_object *r4gl_get_DummyBufferObject(void)
++{
++   return r4gl_process_state(&r4gl_DummyBufferObject_template, sizeof(struct gl_buffer_object),
++                            _Alignof(struct gl_buffer_object), r4gl_DummyBufferObject_init);
++}
++#define DummyBufferObject (*r4gl_get_DummyBufferObject())
++#else
+ static struct gl_buffer_object DummyBufferObject = {
+    .MinMaxCacheMutex = SIMPLE_MTX_INITIALIZER,
+    .RefCount = 1000*1000*1000,  /* never delete */
+ };
++#endif
+ 
+ 
+ /**
+diff --git a/src/mesa/main/externalobjects.c b/src/mesa/main/externalobjects.c
+index 7fdd4e3..6208c9b 100644
+--- a/src/mesa/main/externalobjects.c
++++ b/src/mesa/main/externalobjects.c
+@@ -21,6 +21,9 @@
+  * DEALINGS IN THE SOFTWARE.
+  */
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#endif
+ #include "macros.h"
+ #include "mtypes.h"
+ #include "bufferobj.h"
+@@ -734,9 +737,27 @@ server_signal_semaphore(struct gl_context *ctx,
+  * Used as a placeholder for semaphore objects between glGenSemaphoresEXT()
+  * and glImportSemaphoreFdEXT(), so that glIsSemaphoreEXT() can work correctly.
+  */
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct gl_semaphore_object r4gl_DummySemaphoreObject_template = {
++   .type = PIPE_FD_TYPE_SYNCOBJ,
++};
++static void r4gl_DummySemaphoreObject_init(void *data)
++{
++   *(struct gl_semaphore_object *)data = r4gl_DummySemaphoreObject_template;
++}
++static struct gl_semaphore_object *r4gl_get_DummySemaphoreObject(void)
++{
++   return r4gl_process_state(&r4gl_DummySemaphoreObject_template, sizeof(struct gl_semaphore_object),
++                            _Alignof(struct gl_semaphore_object), r4gl_DummySemaphoreObject_init);
++}
++#define DummySemaphoreObject (*r4gl_get_DummySemaphoreObject())
++#else
+ static struct gl_semaphore_object DummySemaphoreObject = {
+    .type = PIPE_FD_TYPE_SYNCOBJ,
+ };
++#endif
+ 
+ static struct gl_semaphore_object *
+ create_real_semaphore(struct gl_context *ctx, GLuint semaphore, struct gl_semaphore_object *semObj, enum pipe_fd_type type, const char *func)
+diff --git a/src/mesa/main/fbobject.c b/src/mesa/main/fbobject.c
+index 680bde1..2879706 100644
+--- a/src/mesa/main/fbobject.c
++++ b/src/mesa/main/fbobject.c
+@@ -32,6 +32,9 @@
+  *   Brian Paul
+  */
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#endif
+ #include <stdbool.h>
+ 
+ #include "buffers.h"
+@@ -88,20 +91,76 @@ delete_dummy_framebuffer(struct gl_framebuffer *fb)
+  * Later, when the object ID is first bound, we replace the placeholder
+  * with the real frame/renderbuffer.
+  */
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct gl_framebuffer r4gl_DummyFramebuffer_template = {
++   .Mutex = SIMPLE_MTX_INITIALIZER,
++   .Delete = delete_dummy_framebuffer,
++};
++static void r4gl_DummyFramebuffer_init(void *data)
++{
++   *(struct gl_framebuffer *)data = r4gl_DummyFramebuffer_template;
++}
++static struct gl_framebuffer *r4gl_get_DummyFramebuffer(void)
++{
++   return r4gl_process_state(&r4gl_DummyFramebuffer_template, sizeof(struct gl_framebuffer),
++                            _Alignof(struct gl_framebuffer), r4gl_DummyFramebuffer_init);
++}
++#define DummyFramebuffer (*r4gl_get_DummyFramebuffer())
++#else
+ static struct gl_framebuffer DummyFramebuffer = {
+    .Mutex = SIMPLE_MTX_INITIALIZER,
+    .Delete = delete_dummy_framebuffer,
+ };
++#endif
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct gl_renderbuffer r4gl_DummyRenderbuffer_template = {
++   .Delete = delete_dummy_renderbuffer,
++};
++static void r4gl_DummyRenderbuffer_init(void *data)
++{
++   *(struct gl_renderbuffer *)data = r4gl_DummyRenderbuffer_template;
++}
++static struct gl_renderbuffer *r4gl_get_DummyRenderbuffer(void)
++{
++   return r4gl_process_state(&r4gl_DummyRenderbuffer_template, sizeof(struct gl_renderbuffer),
++                            _Alignof(struct gl_renderbuffer), r4gl_DummyRenderbuffer_init);
++}
++#define DummyRenderbuffer (*r4gl_get_DummyRenderbuffer())
++#else
+ static struct gl_renderbuffer DummyRenderbuffer = {
+    .Delete = delete_dummy_renderbuffer,
+ };
++#endif
+ 
+ /* We bind this framebuffer when applications pass a NULL
+  * drawable/surface in make current. */
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct gl_framebuffer r4gl_IncompleteFramebuffer_template = {
++   .Mutex = SIMPLE_MTX_INITIALIZER,
++   .Delete = delete_dummy_framebuffer,
++};
++static void r4gl_IncompleteFramebuffer_init(void *data)
++{
++   *(struct gl_framebuffer *)data = r4gl_IncompleteFramebuffer_template;
++}
++static struct gl_framebuffer *r4gl_get_IncompleteFramebuffer(void)
++{
++   return r4gl_process_state(&r4gl_IncompleteFramebuffer_template, sizeof(struct gl_framebuffer),
++                            _Alignof(struct gl_framebuffer), r4gl_IncompleteFramebuffer_init);
++}
++#define IncompleteFramebuffer (*r4gl_get_IncompleteFramebuffer())
++#else
+ static struct gl_framebuffer IncompleteFramebuffer = {
+    .Mutex = SIMPLE_MTX_INITIALIZER,
+    .Delete = delete_dummy_framebuffer,
+ };
++#endif
+ 
+ 
+ struct gl_framebuffer *
+diff --git a/src/mesa/main/texstore.c b/src/mesa/main/texstore.c
+index 129ce4a..0a39824 100644
+--- a/src/mesa/main/texstore.c
++++ b/src/mesa/main/texstore.c
+@@ -589,24 +589,17 @@ _mesa_texstore_z32f_x24s8(TEXSTORE_PARAMS)
+ static GLboolean
+ texstore_depth_stencil(TEXSTORE_PARAMS)
+ {
+-   static StoreTexImageFunc table[MESA_FORMAT_COUNT];
+-   static GLboolean initialized = GL_FALSE;
+-
+-   if (!initialized) {
+-      memset(table, 0, sizeof table);
+-
+-      table[MESA_FORMAT_S8_UINT_Z24_UNORM] = _mesa_texstore_z24_s8;
+-      table[MESA_FORMAT_Z24_UNORM_S8_UINT] = _mesa_texstore_s8_z24;
+-      table[MESA_FORMAT_Z_UNORM16] = _mesa_texstore_z16;
+-      table[MESA_FORMAT_Z24_UNORM_X8_UINT] = _mesa_texstore_x8_z24;
+-      table[MESA_FORMAT_X8_UINT_Z24_UNORM] = _mesa_texstore_z24_x8;
+-      table[MESA_FORMAT_Z_UNORM32] = _mesa_texstore_z32;
+-      table[MESA_FORMAT_S_UINT8] = _mesa_texstore_s8;
+-      table[MESA_FORMAT_Z_FLOAT32] = _mesa_texstore_z32;
+-      table[MESA_FORMAT_Z32_FLOAT_S8X24_UINT] = _mesa_texstore_z32f_x24s8;
+-
+-      initialized = GL_TRUE;
+-   }
++   static const StoreTexImageFunc table[MESA_FORMAT_COUNT] = {
++      [MESA_FORMAT_S8_UINT_Z24_UNORM] = _mesa_texstore_z24_s8,
++      [MESA_FORMAT_Z24_UNORM_S8_UINT] = _mesa_texstore_s8_z24,
++      [MESA_FORMAT_Z_UNORM16] = _mesa_texstore_z16,
++      [MESA_FORMAT_Z24_UNORM_X8_UINT] = _mesa_texstore_x8_z24,
++      [MESA_FORMAT_X8_UINT_Z24_UNORM] = _mesa_texstore_z24_x8,
++      [MESA_FORMAT_Z_UNORM32] = _mesa_texstore_z32,
++      [MESA_FORMAT_S_UINT8] = _mesa_texstore_s8,
++      [MESA_FORMAT_Z_FLOAT32] = _mesa_texstore_z32,
++      [MESA_FORMAT_Z32_FLOAT_S8X24_UINT] = _mesa_texstore_z32f_x24s8,
++   };
+ 
+    assert(table[dstFormat]);
+    return table[dstFormat](ctx, dims, baseInternalFormat,
+@@ -618,55 +611,41 @@ texstore_depth_stencil(TEXSTORE_PARAMS)
+ static GLboolean
+ texstore_compressed(TEXSTORE_PARAMS)
+ {
+-   static StoreTexImageFunc table[MESA_FORMAT_COUNT];
+-   static GLboolean initialized = GL_FALSE;
+-
+-   if (!initialized) {
+-      memset(table, 0, sizeof table);
+-
+-      table[MESA_FORMAT_SRGB_DXT1] = _mesa_texstore_rgb_dxt1;
+-      table[MESA_FORMAT_SRGBA_DXT1] = _mesa_texstore_rgba_dxt1;
+-      table[MESA_FORMAT_SRGBA_DXT3] = _mesa_texstore_rgba_dxt3;
+-      table[MESA_FORMAT_SRGBA_DXT5] = _mesa_texstore_rgba_dxt5;
+-      table[MESA_FORMAT_RGB_FXT1] = _mesa_texstore_fxt1;
+-      table[MESA_FORMAT_RGBA_FXT1] = _mesa_texstore_fxt1;
+-      table[MESA_FORMAT_RGB_DXT1] = _mesa_texstore_rgb_dxt1;
+-      table[MESA_FORMAT_RGBA_DXT1] = _mesa_texstore_rgba_dxt1;
+-      table[MESA_FORMAT_RGBA_DXT3] = _mesa_texstore_rgba_dxt3;
+-      table[MESA_FORMAT_RGBA_DXT5] = _mesa_texstore_rgba_dxt5;
+-      table[MESA_FORMAT_R_RGTC1_UNORM] = _mesa_texstore_red_rgtc1;
+-      table[MESA_FORMAT_R_RGTC1_SNORM] = _mesa_texstore_signed_red_rgtc1;
+-      table[MESA_FORMAT_RG_RGTC2_UNORM] = _mesa_texstore_rg_rgtc2;
+-      table[MESA_FORMAT_RG_RGTC2_SNORM] = _mesa_texstore_signed_rg_rgtc2;
+-      table[MESA_FORMAT_L_LATC1_UNORM] = _mesa_texstore_red_rgtc1;
+-      table[MESA_FORMAT_L_LATC1_SNORM] = _mesa_texstore_signed_red_rgtc1;
+-      table[MESA_FORMAT_LA_LATC2_UNORM] = _mesa_texstore_rg_rgtc2;
+-      table[MESA_FORMAT_LA_LATC2_SNORM] = _mesa_texstore_signed_rg_rgtc2;
+-      table[MESA_FORMAT_ETC1_RGB8] = _mesa_texstore_etc1_rgb8;
+-      table[MESA_FORMAT_ETC2_RGB8] = _mesa_texstore_etc2_rgb8;
+-      table[MESA_FORMAT_ETC2_SRGB8] = _mesa_texstore_etc2_srgb8;
+-      table[MESA_FORMAT_ETC2_RGBA8_EAC] = _mesa_texstore_etc2_rgba8_eac;
+-      table[MESA_FORMAT_ETC2_SRGB8_ALPHA8_EAC] = _mesa_texstore_etc2_srgb8_alpha8_eac;
+-      table[MESA_FORMAT_ETC2_R11_EAC] = _mesa_texstore_etc2_r11_eac;
+-      table[MESA_FORMAT_ETC2_RG11_EAC] = _mesa_texstore_etc2_rg11_eac;
+-      table[MESA_FORMAT_ETC2_SIGNED_R11_EAC] = _mesa_texstore_etc2_signed_r11_eac;
+-      table[MESA_FORMAT_ETC2_SIGNED_RG11_EAC] = _mesa_texstore_etc2_signed_rg11_eac;
+-      table[MESA_FORMAT_ETC2_RGB8_PUNCHTHROUGH_ALPHA1] =
+-         _mesa_texstore_etc2_rgb8_punchthrough_alpha1;
+-      table[MESA_FORMAT_ETC2_SRGB8_PUNCHTHROUGH_ALPHA1] =
+-         _mesa_texstore_etc2_srgb8_punchthrough_alpha1;
+-
+-      table[MESA_FORMAT_BPTC_RGBA_UNORM] =
+-         _mesa_texstore_bptc_rgba_unorm;
+-      table[MESA_FORMAT_BPTC_SRGB_ALPHA_UNORM] =
+-         _mesa_texstore_bptc_rgba_unorm;
+-      table[MESA_FORMAT_BPTC_RGB_SIGNED_FLOAT] =
+-         _mesa_texstore_bptc_rgb_signed_float;
+-      table[MESA_FORMAT_BPTC_RGB_UNSIGNED_FLOAT] =
+-         _mesa_texstore_bptc_rgb_unsigned_float;
+-
+-      initialized = GL_TRUE;
+-   }
++   static const StoreTexImageFunc table[MESA_FORMAT_COUNT] = {
++      [MESA_FORMAT_SRGB_DXT1] = _mesa_texstore_rgb_dxt1,
++      [MESA_FORMAT_SRGBA_DXT1] = _mesa_texstore_rgba_dxt1,
++      [MESA_FORMAT_SRGBA_DXT3] = _mesa_texstore_rgba_dxt3,
++      [MESA_FORMAT_SRGBA_DXT5] = _mesa_texstore_rgba_dxt5,
++      [MESA_FORMAT_RGB_FXT1] = _mesa_texstore_fxt1,
++      [MESA_FORMAT_RGBA_FXT1] = _mesa_texstore_fxt1,
++      [MESA_FORMAT_RGB_DXT1] = _mesa_texstore_rgb_dxt1,
++      [MESA_FORMAT_RGBA_DXT1] = _mesa_texstore_rgba_dxt1,
++      [MESA_FORMAT_RGBA_DXT3] = _mesa_texstore_rgba_dxt3,
++      [MESA_FORMAT_RGBA_DXT5] = _mesa_texstore_rgba_dxt5,
++      [MESA_FORMAT_R_RGTC1_UNORM] = _mesa_texstore_red_rgtc1,
++      [MESA_FORMAT_R_RGTC1_SNORM] = _mesa_texstore_signed_red_rgtc1,
++      [MESA_FORMAT_RG_RGTC2_UNORM] = _mesa_texstore_rg_rgtc2,
++      [MESA_FORMAT_RG_RGTC2_SNORM] = _mesa_texstore_signed_rg_rgtc2,
++      [MESA_FORMAT_L_LATC1_UNORM] = _mesa_texstore_red_rgtc1,
++      [MESA_FORMAT_L_LATC1_SNORM] = _mesa_texstore_signed_red_rgtc1,
++      [MESA_FORMAT_LA_LATC2_UNORM] = _mesa_texstore_rg_rgtc2,
++      [MESA_FORMAT_LA_LATC2_SNORM] = _mesa_texstore_signed_rg_rgtc2,
++      [MESA_FORMAT_ETC1_RGB8] = _mesa_texstore_etc1_rgb8,
++      [MESA_FORMAT_ETC2_RGB8] = _mesa_texstore_etc2_rgb8,
++      [MESA_FORMAT_ETC2_SRGB8] = _mesa_texstore_etc2_srgb8,
++      [MESA_FORMAT_ETC2_RGBA8_EAC] = _mesa_texstore_etc2_rgba8_eac,
++      [MESA_FORMAT_ETC2_SRGB8_ALPHA8_EAC] = _mesa_texstore_etc2_srgb8_alpha8_eac,
++      [MESA_FORMAT_ETC2_R11_EAC] = _mesa_texstore_etc2_r11_eac,
++      [MESA_FORMAT_ETC2_RG11_EAC] = _mesa_texstore_etc2_rg11_eac,
++      [MESA_FORMAT_ETC2_SIGNED_R11_EAC] = _mesa_texstore_etc2_signed_r11_eac,
++      [MESA_FORMAT_ETC2_SIGNED_RG11_EAC] = _mesa_texstore_etc2_signed_rg11_eac,
++      [MESA_FORMAT_ETC2_RGB8_PUNCHTHROUGH_ALPHA1] = _mesa_texstore_etc2_rgb8_punchthrough_alpha1,
++      [MESA_FORMAT_ETC2_SRGB8_PUNCHTHROUGH_ALPHA1] = _mesa_texstore_etc2_srgb8_punchthrough_alpha1,
++      [MESA_FORMAT_BPTC_RGBA_UNORM] = _mesa_texstore_bptc_rgba_unorm,
++      [MESA_FORMAT_BPTC_SRGB_ALPHA_UNORM] = _mesa_texstore_bptc_rgba_unorm,
++      [MESA_FORMAT_BPTC_RGB_SIGNED_FLOAT] = _mesa_texstore_bptc_rgb_signed_float,
++      [MESA_FORMAT_BPTC_RGB_UNSIGNED_FLOAT] = _mesa_texstore_bptc_rgb_unsigned_float,
++   };
+ 
+    assert(table[dstFormat]);
+    return table[dstFormat](ctx, dims, baseInternalFormat,
+diff --git a/src/mesa/math/m_eval.c b/src/mesa/math/m_eval.c
+index 5e0d043..597a193 100644
+--- a/src/mesa/math/m_eval.c
++++ b/src/mesa/math/m_eval.c
+@@ -41,7 +41,40 @@
+ #include "main/config.h"
+ #include "m_eval.h"
+ 
+-static GLfloat inv_tab[MAX_EVAL_ORDER];
++/* Fixed reciprocals: no shared initialization writes or read-before-init. */
++_Static_assert(MAX_EVAL_ORDER == 30, "Update evaluator reciprocals for the new order");
++static const GLfloat inv_tab[MAX_EVAL_ORDER] = {
++   0.0F,
++   1.0F / 1.0F,
++   1.0F / 2.0F,
++   1.0F / 3.0F,
++   1.0F / 4.0F,
++   1.0F / 5.0F,
++   1.0F / 6.0F,
++   1.0F / 7.0F,
++   1.0F / 8.0F,
++   1.0F / 9.0F,
++   1.0F / 10.0F,
++   1.0F / 11.0F,
++   1.0F / 12.0F,
++   1.0F / 13.0F,
++   1.0F / 14.0F,
++   1.0F / 15.0F,
++   1.0F / 16.0F,
++   1.0F / 17.0F,
++   1.0F / 18.0F,
++   1.0F / 19.0F,
++   1.0F / 20.0F,
++   1.0F / 21.0F,
++   1.0F / 22.0F,
++   1.0F / 23.0F,
++   1.0F / 24.0F,
++   1.0F / 25.0F,
++   1.0F / 26.0F,
++   1.0F / 27.0F,
++   1.0F / 28.0F,
++   1.0F / 29.0F,
++};
+ 
+ 
+ 
+@@ -452,10 +485,5 @@ _math_de_casteljau_surf(GLfloat * cn, GLfloat * out, GLfloat * du,
+ void
+ _math_init_eval(void)
+ {
+-   GLuint i;
+-
+-   /* KW: precompute 1/x for useful x.
+-    */
+-   for (i = 1; i < MAX_EVAL_ORDER; i++)
+-      inv_tab[i] = 1.0F / i;
++   /* Immutable table is ready before any context is initialized. */
+ }
+diff --git a/src/mesa/program/program.c b/src/mesa/program/program.c
+index 78cdb79..10866ba 100644
+--- a/src/mesa/program/program.c
++++ b/src/mesa/program/program.c
+@@ -29,6 +29,9 @@
+  */
+ 
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#endif
+ #include "util/glheader.h"
+ #include "main/context.h"
+ #include "main/framebuffer.h"
+@@ -51,7 +54,22 @@
+  * A pointer to this dummy program is put into the hash table when
+  * glGenPrograms is called.
+  */
++#if defined(R4OS_OPENGL)
++/* The template is shared; mutable placeholder fields/locks belong to the
++ * calling process. It remains alive through all context/resource teardown. */
++static const struct gl_program r4gl__mesa_DummyProgram_template = {0};
++static void r4gl__mesa_DummyProgram_init(void *data)
++{
++   *(struct gl_program *)data = r4gl__mesa_DummyProgram_template;
++}
++struct gl_program *r4gl_get__mesa_DummyProgram(void)
++{
++   return r4gl_process_state(&r4gl__mesa_DummyProgram_template, sizeof(struct gl_program),
++                            _Alignof(struct gl_program), r4gl__mesa_DummyProgram_init);
++}
++#else
+ struct gl_program _mesa_DummyProgram;
++#endif
+ 
+ 
+ /**
+diff --git a/src/mesa/program/program.h b/src/mesa/program/program.h
+index d52e6d3..d7a1f6b 100644
+--- a/src/mesa/program/program.h
++++ b/src/mesa/program/program.h
+@@ -47,7 +47,12 @@
+ extern "C" {
+ #endif
+ 
++#if defined(R4OS_OPENGL)
++struct gl_program *r4gl_get__mesa_DummyProgram(void);
++#define _mesa_DummyProgram (*r4gl_get__mesa_DummyProgram())
++#else
+ extern struct gl_program _mesa_DummyProgram;
++#endif
+ 
+ 
+ extern void
+diff --git a/src/util/format/u_format.c b/src/util/format/u_format.c
+index 8f6defb..4f3f1db 100644
+--- a/src/util/format/u_format.c
++++ b/src/util/format/u_format.c
+@@ -1135,6 +1135,16 @@ util_format_rgb_to_bgr(enum pipe_format format)
+    }
+ }
+ 
++#if defined(R4OS_OPENGL) && DETECT_ARCH_X86_64
++const struct util_format_unpack_description *
++util_format_unpack_description(enum pipe_format format)
++{
++   /* Native x86_64 has no NEON alternative. The generated generic descriptor
++    * lookup already uses immutable data; a mutable duplicate and once lock
++    * would add no selection and would cross process ownership. */
++   return util_format_unpack_description_generic(format);
++}
++#else
+ static const struct util_format_unpack_description *util_format_unpack_table[PIPE_FORMAT_COUNT];
+ 
+ static void
+@@ -1161,6 +1171,7 @@ util_format_unpack_description(enum pipe_format format)
+ 
+    return util_format_unpack_table[format];
+ }
++#endif
+ 
+ enum pipe_format
+ util_format_rgbx_to_rgba(enum pipe_format format)

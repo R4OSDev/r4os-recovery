@@ -1,0 +1,35 @@
+{
+  "accessed": "2026-10-20",
+  "files": {
+    "CP437.TXT": {
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT",
+      "sha256": "6bad4dabcdf5940227c7d81fab130dcb18a77850b5d79de28b5dc4e047b0aaac",
+      "bytes": 9794,
+      "vendored_sha256": "fa637cccff54421668827e36340192f5579ec33443feafbcfb039dcac747b3b2",
+      "transformation": "Only trailing DOS EOF byte removed and final LF ensured; all original content and notices preserved."
+    },
+    "CP1252.TXT": {
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT",
+      "sha256": "f607ae328b4dff5e9bfef725f5fff0ae23f38797f8a5b95998a0d2735c0e8fad",
+      "bytes": 9355,
+      "vendored_sha256": "f607ae328b4dff5e9bfef725f5fff0ae23f38797f8a5b95998a0d2735c0e8fad",
+      "transformation": "Only trailing DOS EOF byte removed and final LF ensured; all original content and notices preserved."
+    },
+    "IBMGRAPH.TXT": {
+      "url": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/IBMGRAPH.TXT",
+      "sha256": "5c8052b5a9c3852b1cb4b6a1b5d1591e8d26604e7ed457cbdc6f1cbe09463cf2",
+      "bytes": 3748,
+      "vendored_sha256": "5c8052b5a9c3852b1cb4b6a1b5d1591e8d26604e7ed457cbdc6f1cbe09463cf2",
+      "transformation": "Only trailing DOS EOF byte removed and final LF ensured; all original content and notices preserved."
+    },
+    "UNICODE-LICENSE.txt": {
+      "url": "https://www.unicode.org/license.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "bytes": 1995,
+      "vendored_sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "transformation": "Only trailing DOS EOF byte removed and final LF ensured; all original content and notices preserved."
+    }
+  },
+  "utf8_reference": "RFC3629 / Unicode17 section3.9 Table3-7",
+  "license": "Original mapping headers/notices retained, IBMGRAPH own permissive notice plus Unicode License V3. Only factual derived scalar mapping tables are compiled; no borrowed conversion implementation."
+}

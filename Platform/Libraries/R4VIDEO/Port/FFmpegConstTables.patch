@@ -1,0 +1,103 @@
+--- a/libavcodec/h264_cavlc.c
++++ b/libavcodec/h264_cavlc.c
+@@ -28,11 +28,17 @@
+ #define CABAC(h) 0
+ #define UNCHECKED_BITSTREAM_READER 1
+ 
++#ifdef R4OS_TABLEGEN
++#include "vlc.h"
++#include "libavutil/common.h"
++#include "libavutil/intmath.h"
++#else
+ #include "h264dec.h"
+ #include "h264_mvpred.h"
+ #include "h264data.h"
+ #include "golomb.h"
+ #include "mpegutils.h"
++#endif
+ #include "libavutil/avassert.h"
+ 
+ 
+@@ -235,7 +241,9 @@
+ };
+ 
+ #define LEVEL_TAB_BITS 8
++#ifndef R4OS_VIDEO
+ static int8_t cavlc_level_tab[7][1<<LEVEL_TAB_BITS][2];
++#endif
+ 
+ #define CHROMA_DC_COEFF_TOKEN_VLC_BITS 8
+ #define CHROMA422_DC_COEFF_TOKEN_VLC_BITS 13
+@@ -246,6 +254,9 @@
+ #define RUN_VLC_BITS                   3
+ #define RUN7_VLC_BITS                  6
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_cavlc_tables.h"
++#else
+ /// 17 pointers to only four different VLCs
+ static const VLCElem *coeff_token_vlc[17];
+ 
+@@ -268,6 +279,9 @@
+                                  + (7  << CHROMA422_DC_TOTAL_ZEROS_VLC_BITS)
+                                  + (520 + 332 + 280 + 256) /* coeff token */];
+ 
++#endif
++
++#ifndef R4OS_TABLEGEN
+ /**
+  * Get the predicted number of non-zero coefficients.
+  * @param n block index
+@@ -286,6 +300,9 @@
+     return i&31;
+ }
+ 
++#endif
++
++#ifndef R4OS_VIDEO
+ static av_cold void init_cavlc_level_tab(void){
+     int suffix_length;
+     unsigned int i;
+@@ -379,6 +396,12 @@
+     init_cavlc_level_tab();
+ }
+ 
++#else
++/* The pinned host initializer already materialized immutable tables. */
++void ff_h264_decode_init_vlc(void) {}
++#endif
++
++#ifndef R4OS_TABLEGEN
+ static inline int get_level_prefix(GetBitContext *gb){
+     unsigned int buf;
+     int log;
+@@ -1148,3 +1171,5 @@
+ 
+     return 0;
+ }
++
++#endif /* !R4OS_TABLEGEN */
+--- a/libavcodec/h264dec.c
++++ b/libavcodec/h264dec.c
+@@ -379,7 +379,9 @@
+     return 0;
+ }
+ 
++#ifndef R4OS_VIDEO
+ static AVOnce h264_vlc_init = AV_ONCE_INIT;
++#endif
+ 
+ static av_cold int h264_decode_init(AVCodecContext *avctx)
+ {
+@@ -390,7 +392,11 @@
+     if (ret < 0)
+         return ret;
+ 
++#ifdef R4OS_VIDEO
++    ret = 0;
++#else
+     ret = ff_thread_once(&h264_vlc_init, ff_h264_decode_init_vlc);
++#endif
+     if (ret != 0) {
+         av_log(avctx, AV_LOG_ERROR, "pthread_once has failed.");
+         return AVERROR_UNKNOWN;

@@ -1,0 +1,27 @@
+{
+  "scope": "Four complete original-C H264 controls for shared-base block-linear surfaces, codec0/slice0 and positive SSD/RDO controls. C7/C9 layout proof; physical qualification is separate.",
+  "bytes": 4608,
+  "sha256": "0fe7871ccc2554d2e3a550ab5e997f59cd04ab2c3f94f0da2d3a6bf4c8bcd703",
+  "generator": "Tests/nvenc_h264_reference.c",
+  "generator_sha256": "e6dacbe866f76569a546acde96b84413c4b2a8794ef21fb4e4486b63fe5f032a",
+  "sources": [
+    {
+      "path": "Original/Nvidia/OpenGpuDoc/classes/video/nvenc_drv.h",
+      "bytes": 275485,
+      "sha256": "04ba0a17c2a50e6102f7511c6294c2b61d99fdd1b6651410a3d63c4924da323d",
+      "origin": {
+        "id": "nvidia-open-gpu-doc",
+        "revision": "9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+        "url": "https://codeload.github.com/NVIDIA/open-gpu-doc/tar.gz/9fdf5c4062007929d9f4e6cbad9c9771fe61b880",
+        "archive_sha256": "901999de58461d953531f55445a3f653ca76ff58cec722bedb9f064d25808707",
+        "sha256": "04ba0a17c2a50e6102f7511c6294c2b61d99fdd1b6651410a3d63c4924da323d"
+      }
+    }
+  ],
+  "records": [
+    "C7B7 IDR QP0",
+    "C7B7 P QP51",
+    "C9B7 IDR QP0",
+    "C9B7 P QP51"
+  ]
+}

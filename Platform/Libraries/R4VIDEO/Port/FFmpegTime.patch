@@ -1,0 +1,57 @@
+--- a/libavutil/time.c
++++ b/libavutil/time.c
+@@ -35,10 +35,16 @@
+ 
+ #include "time.h"
+ #include "error.h"
++#ifdef R4OS_VIDEO
++extern int64_t r4video_time_us(int relative);
++extern int r4video_sleep_us(unsigned usec);
++#endif
+ 
+ int64_t av_gettime(void)
+ {
+-#if HAVE_GETTIMEOFDAY
++#ifdef R4OS_VIDEO
++    return r4video_time_us(0);
++#elif HAVE_GETTIMEOFDAY
+     struct timeval tv;
+     gettimeofday(&tv, NULL);
+     return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
+@@ -55,6 +61,9 @@
+ 
+ int64_t av_gettime_relative(void)
+ {
++#ifdef R4OS_VIDEO
++    return r4video_time_us(1);
++#else
+ #if HAVE_CLOCK_GETTIME && defined(CLOCK_MONOTONIC)
+ #ifdef __APPLE__
+     if (&clock_gettime)
+@@ -66,11 +75,14 @@
+     }
+ #endif
+     return av_gettime() + 42 * 60 * 60 * INT64_C(1000000);
++#endif
+ }
+ 
+ int av_gettime_relative_is_monotonic(void)
+ {
+-#if HAVE_CLOCK_GETTIME && defined(CLOCK_MONOTONIC)
++#ifdef R4OS_VIDEO
++    return 1;
++#elif HAVE_CLOCK_GETTIME && defined(CLOCK_MONOTONIC)
+ #ifdef __APPLE__
+     if (!&clock_gettime)
+         return 0;
+@@ -83,7 +95,9 @@
+ 
+ int av_usleep(unsigned usec)
+ {
+-#if HAVE_NANOSLEEP
++#ifdef R4OS_VIDEO
++    return r4video_sleep_us(usec);
++#elif HAVE_NANOSLEEP
+     struct timespec ts = { usec / 1000000, usec % 1000000 * 1000 };
+     while (nanosleep(&ts, &ts) < 0 && errno == EINTR);
+     return 0;

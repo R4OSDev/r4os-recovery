@@ -1,0 +1,125 @@
+diff --git a/src/mesa/state_tracker/st_manager.c b/src/mesa/state_tracker/st_manager.c
+index 9af523a..079b059 100644
+--- a/src/mesa/state_tracker/st_manager.c
++++ b/src/mesa/state_tracker/st_manager.c
+@@ -983,6 +983,10 @@ st_api_create_context(struct pipe_frontend_screen *fscreen,
+       struct st_screen *screen;
+ 
+       screen = CALLOC_STRUCT(st_screen);
++      if (!screen) {
++         *error = ST_CONTEXT_ERROR_NO_MEMORY;
++         return NULL;
++      }
+       simple_mtx_init(&screen->st_mutex, mtx_plain);
+ 
+       /* We'll use drawable->ID as prehashed value to prevent the hash function
+@@ -993,6 +997,12 @@ st_api_create_context(struct pipe_frontend_screen *fscreen,
+       screen->drawable_ht = _mesa_hash_table_create(NULL,
+                                                     NULL,
+                                                     _mesa_key_pointer_equal);
++      if (!screen->drawable_ht) {
++         simple_mtx_destroy(&screen->st_mutex);
++         FREE(screen);
++         *error = ST_CONTEXT_ERROR_NO_MEMORY;
++         return NULL;
++      }
+       fscreen->st_screen = screen;
+    }
+ 
+@@ -1032,6 +1042,7 @@ st_api_create_context(struct pipe_frontend_screen *fscreen,
+    if (attribs->flags & ST_CONTEXT_FLAG_DEBUG) {
+       if (!_mesa_set_debug_state_int(st->ctx, GL_DEBUG_OUTPUT, GL_TRUE)) {
+          *error = ST_CONTEXT_ERROR_NO_MEMORY;
++         st_destroy_context(st);
+          return NULL;
+       }
+ 
+@@ -1168,8 +1179,11 @@ st_api_make_current(struct st_context *st,
+       }
+ 
+       /* If framebuffers were asked for, we'd better have allocated them */
+-      if ((stdrawi && !stdraw) || (streadi && !stread))
++      if ((stdrawi && !stdraw) || (streadi && !stread)) {
++         _mesa_reference_framebuffer(&stdraw, NULL);
++         _mesa_reference_framebuffer(&stread, NULL);
+          return false;
++      }
+ 
+       if (stdraw && stread) {
+          st_framebuffer_validate(stdraw, st);
+diff --git a/src/egl/main/egldisplay.c b/src/egl/main/egldisplay.c
+index 2f44d99..381fc62 100644
+--- a/src/egl/main/egldisplay.c
++++ b/src/egl/main/egldisplay.c
+@@ -215,6 +215,8 @@ _eglFiniDisplay(void)
+          close(disp->Options.fd);
+ 
+       free(disp->Options.Attribs);
++      u_rwlock_destroy(&disp->TerminateLock);
++      simple_mtx_destroy(&disp->Mutex);
+       free(disp);
+    }
+    _eglGlobal.DisplayList = NULL;
+@@ -277,13 +279,20 @@ _eglFindDisplay(_EGLPlatformType plat, void *plat_dpy,
+       goto out;
+ 
+    simple_mtx_init(&disp->Mutex, mtx_plain);
+-   u_rwlock_init(&disp->TerminateLock);
++   if (u_rwlock_init(&disp->TerminateLock)) {
++      simple_mtx_destroy(&disp->Mutex);
++      free(disp);
++      disp = NULL;
++      goto out;
++   }
+    disp->Platform = plat;
+    disp->PlatformDisplay = plat_dpy;
+    num_attribs = _eglNumAttribs(attrib_list);
+    if (num_attribs) {
+       disp->Options.Attribs = calloc(num_attribs, sizeof(EGLAttrib));
+       if (!disp->Options.Attribs) {
++         u_rwlock_destroy(&disp->TerminateLock);
++         simple_mtx_destroy(&disp->Mutex);
+          free(disp);
+          disp = NULL;
+          goto out;
+diff --git a/src/gallium/auxiliary/rtasm/rtasm_execmem.c b/src/gallium/auxiliary/rtasm/rtasm_execmem.c
+index 82c4d2f..7f46d04 100644
+--- a/src/gallium/auxiliary/rtasm/rtasm_execmem.c
++++ b/src/gallium/auxiliary/rtasm/rtasm_execmem.c
+@@ -47,7 +47,22 @@
+ #include <windows.h>
+ #endif
+ 
+-#if DETECT_OS_POSIX
++#if defined(R4OS_OPENGL)
++
++/* The native software profile has no executable allocator. Report that
++ * capability honestly so callers select their generic implementation. */
++void *rtasm_exec_malloc(size_t size)
++{
++   (void)size;
++   return NULL;
++}
++
++void rtasm_exec_free(void *address)
++{
++   assert(!address);
++}
++
++#elif DETECT_OS_POSIX
+ 
+ 
+ /*
+diff --git a/src/gallium/auxiliary/translate/translate.c b/src/gallium/auxiliary/translate/translate.c
+index d649791..b285347 100644
+--- a/src/gallium/auxiliary/translate/translate.c
++++ b/src/gallium/auxiliary/translate/translate.c
+@@ -38,7 +38,7 @@ struct translate *translate_create( const struct translate_key *key )
+ {
+    struct translate *translate = NULL;
+ 
+-#if DETECT_ARCH_X86 || DETECT_ARCH_X86_64
++#if (DETECT_ARCH_X86 || DETECT_ARCH_X86_64) && !defined(R4OS_OPENGL)
+    translate = translate_sse2_create( key );
+    if (translate)
+       return translate;

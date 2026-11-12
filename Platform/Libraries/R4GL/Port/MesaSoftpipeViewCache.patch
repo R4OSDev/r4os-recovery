@@ -1,0 +1,151 @@
+--- a/src/gallium/drivers/softpipe/sp_context.c
++++ b/src/gallium/drivers/softpipe/sp_context.c
+@@ -90,7 +90,9 @@
+ 
+    for (sh = 0; sh < ARRAY_SIZE(softpipe->tex_cache); sh++) {
+       for (i = 0; i < ARRAY_SIZE(softpipe->tex_cache[0]); i++) {
++#ifndef R4OS_OPENGL
+          sp_destroy_tex_tile_cache(softpipe->tex_cache[sh][i]);
++#endif
+          pipe_sampler_view_reference(&softpipe->sampler_views[sh][i], NULL);
+       }
+    }
+@@ -238,6 +240,7 @@
+       softpipe->cbuf_cache[i] = sp_create_tile_cache( &softpipe->pipe );
+    softpipe->zsbuf_cache = sp_create_tile_cache( &softpipe->pipe );
+ 
++#ifndef R4OS_OPENGL
+    /* Allocate texture caches */
+    for (sh = 0; sh < ARRAY_SIZE(softpipe->tex_cache); sh++) {
+       for (i = 0; i < ARRAY_SIZE(softpipe->tex_cache[0]); i++) {
+@@ -247,6 +250,9 @@
+       }
+    }
+ 
++#endif
++   /* R4OS allocates the unchanged full cache when a sampler view is created,
++    * where allocation failure can be returned to the state tracker. */
+    softpipe->fs_machine = tgsi_exec_machine_create(MESA_SHADER_FRAGMENT);
+ 
+    /* setup quad rendering stages */
+--- a/src/gallium/drivers/softpipe/sp_flush.c
++++ b/src/gallium/drivers/softpipe/sp_flush.c
+@@ -58,7 +58,8 @@
+ 
+       for (sh = 0; sh < ARRAY_SIZE(softpipe->tex_cache); sh++) {
+          for (i = 0; i < softpipe->num_sampler_views[sh]; i++) {
+-            sp_flush_tex_tile_cache(softpipe->tex_cache[sh][i]);
++            if (softpipe->tex_cache[sh][i])
++               sp_flush_tex_tile_cache(softpipe->tex_cache[sh][i]);
+          }
+       }
+    }
+@@ -176,7 +177,8 @@
+ 
+    for (sh = 0; sh < ARRAY_SIZE(softpipe->tex_cache); sh++) {
+       for (i = 0; i < softpipe->num_sampler_views[sh]; i++) {
+-         sp_flush_tex_tile_cache(softpipe->tex_cache[sh][i]);
++         if (softpipe->tex_cache[sh][i])
++            sp_flush_tex_tile_cache(softpipe->tex_cache[sh][i]);
+       }
+    }
+ 
+--- a/src/gallium/drivers/softpipe/sp_state_derived.c
++++ b/src/gallium/drivers/softpipe/sp_state_derived.c
+@@ -313,7 +313,7 @@
+ 
+    /* XXX is this really necessary here??? */
+    for (sh = 0; sh < ARRAY_SIZE(softpipe->tex_cache); sh++) {
+-      for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
++      for (i = 0; i < softpipe->num_sampler_views[sh]; i++) {
+          struct softpipe_tex_tile_cache *tc = softpipe->tex_cache[sh][i];
+          if (tc && tc->texture) {
+             struct softpipe_resource *spt = softpipe_resource(tc->texture);
+--- a/src/gallium/drivers/softpipe/sp_state_sampler.c
++++ b/src/gallium/drivers/softpipe/sp_state_sampler.c
+@@ -90,6 +90,12 @@
+ softpipe_sampler_view_destroy(struct pipe_context *pipe,
+                               struct pipe_sampler_view *view)
+ {
++#ifdef R4OS_OPENGL
++   struct sp_sampler_view *sview = (struct sp_sampler_view *)view;
++   /* Release cached mappings/references before the view's last texture ref. */
++   sp_tex_tile_cache_set_sampler_view(sview->cache, NULL);
++   sp_destroy_tex_tile_cache(sview->cache);
++#endif
+    pipe_resource_reference(&view->texture, NULL);
+    FREE(view);
+ }
+@@ -119,8 +125,18 @@
+       struct pipe_sampler_view **pview = &softpipe->sampler_views[shader][start + i];
+ 
+       pipe_sampler_view_reference(pview, views[i]);
++#ifdef R4OS_OPENGL
++      struct sp_sampler_view *owned_view = (struct sp_sampler_view *)*pview;
++      softpipe->tex_cache[shader][start + i] = owned_view ? owned_view->cache : NULL;
++      if (owned_view) {
++         /* A retained but unbound view may have missed a texture barrier.
++          * Rebinding must not resurrect stale cached texels. */
++         sp_tex_tile_cache_validate_texture(owned_view->cache);
++      }
++#else
+       sp_tex_tile_cache_set_sampler_view(softpipe->tex_cache[shader][start + i],
+                                          views[i]);
++#endif
+       /*
+        * We don't really have variants, however some bits are different per shader,
+        * so just copy?
+@@ -139,8 +155,14 @@
+    for (; i < num + unbind_num_trailing_slots; i++) {
+       struct pipe_sampler_view **pview = &softpipe->sampler_views[shader][start + i];
+       pipe_sampler_view_reference(pview, NULL);
++#ifdef R4OS_OPENGL
++      softpipe->tex_cache[shader][start + i] = NULL;
++      memset(&softpipe->tgsi.sampler[shader]->sp_sview[start + i], 0,
++             sizeof(struct sp_sampler_view));
++#else
+       sp_tex_tile_cache_set_sampler_view(softpipe->tex_cache[shader][start + i],
+                                          NULL);
++#endif
+    }
+ 
+ 
+--- a/src/gallium/drivers/softpipe/sp_tex_sample.c
++++ b/src/gallium/drivers/softpipe/sp_tex_sample.c
+@@ -3617,12 +3617,22 @@
+    const struct softpipe_resource *spr = (struct softpipe_resource *)resource;
+ 
+    if (sview) {
++#ifdef R4OS_OPENGL
++      sview->cache = sp_create_tex_tile_cache(pipe);
++      if (!sview->cache) {
++         FREE(sview);
++         return NULL;
++      }
++#endif
+       struct pipe_sampler_view *view = &sview->base;
+       *view = *templ;
+       view->reference.count = 1;
+       view->texture = NULL;
+       pipe_resource_reference(&view->texture, resource);
+       view->context = pipe;
++#ifdef R4OS_OPENGL
++      sp_tex_tile_cache_set_sampler_view(sview->cache, view);
++#endif
+ 
+ #if MESA_DEBUG
+      /*
+--- a/src/gallium/drivers/softpipe/sp_tex_sample.h
++++ b/src/gallium/drivers/softpipe/sp_tex_sample.h
+@@ -117,8 +117,10 @@
+    bool pot2d;
+    bool need_cube_convert;
+ 
++   /* R4OS: owned by the original view, borrowed by stage/slot copies. The
++    * same immutable view can share cached texels across shader stages. */
++   struct softpipe_tex_tile_cache *cache;
+    /* these are different per shader type */
+-   struct softpipe_tex_tile_cache *cache;
+    compute_lambda_func compute_lambda;
+    compute_lambda_from_grad_func compute_lambda_from_grad;
+    union pipe_color_union border_color;

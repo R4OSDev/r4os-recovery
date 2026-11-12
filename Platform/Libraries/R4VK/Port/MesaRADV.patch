@@ -1,0 +1,1741 @@
+--- a/src/amd/addrlib/src/core/addrcommon.h
++++ b/src/amd/addrlib/src/core/addrcommon.h
+@@ -25,7 +25,7 @@
+     #include <string.h>
+ #endif
+ 
+-#if defined(__GNUC__)
++#if defined(__GNUC__) && !defined(R4OS_VULKAN)
+     #include <signal.h>
+ #endif
+ 
+@@ -37,7 +37,9 @@
+ // Platform specific debug break defines
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
+ #if DEBUG
+-    #if defined(_WIN32)
++    #if defined(R4OS_VULKAN)
++        #define ADDR_DBG_BREAK() { abort(); }
++    #elif defined(_WIN32)
+         #define ADDR_DBG_BREAK()    { __debugbreak(); }
+     #elif defined(__GNUC__)
+         #define ADDR_DBG_BREAK()    { raise(SIGTRAP); }
+--- a/src/amd/common/ac_cmdbuf.h
++++ b/src/amd/common/ac_cmdbuf.h
+@@ -273,6 +273,38 @@
+    __cs_buf = __cs->buf;               \
+ } while (0)
+ 
++#ifdef R4OS_VULKAN
++/* Keep argument evaluation outside macro-local declarations. The tracked
++ * register helpers already use __value; shadowing it here self-initializes
++ * an indeterminate word while the tracked cache records the correct value. */
++static inline void
++r4vk_cmdbuf_emit_word(struct ac_cmdbuf *cs, uint32_t *words, uint32_t index,
++                     uint32_t reserved, uint32_t value)
++{
++   if (!cs->record_discard) {
++      assert(!reserved || index < reserved);
++      words[index] = value;
++   }
++}
++#define ac_cmdbuf_emit(value) do { \
++   r4vk_cmdbuf_emit_word(__cs, __cs_buf, __cs_num, __cs_reserved_dw, (value)); \
++   __cs_num++; \
++} while (0)
++#define ac_cmdbuf_packets_added() (__cs_num != __cs_num_initial)
++#define ac_cmdbuf_emit_array(values, num) do { \
++   unsigned __n = (num); \
++   if (!__cs->record_discard) { \
++      assert(!__cs_reserved_dw || (__cs_num <= __cs_reserved_dw && __n <= __cs_reserved_dw - __cs_num)); \
++      memcpy(__cs_buf + __cs_num, (values), (size_t)__n * 4); \
++   } \
++   __cs_num += __n; \
++} while (0)
++#define ac_cmdbuf_end() do { \
++   __cs->cdw = __cs_num; \
++   assert(__cs->record_discard || __cs->cdw <= __cs->max_dw); \
++   __cs = NULL; \
++} while (0)
++#else
+ #define ac_cmdbuf_emit(value)                                   \
+    do {                                                         \
+       assert(!__cs_reserved_dw || __cs_num < __cs_reserved_dw); \
+@@ -293,6 +325,8 @@
+    assert(__cs->cdw <= __cs->max_dw);  \
+    __cs = NULL;                        \
+ } while (0)
++
++#endif
+ 
+ /* Packet building helpers. Don't use directly. */
+ #define __ac_cmdbuf_set_reg_seq(reg, num, idx, prefix_name, packet, reset_filter_cam)     \
+--- a/src/amd/common/ac_cmdbuf_base.h
++++ b/src/amd/common/ac_cmdbuf_base.h
+@@ -15,6 +15,10 @@
+    uint32_t *buf;        /* The base pointer of the chunk. */
+ 
+    bool context_roll;
++#ifdef R4OS_VULKAN
++   /* Native bounded streams discard further emission after capacity failure. */
++   bool record_discard;
++#endif
+ };
+ 
+ #endif
+--- a/src/amd/common/ac_debug.c
++++ b/src/amd/common/ac_debug.c
+@@ -103,7 +103,7 @@
+ bool ac_vm_fault_occurred(enum amd_gfx_level gfx_level, uint64_t *old_dmesg_timestamp,
+                          uint64_t *out_addr)
+ {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+    return false;
+ #else
+    char line[2000];
+@@ -210,7 +210,7 @@
+    if (ring != AMD_IP_GFX)
+       return NULL;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    char *data;
+    size_t size;
+    FILE *f = open_memstream(&data, &size);
+@@ -298,7 +298,7 @@
+                           const char *wave_dump,
+                           struct ac_wave_info waves[AC_MAX_WAVES_PER_CHIP])
+ {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+    return 0;
+ #else
+    char *dump = NULL;
+--- a/src/amd/common/ac_gpu_info.c
++++ b/src/amd/common/ac_gpu_info.c
+@@ -30,7 +30,7 @@
+ #define ASICREV_IS_MI200(r)      ASICREV_IS(r, MI200)
+ #define ASICREV_IS_GFX940(r)     ASICREV_IS(r, GFX940)
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+ static int drmGetCap(int fd, uint64_t capability, uint64_t *value)
+ {
+    return -EINVAL;
+@@ -40,7 +40,11 @@
+ }
+ static int drmGetDevice2(int fd, uint32_t flags, drmDevicePtr *device)
+ {
++#ifdef R4OS_VULKAN
++   return -ENOSYS;
++#else
+    return -ENODEV;
++#endif
+ }
+ static intptr_t readlink(const char *path, char *buf, size_t bufsiz)
+ {
+@@ -1202,10 +1206,12 @@
+       info->max_render_backends = 2;
+ 
+    info->clock_crystal_freq = device_info->gpu_counter_freq;
++#ifndef R4OS_VULKAN
+    if (!info->clock_crystal_freq) {
+       fprintf(stderr, "amdgpu: clock crystal frequency is 0, timestamps will be wrong\n");
+       info->clock_crystal_freq = 1;
+    }
++#endif
+ 
+    info->tcc_rb_non_coherent = info->gfx_level < GFX12 &&
+                                !util_is_power_of_two_or_zero(info->num_tcc_blocks) &&
+--- a/src/amd/common/ac_linux_drm.h
++++ b/src/amd/common/ac_linux_drm.h
+@@ -9,7 +9,7 @@
+ #include <stdbool.h>
+ #include <stdint.h>
+ 
+-#if !defined(_WIN32)
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+ #include "drm-uapi/amdgpu_drm.h"
+ #include "amdgpu.h"
+ #else
+@@ -325,7 +325,7 @@
+ #endif
+ 
+ /* All functions are static inline stubs on Windows. */
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+ #define __U_STUB__
+ #endif
+ #include "util/u_stub.h"
+@@ -336,7 +336,7 @@
+ struct radeon_info;
+ 
+ typedef union ac_drm_bo {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+    void *abo;
+ #else
+    amdgpu_bo_handle abo;
+--- a/src/amd/common/ac_rgp.c
++++ b/src/amd/common/ac_rgp.c
+@@ -113,6 +113,7 @@
+ 
+ static_assert(sizeof(struct sqtt_file_header) == 56, "sqtt_file_header doesn't match RGP spec");
+ 
++#if defined(USE_LIBELF)
+ static void ac_sqtt_fill_header(struct sqtt_file_header *header)
+ {
+    struct tm *timep, result;
+@@ -139,6 +140,7 @@
+    header->day_in_year = timep->tm_yday;
+    header->is_daylight_savings = timep->tm_isdst;
+ }
++#endif
+ 
+ /**
+  * SQTT CPU info.
+@@ -158,6 +160,7 @@
+ static_assert(sizeof(struct sqtt_file_chunk_cpu_info) == 112,
+               "sqtt_file_chunk_cpu_info doesn't match RGP spec");
+ 
++#if defined(USE_LIBELF)
+ static void ac_sqtt_fill_cpu_info(struct sqtt_file_chunk_cpu_info *chunk)
+ {
+    uint32_t cpu_clock_speed_total = 0;
+@@ -240,6 +243,8 @@
+ 
+    fclose(f);
+ }
++#endif
++
+ 
+ /**
+  * SQTT ASIC info.
+--- a/src/amd/common/ac_spm_config.c
++++ b/src/amd/common/ac_spm_config.c
+@@ -429,8 +429,8 @@
+ {
+    char *buf = os_read_file(path, NULL);
+    if (!buf) {
+-      fprintf(stderr, "ac/spm-config: Failed to open '%s': %s\n",
+-              path, strerror(errno));
++      fprintf(stderr, "ac/spm-config: Failed to open '%s': %d\n",
++              path, errno);
+       return false;
+    }
+ 
+--- a/src/amd/common/ac_surface.c
++++ b/src/amd/common/ac_surface.c
+@@ -23,7 +23,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+ #define AMDGPU_TILING_ARRAY_MODE_SHIFT			0
+ #define AMDGPU_TILING_ARRAY_MODE_MASK			0xf
+ #define AMDGPU_TILING_PIPE_CONFIG_SHIFT			4
+--- a/src/amd/common/nir/ac_nir_meta_cs_clear_copy_buffer.c
++++ b/src/amd/common/nir/ac_nir_meta_cs_clear_copy_buffer.c
+@@ -261,7 +261,7 @@
+             nir_def *last_dword = nir_channel(&b, value, num_dwords);
+ 
+             if (num_dwords) {
+-               nir_def *dwords = nir_channels(&b, value, BITFIELD_MASK(num_dwords));
++               nir_def *dwords = nir_channels(&b, value, (nir_component_mask_t)BITFIELD_MASK(num_dwords));
+                nir_store_ssbo(&b, dwords, dst_buf, offset, .access = ACCESS_RESTRICT);
+             }
+ 
+--- a/src/amd/compiler/aco_ir.cpp
++++ b/src/amd/compiler/aco_ir.cpp
+@@ -20,7 +20,7 @@
+ 
+ thread_local aco::monotonic_buffer_resource* instruction_buffer = nullptr;
+ 
+-uint64_t debug_flags = 0;
++uint64_t debug_flags = DEBUG_VALIDATE_IR | DEBUG_VALIDATE_RA | DEBUG_VALIDATE_OPT;
+ 
+ static const struct debug_control aco_debug_options[] = {
+    {"validateir", DEBUG_VALIDATE_IR},
+@@ -57,7 +57,7 @@
+ void
+ init()
+ {
+-   call_once(&init_once_flag, init_once);
++   /* R4OS: immutable validated compiler policy, no process-global once owner. */
+ }
+ 
+ void
+--- a/src/amd/compiler/aco_print_asm.cpp
++++ b/src/amd/compiler/aco_print_asm.cpp
+@@ -97,7 +97,7 @@
+    }
+ }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_FREESTANDING)
+ /**
+  * Determines the GPU type to use for CLRXdisasm
+  */
+@@ -177,7 +177,7 @@
+ print_asm_clrx(Program* program, enum radeon_family family, std::vector<uint32_t>& binary,
+                unsigned exec_size, FILE* output)
+ {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_FREESTANDING)
+    return true;
+ #else
+    char path[] = "/tmp/fileXXXXXX";
+@@ -421,7 +421,7 @@
+    }
+ #endif
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_FREESTANDING)
+    /* Check if CLRX disassembler binary is available and can disassemble the program */
+    return to_clrx_device_name(program->gfx_level, family) &&
+           system("clrxdisasm --version > /dev/null 2>&1") == 0;
+--- a/src/amd/vulkan/layers/radv_app_workarounds.c
++++ b/src/amd/vulkan/layers/radv_app_workarounds.c
+@@ -17,7 +17,7 @@
+ 
+ /* Metro Exodus */
+ VKAPI_ATTR VkResult VKAPI_CALL
+-metro_exodus_GetSemaphoreCounterValue(VkDevice _device, VkSemaphore _semaphore, uint64_t *pValue)
++radv_metro_exodus_GetSemaphoreCounterValue(VkDevice _device, VkSemaphore _semaphore, uint64_t *pValue)
+ {
+    /* See https://gitlab.freedesktop.org/mesa/mesa/-/issues/5119. */
+    if (_semaphore == VK_NULL_HANDLE) {
+--- a/src/amd/vulkan/layers/radv_app_workarounds.h
++++ b/src/amd/vulkan/layers/radv_app_workarounds.h
+@@ -9,7 +9,7 @@
+ 
+ #include <vulkan/vulkan.h>
+ 
+-VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_GetSemaphoreCounterValue(VkDevice _device, VkSemaphore _semaphore,
++VKAPI_ATTR VkResult VKAPI_CALL radv_metro_exodus_GetSemaphoreCounterValue(VkDevice _device, VkSemaphore _semaphore,
+                                                                      uint64_t *pValue);
+ 
+ VKAPI_ATTR VkResult VKAPI_CALL no_mans_sky_CreateImageView(VkDevice _device, const VkImageViewCreateInfo *pCreateInfo,
+--- a/src/amd/vulkan/layers/radv_rra_layer.c
++++ b/src/amd/vulkan/layers/radv_rra_layer.c
+@@ -21,6 +21,7 @@
+    struct radv_physical_device *pdev = radv_device_physical(device);
+    struct radv_instance *instance = radv_physical_device_instance(pdev);
+ 
++#ifndef R4OS_VULKAN
+    if (device->rra_trace.triggered) {
+       device->rra_trace.triggered = false;
+ 
+@@ -52,6 +53,7 @@
+          }
+       }
+    }
++#endif
+ 
+    VkResult result = device->layer_dispatch.rra.QueuePresentKHR(_queue, pPresentInfo);
+    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+--- a/src/amd/vulkan/radv_cmd_buffer.c
++++ b/src/amd/vulkan/radv_cmd_buffer.c
+@@ -8,6 +8,9 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifdef R4OS_VULKAN
++#include "r4vk_radv_compile.h"
++#endif
+ #include "radv_cmd_buffer.h"
+ #include "meta/radv_meta.h"
+ #include "tools/radv_debug_hang.h"
+@@ -6349,9 +6352,16 @@
+       return;
+ 
+    uint32_t nontrivial_divisors;
++#ifdef R4OS_VULKAN
++   r4vk_radv_error_reset();
++#endif
+    struct radv_shader_part *prolog = lookup_vs_prolog(cmd_buffer, vs_shader, &nontrivial_divisors);
+    if (!prolog) {
++#ifdef R4OS_VULKAN
++      vk_command_buffer_set_error(&cmd_buffer->vk, r4vk_radv_error_result(VK_ERROR_OUT_OF_HOST_MEMORY));
++#else
+       vk_command_buffer_set_error(&cmd_buffer->vk, VK_ERROR_OUT_OF_HOST_MEMORY);
++#endif
+       return;
+    }
+    emit_prolog_regs(cmd_buffer, vs_shader, prolog);
+@@ -9137,9 +9147,16 @@
+    if (!ps || !ps->info.ps.has_epilog)
+       return;
+ 
++#ifdef R4OS_VULKAN
++   r4vk_radv_error_reset();
++#endif
+    ps_epilog = lookup_ps_epilog(cmd_buffer);
+    if (!ps_epilog) {
++#ifdef R4OS_VULKAN
++      vk_command_buffer_set_error(&cmd_buffer->vk, r4vk_radv_error_result(VK_ERROR_OUT_OF_HOST_MEMORY));
++#else
+       vk_command_buffer_set_error(&cmd_buffer->vk, VK_ERROR_OUT_OF_HOST_MEMORY);
++#endif
+       return;
+    }
+ 
+--- a/src/amd/vulkan/radv_cs.h
++++ b/src/amd/vulkan/radv_cs.h
+@@ -22,6 +22,9 @@
+ static inline unsigned
+ radeon_check_space(struct radeon_winsys *ws, struct ac_cmdbuf *cs, unsigned needed)
+ {
++#ifdef R4OS_VULKAN
++   if (cs->record_discard) cs->cdw = cs->reserved_dw = 0;
++#endif
+    assert(cs->cdw <= cs->reserved_dw);
+    if (cs->max_dw - cs->cdw < needed)
+       ws->cs_grow(cs, needed);
+--- a/src/amd/vulkan/radv_device.c
++++ b/src/amd/vulkan/radv_device.c
+@@ -8,7 +8,9 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifndef R4OS_VULKAN
+ #include <fcntl.h>
++#endif
+ #include <stdbool.h>
+ #include <string.h>
+ 
+@@ -25,13 +27,19 @@
+ #include "util/u_debug.h"
+ #include "radv_cs.h"
+ #include "radv_entrypoints.h"
++#ifdef R4OS_VULKAN
++#include "r4vk_wsi_backend.h"
++#endif
+ #include "radv_formats.h"
+ #include "radv_physical_device.h"
++#ifdef R4OS_VULKAN
++#include "r4vk_radv.h"
++#endif
+ #include "radv_shader.h"
+ #include "vk_common_entrypoints.h"
+ #include "vk_pipeline_cache.h"
+ #include "vk_util.h"
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+ #include "winsys/amdgpu/radv_amdgpu_winsys_public.h"
+ #endif
+ #include "util/mesa-blake3.h"
+@@ -781,7 +789,7 @@
+ 
+ #define SET_ENTRYPOINT(app_layer, entrypoint) table.entrypoint = app_layer##_##entrypoint;
+    if (!strcmp(instance->drirc.debug.app_layer, "metroexodus")) {
+-      SET_ENTRYPOINT(metro_exodus, GetSemaphoreCounterValue);
++      SET_ENTRYPOINT(radv_metro_exodus, GetSemaphoreCounterValue);
+    } else if (!strcmp(instance->drirc.debug.app_layer, "rage2")) {
+       SET_ENTRYPOINT(rage2, CmdBeginRenderPass);
+    } else if (!strcmp(instance->drirc.debug.app_layer, "quanticdream")) {
+@@ -827,7 +835,7 @@
+    if (radv_bvh_dumping_enabled(instance) && radv_enable_rt(pdev))
+       add_entrypoints(&b, &rra_device_entrypoints, RADV_RRA_DISPATCH_TABLE);
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    if (instance->vk.trace_mode & VK_TRACE_MODE_RMV)
+       add_entrypoints(&b, &rmv_device_entrypoints, RADV_RMV_DISPATCH_TABLE);
+ #endif
+@@ -839,7 +847,11 @@
+       add_entrypoints(&b, &ctx_roll_device_entrypoints, RADV_CTX_ROLL_DISPATCH_TABLE);
+ 
+    add_entrypoints(&b, &radv_device_entrypoints, RADV_DISPATCH_TABLE_COUNT);
++#ifndef R4OS_VULKAN
+    add_entrypoints(&b, &wsi_device_entrypoints, RADV_DISPATCH_TABLE_COUNT);
++#else
++   add_entrypoints(&b, &r4vk_wsi_device_entrypoints, RADV_DISPATCH_TABLE_COUNT);
++#endif
+    add_entrypoints(&b, &vk_common_device_entrypoints, RADV_DISPATCH_TABLE_COUNT);
+ }
+ 
+@@ -864,16 +876,19 @@
+    if (instance->vk.trace_mode & (RADV_TRACE_MODE_RRA | RADV_TRACE_MODE_GAMMA))
+       device->rra_trace.triggered = true;
+ 
++#ifndef R4OS_VULKAN
+    if (device->vk.memory_trace_data.is_enabled) {
+       simple_mtx_lock(&device->vk.memory_trace_data.token_mtx);
+       radv_rmv_collect_trace_events(device);
+       vk_dump_rmv_capture(&device->vk.memory_trace_data);
+       simple_mtx_unlock(&device->vk.memory_trace_data.token_mtx);
+    }
++#endif
+ 
+    if (instance->vk.trace_mode & RADV_TRACE_MODE_RGP)
+       device->sqtt_triggered = true;
+ 
++#ifndef R4OS_VULKAN
+    if (instance->vk.trace_mode & RADV_TRACE_MODE_CTX_ROLLS) {
+       char filename[2048];
+       time_t t = time(NULL);
+@@ -889,6 +904,7 @@
+ 
+       simple_mtx_unlock(&device->ctx_roll_mtx);
+    }
++#endif
+ 
+    return result;
+ }
+@@ -925,6 +941,9 @@
+    radv_emit_graphics(device, cs);
+ 
+    device->ws->cs_pad(cs->b, 0);
++#ifdef R4OS_VULKAN
++   if (cs->b->record_discard) goto fail;
++#endif
+ 
+    const uint32_t gfx_init_bo_flags = RADEON_FLAG_CPU_ACCESS | RADEON_FLAG_NO_INTERPROCESS_SHARING |
+                                       RADEON_FLAG_READ_ONLY | RADEON_FLAG_GTT_WC | RADEON_FLAG_GL2_BYPASS;
+@@ -1303,7 +1322,9 @@
+ static VkResult
+ radv_create_winsys(struct radv_device *device)
+ {
+-#ifdef _WIN32
++#ifdef R4OS_VULKAN
++   return r4vk_radv_device_winsys(radv_device_physical(device), &device->vk, &device->ws);
++#elif defined(_WIN32)
+    return VK_ERROR_INCOMPATIBLE_DRIVER;
+ #else
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+--- a/src/amd/vulkan/radv_device_memory.c
++++ b/src/amd/vulkan/radv_device_memory.c
+@@ -176,7 +176,9 @@
+       if (result != VK_SUCCESS) {
+          goto fail;
+       } else {
++#ifndef R4OS_VULKAN
+          close(import_info->fd);
++#endif
+       }
+       mem->import_handle_type = import_info->handleType;
+ 
+--- a/src/amd/vulkan/radv_image.c
++++ b/src/amd/vulkan/radv_image.c
+@@ -9,6 +9,9 @@
+  */
+ 
+ #include "radv_image.h"
++#ifdef R4OS_VULKAN
++#include "r4vk_wsi.h"
++#endif
+ #include "tools/radv_debug.h"
+ #include "tools/radv_rmv.h"
+ #include "util/u_atomic.h"
+@@ -1777,7 +1780,11 @@
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+ 
+    if (wsi_common_is_swapchain_image(pCreateInfo))
++#ifdef R4OS_VULKAN
++      return r4vk_create_swapchain_alias(_device, pCreateInfo, pAllocator, pImage);
++#else
+       return wsi_common_create_swapchain_image(pdev->vk.wsi_device, pCreateInfo, pImage);
++#endif
+ 
+    const struct wsi_image_create_info *wsi_info = vk_find_struct_const(pCreateInfo->pNext, WSI_IMAGE_CREATE_INFO_MESA);
+    bool scanout = wsi_info && wsi_info->scanout;
+@@ -1840,6 +1847,17 @@
+       if (status)
+          *status->pResult = VK_SUCCESS;
+ 
++#ifdef R4OS_VULKAN
++      if (!mem) {
++         const VkBindImageMemorySwapchainInfoKHR *alias =
++            vk_find_struct_const(pBindInfos[i].pNext, BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHR);
++         if (!alias || offset || !(mem = radv_device_memory_from_handle(
++               r4vk_swapchain_memory(_device, alias->swapchain, alias->imageIndex)))) {
++            if (status) *status->pResult = VK_ERROR_INITIALIZATION_FAILED;
++            return VK_ERROR_INITIALIZATION_FAILED;
++         }
++      }
++#endif
+       /* Ignore this struct on Android, we cannot access swapchain structures there. */
+ #ifdef RADV_USE_WSI_PLATFORM
+       if (!mem) {
+--- a/src/amd/vulkan/radv_instance.c
++++ b/src/amd/vulkan/radv_instance.c
+@@ -187,6 +187,14 @@
+ {
+    struct radv_drirc *drirc = &instance->drirc;
+ 
++#ifdef R4OS_VULKAN
++   /* Pinned native defaults, owned by this instance; no Linux DRIRC parser. */
++   *drirc = (struct radv_drirc){
++      .debug = {.app_layer = "", .force_vk_devicename = ""},
++      .performance = {.gfx12_hiz_wa = ""},
++      .misc = {.override_vram_size = -1},
++   };
++#else
+    radv_parse_dri_options(drirc, &(driConfigFileParseParams){
+                                     .driverName = "radv",
+                                     .applicationName = instance->vk.app_info.app_name,
+@@ -194,6 +202,7 @@
+                                     .engineName = instance->vk.app_info.engine_name,
+                                     .engineVersion = instance->vk.app_info.engine_version,
+                                  });
++#endif
+ 
+    if (instance->vk.app_info.engine_name && !strcmp(instance->vk.app_info.engine_name, "DXVK")) {
+       /* Since 2.3.1+, DXVK uses the application version to notify the driver about D3D9. */
+@@ -303,7 +312,9 @@
+ 
+    struct vk_instance_dispatch_table dispatch_table;
+    vk_instance_dispatch_table_from_entrypoints(&dispatch_table, &radv_instance_entrypoints, true);
++#ifndef R4OS_VULKAN
+    vk_instance_dispatch_table_from_entrypoints(&dispatch_table, &wsi_instance_entrypoints, false);
++#endif
+ 
+    result =
+       vk_instance_init(&instance->vk, &radv_instance_extensions_supported, &dispatch_table, pCreateInfo, pAllocator);
+@@ -388,8 +399,10 @@
+ 
+    simple_mtx_destroy(&instance->shader_dump_mtx);
+ 
++#ifndef R4OS_VULKAN
+    driDestroyOptionCache(&instance->drirc.options);
+    driDestroyOptionInfo(&instance->drirc.available_options);
++#endif
+ 
+    vk_instance_finish(&instance->vk);
+    vk_free(&instance->vk.alloc, instance);
+@@ -434,9 +447,12 @@
+ /* The loader wants us to expose a second GetInstanceProcAddr function
+  * to work around certain LD_PRELOAD issues seen in apps.
+  */
++#ifndef R4OS_VULKAN
+ PUBLIC
+ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
+ vk_icdGetInstanceProcAddr(VkInstance instance, const char *pName)
+ {
+    return radv_GetInstanceProcAddr(instance, pName);
+ }
++
++#endif
+--- a/src/amd/vulkan/radv_instance.h
++++ b/src/amd/vulkan/radv_instance.h
+@@ -166,6 +166,9 @@
+ 
+ struct radv_instance {
+    struct vk_instance vk;
++#ifdef R4OS_VULKAN
++   struct vk_instance *native_parent;
++#endif
+ 
+    VkAllocationCallbacks alloc;
+ 
+--- a/src/amd/vulkan/radv_physical_device.c
++++ b/src/amd/vulkan/radv_physical_device.c
+@@ -8,7 +8,9 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifndef R4OS_VULKAN
+ #include <fcntl.h>
++#endif
+ #include "util/os_file.h"
+ #include "util/os_misc.h"
+ #include "vulkan/vulkan_core.h"
+@@ -28,13 +30,16 @@
+ #include "radv_android.h"
+ #include "radv_device.h"
+ #include "radv_entrypoints.h"
++#ifdef R4OS_VULKAN
++#include "r4vk_wsi_backend.h"
++#endif
+ #include "radv_instance.h"
+ #include "radv_physical_device.h"
+ #include "radv_pipeline_rt.h"
+ #include "radv_video.h"
+ #include "radv_wsi.h"
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+ typedef void *drmDevicePtr;
+ #else
+ #include "drm-uapi/amdgpu_drm.h"
+@@ -47,7 +52,7 @@
+ #include <llvm-c/TargetMachine.h>
+ #endif
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+ #define RADV_SUPPORT_CALIBRATED_TIMESTAMPS 0
+ #else
+ #define RADV_SUPPORT_CALIBRATED_TIMESTAMPS 1
+@@ -333,7 +338,16 @@
+    memset(uuid, 0, VK_UUID_SIZE);
+    _mesa_blake3_init(&ctx);
+ 
+-#ifdef RADV_BUILD_ID_OVERRIDE
++#ifdef R4OS_VULKAN
++   /* R4M0 has no ELF/dladdr file timestamp. The native recipe binds this
++    * identity to all source, generated input, tool and compilation hashes. */
++   extern const unsigned char r4vk_build_identity[32];
++   static const char domain[] = "R4VK-RADV-v1";
++   _mesa_blake3_update(&ctx, domain, sizeof(domain));
++   _mesa_blake3_update(&ctx, r4vk_build_identity, sizeof(r4vk_build_identity));
++   _mesa_blake3_update(&ctx, &pdev->info.family, sizeof(pdev->info.family));
++   _mesa_blake3_update(&ctx, &pdev->info.chip_external_rev, sizeof(pdev->info.chip_external_rev));
++#elif defined(RADV_BUILD_ID_OVERRIDE)
+    {
+       unsigned size = strlen(RADV_BUILD_ID_OVERRIDE) / 2;
+       char *data = alloca(size);
+@@ -469,6 +483,7 @@
+    pdev->memory_properties.memoryHeapCount = 0;
+    pdev->heaps = 0;
+ 
++#ifndef R4OS_VULKAN
+    if (!pdev->info.has_dedicated_vram) {
+       const uint64_t total_size = gtt_size + visible_vram_size;
+ 
+@@ -494,6 +509,7 @@
+          visible_vram_size = carveout_size;
+       }
+    }
++#endif
+ 
+    /* Only get a VRAM heap if it is significant, not if it is a 16 MiB
+     * remainder above visible VRAM. */
+@@ -904,7 +920,7 @@
+       .EXT_nested_command_buffer = true,
+       .EXT_non_seamless_cube_map = true,
+       .EXT_pci_bus_info = true,
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+       .EXT_physical_device_drm = true,
+ #endif
+       .EXT_pipeline_creation_cache_control = true,
+@@ -2135,7 +2151,7 @@
+           */
+          pdev->info.family != CHIP_NAVI21 && pdev->info.family != CHIP_NAVI22 && pdev->info.family != CHIP_VANGOGH,
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+       /* VK_EXT_pci_bus_info */
+       .pciDomain = pdev->bus_info.domain,
+       .pciBus = pdev->bus_info.bus,
+@@ -2473,7 +2489,7 @@
+    p->identicalMemoryTypeRequirements = false;
+ 
+    /* VK_EXT_physical_device_drm */
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    if (pdev->available_nodes & (1 << DRM_NODE_PRIMARY)) {
+       p->drmHasPrimary = true;
+       p->drmPrimaryMajor = (int64_t)major(pdev->primary_devid);
+@@ -2518,7 +2534,7 @@
+ radv_physical_device_try_create(struct radv_instance *instance, drmDevicePtr drm_device,
+                                 struct radv_physical_device **pdev_out)
+ {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+    assert(drm_device == NULL);
+    return VK_ERROR_INCOMPATIBLE_DRIVER;
+ #else
+@@ -2875,10 +2891,221 @@
+ #endif
+ }
+ 
++#ifdef R4OS_VULKAN
++/* Same RADV initialization, with a typed private instance and native facts.
++ * No DRM fd, Linux synchronization object or NVK layout enters this path. */
++VkResult
++r4vk_radv_physical_create(struct radv_instance *instance, const R4Draw *draw,
++                         const R4Dev *devices, const struct r4vk_radv_architecture *facts,
++                         struct vk_physical_device **out)
++{
++   struct radv_physical_device *pdev = vk_zalloc(&instance->vk.alloc,
++      sizeof(*pdev), 8, VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
++   if (!pdev) return VK_ERROR_OUT_OF_HOST_MEMORY;
++   struct vk_physical_device_dispatch_table dispatch;
++   vk_physical_device_dispatch_table_from_entrypoints(&dispatch, &radv_physical_device_entrypoints, true);
++   vk_physical_device_dispatch_table_from_entrypoints(&dispatch, &r4vk_wsi_physical_entrypoints, false);
++   VkResult result = vk_physical_device_init(&pdev->vk, &instance->vk, NULL, NULL, NULL, &dispatch);
++   if (result != VK_SUCCESS) { vk_free(&instance->vk.alloc, pdev); return result; }
++   pdev->native_facts = *facts;
++   pdev->native_draw = *draw;
++   pdev->native_devices = *devices;
++   pdev->info = facts->info;
++   pdev->global_priority_mask = radeon_to_vk_priority(RADEON_CTX_PRIORITY_MEDIUM);
++   pdev->sync_types[0] = &r4vk_radv_sync_type;
++   pdev->emulated_timeline_sync_type = vk_sync_timeline_get_type(&r4vk_radv_sync_type);
++   pdev->sync_types[1] = &pdev->emulated_timeline_sync_type.sync;
++   pdev->sync_types[2] = NULL;
++   pdev->vk.supported_sync_types = pdev->sync_types;
++   /* Allow all devices on a virtual winsys, otherwise do a basic support check. */
++   if (!radv_is_gpu_supported(&pdev->info)) {
++      if (instance->debug_flags & RADV_DEBUG_STARTUP)
++         fprintf(stderr, "radv: info: device '%s' is not supported by RADV.\n", ac_get_family_name(pdev->info.family));
++      result = VK_ERROR_INCOMPATIBLE_DRIVER;
++      goto fail_wsi;
++   }
++
++   pdev->addrlib = ac_addrlib_create(&pdev->info, &pdev->info.max_alignment);
++   if (!pdev->addrlib) {
++      result = VK_ERROR_INITIALIZATION_FAILED;
++      goto fail_wsi;
++   }
++
++   pdev->wsi_master_fd = -1;
++   pdev->wsi_syncobj_fd = -1;
++
++   pdev->use_llvm = instance->debug_flags & RADV_DEBUG_LLVM;
++#if !AMD_LLVM_AVAILABLE
++   if (pdev->use_llvm) {
++      fprintf(stderr, "ERROR: LLVM compiler backend selected for radv, but LLVM support was not "
++                      "enabled at build time.\n");
++      abort();
++   }
++#elif NDEBUG
++   if (pdev->use_llvm) {
++      fprintf(stderr, "ERROR: The LLVM compiler backend is only for debugging and not supported "
++                      "in release builds of RADV!\n");
++      pdev->use_llvm = false;
++   }
++#endif
++
++#if DETECT_OS_ANDROID
++   pdev->emulate_etc2 = !pdev->info.has_etc_support;
++   pdev->emulate_astc = true;
++#else
++   pdev->emulate_etc2 = !pdev->info.has_etc_support && instance->drirc.features.require_etc2;
++   pdev->emulate_astc = instance->drirc.features.require_astc;
++#endif
++
++   const char *name = ac_get_family_name(pdev->info.family);
++   snprintf(pdev->name, sizeof(pdev->name), "AMD RADV %s%s", name, radv_get_compiler_string(pdev));
++   snprintf(pdev->marketing_name, sizeof(pdev->name), "%s (RADV %s%s)", pdev->info.marketing_name, name,
++            radv_get_compiler_string(pdev));
++
++   if (pdev->info.gfx_level >= GFX12)
++      vk_warn_non_conformant_implementation("radv");
++
++   radv_get_driver_uuid(&pdev->driver_uuid);
++   radv_get_device_uuid(&pdev->info, &pdev->device_uuid);
++   radv_get_optimal_tiling_layout_uuid(pdev, &pdev->optimal_tiling_layout_uuid);
++
++   pdev->dcc_msaa_allowed = (instance->perftest_flags & RADV_PERFTEST_DCC_MSAA);
++
++   pdev->use_fmask = pdev->info.compiler_info.has_fmask && !(instance->debug_flags & RADV_DEBUG_NO_FMASK);
++
++   pdev->force_64_byte_sampled_image = !pdev->use_fmask && instance->drirc.debug.force_64_byte_sampled_image;
++
++   pdev->use_hiz = !(instance->debug_flags & RADV_DEBUG_NO_HIZ);
++
++   if (pdev->info.gfx_level == GFX12) {
++      const char *gfx12_hiz_wa_str = instance->drirc.performance.gfx12_hiz_wa;
++
++      pdev->gfx12_hiz_wa = RADV_GFX12_HIZ_WA_FULL; /* Default */
++
++      if (strlen(gfx12_hiz_wa_str) > 0) {
++         if (!strcmp(gfx12_hiz_wa_str, "disabled")) {
++            pdev->gfx12_hiz_wa = RADV_GFX12_HIZ_WA_DISABLED;
++         } else if (!strcmp(gfx12_hiz_wa_str, "partial")) {
++            pdev->gfx12_hiz_wa = RADV_GFX12_HIZ_WA_PARTIAL;
++         } else if (!strcmp(gfx12_hiz_wa_str, "full")) {
++            pdev->gfx12_hiz_wa = RADV_GFX12_HIZ_WA_FULL;
++         } else {
++            fprintf(stderr, "radv: Invalid value found for radv_gfx12_hiz_wa. "
++                            "Accepted values are: disabled, partial or full.\n");
++         }
++      }
++   }
++
++   pdev->use_ngg = (pdev->info.gfx_level >= GFX10 && pdev->info.family != CHIP_NAVI14 &&
++                    !(instance->debug_flags & RADV_DEBUG_NO_NGG)) ||
++                   pdev->info.gfx_level >= GFX11;
++
++   /* TODO: Investigate if NGG culling helps on GFX11. */
++   pdev->use_ngg_culling = pdev->use_ngg && pdev->info.max_render_backends > 1 &&
++                           (pdev->info.gfx_level == GFX10_3 || pdev->info.gfx_level == GFX10 ||
++                            (instance->perftest_flags & RADV_PERFTEST_NGGC)) &&
++                           !(instance->debug_flags & RADV_DEBUG_NO_NGGC);
++
++   pdev->emulate_ngg_gs_query_pipeline_stat = pdev->use_ngg && pdev->info.gfx_level < GFX11;
++
++   pdev->emulate_mesh_shader_queries = pdev->info.gfx_level == GFX10_3;
++
++   /* PKT3_LOAD_SH_REG_INDEX is supported on GFX8+, but it hangs with compute queues until GFX10.3. */
++   pdev->load_grid_size_from_user_sgpr = pdev->info.gfx_level >= GFX10_3;
++
++   /* Determine the number of threads per wave for all stages. */
++   pdev->cs_wave_size = 64;
++   pdev->ps_wave_size = 64;
++   pdev->ge_wave_size = 64;
++   pdev->rt_wave_size = 64;
++
++   if (pdev->info.gfx_level >= GFX10) {
++      if (instance->perftest_flags & RADV_PERFTEST_CS_WAVE_32)
++         pdev->cs_wave_size = 32;
++
++      /* For pixel shaders, wave64 is recommended. */
++      if (instance->perftest_flags & RADV_PERFTEST_PS_WAVE_32)
++         pdev->ps_wave_size = 32;
++
++      if (instance->perftest_flags & RADV_PERFTEST_GE_WAVE_32)
++         pdev->ge_wave_size = 32;
++
++      /* Default to 32 on RDNA as that gives better perf due to less issues with divergence.
++       * On GFX12+, wave32 will also be required for a future dynamic VGPR allocation implementation.
++       */
++      if (radv_is_rt_wave64_enabled(instance))
++         pdev->rt_wave_size = 64;
++      else
++         pdev->rt_wave_size = 32;
++   }
++
++   radv_probe_video_decode(pdev);
++   radv_probe_video_encode(pdev);
++
++   radv_physical_device_init_mem_types(pdev);
++
++   radv_physical_device_get_supported_extensions(pdev, &pdev->vk.supported_extensions);
++   radv_physical_device_get_features(pdev, &pdev->vk.supported_features);
++
++   if (radv_device_get_cache_uuid(pdev, pdev->cache_uuid)) {
++      result = vk_errorf(instance, VK_ERROR_INITIALIZATION_FAILED, "cannot generate UUID");
++      goto fail_wsi;
++   }
++
++   /* The gpu id is already embedded in the uuid so we just pass "radv"
++    * when creating the cache.
++    */
++   char buf[VK_UUID_SIZE * 2 + 1];
++   mesa_bytes_to_hex(buf, pdev->cache_uuid, VK_UUID_SIZE);
++   pdev->vk.disk_cache = disk_cache_create("RADV", buf, 0);
++
++   pdev->disk_cache_meta =
++      disk_cache_create_custom("RADV", buf, 0, "radv_builtin_shaders", 1024 * 1024 * 32 /* 32MiB */);
++
++   radv_get_physical_device_properties(pdev);
++   r4vk_radv_filter_physical(pdev);
++
++   if ((instance->debug_flags & RADV_DEBUG_INFO))
++      ac_print_gpu_info(stdout, &pdev->info, -1);
++
++   radv_init_physical_device_decoder(pdev);
++   radv_init_physical_device_encoder(pdev);
++
++   radv_physical_device_init_queue_table(pdev);
++
++   /* We don't check the error code, but later check if it is initialized. */
++   ac_init_perfcounters(&pdev->info, false, false, &pdev->ac_perfcounters);
++
++   pdev->gs_table_depth = ac_get_gs_table_depth(pdev->info.gfx_level, pdev->info.family);
++
++   ac_get_task_info(&pdev->info, &pdev->task_info);
++   radv_get_binning_settings(pdev, &pdev->binning_settings);
++
++   if (pdev->info.has_distributed_tess) {
++      if (pdev->info.family == CHIP_FIJI || pdev->info.family >= CHIP_POLARIS10)
++         pdev->tess_distribution_mode = V_028B6C_TRAPEZOIDS;
++      else
++         pdev->tess_distribution_mode = V_028B6C_DONUTS;
++   } else {
++      pdev->tess_distribution_mode = V_028B6C_NO_DIST;
++   }
++
++   simple_mtx_init(&pdev->drm_device_mtx, mtx_plain);
++
++   *out = &pdev->vk;
++   return VK_SUCCESS;
++fail_wsi:
++   if (pdev->addrlib) ac_addrlib_destroy(pdev->addrlib);
++   vk_physical_device_finish(&pdev->vk);
++   vk_free(&instance->vk.alloc, pdev);
++   return result;
++}
++#endif
++
+ VkResult
+ create_drm_physical_device(struct vk_instance *vk_instance, struct _drmDevice *device, struct vk_physical_device **out)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    bool supported_device = false;
+ 
+    if (!(device->available_nodes & (1 << DRM_NODE_RENDER)))
+@@ -2907,19 +3134,23 @@
+    struct radv_physical_device *pdev = container_of(vk_device, struct radv_physical_device, vk);
+    const struct radv_instance *instance = radv_physical_device_instance(pdev);
+ 
++#ifndef R4OS_VULKAN
+    radv_finish_wsi(pdev);
++#endif
+    ac_destroy_perfcounters(&pdev->ac_perfcounters);
+    free(pdev->perfcounters);
+    if (pdev->addrlib)
+       ac_addrlib_destroy(pdev->addrlib);
+    disk_cache_destroy(pdev->vk.disk_cache);
+    disk_cache_destroy(pdev->disk_cache_meta);
++#ifndef R4OS_VULKAN
+    if (pdev->wsi_master_fd != -1)
+       close(pdev->wsi_master_fd);
+    if (pdev->wsi_syncobj_fd != -1)
+       close(pdev->wsi_syncobj_fd);
++#endif
+    simple_mtx_destroy(&pdev->drm_device_mtx);
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    if (pdev->drm_device)
+       ac_drm_device_deinitialize(pdev->drm_device);
+ #endif
+@@ -2984,9 +3215,9 @@
+          VkQueueFlags gfx_flags =
+             VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT;
+          *pQueueFamilyProperties[idx] = (VkQueueFamilyProperties){
+-            .queueFlags = gfx_flags | radv_queue_family_protected_flag(pdev, RADV_QUEUE_GENERAL),
++            .queueFlags = (gfx_flags & (radv_sparse_enabled(pdev) ? ~0u : ~VK_QUEUE_SPARSE_BINDING_BIT)) | radv_queue_family_protected_flag(pdev, RADV_QUEUE_GENERAL),
+             .queueCount = 1,
+-            .timestampValidBits = 64,
++            .timestampValidBits = pdev->info.clock_crystal_freq ? 64 : 0,
+             .minImageTransferGranularity = (VkExtent3D){1, 1, 1},
+          };
+          idx++;
+@@ -2997,9 +3228,9 @@
+       VkQueueFlags compute_flags = VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT;
+       if (*pCount > idx) {
+          *pQueueFamilyProperties[idx] = (VkQueueFamilyProperties){
+-            .queueFlags = compute_flags | radv_queue_family_protected_flag(pdev, RADV_QUEUE_COMPUTE),
++            .queueFlags = (compute_flags & (radv_sparse_enabled(pdev) ? ~0u : ~VK_QUEUE_SPARSE_BINDING_BIT)) | radv_queue_family_protected_flag(pdev, RADV_QUEUE_COMPUTE),
+             .queueCount = pdev->info.ip[AMD_IP_COMPUTE].num_queues,
+-            .timestampValidBits = 64,
++            .timestampValidBits = pdev->info.clock_crystal_freq ? 64 : 0,
+             .minImageTransferGranularity = (VkExtent3D){1, 1, 1},
+          };
+          idx++;
+@@ -3024,7 +3255,7 @@
+             .queueFlags = VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT |
+                           radv_queue_family_protected_flag(pdev, RADV_QUEUE_TRANSFER),
+             .queueCount = pdev->info.ip[AMD_IP_SDMA].num_queues,
+-            .timestampValidBits = 64,
++            .timestampValidBits = pdev->info.clock_crystal_freq ? 64 : 0,
+             .minImageTransferGranularity = (VkExtent3D){1, 1, 1},
+          };
+          idx++;
+@@ -3149,7 +3380,7 @@
+    }
+ }
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+ struct radeon_winsys_heap_info {
+    uint64_t allocated_vram;
+    uint64_t vram_usage;
+--- a/src/amd/vulkan/radv_physical_device.h
++++ b/src/amd/vulkan/radv_physical_device.h
+@@ -28,7 +28,7 @@
+ #include "vk_sync.h"
+ #include "vk_sync_timeline.h"
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+ #include <xf86drm.h>
+ #endif
+ 
+@@ -73,8 +73,17 @@
+    RADV_DRM_DEVICE_VIRTIO,
+ };
+ 
++#ifdef R4OS_VULKAN
++#include "r4vk_radv.h"
++#endif
++
+ struct radv_physical_device {
+    struct vk_physical_device vk;
++#ifdef R4OS_VULKAN
++   struct r4vk_radv_architecture native_facts;
++   R4Draw native_draw;
++   R4Dev native_devices;
++#endif
+ 
+    struct radeon_info info;
+    char name[VK_MAX_PHYSICAL_DEVICE_NAME_SIZE];
+@@ -151,7 +160,7 @@
+    /* Bitmask of memory types that are protected. */
+    uint32_t memory_types_protected;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    int available_nodes;
+    drmPciBusInfo bus_info;
+ 
+--- a/src/amd/vulkan/radv_pipeline_cache.c
++++ b/src/amd/vulkan/radv_pipeline_cache.c
+@@ -4,6 +4,10 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifdef R4OS_VULKAN
++#include "r4vk_radv_compile.h"
++#include "r4vk_state.h"
++#endif
+ #include "radv_pipeline_cache.h"
+ #include "util/macros.h"
+ #include "util/mesa-blake3.h"
+@@ -67,6 +71,11 @@
+ radv_shader_deserialize(struct radv_device *device, const void *key_data, size_t key_size, struct blob_reader *blob)
+ {
+    const struct radv_shader_binary *binary = blob_read_bytes(blob, sizeof(struct radv_shader_binary));
++#ifdef R4OS_VULKAN
++   if (blob->overrun || key_size != sizeof(blake3_hash) ||
++       !r4vk_radv_binary_valid(binary, sizeof(*binary) + (size_t)(blob->end - blob->current)))
++      return NULL;
++#endif
+ 
+    struct radv_shader *shader;
+    radv_shader_create_uncached(device, binary, false, NULL, NULL, &shader);
+@@ -203,6 +212,9 @@
+    if (radv_is_cache_disabled(&device->compiler_info, cache) || skip_cache || (dbg && dbg->dump_shader)) {
+       struct radv_shader *shader;
+       radv_shader_create_uncached(device, binary, false, NULL, dbg, &shader);
++#ifdef R4OS_VULKAN
++      if (!shader) return NULL;
++#endif
+       /* radv_parse_binary_debug_info() might have been done earlier by radv_shader_dump_asm(). Skip it in that case to
+        * avoid memory leaks. */
+       if (!dbg || (!dbg->statistics && !dbg->ir_string && !dbg->disasm_string && !dbg->debug_info_count))
+--- a/src/amd/vulkan/radv_pipeline_compute.c
++++ b/src/amd/vulkan/radv_pipeline_compute.c
+@@ -8,6 +8,10 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifdef R4OS_VULKAN
++#include "r4vk_radv_compile.h"
++#include "r4vk_state.h"
++#endif
+ #include "meta/radv_meta.h"
+ #include "nir/nir.h"
+ #include "nir/radv_nir.h"
+@@ -205,11 +209,26 @@
+    radv_pipeline_stage_init(pipeline->base.create_flags, pStage, pipeline_layout, &stage_key, &cs_stage);
+ 
+    struct radv_shader_debug_info cs_dbg = {0};
+-   struct radv_shader_binary *cs_binary =
+-      radv_compile_cs(compiler_info, &cs_stage, pipeline->base.is_internal, &cs_dbg);
++   struct radv_shader_binary *cs_binary = NULL;
++#ifdef R4OS_VULKAN
++   result = r4vk_radv_compile_compute(compiler_info, &cs_stage, pipeline->base.is_internal, &cs_dbg, &cs_binary);
++   if (result != VK_SUCCESS) {
++      radv_pipeline_stage_finish(&cs_stage);
++      return result;
++   }
++#else
++   cs_binary = radv_compile_cs(compiler_info, &cs_stage, pipeline->base.is_internal, &cs_dbg);
++#endif
+    pipeline->base.shaders[MESA_SHADER_COMPUTE] =
+       radv_shader_create(device, cache, cs_binary, skip_shaders_cache, &cs_dbg);
+ 
++#ifdef R4OS_VULKAN
++   if (!pipeline->base.shaders[MESA_SHADER_COMPUTE]) {
++      free(cs_binary);
++      radv_pipeline_stage_finish(&cs_stage);
++      return r4vk_radv_error_result(VK_ERROR_OUT_OF_HOST_MEMORY);
++   }
++#endif
+    cs_stage.feedback.duration += os_time_get_nano() - stage_start;
+ 
+    if (!skip_shaders_cache) {
+@@ -344,5 +363,8 @@
+                             const VkComputePipelineCreateInfo *pCreateInfos, const VkAllocationCallbacks *pAllocator,
+                             VkPipeline *pPipelines)
+ {
++#ifdef R4OS_VULKAN
++   r4vk_radv_error_reset();
++#endif
+    return radv_create_compute_pipelines(_device, pipelineCache, count, pCreateInfos, pAllocator, pPipelines);
+ }
+--- a/src/amd/vulkan/radv_pipeline_graphics.c
++++ b/src/amd/vulkan/radv_pipeline_graphics.c
+@@ -8,6 +8,10 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifdef R4OS_VULKAN
++#include "r4vk_radv_compile.h"
++#include "r4vk_state.h"
++#endif
+ #include "meta/radv_meta.h"
+ #include "nir/nir.h"
+ #include "nir/nir_serialize.h"
+@@ -2995,12 +2999,23 @@
+ 
+    struct radv_shader_debug_info debug[MESA_VULKAN_SHADER_STAGES] = {0};
+    struct radv_shader_debug_info gs_copy_debug = {0};
++#ifdef R4OS_VULKAN
++   result = r4vk_radv_compile_graphics(compiler_info, stages, &gfx_state->key.gfx_state, pipeline->base.is_internal,
++                                     retained_shaders, noop_fs, debug, binaries, &gs_copy_debug, &gs_copy_binary);
++   if (result != VK_SUCCESS) return result;
++#else
+    radv_graphics_shaders_compile(compiler_info, cache, stages, &gfx_state->key.gfx_state, pipeline->base.is_internal,
+                                  retained_shaders, noop_fs, debug, binaries, &gs_copy_debug, &gs_copy_binary);
++#endif
+    radv_graphics_shaders_create(device, cache, skip_shaders_cache, pipeline->base.shaders, binaries, debug,
+                                 &pipeline->base.gs_copy_shader, gs_copy_binary, &gs_copy_debug);
+ 
+-   if (!skip_shaders_cache) {
++#ifdef R4OS_VULKAN
++   for (unsigned i = 0; i < MESA_VULKAN_SHADER_STAGES; i++)
++      if (binaries[i] && !pipeline->base.shaders[i]) result = r4vk_radv_error_result(VK_ERROR_OUT_OF_HOST_MEMORY);
++   if (gs_copy_binary && !pipeline->base.gs_copy_shader) result = r4vk_radv_error_result(VK_ERROR_OUT_OF_HOST_MEMORY);
++#endif
++   if (result == VK_SUCCESS && !skip_shaders_cache) {
+       radv_pipeline_cache_insert(device, cache, &pipeline->base);
+    }
+ 
+@@ -3444,6 +3459,9 @@
+                              const VkGraphicsPipelineCreateInfo *pCreateInfos, const VkAllocationCallbacks *pAllocator,
+                              VkPipeline *pPipelines)
+ {
++#ifdef R4OS_VULKAN
++   r4vk_radv_error_reset();
++#endif
+    VkResult result = VK_SUCCESS;
+    unsigned i = 0;
+ 
+--- a/src/amd/vulkan/radv_query.c
++++ b/src/amd/vulkan/radv_query.c
+@@ -7,7 +7,9 @@
+  */
+ 
+ #include <assert.h>
++#ifndef R4OS_VULKAN
+ #include <fcntl.h>
++#endif
+ #include <stdbool.h>
+ #include <string.h>
+ 
+--- a/src/amd/vulkan/radv_shader.c
++++ b/src/amd/vulkan/radv_shader.c
+@@ -8,6 +8,10 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
++#ifdef R4OS_VULKAN
++#include "r4vk_radv_compile.h"
++#include "r4vk_state.h"
++#endif
+ #include "radv_shader.h"
+ #include "meta/radv_meta.h"
+ #include "nir/nir.h"
+@@ -153,6 +157,8 @@
+ bool
+ radv_can_dump_shader(const struct radv_compiler_info *compiler_info, nir_shader *nir)
+ {
++   if (!nir)
++      return false;
+    if (is_meta_shader(nir) && nir->info.stage != MESA_SHADER_INTERSECTION)
+       return compiler_info->debug.dump_meta_shaders;
+ 
+@@ -358,7 +364,13 @@
+ 
+    snprintf(buffer, sizeof(buffer), "SPIR-V offset %lu: %s", (unsigned long)spirv_offset, message);
+ 
++#ifdef R4OS_VULKAN
++   /* Isolated compiler callbacks do not enter application debug owners. */
++   extern void r4nak_port_log(const char *, size_t);
++   r4nak_port_log(buffer, strlen(buffer));
++#else
+    vk_debug_report(debug_data->debug_report, vk_flags[level], debug_data->object, 0, 0, "radv", buffer);
++#endif
+ }
+ 
+ static void
+@@ -530,6 +542,9 @@
+             },
+          .emit_debug_break = compiler_info->debug.trap_enabled,
+          .debug_info = compiler_info->key.nir_debug_info,
++#ifdef R4OS_VULKAN
++         .skip_os_break_in_debug_build = true,
++#endif
+          .printf = compiler_info->debug.printf_enabled,
+          .sampler_descriptor_size = compiler_info->sampler_descriptor_size,
+          .sampler_descriptor_alignment = compiler_info->sampler_descriptor_alignment,
+@@ -540,6 +555,9 @@
+       };
+       nir = spirv_to_nir(spirv, stage->spirv.size / 4, spec, stage->stage, stage->entrypoint, &spirv_options,
+                          &compiler_info->nir_options[stage->stage]);
++#ifdef R4OS_VULKAN
++      if (!nir) r4vk_compiler_fail(3);
++#endif
+       nir->info.internal |= is_internal;
+       assert(nir->info.stage == stage->stage);
+ 
+@@ -1083,7 +1101,11 @@
+       return block;
+    }
+ 
+-   return malloc(sizeof(union radv_shader_arena_block));
++   union radv_shader_arena_block *block = malloc(sizeof(*block));
++#ifdef R4OS_VULKAN
++   if (!block) r4vk_radv_error_record(VK_ERROR_OUT_OF_HOST_MEMORY);
++#endif
++   return block;
+ }
+ 
+ static void
+@@ -1115,8 +1137,12 @@
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+    union radv_shader_arena_block *alloc = NULL;
+    struct radv_shader_arena *arena = calloc(1, sizeof(struct radv_shader_arena));
+-   if (!arena)
++   if (!arena) {
++#ifdef R4OS_VULKAN
++      r4vk_radv_error_record(VK_ERROR_OUT_OF_HOST_MEMORY);
++#endif
+       goto fail;
++   }
+ 
+    if (!arena_size)
+       arena_size = MAX2(
+@@ -1149,14 +1175,19 @@
+    alloc->offset = 0;
+    alloc->size = arena_size;
+    list_addtail(&alloc->list, &arena->entries);
++   if (!(flags & RADEON_FLAG_NO_CPU_ACCESS)) {
++      arena->ptr = (char *)radv_buffer_map(device->ws, arena->bo);
++      if (!arena->ptr) {
++#ifdef R4OS_VULKAN
++         r4vk_radv_error_record(VK_ERROR_MEMORY_MAP_FAILED);
++#endif
++         goto fail;
++      }
++   }
++
++   /* Publish the free-list entry only after all fallible setup completed. */
+    if (free_list)
+       add_hole(free_list, alloc);
+-
+-   if (!(flags & RADEON_FLAG_NO_CPU_ACCESS)) {
+-      arena->ptr = (char *)radv_buffer_map(device->ws, arena->bo);
+-      if (!arena->ptr)
+-         goto fail;
+-   }
+ 
+    if (replay_va)
+       arena->type = RADV_SHADER_ARENA_REPLAYED;
+@@ -1201,8 +1232,6 @@
+       left_hole->offset = hole->offset;
+       left_hole->size = offset_in_hole;
+ 
+-      if (free_list)
+-         add_hole(free_list, left_hole);
+    }
+ 
+    if (hole->size > offset_in_hole + size) {
+@@ -1221,6 +1250,8 @@
+    }
+ 
+    if (left_hole) {
++      if (free_list)
++         add_hole(free_list, left_hole);
+       hole->offset += left_hole->size;
+       hole->size -= left_hole->size;
+ 
+@@ -1311,6 +1342,8 @@
+ 
+    alloc =
+       insert_block(device, list_entry(arena->entries.next, union radv_shader_arena_block, list), 0, size, free_list);
++   if (!alloc)
++      goto fail;
+    alloc->freelist.prev = NULL;
+    alloc->freelist.next = ptr;
+ 
+@@ -1321,13 +1354,18 @@
+    return alloc;
+ 
+ fail:
++   if (arena) {
++      list_for_each_entry_safe(union radv_shader_arena_block, hole, &arena->entries, list) {
++         remove_hole(free_list, hole);
++         list_del(&hole->list);
++         free(hole);
++      }
++      if (arena->ptr)
++         device->ws->buffer_unmap(device->ws, arena->bo, false);
++      radv_bo_destroy(device, NULL, arena->bo);
++      free(arena);
++   }
+    mtx_unlock(&device->shader_arena_mutex);
+-   free(alloc);
+-   if (arena) {
+-      free(arena->list.next);
+-      radv_bo_destroy(device, NULL, arena->bo);
+-   }
+-   free(arena);
+    return NULL;
+ }
+ 
+@@ -2714,7 +2752,12 @@
+ {
+    shader->code = calloc(shader->code_size, 1);
+    if (!shader->code) {
++#ifdef R4OS_VULKAN
++      /* The caller still owns this unpublished object and its arena block. */
++      r4vk_radv_error_record(VK_ERROR_OUT_OF_HOST_MEMORY);
++#else
+       radv_shader_unref(device, shader);
++#endif
+       return false;
+    }
+ 
+@@ -3112,6 +3155,12 @@
+ 
+ out:
+    if (result != VK_SUCCESS) {
++#ifdef R4OS_VULKAN
++      result = r4vk_radv_error_result(result);
++      r4vk_radv_error_record(result);
++      if (shader && shader->alloc) radv_free_shader_memory(device, shader->alloc);
++      if (shader) free(shader->code);
++#endif
+       free(shader);
+       *out_shader = NULL;
+    }
+@@ -3174,8 +3223,12 @@
+    struct radv_shader_part *shader_part;
+ 
+    shader_part = calloc(1, sizeof(struct radv_shader_part));
+-   if (!shader_part)
++   if (!shader_part) {
++#ifdef R4OS_VULKAN
++      r4vk_radv_error_record(VK_ERROR_OUT_OF_HOST_MEMORY);
++#endif
+       return NULL;
++   }
+ 
+    shader_part->ref_count = 1;
+    shader_part->code_size = binary->code_size;
+@@ -3204,6 +3257,10 @@
+    return shader_part;
+ 
+ fail:
++#ifdef R4OS_VULKAN
++   r4vk_radv_error_record(VK_ERROR_OUT_OF_DEVICE_MEMORY);
++#endif
++   shader_part->ref_count = 0;
+    radv_shader_part_destroy(device, shader_part);
+    return NULL;
+ }
+@@ -3477,9 +3534,15 @@
+                          (void **)&binary);
+    }
+ 
++#ifdef R4OS_VULKAN
++   if (!binary) r4vk_compiler_fail(3);
++#endif
+    binary->info = *info;
+ 
+    if (!radv_postprocess_binary_config(compiler_info, binary, args)) {
++#ifdef R4OS_VULKAN
++      r4vk_compiler_fail(3);
++#endif
+       free(binary);
+       return NULL;
+    }
+@@ -3681,8 +3744,13 @@
+    radv_aco_convert_shader_info(&ac_info, &stage.info, &stage.args, compiler_info);
+    radv_aco_fill_compiler_options(&ac_opts, compiler_info, &stage_key, &gfx_state, false, dump_shader);
+    radv_aco_convert_vs_prolog_key(&ac_prolog_info, key, &stage.args);
++#ifdef R4OS_VULKAN
++   if (r4vk_radv_compile_part(false, &ac_opts, &ac_info, &ac_prolog_info, &stage.args.ac,
++                              &radv_aco_build_shader_part, &binary) != VK_SUCCESS) return NULL;
++#else
+    aco_compile_vs_prolog(&ac_opts, &ac_info, &ac_prolog_info, &stage.args.ac, &radv_aco_build_shader_part,
+                          (void **)&binary);
++#endif
+ 
+    prolog = radv_shader_part_create(device, binary, stage.info.wave_size);
+    if (!prolog)
+@@ -3739,7 +3807,12 @@
+    radv_aco_convert_shader_info(&ac_info, &info, &args, compiler_info);
+    radv_aco_fill_compiler_options(&ac_opts, compiler_info, &stage_key, NULL, false, dump_shader);
+    radv_aco_convert_ps_epilog_key(&ac_epilog_info, key, &args);
++#ifdef R4OS_VULKAN
++   if (r4vk_radv_compile_part(true, &ac_opts, &ac_info, &ac_epilog_info, &args.ac,
++                              &radv_aco_build_shader_part, &binary) != VK_SUCCESS) return NULL;
++#else
+    aco_compile_ps_epilog(&ac_opts, &ac_info, &ac_epilog_info, &args.ac, &radv_aco_build_shader_part, (void **)&binary);
++#endif
+ 
+    binary->info.spi_shader_col_format = key->spi_shader_col_format;
+    binary->info.cb_shader_mask = ac_get_cb_shader_mask(key->spi_shader_col_format);
+--- a/src/amd/vulkan/tools/radv_debug_hang.c
++++ b/src/amd/vulkan/tools/radv_debug_hang.c
+@@ -10,7 +10,7 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+ #include <sys/utsname.h>
+ #endif
+ #include <sys/stat.h>
+@@ -790,7 +790,7 @@
+ static void
+ radv_dump_cmd(const char *cmd, FILE *f)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    char line[2048];
+    FILE *p;
+ 
+@@ -860,7 +860,7 @@
+ static void
+ radv_dump_device_name(const struct radv_device *device, FILE *f)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+    const struct radeon_info *gpu_info = &pdev->info;
+    char kernel_version[128] = {0};
+@@ -878,7 +878,7 @@
+ static void
+ radv_dump_umr_ring(const struct radv_queue *queue, FILE *f)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    const struct radv_device *device = radv_queue_device(queue);
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+    const enum amd_ip_type ring = radv_queue_ring(queue);
+@@ -955,7 +955,7 @@
+ static char *
+ radv_create_dump_dir()
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    char dump_dir[256], buf_time[128];
+    struct tm *timep, result;
+    time_t raw_time;
+@@ -994,7 +994,7 @@
+ 
+    fprintf(stderr, "radv: GPU hang detected...\n");
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+    const struct radv_instance *instance = radv_physical_device_instance(pdev);
+    const bool save_hang_report = !device->vk.enabled_features.deviceFaultVendorBinaryEXT;
+@@ -1384,7 +1384,7 @@
+ 
+    fprintf(stderr, "radv: Trap handler reached...\n");
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    const struct radv_physical_device *pdev = radv_device_physical(device);
+    char *dump_dir = NULL;
+    char dump_path[512];
+--- a/src/amd/vulkan/tools/radv_rmv.c
++++ b/src/amd/vulkan/tools/radv_rmv.c
+@@ -4,12 +4,14 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+ #include <dirent.h>
+ #include <unistd.h>
+ #endif
+ #include <errno.h>
++#ifndef R4OS_VULKAN
+ #include <fcntl.h>
++#endif
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include "ac_gpu_info.h"
+@@ -68,7 +70,7 @@
+ static void
+ open_trace_pipe(uint32_t cpu_index, int *dst_fd)
+ {
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(R4OS_VULKAN)
+    *dst_fd = -1;
+ #else
+    char filename[2048];
+@@ -161,6 +163,7 @@
+    util_dynarray_append(&data->tokens, token);
+ }
+ 
++#ifndef R4OS_VULKAN
+ static void
+ evaluate_trace_event(struct radv_device *device, uint64_t timestamp, struct util_dynarray *tokens,
+                      struct trace_event_amdgpu_vm_update_ptes *event)
+@@ -270,11 +273,12 @@
+       close(device->memory_trace.pipe_fds[i]);
+    }
+ }
++#endif
+ 
+ void
+ radv_memory_trace_init(struct radv_device *device)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(R4OS_VULKAN)
+    DIR *dir = opendir(RADV_FTRACE_INSTANCE_PATH);
+    if (!dir) {
+       fprintf(stderr,
+@@ -440,19 +444,23 @@
+ void
+ radv_rmv_collect_trace_events(struct radv_device *device)
+ {
++#ifndef R4OS_VULKAN
+    for (uint32_t i = 0; i < device->memory_trace.num_cpus; ++i) {
+       append_trace_events(device, device->memory_trace.pipe_fds[i]);
+    }
++#endif
+ }
+ 
+ void
+ radv_memory_trace_finish(struct radv_device *device)
+ {
++#ifndef R4OS_VULKAN
+    if (!device->vk.memory_trace_data.is_enabled)
+       return;
+ 
+    set_event_tracing_enabled("amdgpu_vm_update_ptes", false);
+    close_pipe_fds(device);
++#endif
+ }
+ 
+ /* The token lock must be held when entering _locked functions */
+--- a/src/util/perf/u_trace.c
++++ b/src/util/perf/u_trace.c
+@@ -40,7 +40,11 @@
+    FILE *trace_file;
+    enum u_trace_type enabled_traces;
+ };
++#ifdef R4OS_VULKAN
++static const struct u_trace_state u_trace_state = {0};
++#else
+ static struct u_trace_state u_trace_state = { .once = UTIL_ONCE_FLAG_INIT };
++#endif
+ 
+ #ifdef HAVE_PERFETTO
+ /**
+@@ -303,6 +307,7 @@
+    .event = &print_json_event,
+ };
+ 
++#ifndef R4OS_VULKAN
+ static const struct debug_named_value config_control[] = {
+    { "print", U_TRACE_TYPE_PRINT, "Enable print" },
+    { "print_csv", U_TRACE_TYPE_PRINT_CSV, "Enable print in CSV" },
+@@ -342,10 +347,14 @@
+    }
+ }
+ 
++#endif
++
+ void
+ u_trace_state_init(void)
+ {
++#ifndef R4OS_VULKAN
+    util_call_once(&u_trace_state.once, u_trace_state_init_once);
++#endif
+ }
+ 
+ bool
+@@ -363,6 +372,9 @@
+ static void
+ queue_init(struct u_trace_context *utctx)
+ {
++#ifdef R4OS_VULKAN
++   assert(!utctx->enabled_traces && !utctx->queue.jobs);
++#else
+    if (utctx->queue.jobs)
+       return;
+ 
+@@ -374,6 +386,7 @@
+ 
+    if (!ret)
+       utctx->out = NULL;
++#endif
+ }
+ 
+ static uint32_t
+@@ -515,12 +528,16 @@
+ 
+    if (!utctx->queue.jobs)
+       return;
++#ifdef R4OS_VULKAN
++   assert(!"Native tracing is not enabled");
++#else
+    util_queue_finish(&utctx->queue);
+    util_queue_destroy(&utctx->queue);
+    util_dynarray_foreach(&utctx->flushed_traces, struct u_trace_flush *, flush) {
+       u_trace_flush_destroy(*flush);
+    }
+    util_dynarray_fini(&utctx->flushed_traces);
++#endif
+ }
+ 
+ #ifdef HAVE_PERFETTO
+@@ -798,6 +815,9 @@
+ void
+ u_trace_context_process(struct u_trace_context *utctx, bool eof)
+ {
++#ifdef R4OS_VULKAN
++   assert(!utctx->enabled_traces && !utctx->flushed_traces.size);
++#else
+    if (!util_dynarray_num_elements(&utctx->flushed_traces, struct u_trace_flush *))
+       return;
+ 
+@@ -812,6 +832,7 @@
+    }
+ 
+    util_dynarray_clear(&utctx->flushed_traces);
++#endif
+ }
+ 
+ static linear_ctx *
+--- a/src/util/texcompress_astc_luts.cpp
++++ b/src/util/texcompress_astc_luts.cpp
+@@ -28,6 +28,11 @@
+ #include <vector>
+ 
+ #include "texcompress_astc_luts.h"
++#ifdef R4OS_VULKAN
++#include "cpp_runtime.h"
++#include <new>
++#include <cstdlib>
++#endif
+ 
+ namespace Granite
+ {
+@@ -363,10 +368,27 @@
+ 	}
+ }
+ 
++#ifdef R4OS_VULKAN
++static const char r4vk_astc_key = 0;
++static void r4vk_astc_destroy() { get_astc_luts().~ASTCLutHolder(); }
++static void r4vk_astc_init(void *data)
++{
++   new(data) ASTCLutHolder;
++   if (atexit(r4vk_astc_destroy) != 0)
++      r4native_fatal("ASTC finalizer unavailable");
++}
++#endif
+ ASTCLutHolder &get_astc_luts()
+ {
++#ifdef R4OS_VULKAN
++   void *data = r4native_cpp_state(&r4vk_astc_key, sizeof(ASTCLutHolder),
++                                 alignof(ASTCLutHolder), r4vk_astc_init);
++   if (!data) r4native_fatal("ASTC process state unavailable");
++   return *static_cast<ASTCLutHolder *>(data);
++#else
+ 	static ASTCLutHolder holder;
+ 	return holder;
++#endif
+ }
+ 
+ ASTCLutHolder::ASTCLutHolder()

@@ -1,0 +1,4122 @@
+{
+  "schema": 1,
+  "upstream_version": "26.2.2",
+  "url": "https://archive.mesa3d.org/mesa-26.2.2.tar.xz",
+  "archive_sha256": "eeb29ca7e56cfaa8e8a79538dcf834e3b18e501c31bef5145e959ea437cc4216",
+  "original_root": "ThirdParty/Mesa26.2.2/Original",
+  "files": [
+    {
+      "path": "VERSION",
+      "sha256": "b8a6ba78eed1a56618f65da8d5a65f0fc90b59ada87d73de553d06c927d7cb33",
+      "bytes": 7,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "docs/license.rst",
+      "sha256": "0d1a0472ecc81830e75c20d59b0ea02841e3db21255e0ebad97ab682c54d6615",
+      "bytes": 1816,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "include/GL/gl.h",
+      "sha256": "f09313b53505928802f07d1b7fa9d40e7abe7728db389ec8fab348778073e4f1",
+      "bytes": 79877,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GL/glext.h",
+      "sha256": "e7d514287e81e5403c14b02c2bab9d870589353642a8748da4213b9a55dbf56f",
+      "bytes": 859012,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES/gl.h",
+      "sha256": "6b576206efbee73c0ba9716f8bbeb23496de17e735d0aa9e5eb00d73976db185",
+      "bytes": 30603,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES/glext.h",
+      "sha256": "f9d9dc4d8006925c5a0dd37a7f91a0fb87d066ba5b057384f6dea8ffeac79dbe",
+      "bytes": 52710,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES/glplatform.h",
+      "sha256": "c6bcc0caaf56609c494efb327e8e9e2845630f6b58641ddde71eacd2c2790d21",
+      "bytes": 634,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES2/gl2.h",
+      "sha256": "80f2c16d6543bc5ed3f9431c21fd4825d29af1dd82beab2edf31e377e6e70995",
+      "bytes": 42930,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES2/gl2ext.h",
+      "sha256": "4530230062731e45cd7ea0c931eec6f846434e0295a618b8761f09c972d3c669",
+      "bytes": 250982,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES2/gl2platform.h",
+      "sha256": "f5da0747540a50be5f44aad264aae45bdf157a192c40f17487dd9a2f99c71b6c",
+      "bytes": 642,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES3/gl3.h",
+      "sha256": "c61394d5166fc7f92db132d4cda66517d3e5e8c14b88267f0529ef298c2333d1",
+      "bytes": 81600,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES3/gl31.h",
+      "sha256": "612fc3a3c483baa3b04dfa6be3cb44217ad5ebb92c3af05531dcac2c159b177a",
+      "bytes": 106404,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES3/gl32.h",
+      "sha256": "e580e7db6bfc6b86860ae6b02fa27eb9acfe6726bab71f9c268568cdbf80baea",
+      "bytes": 127284,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES3/gl3ext.h",
+      "sha256": "5730da902cec04b86f93152a219b379eabbf4eac97387f271fb8141fdfe4c5c5",
+      "bytes": 741,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/GLES3/gl3platform.h",
+      "sha256": "a9e060dae5a2b11c5a889b679692b7089a10a7e03ebfbb6cf28217f6e322fb08",
+      "bytes": 642,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/KHR/khrplatform.h",
+      "sha256": "7b1e01aaa7ad8f6fc34b5c7bdf79ebf5189bb09e2c4d2e79fc5d350623d11e83",
+      "bytes": 11131,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/c99_alloca.h",
+      "sha256": "96ffde34c6cabd17e41df0ea8b79b034ce8f406a60ef58fe8f068af406d8b194",
+      "bytes": 1608,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "include/c99_compat.h",
+      "sha256": "92445314d5fb3eff3a12eaf4cc864f9b459862a99594403b36ea79dfe149d267",
+      "bytes": 2754,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "include/no_extern_c.h",
+      "sha256": "60883a8d2b2978b861ef686c5a9afb41cf91ffec7c56baca89c626e7fea2d385",
+      "bytes": 2051,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_av1std.h",
+      "sha256": "9b4ebcef0d6844b226803fa91b4c4c8bf9eb941aa31b19cea48ded0886a8f9e2",
+      "bytes": 16687,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_av1std_decode.h",
+      "sha256": "f03abf49fcaf2bd179d48d768164f9494264b58401b98899e8860ba297a1e7aa",
+      "bytes": 4250,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_av1std_encode.h",
+      "sha256": "40f84c98d0341246ead3e864e1378df47d861505c5c139da5ed85c352d5e2300",
+      "bytes": 5979,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_h264std.h",
+      "sha256": "f6691f82e4637adda20e56d56951c673cc1ecdf2fa77e09cc8eba4b1f45118c1",
+      "bytes": 13861,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_h264std_decode.h",
+      "sha256": "8c4682860954d6bfc603e200d9e12586bc57265bd37b73a12b1ecf0c1ad42721",
+      "bytes": 2723,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_h264std_encode.h",
+      "sha256": "75cc54e489b1ec7e3c635680cabaf7c9c2ddd4071a485440e5368e76ede30a85",
+      "bytes": 6878,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_h265std.h",
+      "sha256": "01b5f3d0fd9d273a68ed90f898ba94c05c0305280a753bf95fab60d60727c22e",
+      "bytes": 23439,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_h265std_decode.h",
+      "sha256": "926a24d94afed2b1ab030e81c3b9e2e6730cca530f7a5a5bd821e7b896b93a41",
+      "bytes": 2429,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_h265std_encode.h",
+      "sha256": "8a56e0c78496affa84eca39ec0f5636df681c04623dd0291aeeadd012df324be",
+      "bytes": 7462,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_vp9std.h",
+      "sha256": "e18e20b197945929d5871836bfde923e38b350b09e1cbe430f1bd802d9eda34e",
+      "bytes": 5384,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codec_vp9std_decode.h",
+      "sha256": "c3929bbdd0ab79128c7f9bfb9641c9a017b3983529315b771caaafc74fdbb89a",
+      "bytes": 2371,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vk_video/vulkan_video_codecs_common.h",
+      "sha256": "be6d2495d19e96aca6aa5c11e5c418d1cd72beac23fe19eb9169c06e2843f0af",
+      "bytes": 660,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vulkan/vk_platform.h",
+      "sha256": "949d517bb83e1d88fd4f1cef02bd3cb9ab50d44e8354cc68227cf2dccfdd3307",
+      "bytes": 2828,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "include/vulkan/vulkan_core.h",
+      "sha256": "55c06a17793bb1a9d752aa0906116fff9d1fb74f5dd3896777b92f124c9637aa",
+      "bytes": 1350393,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "licenses/Apache-2.0",
+      "sha256": "7e4d3fba250d15e9e0afa380d4b611828fa2560cc8fdebe95bcf2f01a487de12",
+      "bytes": 10045,
+      "license": "License text only: Apache-2.0"
+    },
+    {
+      "path": "licenses/BSL-1.0",
+      "sha256": "9b9fea7520a816107fcac2598b7c0155222f16bc430e989706b22f4367f1df7d",
+      "bytes": 1649,
+      "license": "License text only: BSL-1.0"
+    },
+    {
+      "path": "licenses/GPL-1.0-or-later",
+      "sha256": "8ff76f1528e6e4e9400c0f6b1f2d19d4979aaac3bcc44bb707a55389132825c4",
+      "bytes": 13047,
+      "license": "License text only: GPL-1.0-or-later"
+    },
+    {
+      "path": "licenses/GPL-2.0-only",
+      "sha256": "6667ad4063569cd53b13500550d93fcd3dc11bcf82c5514296af013a0b720ba5",
+      "bytes": 18424,
+      "license": "License text only: GPL-2.0-only"
+    },
+    {
+      "path": "licenses/MIT",
+      "sha256": "323c587d0ccf10e376f8bf9a7f31fb4ca6078105194b42e0b1e0ee2bc9bde71f",
+      "bytes": 1372,
+      "license": "License text only: MIT"
+    },
+    {
+      "path": "licenses/SGI-B-2.0",
+      "sha256": "686bf035a1fd22076416fd3b90370ac67771e884bf57f55693d51f8ce7c710a7",
+      "bytes": 1822,
+      "license": "License text only: SGI-B-2.0"
+    },
+    {
+      "path": "licenses/exceptions/Linux-Syscall-Note",
+      "sha256": "9b4084655174654608fd037e9ddb4feeadfada01cd042e9c17b05aa7105b2b9f",
+      "bytes": 1257,
+      "license": "License text only: Linux-Syscall-Note"
+    },
+    {
+      "path": "src/amd/common/ac_binary.h",
+      "sha256": "6c6cdb69cefcde2798cb36e22a8b4e41daa34a39d6ca484a6a2bc9dc9bf589db",
+      "bytes": 1390,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_descriptors.c",
+      "sha256": "a189275d996d6f358e6ff7e31837ebc304d53c44154d7046271094a5eab760d6",
+      "bytes": 67782,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/ac_descriptors.h",
+      "sha256": "a077392e9776146fe4b43d4714e8c1bb29d0e2cf494af43cdfbca9a7998a0cba",
+      "bytes": 15451,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/ac_formats.c",
+      "sha256": "e725f0d0d5f641148b59f7adeaad140e69086fbd3668efd2e7e65776e254fe5d",
+      "bytes": 33389,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/ac_formats.h",
+      "sha256": "1740e6fee9a03e4220302ba81ba3576b6322a4f99086e75d5f8399c9d64949e0",
+      "bytes": 2358,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/ac_gpu_info.h",
+      "sha256": "bb082f1b5fd7d2245648441fed02f3cce22fdd6f9ba03d4ce35b3a0d8e70f9da",
+      "bytes": 23994,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_hw_stage.h",
+      "sha256": "2f5bc3d8bbb77e4de5edf210e593098c9f360003571576103bc8fbbf0da38c3b",
+      "bytes": 3513,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_shader_args.c",
+      "sha256": "0751e65b349a488fd1206c7f8df08001daaa61d8154caa904e9e95781568fcd0",
+      "bytes": 2967,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/ac_shader_args.h",
+      "sha256": "9e74817e89a8d4353fa446a55576414a9ae926f07aeab121a2fa49b7c3ce3ad8",
+      "bytes": 6925,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_shader_debug_info.h",
+      "sha256": "445fc19362abc7046501e75d001493f7ff218e16b4b9f1b1b1827b640c93129c",
+      "bytes": 881,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_shader_util.c",
+      "sha256": "91b28d0dc39b95b8fa737ab2a3bd3732518c0641481cb8168af908289e8dcc64",
+      "bytes": 64333,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/ac_shader_util.h",
+      "sha256": "c911fc892f9a995570ba14287f98eb3c9ef3d5348130221054cd5b71382191ba",
+      "bytes": 13198,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_surface.h",
+      "sha256": "89fa017fe1271c5b4551437401af31126c69f78f477631bc333417451772909a",
+      "bytes": 21881,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/ac_video.h",
+      "sha256": "519c263bc1330730e84a11bef8fe01a7ad42d4b67ba8dff7f7af8c3148f491e9",
+      "bytes": 5574,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/amd_family.h",
+      "sha256": "5a625359004ecc38bc8e6ac663fed6d2cc3ed037f975ca9b6b28b63e152a21c7",
+      "bytes": 6339,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/gfx10_format_table.h",
+      "sha256": "c90452cbae0d892b08ce41ff37e90121b92165797600f5c9a6121972c0e45c81",
+      "bytes": 929,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/gfx10_format_table.py",
+      "sha256": "d55896f77692cd02f3924b530531d2e6bdaf0aeee3e73ef44109a016ab5c96ca",
+      "bytes": 10297,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/meson.build",
+      "sha256": "bb8e5bf76f739b1f524f7bd3c725ac10eb69a22b011412a7f9ab0519ae2068b5",
+      "bytes": 8848,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir.c",
+      "sha256": "fac896064b567f0387e47de736cb90d8d7b298b1919543645f5fbd2d66f7c06e",
+      "bytes": 44910,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir.h",
+      "sha256": "fd66453433d9e057aed1a848b0fedf3c185ac912da3f30f3207b1e91271488bc",
+      "bytes": 18042,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_assign_io_locations.c",
+      "sha256": "d84e3ecd4a3aec2b2642ebd57a10da192f2be1c08eb21813ff8c9b7b09891a1a",
+      "bytes": 6354,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_create_gs_copy_shader.c",
+      "sha256": "0f3e0120579ec726c04147844983102856c8225175bba627ab0c59584fcea855",
+      "bytes": 3456,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_cull.c",
+      "sha256": "4a69be1ae04dc4175926519f26644723add0d3ac792ef71122aafe95edaf6d5e",
+      "bytes": 22635,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_fixup_smem_loads_null_prt.c",
+      "sha256": "95aa55f1ec149318ed1f99e7a1f7ebd790c70dd54c5c20cdc80e59e25df42ee4",
+      "bytes": 4225,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_helpers.h",
+      "sha256": "53048a22d55d77dda2dee409682ed34921d31c88850be364e460d34c57307d4d",
+      "bytes": 10891,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_esgs_io_to_mem.c",
+      "sha256": "aa99a278630015aa3d4304289f00d1c0a5b313664a9aae2089da1b1ef9b9ad21",
+      "bytes": 14319,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_global_access.c",
+      "sha256": "09968d579f54f0f95880e650e9c39118da7923a50c3e0e2bcd3cd8f30c8e1549",
+      "bytes": 10818,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_image_opcodes_cdna.c",
+      "sha256": "10f774c58b4f4b6ed96e0081735c4c0e15e0ce1e01ff6b12d4c490dcc2123bc1",
+      "bytes": 21148,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_image_tex.c",
+      "sha256": "bfc7534a218977a228776cfaf640ab0e01fb248fb47f8c01039d6a0b10a2abf1",
+      "bytes": 11281,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_intrinsics_to_args.c",
+      "sha256": "9a2bdbbe0b6515d6ed503fd88bf2a2c8640bc25d02cb0136caaddcd3e90ad5fe",
+      "bytes": 25777,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_legacy_gs.c",
+      "sha256": "2a902fdcb1afc94f609f0d2a0d5871e1c404c4a8fad31b8cecfca39149cf16c9",
+      "bytes": 7547,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_legacy_vs.c",
+      "sha256": "763bf45893e1dc14fd9cfd0fdf64335b3b499657390e1d6a19986f36f9279d8d",
+      "bytes": 2825,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_mem_access_bit_sizes.c",
+      "sha256": "697c2d76db809c76655b03e5adf07bea6b00065d5c7d33b5a0f21b5dee3e0c90",
+      "bytes": 14934,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_ngg.c",
+      "sha256": "105d8d0952b78ce40eaa28b2b58c905207e7b12e3966bc231c94c3aaf067c905",
+      "bytes": 74884,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_ngg_gs.c",
+      "sha256": "67b4925909134af804dddb395126a5ab5a0046472bea2e02f6a0147a27138c30",
+      "bytes": 39956,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_ngg_mesh.c",
+      "sha256": "fc91b690beb1b053902df4609d15684766a2b38023dfeba50158e22f5f965cb3",
+      "bytes": 58554,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_ps_early.c",
+      "sha256": "8c274a63ded2d37f9474b488121e35a6c325761f301e669de364b132c7162721",
+      "bytes": 17732,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_ps_late.c",
+      "sha256": "4668a7b90d5aa85501a69bfd7e8ac2b24e725474cb01c7f9874db690565afe58",
+      "bytes": 25487,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_resinfo.c",
+      "sha256": "63a4f3c860475543928a1cb3076c279e76e83815bab2b7302bfc0d315724f823",
+      "bytes": 14919,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_sample_mask_in.c",
+      "sha256": "26b96d3e448e271a5b5652837c34224c05abb05d489995f1d4e0ba8911bda759",
+      "bytes": 2927,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_taskmesh_io_to_mem.c",
+      "sha256": "d40c183e9bcd99bbc7dcda96c15f7a2d98c4ca12347e43b835f51a72c2fa03e0",
+      "bytes": 13760,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_tess_io_to_mem.c",
+      "sha256": "6624992c9f461c396044afd7eb411e2ca04ec35cef666ab130831bb488748d6a",
+      "bytes": 73945,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_lower_tex_coords.c",
+      "sha256": "3268701b3489b78ec4be1ce8048823e0aa04d89d446a628217fb0e97f65667e5",
+      "bytes": 22578,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_meta.h",
+      "sha256": "a7d8a1d502d63aa8016d4175f6afc6809079bf2120c24d8b592d4665a07003c2",
+      "bytes": 6918,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_meta_cs_blit.c",
+      "sha256": "46d582b5265a70a7b17719c101614e0f66ecbd75f04b7d37de83d0a7d85ab218",
+      "bytes": 54896,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_meta_cs_clear_copy_buffer.c",
+      "sha256": "a92b722258fca5cd58da6fded98038c675c534b52dba981e4e0ac1e2380675ec",
+      "bytes": 27806,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_meta_ps_resolve.c",
+      "sha256": "54dd7ad87f2916e7c6ddb2136464f3bd49af9b69f018d0bffd5092f2db3b1d3c",
+      "bytes": 6221,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_opt_flip_if_for_mem_loads.c",
+      "sha256": "4ef453198f6dce91baf00c252c2b2d43bbb1bc329a3c625bdda9f7c6be719d62",
+      "bytes": 7020,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_opt_outputs.c",
+      "sha256": "ad8715b1e5b9974906a4dda4598ec0a9a9537995cae29079795001868589624f",
+      "bytes": 10582,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_opt_shared_append.c",
+      "sha256": "98a750a3757bda665558c8f0ac6e43876cd43726d6b4750005b16657758d0472",
+      "bytes": 1422,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_prerast_utils.c",
+      "sha256": "8b63338ab053724a41f0d39875946a981003cb454c40428ce0f920bc3de11e9f",
+      "bytes": 57006,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_surface.c",
+      "sha256": "8481f2cae6954ce8bc32daaf63253583cf8265ed1d55a4231e161f3111daa598",
+      "bytes": 8518,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/common/nir/ac_nir_surface.h",
+      "sha256": "7e3babf34573e2a5e90476d0ea432a372218d2e48a3aa7936b4b2c0376cc2338",
+      "bytes": 1897,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/../compiler/aco_nir_call_attribs.h",
+      "sha256": "4e547ccff1518ba9a8150ae6c47115b73018a3974afb7143b2544c219dbd4aa0",
+      "bytes": 4078,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_assembler.cpp",
+      "sha256": "0c091c76905d639c478c6606658bc05f0f2d485d28a7d5fa73e235818424734b",
+      "bytes": 66645,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_builder_h.py",
+      "sha256": "fbcc0bbb6cfb1fc331f0adf568915535a2b220f80c038dce5116aef1b2616732",
+      "bytes": 23871,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_dead_code_analysis.cpp",
+      "sha256": "67424966df2fd2fd1eb8c7f91e02f62d633b98ca3f43a7cd36e8ab47d4c325d6",
+      "bytes": 1604,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_dominance.cpp",
+      "sha256": "9ea91461d7cbb3c383feb0356b424f73c736d6a37339755429f39493f6e65f68",
+      "bytes": 5424,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_form_hard_clauses.cpp",
+      "sha256": "d05cd9572d3800f6b727e1f679abc364c7e937cdbe4cc015f20c016204bc542d",
+      "bytes": 4234,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_insert_NOPs.cpp",
+      "sha256": "4d179cd8f3c43ca72732445dac56f30c638e6d68d918e3a1e8acba0e645a7fd8",
+      "bytes": 79812,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_insert_delay_alu.cpp",
+      "sha256": "c57807f28e51018659426218a501409cbe03a5a547b878e27cec7a51fdeca0d2",
+      "bytes": 13461,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_insert_exec_mask.cpp",
+      "sha256": "e52c4bbdb52957a61af316b99b010640c718b555b3125119d48743b7293bb9df",
+      "bytes": 33596,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_insert_fp_mode.cpp",
+      "sha256": "2d5b5757abd4655a3753470072992ccb462da3863a48e394620c32e58156e9e7",
+      "bytes": 17403,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_insert_waitcnt.cpp",
+      "sha256": "5be04ade06c3e255397b48e9b6816efd57d6fd3abe024321750ff8c2ae754baf",
+      "bytes": 40494,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_interface.cpp",
+      "sha256": "fb72dac09834596c512422cd2bde3b513f3c5915a339aea0aaf857a10c2bbb61",
+      "bytes": 12701,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_interface.h",
+      "sha256": "1d4d1fe509c3cbea498426e7ca98eabc4193ba480270d423f7213064ddca3376",
+      "bytes": 3183,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_ir.cpp",
+      "sha256": "1ad31c2096884e373175c6893b31829763cd207c1a2c7c34bd741e2314a369ca",
+      "bytes": 71054,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_ir.h",
+      "sha256": "c495e6dd08d4fe1ac5984ccbd21c6f194ac24c1de3e725e92953eafd18c65ee3",
+      "bytes": 89131,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_live_var_analysis.cpp",
+      "sha256": "c01e39fcea9a7cdf8716e5970da1f32c98e70100f1c96c4191470cf35414b80e",
+      "bytes": 28079,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_lower_branches.cpp",
+      "sha256": "dfb6bd6f5f44d73f0bade9415887b8f115119cfb747b85d89a7aa0f60d2c8643",
+      "bytes": 25678,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_lower_phis.cpp",
+      "sha256": "da64d0c573750504f5f2bf75196838d734b8e2745238df470a3e677ac39a397d",
+      "bytes": 17386,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_lower_subdword.cpp",
+      "sha256": "61c3328deb11354d3335037d5a1e535654c6139ad8cd27672e2fcabada38ddbd",
+      "bytes": 9743,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_lower_to_cssa.cpp",
+      "sha256": "d54202bca881e0bdea222d753eca0e6f66e50b1e6db5ce973136537a81e76e76",
+      "bytes": 20150,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_lower_to_hw_instr.cpp",
+      "sha256": "08004028979cd3aeca5028d4d26ebf1722a7bdb6fcc1fd61b46df945bc12776a",
+      "bytes": 138429,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_nir_call_attribs.h",
+      "sha256": "4e547ccff1518ba9a8150ae6c47115b73018a3974afb7143b2544c219dbd4aa0",
+      "bytes": 4078,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_opcodes.py",
+      "sha256": "21d9c086dd32b0dbe094f1523ac337d350258a3fb973a510a46fbea85a56bee1",
+      "bytes": 139502,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_opcodes_cpp.py",
+      "sha256": "dde16a9fbb0ab780f24ac4ab75504412249e4fa526b7d9f2ef4e8a0f61d57c16",
+      "bytes": 2872,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_opcodes_h.py",
+      "sha256": "a40ebaa4a24c0d571a231397bd072d87bc4f354b8f0a8f61afbf851471db57a3",
+      "bytes": 1123,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_opt_value_numbering.cpp",
+      "sha256": "5d3d72efcef5481ecf82fcfc48e0359e7820282ec73f740184e03c6a463842c2",
+      "bytes": 18936,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_optimizer.cpp",
+      "sha256": "4d40ffa9af823cf2563cfbfd96a77c7b62d1ea425441c70589817bb28aa5b1eb",
+      "bytes": 222876,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_optimizer_postRA.cpp",
+      "sha256": "3824a46cfc118186e45b022d54f4c98d682729201fe6c338fd15900ea6b1fc05",
+      "bytes": 48832,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_print_asm.cpp",
+      "sha256": "2eceeeff2cacdb87c90dbbcfe75b9e1fa9075589f00cc124dbf2ff6f1f70b83c",
+      "bytes": 13229,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_print_ir.cpp",
+      "sha256": "f8d3fe50371c7ca342ca70f36c14ee3717d9c301c5835885cc06abc954dfda17",
+      "bytes": 43868,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_reduce_assign.cpp",
+      "sha256": "3cc1398493601d65d4ab3521420a7c9bb8ed02f2b1a547b71225bfa92125acca",
+      "bytes": 7044,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_register_allocation.cpp",
+      "sha256": "c4a20592054f26528b9d36948f919573deed549033496534cf050b53040ae0aa",
+      "bytes": 167466,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_reindex_ssa.cpp",
+      "sha256": "441474d672e33446fe3a938e4011d5a40a3f0b958f2238d21a1b025ae6b7885f",
+      "bytes": 2557,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_repair_ssa.cpp",
+      "sha256": "5a68268e007d3df27d7c8f7d50997b98f213ed4b51dd04781ad713679f13ecc4",
+      "bytes": 8841,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_scheduler.cpp",
+      "sha256": "de9703777f1089d3f620de462aca057a3c918e081aef0b8e6a3e696d9c2d6f9d",
+      "bytes": 52996,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_scheduler_ilp.cpp",
+      "sha256": "96fa9c84a1388776b5c6b131e0589528aa48b9b9087176c2532d83674d8e50e4",
+      "bytes": 36101,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_shader_info.h",
+      "sha256": "96c26dd20277c32bd3416da2c63373f6cc2b1aac957f6968ac29f638eb17e357",
+      "bytes": 5634,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_spill.cpp",
+      "sha256": "8c0379bb724dec086266ebedde425aa2de98fc4bb2d7b9b725c853c0c5302af4",
+      "bytes": 78511,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_spill_preserved.cpp",
+      "sha256": "4dcb0f3bafc2b463ea763aae67b01dc4b98e7756a7331128440341709fc552ab",
+      "bytes": 29365,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_ssa_elimination.cpp",
+      "sha256": "72312f38060c7f99dabb2dab6de311b35f0d84e1aecc167e1348747da21ea4dc",
+      "bytes": 2921,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_statistics.cpp",
+      "sha256": "e67cfaea74c07d595ebe8892a364e707030737b7ed07e263e08b4a9c9bb18868",
+      "bytes": 25709,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/aco_util.h",
+      "sha256": "79810b19057f89e8bee79ede89edc0b0d841a12fcba168b6a821f43ce0994cf8",
+      "bytes": 38340,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/compiler/aco_validate.cpp",
+      "sha256": "bea23af91645b5ccc0e2d8d532d9312a21988e41fb8b59e13147f572708bca7e",
+      "bytes": 86713,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_instruction_selection.h",
+      "sha256": "de5c17ed6bfafb6a781a3016286465b084f4397dd120cec6222e2d88f41cd83b",
+      "bytes": 11153,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_isel_cfg.cpp",
+      "sha256": "cc516999940ba91b0806d8b11f273fc798c8e3dd090a517eead6f2bb417e3c1a",
+      "bytes": 16684,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_isel_helpers.cpp",
+      "sha256": "77e61f36f21f00dd4007b8b4b7cdc88154ab6ceb08fb4831e635a3f0c6fac3c5",
+      "bytes": 48461,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_isel_setup.cpp",
+      "sha256": "c7ed687804510cdcc107cec02b154d5c868a67ebb8bbba77a9e25ebcfda20ecb",
+      "bytes": 31809,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_nir.cpp",
+      "sha256": "309baead3a4bc884c930c330bbf93e62285bd2d9270a3fe2bc6f3ca9a21dcf00",
+      "bytes": 63270,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_nir_alu.cpp",
+      "sha256": "1c3e092dd6d82c27e08fca55b11f15d89724a0509c7044b2c441351afd4b4a5b",
+      "bytes": 177011,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp",
+      "sha256": "52d837d9f7ede21903458c38b51f9346457b023453b44384cf5097404e417339",
+      "bytes": 211647,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_ps_epilog.cpp",
+      "sha256": "54aa86d2bac60405f1e0e2d6037250a2912aafb1e85d995217ec42c81e903451",
+      "bytes": 17111,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_ps_prolog.cpp",
+      "sha256": "226975f9820891a2fcd830c0d670800d0871064a46c85d0b023fa2b4f3bad055",
+      "bytes": 11660,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_trap_handler.cpp",
+      "sha256": "de64a1baa0dea71da192f51ac1267ad686479dbf99be4c5055610c04aade4bf7",
+      "bytes": 18210,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/instruction_selection/aco_select_vs_prolog.cpp",
+      "sha256": "3bf7ae28be95d7af09a1deb09e2505dc166dc9d99f0f9adf61ccebf4b354a1a8",
+      "bytes": 27738,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/compiler/meson.build",
+      "sha256": "e23012e3c2548d8557e787b88634fd9e2c71b55691198061decaa70dde51a4ca",
+      "bytes": 2919,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/registers/canonicalize.py",
+      "sha256": "c3f1020ba0d4bcb8407dde6049fc7c41ff54f2296836f9472e0948a045e93a6e",
+      "bytes": 2098,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/registers/gfx10-rsrc.json",
+      "sha256": "ab6deb6cea2daf6ef546b8ae5eff105d5939c9d8cd76a710f9f8064e6a2cf820",
+      "bytes": 19795,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx10.json",
+      "sha256": "f3435695c47c3c3b1d8329a96b098452d5909944ca2c99995520c22614617d48",
+      "bytes": 402500,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx103.json",
+      "sha256": "781f3d4aa1e4d00c15fc67db21732521a4619a66480a704fbdbee9f97b0cdfff",
+      "bytes": 400899,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx11-rsrc.json",
+      "sha256": "838e540d6adcb58f3fce9e561d38dc727563102bd02d47938fc6e170db46c164",
+      "bytes": 15007,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx11.json",
+      "sha256": "304b57f399534febbd2b055067b81c2652c700eaea88526a7d10c6bb889bf2fb",
+      "bytes": 372700,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx115.json",
+      "sha256": "3d8ba0bb99dc326271b5bc213d1891e0983f1dfdf1f4eaef636c4fe035f365f2",
+      "bytes": 370883,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx12-rsrc.json",
+      "sha256": "3cfef958a39875c6a1b341afb55082a4ffc571ff34dbd651456dc4f846fdddd0",
+      "bytes": 12969,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx12.json",
+      "sha256": "e75a0a16f6c10fb27a02a29644307e949ab78042c76ea62509d9236d7e7e8bc1",
+      "bytes": 372733,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx6.json",
+      "sha256": "38b492cf4211615934372777c55381ba21e448d3f199ddf1394def62446ce1a1",
+      "bytes": 285433,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx7.json",
+      "sha256": "22fdc2fa9ceb139b6c9ecdff4ed5e90d2b42f7c700ab4d18f3d742996b506af8",
+      "bytes": 309435,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx8.json",
+      "sha256": "225dcbb9c4d16cc4c79d48e1b91d19ab71afa24f6a14e3613ddc49379c08d1bb",
+      "bytes": 320092,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx81.json",
+      "sha256": "851c3eb49a3933730520efcfb680ae756d7cf2c746c00e65e1b12c1dd35e8161",
+      "bytes": 327988,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx9.json",
+      "sha256": "081fbfd1251fb5c6f4b7b6a218ba217e21346e824a04ec8146ab0d1d389ddb06",
+      "bytes": 361872,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/gfx940.json",
+      "sha256": "c97ebc6b44f20cddce9d3900f53755596aa0928c0ccc843e06203d56eecc705f",
+      "bytes": 97171,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/makeregheader.py",
+      "sha256": "7e3a8a87a7bf6a8752990f3ff4013d4dd06c8522cb4d4af04e785c94b381d509",
+      "bytes": 15290,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/registers/mergedbs.py",
+      "sha256": "2f353108e646eef8dea1d8e1d056ed8fc43d5439599c3ce247d469101675600d",
+      "bytes": 805,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/registers/parse_kernel_headers.py",
+      "sha256": "d3e61d1ae4a34f86ab1695b29eaf22981057273dc405035bb4b059f4b54d21f9",
+      "bytes": 36011,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/registers/parseheader.py",
+      "sha256": "cad9a1749497b2c2e6598b435a0513a31bd8a933870a345ef776aaf026c18a12",
+      "bytes": 5552,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/registers/pkt3.json",
+      "sha256": "af35bfe7b665dbe5794416602c2ad03bfb9417f080b0d99e7aa094b2519f365d",
+      "bytes": 9381,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/registers/regdb.py",
+      "sha256": "e524f45b0304396c3a8694631fec5db485938731a901a47d36279418934f1e83",
+      "bytes": 31116,
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/registers/registers-manually-defined.json",
+      "sha256": "0e1f10a943eeb840fb55d1f1fb89e1a998893659f14195b6c0ca9869cdc9e83a",
+      "bytes": 5922,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/amd/vulkan/meson.build",
+      "sha256": "96199abeb5a57f3abac9c7e38834e2df4d02bc6e66a705e23a80c856c2a39708",
+      "bytes": 10637,
+      "license": "MIT"
+    },
+    {
+      "path": "src/compiler/builtin_types.py",
+      "sha256": "27da11ba307da3c0c9d235815e5dafe9c17be7e99c19f6be76ca5c1b05863369",
+      "bytes": 28179,
+      "license": "MIT"
+    },
+    {
+      "path": "src/compiler/builtin_types_c.py",
+      "sha256": "203d991fa9893d18e156425f334faf1dc6ccd92c364224244c260fe77d90f36c",
+      "bytes": 1279,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/builtin_types_h.py",
+      "sha256": "13d2d66c5b9c7a7f3299c4ab4c0047ee3cb639190f440e8e68b320d4ccb2714a",
+      "bytes": 707,
+      "license": "MIT"
+    },
+    {
+      "path": "src/compiler/glsl/ir_expression_operation.py",
+      "sha256": "c563cb50b29a6d0563dba9b8065768ae8d46549d5933637d6a31846d86c7cf97",
+      "bytes": 47336,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/glsl_types.c",
+      "sha256": "f87e80b0606c67ffc9d4ce546f2660de021abd1ee11cca69b3d8e625d5e7e08b",
+      "bytes": 136458,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/glsl_types.h",
+      "sha256": "6973693bb2160ca20b8a6781364b224e9e318615bcc6d983b7f4dd79389e5832",
+      "bytes": 45457,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/isaspec/decode.py",
+      "sha256": "5fcc864dc65b293e98e37afa8582a44bc6a769275f33c65d0ed779f17112af85",
+      "bytes": 15836,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/isaspec/encode.py",
+      "sha256": "c057b60e1031b7cdc2d78117e1fa2e5086d899df18702fe79fa594b0aecc3854",
+      "bytes": 25355,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/isaspec/isa.py",
+      "sha256": "f435e8125f3c0fce867eef59f9a840ff459c6bdb47da102d1af164618bcfe0aa",
+      "bytes": 23974,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/list.h",
+      "sha256": "9fd48602bc7237c32d2ecb2af1f9ea7138d3ec0fb2e6b6b280596536cc22a352",
+      "bytes": 12923,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/meson.build",
+      "sha256": "93441c7367a77859be8f191775d19b8863addc26c5effd3a2a1b5821109ccb94",
+      "bytes": 14808,
+      "license": "MIT"
+    },
+    {
+      "path": "src/compiler/nir/nir.c",
+      "sha256": "66ff8fa03a1335676c95446d3b5b674bc97e41fa105b87ccb95e61fbe891acd7",
+      "bytes": 123350,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir.h",
+      "sha256": "a326344d86757863d0999984fdb6c6a48f110567c6f2582b9a517514a44bdb3c",
+      "bytes": 254175,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_algebraic.py",
+      "sha256": "ab091d32c11badca353b3e338d3d711e4cfc8b65ac474367281c931c16391ca5",
+      "bytes": 66703,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_blend_equation_advanced_helper.h",
+      "sha256": "43cee7b22e25718f44d621a1df2ea22c2caa9dbef4a1d89c49758a70036bab60",
+      "bytes": 4317,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_builder.c",
+      "sha256": "de9ecc21c9bbe30f0d19050bc9d8431ea3126eced64e193f3d2e7c39655d695a",
+      "bytes": 25488,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_builder.h",
+      "sha256": "f50f0ab2c9ec39de8e34a95f54cbe5bb1b6b749fe984a515aa2386c0dc5962fe",
+      "bytes": 74762,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_builder_opcodes_h.py",
+      "sha256": "57a9693c5f82b7f4fc5f95b98b1f598d7a615af1392c3b88d5836b49089d37d7",
+      "bytes": 8873,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_builtin_builder.c",
+      "sha256": "15af115edd1ccaaee884a990601afe58204a26f1d993ab0b9cfe2ef129f842c6",
+      "bytes": 17130,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_builtin_builder.h",
+      "sha256": "9f057eb2ee13769a684291e92899230acaad9edc58f3b99a1176be77b02cab40",
+      "bytes": 8082,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_clip_cull_distance_io_utils.c",
+      "sha256": "acda9dd638e805193bf9be5d87b7d9b4814339a2208c182dec64be6d78e4da19",
+      "bytes": 18374,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_clone.c",
+      "sha256": "6f9ee9c1df59ee47779aa9ac42d50cd5e567de96e758581cb00bb6bd194774ee",
+      "bytes": 28884,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_constant_expressions.h",
+      "sha256": "4467d327af1acc120302d14a5cc12a5c024e5055692cd49d34cc98d841c4ed05",
+      "bytes": 1972,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_constant_expressions.py",
+      "sha256": "b359ce2aeae5a970e289a0b5282a65ef7e4495a81247988638a2442974e7e034",
+      "bytes": 20349,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_control_flow.c",
+      "sha256": "575ab1b07fab8d1ea0cbc09e5c07437acd6ba30564c92e227e7e8749c78884f3",
+      "bytes": 29988,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_control_flow.h",
+      "sha256": "9537767714139e2661ce59b9de194167f483149ace1634eae7e68f90791bd275",
+      "bytes": 7435,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_control_flow_private.h",
+      "sha256": "fcce95a195a2d5ac1cf27741fa5ee57c5094ef0656153fbff7c2933cc1f0ed84",
+      "bytes": 1570,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_conversion_builder.h",
+      "sha256": "5161fd22823cde86292def5356930127750bb248a1c3244b865a1719c33179d4",
+      "bytes": 19676,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_convert_address_format.c",
+      "sha256": "a468c1aa3cafc9730db6fe53e4ae69d1c89cd895d8ace39b2c9a714d19f43f36",
+      "bytes": 6746,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_defines.h",
+      "sha256": "d9787982a506c51386743b23b39735dc674d86a0fcf12b25bd1372181fbbac35",
+      "bytes": 9817,
+      "license": "MIT"
+    },
+    {
+      "path": "src/compiler/nir/nir_deref.c",
+      "sha256": "80c28f3d3d3173720be3110cab68894567cb3fd184fefad9263f13580a506065",
+      "bytes": 52773,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_deref.h",
+      "sha256": "f81adaf9d7e3de4a4b6b4112a9669f08b63f25e3f6f13ab554c8cd414231e8b1",
+      "bytes": 3056,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_divergence_analysis.c",
+      "sha256": "fc60b58c89b370a6a3d0c247dbd7e7ef6d59b56b525591ce5261698c08e9a0c7",
+      "bytes": 65624,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_dominance.c",
+      "sha256": "8c825875d623303b65cf7206d7c87b54f33f261872edba99301c530868e1cccf",
+      "bytes": 8465,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_dominance_lca.c",
+      "sha256": "d95be0b63cf87c1d91cbb690a53461bc92c858056e261cc3e41206345f205737",
+      "bytes": 5465,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_downgrade_pls_vars.c",
+      "sha256": "5dea97639e34c844700d74e0e7576d4a28862c632035294383710212da366404",
+      "bytes": 5149,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_fixup_is_exported.c",
+      "sha256": "7b9e46e001d22f81be1edb26dea218a6bae45d8507340e556fbae36ea2a3d648",
+      "bytes": 2391,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_format_convert.c",
+      "sha256": "95a9828850136af57a225d3774b4259a1a5ea867c89f162b05dd63e5228aff36",
+      "bytes": 25437,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_format_convert.h",
+      "sha256": "0c48db0555ce882cebe0b386a68c7c688df0b1463cec4a53159a22e49a26c2a0",
+      "bytes": 5553,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_from_ssa.c",
+      "sha256": "cea5650efae7fcd9d3035d2c2e1827141b78d59523dcf9016046394c8131d65a",
+      "bytes": 41965,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_functions.c",
+      "sha256": "695213285c6d86152eb4c7f124a21c4cd13f8de18221d9179c8b3ec6e49db844",
+      "bytes": 20621,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_gather_info.c",
+      "sha256": "f19009ce1d5ad65daf3e0bab85d74324fca9dd1ddf48e04af5044b9fcafbc01e",
+      "bytes": 48488,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_gather_output_deps.c",
+      "sha256": "f0c38f656f661fbf5603c1c3f797f62b2e2d59e8cce02e54e9d810db11d60330",
+      "bytes": 18541,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_gather_tcs_info.c",
+      "sha256": "4e01a97a75ae1ad7b6dcf84c9f9e829a5e48f38674fb9c43347566760b07859d",
+      "bytes": 24187,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_gather_types.c",
+      "sha256": "7b02b644e2a4ffa6d304d81fceb07a0e0673cb11abb8b4d53d0a3b7ca9171e7e",
+      "bytes": 7086,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_gather_xfb_info.c",
+      "sha256": "5a52328f2f8b809d0c2ce24da95eb6d13c40f2b348a8baf431dfb588190d1187",
+      "bytes": 19774,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_gs_count_vertices.c",
+      "sha256": "0a8e5299a62e760d5e73686617bbf3637c9e2925e0a3814ee3b1d2ad791b5fe6",
+      "bytes": 4750,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_inline_helpers.h",
+      "sha256": "ff6173c3c080ab67d015e7f33569becae29046cbc7de00d5a95fe6fd2775f0f6",
+      "bytes": 4160,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_inline_sysval.c",
+      "sha256": "f497ac97d366be10e06f4da8691822cf0663b1d3919cb1d061ee562a267934ae",
+      "bytes": 718,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_inline_uniforms.c",
+      "sha256": "516806fd7f086bf81056b079f803f9af1485d14286b401fbffb2244f3625996b",
+      "bytes": 19271,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_instr_set.c",
+      "sha256": "ac90e609cc13cd4cd192e32a918cabadf9bb72023e81cf716226807ac7977dc2",
+      "bytes": 28361,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_instr_set.h",
+      "sha256": "0ffe2f5a283ca93cf3f42ce516bd91cbf07331e8ce02f6b524c53d48580ab39d",
+      "bytes": 2784,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_intrinsics.py",
+      "sha256": "7633856b0cd1cf7ab5c4e16d35ffb7185c41cca06d4efc0447aaa3d4c9955665",
+      "bytes": 148524,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_intrinsics_c.py",
+      "sha256": "8d370347106954ca7b810dcd276a632b2171840ef3eb884d696a790bd1f25a8e",
+      "bytes": 2937,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_intrinsics_h.py",
+      "sha256": "dac1cce28f9d706e5d9019778c4c493b57e0730f93491d2d0740c372169bb4a3",
+      "bytes": 2216,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_intrinsics_indices_h.py",
+      "sha256": "016f05308ea76e67cd6183bffe098cdce1eae8c97cf1f10e5244ec4fba9f93de",
+      "bytes": 3536,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_io_add_xfb_info.c",
+      "sha256": "368f9e90b5ee1c1eb5f8e66e4328ac0ca8c3348a55dda26957ae44d155be1018",
+      "bytes": 2879,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_legacy.c",
+      "sha256": "3206f635043978fb5da8b2b91695a4db4c76932764fa06872eabdfdbf09b51b3",
+      "bytes": 10362,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_legacy.h",
+      "sha256": "454ae4caa9263c00148d98b4d060458fc33b9c7545ade5c05f520728e0d6f6f9",
+      "bytes": 2415,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_linking_helpers.c",
+      "sha256": "013e01cf7738e6f687ddc00ed1f93625b0c64d112a934f9fccdbbc3b6c1027de",
+      "bytes": 57636,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_liveness.c",
+      "sha256": "c88081be9c7664cb34a1e67d3a7999006e81cf53c343cbe321316a2841501b58",
+      "bytes": 10466,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_loop_analyze.c",
+      "sha256": "bf4d526c84836ec2d4fe91e696e4645a8bc4535ad19abe038d9cb1fafa5574f8",
+      "bytes": 55022,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_loop_analyze.h",
+      "sha256": "7d338abd4fa57d6c885784430cdfc5c2fff1b2f06ac7ff29efacee67e73d3b0f",
+      "bytes": 3982,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_abort.c",
+      "sha256": "c4699aa5ac9342992372577b8b9052ebe7e002e72244e4e98a7f9fbcfd9d849c",
+      "bytes": 4820,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_alpha.c",
+      "sha256": "a844730a07c84a91070fe3a9729597532c85064d01c92f8cfd6d204aaea82a0c",
+      "bytes": 6163,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_alu.c",
+      "sha256": "d1567af78d333d21dfe6bd8a7d6b337a9d426ba675ad15e9ab3b2b67c2a85a7c",
+      "bytes": 9557,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_alu_width.c",
+      "sha256": "cccc8f22ecd4ee229ef500b3e167b7fe3417c8a55a46d9816042d02877f31492",
+      "bytes": 18168,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_amul.c",
+      "sha256": "02c075d732febffaca62bb3b91419d18cd82a898c6fadbf10fc801f7dbd98ab5",
+      "bytes": 8872,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_array_deref_of_vec.c",
+      "sha256": "41cbade69c06e5ff6936de9b2ce3a03e60ac29751786e3ef37152005379ba563",
+      "bytes": 6152,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_atomics.c",
+      "sha256": "8b8e80cb7bff3cebc8927a9cd8375e24c3dc3ef3a8ad5ee7a1eb6d4a4d279b4b",
+      "bytes": 7056,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_atomics_to_ssbo.c",
+      "sha256": "1257762c430af55c76fb033ce82d17791ad52260c7eb994f9df0dfb2bd7e4946",
+      "bytes": 9637,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_bit_size.c",
+      "sha256": "5c2836922af44ebf4b62511bf97effbba785eab13909e0c45a583b3b5f96da38",
+      "bytes": 15203,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_bitmap.c",
+      "sha256": "845c9fee62d0cd364384e10345fd165ba47af69cb6a72e9e6b5695e2146b3605",
+      "bytes": 3643,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_blend.c",
+      "sha256": "94d23204a0ec25876fa820827f1ec236eda39030b6cbfee812fce08a09515481",
+      "bytes": 40428,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_blend.h",
+      "sha256": "57dac47f91e45fd39b1a1f924a7948a2aecb21e5ce6f2792863b5b70a1c4b30b",
+      "bytes": 2704,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_bool_to_float.c",
+      "sha256": "7a71ab46e61bb81070523c43ba654e980517e477d9e071163588cee041612c82",
+      "bytes": 6593,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_bool_to_int32.c",
+      "sha256": "05d2645110a5fdfcfc2d45865efcab295e8bb65230d03a7eebdfc9892e2911b5",
+      "bytes": 6278,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_calls_to_builtins.c",
+      "sha256": "cdc6adb65bff1c3e465fd9c31ee199fbe737246aec27776487be0ff6e5ccb085",
+      "bytes": 5494,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_cl_images.c",
+      "sha256": "58b431fc72bd85ed4fcbe04b864dd42dd658a5b026b594c82e6f269acf645f9a",
+      "bytes": 10369,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_clamp_color_outputs.c",
+      "sha256": "8df88be08e0b4740e13f7b70e60b81554b0b5b55e44469c7d2908decf4a9c125",
+      "bytes": 2817,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_clip.c",
+      "sha256": "6befdc33ffa5003a0217437edfddf5ae79dbfa430804951e5c5dcccad0c0e4d0",
+      "bytes": 25454,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_clip_disable.c",
+      "sha256": "e28128d558da3b08ca5f42962222d64cdeed4690a3b40621805321c1a6d7a4a5",
+      "bytes": 4066,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_clip_halfz.c",
+      "sha256": "64072939180e266e3dca98515cf19c09b562a277d420c490bf4a9ccfbf5f519a",
+      "bytes": 3930,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_const_arrays_to_uniforms.c",
+      "sha256": "89df14243657991380d68dcd7149680fcb89e19221d8c46fe722831bb8d66866",
+      "bytes": 14154,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_continue_constructs.c",
+      "sha256": "18ca9fda5f9717b2d3cac1d44b93090bc14bf4b68fb17d813781976bcd8931d3",
+      "bytes": 11983,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_convert_alu_types.c",
+      "sha256": "6ae41c4f868bd15aed404ed92912f61194d98ddf2f65bbc82717ed1933eebe01",
+      "bytes": 4938,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_cooperative_matrix.c",
+      "sha256": "1f709bba28296a562b67c5cdd0aae757a8813ff1571917ea1b4c5dace482a59d",
+      "bytes": 35655,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_discard_if.c",
+      "sha256": "8a2ab3e1182694335af6c393a1a99af2ae0ea0e58f135a22a40ccda3fd6de32a",
+      "bytes": 5819,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_double_ops.c",
+      "sha256": "8ee9bed44394f16fc41ade250ee38eb2feb1f26aa9c75ab0b39299a8d013396f",
+      "bytes": 28770,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_explicit_io.c",
+      "sha256": "f8df1ae8814265c6e7ddba96d94ebc28088de01c5838b9136ba9671b0c2d34eb",
+      "bytes": 91705,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_fb_read.c",
+      "sha256": "019313f40bfc48349fb28437743e076d62d0e11a2a968c87f4808a5d15545d6f",
+      "bytes": 3828,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_flatshade.c",
+      "sha256": "e19b05fe8411769e3c06966b7a45aa1022d8b2625344e6234827b45c086129e7",
+      "bytes": 1036,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_floats.c",
+      "sha256": "eb9751cb03eefe2202c976ac200494571efdb87f65f0dfe4d0e784c925e2b7d9",
+      "bytes": 4820,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_flrp.c",
+      "sha256": "f7f7dd89defda5474053ebe651112dd1f9e9f75c5322395a2ef5c3138714a1fa",
+      "bytes": 20134,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_fp16_conv.c",
+      "sha256": "b1e90db1de2c6839bcd78e2aa65118409660d853ab17fe7de3808ecffc5cc7a4",
+      "bytes": 14147,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_frag_coord_to_pixel_coord.c",
+      "sha256": "86f2d757e8a54dc3d62aba172c8aecaf7e44a7f7aa5ac3eabf102635aa2546c7",
+      "bytes": 1279,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_fragcolor.c",
+      "sha256": "bb4c7377f054c26f4f09cc73808238d41f69ccbf6f5d2aa18fdf5703a12eb324",
+      "bytes": 4060,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_fragcoord_wtrans.c",
+      "sha256": "630efbeae392dc586ca8617dafb7a50ee9424d22c9d2ebf227f607fc448cc3c4",
+      "bytes": 2648,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_frexp.c",
+      "sha256": "434c0327a38852ee359344241fa6c4618bf184d56cf8f0e03766b61f909fc1d6",
+      "bytes": 6830,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_global_vars_to_local.c",
+      "sha256": "57c42a3ef38ed704136bd5c0e0ec7217b64b5300ce3e49920cadf837c57675bb",
+      "bytes": 3484,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_goto_ifs.c",
+      "sha256": "ca6729ddc449e790be338f0cda1d80b89f16d17c77526ee013b0de083e6e9a73",
+      "bytes": 33969,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_gs_intrinsics.c",
+      "sha256": "7991a824c65c5de75bd9fc4acaa9b5a4ea44cc0f975916d1b3e86769f18275b1",
+      "bytes": 15712,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_halt_to_return.c",
+      "sha256": "07b001d5e5fbd2ca182f23358330d837305c83fd8c1a102d6923c8d0e57097d8",
+      "bytes": 548,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_helper_writes.c",
+      "sha256": "f46eb9cbb5550daec5bc69fe3743ff6d3b02d694df49c584e236ba5f26674b9f",
+      "bytes": 4412,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_idiv.c",
+      "sha256": "4a796454988441e71136507147ab2cf087d2e48165511022b3e6cef25da41a22",
+      "bytes": 6676,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_image.c",
+      "sha256": "5531a8d8958be2fd65babafe447147674c733f90bc546f2ae923ebad6914c777",
+      "bytes": 8787,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_image_atomics_to_global.c",
+      "sha256": "4bdfc490959f204511bb1fe0bcdb790a8f21844f296a1e09db35dc6bf73c05fb",
+      "bytes": 4034,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_indirect_derefs_to_if_else_trees.c",
+      "sha256": "2dbaf2d204a854efcb120c2a3df06b67f137670b805d636b7736bf6472d1ae0d",
+      "bytes": 9304,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_input_attachments.c",
+      "sha256": "6f10a535c2d61fba29a4177cd6b34d385fb4a54f47534d2b5f976b3bf02b73fc",
+      "bytes": 7941,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_int64.c",
+      "sha256": "a38222d7cd2fbc9fdd7b1a19f4d49ff88663c22755f7b33ccec812033c03173b",
+      "bytes": 47503,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_int_to_float.c",
+      "sha256": "f607ec10f8e7d5f52a9bb0cfdefaae9ce3beacad489aec85eb3268da117b0fe7",
+      "bytes": 8703,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_interpolation.c",
+      "sha256": "351cb89525dbff0a93fa32c42657867917b8955c42caa5bfdbfc173391a94ad0",
+      "bytes": 4589,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_io.c",
+      "sha256": "fa6003edac6b22755090b10aaa29f0a260c3fb1303fc25aa48c63192f0003c29",
+      "bytes": 53693,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_io_array_vars_to_elements.c",
+      "sha256": "00a84fd75b2c82b06cf785282abc4480d2b1888a455b1bdde2f325a0d3dce0d4",
+      "bytes": 15173,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_io_indirect_loads.c",
+      "sha256": "bcee0bc9c263d7f9198f5da857ec6373eaf2aa76bd8b0423067ee5a19b68761d",
+      "bytes": 12555,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_io_to_scalar.c",
+      "sha256": "d5c168a3f69bfc3ef88e7c486851ae6606cd3af5d00d94891cb0c4fc922b61e0",
+      "bytes": 13784,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_io_vars_to_scalar.c",
+      "sha256": "f00eef3dd38275ea17ff662acc7fe711155ddbee2edf86399ce9ec00b1673620",
+      "bytes": 9820,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_io_vars_to_temporaries.c",
+      "sha256": "fbcc82f064c1e6fe46d5d5e787311af8234c17901f7fd45b352f43710d7789ac",
+      "bytes": 16700,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_is_helper_invocation.c",
+      "sha256": "7d3150e35dc7c1943dd4750aa5a090ccc375d11af77b4101213a556026f930d0",
+      "bytes": 4368,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_load_const_to_scalar.c",
+      "sha256": "c23dd2c644a221f235b686063705a9850683458c5757f5c8add90fcfe219631c",
+      "bytes": 3106,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_locals_to_regs.c",
+      "sha256": "2849be0ae0203ea571b639036126e777fd4bfd7f05967b87a56c95a727cc43a7",
+      "bytes": 10272,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_mediump.c",
+      "sha256": "11691062cfaf63ab40eedf0ca45486008efd23daf111b1f3a344b89285e94e9b",
+      "bytes": 29768,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_mem_access_bit_sizes.c",
+      "sha256": "511508b803f263363cbe6ce5d58d95a0ebc704998abc20bfd8193ef6518aaeeb",
+      "bytes": 23165,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_memcpy.c",
+      "sha256": "5499a716bf8b9173bca340de257690777d746bec8802432df0427157a170a2fc",
+      "bytes": 6893,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_memory_model.c",
+      "sha256": "554257aa72237cbd055c525c80d58c70a4862db45b2eae3c6f2a4e2311a39048",
+      "bytes": 12985,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_multiview.c",
+      "sha256": "12a1fa172757ef89e07fd2bacc8735c85bb1784f25d12de642657967396e4868",
+      "bytes": 11816,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_non_uniform_access.c",
+      "sha256": "761e2137c254993f0c5e852219c50b79b3c85a224f38b3781f744661215b9efa",
+      "bytes": 20023,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_packing.c",
+      "sha256": "d00cba28403a900de6437c0d5b4d6d83ab54e5e3fa3cae6491d4621f1d5ba9c1",
+      "bytes": 6761,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_passthrough_edgeflags.c",
+      "sha256": "3e55b704a655bec8cf8da17b592dfc5d49c0cc2f3d13715d6b6c573dcae895b7",
+      "bytes": 2462,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_patch_vertices.c",
+      "sha256": "7110ebc9a09d66b48dc8d8830ec416a9734d1a9635626dd5f03ccf6b4f14a470",
+      "bytes": 3353,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_phis_to_scalar.c",
+      "sha256": "6bad1789020c18fcc0dab1e3eadc02c29c3be86ff8303fa58c228f06e20fca92",
+      "bytes": 10387,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_pntc_ytransform.c",
+      "sha256": "580ddccd73a8aa5e3e0474889a5c3a27ca41fdcba6f9fd85c217fdac09ac4d1b",
+      "bytes": 4948,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_point_size.c",
+      "sha256": "b505c0dfc69fe9c93d604a9415e239366896877b39f82eab4914e5b5228616ce",
+      "bytes": 4228,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_point_smooth.c",
+      "sha256": "ce56763f5239db6ebc85dfc8aeb82d9c989c6fb817a7007236f6d43a3d175659",
+      "bytes": 5821,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_poly_line_smooth.c",
+      "sha256": "487490e4ed4abb4f48cfd5e4eb2ab69958e2efe9efc07a3e0367ea5f5ad88dfa",
+      "bytes": 3027,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_printf.c",
+      "sha256": "052907e5d7cc99852fc0653eac41d58bc9ecb874ddace0080698b740f9370f05",
+      "bytes": 11441,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_readonly_images_to_tex.c",
+      "sha256": "9ce6fb524c5aa876375053d0d75682a1178f798f87fa26546fdd7071339b5345",
+      "bytes": 8881,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_reg_intrinsics_to_ssa.c",
+      "sha256": "17fb6905d3ad8985df1bebe286802bce5f06c1ff474dce1da74bac006deae563",
+      "bytes": 5299,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_returns.c",
+      "sha256": "9bc634dfc3ca5ab4d59cafbedf2950b921e2cf823cad7e062fa98ca21821b50c",
+      "bytes": 10454,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_robust_access.c",
+      "sha256": "1f9a66e0c0b9bd1d29ca9f68cd87e58b95e8ec9c709856ba742be33a29411251",
+      "bytes": 11274,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_sample_shading.c",
+      "sha256": "6c09904cab629f850bd54c8147d0c1d6d1b692cedc1dd499e660c7b48e86fdbf",
+      "bytes": 2055,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_samplers.c",
+      "sha256": "80f0e6056bb10557d567b331f5bb3ffd1690b0d72589e2975c0455c364ce03b2",
+      "bytes": 5189,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_scratch.c",
+      "sha256": "4d445b14b1c7108826d3363b749d18c215d1713e0feb725bf91536d318ef75da",
+      "bytes": 11088,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_scratch_to_var.c",
+      "sha256": "e3005d7ffc5bc4d5ebbf68e4d856da9053f62d259378ce15e48086872cad281a",
+      "bytes": 5230,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_shader_calls.c",
+      "sha256": "89a8beec720b6070a4ff9aded4372a52d282250dd714b2415d56fd8f7029d218",
+      "bytes": 73308,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_single_sampled.c",
+      "sha256": "40b3057bb28c0e5c9004eb589ac5f43d980b8982318b5d8890e734b628c8cfba",
+      "bytes": 4652,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_ssbo.c",
+      "sha256": "809f65c58e87a6ffa071e84b760fc772bdea635c0d491d201a9fa17782bfc563",
+      "bytes": 4709,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_subgroups.c",
+      "sha256": "c4e8d8c3f19756479115209d8274b430fbcaa4670d1382a7f3abc41f41f2f8bb",
+      "bytes": 54545,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_system_values.c",
+      "sha256": "99b303c5b9c13690ac86792e419c939b9f697811599af1a624fcc9cf88378523",
+      "bytes": 31955,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_sysvals_to_varyings.c",
+      "sha256": "5605161eda82714f1449d2cf5e26907c242dec378adbf60f42469fbefd7ed3c6",
+      "bytes": 4330,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_task_shader.c",
+      "sha256": "9952a67e34fd2f24ba38b6fb4ded7b27760edc05bd76e518cb18c61ac5511abc",
+      "bytes": 17274,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_terminate_to_demote.c",
+      "sha256": "bb2b11bd3110f9c14b45a9e280d2890aebb1f30255ea04ff966e1b7d9cc25c8a",
+      "bytes": 3628,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_tess_coord_z.c",
+      "sha256": "e27c305a692ed00012aad24ec6916762924961e2e364eeec563e4d8476b4c729",
+      "bytes": 992,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_tex.c",
+      "sha256": "68c3d2619e447f5c47c06b77f9237d80df5360ac923f4e2d9c5ccd1c5156a0e2",
+      "bytes": 65082,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_tex_shadow.c",
+      "sha256": "2f9d8a9c108126f9708b1aa4a541cb1494571e9fa26aa28df2c874501ff3beea",
+      "bytes": 5492,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_texcoord_replace.c",
+      "sha256": "423c8997bdc2be6349b25609f9690e88cf2783dc6d1e2897f69f348dae4c6a57",
+      "bytes": 5137,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_texcoord_replace_late.c",
+      "sha256": "9595eb50286427c42a71e09a7f4c8d1cc84cff152abcb0a8af7dd7d8b290a28d",
+      "bytes": 3019,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_two_sided_color.c",
+      "sha256": "9750eadc46cde90c78b04cd3f8d943d9f68c447757b71f16657eaa59e777ae91",
+      "bytes": 2558,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_ubo_vec4.c",
+      "sha256": "160b81683cf2fcd20e8ec7fbb761d16a8979426b28c84c53d878ae2d84abab5d",
+      "bytes": 7551,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_undef_to_zero.c",
+      "sha256": "6b4c440f665f8782ee1ec07a5344f6ad6d93a777b8261d8980aa0ca4b0d4e148",
+      "bytes": 2637,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_uniforms_to_ubo.c",
+      "sha256": "0ec181f28aaf832ff12418672619e589f022d13f57307d5737a918d311295c7b",
+      "bytes": 6697,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_var_copies.c",
+      "sha256": "1e03ce1f6cb6d1cc32c69d7c642e1e04c0d605cbba9a311065ecfb94a20b05f8",
+      "bytes": 5366,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_variable_initializers.c",
+      "sha256": "13fcd957f8d6fd030d57656a3794e73e66d03d767e74daaffeff331b2a0dc1a9",
+      "bytes": 10931,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_vars_to_ssa.c",
+      "sha256": "a3fcecec91b1dd84fa27b2b4dc9760626c5ba92079302f43f8dbc1a6ddb89261",
+      "bytes": 30324,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_vec3_to_vec4.c",
+      "sha256": "9c596c656387696d153fffffbeeea781f77162930a03220d44f441877423ab93",
+      "bytes": 4758,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_vec_to_regs.c",
+      "sha256": "a5924e27e2ff1aba17c18ee1f4ea5279d301f3b63deaaa19d4ab8ac35770a7f2",
+      "bytes": 8621,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_view_index_to_device_index.c",
+      "sha256": "e531ae04de3e917af9eec64f2f98cd394cdaafe0ed3c85bfa8003c2442f415fd",
+      "bytes": 557,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_viewport_transform.c",
+      "sha256": "d3b6e91e340518103389b3fb4739b90f70ac279f775e9b9c0affdbf4d69059ef",
+      "bytes": 5072,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_workgroup_size.c",
+      "sha256": "a7717e7b39acd3f652b101c603eeac02754da3a2b93c3e05c3a5c0e6c0f92491",
+      "bytes": 39724,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_wpos_center.c",
+      "sha256": "7dbe78d1e841346ee390435a066cdbafe52d733b68cfbd070c374c0d3e5d8c84",
+      "bytes": 2640,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_wpos_ytransform.c",
+      "sha256": "00ca2de448f854f465fbdda1788b469110d0a66fcec4f008c00d56392d335416",
+      "bytes": 12061,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_lower_wrmasks.c",
+      "sha256": "472c8473af5c197eed69f344e469716a0eb1a542c0d7912e6f25ffb05f1f113c",
+      "bytes": 3560,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_metadata.c",
+      "sha256": "a5855fb1df865ce9d3d4a1d27fd222632d9adf13e1814c577d049353ef1f3a9f",
+      "bytes": 7236,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_mod_analysis.c",
+      "sha256": "fb099f5f31ade6fc02bd39115a93dedd9836e5de9eb418f6c870e6a9782fcd69",
+      "bytes": 5935,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_move_output_stores_to_end.c",
+      "sha256": "ac225b3a79b0b945e0220016863f48c2ccbed80e221f4c1cc702f88cf82005ef",
+      "bytes": 2933,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_move_vec_src_uses_to_dest.c",
+      "sha256": "c3ccf43495f23b59b7ce78372952ecf914f69146df1878dc37e237cdb348b650",
+      "bytes": 6902,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_normalize_cubemap_coords.c",
+      "sha256": "14a80fd24bf3c41db933822792ea18b3395f7d270fd8a2a0c3a18ab992f166fa",
+      "bytes": 2773,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_normalize_sin_cos.c",
+      "sha256": "e178f2ec73b9a8311671e4a73f1f3bbe52010bca6023363cde8c449b38725fe9",
+      "bytes": 811,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opcodes.py",
+      "sha256": "c8ed942f9c130627f79109228980f232ffc0259ae6d1f6a26a17443fe1f7bfd8",
+      "bytes": 87677,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_opcodes_c.py",
+      "sha256": "165dedc9fec191354a5985178f3a214526aa175e253388342aacb917517cf0e3",
+      "bytes": 5389,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opcodes_h.py",
+      "sha256": "a0ccc45ab6c58d7bf5bf7b06508efa924cffb3011ec60294de790633e87667b9",
+      "bytes": 1635,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_access.c",
+      "sha256": "38ad2d76b2bec57a540f4dccffe860cafbd250233287ab8c5d62093169c33c9c",
+      "bytes": 14573,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_algebraic.py",
+      "sha256": "f63c37ce8072425e8f490546b9800699363be01fda0431ec950c1686b605adbf",
+      "bytes": 254471,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_barriers.c",
+      "sha256": "6658ac003c8abbe838c411b40ac255e20bb40f57e9fb8cc75771dd1fce624f90",
+      "bytes": 16498,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_barycentric.c",
+      "sha256": "63f8d73cb1eef5b41f4a359236b9aaea6b9640e11f8631e842b083fa534fc047",
+      "bytes": 5064,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_call.c",
+      "sha256": "a5cc7799f6b286818978bd2512b5c472f71f5a6ad52a6e9fb350521b1dd86edc",
+      "bytes": 8547,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_clip_cull_const.c",
+      "sha256": "5926240403f21b1cb881795ffa85655478b449ae72225d96a1ed41e7f60a4266",
+      "bytes": 3699,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_combine_stores.c",
+      "sha256": "bd339f2449726ef0a21fe0c1f16ab2ac1f325265095cba183aea465ef8d0e8a2",
+      "bytes": 14777,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_comparison_pre.c",
+      "sha256": "69fc9ac7576f30afe6499a6ddf26966bbdc5139e0fdf18d28a9b182828768e4d",
+      "bytes": 13038,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_constant_folding.c",
+      "sha256": "dd6e57a0749a5d2024ed2fc43b8c8d3d03e85a80084c7666876e73a9f0bca96b",
+      "bytes": 21084,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_copy_prop_vars.c",
+      "sha256": "35cbb1a29df5676ddc5a7c6ea54896d393f22d2148fd2d147c33c8f0273730d8",
+      "bytes": 58075,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_copy_propagate.c",
+      "sha256": "3969b879632d4b175e7ab8dccadfe079ce100caa19fa45ac07a7e0f649beedc5",
+      "bytes": 6070,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_cse.c",
+      "sha256": "5ce144bb46ca2c815dfbf7dc47b76746bde9dadb489f9945b3b2fc48d9735917",
+      "bytes": 3702,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_dce.c",
+      "sha256": "d0a63d41412452f9584b2293fb815494ae6adc2fd2d5c44bd259cfd4f2550ca5",
+      "bytes": 8218,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_dead_cf.c",
+      "sha256": "fafb450dad79ebc4e98d6f887c26cfc560c286071389bbb8346f362d105ca3af",
+      "bytes": 15684,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_dead_write_vars.c",
+      "sha256": "15eacfcd626c1d1908e3287401a4efc0bb2ffb820d5dc2c5f595d184385a973a",
+      "bytes": 11510,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_find_array_copies.c",
+      "sha256": "336b7c96396888c698bdb029204f487ce9a650e7a92bfcc962774ca34ec8bd1e",
+      "bytes": 22673,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_fp_math_ctrl.c",
+      "sha256": "87d75b0671ffe92321a1641daa7e9cdb3ad40a95f55b0161766ea52582209537",
+      "bytes": 11400,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_frag_coord_to_pixel_coord.c",
+      "sha256": "17a579bd667eadf115e91092b3f00412498c51e1a90d17ea5217608d0cdc16ab",
+      "bytes": 2055,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_fragdepth.c",
+      "sha256": "7bccac21cd615a388b65f83c85cf02747e59bb7bfea8db044e49225b7ee7502a",
+      "bytes": 4102,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_gcm.c",
+      "sha256": "6b2042fce4d6bb8b637cf0a33c508808819482c8084763285051797d4cdc627f",
+      "bytes": 31764,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_generate_bfi.c",
+      "sha256": "b28fc969119912e5e237a631b4a5063b2e7bc6ca2e2958fb8b51fdeeb7e0e525",
+      "bytes": 5770,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_group_loads.c",
+      "sha256": "8923543abc72b028ab64e020c1dedd3a3024894bea0c6f357e16352150c40592",
+      "bytes": 17112,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_idiv_const.c",
+      "sha256": "8f99b03840c649c1a6c961a93d0cc98c9b48b7561698e1937d030116b8f865d9",
+      "bytes": 7845,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_if.c",
+      "sha256": "c450c140ca6580d33dc9cdb6899cc3c9508cf0625b0e2404062f6e504de32e2c",
+      "bytes": 53653,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_intrinsics.c",
+      "sha256": "d604a6dfbae8550ecaa87a041209e5de072b7c3260e8ea9536db03dc7d41ca0e",
+      "bytes": 27875,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_large_constants.c",
+      "sha256": "4fc98b82e82dd372dc1e54b59cc18377d2ef65c370aec0f2cf633efbe2d7b6c4",
+      "bytes": 25963,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_licm.c",
+      "sha256": "ee3e17f1d74b97f99dcd7eaadb39dd655a438309c57ffa8ff8f3a9b9bca82d87",
+      "bytes": 6646,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_load_skip_helpers.c",
+      "sha256": "b367172eeb3d3c1f854eb27956c20491132922b06ed36fb2785bcb5713f327f7",
+      "bytes": 10446,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_load_store_vectorize.c",
+      "sha256": "3c0d69aa5f6a7115bb0da53a436b4617bb7089f29969dc6775dc0fc6b7067d8f",
+      "bytes": 74494,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_loop.c",
+      "sha256": "8b260f9fbeb7467c84cf55174c8d70667feecda4cee9d1c9379efa4afbe92ea7",
+      "bytes": 25507,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_loop_unroll.c",
+      "sha256": "a6ac57a0ff3a8e21206123bf3eb728c6ee7d6c788b5c7799d0358eca1a492115",
+      "bytes": 44963,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_memcpy.c",
+      "sha256": "3bbb34ec98e6e26e481016927c5fae118030708bfc3419dd2ecba73ab1b5aff4",
+      "bytes": 9879,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_move.c",
+      "sha256": "37275fbaac44ea369eb2c3e13b519360591310f28bcc6fec38ae61169f4723b9",
+      "bytes": 6106,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_move_discards_to_top.c",
+      "sha256": "1c4c339552bb0c52515ea2d0a3f002433cc1849a1571e29d7f374e725b3967af",
+      "bytes": 12980,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_move_to_top.c",
+      "sha256": "d57df9c4a96650b68b2413f37f0905ea1da6542031fd0de8ee6aa7b323f40cc0",
+      "bytes": 6672,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_mqsad.c",
+      "sha256": "64fc9eafc3fe78da286e6328838c1339ffb527e2e288519afb34ca456c0c164d",
+      "bytes": 4158,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_non_uniform_access.c",
+      "sha256": "6bb4b93aa3bc26cd32dbd1b0b7adad04609e76bd5442ca7115f54ffad14532ba",
+      "bytes": 9963,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_offsets.c",
+      "sha256": "ce84d5f3f6f3bf8b5a9c7986b27254bee3f3c4be1698436a0b00526ffa4bcb5f",
+      "bytes": 16814,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_peephole_select.c",
+      "sha256": "17100a8eb7cc98202c344942f0781d0f1781c38f2dbcd0d5b982af86b7092573",
+      "bytes": 21179,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_phi_precision.c",
+      "sha256": "fa4cfd494aea40300248ec7f7c88067021fc3ebba11d5cafba91dca0df7e5015",
+      "bytes": 13908,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_phi_to_bool.c",
+      "sha256": "c32ec68c68200da23d5b7303d9ad351bdf1c337f60e104083cb027c143b6342e",
+      "bytes": 6908,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_preamble.c",
+      "sha256": "a201329bc67ebf892679fc69382387ff5bc23e174dc9ffb31adbe79f1ac93a95",
+      "bytes": 33367,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_ray_queries.c",
+      "sha256": "34e183b0d37c099fb2011a2b525aead6df3b953076d692516bab62bdda6dbfd2",
+      "bytes": 13614,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_reassociate.c",
+      "sha256": "2905fad2bfdeae3cf00187c83cf6d114a60cf0bb85f90cfe6040b627904f0375",
+      "bytes": 20659,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_reassociate_bfi.c",
+      "sha256": "5fc64c70d033d29b0369a0689034969d73c6c9d22b89d407c100ea86cadb017d",
+      "bytes": 4870,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_rematerialize_compares.c",
+      "sha256": "31db4181708e7bff93fb9ccbc5730e840f0700a667e7706f79b2d05d4f1d7d0c",
+      "bytes": 9898,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_remove_phis.c",
+      "sha256": "bf917dd38be0a8583ba109c5cb57af91f241e17665f336986b186589ce01ab55",
+      "bytes": 6661,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_shared_vars_to_subgroup.c",
+      "sha256": "2a90993582b81295931a4634159f504fbd25d9ecc7ba7b75b19550596619415c",
+      "bytes": 36041,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_shrink_stores.c",
+      "sha256": "006d58826258e24ddda5974b843211303b62f93bda68b938a37b9821932698b3",
+      "bytes": 4392,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_shrink_vectors.c",
+      "sha256": "fd46a6f0fdd06147a9bc4881a99ecd3b10fe9c4c49b462e9215df297f7a6de1b",
+      "bytes": 19049,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_sink.c",
+      "sha256": "38a42e6d572f05732f3acd4ad2676b0551672878b4ebff818cc6c0dc382e077a",
+      "bytes": 15088,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_undef.c",
+      "sha256": "01c494f188f86fcdbe15bcfb2c9caa6a61a7c8867acb64fe9f54930baf1ee97b",
+      "bytes": 11139,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_uniform_atomics.c",
+      "sha256": "432e4474ac0d0e33805eb2056deb329f2cb55bdca8c45619233cfd6e4da27fef",
+      "bytes": 12034,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_uniform_subgroup.c",
+      "sha256": "2084051527ffaea5e34af63493e986fe93a4be0041a13a2083eb54ceba04fd5e",
+      "bytes": 11455,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_uub.c",
+      "sha256": "db000b258f553421caabcc73724694f6462e93649159c97eab31d59e44eed6c7",
+      "bytes": 9542,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_varyings.c",
+      "sha256": "be92ec5281a68b726fe6af15b06cd6977d1a5e602fcc6bc83cc9b42f4ec75f8c",
+      "bytes": 253886,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_vectorize.c",
+      "sha256": "0eeae3a0cdca409d818d1cbf64e94b0f04da4e89c297eec47c29d44336fc7d15",
+      "bytes": 23457,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_vectorize_io.c",
+      "sha256": "a39987ae49eabea45c6b3b51dcd2143074866df96cdf9115fd92be48dcedf613",
+      "bytes": 24025,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_opt_vectorize_io_vars.c",
+      "sha256": "c7e8cbefa301f9f626a4e9ef233f03cf82029892197de0cc968942a877b5bd93",
+      "bytes": 21715,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_passthrough_gs.c",
+      "sha256": "30c1dcd5641ccca6f3e755ffbf043e47488245155765e8a22db8dabed3ea13a1",
+      "bytes": 11221,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_passthrough_tcs.c",
+      "sha256": "0ffc110ede3f30f12d56ba3952bb833ad945639ff82aa28921212e07f00ea9c5",
+      "bytes": 4686,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_phi_builder.c",
+      "sha256": "747192428a2cafa3e16035e0cbc0923fa38f4b5d7d84d6109d3d818b872aefb2",
+      "bytes": 11000,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_phi_builder.h",
+      "sha256": "7c9a7445b9c803e7d9d8287fe32782b53e479540d1cf32f3f5bfbc597480a28c",
+      "bytes": 4851,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_print.c",
+      "sha256": "19410081fc666ed1da328328ecc38303dc176fe8708483be1f0e88ec68368dcc",
+      "bytes": 99234,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_propagate_invariant.c",
+      "sha256": "81c398cb0d3519f4e5c9e5ad93dd671ce80e0ef00d752b01aeb98d4072dcec92",
+      "bytes": 10657,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_range_analysis.c",
+      "sha256": "1e74270e6bf9ef1b6524376b5fbb601849a48efaa8ce6c33cff50590e543e73b",
+      "bytes": 87591,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_range_analysis.h",
+      "sha256": "89a9600738d81f084976f9a0c04805266eecde272993dd2236aafb43b98a1f28",
+      "bytes": 3672,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_recompute_io_bases.c",
+      "sha256": "4493e044691cc21bad18c8ffc8ffafeff11885c701c9db2bf6a1462a4baab084",
+      "bytes": 8721,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_remove_dead_variables.c",
+      "sha256": "36d42181ac4eafa2f465728ebfdfe1405428e596e994cb43daf2179b86a130f5",
+      "bytes": 6439,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_remove_outputs.c",
+      "sha256": "6a23e05765bc82ea373c9ade2ad45e0155646cd0b5885be55935e72f3164af6e",
+      "bytes": 3356,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_remove_tex_shadow.c",
+      "sha256": "9a16018c920ff1174005fe13b02333b702b1b6098656aa683524a5ffc06fdf51",
+      "bytes": 3642,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_repair_ssa.c",
+      "sha256": "5ff8089a18a7d3352b41544e3fb22f9a56fd63b1afefd53549ced4f13c4cfb3b",
+      "bytes": 5969,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_scale_fdiv.c",
+      "sha256": "48464de5c9ef1dbf7e12abe2506c5ffeda6e2bfc6cc08472f88df88f26e685d1",
+      "bytes": 3365,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_schedule.c",
+      "sha256": "23762e95cafa3820957a94da042c4c8147d350d6c66208ea4b8c7796a406d35e",
+      "bytes": 39396,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_schedule.h",
+      "sha256": "9d2d2338406fee85e1c7e6c49808b3d8049c03028140085658800ee6837deafc",
+      "bytes": 3410,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_search.c",
+      "sha256": "cee0d6eb71571c09648eca6e17705726223d206e2d29b15773365e06f9f964ff",
+      "bytes": 30978,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_search.h",
+      "sha256": "1c2e2f9359c7bcfcdf3a0e813abcce4497097ae23b8ee7daabe17a3679b5d5a7",
+      "bytes": 7720,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_search_helpers.h",
+      "sha256": "2d51f1c4269d99bdb966685da32dff86b786c74c9f15c3b90a1a9c13e1ac6582",
+      "bytes": 33243,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_separate_merged_clip_cull_io.c",
+      "sha256": "f942b9fe5b5d404353d9f77084c7b7a1e77fe0ccb1bd2559372c4e28fa42d5ec",
+      "bytes": 3519,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_serialize.c",
+      "sha256": "76930c6d43ac701e05afdc282d6d016b1039dd71ac7e81bf14f8de805fe8547c",
+      "bytes": 74881,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_serialize.h",
+      "sha256": "f73fa670b315c19fb5c9083c76412ba082816b52afdbf5a6a129681bd8fd1339",
+      "bytes": 1897,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_shader_bisect.c",
+      "sha256": "bc32bd8d7a1da8b9d5b272c892be86325b7668016b43eb0d115a1c8e781cce31",
+      "bytes": 2532,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_shader_bisect.py",
+      "sha256": "083b33cba99fe9ace94741a82fcf31c42ec706ce362c1f1abf6361690901c559",
+      "bytes": 3392,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_shader_compiler_options.h",
+      "sha256": "b5570da381b4e6e672fa032428101f998bca8468ad748fda2f9df4dd0d7ed78b",
+      "bytes": 32070,
+      "license": "MIT"
+    },
+    {
+      "path": "src/compiler/nir/nir_softfloat.h",
+      "sha256": "ec490c4cf0a519323e1946e1bf7327ae9e875b9e366ec7ac95f9c18d988ff41d",
+      "bytes": 2609,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_split_64bit_vec3_and_vec4.c",
+      "sha256": "346672a94f5e597a623b201b369394b11f91820a94bae45e822d49219cba9af9",
+      "bytes": 11113,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_split_conversions.c",
+      "sha256": "9ba1a5dae2c8c3fef05b0a37aa9f0c9bf515168b172b9884d6da694dc8e46f82",
+      "bytes": 9020,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_split_per_member_structs.c",
+      "sha256": "8d6ee7ca6cb4ff61395143ef74e2338273e81271ea586cc37687d8fb247f643e",
+      "bytes": 6164,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_split_var_copies.c",
+      "sha256": "25089c98413a26ecadd5c9b2fcbe292953cef118115f8225be8d251f494be5b2",
+      "bytes": 4988,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_split_vars.c",
+      "sha256": "b7c3555ae383ba7d3e74a4c1ed0257c9ff8d2fa80350e4b1f58ac1534d1f78ad",
+      "bytes": 64226,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_sweep.c",
+      "sha256": "4d31223521e97bcfe0a46086a0fe3df770b37dfa9ee27f8301babed81e0ac010",
+      "bytes": 6573,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_tcs_info.h",
+      "sha256": "2483e6ab87af87adf0ffb198d22cf7d1e1ee3481628eb7613035a2f5a7934fb6",
+      "bytes": 3947,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_to_lcssa.c",
+      "sha256": "b7add699edfdc04459a015f449b411a30449a1d94020d16c03fbdd6097dfa8c5",
+      "bytes": 13216,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_trivialize_registers.c",
+      "sha256": "bbd3cba9f1858a1c31694fed1cc8d745b3a4e3ed8e7b0e6821bdbbb7574b9f70",
+      "bytes": 17350,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_unlower_io_to_vars.c",
+      "sha256": "5d82cb01340ac7ccbb4cf25927913ab8001d0eaf970c688f09d8279d08cd7dc7",
+      "bytes": 30161,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_use_dominance.c",
+      "sha256": "f1731a6595c0e0bdf9d859e59f8a0e99da21e19ef53394f219a89896e690ceab",
+      "bytes": 13120,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_validate.c",
+      "sha256": "f2641b58fc0fa7a8e41f870b8d96569518b588b6b5ebec4845ab1646f07d8650",
+      "bytes": 92306,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_vla.h",
+      "sha256": "ba736ab99c1969e07fb28259d0d13540e741bc0c685d61d38bcb6cbc98732a0b",
+      "bytes": 2132,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/nir/nir_worklist.c",
+      "sha256": "5ff367113e625fceee4b04c2720954bb5674ab5498ac2318f3d4381fcd145070",
+      "bytes": 1707,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_worklist.h",
+      "sha256": "8149738ec5378eb458dcc11f863ab13b118bd5e5147a362478f8096a6922695e",
+      "bytes": 4106,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/nir/nir_xfb_info.h",
+      "sha256": "707aadf995df46e0cda3a3ad64b449dd092a9760a7203e0fd79735b4e8c06b3d",
+      "bytes": 3035,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/shader_enums.c",
+      "sha256": "12ab59ee32209d1550aa671602c168a913f555b020dcdcde46cec5b4a584953b",
+      "bytes": 17789,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/shader_enums.h",
+      "sha256": "a206b036c26034242d09568ffd95f9e881d73bea22fb02d50ee1fab3aba64241",
+      "bytes": 55656,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/shader_info.h",
+      "sha256": "b7c0ffcdc60db695854fa596171c8bffe7928598fe93d1cb17939114b7f4e74b",
+      "bytes": 23123,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/compiler/spirv/GLSL.ext.AMD.h",
+      "sha256": "28b306c7d15734d5e91ea771118beb70009a8469d97333964a3f50fb4a877a42",
+      "bytes": 3616,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/GLSL.std.450.h",
+      "sha256": "d18a932ee97c268a57e33134651d554dbe71a5654b975e89e9e9487fa59ac9df",
+      "bytes": 3087,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/NonSemanticShaderDebugInfo100.h",
+      "sha256": "40252eae16fc59bce038042083598efba5461611a372acb791a8b69614701fad",
+      "bytes": 7109,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/OpenCL.std.h",
+      "sha256": "7cf7a4aa83fef2e12580783c8b5f2b1be0babf1cc4cce8199540ec2c3c3182d3",
+      "bytes": 8843,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/gl_spirv.c",
+      "sha256": "14d8f9dd4f8d7ec3f603d6ba58ce16fc6f77ef07594c56f2859194a109aae030",
+      "bytes": 7726,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/nir_spirv.h",
+      "sha256": "af160db74b5fed349804eb06b5e230de17b6aea85416e7666c8ef1840b52e130",
+      "bytes": 5738,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/spir-v.xml",
+      "sha256": "42bf7a6c8aef0f171beb12897d2fa2e75da9947d4f31da65c05ce231a8042664",
+      "bytes": 21943,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/spirv.core.grammar.json",
+      "sha256": "2fed679717d182cc8268d4f4873084bd5340ae3df3cf6a7a373d88e9f45f751f",
+      "bytes": 605922,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/spirv.h",
+      "sha256": "af8313f94534eeb4773487fb9ad32296e4bc4a9405089efca74ff274fcc10aa0",
+      "bytes": 322397,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/spirv_info_gen.py",
+      "sha256": "32ccdb2ddf479dfacbf778009d84cf212e9dcc994dea8cf3cddc9a2719afb88e",
+      "bytes": 4853,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/spirv_internal_exts.h",
+      "sha256": "8bfb14c81051ba9564d1bdbd9a7174979be6c7bdb65d7c4b97ecc19193666bf7",
+      "bytes": 211,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/spirv_to_nir.c",
+      "sha256": "b7ca7fca43770338f15592744e2a8c26ec50972d053db9ee81a3512a9899e979",
+      "bytes": 294871,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_alu.c",
+      "sha256": "abbbfcbdd8e8ef72004942db75dc63f9c7618255a314a85cabccba26072abbb0",
+      "bytes": 53644,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_amd.c",
+      "sha256": "aa49bf1d21807eab4e3f8589acf6e1b0eb233f9b18ee5e657e2b32ef8bf6d804",
+      "bytes": 7234,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_cfg.c",
+      "sha256": "70207baae54beecf253ae962f512dc0b8d67fa21727dab045d871bbc71014c20",
+      "bytes": 27197,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_cmat.c",
+      "sha256": "3e8ddd785049237b4c43fdf9cda3224d8d9e695bc67311a916a34206ef517668",
+      "bytes": 16080,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_debug.c",
+      "sha256": "3f42ecf08bf42affc414b8b9d88e051421519412caa59ac14b971caf507ef490",
+      "bytes": 1366,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_gather_types_c.py",
+      "sha256": "a0e8928cd90bcd16b9e798a0890bb03113c138a15be6029ecc65a283ce807591",
+      "bytes": 3149,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_generator_ids_h.py",
+      "sha256": "a98e6d9eff6d73aa633f281a5a1830f3fc38348191eb93422a5b306237911ca7",
+      "bytes": 1061,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_glsl450.c",
+      "sha256": "e18e06f3681c199698063298c59e1a7b8792e522dda1e0cc2accd8c70cf2311c",
+      "bytes": 23186,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_opencl.c",
+      "sha256": "cbbdfa244274b47da5b826be771c05de2378d97d0a3766f4a19fc5b636973feb",
+      "bytes": 45555,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_private.h",
+      "sha256": "cd6475a8ac06efec3942b10f8b59f88a2eefd70df097cdea117213363d67994b",
+      "bytes": 37789,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_structured_cfg.c",
+      "sha256": "46d57f0fe8b41a6cd2d50fc813e0f6ea6cbb2977c90a44ed80cded1d4aaa7b2e",
+      "bytes": 60724,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_subgroup.c",
+      "sha256": "13570d49d5ff03891ccca293a9be67bdbe425d47fdb95bc76cc5050a38e5babe",
+      "bytes": 16684,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/compiler/spirv/vtn_variables.c",
+      "sha256": "f479c3e61fa261f10a371d73aa84ede609ebba5f11f30fe4d6a0cff8d0d7e4d5",
+      "bytes": 122951,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/bfloat.h",
+      "sha256": "5600e0dba4071bc687b2a321b486f158f4a7796184ae32867276518ea9ecf9bc",
+      "bytes": 1490,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/bigmath.h",
+      "sha256": "781ef976d4441af3cd7d3e1235b43d1a445f5483650ccdf8d4071ceea6f1345c",
+      "bytes": 3559,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/bitscan.c",
+      "sha256": "da1da8e4965c273874792f7f9ab70ab418d979e4e86212e9d0cbfe834825d8b5",
+      "bytes": 2130,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/bitscan.h",
+      "sha256": "f7ac55be1a19f7a7bad10b64d16861a37b0e239d147a083612875c929a0bc2b5",
+      "bytes": 10889,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/bitset.h",
+      "sha256": "80cc8ca72cb4bfb862f9fe4bdaf679db632b82bfcf9a1c5f35c07d2e699bb179",
+      "bytes": 22119,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/blake3/blake3.c",
+      "sha256": "53aba7db8bbffd57bf3745b60496edefb76368750d8812765a0257d28f23e15d",
+      "bytes": 29027,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/blake3/blake3.h",
+      "sha256": "875039b6a5dc3a7529e704a07c961c508db2c2f6559a59d0e00ea0dce237f0f7",
+      "bytes": 1999,
+      "license": "Apache-2.0 (selected from upstream Apache-2.0 OR CC0-1.0 offer)"
+    },
+    {
+      "path": "src/util/blake3/blake3_dispatch.c",
+      "sha256": "a6cef5c497d95c8f7fcde6e1a8e140637f3260b31e911319e69cf5069459b635",
+      "bytes": 9165,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/blake3/blake3_impl.h",
+      "sha256": "9dab2a24a6adf4124a1590878fb0dc8861280f356cb950bd78c1735bba1c7cad",
+      "bytes": 11983,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/blake3/blake3_portable.c",
+      "sha256": "2bc25b0dad67b4329d0b49cfa075ab2b0d04e424addbddc4e9c389c52a192524",
+      "bytes": 5889,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/blend.h",
+      "sha256": "86c1e3b5b6fbdf6dc47f717f6da6c9a95e3c251ef23c19b7fff6ea5e977a55df",
+      "bytes": 5575,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/blob.c",
+      "sha256": "f418d2c72a60e09f1df77ff6a8d8a54b92a676c60b63e6e2f97668aba88403c6",
+      "bytes": 8855,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/blob.h",
+      "sha256": "f102f88a8363f799d1a4553b1494ac19482ccb4763eea31f648291fe8ae9420d",
+      "bytes": 13479,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/box.h",
+      "sha256": "9a55269f5cbea3fd736a8571a059fa5739160f5927b5c643d708f4cf05c267e6",
+      "bytes": 9584,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/compiler.h",
+      "sha256": "919661909955445d4a0858f56e0ebaabbcaf8b694f5be8906c987979eeaa4fd0",
+      "bytes": 3520,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/crc32.c",
+      "sha256": "4245ae3e8748a862f61bf33c0e18d44cae06e98a5c72df87f14f42c2705eafa7",
+      "bytes": 5402,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/crc32.h",
+      "sha256": "d67bf86db4f21d7dd3b81820093823755e08e5a64669bda4a2537cbde1e0da04",
+      "bytes": 1638,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/dag.c",
+      "sha256": "2ae079ee7f77ce6b178be82d57195ee2dd9fcb13add3e2b6f54cf2b7ebd4f143",
+      "bytes": 8037,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/dag.h",
+      "sha256": "e71ce4cde8adc8d8214684a904b8826bc200a9066a1f75d420cffeddb4895407",
+      "bytes": 2405,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/detect.h",
+      "sha256": "a8ea16b111b4e89830aa9084b7915760e13c8be1e96bc240ae31edab2395439a",
+      "bytes": 2141,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/detect_arch.h",
+      "sha256": "0b4d0d2f98057061e755e7c9af449425a76f5ad7fd76054671b866a3c03e39e5",
+      "bytes": 4953,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/detect_cc.h",
+      "sha256": "bffcab52c836d510782f872e26055f0ca93562378fccbd5ecdb436a90fdca573",
+      "bytes": 2519,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/detect_os.h",
+      "sha256": "20ef7b831320956ac6ac44b96b20d2b47be6d2df945439acf90ef27b1c1ee7ea",
+      "bytes": 2903,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/disk_cache.h",
+      "sha256": "85685fa5b78b1d0920170b2eecdf32dc58e8dec3e3537fcf2e98e6ce7b546411",
+      "bytes": 10244,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/double.c",
+      "sha256": "eee0638bf1deb810b068e76e9cfd7f39c09fa61cbb6e9bd4243f4cb6964a5c76",
+      "bytes": 1385,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/double.h",
+      "sha256": "6c0922e8d0e3952477bf4a6ca3afca2cc98dda4d259dcc988211ed1a8b5a4188",
+      "bytes": 1772,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/enum_operators.h",
+      "sha256": "a67abf8ffd599b72b2f2936492a002f73b352bd4e4fac45b33e75232e6493b06",
+      "bytes": 3321,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/fast_idiv_by_const.c",
+      "sha256": "6cb610ce97999b486007658f6e4952b06e00dc189cf1b86ae7566d95ffe09261",
+      "bytes": 7998,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/fast_idiv_by_const.h",
+      "sha256": "b8a73cb162a12af091571c5659590e50b0225ea6a0b8b33024881763f0df15bb",
+      "bytes": 6816,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/fast_urem_by_const.h",
+      "sha256": "31dafa6ebf5dbcb5e9862181828b4eb833e2f3154c35193fbcb97b9d9ec854f2",
+      "bytes": 2925,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/float8.c",
+      "sha256": "e3211fda7e6225479e8d8f407a4fb7fb9d387c7a6eff8c7d068e6c4ae31c061f",
+      "bytes": 3535,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/float8.h",
+      "sha256": "b3341f3c591ac89158d780d0c82f118b7b90f3e9893f4f3b267436288f464867",
+      "bytes": 450,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/format_utils.h",
+      "sha256": "4b55d9dbe173c014db4615c0510f7697a3f1ce7bd947bb2d42d84022c7d9203c",
+      "bytes": 6029,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/meson.build",
+      "sha256": "1ab070b7227492327d48bdfc0d524a4af742c257a00c72994803724bca2f64f6",
+      "bytes": 1282,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/format/texcompress_bptc_tmp.h",
+      "sha256": "a384213f0a3b40694103b59a990af73116f02fafc8c2385754ba60b8158134cb",
+      "bytes": 57778,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/texcompress_etc_tmp.h",
+      "sha256": "b4525cee7ca8d861756036633a3a3fa3f3281d0451fde8e06ee1ecdaa0a7861b",
+      "bytes": 5420,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/texcompress_s3tc_tmp.h",
+      "sha256": "849f336cba96435141dd25cfa5665c8eee4619055c2660053f301d2fc45d3618",
+      "bytes": 42957,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format.c",
+      "sha256": "f965e9987181b2cac5596bf7d0c80df723c62c94ea4f78b697289adb3e48a0bf",
+      "bytes": 44125,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format.h",
+      "sha256": "531ae7074955f5b96de1cdeb53df8417bfd2b4dcdfc915b7d4a0c4555b53c67f",
+      "bytes": 44411,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/format/u_format.yaml",
+      "sha256": "f0fef33544456468def10d5dffc72a61e8b0e7acc599b700fc65366e6f495a10",
+      "bytes": 80486,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/util/format/u_format_bptc.c",
+      "sha256": "c8c771f501b142b9ef9b680655def7a53e12d6cf25904fce60c8f2450968919b",
+      "bytes": 12602,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_bptc.h",
+      "sha256": "a691cdca5c81c11e461bfa12ab87fe6481fffdbae3e35e1b4d52295696c9f74a",
+      "bytes": 6580,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_etc.c",
+      "sha256": "b0513e3d6237c6128c26fa2035582e15c97bd7db9c2fca7869bfb6a02b217731",
+      "bytes": 2619,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_etc.h",
+      "sha256": "5af29da0b566e0994d1bc1529e50643b80b1747a67a316ec0975e2f8db76dd90",
+      "bytes": 2288,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_fxt1.c",
+      "sha256": "0a27eec71adb609f742f3ea684c45d9845f656d45b8de4fe4d3477b282a51c0f",
+      "bytes": 50112,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_fxt1.h",
+      "sha256": "bcf0dd6ef9bb9101bba7adfa87835eb12e5eb2b01275d07f0ff998edf4bb7a39",
+      "bytes": 3461,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_latc.c",
+      "sha256": "88deed4b0740c12371c076acc76de668dcf2f97b36ebe8671fce253131da1edc",
+      "bytes": 11333,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_latc.h",
+      "sha256": "b711039a68237493a7747a6be5dd0daf117cea44a4b3cdec8f7b628558569958",
+      "bytes": 5312,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_other.c",
+      "sha256": "bd2f0d5e8b6d82f4d45437549b45ea7a6fd196e8d1239e13d0f28e63bf19d764",
+      "bytes": 14572,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_other.h",
+      "sha256": "4fd833796c0cf59663349aa3ff9498c0edfb4ff7800c08e2fba5ae97b6b37bbf",
+      "bytes": 5911,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_pack.py",
+      "sha256": "a4a2510d443c84059d25f2346c521d28d503c1744b76b2aa3079198ecc33f2bc",
+      "bytes": 28355,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/format/u_format_parse.py",
+      "sha256": "d523a751f6a3334f7cbe2e5bdede1065c3629390cdbbe98e5d41109e3cf63ebb",
+      "bytes": 20503,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/format/u_format_rgtc.c",
+      "sha256": "d07dfd70e00f57b749de62f3832a05a64670d9602a8245b52f7839f8214e9810",
+      "bytes": 20847,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_rgtc.h",
+      "sha256": "c2fbd39a2be1d65c56ed456e00a5255b1745d9d94e8929280227566073e99275",
+      "bytes": 6438,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_s3tc.c",
+      "sha256": "30b17502c4fac127e7445bcfa68e7585923186c44aabc9920f7af99a0825bb95",
+      "bytes": 28243,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_s3tc.h",
+      "sha256": "3a77460daa2e48cc72cc6f4c12f28f82ee9c747f26bace4047cf267d1956ef09",
+      "bytes": 10190,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_table.py",
+      "sha256": "5a68041e209731c2d69802af2562c1d61e4c99024fdcaf1a7c116e73d143d809",
+      "bytes": 27760,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/format/u_format_yuv.c",
+      "sha256": "4331489d13bad59cbc7fcad221cde852186997d5eee40bdf6c9f8e6330d579dd",
+      "bytes": 41428,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_yuv.h",
+      "sha256": "07d2f1d9bb2a2f7bf4713d14aaf83057e477b0e92d8ba8827f31da30226176d4",
+      "bytes": 14318,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_zs.c",
+      "sha256": "4ab67731f75e6aad9303e0b40d35134917522a103ca4e3de5f52b817ee45f42b",
+      "bytes": 36173,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_format_zs.h",
+      "sha256": "8f9e619acefab53a27b233773af5dc87694304b7aa75d74bce1470474d239125",
+      "bytes": 12671,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format/u_formats.h",
+      "sha256": "c1e04fd9d1c1e5d53786387339024436dbadab5ce172176366bf443c34278b81",
+      "bytes": 2266,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/format_r11g11b10f.h",
+      "sha256": "b0beabfa138da9c4935227e7d4d392c677007d84b7ec90e776f16ac68a79cf19",
+      "bytes": 9025,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format_rgb9e5.h",
+      "sha256": "f04986a429c43b3d5f50575f91ce65603209e9e53a17d34d7de1c6b129eb9538",
+      "bytes": 4197,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format_srgb.h",
+      "sha256": "0d1de21d7a961f9a0f442a5816f39930333eb141c6e06ad4afc4ee38bab5a766",
+      "bytes": 4397,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/format_srgb.py",
+      "sha256": "7d217e8055c2486685970812402a44660ad34573d9f33a53f36b9d90fac1f6c9",
+      "bytes": 4715,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/futex.h",
+      "sha256": "acd349682b307cf44957e027f4e3f03f9d4dbdc304e6e588721b748273a9e75e",
+      "bytes": 1911,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/glheader.h",
+      "sha256": "def3c9be62583645c6ecb0f9579414a75aed664fca4fa2d20049f3a54ba7f184",
+      "bytes": 3934,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/half_float.c",
+      "sha256": "6df7fce1785973541581c6234f10589f6968e3a3fbc2aa20c6c5899b7d12862e",
+      "bytes": 7013,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/half_float.h",
+      "sha256": "fd9f262c6674b4688d83d2151433980437cbba494035152c505733b8c1b455f3",
+      "bytes": 8046,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/hash_table.c",
+      "sha256": "df5513cb17497b191b93bbd22831ea0d373275655a97750672546b846a56f1fb",
+      "bytes": 28428,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/hash_table.h",
+      "sha256": "2c5d9cdbf9ae86a5b202c14719c5a32a0b19d5c47d1ebffcd45fd52c945aa29d",
+      "bytes": 11002,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/helpers.c",
+      "sha256": "352f135a1dcba6ac82739b8b5469c24560578040938e61f0d55a00b64154cc9e",
+      "bytes": 1187,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/helpers.h",
+      "sha256": "07e2cb108d8788f4f2351c3d0e546e8f02fb943f8b2ce5b4ee2755bf07dfc4fe",
+      "bytes": 306,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/hex.h",
+      "sha256": "1e26ec1a4763429e48f539bb3ac9caff781adba47b76342829f441783e0307db",
+      "bytes": 2314,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/list.h",
+      "sha256": "230917903d976629b78c3460f9af36aed1a1e5855b4c6609b8d3a3f9ef735e8e",
+      "bytes": 11377,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/log.h",
+      "sha256": "73ddc3d866ddfba5ec7351a08aa97561b8b3e90703f87992fb8533a00173f32a",
+      "bytes": 4644,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/macros.h",
+      "sha256": "f965ee46d99dcd390d49c86aa9df63bc62ad706ab13d8e3e2ae1b4db57afb238",
+      "bytes": 18232,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/memstream.c",
+      "sha256": "715794f6a93b8211768dc389cf8763387bcc4577292cbc38f77b60214139b751",
+      "bytes": 2945,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/memstream.h",
+      "sha256": "2fe3691c7f616e76469d541bf8a2a4c12a643acc5050db2d2c545864afa53a6e",
+      "bytes": 2062,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/mesa-blake3.c",
+      "sha256": "a744827ad379b7358769f6202eb11e97ff5a413d857192237390b90dd8b0083a",
+      "bytes": 3249,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/mesa-blake3.h",
+      "sha256": "abe40b32adcee7e10c08ccb9158ba55fe7b0e7fae7e5161966555a53b3483b6a",
+      "bytes": 2483,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/meson.build",
+      "sha256": "a2708cc654ab709ee8729920e06b3f859591531d6668bfdadea63930a151d70f",
+      "bytes": 14774,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/os_memory.h",
+      "sha256": "58ea533018d008c9b7261321182f3e172dcceba111d6b64a3188f6a9697f5cf9",
+      "bytes": 1472,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/os_memory_aligned.h",
+      "sha256": "70b31922b549fc117ff5e844b069daeeb7bc1b664408de46508ce27b749744a5",
+      "bytes": 3200,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/os_memory_stdc.h",
+      "sha256": "0f8e3c0b484e433286cc11204521a0b6012e4eb351c075b3b39e119c45a45dbb",
+      "bytes": 2139,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/os_misc.h",
+      "sha256": "721cec97e4a28c372cbdaf272e3f1c3cde045778da0e174ebb46e01ec57eb719",
+      "bytes": 6683,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/os_time.h",
+      "sha256": "01f5abdcf2867c27e9348fc2706d97639c403bcac8c264e864c5d7ed88ffd8d1",
+      "bytes": 3924,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/perf/cpu_trace.h",
+      "sha256": "5b19de13bd82ea8102ead8ec0c6ff74090c332692a1924820b9db1e3a822e376",
+      "bytes": 8099,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/perf/u_gpuvis.h",
+      "sha256": "cfc393e61a0820f2d61bee37351ab42f640f390e4045ab5958c83bc2a4dae2ec",
+      "bytes": 440,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/perf/u_perfetto.h",
+      "sha256": "8b0d8165ae6293705c61c3c20b4599611992b8792283a53afceb0c9d1b2f66be",
+      "bytes": 4457,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/perf/u_sysprof.h",
+      "sha256": "f3eb200e2482bba275971610f1395452953844d49affc518b773bafecbd9ad79",
+      "bytes": 233,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/process_shader_stats.py",
+      "sha256": "b31ca8266004621f7d59abf63954f2b652d51ee7abf1cd1e0e7e3946154da922",
+      "bytes": 8127,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/ralloc.c",
+      "sha256": "6dc89e02827717d64e1596d91894935a589a3366c378de7c928795a2cd22731a",
+      "bytes": 36856,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/ralloc.h",
+      "sha256": "367cc4b53d8d2a97135e7a443cba670fc0af450ee9026cd21ec47bc517155cec",
+      "bytes": 28160,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/range_minimum_query.c",
+      "sha256": "d0ca7da4943b2ab1b9b404ffd66f4769f9daa2e3ce1ea97cab82a60450164b16",
+      "bytes": 2977,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/range_minimum_query.h",
+      "sha256": "a2ca6ff344045dc82237c2db6161f951ee8b8b300c762b2700693bac9fb752f7",
+      "bytes": 1575,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/rb_tree.c",
+      "sha256": "a15e4b0f2597e9f743072b0353154f6e19c82be78ca36560d56dd2ff4ca13d1f",
+      "bytes": 20807,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/rb_tree.h",
+      "sha256": "4894e87eb11f38cb3d0b73aef82a81121899b38e6cdc1f71e41fba47cc3e45d8",
+      "bytes": 15787,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/rgtc.c",
+      "sha256": "8cc61a528a9bd095e3d79e8da040b18c9d354f561a43c2db1534edbdfc407102",
+      "bytes": 1770,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/rgtc.h",
+      "sha256": "8229eb9b0ec6fcfecba6f5a663ba95efc9a8b9cd11f12a6342a374bfb5f72964",
+      "bytes": 1951,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/rounding.h",
+      "sha256": "8d1ab341bffd0f8818b2fbe0d614a1b101ec376fa2fb5f108aec42b349bf722d",
+      "bytes": 4211,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/set.c",
+      "sha256": "b8a521f9ae5f8eab6a593b5b2b1eef037f724aef0f09b63b2aa87ccd2e757d30",
+      "bytes": 21241,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/set.h",
+      "sha256": "6c70555c9e3da96c4450b922f9de40f3ecc99630a49ed83d1fd6293ece7eb5ca",
+      "bytes": 5516,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/shader_stats.rnc",
+      "sha256": "e381b682635d209ac03c1584b0be4b1b4149c5218218398dde61805b22df5bdf",
+      "bytes": 691,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/shader_stats.xml",
+      "sha256": "9efabef78f422abef0327eff8fd61935c72fef81ad9505fb813db501c6b289ed",
+      "bytes": 14008,
+      "license": "MIT (Mesa/AMD/NIR component default; file has no separate license notice)"
+    },
+    {
+      "path": "src/util/simple_mtx.c",
+      "sha256": "6b2cca5826d573e843191216563e48a10862d0c56b487282caa0b37d58535403",
+      "bytes": 566,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/simple_mtx.h",
+      "sha256": "e0efe2ae0e27477ab412fe62b80dab64d22a8a9e96d9abb59a52dbba2b01241b",
+      "bytes": 5405,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/softfloat.c",
+      "sha256": "9aab893f67eeb580dd1f5c53acc0d7da273f4859f2171069afd7ee6f35a93fc1",
+      "bytes": 44202,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/softfloat.h",
+      "sha256": "bc123eefce1a230d8d9ac20f0b8a0d1b7ae7116529fda084ffa697534a293c58",
+      "bytes": 2515,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/sparse_bitset.h",
+      "sha256": "5c21a15f47236377ce6caafd3768ab21258b6d0c54b3e3b6a960216715b0c3d7",
+      "bytes": 11208,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/stack_array.h",
+      "sha256": "d89e8bcb1a5c64e2cadbafe45d19fa47d3fa811c01cf661282245db6336fb5d1",
+      "bytes": 1901,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/strndup.h",
+      "sha256": "107695e22dd1b10728fbaf5b6f5facb61211b04e1634c3728a43b0b6e3e809f6",
+      "bytes": 348,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/texcompress_rgtc_tmp.h",
+      "sha256": "adfe646c37584b66d922a2067c01d618bc07c198b65b6273c5dd10d0ccce26a7",
+      "bytes": 18084,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_atomic.h",
+      "sha256": "81bf636924f9c049606ed8d0be2e01cc7b9facc963955efc1faec2140b510960",
+      "bytes": 16578,
+      "license": "No copyright claimed (embedded original notice)"
+    },
+    {
+      "path": "src/util/u_call_once.h",
+      "sha256": "c9413af6e96b3ad1bb5e684c0b3c15be635f47774d4eb63ff7f273676fab7a58",
+      "bytes": 1755,
+      "license": "MIT"
+    },
+    {
+      "path": "src/util/u_cpu_detect.h",
+      "sha256": "b6a693586cc2aabef5a56ddff1a4745e83680e457bb83d70addb4612a80591f9",
+      "bytes": 4886,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/u_debug.c",
+      "sha256": "6eef5802c2acb8a5ea79deb83e9d62ebcbd8348e42b22f4d37b7993901047004",
+      "bytes": 14238,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_debug.h",
+      "sha256": "3fc8d2dc29445c3a5643f10d44dca126e0c0e71d5e6d5051ce73aa646257b7d6",
+      "bytes": 11600,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/u_dynarray.c",
+      "sha256": "abe2324366e6ca2a5bbbb132c13c282892865662d72fba13fb7955d6711e6122",
+      "bytes": 149,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_dynarray.h",
+      "sha256": "c03eeb512b590743a0355669f93e50919aabe4a4f92ffcc00d60d9441426ae53",
+      "bytes": 9519,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/u_endian.h",
+      "sha256": "bf02a7d0e9984cf41e046e559e6c343b972031abaa8ecc253e4c641caa2112ea",
+      "bytes": 3349,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/u_math.c",
+      "sha256": "f4b4b84a98dfc1202835f8c88e3941a505e7d6795020b504099fa590862069ae",
+      "bytes": 9866,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_math.h",
+      "sha256": "f9f80af6f6c28aa684d5987d1edfb3cd2e958f64dbfd95e41230026cbef98d99",
+      "bytes": 19385,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/u_memory.h",
+      "sha256": "095cba8c9eebf74e44667447f5508b474c2286a41a99eb96e60f5a7160790ba8",
+      "bytes": 3614,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_overflow.h",
+      "sha256": "310124da055682608d31503734401eee7f35e1bf19af3695bd6dcef3e691a726",
+      "bytes": 3298,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_pack_color.h",
+      "sha256": "eb3c34794d8fbd741b56a7c86ab0da2af88fbd1c3f54ab74f37560e2909c9b28",
+      "bytes": 17307,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_printf.c",
+      "sha256": "cbd3519bdc73fb2b346c16ebb916e7d3625695fa285db26a4cbf54754d92daaa",
+      "bytes": 14533,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_printf.h",
+      "sha256": "0cbd05e4fe7277dce8d484b9b53c150b1651a1a85212c2d7a323bc1cea15841b",
+      "bytes": 4258,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_qsort.h",
+      "sha256": "bc38214c68095c10b52f682f6129cfae04100e78ff02d048010b6cc02cdee09c",
+      "bytes": 2954,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_string.c",
+      "sha256": "05087a9c09af2a3858d7da7bfe52542541ab973e6ab37f506c275a75bd5a2991",
+      "bytes": 807,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_string.h",
+      "sha256": "ea5d9321707b864fdadb222c3763ba9bff0819070534e0656359e4dd8a9febf1",
+      "bytes": 3179,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_thread.h",
+      "sha256": "70b79a3a2727e587f8d3e20ceaa0866e8cbe04b1b0f683be32b1129975fc3039",
+      "bytes": 5343,
+      "license": "MIT (embedded notice)"
+    },
+    {
+      "path": "src/util/u_vector.c",
+      "sha256": "356b1fd22b7a0d70e4daf932eac9cfcd3d7f63c32974ed1cb97a4a6c736f99a9",
+      "bytes": 3968,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_vector.h",
+      "sha256": "1f2000c00c23e14c16ab65e0ada5c311b4bceeed2ceab6bd8e1adb04bb1c930f",
+      "bytes": 3459,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_worklist.c",
+      "sha256": "671f7662afb8b382af90bca911e5f66c65d8b66c7ae528cc4c59ea661721b399",
+      "bytes": 3113,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_worklist.h",
+      "sha256": "5994c9bf905f33f83feded13e516a421090566d7380c200d9a60e27b40012252",
+      "bytes": 3627,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/u_ycbcr.h",
+      "sha256": "beb4ffd8f0efcb642368b3b9ad80cf76c7dd9231d8c2960385d26392ef3660fc",
+      "bytes": 4288,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/util/xxhash.h",
+      "sha256": "17973c0dc49d9854ca26caa191f0e12f7a424b68858d9a78de3860d959d85e4b",
+      "bytes": 268319,
+      "license": "Original per-file terms and notices, preserved verbatim"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_descriptors.c",
+      "sha256": "488f50cc81e9fe683aa49d6ba3c0343d331214fb2aab5cc3cd91cc2299a4d6fe",
+      "bytes": 27649,
+      "license": "MIT; original Valve 2020 notice retained; descriptor replacement reference only"
+    }
+  ],
+  "patches": [
+    {
+      "path": "Port/Jobs.patch",
+      "sha256": "26bdadab5549272bee7f62179514502d7cec2464093d6c855ea66c0d4227fe62",
+      "description": "Job-owned Mesa caches, fixed ACO validation policy, cooperative compiler checkpoints, explicitly unavailable external disassembler."
+    }
+  ],
+  "source_boundary": {
+    "compiled_originals": [
+      "src/amd/compiler/instruction_selection/aco_isel_cfg.cpp",
+      "src/amd/compiler/instruction_selection/aco_isel_setup.cpp",
+      "src/amd/compiler/instruction_selection/aco_isel_helpers.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_nir_alu.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_ps_prolog.cpp",
+      "src/amd/compiler/aco_dominance.cpp",
+      "src/amd/compiler/aco_dead_code_analysis.cpp",
+      "src/amd/compiler/aco_interface.cpp",
+      "src/amd/compiler/aco_form_hard_clauses.cpp",
+      "src/amd/compiler/aco_insert_delay_alu.cpp",
+      "src/amd/compiler/aco_insert_fp_mode.cpp",
+      "src/amd/compiler/aco_assembler.cpp",
+      "src/amd/compiler/aco_insert_exec_mask.cpp",
+      "src/amd/compiler/aco_reduce_assign.cpp",
+      "src/amd/compiler/aco_insert_waitcnt.cpp",
+      "src/amd/compiler/aco_insert_NOPs.cpp",
+      "src/amd/compiler/aco_live_var_analysis.cpp",
+      "src/amd/compiler/aco_lower_branches.cpp",
+      "src/amd/compiler/aco_lower_phis.cpp",
+      "src/amd/compiler/aco_lower_subdword.cpp",
+      "src/amd/compiler/aco_lower_to_cssa.cpp",
+      "src/amd/compiler/aco_register_allocation.cpp",
+      "src/amd/compiler/aco_optimizer_postRA.cpp",
+      "src/amd/compiler/aco_lower_to_hw_instr.cpp",
+      "src/amd/compiler/aco_opt_value_numbering.cpp",
+      "src/amd/compiler/aco_optimizer.cpp",
+      "src/amd/compiler/aco_print_ir.cpp",
+      "src/amd/compiler/aco_reindex_ssa.cpp",
+      "src/amd/compiler/aco_repair_ssa.cpp",
+      "src/amd/compiler/aco_scheduler_ilp.cpp",
+      "src/amd/compiler/aco_scheduler.cpp",
+      "src/amd/compiler/aco_ssa_elimination.cpp",
+      "src/amd/compiler/aco_spill_preserved.cpp",
+      "src/amd/compiler/aco_statistics.cpp",
+      "src/amd/compiler/aco_spill.cpp",
+      "src/amd/compiler/aco_validate.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_ps_epilog.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_trap_handler.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_nir.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_vs_prolog.cpp",
+      "src/amd/compiler/aco_ir.cpp",
+      "src/amd/compiler/instruction_selection/aco_select_nir_intrinsics.cpp",
+      "src/amd/compiler/aco_print_asm.cpp",
+      "src/compiler/nir/nir_builtin_builder.c",
+      "src/compiler/nir/nir_builder.c",
+      "src/compiler/nir/nir_convert_address_format.c",
+      "src/compiler/nir/nir_clone.c",
+      "src/compiler/nir/nir_control_flow.c",
+      "src/compiler/nir/nir.c",
+      "src/compiler/nir/nir_clip_cull_distance_io_utils.c",
+      "src/compiler/nir/nir_dominance.c",
+      "src/compiler/nir/nir_dominance_lca.c",
+      "src/compiler/nir/nir_fixup_is_exported.c",
+      "src/compiler/nir/nir_divergence_analysis.c",
+      "src/compiler/nir/nir_downgrade_pls_vars.c",
+      "src/compiler/nir/nir_deref.c",
+      "src/compiler/nir/nir_format_convert.c",
+      "src/compiler/nir/nir_functions.c",
+      "src/compiler/nir/nir_gather_info.c",
+      "src/compiler/nir/nir_from_ssa.c",
+      "src/compiler/nir/nir_gather_types.c",
+      "src/compiler/nir/nir_gather_tcs_info.c",
+      "src/compiler/nir/nir_opt_group_loads.c",
+      "src/compiler/nir/nir_gather_xfb_info.c",
+      "src/compiler/nir/nir_gather_output_deps.c",
+      "src/compiler/nir/nir_gs_count_vertices.c",
+      "src/compiler/nir/nir_io_add_xfb_info.c",
+      "src/compiler/nir/nir_instr_set.c",
+      "src/compiler/nir/nir_inline_sysval.c",
+      "src/compiler/nir/nir_inline_uniforms.c",
+      "src/compiler/nir/nir_liveness.c",
+      "src/compiler/nir/nir_legacy.c",
+      "src/compiler/nir/nir_loop_analyze.c",
+      "src/compiler/nir/nir_lower_abort.c",
+      "src/compiler/nir/nir_linking_helpers.c",
+      "src/compiler/nir/nir_lower_alu.c",
+      "src/compiler/nir/nir_lower_amul.c",
+      "src/compiler/nir/nir_lower_alpha.c",
+      "src/compiler/nir/nir_lower_alu_width.c",
+      "src/compiler/nir/nir_lower_atomics_to_ssbo.c",
+      "src/compiler/nir/nir_lower_array_deref_of_vec.c",
+      "src/compiler/nir/nir_lower_bitmap.c",
+      "src/compiler/nir/nir_lower_bool_to_float.c",
+      "src/compiler/nir/nir_lower_blend.c",
+      "src/compiler/nir/nir_lower_bool_to_int32.c",
+      "src/compiler/nir/nir_lower_calls_to_builtins.c",
+      "src/compiler/nir/nir_lower_cl_images.c",
+      "src/compiler/nir/nir_lower_clamp_color_outputs.c",
+      "src/compiler/nir/nir_lower_clip_disable.c",
+      "src/compiler/nir/nir_lower_clip_halfz.c",
+      "src/compiler/nir/nir_lower_clip.c",
+      "src/compiler/nir/nir_lower_const_arrays_to_uniforms.c",
+      "src/compiler/nir/nir_lower_continue_constructs.c",
+      "src/compiler/nir/nir_lower_convert_alu_types.c",
+      "src/compiler/nir/nir_lower_variable_initializers.c",
+      "src/compiler/nir/nir_lower_discard_if.c",
+      "src/compiler/nir/nir_lower_fb_read.c",
+      "src/compiler/nir/nir_lower_double_ops.c",
+      "src/compiler/nir/nir_lower_cooperative_matrix.c",
+      "src/compiler/nir/nir_lower_flatshade.c",
+      "src/compiler/nir/nir_lower_floats.c",
+      "src/compiler/nir/nir_lower_explicit_io.c",
+      "src/compiler/nir/nir_lower_flrp.c",
+      "src/compiler/nir/nir_lower_fragcoord_wtrans.c",
+      "src/compiler/nir/nir_lower_frag_coord_to_pixel_coord.c",
+      "src/compiler/nir/nir_lower_fp16_conv.c",
+      "src/compiler/nir/nir_lower_global_vars_to_local.c",
+      "src/compiler/nir/nir_lower_fragcolor.c",
+      "src/compiler/nir/nir_lower_frexp.c",
+      "src/compiler/nir/nir_lower_goto_ifs.c",
+      "src/compiler/nir/nir_lower_gs_intrinsics.c",
+      "src/compiler/nir/nir_lower_halt_to_return.c",
+      "src/compiler/nir/nir_lower_helper_writes.c",
+      "src/compiler/nir/nir_lower_load_const_to_scalar.c",
+      "src/compiler/nir/nir_lower_idiv.c",
+      "src/compiler/nir/nir_lower_locals_to_regs.c",
+      "src/compiler/nir/nir_lower_image_atomics_to_global.c",
+      "src/compiler/nir/nir_lower_image.c",
+      "src/compiler/nir/nir_lower_indirect_derefs_to_if_else_trees.c",
+      "src/compiler/nir/nir_lower_input_attachments.c",
+      "src/compiler/nir/nir_lower_interpolation.c",
+      "src/compiler/nir/nir_lower_int64.c",
+      "src/compiler/nir/nir_lower_int_to_float.c",
+      "src/compiler/nir/nir_lower_io_array_vars_to_elements.c",
+      "src/compiler/nir/nir_lower_io_indirect_loads.c",
+      "src/compiler/nir/nir_lower_io.c",
+      "src/compiler/nir/nir_lower_io_vars_to_temporaries.c",
+      "src/compiler/nir/nir_lower_io_to_scalar.c",
+      "src/compiler/nir/nir_lower_io_vars_to_scalar.c",
+      "src/compiler/nir/nir_lower_is_helper_invocation.c",
+      "src/compiler/nir/nir_lower_multiview.c",
+      "src/compiler/nir/nir_lower_mediump.c",
+      "src/compiler/nir/nir_lower_mem_access_bit_sizes.c",
+      "src/compiler/nir/nir_lower_memcpy.c",
+      "src/compiler/nir/nir_lower_memory_model.c",
+      "src/compiler/nir/nir_lower_packing.c",
+      "src/compiler/nir/nir_lower_passthrough_edgeflags.c",
+      "src/compiler/nir/nir_lower_non_uniform_access.c",
+      "src/compiler/nir/nir_lower_patch_vertices.c",
+      "src/compiler/nir/nir_lower_pntc_ytransform.c",
+      "src/compiler/nir/nir_lower_phis_to_scalar.c",
+      "src/compiler/nir/nir_lower_point_smooth.c",
+      "src/compiler/nir/nir_lower_point_size.c",
+      "src/compiler/nir/nir_lower_poly_line_smooth.c",
+      "src/compiler/nir/nir_lower_reg_intrinsics_to_ssa.c",
+      "src/compiler/nir/nir_lower_readonly_images_to_tex.c",
+      "src/compiler/nir/nir_lower_printf.c",
+      "src/compiler/nir/nir_lower_returns.c",
+      "src/compiler/nir/nir_lower_sample_shading.c",
+      "src/compiler/nir/nir_lower_samplers.c",
+      "src/compiler/nir/nir_lower_robust_access.c",
+      "src/compiler/nir/nir_lower_scratch.c",
+      "src/compiler/nir/nir_lower_single_sampled.c",
+      "src/compiler/nir/nir_lower_scratch_to_var.c",
+      "src/compiler/nir/nir_lower_ssbo.c",
+      "src/compiler/nir/nir_lower_system_values.c",
+      "src/compiler/nir/nir_lower_task_shader.c",
+      "src/compiler/nir/nir_lower_subgroups.c",
+      "src/compiler/nir/nir_lower_terminate_to_demote.c",
+      "src/compiler/nir/nir_lower_shader_calls.c",
+      "src/compiler/nir/nir_lower_tess_coord_z.c",
+      "src/compiler/nir/nir_lower_tex_shadow.c",
+      "src/compiler/nir/nir_lower_texcoord_replace.c",
+      "src/compiler/nir/nir_lower_texcoord_replace_late.c",
+      "src/compiler/nir/nir_lower_two_sided_color.c",
+      "src/compiler/nir/nir_lower_undef_to_zero.c",
+      "src/compiler/nir/nir_lower_tex.c",
+      "src/compiler/nir/nir_lower_var_copies.c",
+      "src/compiler/nir/nir_lower_vars_to_ssa.c",
+      "src/compiler/nir/nir_lower_view_index_to_device_index.c",
+      "src/compiler/nir/nir_lower_vec_to_regs.c",
+      "src/compiler/nir/nir_lower_vec3_to_vec4.c",
+      "src/compiler/nir/nir_lower_viewport_transform.c",
+      "src/compiler/nir/nir_lower_wpos_center.c",
+      "src/compiler/nir/nir_lower_wpos_ytransform.c",
+      "src/compiler/nir/nir_lower_wrmasks.c",
+      "src/compiler/nir/nir_lower_bit_size.c",
+      "src/compiler/nir/nir_lower_ubo_vec4.c",
+      "src/compiler/nir/nir_lower_uniforms_to_ubo.c",
+      "src/compiler/nir/nir_metadata.c",
+      "src/compiler/nir/nir_mod_analysis.c",
+      "src/compiler/nir/nir_lower_sysvals_to_varyings.c",
+      "src/compiler/nir/nir_lower_workgroup_size.c",
+      "src/compiler/nir/nir_move_vec_src_uses_to_dest.c",
+      "src/compiler/nir/nir_move_output_stores_to_end.c",
+      "src/compiler/nir/nir_opt_access.c",
+      "src/compiler/nir/nir_normalize_cubemap_coords.c",
+      "src/compiler/nir/nir_normalize_sin_cos.c",
+      "src/compiler/nir/nir_opt_barriers.c",
+      "src/compiler/nir/nir_opt_barycentric.c",
+      "src/compiler/nir/nir_opt_clip_cull_const.c",
+      "src/compiler/nir/nir_opt_call.c",
+      "src/compiler/nir/nir_opt_combine_stores.c",
+      "src/compiler/nir/nir_opt_comparison_pre.c",
+      "src/compiler/nir/nir_opt_constant_folding.c",
+      "src/compiler/nir/nir_opt_copy_propagate.c",
+      "src/compiler/nir/nir_opt_cse.c",
+      "src/compiler/nir/nir_opt_dce.c",
+      "src/compiler/nir/nir_opt_dead_cf.c",
+      "src/compiler/nir/nir_opt_copy_prop_vars.c",
+      "src/compiler/nir/nir_opt_fp_math_ctrl.c",
+      "src/compiler/nir/nir_opt_dead_write_vars.c",
+      "src/compiler/nir/nir_opt_frag_coord_to_pixel_coord.c",
+      "src/compiler/nir/nir_opt_find_array_copies.c",
+      "src/compiler/nir/nir_opt_gcm.c",
+      "src/compiler/nir/nir_opt_fragdepth.c",
+      "src/compiler/nir/nir_opt_generate_bfi.c",
+      "src/compiler/nir/nir_opt_idiv_const.c",
+      "src/compiler/nir/nir_opt_licm.c",
+      "src/compiler/nir/nir_opt_if.c",
+      "src/compiler/nir/nir_opt_large_constants.c",
+      "src/compiler/nir/nir_opt_load_skip_helpers.c",
+      "src/compiler/nir/nir_opt_intrinsics.c",
+      "src/compiler/nir/nir_opt_loop.c",
+      "src/compiler/nir/nir_opt_loop_unroll.c",
+      "src/compiler/nir/nir_opt_memcpy.c",
+      "src/compiler/nir/nir_opt_move.c",
+      "src/compiler/nir/nir_opt_move_to_top.c",
+      "src/compiler/nir/nir_opt_move_discards_to_top.c",
+      "src/compiler/nir/nir_opt_mqsad.c",
+      "src/compiler/nir/nir_opt_load_store_vectorize.c",
+      "src/compiler/nir/nir_opt_non_uniform_access.c",
+      "src/compiler/nir/nir_opt_offsets.c",
+      "src/compiler/nir/nir_opt_phi_precision.c",
+      "src/compiler/nir/nir_opt_peephole_select.c",
+      "src/compiler/nir/nir_opt_phi_to_bool.c",
+      "src/compiler/nir/nir_opt_ray_queries.c",
+      "src/compiler/nir/nir_opt_preamble.c",
+      "src/compiler/nir/nir_opt_reassociate.c",
+      "src/compiler/nir/nir_opt_reassociate_bfi.c",
+      "src/compiler/nir/nir_opt_rematerialize_compares.c",
+      "src/compiler/nir/nir_opt_remove_phis.c",
+      "src/compiler/nir/nir_opt_shrink_stores.c",
+      "src/compiler/nir/nir_opt_sink.c",
+      "src/compiler/nir/nir_opt_shared_vars_to_subgroup.c",
+      "src/compiler/nir/nir_opt_shrink_vectors.c",
+      "src/compiler/nir/nir_opt_undef.c",
+      "src/compiler/nir/nir_opt_uniform_atomics.c",
+      "src/compiler/nir/nir_opt_uniform_subgroup.c",
+      "src/compiler/nir/nir_opt_uub.c",
+      "src/compiler/nir/nir_opt_vectorize.c",
+      "src/compiler/nir/nir_opt_vectorize_io.c",
+      "src/compiler/nir/nir_opt_vectorize_io_vars.c",
+      "src/compiler/nir/nir_phi_builder.c",
+      "src/compiler/nir/nir_passthrough_tcs.c",
+      "src/compiler/nir/nir_passthrough_gs.c",
+      "src/compiler/nir/nir_propagate_invariant.c",
+      "src/compiler/nir/nir_recompute_io_bases.c",
+      "src/compiler/nir/nir_range_analysis.c",
+      "src/compiler/nir/nir_opt_varyings.c",
+      "src/compiler/nir/nir_remove_dead_variables.c",
+      "src/compiler/nir/nir_print.c",
+      "src/compiler/nir/nir_remove_outputs.c",
+      "src/compiler/nir/nir_remove_tex_shadow.c",
+      "src/compiler/nir/nir_repair_ssa.c",
+      "src/compiler/nir/nir_scale_fdiv.c",
+      "src/compiler/nir/nir_schedule.c",
+      "src/compiler/nir/nir_separate_merged_clip_cull_io.c",
+      "src/compiler/nir/nir_shader_bisect.c",
+      "src/compiler/nir/nir_search.c",
+      "src/compiler/nir/nir_split_conversions.c",
+      "src/compiler/nir/nir_split_per_member_structs.c",
+      "src/compiler/nir/nir_split_64bit_vec3_and_vec4.c",
+      "src/compiler/nir/nir_serialize.c",
+      "src/compiler/nir/nir_sweep.c",
+      "src/compiler/nir/nir_split_var_copies.c",
+      "src/compiler/nir/nir_to_lcssa.c",
+      "src/compiler/nir/nir_use_dominance.c",
+      "src/compiler/nir/nir_trivialize_registers.c",
+      "src/compiler/nir/nir_split_vars.c",
+      "src/compiler/nir/nir_worklist.c",
+      "src/compiler/nir/nir_unlower_io_to_vars.c",
+      "src/compiler/spirv/gl_spirv.c",
+      "src/compiler/nir/nir_lower_atomics.c",
+      "src/compiler/nir/nir_validate.c",
+      "src/compiler/spirv/vtn_amd.c",
+      "src/compiler/spirv/vtn_alu.c",
+      "src/compiler/spirv/vtn_cfg.c",
+      "src/compiler/spirv/vtn_cmat.c",
+      "src/compiler/spirv/vtn_debug.c",
+      "src/compiler/spirv/vtn_glsl450.c",
+      "src/compiler/spirv/vtn_opencl.c",
+      "src/compiler/spirv/vtn_subgroup.c",
+      "src/compiler/spirv/spirv_to_nir.c",
+      "src/compiler/spirv/vtn_structured_cfg.c",
+      "src/util/bitscan.c",
+      "src/compiler/shader_enums.c",
+      "src/util/dag.c",
+      "src/util/blob.c",
+      "src/util/half_float.c",
+      "src/util/memstream.c",
+      "src/util/hash_table.c",
+      "src/util/ralloc.c",
+      "src/util/rgtc.c",
+      "src/util/set.c",
+      "src/compiler/glsl_types.c",
+      "src/util/u_dynarray.c",
+      "src/util/u_debug.c",
+      "src/util/u_math.c",
+      "src/util/u_string.c",
+      "src/util/softfloat.c",
+      "src/util/double.c",
+      "src/compiler/spirv/vtn_variables.c",
+      "src/util/fast_idiv_by_const.c",
+      "src/util/u_printf.c",
+      "src/util/range_minimum_query.c",
+      "src/util/float8.c",
+      "src/util/u_vector.c",
+      "src/util/simple_mtx.c",
+      "src/util/u_worklist.c",
+      "src/util/rb_tree.c",
+      "src/util/blake3/blake3.c",
+      "src/util/format/u_format.c",
+      "src/util/mesa-blake3.c",
+      "src/util/blake3/blake3_portable.c",
+      "src/util/blake3/blake3_dispatch.c",
+      "src/amd/common/ac_shader_args.c",
+      "src/amd/common/ac_formats.c",
+      "src/amd/common/ac_shader_util.c",
+      "src/amd/common/ac_descriptors.c",
+      "src/amd/common/nir/ac_nir_assign_io_locations.c",
+      "src/amd/common/nir/ac_nir_create_gs_copy_shader.c",
+      "src/amd/common/nir/ac_nir_cull.c",
+      "src/amd/common/nir/ac_nir_fixup_smem_loads_null_prt.c",
+      "src/amd/common/nir/ac_nir_lower_esgs_io_to_mem.c",
+      "src/amd/common/nir/ac_nir_lower_global_access.c",
+      "src/amd/common/nir/ac_nir_lower_image_opcodes_cdna.c",
+      "src/amd/common/nir/ac_nir_lower_image_tex.c",
+      "src/amd/common/nir/ac_nir_lower_legacy_gs.c",
+      "src/amd/common/nir/ac_nir_lower_intrinsics_to_args.c",
+      "src/amd/common/nir/ac_nir_lower_legacy_vs.c",
+      "src/amd/common/nir/ac_nir_lower_mem_access_bit_sizes.c",
+      "src/amd/common/nir/ac_nir_lower_ngg_gs.c",
+      "src/amd/common/nir/ac_nir_lower_ngg_mesh.c",
+      "src/amd/common/nir/ac_nir_lower_ps_early.c",
+      "src/amd/common/nir/ac_nir_lower_ngg.c",
+      "src/amd/common/nir/ac_nir_lower_resinfo.c",
+      "src/amd/common/nir/ac_nir_lower_ps_late.c",
+      "src/amd/common/nir/ac_nir_lower_sample_mask_in.c",
+      "src/amd/common/nir/ac_nir_lower_taskmesh_io_to_mem.c",
+      "src/amd/common/nir/ac_nir_lower_tex_coords.c",
+      "src/amd/common/nir/ac_nir_lower_tess_io_to_mem.c",
+      "src/amd/common/nir/ac_nir_meta_ps_resolve.c",
+      "src/amd/common/nir/ac_nir_meta_cs_clear_copy_buffer.c",
+      "src/amd/common/nir/ac_nir_opt_flip_if_for_mem_loads.c",
+      "src/amd/common/nir/ac_nir_meta_cs_blit.c",
+      "src/amd/common/nir/ac_nir_opt_shared_append.c",
+      "src/amd/common/nir/ac_nir_opt_outputs.c",
+      "src/amd/common/nir/ac_nir_surface.c",
+      "src/amd/common/nir/ac_nir_prerast_utils.c",
+      "src/amd/common/nir/ac_nir.c",
+      "src/util/crc32.c",
+      "src/util/helpers.c",
+      "src/util/format/u_format_etc.c",
+      "src/util/format/u_format_latc.c",
+      "src/util/format/u_format_other.c",
+      "src/util/format/u_format_rgtc.c",
+      "src/util/format/u_format_fxt1.c",
+      "src/util/format/u_format_bptc.c",
+      "src/util/format/u_format_yuv.c",
+      "src/util/format/u_format_zs.c",
+      "src/util/format/u_format_s3tc.c"
+    ],
+    "selection": "Exact source/header/generator closure for the complete SPIR-V/NIR/ACO compiler. Other-generation encoding tables remain upstream dependencies; runtime admission is fixed to Picasso GFX9 wave64. Generated opcode tables use C++23 constant initialization, with global constructors rejected.",
+    "future_owners": {
+      "RADV": "R4VK, 0.80.23-25",
+      "ACO/NIR": "R4ACO, 0.80.13",
+      "AddrLib": "R4AMD, 0.80.12"
+    }
+  },
+  "additional_licenses": [
+    {
+      "path": "ThirdParty/Blake3-1.8.2/LICENSE_A2",
+      "sha256": "00fcc7a934ddbc9ece2a7cc063ac788e284b703b1d705ccbba72d462aa97921e",
+      "url": "https://raw.githubusercontent.com/BLAKE3-team/BLAKE3/1.8.2/LICENSE_A2",
+      "version": "1.8.2"
+    }
+  ]
+}

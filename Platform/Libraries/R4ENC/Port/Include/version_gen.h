@@ -1,0 +1,1 @@
+#define VERSION_NUMBER "OpenH264 2.6.0 / R4OS"

@@ -1,0 +1,125 @@
+﻿R4OS Runtime Libraries
+======================
+
+Dieses Repository enthaelt die offiziellen unabhaengigen Runtime-R4Ls:
+
+- `R4STD` fuer Text, Settings, Datum, Zeit und Konfiguration
+- `R4IMG` fuer Raster- und Vektorbildformate
+- `R4GFX` fuer Grafiklayouts und Softwarezugriffe auf gemeinsame BO-CPU-Maps
+- `R4NV` fuer NVIDIA-Formate, feste Shader und native Commandencoder
+- `R4NAK` fuer den freestanding SPIR-V/NIR/NAK-Laufzeitcompiler
+- `R4VK` fuer die native Mesa-Vulkan-Anbindung
+- `R4GL` fuer EGL/OpenGL mit explizitem Mesa-Softwareprofil
+- `R4VIDEO` fuer asynchrone H.264-Dekodierung und gemeinsame YUV-BO-Leihen
+- `R4FONT` fuer TTF, OpenType/CFF, WOFF, WOFF2 und Font-Rasterung
+
+Jede Library besitzt ihren Contract, ihre Baseline, Implementierung,
+versionierten Zig-/C-Bindings, Tests und Drittquellen in der eigenen Einheit.
+Eine kompatible Libraryaenderung benoetigt keine Aenderung an Kernel,
+Plattform-Contract oder Kern-SDK.
+
+Pfade
+-----
+
+`Settings.R4S` mappt Workspace, Repositories, Contract, SDK, DevKit und Zig.
+Relative Pfade sind die portable Voreinstellung; jeder Eintrag kann durch
+einen anderen relativen oder absoluten Pfad ersetzt werden.
+
+Build und Tests
+---------------
+
+Unter Windows:
+
+    Build.bat
+    Build.bat test
+    Build.bat R4STD test
+    Build.bat R4IMG test
+    Build.bat R4FONT test
+
+Unter Linux stehen dieselben Schritte ueber `Build.sh` bereit. Beide
+Starter fuehren die gemeinsame PowerShell-7-Logik in Build.ps1 aus.
+R4NAK benoetigt die gepinnten C-/Rust-/Mesa-Hostwerkzeuge aus seiner README.
+Sein nativer Build laeuft ebenfalls ueber PS7; fremdes Arbeitsverzeichnis
+und Offline-Cache sind unter Debian geprueft. Windows-Ausfuehrung bleibt
+separat offen in ExFiles/Reports/OssiGPU.txt /0.79.34.
+R4GL verwendet die gemeinsame gepruefte Mesa-Quelle, braucht aber keinen
+Rust-Hostcompiler. Sein Build kompiliert Softpipe/EGL, die C/C++-Laufzeit und
+gepinntes Musl; Versionen, Grenzen und Prozessabschluss stehen in R4GL/README.md.
+R4VIDEO verwendet den gepinnten FFmpeg-Decoderkern mit clang/NASM. Es bleibt
+waehrend der Integration bei IMAGE_SCOPE=none; Build und Grenzen: R4VIDEO/README.md.
+
+Die Starter wenden die Settings vor der Zig-Paketaufloesung an. SDK und
+Plattform-Contract sind im Paketbaum inhaltlich gepinnt; die gemappten lokalen
+Checkouts werden als passende Entwicklungsvarianten verwendet.
+
+Consumer-Bindings
+-----------------
+
+Das Rootpaket `r4os_libraries` stellt die Zig-Bindings als benannte Pfade
+`r4std_zig_binding`, `r4img_zig_binding`, `r4gfx_zig_binding`,
+`r4nv_zig_binding`, `r4nak_zig_binding`, `r4vk_zig_binding`, `r4gl_zig_binding`
+und `r4font_zig_binding`, `r4video_zig_binding` bereit.
+`r4nak_worker` liefert die optionale R4SYS-Worker-/Dateicache-Anbindung. Fuer
+C-Verbraucher existieren entsprechend `r4std_c_include`, `r4img_c_include` und
+`r4font_c_include`, `r4gfx_c_include`, `r4nv_c_include`, `r4nak_c_include`,
+`r4vk_c_include`, `r4gl_c_include` und `r4video_c_include`.
+Ein Modul pinnt dieses Paket und uebergibt nur den
+benoetigten Pfad an den SDK-Manifestbuild; die Runtime-Implementierungen werden
+dadurch weder eingebettet noch mit dem Verbraucher gekoppelt.
+
+Fuer distributionseigene Hostgeneratoren exportiert das Rootpaket ausserdem
+den formatreinen Pfad `r4font_format`. Das ist kein Runtime-Provider und keine
+zweite R4FONT-API, sondern nur die gemeinsame Dateiformatdefinition fuer die
+Erzeugung installierbarer `.R4F`-Systemfonts.
+
+Herkunft und Transfergrenzen stehen in `PROVENANCE.txt`.
+
+R4NV0.1.16 /0.82.3: Optional ausgehandelte Copy-Variante fuer den
+gemischten GR-Kanal: flags=copy_flag_graphics_channel setzt ausschliesslich
+Methodenheader auf CE-Subchannel4 neben GR0/Compute1. Flags0 behaelt die
+eigenstaendige CE unveraendert auf0. Unbekannte Bits werden ohne Aenderung
+der Ausgabe abgewiesen. Bestehende Slots, Revisionen, Structgroessen,
+Offsets, Typen und Konstanten bleiben gleich; zwei additive Konstanten und
+eine ausdrueckliche Flagsbedeutung sind kontrolliert generiert/baselineiert.
+Vorhandene Provider-/C-Zig-Gruppen RED15/GREEN16:11/11,2/2 bestanden.
+Anlass ist echter XID13 auf NVIDIA183/DISPLAYD56. Physisch16/57 bestehen
+fuenf native CE-/VA-Auftraege samt A->B-Remap und eigenen Semaphoren.
+Gesamt265 regulaere CE/8 logische Bilder/72241748 exakte Bytes und gleiche
+ruhende BO-/Runtimebilanz. Der alte Fehlerabbau ist separat beim NVIDIA-
+Treiber offen; keine pauschale Qualifikation weiterer GPU-Profile.
+
+
+SDK-Profilhoheit seit 0.89.31
+----------------------------
+Die gepflegte Build-/Werkzeugpolitik und die Systemauswahl liegen ausschliesslich
+in den drei Dateien Profiles/Build.json, Tools.json und Components.json des
+gewaehlten SDK. Dieses Repository besitzt Quellen, Runtime-ABI, Lizenznachweise
+und fachliche Generatoren. AMDProfile.json, GL-NativeInputs-Profile, Rusttarget
+und die Toolfelder der Locks sind gepruefte SDK-Projektionen. Aenderungen dort
+werden durch SDK/Tools/Sync-NativeProjections.ps1 abgeleitet; native Starter
+pruefen den SDK-Satz vor dem Build. Rust 1.85.1/Clang 19.1.7 der nativen Kette
+bleiben bewusst vom Rust-1.99-Kernel-/Modulprofil getrennt. Entwicklungsstaende
+benoetigen den ausdruecklichen SDK-Quellbeleg; keine automatische Freigabe.
+
+Quellpaket0.64.48 / R4OS0.89.47
+-------------------------------
+Die gemeinsame generierte Rust-Projektion verwendet die aktuellen
+Contract75-Typen einschliesslich R4DESK21/632 und GuiWindowAppearance48.
+Der fachliche Generator wurde gegen die wirklichen aktuellen C-Typen gebaut;
+keine handgepflegten Layoutasserts. Gemeinsamer nativer Helferheader und dessen
+Fingerprint bleiben bytegleich, Library-APIs und R4L-Artefakte unveraendert.
+Bestehende C/Rust-Helferfaelle und fuenf Besitz-/Unsafe-Negativfaelle bestehen.
+Der Desktop-Verbrauch besteht mit13 Fensterfaellen und3 Geometriefaellen.
+Anschluss und native Grenze: Docs/API/GuiWindowAppearance.txt.
+
+Start2-Helfer ab Quellpaket0.64.57
+---------------------------------
+Shared/Language/support.zig stellt openSession2, application2 und die
+abgeleiteten System-/Zeichenfassaden sowie colorClient2 und deviceClient2
+bereit. Der Besitzer initialisiert Anwendung und Session an ihrer finalen
+Adresse und haelt sie fuer alle abgeleiteten Leihen resident.
+R4STD/Bindings/Rust bietet Standard::open2 fuer den wirklichen App2-Kontext.
+Der compilergepruefte Helferkatalog erzeugt C-Header, Rust-Projektion und
+Fingerprint gemeinsam. Aufrufer lesen anonyme Ergebnistypen aus der jeweils
+gepinnten Projektion. Fachliche Runtime-R4L-Schnittstellen behalten ihre
+libraryeigenen benannten Vertraege und getrennten technischen Query2-Nachweis.

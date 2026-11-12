@@ -1,0 +1,110 @@
+{
+  "sources": [
+    {
+      "original": "ExFiles/Reference/GFX/Nvidia/OpenGpuDoc/classes/video/nvdec_drv.h",
+      "file": "nvdec_drv.h",
+      "sha256": "6211a3cf07e381374d81cee0b7745ebcbad8b6ef7e8fed8d903945a0a8878a73"
+    },
+    {
+      "original": "ExFiles/Reference/GFX/Nvidia/OpenGpuDoc/classes/video/clc7b0.h",
+      "file": "clc7b0.h",
+      "sha256": "acecbf5ed71a3c8b5ba0a0049ac2fea4eecf374cc6da58a2a63137afe13def47"
+    },
+    {
+      "original": "ExFiles/Reference/GFX/Nvidia/OpenGpuDoc/classes/video/clc9b0.h",
+      "file": "clc9b0.h",
+      "sha256": "4bedd0032e78bb28795e5929147d089304ac7b0cf225ddb9899dca5d8da2d678"
+    },
+    {
+      "original": "ExFiles/Reference/GFX/Nvidia/OpenKernelModules-570.144/src/common/sdk/nvidia/inc/nvtypes.h",
+      "file": "nvtypes.h",
+      "commit": "8ec351aeb96a93a4bb69ccc12a542bf8a8df2b6f",
+      "sha256": "3fd5e2c20b1432421a214b12e52778f48f7914b87645d4736cf55324d25c9d3c"
+    },
+    {
+      "transport": "Gitiles base64, decoded to original UTF-8 bytes",
+      "file": "h264.rs",
+      "commit": "684c1b339bddbed6f11af93161da1c1bba77edb1",
+      "license": "MIT",
+      "sha256": "d89059e1db123a320f2133df3010893f0ef19befdbfded97d0999866416535f1",
+      "url": "https://chromium.googlesource.com/external/gitlab.freedesktop.org/mesa/mesa/+/684c1b339bddbed6f11af93161da1c1bba77edb1/src/nouveau/vulkan/rust/video/decode/h264.rs?format=TEXT"
+    },
+    {
+      "original": "ExFiles/Reference/GFX/0.82.30/NvdecBindingSource/clc56f.h",
+      "file": "clc56f.h",
+      "commit": "8ec351aeb96a93a4bb69ccc12a542bf8a8df2b6f",
+      "license": "MIT",
+      "sha256": "8b7a6d6d5d5e3538f2f3e3b975d00c4aa94bd2480008c49aefcfc2566e3f658e"
+    },
+    {
+      "original": "ExFiles/Reference/GFX/0.82.30/NvdecBindingSource/decode-mod.rs",
+      "file": "decode-mod.rs",
+      "commit": "684c1b339bddbed6f11af93161da1c1bba77edb1",
+      "license": "MIT",
+      "sha256": "37998f5ef46f657b815213e967bb28d5b332034e036bf57f14f61f9c9427209d",
+      "url": "https://chromium.googlesource.com/external/gitlab.freedesktop.org/mesa/mesa/+/684c1b339bddbed6f11af93161da1c1bba77edb1/src/nouveau/vulkan/rust/video/decode/mod.rs?format=TEXT"
+    },
+    {
+      "original": "ExFiles/Reference/GFX/0.82.30/NvdecBindingSource/nv_push_rs.rs",
+      "file": "nv_push_rs.rs",
+      "commit": "684c1b339bddbed6f11af93161da1c1bba77edb1",
+      "license": "MIT",
+      "sha256": "ea0377f772a61a3dc1745fbc70d66eacd4305dee074935f8e1e3a51a83b50e78",
+      "url": "https://chromium.googlesource.com/external/gitlab.freedesktop.org/mesa/mesa/+/684c1b339bddbed6f11af93161da1c1bba77edb1/src/nouveau/headers/nv_push_rs/lib.rs?format=TEXT"
+    }
+  ],
+  "recipe": "Temp/Ossi08230/GenerateBinding9.ps1",
+  "scope": "H.264 wire encoding reference; no physical decode claim",
+  "layout": {
+    "picture_size": 764,
+    "new_picture_size": 764,
+    "status_size": 56,
+    "slice_error_offset": 52,
+    "eos": 52,
+    "explicitEOSPresentFlag": 68,
+    "stream_len": 72,
+    "slice_count": 76,
+    "mbhist_buffer_size": 80,
+    "gptimer_timeout_value": 84,
+    "log2_max_pic_order_cnt_lsb_minus4": 88,
+    "delta_pic_order_always_zero_flag": 92,
+    "frame_mbs_only_flag": 96,
+    "PicWidthInMbs": 100,
+    "FrameHeightInMbs": 104,
+    "entropy_coding_mode_flag": 112,
+    "pic_order_present_flag": 116,
+    "num_ref_idx_l0_active_minus1": 120,
+    "num_ref_idx_l1_active_minus1": 124,
+    "deblocking_filter_control_present_flag": 128,
+    "redundant_pic_cnt_present_flag": 132,
+    "transform_8x8_mode_flag": 136,
+    "pitch_luma": 140,
+    "pitch_chroma": 144,
+    "luma_top_offset": 148,
+    "luma_bot_offset": 152,
+    "luma_frame_offset": 156,
+    "chroma_top_offset": 160,
+    "chroma_bot_offset": 164,
+    "chroma_frame_offset": 168,
+    "HistBufferSize": 172,
+    "CurrFieldOrderCnt": 184,
+    "dpb": 192,
+    "WeightScale": 448,
+    "WeightScale8x8": 544,
+    "displayPara": 724,
+    "ssm": 752,
+    "records": 2
+  },
+  "generator": "Tests/nvdec_h264_reference.c",
+  "generator_sha256": "a2304d99b38250527d8f59033438c21f55edeb7aae1e8fce146c404fc27ac0ae",
+  "vector_sha256": "86e8ffc025f9662543b447c53dcaefed9f3b3b1a562c985cb165c218073a6e0f",
+  "vector": "Source/nvdec_h264_vectors.bin",
+  "date": "2026-10-04",
+  "binding": {
+    "subchannel": 4,
+    "engine_sw": 31,
+    "vector_offset": 1708,
+    "vector_words": 5,
+    "source": "Original NVK state init chooses ENGINE_SW and original Push class_to_subc maps decoder to4. C header emits actual NVC56F ENGINE_SW bits; previous picture/method/status vectors unchanged."
+  }
+}

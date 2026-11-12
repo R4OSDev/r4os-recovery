@@ -1,0 +1,156 @@
+--- a/src/egl/main/eglapi.c
++++ b/src/egl/main/eglapi.c
+@@ -377,6 +377,23 @@
+    return EGL_SUCCESS;
+ }
+ 
++#if defined(R4OS_OPENGL)
++static EGLint
++_eglR4OSValidateIntAttribs(const EGLAttrib *attrs, bool image)
++{
++   for (const EGLAttrib *a = attrs; a && a[0] != EGL_NONE; a += 2) {
++      if (a[0] < INT32_MIN || a[0] > INT32_MAX)
++         return image ? EGL_BAD_PARAMETER : EGL_BAD_ATTRIBUTE;
++      if (a[1] < INT32_MIN || a[1] > INT32_MAX) {
++         if (image && a[0] == EGL_GL_TEXTURE_LEVEL)
++            return EGL_BAD_MATCH;
++         return image ? EGL_BAD_PARAMETER : EGL_BAD_ATTRIBUTE;
++      }
++   }
++   return EGL_SUCCESS;
++}
++#endif
++
+ static EGLint *
+ _eglConvertAttribsToInt(const EGLAttrib *attr_list)
+ {
+@@ -640,7 +657,12 @@
+ {
+    disp->Version = 14;
+ 
+-   if (disp->Extensions.KHR_fence_sync && disp->Extensions.KHR_cl_event2 &&
++   /* R4OS has no OpenCL client API. Unsupported sync types are rejected
++    * as required by EGL 1.5 section 3.8; do not invent KHR_cl_event2. */
++   if (disp->Extensions.KHR_fence_sync &&
++#if !defined(R4OS_OPENGL)
++       disp->Extensions.KHR_cl_event2 &&
++#endif
+        disp->Extensions.KHR_wait_sync && disp->Extensions.KHR_image_base &&
+        disp->Extensions.KHR_gl_texture_2D_image &&
+        disp->Extensions.KHR_gl_texture_cubemap_image &&
+@@ -1141,6 +1163,11 @@
+ 
+    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL);
+ 
++#if defined(R4OS_OPENGL)
++   EGLint validation = _eglR4OSValidateIntAttribs(attrib_list, false);
++   if (validation != EGL_SUCCESS)
++      RETURN_EGL_ERROR(disp, validation, EGL_NO_SURFACE);
++#endif
+    int_attribs = _eglConvertAttribsToInt(attrib_list);
+    if (attrib_list && !int_attribs)
+       RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_SURFACE);
+@@ -1257,6 +1284,11 @@
+ 
+    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL);
+ 
++#if defined(R4OS_OPENGL)
++   EGLint validation = _eglR4OSValidateIntAttribs(attrib_list, false);
++   if (validation != EGL_SUCCESS)
++      RETURN_EGL_ERROR(disp, validation, EGL_NO_SURFACE);
++#endif
+    int_attribs = _eglConvertAttribsToInt(attrib_list);
+    if (attrib_list && !int_attribs)
+       RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_SURFACE);
+@@ -1864,6 +1896,11 @@
+ 
+    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL);
+ 
++#if defined(R4OS_OPENGL)
++   EGLint validation = _eglR4OSValidateIntAttribs(attr_list, true);
++   if (validation != EGL_SUCCESS)
++      RETURN_EGL_ERROR(disp, validation, EGL_NO_IMAGE);
++#endif
+    int_attribs = _eglConvertAttribsToInt(attr_list);
+    if (attr_list && !int_attribs)
+       RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_IMAGE);
+@@ -1910,7 +1947,7 @@
+ 
+ static EGLSync
+ _eglCreateSync(_EGLDisplay *disp, EGLenum type, const EGLAttrib *attrib_list,
+-               EGLBoolean orig_is_EGLAttrib, EGLenum invalid_type_error)
++               EGLBoolean orig_is_EGLAttrib, EGLBoolean core, EGLenum invalid_type_error)
+ {
+    _EGLContext *ctx = _eglGetCurrentContext();
+    _EGLSync *sync = NULL;
+@@ -1918,18 +1955,11 @@
+ 
+    _EGL_CHECK_DISPLAY(disp, EGL_NO_SYNC_KHR);
+ 
+-   if (!disp->Extensions.KHR_cl_event2 && orig_is_EGLAttrib) {
+-      /* There exist two EGLAttrib variants of eglCreateSync*:
+-       * eglCreateSync64KHR which requires EGL_KHR_cl_event2, and eglCreateSync
+-       * which requires EGL 1.5. Here we use the presence of EGL_KHR_cl_event2
+-       * support as a proxy for EGL 1.5 support, even though that's not
+-       * entirely correct (though _eglComputeVersion does the same).
+-       *
+-       * The EGL spec provides no guidance on how to handle unsupported
+-       * functions. EGL_BAD_MATCH seems reasonable.
+-       */
++   /* Core EGLAttrib entrypoints depend on EGL 1.5, whereas the 64-bit KHR
++    * variant depends on KHR_cl_event2. One must not stand in for the other. */
++   if ((core && disp->Version < 15) ||
++       (!core && orig_is_EGLAttrib && !disp->Extensions.KHR_cl_event2))
+       RETURN_EGL_ERROR(disp, EGL_BAD_MATCH, EGL_NO_SYNC_KHR);
+-   }
+ 
+    /* If type is EGL_SYNC_FENCE and no context is current for the bound API
+     * (i.e., eglGetCurrentContext returns EGL_NO_CONTEXT ), an EGL_BAD_MATCH
+@@ -1990,7 +2020,7 @@
+          RETURN_EGL_ERROR(disp, err, EGL_NO_SYNC);
+    }
+ 
+-   sync = _eglCreateSync(disp, type, attrib_list, EGL_FALSE, EGL_BAD_ATTRIBUTE);
++   sync = _eglCreateSync(disp, type, attrib_list, EGL_FALSE, EGL_FALSE, EGL_BAD_ATTRIBUTE);
+ 
+    if (sizeof(int_list[0]) != sizeof(attrib_list[0]))
+       free(attrib_list);
+@@ -2004,7 +2034,7 @@
+ {
+    _EGLDisplay *disp = _eglLockDisplay(dpy);
+    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL);
+-   return _eglCreateSync(disp, type, attrib_list, EGL_TRUE, EGL_BAD_ATTRIBUTE);
++   return _eglCreateSync(disp, type, attrib_list, EGL_TRUE, EGL_FALSE, EGL_BAD_ATTRIBUTE);
+ }
+ 
+ PUBLIC EGLSync EGLAPIENTRY
+@@ -2012,7 +2042,7 @@
+ {
+    _EGLDisplay *disp = _eglLockDisplay(dpy);
+    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL);
+-   return _eglCreateSync(disp, type, attrib_list, EGL_TRUE, EGL_BAD_PARAMETER);
++   return _eglCreateSync(disp, type, attrib_list, EGL_TRUE, EGL_TRUE, EGL_BAD_PARAMETER);
+ }
+ 
+ static EGLBoolean
+--- a/src/mesa/state_tracker/st_manager.c
++++ b/src/mesa/state_tracker/st_manager.c
+@@ -632,6 +632,7 @@
+     * brings GLES on par with desktop GLs EXT_framebuffer_sRGB, in mesa this
+     * is also expressed by using the same extension flag
+     */
++#if !defined(R4OS_OPENGL)
+    if (_mesa_has_EXT_framebuffer_sRGB(st->ctx)) {
+       struct pipe_screen *screen = st->screen;
+       const enum pipe_format srgb_format =
+@@ -653,6 +654,10 @@
+       }
+    }
+ 
++#endif
++   /* R4OS EGL chooses a linear or sRGB visual per surface. Preserve it:
++    * EGL 1.5 / KHR_gl_colorspace requires the actual attachment encoding
++    * to match EGL_GL_COLORSPACE, including for desktop GL. */
+    _mesa_initialize_window_framebuffer(stfb, &mode);
+ 
+    stfb->drawable = drawable;

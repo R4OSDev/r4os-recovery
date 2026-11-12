@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "generator": "Tools/RenderState/Generate.ps1",
+  "recipe_sha256": "72d66217a9f9db24c61932901dcbc6381ad68c005b25a2c8ebf16ac60e43ce01",
+  "class": "c997",
+  "output_sha256": "903ce6a1f9522ebad17f8e58d89d8171faa3202ee4c1881f67fac6bcc8725b57",
+  "sources": [
+    {
+      "origin": "Mesa26.2.2",
+      "path": "src/nouveau/vulkan/nvk_cmd_draw.c",
+      "sha256": "8e9c97b91a13156dc4ac74b3ecb252d064b8cbde8c7ef31d46433a0814861c5d"
+    },
+    {
+      "origin": "Mesa26.2.2",
+      "path": "src/nouveau/vulkan/nvk_shader.c",
+      "sha256": "a54b58b697f6ed1b00a8d445a6f1bb428c2c4e034a37811bae16df0fa1540c77"
+    },
+    {
+      "origin": "Mesa26.2.2",
+      "path": "src/nouveau/headers/nvidia/classes/clc597.h",
+      "sha256": "4b47ff263696df6377c693088353a5bff366a8e11d5c8cac1825c2333d8ce39d"
+    },
+    {
+      "origin": "Mesa26.2.2",
+      "path": "src/nouveau/headers/nvidia/classes/clc797.h",
+      "sha256": "868a0ce5794a9a4a2118022bfac817a0c84ba53dbc80c05337e087a3176a3e80"
+    },
+    {
+      "origin": "Mesa26.2.2",
+      "path": "src/nouveau/headers/nvidia/classes/clc997.h",
+      "sha256": "28a7aa21e99c65818b23ba0b61840bd235c0da39944aa43d1bf6bcd6ddd8c9aa"
+    },
+    {
+      "origin": "Mesa26.2.2",
+      "path": "src/nouveau/headers/nvidia/classes/clcd97.h",
+      "sha256": "07ffa8e80b70f8f5d47792d941450c13c306b0a491a6ac68318ffadceabd7802"
+    },
+    {
+      "path": "src/common/sdk/nvidia/inc/nvmisc.h",
+      "origin": "NVIDIA570.144",
+      "sha256": "707e5a739d9b8781c05003188d6e64888303c84039e4f2ecc0810b8411669248"
+    }
+  ]
+}

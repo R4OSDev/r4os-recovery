@@ -1,0 +1,200 @@
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -175,6 +175,7 @@
+ static void r4gl_zink_init(void *data)
+ {
+    struct r4gl_zink_state *s = data;
++   r4gl_native_startup_trace("R4GL STARTUP zink process state initialize");
+    memset(s, 0, sizeof(*s));
+    simple_mtx_init(&s->devices_gate, mtx_plain);
+    simple_mtx_init(&s->instance_gate, mtx_plain);
+@@ -191,6 +192,7 @@
+ bool r4gl_zink_tracing(void) { return __atomic_load_n(&r4gl_zink_state()->tracing, __ATOMIC_RELAXED); }
+ r4gl_zink_descriptor_mode_type *r4gl_zink_descriptor_mode(void)
+ { return &r4gl_zink_state()->descriptors; }
++#define R4GL_STARTUP(message) r4gl_native_startup_trace(message)
+ #define num_screens (r4gl_zink_state()->screen_count)
+ #define device_lock (r4gl_zink_state()->devices_gate)
+ #define device_table (r4gl_zink_state()->devices)
+@@ -200,6 +202,7 @@
+ #define instance_refcount (r4gl_zink_state()->references)
+ #define r4gl_instance (r4gl_zink_state()->vk_instance)
+ #else
++#define R4GL_STARTUP(message) ((void)0)
+ static simple_mtx_t device_lock = SIMPLE_MTX_INITIALIZER;
+ static struct set device_table;
+ 
+@@ -2949,8 +2952,10 @@
+ {
+    VkDevice dev = VK_NULL_HANDLE;
+ 
++   R4GL_STARTUP("R4GL STARTUP before logical-device owner gate");
+    simple_mtx_lock(&device_lock);
+ 
++   R4GL_STARTUP("R4GL STARTUP logical-device gate acquired; before device set");
+    if (!device_table.table)
+       _mesa_set_init(&device_table, NULL, _mesa_hash_pointer, _mesa_key_pointer_equal);
+ 
+@@ -2963,6 +2968,7 @@
+       return zdev;
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP logical-device set ready; before vkCreateDevice");
+    VkResult result = VKSCR(CreateDevice)(screen->pdev, dci, NULL, &dev);
+    if (result != VK_SUCCESS) {
+       mesa_loge("ZINK: vkCreateDevice failed (%s)", vk_Result_to_str(result));
+@@ -3585,6 +3591,7 @@
+       return NULL;
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP internal screen entry");
+    struct zink_screen *screen = rzalloc(NULL, struct zink_screen);
+    if (!screen) {
+       if (!config || !config->driver_name_is_inferred)
+@@ -3595,6 +3602,7 @@
+    screen->driver_name_is_inferred = config && config->driver_name_is_inferred;
+    screen->drm_fd = -1;
+ 
++   R4GL_STARTUP("R4GL STARTUP before GLSL singleton");
+    glsl_type_singleton_init_or_ref();
+ #ifndef R4OS_OPENGL
+    zink_debug = debug_get_option_zink_debug_setting();
+@@ -3603,6 +3611,7 @@
+ 
+ #endif
+ 
++   R4GL_STARTUP("R4GL STARTUP before CPU/trace options");
+    screen->threaded = util_get_cpu_caps()->nr_cpus > 1 && debug_get_bool_option("GALLIUM_THREAD", util_get_cpu_caps()->nr_cpus > 1);
+    if (zink_debug & ZINK_DEBUG_FLUSHSYNC)
+       screen->threaded_submit = false;
+@@ -3645,6 +3654,7 @@
+    }
+ 
+ #endif
++   R4GL_STARTUP("R4GL STARTUP before Vulkan instance");
+    simple_mtx_lock(&instance_lock);
+    if (++instance_refcount == 1) {
+       r4gl_instance_info.loader_version = zink_get_loader_version(screen);
+@@ -3697,6 +3707,7 @@
+          debug_printf("ZINK: failed to setup debug utils\n");
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP before physical-device selection");
+    choose_pdev(screen, dev_major, dev_minor, adapter_luid);
+    if (screen->pdev == VK_NULL_HANDLE) {
+       if (!screen->driver_name_is_inferred)
+@@ -3715,6 +3726,7 @@
+                                               VK_FORMAT_D32_SFLOAT_S8_UINT);
+    screen->have_dynamic_state_vertex_input_binding_stride = true;
+ 
++   R4GL_STARTUP("R4GL STARTUP before physical-device info");
+    if (!zink_get_physical_device_info(screen)) {
+       if (!screen->driver_name_is_inferred)
+          debug_printf("ZINK: failed to detect features\n");
+@@ -3755,6 +3767,7 @@
+       goto fail;
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP physical-device requirements passed");
+    if (zink_set_driver_strings(screen)) {
+       mesa_loge("ZINK: failed to set driver strings\n");
+       goto fail;
+@@ -3801,6 +3814,7 @@
+          screen->resizable_bar = true;
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP before flush worker");
+    setup_renderdoc(screen);
+    if (screen->threaded_submit && !util_queue_init(&screen->flush_queue, "zfq", 8, 1, UTIL_QUEUE_INIT_RESIZE_IF_FULL, screen)) {
+       if (!screen->driver_name_is_inferred)
+@@ -3827,14 +3841,17 @@
+       screen->debug_mem_sizes = _mesa_hash_table_create(screen, _mesa_hash_string, _mesa_key_string_equal);
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP before workarounds/features");
+    check_hic_shader_read(screen);
+ 
+    init_driver_workarounds(screen);
+    disable_features(screen);
+ 
++   R4GL_STARTUP("R4GL STARTUP before logical device");
+    struct zink_device *zdev = zink_create_logical_device(screen);
+    if (!zdev || !zdev->dev)
+       goto fail;
++   R4GL_STARTUP("R4GL STARTUP logical device created");
+    screen->dev = zdev->dev;
+    screen->queue_lock = &zdev->queue_lock;
+ 
+@@ -3947,6 +3964,7 @@
+       }
+    }
+ 
++   R4GL_STARTUP("R4GL STARTUP before BO allocator");
+    if (!zink_screen_resource_init(&screen->base))
+       goto fail;
+ #ifdef R4OS_OPENGL
+@@ -3959,6 +3977,7 @@
+    }
+    zink_screen_fence_init(&screen->base);
+ 
++   R4GL_STARTUP("R4GL STARTUP before compiler/cache workers");
+    zink_screen_init_compiler(screen);
+    if (!disk_cache_init(screen)) {
+       if (!screen->driver_name_is_inferred)
+@@ -3968,6 +3987,7 @@
+    if (!util_queue_init(&screen->cache_get_thread, "zcfq", 8, 4,
+                         UTIL_QUEUE_INIT_RESIZE_IF_FULL, screen))
+       goto fail;
++   R4GL_STARTUP("R4GL STARTUP before format properties");
+    populate_format_props(screen);
+ 
+ #ifdef R4OS_OPENGL
+@@ -3977,6 +3997,7 @@
+ 
+    screen->driconf.inline_uniforms = debug_get_bool_option("ZINK_INLINE_UNIFORMS", screen->is_cpu);
+ 
++   R4GL_STARTUP("R4GL STARTUP before timeline semaphore");
+    if (!zink_screen_init_semaphore(screen)) {
+       if (!screen->driver_name_is_inferred)
+          mesa_loge("zink: failed to create timeline semaphore");
+@@ -4074,6 +4095,7 @@
+ 
+    zink_init_screen_pipeline_libs(screen);
+ 
++   R4GL_STARTUP("R4GL STARTUP before descriptor/pipeline layouts");
+    if (!init_layouts(screen)) {
+       if (!screen->driver_name_is_inferred)
+          mesa_loge("ZINK: failed to initialize layouts");
+@@ -4094,6 +4116,7 @@
+    screen->r4gl_initialized |= 64;
+ #endif
+ 
++   R4GL_STARTUP("R4GL STARTUP before shader/compute/screen caps");
+    init_optimal_keys(screen);
+ 
+    zink_init_shader_caps(screen);
+@@ -4109,13 +4132,16 @@
+    zink_tracing = tracing;
+ #endif
+ 
++   R4GL_STARTUP("R4GL STARTUP before final queue marker");
+    simple_mtx_lock(screen->queue_lock);
+    screen->frame_marker_emitted = zink_screen_debug_marker_begin(screen, "frame");
+    simple_mtx_unlock(screen->queue_lock);
+ 
++   R4GL_STARTUP("R4GL STARTUP screen complete");
+    return screen;
+ 
+ fail:
++   R4GL_STARTUP("R4GL STARTUP before failed-screen cleanup");
+    zink_destroy_screen(&screen->base);
+    return NULL;
+ }
+@@ -4124,6 +4150,7 @@
+ zink_create_screen(struct sw_winsys *winsys, const struct pipe_screen_config *config)
+ {
+ #ifdef R4OS_OPENGL
++   r4gl_native_startup_trace("R4GL STARTUP before process create gate");
+    simple_mtx_lock(&r4gl_zink_state()->create_gate);
+ #endif
+    struct zink_screen *ret = zink_internal_create_screen(config, -1, -1, 0);

@@ -1,0 +1,95 @@
+--- a/src/egl/main/egldisplay.h
++++ b/src/egl/main/egldisplay.h
+@@ -86,6 +86,11 @@
+ 
+    /* used to link resources of the same type */
+    _EGLResource *Next;
++#if defined(R4OS_OPENGL)
++   /* Optional native final release, including the last egl_relax loan.
++    * Resources using this hook must not also free after _eglPutResource. */
++   void (*R4OSRelease)(_EGLResource *);
++#endif
+ };
+ 
+ /**
+--- a/src/egl/main/egldisplay.c
++++ b/src/egl/main/egldisplay.c
+@@ -436,7 +436,12 @@
+ _eglPutResource(_EGLResource *res)
+ {
+    assert(res && res->RefCount > 0);
+-   return p_atomic_dec_zero(&res->RefCount);
++   EGLBoolean last = p_atomic_dec_zero(&res->RefCount);
++#if defined(R4OS_OPENGL)
++   if (last && res->R4OSRelease)
++      res->R4OSRelease(res);
++#endif
++   return last;
+ }
+ 
+ /**
+--- a/src/egl/main/eglsync.h
++++ b/src/egl/main/eglsync.h
+@@ -30,6 +30,9 @@
+ 
+ #include "egldisplay.h"
+ #include "egltypedefs.h"
++#if defined(R4OS_OPENGL)
++#include "util/u_atomic.h"
++#endif
+ 
+ /**
+  * "Base" class for device driver syncs.
+@@ -44,6 +47,18 @@
+    EGLAttrib CLEvent;
+    EGLint SyncFd;
+ };
++
++/* Native waits complete outside the display mutex; queries must use the
++ * same atomic access as the driver. Other frontends retain their contract. */
++static inline EGLenum
++_eglReadSyncStatus(_EGLSync *sync)
++{
++#if defined(R4OS_OPENGL)
++   return p_atomic_read(&sync->SyncStatus);
++#else
++   return sync->SyncStatus;
++#endif
++}
+ 
+ extern EGLBoolean
+ _eglInitSync(_EGLSync *sync, _EGLDisplay *disp, EGLenum type,
+--- a/src/egl/main/eglsync.c
++++ b/src/egl/main/eglsync.c
+@@ -125,14 +125,14 @@
+       break;
+    case EGL_SYNC_STATUS_KHR:
+       /* update the sync status */
+-      if (sync->SyncStatus != EGL_SIGNALED_KHR &&
++      if (_eglReadSyncStatus(sync) != EGL_SIGNALED_KHR &&
+           (sync->Type == EGL_SYNC_FENCE_KHR ||
+            sync->Type == EGL_SYNC_CL_EVENT_KHR ||
+            sync->Type == EGL_SYNC_REUSABLE_KHR ||
+            sync->Type == EGL_SYNC_NATIVE_FENCE_ANDROID))
+          disp->Driver->ClientWaitSyncKHR(disp, sync, 0, 0);
+ 
+-      *value = sync->SyncStatus;
++      *value = _eglReadSyncStatus(sync);
+       break;
+    case EGL_SYNC_CONDITION_KHR:
+       if (sync->Type != EGL_SYNC_FENCE_KHR &&
+--- a/src/egl/main/eglapi.c
++++ b/src/egl/main/eglapi.c
+@@ -2063,7 +2063,11 @@
+           disp->Extensions.KHR_fence_sync ||
+           disp->Extensions.ANDROID_native_fence_sync);
+ 
+-   if (s->SyncStatus == EGL_SIGNALED_KHR)
++#if defined(R4OS_OPENGL)
++   if (flags & ~EGL_SYNC_FLUSH_COMMANDS_BIT_KHR)
++      RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, EGL_FALSE);
++#endif
++   if (_eglReadSyncStatus(s) == EGL_SIGNALED_KHR)
+       RETURN_EGL_EVAL(disp, EGL_CONDITION_SATISFIED_KHR);
+ 
+    egl_relax (disp, &s->Resource) {

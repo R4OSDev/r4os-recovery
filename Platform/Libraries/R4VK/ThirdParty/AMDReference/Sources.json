@@ -1,0 +1,1049 @@
+{
+  "schema": 1,
+  "version": "26.2.2",
+  "url": "https://archive.mesa3d.org/mesa-26.2.2.tar.xz",
+  "archive_sha256": "eeb29ca7e56cfaa8e8a79538dcf834e3b18e501c31bef5145e959ea437cc4216",
+  "status": "Original RADV reference preserved; selected RADV/ACO/AddrLib and common runtime sources are now built by R4VK for 0.80.23.",
+  "boundary": "Original files remain unchanged. A single private Mesa build tree applies Port/MesaRuntime.patch and Port/MesaRADV.patch; the native R4DRAW/R4DEV winsys replaces Linux DRM discovery, BO/VA and queue/sync. Linux winsys sources remain reference-only. Graphics/compute, Vulkan 1.3 and WSI acceptance follow in 0.80.24-25; physical GPU acceptance only in 0.80.39.",
+  "patches": [
+    "Port/MesaRuntime.patch",
+    "Port/MesaRADV.patch"
+  ],
+  "files": [
+    {
+      "path": "src/amd/vulkan/.clang-format",
+      "sha256": "4e2f19b218699ed1143092378cde6cb05c7a2665e08fc92a40ec2dd1b789e712",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/.editorconfig",
+      "sha256": "376d5c9d5fdc328086768c40c0b72d50fc3af8b3673358a667f6e9aa5e34543e",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/00-radv-defaults.conf",
+      "sha256": "0613b987fa05e14321f9c40c20a1777865ba1c0effcaf53bd2fb484fd53505b3",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/.clang-format",
+      "sha256": "da1c249067eac61726fe2793b6069873ec920a96f3829e4380830afaa03af4b2",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/README.md",
+      "sha256": "1195abc94c2c48ed2c0a6fcd30b734e060a545c157ac37eba8a235ff0be53221",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/bvh_defines.h",
+      "sha256": "e975133242070fcdbe34cd17b0d866df0f1e5bd4114137006791a027d5bee114",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/bvh_helpers.h",
+      "sha256": "44cf7ce748a4f7a5add92d6f998514bf03397121de935a8614fdf53f7d106df2",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/copy.comp",
+      "sha256": "115d9ae6d76aa0084287b7a304632b0619137373b3801e04d23938a941a754d2",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/copy_addrs.comp",
+      "sha256": "2614be248376b870da8a385258aba50ec8337ebf9b216f34e54da392042c9d0f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/encode.comp",
+      "sha256": "7466e8e890c20dbe472531a8af5de04035681f3f4275b499e63bec594d3d1342",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/encode.h",
+      "sha256": "11c35fdad533f2d438f3499d08a5f215f82b0a2eeb42bba377a84ebe65ec4039",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/encode_gfx12.comp",
+      "sha256": "e58eea1700160346d8828da394cf4f64fa7549d0ae6c7b79e5b72aee18a1cb05",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/encode_triangles_gfx12.comp",
+      "sha256": "1c54ec0fd5408bcb5898b4072bb6267323f7335bc32577ea3ad7270e62edbb70",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/header.comp",
+      "sha256": "999f106a655e0e83bc2d1c188384d04c8f170ac114c4db89959e2388ccc81778",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/invocation_cluster.h",
+      "sha256": "a02357b9c811d2d4eae5c56a674512919b0ea9fe02d55b236c29ba70945cbdc2",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/leaf.comp",
+      "sha256": "d2354082cb6ea48ee4eabd7740a5be7fe317ebf9f7339475e1dccd3d48ea5fc4",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/meson.build",
+      "sha256": "d3567d7ccb1c688c6955fc7f15ec961c8f5387dc06644f31548a87421266c02b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/update.comp",
+      "sha256": "f2a56102815b6419d8c196dc11a9cf460d7b1156b0ab6627be720685d5040718",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/update.h",
+      "sha256": "00ffd1be12842467bda84b765b71acbea8710335dc3ea6a6cd113b7970730386",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/bvh/update_gfx12.comp",
+      "sha256": "000372c512108fcec021d8af18ea553f968cec184da08b25bc1917cfac197804",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/meson.build",
+      "sha256": "82bce68b3b58bef0c9b0d6539165e12188c081e384f4627c89e3a22e21119786",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_annotate_layer_gen.py",
+      "sha256": "ed9e752d2afb2543cce34fa7d15f301bfbbc27d8a7ddc2cc696f315dea679150",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_app_workarounds.c",
+      "sha256": "e8f55808bb9c26543fd93d64cd0db52cbb758604cef543a030460abbd2cc1cbc",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_app_workarounds.h",
+      "sha256": "a8bb365aaf9f48fb4f95619bb04e8833ffe50b46a85ede53745c641fb28777d2",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_ctx_roll_layer.c",
+      "sha256": "7572717efc463a448f475cd511c7f3eca7448588f9f8be2203fe6255692cb22f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_rmv_layer.c",
+      "sha256": "3eb5ea61de1bc8dfd31510c6344d58c071e38ee095bc2e404883017e9302db79",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_rra_layer.c",
+      "sha256": "80e09d617a19f5ba9f822ffa4bfbdefa05cfb166710c968f7d58a5b198fe756c",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_sqtt_layer.c",
+      "sha256": "068e3d631c7774abe12b29a1447cacb2b921457090fcda000c69cc6c53c9daf7",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/layers/radv_utrace_layer.c",
+      "sha256": "e74a9d98da0e1d1d8556485f224d62c01e8476a58ccfb6b071f2d4310bea6300",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meson.build",
+      "sha256": "96199abeb5a57f3abac9c7e38834e2df4d02bc6e66a705e23a80c856c2a39708",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta.c",
+      "sha256": "56b1dd237d8541b4533171d5c13ff938914a9ce571b427e5cff67419fc0789d8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta.h",
+      "sha256": "3e23e4e8ef03ec133c59ee2a982cb827e33eb29b99bac6ff8674160fead874de",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_astc_decode.c",
+      "sha256": "17608f1507ee39ed9690b71e2fae5abf2dff7b5881e410a0b095ea1543d150ca",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_blit.c",
+      "sha256": "5b0ca6b5cbcd063fe2ae6c135e872ee070e8060626dc9f04d0429df4a34039f3",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_blit2d.c",
+      "sha256": "103404ae59d8cf6f56d672730f3435a64736c217e501b826d2cf66cf13932711",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_buffer.c",
+      "sha256": "0d7786e2ae623f4df3fc2d408a3d51b54369b1804f7b84f1ea5309b731732e7c",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_bufimage.c",
+      "sha256": "222fa4465c4b58bf4a694d545005f8e44e7c643890d4eccdde54942743ba5fc1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_clear.c",
+      "sha256": "027885ac05953b6860a23e1d62d8b1fc440c85f968763554e8b02071a9a833eb",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_clear_hiz.c",
+      "sha256": "211a5c9b4d6d698628217c81f6abedd4b35c05dac6d7c8effd96f4b6846e93be",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_copy.c",
+      "sha256": "f0920ffc1c6a4d0ac9824fc21a24f75012db3ed5fa37d1f3cee75de370d31020",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_copy_indirect_cs.c",
+      "sha256": "d7d103b79cc14cf59a0c5d45887c890411d31caa743d1456124d32f5e5dd5812",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_copy_indirect_fs.c",
+      "sha256": "0aea2b0d7553925e2c99dd72e53231a4e4007cdfc4eab25f6c86796190bd7bfd",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_copy_vrs_htile.c",
+      "sha256": "00b362375ea193532e56735d381ad0596499797fdf3e7c9dd86f5475c292f300",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_dcc_retile.c",
+      "sha256": "a0367facc10ef6b7d455a4ae01cafc99bdf3f4e4ad77cb24b3c8bc3adf8d9fe7",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_decompress.c",
+      "sha256": "aabfc19131714a8c2644193e511c7f49dc23298d41cc981b130eaf80fea866f5",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_etc_decode.c",
+      "sha256": "71bfa5c0e51ceded80550f354c97c188942db17e2c2efcf975a858ae7b0773c1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_fast_clear.c",
+      "sha256": "f9dce37032cb4ef8d5b5e110ba118c700aebcb1fccab702363dfbaec63ab876b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_fmask_copy.c",
+      "sha256": "af8be25964879b32d08fff59a82eeae806de790dcc0dd24ca803ef7e225da7b1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_fmask_expand.c",
+      "sha256": "010939b1fba91a75cc27071dc4450a11b4ca30d39b6ecd566a3f0dcb26e684ce",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_resolve.c",
+      "sha256": "38ffc79ae5c173ba793742b08eeec27b99d36bef0bf744db1f710e02913ad449",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_resolve_cs.c",
+      "sha256": "fa22d223ccf8712215685bfa5f78fc95ca5f35e5481e39ab43e05837b5a4f34e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/meta/radv_meta_resolve_fs.c",
+      "sha256": "cd8b7f03d3afba758b43e6d0f92fc798d98170fbafae7bd925404c948879d865",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_meta_nir.c",
+      "sha256": "a59cb65cf68e2a0111e0e59cf84444373d9c8a2198e6def5cf7121730f656675",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_meta_nir.h",
+      "sha256": "3ebffff45e861b3581151e2fe4ee6958d02f1c83960d2fb5daaa0077a1413e12",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir.h",
+      "sha256": "64f05166e427f579b5ce1d772243662824c896c192728f01cfbffccf65f8a7e8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_export_multiview.c",
+      "sha256": "0689dd3fa614026f369ee1ae116eabf062c3e56ae4f093955541d3d6d2e9aebb",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_abi.c",
+      "sha256": "3d1416fda1e1d586e16d2e2f2d6f8a782b56807596f7be2c9e7f18412bc9ca16",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_call_abi.c",
+      "sha256": "dfd167f9d28077127f07df7ba6c0efe76f485fd3ec33a15560350d6d144c8a23",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_cooperative_matrix.c",
+      "sha256": "1d381e1e5973b1300c3d4f395a6a3f2a8361506a2537b031701eb36ffe5cf4dc",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_descriptors.c",
+      "sha256": "488f50cc81e9fe683aa49d6ba3c0343d331214fb2aab5cc3cd91cc2299a4d6fe",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_fs_barycentric.c",
+      "sha256": "95c8b5b0041811803671c0932aa15aed91b802f92901e9b80cbae0e2c8ebc102",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_fs_intrinsics.c",
+      "sha256": "60fc2becfc4f6e6e11b057388f27c798b34d7898dbdddf833e515d343f59f0ee",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_hit_attrib_derefs.c",
+      "sha256": "b7759b8d42d68017ef9620cac13643479a9e8d1aacf649b60b01fc27d92db3e6",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_immediate_samplers.c",
+      "sha256": "457abfe804ef3924ba1816efcf695a6e71ee9be60b69cfbf1f6754f6c9335da0",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_intrinsics_early.c",
+      "sha256": "056f23fa816a1a2cc2721d88d16d9c76661fd40d145d695f087be8b590235ca5",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_io.c",
+      "sha256": "82b45a4993e4f6f21d49af13ba4445527949edac68841c922cf20be67ce9237e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_opt_fs_frag_pos.c",
+      "sha256": "d35ab26661fdf893a8fe155305a7e803bdac2bf14f52ebad0988ac5d5e7031fd",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_primitive_shading_rate.c",
+      "sha256": "71161308d9a8a5cc4846a13f0658452b8d3c5e21ed7b57313d98645c307af619",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_printf.c",
+      "sha256": "6c84c95864da3c8cd8d46eb98a1d614b4be9c9d409d8197b5360f23e02c9821b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_ray_queries.c",
+      "sha256": "706a7f651d37df4850805c256c77f2ed2e4a30e627ab99e577039af32eb8cbcf",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_lower_vs_inputs.c",
+      "sha256": "2172976054560119e39d37de191818422c4fd0e28a73460c29b66f0cb60c49c7",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_opt_fs_builtins.c",
+      "sha256": "c527a4f077416f987e331aae471332150d274972ba922505198f61d9ae29f3a8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_opt_tid_function.c",
+      "sha256": "92cd28c4ef36512b111d90aa5521eaa86f8d109f6b1c248007718c4a890b2298",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_remap_color_attachment.c",
+      "sha256": "f291b5bf8c7c4838c11fbed297756da810cdd0c9edbd4ebe6c3b2e7daf0e7241",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_common.c",
+      "sha256": "393339e21ef4c95e493b13c64e6fa19792bdda7c889e58acc773cab2d77c9217",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_common.h",
+      "sha256": "27af676e97f0487894041755fada7e3bd18e19dc6fe18399dab7a33ed914c6b6",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_common.c",
+      "sha256": "7d0c9a7930c945bacc8f339857d0842c1af28a007acd67fcec825eb50ce9952b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_common.h",
+      "sha256": "3a160cf2e4ff0b8c2d64c77303c13f5c05da5808b2c96abeccd54f7ec30933de",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_cps.c",
+      "sha256": "9b568e01a2b0d1afca4c07b329b2075b98918d2ac65b2c1e9f2ef80ebd3626ed",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_cps.h",
+      "sha256": "c2b97b2fcc4c5c3ec07e916dfb664505371d4353553fdf4f89d4b10e8749f5e9",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_functions.c",
+      "sha256": "46e26498af09cb59f9ad6085af32793bc6378f0f2356cd720658f403ea39131b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_functions.h",
+      "sha256": "e3401fdfe5059021f50ac24a63ab6b66d68f803d3c7bb6222fddc75cf98f264e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_monolithic.c",
+      "sha256": "eb008c03d280acd258e97d9423467f31bd98ecd7028ee603944acf5ab1017dff",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_stage_monolithic.h",
+      "sha256": "24725e15e61a3d31e9281223ebde8976ef77bae4b683d0e871276529205f2e7f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_traversal_shader.c",
+      "sha256": "28e9ba718f3ab7713ce2f7cafdb4aa524b1a97d9d165248aac0142627623475d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_rt_traversal_shader.h",
+      "sha256": "981ae407bc82227995b0f7abb51a70a308fdbd5c928f9ff66ab121a850e2806f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/nir/radv_nir_trim_fs_color_exports.c",
+      "sha256": "999b81823ec182febb2a5ddf875377d8d1403946afd21612f08122c0ec6652cb",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_acceleration_structure.c",
+      "sha256": "f81a17cb8f729c14b4c3b60ac8d342bbcd18e3479bf243dddff3ca36442908dc",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_aco_shader_info.h",
+      "sha256": "eee03c02d1d10126d87d28e758a28d7d6c9e461ac3bd75109bf48d2bb1c3bbf3",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_android.c",
+      "sha256": "7772a8ef3adc9f53d1a1366c9864be04138a7dd391982b8938b587168ea6efe0",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_android.h",
+      "sha256": "d9ef9d5af531b674368f7db1bb1cef513f237921032f02e9ab618d9b19843d90",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_buffer.c",
+      "sha256": "46bf2451d1b9c3f06bcd842d5f84019dec7e0bf5f8ca2e3d9b2008c822678398",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_buffer.h",
+      "sha256": "e807d9ab9440d4f9ee29f99c6589a2bc574ce26f4a8e510abb8968080a9fea33",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_buffer_view.c",
+      "sha256": "f1702b3972150b9f73d81c9e7d60466a8980df70fed618bdf366f0d74b922ef2",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_buffer_view.h",
+      "sha256": "455377db01e72f9c3201370bb040b7a5110b08bbf7f26f14636354b919cce8f8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cmd_buffer.c",
+      "sha256": "a256461f316fb3e71d1a17fef6682af64e432fbe8e3fc0eee276ef5b36d245e6",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cmd_buffer.h",
+      "sha256": "ed6af933fba4f6c35472cc8cbbe926cb94e4d88f5a1d99500cfdc0c2c80ae7ed",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_constants.h",
+      "sha256": "864fa5206a89738a241a88948b517736c8971d47bcb4c7d67f5cab2384b0b988",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cp_dma.c",
+      "sha256": "eebe4bc43b63374820f836a910f7dd02851bef1a76ae1d7f27833fb3e0b7b276",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cp_dma.h",
+      "sha256": "2962487b94644c15964627936539379f5acb0730733bebe53660a88c6d53e5ac",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cp_reg_shadowing.c",
+      "sha256": "fc482dd1de84af4a716489edd38abd12b41849428e0146bec4b9ad813a9059a7",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cp_reg_shadowing.h",
+      "sha256": "61bfcaa5784080208a80b9db3379f25e725100ae9305d3265e0171ead38ee154",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cs.c",
+      "sha256": "a92007fe6487d4c14fb8ef6064476f2b152c16679c429ef8b001d43c5857d855",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_cs.h",
+      "sha256": "a7365bd2f9ef9deb67e0f4be90c440900890e8b31303bb53bf09d1c5e6ad3e1b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptor_pool.c",
+      "sha256": "27e3f94f6c4f92f379a46115090203597c6997f7443e7ca2b2065e6359d2fc83",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptor_pool.h",
+      "sha256": "92c81c5b7dd012f3e083047084c7f2556476bb00cb7daf3050c672f85b75fefa",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptor_set.c",
+      "sha256": "a93529a9317cfc4108b1e84f503d3908c4896f550a1bfc70e7e670b49a15008f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptor_set.h",
+      "sha256": "69a93d271f38b4938e636fbe1dff5e647b37d0c6d8c17db135ac5f26a0fac35b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptor_update_template.c",
+      "sha256": "2b275857da7fb12f2f6a8da194ff7ec87106383fed3b62bff4ece27eb2cbb96f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptor_update_template.h",
+      "sha256": "1dbd5b73f5caeeb9b07f3b1df2fa1864333b3122690f7e99b25a1f04279f302e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptors.c",
+      "sha256": "acebdb6caecd64af1e661211b17875b954ce42a8ccaa6f9deb192b3fa0d02371",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_descriptors.h",
+      "sha256": "23abf950d61b17afd1980e639519758f50bbde5bc30ee1c005ce7c5aa9a412f7",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_device.c",
+      "sha256": "663a0ae27f4385cfe0e5306d69ef5e21108e0476e9cb3276acebd1a8c92476c8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_device.h",
+      "sha256": "9f3bb3ebaa1717059a6bacaae3fe48e6a703e0440aa07eeb9ae2624478d32d84",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_device_memory.c",
+      "sha256": "1e9f6a850cfad3e4120c4a5ae409b99de9efa8244a2cfc3203d270bbaf91e7a0",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_device_memory.h",
+      "sha256": "0bcd023004d3fc389999e8aa4d2709f7b4cb97c75837189fde0666adec0faaba",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_dgc.c",
+      "sha256": "a9c00f846f2d44ec27687a7db5f6d9060c1adeac0ab527fe623c11ca595ace06",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_dgc.h",
+      "sha256": "898039628bbed2a0d828f754a154833068eb447640d355c9ae68a8144de2aed1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_drirc_gen.py",
+      "sha256": "31ac54a512f9a8b8fe7a072dc127014cdabb840cfcd261a883fea48a5b1ca694",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_event.c",
+      "sha256": "a86e23484688c08c66ffade85cdf256abc626a4d3645ae66b3b4077431f7aa8e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_event.h",
+      "sha256": "2232cd12df7e1d0467265b0c17f304ede6bf605a85e251324ceda379a50ea941",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_formats.c",
+      "sha256": "0cdcc952bfe42fc590e090a3050480e1ddfd5ee18a988d16846da404177d5d65",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_formats.h",
+      "sha256": "c31fd241a5eb5a8ac7eb9171d95766dfba467ef08af0aa29b179f2c84fa37bb9",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_host_image_copy.c",
+      "sha256": "8782f3b28a3f8d195f479485f0967e73278b0160f8f0afd0514429c24a57843f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_image.c",
+      "sha256": "22ec2feb2df840459a0cdb020959f0451857c3f5154f3187c82e4e5eb259d42d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_image.h",
+      "sha256": "92f52472e58d3483b606545f8c1fc1f823363e17e4ae4bcf9bf238609a04cbc1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_image_view.c",
+      "sha256": "a9b387ecba30255db322c33ebf05684d4b66b3cc1e411837a79dfb034deebd53",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_image_view.h",
+      "sha256": "4219366541839a0270e337e4189f4d35e190d2da41963941303843257a027235",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_instance.c",
+      "sha256": "9d6db5588cdffd670fbbb58b75ccd448249c01052100a895b4d9a9fbd63c6ea8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_instance.h",
+      "sha256": "aa98d382e5a34123c3551d067f512b2d49198636c6834ac81f68a8cbeaef4a5a",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_llvm_helper.cpp",
+      "sha256": "b69fc4cbbe9a429e85380ddb9278458fe758f2863609774704c9564f93fc9aa0",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_llvm_helper.h",
+      "sha256": "54319f1c4b72f24d9cdb36ee4837cb2bf9b381307fb9d928b7db986099cb5fce",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_nir_to_llvm.c",
+      "sha256": "56aeff8189d9662dc0784c3fca5a991cb20f22c4584ff2e45f0f7e3e3de16cb7",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_nir_to_llvm.h",
+      "sha256": "85270b617e70d08c65adc12c1760ca4d456aa314f6820e8a63f1fd5dd30fdf2d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_perfcounter.c",
+      "sha256": "08a920277aeb80f6c04f5a2bd1d4c5a54c39c6f3f390b35393cc60d78e6c0ef1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_perfcounter.h",
+      "sha256": "798e5e325146ee59624a89fde2a7502bfa082eb0c1b743d908f54fb84dca9d78",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_physical_device.c",
+      "sha256": "468c0fee6c0e30350d7db084c4f34379ffdd22591d5ab874f488bcda0517a58d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_physical_device.h",
+      "sha256": "fe761b9b26a1c6c2f396a416ce3e1ce9e6780d703027d841f5aa134cb7e93954",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline.c",
+      "sha256": "b28475667a6b751f875d69a014237442d365b8d38eca672a8ee34e2ea027a06c",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline.h",
+      "sha256": "ab08b2917975d232676f510259e217d1efd9d50523e1a004297269902fc7a46e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_binary.c",
+      "sha256": "939d2e49fee57ee221e5387bd6ee74104768b1a5a442db92aa6230fc521ec4f9",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_binary.h",
+      "sha256": "e5c72675120660e2b695a8642ab959ba1c1dadd50e57b9ccd9f29aa967bbd748",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_cache.c",
+      "sha256": "305faca55d308e4ac677e15e08930a48ee24c4d555e664e1216321f6e6cdb302",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_cache.h",
+      "sha256": "ec9ce4a6edf66d1c018adfd6ddfac0f2b2f61aae1d09800f6916ab29821d3558",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_compute.c",
+      "sha256": "0c36fb5dfcf1c20099e2137c7368b5199816006a87352763c79de6b4eaf1096f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_compute.h",
+      "sha256": "cbb1cf721dade028a241e57e0c0751310d4f934781ece9cb04f48dd70e1150b5",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_graphics.c",
+      "sha256": "7066034bf60c969551dcb371df6ba34a5be7e02b409cb479bcff1aeed4cce6d0",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_graphics.h",
+      "sha256": "f7e37823c9eff627af3f69b90a273582218c62ea4538459c5bbaaa186071ce45",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_layout.c",
+      "sha256": "e1ee3be9d00b027b2ef55acc582e211f6afd8f16b65d532a07610681b71da4c3",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_layout.h",
+      "sha256": "3980fdc51501a5dbdeb75bc465c92d0b36a9b04de3dd6e4b9e06e9662139db0b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_rt.c",
+      "sha256": "49fa7483d40f754aa6b2c32925463dec498e0e1a9b04ee4675f9a33b0d07fdd3",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_pipeline_rt.h",
+      "sha256": "6db85017e7be6552ee8d4cab4d985c02d49060c3f63362a03f84b24e2a650e4d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_query.c",
+      "sha256": "78c204d236b5f86842cca8eae5d9550c28c1ccf52a7e9bc1184693ede6ca7b3d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_query.h",
+      "sha256": "6dc8a86b8d36a79673196de74e9c57fcec9fcdcf6ce2f28e1d64f4cde5a40965",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_queue.c",
+      "sha256": "8083ecd9c98c8a46241fdb60ae656d052ca60c21fe2cba49458e6cd7f540735e",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_queue.h",
+      "sha256": "0479acf864f89d1489baf9d6a860af47c8287d255f8bde59fce4cf3d43bcec02",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_radeon_winsys.h",
+      "sha256": "f0c05b71e1478d1f231129f0d10059e0724eaef0a645a62278bdedc016548713",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_sampler.c",
+      "sha256": "3e95549b6ab9ac52665763a408207fa4685a1e4ecc27fbcba83c974ff5eef9f9",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_sampler.h",
+      "sha256": "3b0e41867defef4c55168fd62546e66ea3b54e83a7da20889ecbd260a32f6d24",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_sdma.c",
+      "sha256": "b502ac8e8ed10aa2fec57ca404d5ed5bb13bf0df9a4e237d19980338afcefd62",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_sdma.h",
+      "sha256": "08cace8e110183740f9c8b8a50d07a43cf5200198e42fbae7e8e2ba9526c344d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader.c",
+      "sha256": "b4ddf078ff17e4d0824cc2c90e1672448fdd2a62624b225c1488a695fcec5cdb",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader.h",
+      "sha256": "253d486f7f042aecda3f42a53c632a4f7ba71d370963c0c48189c383db3761ff",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader_args.c",
+      "sha256": "64571456af3b9c036a6b91c28bab2a1745c4951e157d2ba4c8c07baa626e7d71",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader_args.h",
+      "sha256": "54fcc69f637945d80a1ffd9e1fc45dfac120b33ae0ec20b8c350695d99509443",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader_info.c",
+      "sha256": "d614c9ff88a7160ea944f65a58e15ad7e5186fa5333756293f76e6dd1ec41398",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader_info.h",
+      "sha256": "6f36525ab81557a67235aa34eaa1e64e25b52bc6fed8a87eb0f878ab5eef2a8a",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader_object.c",
+      "sha256": "6c4c44da78fa6287488c2d20e1ac63f2eef8da3bd6aa959d05d4c742e2dd5463",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_shader_object.h",
+      "sha256": "c7ed98617c3d2d5ec21394cb822d9db8cccca325df42860ee446e143e1db5b1c",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_tracepoints.py",
+      "sha256": "bd613456e557b01622680294f82b7b2796dec9b55ac62c2fa19ca95de1db3e68",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_video.c",
+      "sha256": "ee2da7a630c3a5773ae0a6c821fce93f42e47ac17cee6dd618301087f7f3a035",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_video.h",
+      "sha256": "5bc3647fdb5314ea9262965d74fe409b0e489e07af6318d6c515704c8e913223",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_video_enc.c",
+      "sha256": "dfd5de96ba86243979f826c424796c67eac6d2fa90627bd60e87ac0e25631af2",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/radv_wsi.c",
+      "sha256": "ba5b23bc39e68f8e52cb6bc3b65b0327c2003512aa9c0c5c981b43fa7bee9716",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/radv_wsi.h",
+      "sha256": "cc461b610b06bd3828e9344dde6a849396b016a2f59bef7b158894e6086fe16f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tests/drirc.cpp",
+      "sha256": "8a98151e9d4b8340c4df311bed6f28b60a629ba76ffd778a7452f242b82978a4",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tests/helpers.cpp",
+      "sha256": "6f8be242b67b4a3ad038dc02322065a5fc043ca94d395fccb67a84e5313dbc18",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tests/helpers.h",
+      "sha256": "0e1c166b9fdb82b54549e423990978c26a74b26ece19e887e64c0f9ef2ad8647",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tests/misc.cpp",
+      "sha256": "fbdea32f3aa704640de9e64cc10f8ee57c70d697fe64cf6a469f1112310ba6cb",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tests/radv_nir_lower_hit_attrib_derefs_tests.cpp",
+      "sha256": "d86ccf1910221cdafa221f62247ce86108cd285eae0211efeae2e4477f8db80c",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_check_va.py",
+      "sha256": "0bd580fb69d8d0419dbd83c4686f17c5ec2b3ef9281fbf270eb0e9625a2c9d65",
+      "license": "MIT (Mesa AMD component; original notices retained)"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_debug.c",
+      "sha256": "877ad4e3028b1aeea63bbe3aaf31bd5724d3698eb053b2b7017703e7ea6cdcaa",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_debug.h",
+      "sha256": "2bfad300d4ae309f447ddbdb8dbd0c3d2b96346cc31479eeaa6217b4d30a3b2a",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_debug_hang.c",
+      "sha256": "1ffa18267e2d47ca8c8b2e0924fdcd1bb7a6f85db528dfd432fcc77a672b6eef",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_debug_hang.h",
+      "sha256": "9da7689824dd60b8ad594cde17f914c026c099cb988272eb576c5bf3a7aa73a8",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_debug_nir.c",
+      "sha256": "a6e5c287ede0b3fc01daf1b8ba67c2bc07e2e477a78f89c2ab46f53073adf93d",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_debug_nir.h",
+      "sha256": "c552a5005926ae22e0272e0a53d0e6dc8716a4d68fa8c1efa00ae419ceca07b1",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_gamma.h",
+      "sha256": "2e0a942de813fe88c40c5bff8afb3d2bd14536ec826714482dba4745ec26056b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_rmv.c",
+      "sha256": "778636368f77dfd9bfbb257d380da716d88d52ea1318fc7b5eb406bac649d59a",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_rmv.h",
+      "sha256": "b1dfdfa285e4d89346462471e4d12ca2f3359aeee77404160c08e67db21f2a85",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_rra.c",
+      "sha256": "0d7b4b03e190d1fb558d1ae387157dd7490fd1f56e233301720ddcc7c0be5a0f",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_rra.h",
+      "sha256": "f58817bddfdbe991e9aa89ba09ca53e3fcb87c178d3fd44e70c6e5b57703a4da",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_rra_gfx10_3.c",
+      "sha256": "b0a23022c58c387ec95be019e798414c351ff41ae10fcbc79480fd2a4afad022",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_rra_gfx12.c",
+      "sha256": "34e30ef1e860e1156ec5c7f171afcf15d42cece84d01678e73358954ef23c89b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_spm.c",
+      "sha256": "65500d90fc155cffac78b0f86655bde0f802d384c3ef71c99badfb30681e61df",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_spm.h",
+      "sha256": "af83d308f791633ad3276be4f12b053e3fc64e5ae26d8c32b1a81fc7b40c46ab",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_sqtt.c",
+      "sha256": "da74385c2b87d198d3fce5c54f4130798cac3ab3b24aef7f5f8439242999ebfa",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/tools/radv_sqtt.h",
+      "sha256": "27a090aafcf0e7629b9f5f4e731912aaf7799870097f6d9d3e792227d8ca03ef",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_bo.c",
+      "sha256": "fa2a8b944d86e80378e026d5e5d98e5091efea84fc88eea9953cd831e1fa93ac",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_bo.h",
+      "sha256": "629e91b75e7b76bc9a6aa876705e118e92e6857efbb99ccdfcfc493510d6c889",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_cs.c",
+      "sha256": "853d66f2db5cbde7ee1dc1b899ac088d7e56e34c384f321ba6df45f136720e5b",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_cs.h",
+      "sha256": "1b804a3a44522f521f598b5f21836955a4798e89d6f3fac28b673d792627a0b6",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_winsys.c",
+      "sha256": "347b9b276374e5f0a0e6684e9c6ebf4f34895e24887217cca7eaf43c46b6f5a5",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_winsys.h",
+      "sha256": "4241a645102ae1b2486e7c55c9f8dc7f67aaa987bbeeb7af61e87318009a05ac",
+      "license": "MIT"
+    },
+    {
+      "path": "src/amd/vulkan/winsys/amdgpu/radv_amdgpu_winsys_public.h",
+      "sha256": "b25118fe292a0eff425d6f5e85a2116bd96594b2b60f26e26413889bb98526f0",
+      "license": "MIT"
+    },
+    {
+      "path": "docs/license.rst",
+      "sha256": "0d1a0472ecc81830e75c20d59b0ea02841e3db21255e0ebad97ab682c54d6615",
+      "license": "Original license documentation"
+    },
+    {
+      "path": "licenses/MIT",
+      "sha256": "323c587d0ccf10e376f8bf9a7f31fb4ca6078105194b42e0b1e0ee2bc9bde71f",
+      "license": "Original license documentation"
+    }
+  ]
+}

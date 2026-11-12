@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="40" viewBox="0 0 64 40">
+  <defs>
+    <clipPath id="content-clip"><rect x="4" y="4" width="56" height="32"/></clipPath>
+    <path id="mark" d="M0 0 H16 V12 H0 Z" fill="#cc3300"/>
+  </defs>
+  <rect width="64" height="40" fill="#112233"/>
+  <g transform="translate(8 6)" clip-path="url(#content-clip)">
+    <use href="#mark"/>
+    <circle cx="30" cy="14" r="8" fill="#00aa44" opacity=".75"/>
+  </g>
+  <a href="/next" data-r4-node="42">
+    <rect x="48" y="28" width="12" height="8" fill="#abcdef"/>
+  </a>
+</svg>

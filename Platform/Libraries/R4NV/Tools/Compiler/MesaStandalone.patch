@@ -1,0 +1,143 @@
+--- a/meson.options
++++ b/meson.options
+@@ -915,3 +915,5 @@
+   value : false,
+   description : 'Build panfrost Rust components.'
+ )
++option('r4os-nak', type : 'boolean', value : false,
++       description : 'Build the standalone R4OS NIR/NAK shader compiler')
+--- a/meson.build
++++ b/meson.build
+@@ -312,6 +312,10 @@
+ with_imagination_srv = get_option('imagination-srv')
+ with_microsoft_vk = _vulkan_drivers.contains('microsoft-experimental')
+ with_nouveau_vk = _vulkan_drivers.contains('nouveau')
++with_r4os_nak = get_option('r4os-nak')
++if with_r4os_nak
++  pre_args += '-DR4OS_NAK_STANDALONE=1'
++endif
+ with_asahi_vk = _vulkan_drivers.contains('asahi')
+ with_gfxstream_vk = _vulkan_drivers.contains('gfxstream')
+ with_kosmickrisp_vk = _vulkan_drivers.contains('kosmickrisp')
+@@ -863,7 +867,7 @@
+ endif
+ 
+ with_virtgpu_kumquat = get_option('virtgpu_kumquat') and with_gfxstream_vk
+-if with_gallium_rusticl or with_nouveau_vk or with_tools.contains('etnaviv') or with_virtgpu_kumquat or with_panfrost_rust
++if with_gallium_rusticl or with_nouveau_vk or with_r4os_nak or with_tools.contains('etnaviv') or with_virtgpu_kumquat or with_panfrost_rust
+   # rust.bindgen() does not pass `--rust-target` to bindgen until 1.7.0.
+   if meson.version().version_compare('< 1.7.0')
+     error('Mesa Rust support requires Meson 1.7.0 or newer')
+@@ -993,6 +997,7 @@
+ endif
+ 
+ with_gfx_compute = [
++  with_r4os_nak,
+   with_any_opengl,
+   with_any_vk,
+   with_clc,
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -107,7 +107,7 @@
+ if with_microsoft_clc or with_gallium_d3d12 or with_spirv_to_dxil or with_microsoft_vk
+   subdir('microsoft')
+ endif
+-if with_any_nouveau
++if with_any_nouveau or with_r4os_nak
+   subdir('nouveau')
+ endif
+ if with_gfxstream_vk
+--- a/src/compiler/meson.build
++++ b/src/compiler/meson.build
+@@ -73,6 +73,6 @@
+ endif
+ subdir('isaspec')
+ 
+-if with_nouveau_vk or with_tools.contains('etnaviv') or with_panfrost_rust
++if with_nouveau_vk or with_r4os_nak or with_tools.contains('etnaviv') or with_panfrost_rust
+   subdir('rust')
+ endif
+--- a/src/nouveau/meson.build
++++ b/src/nouveau/meson.build
+@@ -2,12 +2,17 @@
+ # SPDX-License-Identifier: MIT
+ 
+ subdir('headers')
+-subdir('drm')
+-subdir('winsys')
+-if with_nouveau_vk
++if with_any_nouveau
++  subdir('drm')
++  subdir('winsys')
++endif
++if with_nouveau_vk or with_r4os_nak
+   subdir('rust')
+   subdir('nil')
+   subdir('compiler')
++endif
++if with_r4os_nak
++  subdir('r4os')
+ endif
+ if with_tools.contains('drm-shim')
+   subdir('drm-shim')
+--- a/src/nouveau/headers/meson.build
++++ b/src/nouveau/headers/meson.build
+@@ -132,8 +132,8 @@
+ nouveau_util_py = files('util.py')
+ nouveau_util_py_path = meson.current_source_dir()
+ 
+-# Only generate Rust bindings for NVK
+-if with_nouveau_vk
++# NAK also needs the class and hardware definitions without a winsys.
++if with_nouveau_vk or with_r4os_nak
+   cl_rs_generated = []
+   foreach cl : nv_classes
+     cl_rs_generated += custom_target(
+--- a/src/nouveau/compiler/nak_bindings.h
++++ b/src/nouveau/compiler/nak_bindings.h
+@@ -5,6 +5,7 @@
+ 
+ #include "nak_private.h"
+ 
++#ifndef R4OS_NAK_STANDALONE
+ #include "nouveau_bo.h"
+ #include "nouveau_context.h"
+ #include "nouveau_device.h"
+@@ -18,3 +19,4 @@
+ enum ENUM_PACKED drm_rs_ioctls {
+    DRM_RS_IOCTL(NOUVEAU_EXEC),
+ };
++#endif
+--- a/src/nouveau/compiler/meson.build
++++ b/src/nouveau/compiler/meson.build
+@@ -40,6 +40,11 @@
+   idep_nil_h,
+ ]
+ 
++nak_hw_deps = []
++if with_nouveau_vk
++  nak_hw_deps = [dep_libdrm, idep_nouveau_ws]
++endif
++
+ _nak_bindings_rs = rust.bindgen(
+   input : ['nak_bindings.h'],
+   output : 'nak_bindings.rs',
+@@ -66,8 +71,7 @@
+     '--with-derive-default',
+   ],
+   dependencies : [
+-    dep_libdrm,
+-    idep_nouveau_ws,
++    nak_hw_deps,
+     libnak_deps,
+   ],
+ )
+@@ -119,7 +123,7 @@
+ #
+ # Also, don't build on Android because we do cross-builds and, unlike most
+ # tests, these depend on libdrm and that confuses the build system.
+-if with_tests and get_option('b_sanitize') == 'none' and not with_platform_android
++if with_tests and with_nouveau_vk and get_option('b_sanitize') == 'none' and not with_platform_android
+   rust.test(
+     'nak',
+     _libnak_rs,

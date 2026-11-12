@@ -1,0 +1,104 @@
+diff --git a/src/lcms2_internal.h b/src/lcms2_internal.h
+index 26e4e86..c48814f 100644
+--- a/src/lcms2_internal.h
++++ b/src/lcms2_internal.h
+@@ -198,7 +198,25 @@ cmsINLINE cmsUInt16Number _cmsQuickSaturateWord(cmsFloat64Number d)
+ #define CMSCHECKPOINT CMSAPI
+ 
+ // Pthread support --------------------------------------------------------------------
+-#ifndef CMS_NO_PTHREADS
++#if defined(CMS_R4OS)
++// R4OS port: no host threading dependency. The registry lock protects only
++// bounded pointer-list mutation; caller-owned transforms serialize their own
++// context. Frame conversion uses the direct owned-context path below.
++typedef unsigned int _cmsMutex;
++#define CMS_MUTEX_INITIALIZER 0
++cmsINLINE int _cmsLockPrimitive(_cmsMutex *m)
++{
++    while (__atomic_exchange_n(m, 1, __ATOMIC_ACQUIRE)) {
++        while (__atomic_load_n(m, __ATOMIC_RELAXED)) __asm__ volatile("pause");
++    }
++    return 0;
++}
++cmsINLINE int _cmsUnlockPrimitive(_cmsMutex *m) { __atomic_store_n(m, 0, __ATOMIC_RELEASE); return 0; }
++cmsINLINE int _cmsInitMutexPrimitive(_cmsMutex *m) { *m = 0; return 0; }
++cmsINLINE int _cmsDestroyMutexPrimitive(_cmsMutex *m) { (void)m; return 0; }
++cmsINLINE int _cmsEnterCriticalSectionPrimitive(_cmsMutex *m) { return _cmsLockPrimitive(m); }
++cmsINLINE int _cmsLeaveCriticalSectionPrimitive(_cmsMutex *m) { return _cmsUnlockPrimitive(m); }
++#elif !defined(CMS_NO_PTHREADS)
+ 
+ // This is the threading support. Unfortunately, it has to be platform-dependent because 
+ // windows does not support pthreads. 
+diff --git a/src/cmsplugin.c b/src/cmsplugin.c
+index 21465f3..49aaeb9 100644
+--- a/src/cmsplugin.c
++++ b/src/cmsplugin.c
+@@ -713,6 +713,11 @@ cmsBool InitContextMutex(void)
+ // Internal, get associated pointer, with guessing. Never returns NULL.
+ struct _cmsContext_struct* _cmsGetContext(cmsContext ContextID)
+ {
++#ifdef CMS_R4OS
++    // R4GFX never exports a cmsContext. Its caller-owned context is retained
++    // through all calls, including allocator bootstrap using fakeContext.
++    return ContextID ? (struct _cmsContext_struct*) ContextID : &globalContext;
++#else
+     struct _cmsContext_struct* id = (struct _cmsContext_struct*) ContextID;
+     struct _cmsContext_struct* ctx;
+ 
+@@ -739,6 +744,7 @@ struct _cmsContext_struct* _cmsGetContext(cmsContext ContextID)
+ 
+     _cmsLeaveCriticalSectionPrimitive(&_cmsContextPoolHeadMutex);
+     return &globalContext;
++#endif
+ }
+ 
+ 
+@@ -1027,6 +1033,15 @@ void* CMSEXPORT cmsGetContextUserData(cmsContext ContextID)
+ // Use context mutex to provide thread-safe time
+ cmsBool _cmsGetTime(struct tm* ptr_time)
+ {
++#ifdef CMS_R4OS
++    // Virtual working profiles are deterministic and never claim a measured
++    // creation timestamp. Imported profile timestamps remain unchanged.
++    memset(ptr_time, 0, sizeof(*ptr_time));
++    ptr_time->tm_year = 100;
++    ptr_time->tm_mday = 1;
++    ptr_time->tm_wday = 6;
++    return TRUE;
++#else
+     struct tm* t;
+ #if defined(HAVE_GMTIME_R) || defined(HAVE_GMTIME_S)
+     struct tm tm;
+@@ -1052,4 +1067,5 @@ cmsBool _cmsGetTime(struct tm* ptr_time)
+         *ptr_time = *t;
+         return TRUE;
+     }
++#endif
+ }
+diff --git a/src/cmserr.c b/src/cmserr.c
+index fd56c38..1a443ea 100644
+--- a/src/cmserr.c
++++ b/src/cmserr.c
+@@ -514,9 +514,17 @@ void CMSEXPORT cmsSignalError(cmsContext ContextID, cmsUInt32Number ErrorCode, c
+     _cmsLogErrorChunkType* lhg;
+ 
+ 
++#ifdef CMS_R4OS
++    // The R4GFX adapter consumes the numeric error. Retain the original
++    // message template without a dependency on host printf or locale state.
++    cmsUNUSED_PARAMETER(args);
++    strncpy(Buffer, ErrorText, MAX_ERROR_MESSAGE_LEN-1);
++    Buffer[MAX_ERROR_MESSAGE_LEN-1] = 0;
++#else
+     va_start(args, ErrorText);
+     vsnprintf(Buffer, MAX_ERROR_MESSAGE_LEN-1, ErrorText, args);
+     va_end(args);
++#endif
+ 
+     // Check for the context, if specified go there. If not, go for the global
+     lhg = (_cmsLogErrorChunkType*) _cmsContextGetClientChunk(ContextID, Logger);
+@@ -704,4 +712,3 @@ cmsBool _cmsRegisterParallelizationPlugin(cmsContext ContextID, cmsPluginBase* D
+     // All is ok
+     return TRUE;
+ }
+-

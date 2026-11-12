@@ -1,0 +1,8 @@
+Building R4GFX in /root/Projekte/R4OS/Repositories/Libraries/R4GFX
+info: fork /root/Projekte/R4OS/Repositories/SDK matched 1 r4os_sdk packages
+info: fork /root/Projekte/R4OS/Repositories/Contract matched 1 r4os_contract packages
+test
++- run test w
+native YUV: public encoder, one upload/no pixel maps, cached BO/VA reuse, reset and separate engine/map retirement: OK
+failed command: ./.zig-cache/o/27b9aa940c277e562155da183cb3c516/test --cache-dir=./.zig-cache --seed=0x3275fd --listen=-
+

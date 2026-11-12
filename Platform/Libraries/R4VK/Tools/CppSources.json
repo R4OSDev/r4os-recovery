@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "provider": "Zig bundled libc++",
+  "license": "Apache-2.0 WITH LLVM-exception",
+  "units": [
+    "hash",
+    "functional",
+    "mutex",
+    "mutex_destructor",
+    "new",
+    "new_helpers",
+    "condition_variable",
+    "condition_variable_destructor"
+  ],
+  "files": [
+    {
+      "path": "lib/libcxx/src/hash.cpp",
+      "sha256": "1d5dd63a8ed59a79f945a8b3be6361819bd7ab0b6873a5d4c145ef2e19a58cdc"
+    },
+    {
+      "path": "lib/libcxx/src/mutex.cpp",
+      "sha256": "e458015dc1dd19969bc811b2865b7c5d7ea36f4a345cd7b232bb8343299caef4"
+    },
+    {
+      "path": "lib/libcxx/src/mutex_destructor.cpp",
+      "sha256": "33be4d7e44eef4c14af20cb4a04c78f4b8ec0d77f326b94b01592c5555a306c8"
+    },
+    {
+      "path": "lib/libcxx/src/new.cpp",
+      "sha256": "577f431626811d06993c0b81f9d3042a278573b64bdf6d5ec114dfea21002671"
+    },
+    {
+      "path": "lib/libcxx/src/new_helpers.cpp",
+      "sha256": "82b6b57506edc48dcbb13eaa5bf533e680167f983a2a2cf85064c003cb8cdb38"
+    },
+    {
+      "path": "lib/libcxx/src/include/overridable_function.h",
+      "sha256": "e08033caa78bc2c707678686171f3675b93b7d4ecd15d94102c9bfd0f3b4e4fd"
+    },
+    {
+      "path": "lib/libcxx/LICENSE.TXT",
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b"
+    },
+    {
+      "path": "lib/libcxx/src/functional.cpp",
+      "sha256": "2b283558da7d4e2e32db8fb3fef9e0c20ad259182cc72561cf318f9d6557b5d8"
+    },
+    {
+      "path": "lib/libcxx/src/condition_variable.cpp",
+      "sha256": "60f9ac564007c3b0b2e6d667fc5d72990f6ba79eed6d199600930a86291a0be5"
+    },
+    {
+      "path": "lib/libcxx/src/condition_variable_destructor.cpp",
+      "sha256": "4c579e99ab9ff84829da34c85813e43d372786094afed27955dc0ab150bdcf65"
+    }
+  ]
+}

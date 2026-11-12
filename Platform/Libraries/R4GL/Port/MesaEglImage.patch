@@ -1,0 +1,335 @@
+--- a/src/mesa/main/fbobject.c
++++ b/src/mesa/main/fbobject.c
+@@ -2848,7 +2848,11 @@
+ 
+    FLUSH_VERTICES(ctx, _NEW_BUFFERS, 0);
+ 
+-   if (rb->InternalFormat == internalFormat &&
++   if (
++#if defined(R4OS_OPENGL)
++       !p_atomic_read(&rb->R4OSImageSibling) &&
++#endif
++       rb->InternalFormat == internalFormat &&
+        rb->Width == (GLuint) width &&
+        rb->Height == (GLuint) height &&
+        rb->NumSamples == samples &&
+--- a/src/mesa/main/mtypes.h
++++ b/src/mesa/main/mtypes.h
+@@ -789,6 +789,10 @@
+     * Else there is no image data.
+     */
+    struct pipe_resource *pt;
++#if defined(R4OS_OPENGL)
++   bool R4OSImageSibling;
++   unsigned char *R4OSImageLayers;
++#endif
+ 
+    /* List of transfers, allocated on demand.
+     * transfer[layer] is a mapping for that layer.
+@@ -2564,6 +2568,9 @@
+                              GLuint width, GLuint height);
+ 
+    struct pipe_resource *texture;
++#if defined(R4OS_OPENGL)
++   int R4OSImageSibling; /* Atomic EGL export claim. */
++#endif
+    enum pipe_format format_linear;
+    enum pipe_format format_srgb;
+    struct pipe_surface surface;
+--- a/src/mesa/main/renderbuffer.c
++++ b/src/mesa/main/renderbuffer.c
+@@ -135,6 +135,9 @@
+    rb->Height = height;
+    rb->_BaseFormat = _mesa_base_fbo_format(ctx, internalFormat);
+    rb->defined = GL_FALSE;  /* undefined contents now */
++#if defined(R4OS_OPENGL)
++   p_atomic_set(&rb->R4OSImageSibling, 0);
++#endif
+ 
+    if (rb->software) {
+       return renderbuffer_alloc_sw_storage(ctx, rb, internalFormat,
+@@ -616,6 +619,22 @@
+                            last_layer);
+    }
+ 
++#if defined(R4OS_OPENGL)
++   /* EGLImage views select a physical level/layer independently of the GL
++    * attachment's logical level zero. Keep that selection for FBO rendering
++    * and readback as well as for sampler views. */
++   if (rb->is_rtt && stTexObj->surface_based) {
++      if (stTexObj->level_override >= 0)
++         level = stTexObj->level_override;
++      if (stTexObj->layer_override >= 0)
++         first_layer = last_layer = stTexObj->layer_override;
++   } else if (!rb->is_rtt && p_atomic_read(&rb->R4OSImageSibling)) {
++      level = rb->surface.level;
++      first_layer = rb->surface.first_layer;
++      last_layer = rb->surface.last_layer;
++   }
++#endif
++
+    int nr_samples = rb->rtt_nr_samples;
+    if (rb->rtt_nr_samples && rb->rtt_nr_samples != resource->nr_samples) {
+       assert(!resource->nr_samples);
+--- a/src/mesa/main/teximage.c
++++ b/src/mesa/main/teximage.c
+@@ -3267,6 +3267,12 @@
+             _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s%uD", func, dims);
+          }
+          else {
++#if defined(R4OS_OPENGL)
++            if (!st_r4os_orphan_egl_images(ctx, texObj)) {
++               _mesa_unlock_texture(ctx, texObj);
++               return;
++            }
++#endif
+             st_FreeTextureImageBuffer(ctx, texImage);
+ 
+             _mesa_init_teximage_fields(ctx, texImage,
+@@ -4615,6 +4621,12 @@
+          const GLuint face = _mesa_tex_target_to_face(target);
+ 
+          /* Free old texture image */
++#if defined(R4OS_OPENGL)
++         if (!st_r4os_orphan_egl_images(ctx, texObj)) {
++            _mesa_unlock_texture(ctx, texObj);
++            return;
++         }
++#endif
+          st_FreeTextureImageBuffer(ctx, texImage);
+ 
+          _mesa_init_teximage_fields(ctx, texImage, width, height, 1,
+--- a/src/mesa/state_tracker/st_cb_eglimage.c
++++ b/src/mesa/state_tracker/st_cb_eglimage.c
+@@ -438,6 +438,9 @@
+       rb->InternalFormat = rb->_BaseFormat;
+ 
+       st_set_ws_renderbuffer_surface(rb, &surf_tmpl);
++#if defined(R4OS_OPENGL)
++      p_atomic_set(&rb->R4OSImageSibling, 1);
++#endif
+       pipe_resource_reference(&stimg.texture, NULL);
+    }
+ }
+@@ -454,7 +457,13 @@
+    GLenum internalFormat;
+    mesa_format texFormat;
+ 
+-   if (stimg->texture->target != gl_target_to_pipe(texObj->Target)) {
++   if (stimg->texture->target != gl_target_to_pipe(texObj->Target)
++#if defined(R4OS_OPENGL)
++       && !(texObj->Target == GL_TEXTURE_2D &&
++            (stimg->texture->target == PIPE_TEXTURE_CUBE ||
++             stimg->texture->target == PIPE_TEXTURE_3D))
++#endif
++       ) {
+       _mesa_error(ctx, GL_INVALID_OPERATION, __func__);
+       return;
+    }
+@@ -655,6 +664,9 @@
+    pipe_resource_reference(&texObj->pt, stimg->texture);
+    st_texture_release_all_sampler_views(st, texObj);
+    pipe_resource_reference(&texImage->pt, texObj->pt);
++#if defined(R4OS_OPENGL)
++   texImage->R4OSImageSibling = true;
++#endif
+    if (st->screen->resource_changed)
+       st->screen->resource_changed(st->screen, texImage->pt);
+ 
+--- a/src/mesa/state_tracker/st_cb_texture.c
++++ b/src/mesa/state_tracker/st_cb_texture.c
+@@ -470,6 +470,17 @@
+ 
+    DBG("%s\n", __func__);
+ 
++#if defined(R4OS_OPENGL)
++   if (stImage->R4OSImageSibling) {
++      /* Respecification must not reuse the old externally shared storage,
++       * even when dimensions and format happen to be identical. */
++      if (stObj->pt == stImage->pt)
++         pipe_resource_reference(&stObj->pt, NULL);
++      stImage->R4OSImageSibling = false;
++      free(stImage->R4OSImageLayers);
++      stImage->R4OSImageLayers = NULL;
++   }
++#endif
+    if (stImage->pt) {
+       pipe_resource_reference(&stImage->pt, NULL);
+    }
+@@ -3115,6 +3126,114 @@
+ }
+ 
+ 
++#if defined(R4OS_OPENGL)
++/* A structural change orphans the whole texture (KHR_gl_image issues 2/4,
++ * OES_EGL_image). Clone each distinct allocation once before publishing any
++ * new pointers. On allocation failure every sibling retains its old storage.
++ * Caller holds the shared texture mutex; deletion never takes this path. */
++GLboolean
++st_r4os_orphan_egl_images(struct gl_context *ctx, struct gl_texture_object *obj)
++{
++   struct st_context *st = st_context(ctx);
++   const unsigned faces = _mesa_num_tex_faces(obj->Target);
++   struct pipe_resource *old[6 * MAX_TEXTURE_LEVELS] = {0};
++   struct pipe_resource *fresh[6 * MAX_TEXTURE_LEVELS] = {0};
++   unsigned count = 0;
++   bool shared = false;
++
++   for (unsigned f = 0; f < faces; f++)
++      for (unsigned l = 0; l < MAX_TEXTURE_LEVELS; l++) {
++         struct gl_texture_image *img = obj->Image[f][l];
++         shared |= img && img->R4OSImageSibling;
++      }
++   if (!shared)
++      return GL_TRUE;
++
++   /* Imported 2D views may address one cube face, 3D slice or mip level.
++    * Materialize just that logical image before clearing its overrides. */
++   const bool view = obj->surface_based;
++   for (unsigned f = 0; f < faces; f++) {
++      for (unsigned l = 0; l < MAX_TEXTURE_LEVELS; l++) {
++         struct gl_texture_image *img = obj->Image[f][l];
++         if (!img || !img->pt)
++            continue;
++         unsigned i;
++         for (i = 0; i < count && old[i] != img->pt; i++) {}
++         if (i < count)
++            continue;
++         struct pipe_resource templ = *img->pt;
++         templ.bind = default_bindings(st, templ.format);
++         templ.flags = 0;
++         templ.usage = PIPE_USAGE_DEFAULT;
++         if (view) {
++            templ.target = PIPE_TEXTURE_2D;
++            templ.width0 = img->Width;
++            templ.height0 = img->Height;
++            templ.depth0 = templ.array_size = 1;
++            templ.last_level = 0;
++         }
++         fresh[count] = st->screen->resource_create(st->screen, &templ);
++         if (!fresh[count]) {
++            for (i = 0; i < count; i++)
++               pipe_resource_reference(&fresh[i], NULL);
++            _mesa_error(ctx, GL_OUT_OF_MEMORY, "EGLImage texture orphan");
++            return GL_FALSE;
++         }
++         old[count++] = img->pt;
++      }
++   }
++
++   for (unsigned i = 0; i < count; i++) {
++      for (unsigned l = 0; l <= fresh[i]->last_level; l++) {
++         struct pipe_box box = {
++            .width = u_minify(fresh[i]->width0, l),
++            .height = u_minify(fresh[i]->height0, l),
++            .depth = util_max_layer(fresh[i], l) + 1,
++         };
++         unsigned src_level = l;
++         if (view) {
++            src_level = MAX2(obj->level_override, 0);
++            box.z = MAX2(obj->layer_override, 0);
++         }
++         st->pipe->resource_copy_region(st->pipe, fresh[i], l, 0, 0, 0,
++                                        old[i], src_level, &box);
++      }
++   }
++
++   /* Do not let later mipmap consolidation choose an old shared allocation. */
++   struct pipe_resource *canonical = NULL;
++   for (unsigned i = 0; i < count; i++)
++      if (obj->pt == old[i])
++         canonical = fresh[i];
++   pipe_resource_reference(&obj->pt, canonical);
++   obj->surface_based = GL_FALSE;
++   obj->level_override = obj->layer_override = -1;
++   st_texture_release_all_sampler_views(st, obj);
++   for (unsigned f = 0; f < faces; f++) {
++      for (unsigned l = 0; l < MAX_TEXTURE_LEVELS; l++) {
++         struct gl_texture_image *img = obj->Image[f][l];
++         if (!img)
++            continue;
++         for (unsigned i = 0; i < count; i++)
++            if (img->pt == old[i]) {
++               pipe_resource_reference(&img->pt, fresh[i]);
++               break;
++            }
++         img->R4OSImageSibling = false;
++         free(img->R4OSImageLayers);
++         img->R4OSImageLayers = NULL;
++         _mesa_update_fbo_texture(ctx, obj, f, l);
++      }
++   }
++   for (unsigned i = 0; i < count; i++)
++      pipe_resource_reference(&fresh[i], NULL);
++   _mesa_dirty_texobj(ctx, obj);
++   obj->needs_validation = true;
++   ST_SET_FRAMEBUFFER_STATES(ctx->NewDriverState);
++   return GL_TRUE;
++}
++#endif
++
+ /**
+  * Copy image data from stImage into the texture object 'stObj' at level
+  * 'dstLevel'.
+@@ -3556,6 +3675,11 @@
+       for (face = 0; face < numFaces; face++) {
+          struct gl_texture_image *stImage =
+             texObj->Image[face][level];
++#if defined(R4OS_OPENGL)
++         stImage->R4OSImageSibling = false;
++         free(stImage->R4OSImageLayers);
++         stImage->R4OSImageLayers = NULL;
++#endif
+          pipe_resource_reference(&stImage->pt, texObj->pt);
+ 
+          compressed_tex_fallback_allocate(st, stImage);
+@@ -3568,6 +3692,11 @@
+       st_from_pipe_compression_rate(texObj->pt->compression_rate);
+ 
+    /* The texture is in a validated state, so no need to check later. */
++#if defined(R4OS_OPENGL)
++   texObj->surface_based = GL_FALSE;
++   texObj->level_override = texObj->layer_override = -1;
++   st_texture_release_all_sampler_views(st, texObj);
++#endif
+    texObj->needs_validation = false;
+    texObj->validated_first_level = 0;
+    texObj->validated_last_level = levels - 1;
+--- a/src/mesa/state_tracker/st_cb_texture.h
++++ b/src/mesa/state_tracker/st_cb_texture.h
+@@ -60,6 +60,10 @@
+ 
+ void st_FreeTextureImageBuffer(struct gl_context *ctx,
+                                struct gl_texture_image *texImage);
++#if defined(R4OS_OPENGL)
++GLboolean st_r4os_orphan_egl_images(struct gl_context *ctx,
++                                   struct gl_texture_object *texObj);
++#endif
+ void st_MapTextureImage(struct gl_context *ctx,
+                         struct gl_texture_image *texImage,
+                         GLuint slice, GLuint x, GLuint y, GLuint w, GLuint h,
+--- a/src/mesa/state_tracker/st_gen_mipmap.c
++++ b/src/mesa/state_tracker/st_gen_mipmap.c
+@@ -30,6 +30,9 @@
+ 
+ #include "main/mipmap.h"
+ #include "main/teximage.h"
++#if defined(R4OS_OPENGL)
++#include "main/texobj.h"
++#endif
+ 
+ #include "pipe/p_context.h"
+ #include "pipe/p_defines.h"
+@@ -73,6 +76,12 @@
+ 
+    if (lastLevel == 0)
+       return;
++
++#if defined(R4OS_OPENGL)
++   _mesa_test_texobj_completeness(ctx, texObj);
++   if (!texObj->_MipmapComplete && !st_r4os_orphan_egl_images(ctx, texObj))
++      return;
++#endif
+ 
+    st_flush_bitmap_cache(st);
+    st_invalidate_readpix_cache(st);

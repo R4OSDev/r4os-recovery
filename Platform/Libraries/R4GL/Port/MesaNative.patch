@@ -1,0 +1,177 @@
+--- a/src/util/cnd_monotonic.h
++++ b/src/util/cnd_monotonic.h
+@@ -40,7 +40,9 @@
+ 
+ struct u_cnd_monotonic
+ {
+-#ifdef _WIN32
++#if defined(R4OS_OPENGL)
++   cnd_t cond;
++#elif defined(_WIN32)
+    void *Ptr;
+ #else
+    pthread_cond_t cond;
+--- a/src/util/rwlock.h
++++ b/src/util/rwlock.h
+@@ -32,13 +32,20 @@
+ #include <pthread.h>
+ #endif
+ 
++#include "c11/threads.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+ struct u_rwlock
+ {
+-#if defined(_WIN32) && !defined(HAVE_PTHREAD)
++#if defined(R4OS_OPENGL)
++   mtx_t mutex;
++   cnd_t changed;
++   unsigned readers, waiting_writers;
++   bool writer;
++#elif defined(_WIN32) && !defined(HAVE_PTHREAD)
+    struct {
+       void *Ptr;
+    } rwlock;
+--- a/src/util/log.c
++++ b/src/util/log.c
+@@ -142,7 +142,7 @@
+ 
+    mesa_log_file = stderr;
+ 
+-#if !DETECT_OS_WINDOWS
++#if !DETECT_OS_WINDOWS && !defined(R4OS_OPENGL)
+    if (__normal_user()) {
+       FILE *fp = NULL;
+ 
+--- a/src/util/rand_xor.c
++++ b/src/util/rand_xor.c
+@@ -24,7 +24,7 @@
+ 
+ #include "detect_os.h"
+ 
+-#if !DETECT_OS_WINDOWS
++#if !DETECT_OS_WINDOWS && !defined(R4OS_OPENGL)
+ #if defined(HAVE_GETRANDOM)
+ #include <sys/random.h>
+ #endif
+@@ -65,7 +65,7 @@
+       return;
+    }
+ 
+-#if !DETECT_OS_WINDOWS
++#if !DETECT_OS_WINDOWS && !defined(R4OS_OPENGL)
+    size_t seed_size = sizeof(uint64_t) * 2;
+ 
+ #if defined(HAVE_GETRANDOM)
+--- a/src/util/u_thread.c
++++ b/src/util/u_thread.c
+@@ -69,6 +69,8 @@
+ {
+    struct u_thread_param *paramp = malloc(sizeof(*paramp));
+    int ret = thrd_error;
++   if (!paramp)
++      return thrd_nomem;
+ 
+    paramp->routine = routine;
+    paramp->arg = param;
+@@ -91,6 +93,8 @@
+    ret = thrd_create(thrd, thread_routine, paramp);
+ #endif
+ 
++   if (ret != thrd_success)
++      free(paramp);
+    return ret;
+ }
+ 
+--- a/src/util/xmlconfig.c
++++ b/src/util/xmlconfig.c
+@@ -55,7 +55,9 @@
+ #else
+ #include <regex.h>
+ #endif
++#if !defined(R4OS_OPENGL)
+ #include <fcntl.h>
++#endif
+ #include <math.h>
+ #include "strndup.h"
+ #include "u_process.h"
+--- a/src/egl/main/egldisplay.c
++++ b/src/egl/main/egldisplay.c
+@@ -39,7 +39,9 @@
+ #else
+ #include <unistd.h>
+ #endif
++#if !defined(R4OS_OPENGL)
+ #include <fcntl.h>
++#endif
+ #include "c11/threads.h"
+ #include "util/macros.h"
+ #include "util/os_file.h"
+--- a/src/gallium/auxiliary/util/u_screen.c
++++ b/src/gallium/auxiliary/util/u_screen.c
+@@ -201,6 +201,7 @@
+    return os_time_get_nano();
+ }
+ 
++#if !defined(R4OS_OPENGL)
+ static uint32_t
+ hash_file_description(const void *key)
+ {
+@@ -325,3 +326,5 @@
+    simple_mtx_unlock(&screen_mutex);
+    return pscreen;
+ }
++
++#endif /* !R4OS_OPENGL: DRM file-description screen cache */
+--- a/src/gallium/auxiliary/cso_cache/cso_context.c
++++ b/src/gallium/auxiliary/cso_cache/cso_context.c
+@@ -349,9 +349,11 @@
+    struct cso_context_priv *ctx = (struct cso_context_priv *)cso;
+    unsigned i;
+ 
++#if !defined(R4OS_OPENGL)
+    bool dumping = trace_dumping_enabled_locked();
+    if (dumping)
+       trace_dumping_stop_locked();
++#endif
+    if (ctx->base.pipe) {
+       ctx->base.pipe->bind_blend_state(ctx->base.pipe, NULL);
+       ctx->base.pipe->bind_rasterizer_state(ctx->base.pipe, NULL);
+@@ -465,8 +467,10 @@
+    ctx->base.pipe->set_sample_mask(ctx->base.pipe, ctx->sample_mask);
+    if (ctx->base.pipe->set_min_samples)
+       ctx->base.pipe->set_min_samples(ctx->base.pipe, ctx->min_samples);
++#if !defined(R4OS_OPENGL)
+    if (dumping)
+       trace_dumping_start_locked();
++#endif
+ }
+ 
+ 
+--- a/src/gallium/auxiliary/util/u_threaded_context.c
++++ b/src/gallium/auxiliary/util/u_threaded_context.c
+@@ -5560,7 +5560,9 @@
+       tc->options = *options;
+    }
+ 
++#if !defined(R4OS_OPENGL)
+    pipe = trace_context_create_threaded(pipe->screen, pipe, &replace_buffer, &tc->options);
++#endif
+ 
+    /* The driver context isn't wrapped, so set its "priv" to NULL. */
+    pipe->priv = NULL;
+--- a/src/gallium/drivers/zink/zink_context.c
++++ b/src/gallium/drivers/zink/zink_context.c
+@@ -6228,7 +6228,9 @@
+ {
+    /* need to get the actual zink_context, not the threaded context */
+    pctx = threaded_context_unwrap_sync(pctx);
++#if !defined(R4OS_OPENGL)
+    pctx = trace_get_possibly_threaded_context(pctx);
++#endif
+    return zink_context(pctx);
+ }
+ 

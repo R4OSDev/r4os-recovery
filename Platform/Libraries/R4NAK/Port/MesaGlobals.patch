@@ -1,0 +1,105 @@
+--- a/src/compiler/glsl_types.c
++++ b/src/compiler/glsl_types.c
+@@ -33,9 +33,7 @@
+ #include "util/u_string.h"
+ #include "util/simple_mtx.h"
+ 
+-static simple_mtx_t glsl_type_cache_mutex = SIMPLE_MTX_INITIALIZER;
+-
+-static struct {
++struct r4nak_glsl_type_cache {
+    void *mem_ctx;
+ 
+    /* Use a linear (arena) allocator for all the new types, since
+@@ -55,7 +53,23 @@
+    struct hash_table *struct_types;
+    struct hash_table *interface_types;
+    struct hash_table *subroutine_types;
+-} glsl_type_cache;
++};
++
++/* R4OS: mutable type interning belongs to one compilation job. A failed
++ * worker can retire its entire arena without leaving shared dangling types.
++ * Other library callers are excluded by the public compilation owner. */
++struct r4nak_glsl_state {
++   struct r4nak_glsl_type_cache cache;
++   simple_mtx_t mutex;
++};
++extern void *r4nak_port_state(unsigned slot, size_t size, size_t alignment);
++static struct r4nak_glsl_state *r4nak_glsl_state(void)
++{
++   return r4nak_port_state(0, sizeof(struct r4nak_glsl_state),
++                          _Alignof(struct r4nak_glsl_state));
++}
++#define glsl_type_cache (r4nak_glsl_state()->cache)
++#define glsl_type_cache_mutex (r4nak_glsl_state()->mutex)
+ 
+ static const glsl_type *
+ make_vector_matrix_type(linear_ctx *lin_ctx, uint32_t gl_type,
+--- a/src/util/u_debug.c
++++ b/src/util/u_debug.c
+@@ -408,8 +408,10 @@
+ const char *
+ debug_dump_flags(const struct debug_named_value *names, uint64_t value)
+ {
+-   static thread_local char output[4096];
+-   static thread_local char rest[256];
++   /* R4OS: this private compiler permits exactly one active worker.
++    * Bounded diagnostic buffers need no OS TLS and retain no job memory. */
++   static char output[4096];
++   static char rest[256];
+    int first = 1;
+ 
+    output[0] = '\0';
+--- a/src/util/u_printf.c
++++ b/src/util/u_printf.c
+@@ -376,12 +376,19 @@
+    return hash;
+ }
+ 
+-static struct {
+-   uint32_t users;
+-   struct hash_table_u64 *ht;
+-} u_printf_cache = {0};
+-
+-static simple_mtx_t u_printf_lock = SIMPLE_MTX_INITIALIZER;
++/* R4OS: printf metadata is owned by the active compilation job. */
++struct r4nak_printf_state {
++   struct { uint32_t users; struct hash_table_u64 *ht; } cache;
++   simple_mtx_t mutex;
++};
++extern void *r4nak_port_state(unsigned slot, size_t size, size_t alignment);
++static struct r4nak_printf_state *r4nak_printf_state(void)
++{
++   return r4nak_port_state(2, sizeof(struct r4nak_printf_state),
++                          _Alignof(struct r4nak_printf_state));
++}
++#define u_printf_cache (r4nak_printf_state()->cache)
++#define u_printf_lock (r4nak_printf_state()->mutex)
+ 
+ void
+ u_printf_singleton_init_or_ref(void)
+--- a/src/compiler/nir/nir.c
++++ b/src/compiler/nir/nir.c
+@@ -130,8 +130,7 @@
+ void
+ nir_process_debug_variable(void)
+ {
+-   static once_flag flag = ONCE_FLAG_INIT;
+-   call_once(&flag, nir_process_debug_variable_once);
++   /* R4OS ABI1 has no environment-driven debug configuration. */
+ }
+ #endif
+ 
+--- a/src/compiler/spirv/spirv_to_nir.c
++++ b/src/compiler/spirv/spirv_to_nir.c
+@@ -243,8 +243,7 @@
+ static void
+ mesa_spirv_debug_init(void)
+ {
+-   static once_flag initialized_debug_flag = ONCE_FLAG_INIT;
+-   call_once(&initialized_debug_flag, initialize_mesa_spirv_debug);
++   /* R4OS ABI1 has no environment-driven debug configuration. */
+ }
+ 
+ #ifndef NDEBUG

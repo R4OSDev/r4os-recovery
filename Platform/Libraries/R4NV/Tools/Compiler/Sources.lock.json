@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "compiler_abi": 1,
+  "graphics_constants_abi": 4,
+  "mesa": {
+    "version": "26.2.2",
+    "filename": "mesa-26.2.2.tar.xz",
+    "url": "https://archive.mesa3d.org/mesa-26.2.2.tar.xz",
+    "sha512": "55b1234c8653dad9b85ba3de7b777a0d957909baf4628f0c00e21d4ba89c004cb687a1dcf8da46ed0a092231dd4f859027509f83ad8c558750845ba470902615"
+  },
+  "crates": [
+    {
+      "wrap": "paste-1-rs",
+      "directory": "paste-1.0.14",
+      "filename": "paste-1.0.14.tar.gz",
+      "url": "https://static.crates.io/crates/paste/1.0.14/download",
+      "sha256": "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
+    },
+    {
+      "wrap": "rustc-hash-2-rs",
+      "directory": "rustc-hash-2.1.1",
+      "filename": "rustc-hash-2.1.1.tar.gz",
+      "url": "https://static.crates.io/crates/rustc-hash/2.1.1/download",
+      "sha256": "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
+    },
+    {
+      "wrap": "syn-2-rs",
+      "directory": "syn-2.0.87",
+      "filename": "syn-2.0.87.tar.gz",
+      "url": "https://static.crates.io/crates/syn/2.0.87/download",
+      "sha256": "25aa4ce346d03a6dcd68dd8b4010bcb74e54e62c90c573f394c46eae99aba32d"
+    },
+    {
+      "wrap": "quote-1-rs",
+      "directory": "quote-1.0.35",
+      "filename": "quote-1.0.35.tar.gz",
+      "url": "https://static.crates.io/crates/quote/1.0.35/download",
+      "sha256": "291ec9ab5efd934aaf503a6466c5d5251535d108ee747472c3977cc5acc868ef"
+    },
+    {
+      "wrap": "proc-macro2-1-rs",
+      "directory": "proc-macro2-1.0.86",
+      "filename": "proc-macro2-1.0.86.tar.gz",
+      "url": "https://static.crates.io/crates/proc-macro2/1.0.86/download",
+      "sha256": "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
+    },
+    {
+      "wrap": "unicode-ident-1-rs",
+      "directory": "unicode-ident-1.0.12",
+      "filename": "unicode-ident-1.0.12.tar.gz",
+      "url": "https://static.crates.io/crates/unicode-ident/1.0.12/download",
+      "sha256": "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+    }
+  ],
+  "host_tools": {
+    "rustc": "1.85.1",
+    "meson": "1.7.0",
+    "ninja": "1.12.1",
+    "bindgen": "0.71.1",
+    "cbindgen": "0.27.0",
+    "clang": "19.1.7",
+    "python_minimum": "3.10",
+    "mako_minimum": "0.8.0",
+    "nasm_minimum": "2.16"
+  },
+  "target": {
+    "sm": 86,
+    "max_warps_per_mp": 48
+  },
+  "targets": [
+    {
+      "sm": 75,
+      "max_warps_per_mp": 32
+    },
+    {
+      "sm": 86,
+      "max_warps_per_mp": 48
+    },
+    {
+      "sm": 89,
+      "max_warps_per_mp": 48
+    },
+    {
+      "sm": 120,
+      "max_warps_per_mp": 48
+    }
+  ],
+  "profiles": [
+    {
+      "id": 1,
+      "name": "rectangle_vertex",
+      "stage": 0
+    },
+    {
+      "id": 2,
+      "name": "texture_fragment",
+      "stage": 4
+    },
+    {
+      "id": 3,
+      "name": "srgb_decode_fragment",
+      "stage": 4
+    },
+    {
+      "id": 4,
+      "name": "srgb_encode_fragment",
+      "stage": 4
+    },
+    {
+      "id": 5,
+      "name": "solid_fragment",
+      "stage": 4
+    },
+    {
+      "id": 6,
+      "name": "solid_vertex",
+      "stage": 0
+    },
+    {
+      "id": 7,
+      "name": "color_fragment",
+      "stage": 4
+    },
+    {
+      "id": 8,
+      "name": "yuv_fragment",
+      "stage": 4
+    },
+    {
+      "id": 9,
+      "name": "encode_fragment",
+      "stage": 4
+    }
+  ]
+}

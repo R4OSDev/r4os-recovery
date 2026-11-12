@@ -1,0 +1,113 @@
+--- a/src/mesa/state_tracker/st_cb_flush.c
++++ b/src/mesa/state_tracker/st_cb_flush.c
+@@ -45,6 +45,12 @@
+ #include "pipe/p_screen.h"
+ #include "util/u_gen_mipmap.h"
+ #include "util/perf/cpu_trace.h"
++#ifdef R4OS_OPENGL
++#include "r4gl_state.h"
++#define R4GL_RUNTIME(stage) r4gl_native_runtime_trace(stage)
++#else
++#define R4GL_RUNTIME(stage) ((void)0)
++#endif
+ 
+ 
+ void
+@@ -57,10 +63,14 @@
+    /* We want to call this function periodically.
+     * Typically, it has nothing to do so it shouldn't be expensive.
+     */
++   R4GL_RUNTIME("st-before-zombies");
+    st_context_free_zombie_objects(st);
++   R4GL_RUNTIME("st-after-zombies");
+ 
+    st_flush_bitmap_cache(st);
++   R4GL_RUNTIME("st-before-pipe-flush");
+    st->pipe->flush(st->pipe, fence, flags);
++   R4GL_RUNTIME("st-after-pipe-flush");
+ }
+ 
+ 
+--- a/src/gallium/drivers/zink/zink_context.c
++++ b/src/gallium/drivers/zink/zink_context.c
+@@ -64,6 +64,12 @@
+ 
+ #define XXH_INLINE_ALL
+ #include "util/xxhash.h"
++#ifdef R4OS_OPENGL
++#include "r4gl_state.h"
++#define R4GL_RUNTIME(stage) r4gl_native_runtime_trace(stage)
++#else
++#define R4GL_RUNTIME(stage) ((void)0)
++#endif
+ 
+ static void
+ update_tc_info(struct zink_context *ctx)
+@@ -4093,9 +4099,13 @@
+       zink_flush_clears(ctx);
+    zink_batch_no_rp_safe(ctx);
+ 
++   R4GL_RUNTIME("zink-before-unsync-wait");
+    util_queue_fence_wait(&ctx->unsync_fence);
++   R4GL_RUNTIME("zink-after-unsync-wait");
+    util_queue_fence_reset(&ctx->flush_fence);
++   R4GL_RUNTIME("zink-before-end-batch");
+    zink_end_batch(ctx);
++   R4GL_RUNTIME("zink-after-end-batch");
+    ctx->deferred_fence = NULL;
+ 
+    if (sync)
+@@ -4105,7 +4115,9 @@
+       check_device_lost(ctx);
+    } else {
+       struct zink_screen *screen = zink_screen(ctx->base.screen);
++      R4GL_RUNTIME("zink-before-start-batch");
+       zink_start_batch(ctx);
++      R4GL_RUNTIME("zink-after-start-batch");
+       if (screen->info.have_EXT_transform_feedback && ctx->num_so_targets)
+          ctx->dirty_so_targets = true;
+       memset(ctx->pipeline_changed, 1, sizeof(ctx->pipeline_changed));
+--- a/src/gallium/drivers/zink/zink_batch.c
++++ b/src/gallium/drivers/zink/zink_batch.c
+@@ -7,6 +7,12 @@
+ #include "zink_resource.h"
+ #include "zink_screen.h"
+ #include "zink_surface.h"
++#ifdef R4OS_OPENGL
++#include "r4gl_state.h"
++#define R4GL_RUNTIME(stage) r4gl_native_runtime_trace(stage)
++#else
++#define R4GL_RUNTIME(stage) ((void)0)
++#endif
+ 
+ #ifdef VK_USE_PLATFORM_METAL_EXT
+ #include "QuartzCore/CAMetalLayer.h"
+@@ -541,7 +547,9 @@
+ {
+    MESA_TRACE_FUNC();
+    struct zink_screen *screen = zink_screen(ctx->base.screen);
++   R4GL_RUNTIME("batch-before-reset");
+    zink_reset_batch(ctx);
++   R4GL_RUNTIME("batch-after-reset");
+    struct zink_batch_state *bs = ctx->bs;
+ 
+    bs->ctx = ctx;
+@@ -568,6 +576,7 @@
+          mesa_loge("ZINK: vkBeginCommandBuffer failed (%s)", vk_Result_to_str(result));
+    );
+ 
++   R4GL_RUNTIME("batch-after-begin-command-buffers");
+    bs->fence.completed = false;
+ 
+ #if HAVE_RENDERDOC_INTEGRATION
+@@ -592,8 +601,10 @@
+ #endif
+ 
+    /* descriptor buffers must always be bound at the start of a batch */
++   R4GL_RUNTIME("batch-before-bind-db");
+    if (zink_descriptor_mode == ZINK_DESCRIPTOR_MODE_DB && !(ctx->flags & ZINK_CONTEXT_COPY_ONLY))
+       zink_batch_bind_db(ctx);
++   R4GL_RUNTIME("batch-after-bind-db");
+    /* zero init for unordered blits */
+    if (screen->info.have_EXT_attachment_feedback_loop_dynamic_state) {
+       VKCTX(CmdSetAttachmentFeedbackLoopEnableEXT)(ctx->bs->cmdbuf, 0);

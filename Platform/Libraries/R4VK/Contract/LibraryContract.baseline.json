@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "module_name": "R4VK",
+  "zig_client": "R4Vk",
+  "c_prefix": "r4vk",
+  "c_header": "r4vk.h",
+  "description": "Native Vulkan ICD bootstrap. Vulkan objects and commands retain their standard C ABI; NVIDIA.R4D owns hardware.",
+  "interfaces": [
+    {
+      "export_name": "VULKAN_V1",
+      "symbol": "r4vk_vulkan_v1",
+      "zig_name": "vulkan_v1",
+      "zig_type": "VulkanV1",
+      "c_type": "R4VkVulkanV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 5638870999665882194,
+      "interface_id_hi": 3551442629496353874,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "open",
+          "c_name": "r4vk_open",
+          "symbol": "r4vk_open_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4VkRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Native kernel tables. Only their immutable addresses may be retained."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4VkLoader",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Written only on success."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "VkResult",
+            "ownership": "No device, instance or caller buffer is retained. The imported R4VK generation must remain loaded while using its entrypoints or objects."
+          },
+          "description": "Bind the explicitly selected original tables or actual Start2 caller and obtain standard ICD entrypoints. Version2 retains only process-owned copied start metadata, immutable boot tables and process-lifetime import/name views. Idempotent for matching binding; no Vulkan instance/device or GPU support is created."
+        }
+      ],
+      "description": "Native library-to-ICD bootstrap ABI1."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4VkRuntime",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "1 for original table binding;2 for actual Start2 caller binding. Other values reject without output."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "At least 32 bytes."
+        },
+        {
+          "name": "sys",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Version1: immutable boot-lifetime R4SYS table address. Version2: opaque address of the actual Start2 record, never a disguised table."
+        },
+        {
+          "name": "draw",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Version1: immutable boot-lifetime R4DRAW table address. Version2: zero; DRAW2 comes only from admitted imports."
+        },
+        {
+          "name": "dev",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Version1: immutable boot-lifetime R4DEV table address. Version2: zero; DEV2 comes only from admitted imports."
+        }
+      ],
+      "description": "Native versioned platform binding. Version1 retains the original three immutable kernel table addresses. Version2 carries an actual Start2 address in sys and zero draw/dev; the library admits its real imports and copies a process-owned start/C-view snapshot. The32-byte record and VULKAN_V1 layout/IDs/revisions/slots are unchanged."
+    },
+    {
+      "name": "R4VkLoader",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "1 for this descriptor."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "32 bytes."
+        },
+        {
+          "name": "negotiate_loader_icd",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "PFN_vkNegotiateLoaderICDInterfaceVersion. Native supported negotiation versions are 1 through 7; version 0 is rejected."
+        },
+        {
+          "name": "get_instance_proc_addr",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "PFN_vkGetInstanceProcAddr using the ordinary Vulkan x86_64 C ABI."
+        },
+        {
+          "name": "get_physical_device_proc_addr",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "PFN_GetPhysicalDeviceProcAddr from the standard Vulkan ICD ABI."
+        }
+      ],
+      "description": "Borrowed entrypoint addresses from this R4VK generation. Negotiate before creating instances; query Vulkan functions and capabilities through the standard API."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "success",
+      "c_name": "R4VK_SUCCESS",
+      "type": "i32",
+      "value": 0,
+      "description": "VK_SUCCESS."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "error_initialization_failed",
+      "c_name": "R4VK_ERROR_INITIALIZATION_FAILED",
+      "type": "i32",
+      "value": -3,
+      "description": "VK_ERROR_INITIALIZATION_FAILED: unsupported descriptor or missing/incompatible platform binding; output unchanged."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "objects",
+      "text": "Vulkan objects, allocation callbacks and mutable runtime/compiler state belong to the creating process. Applications obey Vulkan synchronization and lifetime rules; destroy objects before discarding their library binding."
+    },
+    {
+      "name": "hardware",
+      "text": "R4VK uses native resource/queue/VA/fence contracts. NVIDIA.R4D is the sole GPU owner. No Linux ioctl, FD, device file or host Vulkan loader is exposed as the native ABI."
+    },
+    {
+      "name": "fallback",
+      "text": "A valid instance can enumerate zero eligible GPUs. Missing R4VK or no compatible device leaves the ordinary software-rendering fallback available. Opening the ICD does not establish device support or Vulkan conformance."
+    }
+  ]
+}

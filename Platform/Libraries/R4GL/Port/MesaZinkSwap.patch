@@ -1,0 +1,58 @@
+--- a/src/gallium/drivers/zink/zink_kopper.c
++++ b/src/gallium/drivers/zink/zink_kopper.c
+@@ -450,6 +450,18 @@
+    VkResult error = update_caps(screen, cdt);
+    if (error != VK_SUCCESS)
+       return error;
++#ifdef R4OS_OPENGL
++   /* Policy changes cannot discard an earlier FIFO frame still queued in
++    * WINSVC. Consumer loans may outlive the old Vulkan chain independently. */
++   if (cdt->swapchain && cdt->swapchain->scci.presentMode == VK_PRESENT_MODE_FIFO_KHR &&
++       cdt->present_mode != cdt->swapchain->scci.presentMode) {
++      PFN_r4vkDrainWindowSwapchain drain = (PFN_r4vkDrainWindowSwapchain)
++         r4gl_native_vulkan_proc(screen->instance, R4VK_WINDOW_DRAIN_ENTRYPOINT);
++      if (!drain) return VK_ERROR_FEATURE_NOT_PRESENT;
++      error = drain(screen->dev, cdt->swapchain->swapchain, 1000000000ull);
++      if (error != VK_SUCCESS) return error;
++   }
++#endif
+    struct kopper_swapchain *cswap = kopper_CreateSwapchain(screen, cdt, w, h, &error);
+    if (!cswap)
+       return error;
+@@ -1001,8 +1013,14 @@
+    /* pick up pending present mode updates here */
+    if (cdt->present_mode != cdt->swapchain->scci.presentMode) {
+       VkResult ret = update_swapchain(screen, cdt, cdt->caps.currentExtent.width, cdt->caps.currentExtent.height);
+-      if (ret != VK_SUCCESS)
++      if (ret != VK_SUCCESS) {
++#ifdef R4OS_OPENGL
++         if (cdt->r4os_result == VK_SUCCESS || cdt->r4os_result == VK_SUBOPTIMAL_KHR)
++            cdt->r4os_result = ret;
++         if (ret == VK_ERROR_DEVICE_LOST) screen->device_lost = true;
++#endif
+          mesa_loge("zink: failed to set swap interval!");
++      }
+    }
+ }
+ 
+@@ -1270,6 +1288,9 @@
+    assert(res->obj->dt);
+    struct kopper_displaytarget *cdt = res->obj->dt;
+    VkPresentModeKHR old_present_mode = cdt->present_mode;
++#ifdef R4OS_OPENGL
++   cdt->r4os_result = VK_SUCCESS;
++#endif
+ 
+    zink_kopper_set_present_mode_for_interval(cdt, interval);
+ 
+@@ -1281,6 +1302,10 @@
+        */
+       VkResult ret = update_swapchain(screen, cdt, cdt->caps.currentExtent.width, cdt->caps.currentExtent.height);
+       if (ret != VK_SUCCESS) {
++#ifdef R4OS_OPENGL
++         cdt->r4os_result = ret;
++         if (ret == VK_ERROR_DEVICE_LOST) screen->device_lost = true;
++#endif
+          cdt->present_mode = old_present_mode;
+          mesa_loge("zink: failed to set swap interval!");
+       }

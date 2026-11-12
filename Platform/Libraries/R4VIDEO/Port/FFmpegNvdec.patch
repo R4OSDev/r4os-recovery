@@ -1,0 +1,95 @@
+diff --git a/libavutil/pixfmt.h b/libavutil/pixfmt.h
+index 2e7b645..569b220 100644
+--- a/libavutil/pixfmt.h
++++ b/libavutil/pixfmt.h
+@@ -499,6 +499,10 @@ enum AVPixelFormat {
+ 
+     AV_PIX_FMT_OHCODEC, /// hardware decoding through openharmony
+ 
++#ifdef R4OS_VIDEO
++    /* Private R4VIDEO format: data[0]/buf[0] retain the NVDEC image owner. */
++    AV_PIX_FMT_R4OS_NVDEC,
++#endif
+     AV_PIX_FMT_NB         ///< number of pixel formats, DO NOT USE THIS if you want to link with shared libav* because the number of formats might differ between versions
+ };
+ 
+diff --git a/libavutil/pixdesc.c b/libavutil/pixdesc.c
+index ba25a25..5174c65 100644
+--- a/libavutil/pixdesc.c
++++ b/libavutil/pixdesc.c
+@@ -2617,6 +2617,12 @@ static const AVPixFmtDescriptor av_pix_fmt_descriptors[AV_PIX_FMT_NB] = {
+         .flags = AV_PIX_FMT_FLAG_PLANAR | AV_PIX_FMT_FLAG_ALPHA |
+                  AV_PIX_FMT_FLAG_RGB | AV_PIX_FMT_FLAG_FLOAT,
+     },
++#ifdef R4OS_VIDEO
++    [AV_PIX_FMT_R4OS_NVDEC] = {
++        .name = "r4os_nvdec",
++        .flags = AV_PIX_FMT_FLAG_HWACCEL,
++    },
++#endif
+     [AV_PIX_FMT_DRM_PRIME] = {
+         .name = "drm_prime",
+         .flags = AV_PIX_FMT_FLAG_HWACCEL,
+diff --git a/libavcodec/hwaccels.h b/libavcodec/hwaccels.h
+index 4f8da46..0eee81d 100644
+--- a/libavcodec/hwaccels.h
++++ b/libavcodec/hwaccels.h
+@@ -38,6 +38,9 @@ extern const struct FFHWAccel ff_h264_d3d11va2_hwaccel;
+ extern const struct FFHWAccel ff_h264_d3d12va_hwaccel;
+ extern const struct FFHWAccel ff_h264_dxva2_hwaccel;
+ extern const struct FFHWAccel ff_h264_nvdec_hwaccel;
++#ifdef R4OS_VIDEO
++extern const struct FFHWAccel ff_h264_r4os_nvdec_hwaccel;
++#endif
+ extern const struct FFHWAccel ff_h264_vaapi_hwaccel;
+ extern const struct FFHWAccel ff_h264_vdpau_hwaccel;
+ extern const struct FFHWAccel ff_h264_videotoolbox_hwaccel;
+diff --git a/libavcodec/h264_slice.c b/libavcodec/h264_slice.c
+index 7e2c460..9d86ea2 100644
+--- a/libavcodec/h264_slice.c
++++ b/libavcodec/h264_slice.c
+@@ -786,7 +786,12 @@ static void init_scan_tables(H264Context *h)
+ 
+ static enum AVPixelFormat get_pixel_format(H264Context *h, int force_callback)
+ {
+-#define HWACCEL_MAX (CONFIG_H264_DXVA2_HWACCEL + \
++#ifdef R4OS_VIDEO
++#define R4OS_HWACCEL_COUNT 1
++#else
++#define R4OS_HWACCEL_COUNT 0
++#endif
++#define HWACCEL_MAX (R4OS_HWACCEL_COUNT + CONFIG_H264_DXVA2_HWACCEL + \
+                      (CONFIG_H264_D3D11VA_HWACCEL * 2) + \
+                      CONFIG_H264_D3D12VA_HWACCEL + \
+                      CONFIG_H264_NVDEC_HWACCEL + \
+@@ -862,6 +867,9 @@ static enum AVPixelFormat get_pixel_format(H264Context *h, int force_callback)
+             *fmt++ = AV_PIX_FMT_YUV420P14;
+         break;
+     case 8:
++#ifdef R4OS_VIDEO
++        *fmt++ = AV_PIX_FMT_R4OS_NVDEC;
++#endif
+ #if CONFIG_H264_VDPAU_HWACCEL
+         *fmt++ = AV_PIX_FMT_VDPAU;
+ #endif
+diff --git a/libavcodec/h264dec.c b/libavcodec/h264dec.c
+index ca65df2..8073d2d 100644
+--- a/libavcodec/h264dec.c
++++ b/libavcodec/h264dec.c
+@@ -1119,6 +1119,16 @@ const FFCodec ff_h264_decoder = {
+                              AV_CODEC_CAP_DELAY | AV_CODEC_CAP_SLICE_THREADS |
+                              AV_CODEC_CAP_FRAME_THREADS,
+     .hw_configs            = (const AVCodecHWConfigInternal *const []) {
++#ifdef R4OS_VIDEO
++                               &(const AVCodecHWConfigInternal) {
++                                   .public = {
++                                       .pix_fmt = AV_PIX_FMT_R4OS_NVDEC,
++                                       .methods = AV_CODEC_HW_CONFIG_METHOD_INTERNAL,
++                                       .device_type = AV_HWDEVICE_TYPE_NONE,
++                                   },
++                                   .hwaccel = &ff_h264_r4os_nvdec_hwaccel,
++                               },
++#endif
+ #if CONFIG_H264_DXVA2_HWACCEL
+                                HWACCEL_DXVA2(h264),
+ #endif

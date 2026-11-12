@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "purpose": "Single-level 2D R4OS C797 TIC/target/sampler profile, explicit shader color conversion",
+  "generator": "Temp/gfx-render-state-20260913/RenderImageReference.c",
+  "fixture_sha256": "3318e84a181cb36559f050ddd85d791209258e39db9ff6c3c03fe2e1217cd388",
+  "sources": [
+    {
+      "sha256": "707e5a739d9b8781c05003188d6e64888303c84039e4f2ecc0810b8411669248",
+      "path": "ExFiles/Reference/GFX/Nvidia/OpenKernelModules-570.144/src/common/sdk/nvidia/inc/nvmisc.h"
+    },
+    {
+      "sha256": "eb4ae1935e33df088d445278add2813decab13fd472f8dab3eeea4b4930bb2fd",
+      "path": "ExFiles/Reference/GFX/Nvidia/OpenKernelModules-570.144/src/common/sdk/nvidia/inc/class/clc797.h"
+    },
+    {
+      "sha256": "4dfcee5f7b09d9c3efba8c3dd07efb43b37d41586ae3d9338165413b19fe363c",
+      "path": "DevKit/Toolchains/MesaNAK/26.2.2-2e3c65ad5e8b8e15/Source/src/nouveau/headers/nvidia/classes/clb097tex.h"
+    },
+    {
+      "sha256": "0b1bc445c0c46401769ec77fc8b97f9fae3c5644054ec7f847cf887d25141162",
+      "path": "DevKit/Toolchains/MesaNAK/26.2.2-2e3c65ad5e8b8e15/Source/src/nouveau/headers/nvidia/classes/cl9097tex.h"
+    },
+    {
+      "sha256": "2c46db13da68d9f650d5330fbc4073ef65b6f01ec553a7a8546c24f2298f2439",
+      "path": "DevKit/Toolchains/MesaNAK/26.2.2-2e3c65ad5e8b8e15/Source/src/nouveau/nil/descriptor.rs"
+    },
+    {
+      "sha256": "79d396f12ce0d2b8836a158d2947a534af759c09b281a63fea52f8729dc621fc",
+      "path": "DevKit/Toolchains/MesaNAK/26.2.2-2e3c65ad5e8b8e15/Source/src/nouveau/nil/nil_formats.csv"
+    },
+    {
+      "sha256": "119f8e76c14884331720e2bec42c10ca44eb10d91df2965d6eee0b8b4169cb85",
+      "path": "DevKit/Toolchains/MesaNAK/26.2.2-2e3c65ad5e8b8e15/Source/src/nouveau/vulkan/nvk_sampler.c"
+    },
+    {
+      "sha256": "8e9c97b91a13156dc4ac74b3ecb252d064b8cbde8c7ef31d46433a0814861c5d",
+      "path": "DevKit/Toolchains/MesaNAK/26.2.2-2e3c65ad5e8b8e15/Source/src/nouveau/vulkan/nvk_cmd_draw.c"
+    }
+  ]
+}

@@ -1,0 +1,214 @@
+diff --git a/src/gallium/auxiliary/cso_cache/cso_context.c b/src/gallium/auxiliary/cso_cache/cso_context.c
+index af672e2..0dc2602 100644
+--- a/src/gallium/auxiliary/cso_cache/cso_context.c
++++ b/src/gallium/auxiliary/cso_cache/cso_context.c
+@@ -359,9 +359,9 @@ cso_unbind_context(struct cso_context *cso)
+       ctx->base.pipe->bind_rasterizer_state(ctx->base.pipe, NULL);
+ 
+       {
+-         static struct pipe_sampler_view *views[PIPE_MAX_SHADER_SAMPLER_VIEWS] = { NULL };
+-         static struct pipe_shader_buffer ssbos[PIPE_MAX_SHADER_BUFFERS] = { 0 };
+-         static void *zeros[PIPE_MAX_SAMPLERS] = { NULL };
++         struct pipe_sampler_view *views[PIPE_MAX_SHADER_SAMPLER_VIEWS] = { NULL };
++         struct pipe_shader_buffer ssbos[PIPE_MAX_SHADER_BUFFERS] = { 0 };
++         void *zeros[PIPE_MAX_SAMPLERS] = { NULL };
+          struct pipe_screen *scr = ctx->base.pipe->screen;
+          mesa_shader_stage sh;
+          for (sh = 0; sh < MESA_SHADER_MESH_STAGES; sh++) {
+diff --git a/src/mesa/main/bufferobj.c b/src/mesa/main/bufferobj.c
+index 02b9cca..b406389 100644
+--- a/src/mesa/main/bufferobj.c
++++ b/src/mesa/main/bufferobj.c
+@@ -1078,19 +1078,7 @@ _mesa_delete_buffer_object(struct gl_context *ctx,
+ /**
+  * Get the value of MESA_NO_MINMAX_CACHE.
+  */
+-static bool
+-get_no_minmax_cache()
+-{
+-   static bool read = false;
+-   static bool disable = false;
+-
+-   if (!read) {
+-      disable = debug_get_bool_option("MESA_NO_MINMAX_CACHE", false);
+-      read = true;
+-   }
+-
+-   return disable;
+-}
++DEBUG_GET_ONCE_BOOL_OPTION(no_minmax_cache, "MESA_NO_MINMAX_CACHE", false)
+ 
+ /**
+  * Callback called from _mesa_HashWalk()
+@@ -1282,7 +1270,7 @@ _mesa_bufferobj_alloc(struct gl_context *ctx, GLuint id)
+    buf->Usage = GL_STATIC_DRAW_ARB;
+ 
+    simple_mtx_init(&buf->MinMaxCacheMutex, mtx_plain);
+-   if (get_no_minmax_cache())
++   if (debug_get_option_no_minmax_cache())
+       buf->UsageHistory |= USAGE_DISABLE_MINMAX_CACHE;
+    return buf;
+ }
+diff --git a/src/mesa/main/draw.c b/src/mesa/main/draw.c
+index 992fadd..a9ac5c6 100644
+--- a/src/mesa/main/draw.c
++++ b/src/mesa/main/draw.c
+@@ -1709,7 +1709,11 @@ _mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
+                                   GLsizei count, GLenum type,
+                                   const GLvoid * indices, GLint basevertex)
+ {
++#if defined(R4OS_OPENGL)
++   static const char budget_key = 0;
++#else
+    static GLuint warnCount = 0;
++#endif
+    bool index_bounds_valid = true;
+ 
+    /* This is only useful to catch invalid values in the "end" parameter
+@@ -1738,7 +1742,11 @@ _mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
+        * but did provide valid indices.  Also issue a warning indicating that
+        * the application is broken.
+        */
++#if defined(R4OS_OPENGL)
++      if (r4gl_take_diagnostic_budget(&budget_key, 10)) {
++#else
+       if (warnCount++ < 10) {
++#endif
+          _mesa_warning(ctx, "glDrawRangeElements(start %u, end %u, "
+                        "basevertex %d, count %d, type 0x%x, indices=%p):\n"
+                        "\trange is outside VBO bounds (max=%u); ignoring.\n"
+diff --git a/src/mesa/main/errors.c b/src/mesa/main/errors.c
+index 58e152e..c454d2f 100644
+--- a/src/mesa/main/errors.c
++++ b/src/mesa/main/errors.c
+@@ -39,6 +39,19 @@
+ #include "util/log.h"
+ #include "api_exec_decl.h"
+ 
++#if defined(R4OS_OPENGL)
++static bool r4gl_error_debug_policy(void)
++{
++   const char *value = os_get_option_cached("MESA_DEBUG");
++#ifndef NDEBUG
++   return !value || !strstr(value, "silent");
++#else
++   return value != NULL;
++#endif
++}
++R4GL_PROCESS_OPTION(error_output, bool, r4gl_error_debug_policy())
++#endif
++
+ /**
+  * When a new type of error is recorded, print a message describing
+  * previous errors which were accumulated.
+@@ -95,12 +108,20 @@ _mesa_problem( const struct gl_context *ctx, const char *fmtString, ... )
+ {
+    va_list args;
+    char str[MAX_DEBUG_MESSAGE_LENGTH];
++#if defined(R4OS_OPENGL)
++   static const char budget_key = 0;
++#else
+    static int numCalls = 0;
++#endif
+ 
+    (void) ctx;
+ 
++#if defined(R4OS_OPENGL)
++   if (r4gl_take_diagnostic_budget(&budget_key, 50)) {
++#else
+    if (numCalls < 50) {
+       numCalls++;
++#endif
+ 
+       va_start( args, fmtString );
+       vsnprintf( str, MAX_DEBUG_MESSAGE_LENGTH, fmtString, args );
+@@ -115,6 +136,9 @@ _mesa_problem( const struct gl_context *ctx, const char *fmtString, ... )
+ static GLboolean
+ should_output(struct gl_context *ctx, GLenum error, const char *fmtString)
+ {
++#if defined(R4OS_OPENGL)
++   const GLint debug = debug_get_option_error_output();
++#else
+    static GLint debug = -1;
+ 
+    /* Check debug environment variable only once:
+@@ -135,6 +159,7 @@ should_output(struct gl_context *ctx, GLenum error, const char *fmtString)
+ #endif
+    }
+ 
++#endif
+    if (debug) {
+       if (ctx->ErrorValue != error ||
+           ctx->ErrorDebugFmtString != fmtString) {
+diff --git a/src/mesa/main/shaderapi.c b/src/mesa/main/shaderapi.c
+index 06b6a70..5bbb90c 100644
+--- a/src/mesa/main/shaderapi.c
++++ b/src/mesa/main/shaderapi.c
+@@ -172,6 +172,11 @@ _mesa_get_shader_flags(void)
+ const char *
+ _mesa_get_shader_capture_path(void)
+ {
++#if defined(R4OS_OPENGL)
++   /* R4OS has one trusted user; secure and ordinary option reads share the
++    * same policy. Cached strings belong to the calling process runtime. */
++   return os_get_option_cached("MESA_SHADER_CAPTURE_PATH");
++#else
+    static bool read_env_var = false;
+    static const char *path = NULL;
+ 
+@@ -190,6 +195,7 @@ _mesa_get_shader_capture_path(void)
+    }
+ 
+    return path;
++#endif
+ }
+ 
+ /**
+diff --git a/src/util/xmlconfig.c b/src/util/xmlconfig.c
+index 1e50e61..9c43b2c 100644
+--- a/src/util/xmlconfig.c
++++ b/src/util/xmlconfig.c
+@@ -1326,6 +1326,8 @@ initOptionCache(driOptionCache *cache, const driOptionCache *info)
+    }
+ }
+ 
++#if !defined(R4OS_OPENGL)
++/* Injection is used by the upstream host tests, not the native frontend. */
+ static const char *execname;
+ 
+ void
+@@ -1333,6 +1335,7 @@ driInjectExecName(const char *exec)
+ {
+    execname = exec;
+ }
++#endif
+ 
+ void
+ driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
+@@ -1341,8 +1344,12 @@ driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
+    initOptionCache(cache, info);
+    struct OptConfData userData = {0};
+ 
++#if defined(R4OS_OPENGL)
++   const char *execname = os_get_option_cached("MESA_DRICONF_EXECUTABLE_OVERRIDE");
++#else
+    if (!execname)
+       execname = os_get_option("MESA_DRICONF_EXECUTABLE_OVERRIDE");
++#endif
+    if (!execname)
+       execname = util_get_process_name();
+ 
+diff --git a/src/util/xmlconfig.h b/src/util/xmlconfig.h
+index d895722..e4b206e 100644
+--- a/src/util/xmlconfig.h
++++ b/src/util/xmlconfig.h
+@@ -180,7 +180,9 @@ float driQueryOptionf(const driOptionCache *cache, const char *name);
+ char *driQueryOptionstr(const driOptionCache *cache, const char *name);
+ 
+ /* Overrides for the unit tests to control drirc parsing. */
++#if !defined(R4OS_OPENGL)
+ void driInjectExecName(const char *exec);
++#endif
+ 
+ /**
+  * Returns a hash of the options for this application.

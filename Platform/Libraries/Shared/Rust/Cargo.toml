@@ -1,0 +1,13 @@
+[package]
+name = "r4os-library-helpers"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+build = false
+
+[dependencies]
+r4os-sdk = { version = "=0.1.0", features = ["alloc"] }
+r4os-text-core = { path = "../../R4STD/Rust", version = "=0.1.1" }
+
+[workspace]

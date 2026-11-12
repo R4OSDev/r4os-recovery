@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "provider": "Zig 0.16.0 bundled musl and std.math",
+  "target": "x86_64-freestanding-none",
+  "license": "MIT and per-file permissive notices",
+  "c_units": [
+    "lib/libc/musl/src/math/pow.c",
+    "lib/libc/musl/src/math/powf.c",
+    "lib/libc/musl/src/math/pow_data.c",
+    "lib/libc/musl/src/math/powf_data.c",
+    "lib/libc/musl/src/math/exp_data.c",
+    "lib/libc/musl/src/math/exp2f_data.c",
+    "lib/libc/musl/src/math/scalbn.c",
+    "lib/libc/musl/src/math/scalbnf.c",
+    "lib/libc/musl/src/math/ldexp.c",
+    "lib/libc/musl/src/math/ldexpf.c",
+    "lib/libc/musl/src/math/__math_invalid.c",
+    "lib/libc/musl/src/math/__math_invalidf.c",
+    "lib/libc/musl/src/math/__math_oflow.c",
+    "lib/libc/musl/src/math/__math_oflowf.c",
+    "lib/libc/musl/src/math/__math_uflow.c",
+    "lib/libc/musl/src/math/__math_uflowf.c",
+    "lib/libc/musl/src/math/__math_xflow.c",
+    "lib/libc/musl/src/math/__math_xflowf.c"
+  ],
+  "files": [
+    {
+      "path": "lib/libc/musl/src/math/pow.c",
+      "sha256": "b06f0a08d74fcff8cced7afa2c0e47e301e3e8a19c0de5becdec28cd7b014027"
+    },
+    {
+      "path": "lib/libc/musl/src/math/powf.c",
+      "sha256": "74069b3a380cf954361e0243b38de2094ae680e2ecfb3e50af61ab576f13babf"
+    },
+    {
+      "path": "lib/libc/musl/src/math/pow_data.c",
+      "sha256": "2052ec913f9b4a2170a98a6fcbcd7694f5dec220036b00c36106a2b4b65a4c55"
+    },
+    {
+      "path": "lib/libc/musl/src/math/powf_data.c",
+      "sha256": "136f491b0f904842b926784134d0adba7a9103d2ce8a226276dd6e9260457398"
+    },
+    {
+      "path": "lib/libc/musl/src/math/pow_data.h",
+      "sha256": "5014345a7958adcf6ff835b5e96afa99dd5a98c40dfe968442288e002b8e01a3"
+    },
+    {
+      "path": "lib/libc/musl/src/math/powf_data.h",
+      "sha256": "5d632276e5f21cdcd47f35c53cf792640ad347aabce1e1bd5774fad5371fc8d8"
+    },
+    {
+      "path": "lib/libc/musl/src/math/exp_data.c",
+      "sha256": "c55dff64e369fe816cd8ce367064989bb119f85783599680d1a329031c660689"
+    },
+    {
+      "path": "lib/libc/musl/src/math/exp2f_data.c",
+      "sha256": "3da38c471cc5eb8dc1c2e283c6c00a36b1d353ba5c8ca1e82d95180948e26bd5"
+    },
+    {
+      "path": "lib/libc/musl/src/math/exp_data.h",
+      "sha256": "df77fca837edd02b260dd09a2914202775909ae67a059218ae38cfab104e6d16"
+    },
+    {
+      "path": "lib/libc/musl/src/math/exp2f_data.h",
+      "sha256": "fb52b690bef63df2e8996f2d2b3fd77f9ea08795863e73afdc882df04460e850"
+    },
+    {
+      "path": "lib/libc/musl/src/math/scalbn.c",
+      "sha256": "a2e766283ed30c2b30c71e01dbdabef58faf92cc9aa84a01c1ce1069b6625696"
+    },
+    {
+      "path": "lib/libc/musl/src/math/scalbnf.c",
+      "sha256": "3fb36f1cf8d9c118bfe85b462e6e0c034543835e5ffee4661f5ab8de997813e5"
+    },
+    {
+      "path": "lib/libc/musl/src/math/ldexp.c",
+      "sha256": "702b608d3a5cf9c5d26c26ef2c528a3003555ee48ececec3b817c817d297bfe8"
+    },
+    {
+      "path": "lib/libc/musl/src/math/ldexpf.c",
+      "sha256": "4edbe502fab04f8dc618550f4418a636606842deefdbb997103e3d8a39d03094"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_invalid.c",
+      "sha256": "b56440ed59fa1e1aaaf6bf8b672c8bb71eaf844457906f7773da1d67d7ef013b"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_invalidf.c",
+      "sha256": "d2af8360271109d77dfab3c538eb158e34633454707dea4efa9f2f1e7e2bd0c7"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_oflow.c",
+      "sha256": "74669de53bc4b250183cfa262a8a03ee8106f33a83e3aca6b217bafc7363b83c"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_oflowf.c",
+      "sha256": "69414934bb798f5261e2d80f4b878e2bbe4dfa6025adbd06586195ba5554b04a"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_uflow.c",
+      "sha256": "9a841197bbe9ade9bbd684f8bc65424a97c481d37dabb9fa1790bafe7959034a"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_uflowf.c",
+      "sha256": "2371ed08fc95e48833a67122b5ef538ce7fc87f40fc7a4df451d71e1787d1d42"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_xflow.c",
+      "sha256": "5feafe10347636884a071a5096f912d5ca4a0939844804ca09b88241405648ad"
+    },
+    {
+      "path": "lib/libc/musl/src/math/__math_xflowf.c",
+      "sha256": "38da031cfed0ba90e68a14dfbc57404ebcb827c9ac34648161c7d11cb212c9ba"
+    },
+    {
+      "path": "lib/libc/musl/src/internal/libm.h",
+      "sha256": "d5a11757541471030d8f4bf7a39a29de35732ecbb291b2f45bf03296be4f25a2"
+    },
+    {
+      "path": "lib/libc/musl/arch/generic/fp_arch.h",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "lib/libc/musl/COPYRIGHT",
+      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "5c537d6853e005298a285d508cff9ac7192cea23576c840d485b2b586a7ff177"
+    },
+    {
+      "path": "lib/std/math/acos.zig",
+      "sha256": "d8fad941a1f91ac77ba48818eec759632ada8f7a32be21fd647bee5b5208d2cb"
+    },
+    {
+      "path": "lib/std/math/asin.zig",
+      "sha256": "acde0da8b724c80c379eea6397e21e9f5ab3109b015214b7e17804b858714fcf"
+    },
+    {
+      "path": "lib/std/math/atan.zig",
+      "sha256": "82d89fcf00a12f0c1d6e793e0f7b30859c30274c9360c08aaa80253d894d280b"
+    },
+    {
+      "path": "lib/std/math/atan2.zig",
+      "sha256": "ad6ac04bf60dbe2b88bb953080b0dcace55007dbce4eadccaa5a810baadcc76d"
+    }
+  ]
+}

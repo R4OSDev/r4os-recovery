@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "generator": "glslangValidator",
+  "version": "15.2.0",
+  "arguments": [
+    "-V"
+  ],
+  "fixtures": [
+    {
+      "name": "fullscreen",
+      "stage": 0,
+      "source": "fullscreen.vert",
+      "source_sha256": "32ba5594bd71e6d65070fd05ebbcf17b5c3ecfc368f33db475ae047d379f46d4",
+      "spirv_sha256": "ea8064648b3e6c5a936cfa56236d5c647f04a5ec6d80b2c8be80f7e7729bf6d2",
+      "word_count": 284
+    },
+    {
+      "name": "color",
+      "stage": 4,
+      "source": "color.frag",
+      "source_sha256": "e30fe4e2654b574b87f143814dcfd431c5cfa5f89c5144608adf4e84c25fa3a5",
+      "spirv_sha256": "5bcf4a69cb50dd99d7ccdea31677fdcd173695ad1d2d857dd802279926c7a691",
+      "word_count": 125
+    },
+    {
+      "name": "copy",
+      "stage": 5,
+      "source": "copy.comp",
+      "source_sha256": "34afed8e652f63e394da5a7331902b9b2dddcd3fba8183ff17fb1b72f2683f65",
+      "spirv_sha256": "dc062a666a0d6e9e6be0cd263b833be9010ac269908946c2775f2194b20d4b53",
+      "word_count": 341
+    },
+    {
+      "name": "fill",
+      "stage": 5,
+      "source": "fill.comp",
+      "source_sha256": "cdd832af72b3c4930d7e318e1bea466de1c7cdd7469249a3545e3820744cd125",
+      "spirv_sha256": "42bab472a5ad88ddf899771f323af4187bac8182f0bb661144c88ee615df9ec8",
+      "word_count": 298
+    },
+    {
+      "name": "shared",
+      "stage": 5,
+      "source": "shared.comp",
+      "source_sha256": "9fb29b8d5f2b3398536e40658ed802e162a408fceeea5e87e1cd686ff04bf334",
+      "spirv_sha256": "304f1d4548d5dfbebdf65589933182c74b3903a01c5a2a268cc82302e0545163",
+      "word_count": 321
+    },
+    {
+      "name": "sample",
+      "stage": 4,
+      "source": "sample.frag",
+      "source_sha256": "f019c9e371f84c0c7fbe3043709d71ce8b94459fa0a2e87a89a03e29d76bdd25",
+      "spirv_sha256": "6d6292e03068bb40a6f99fc8207a2d1f16bfc27d36596adfdc9339f92d521d9c",
+      "word_count": 291
+    }
+  ]
+}

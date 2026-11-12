@@ -1,0 +1,31 @@
+--- a/src/mesa/glapi/glapi/gen/ARB_robustness.xml
++++ b/src/mesa/glapi/glapi/gen/ARB_robustness.xml
+@@ -186,4 +186,28 @@
+ </category>
+ 
+ 
++<category name="4.5">
++    <!-- Desktop Core aliases use the existing bounded ARB query implementations. -->
++    <function name="GetnCompressedTexImage" alias="GetnCompressedTexImageARB">
++        <param name="target" type="GLenum" />
++        <param name="lod" type="GLint" />
++        <param name="bufSize" type="GLsizei" />
++        <param name="img" type="GLvoid *" output="true" />
++    </function>
++    <function name="GetnTexImage" alias="GetnTexImageARB">
++        <param name="target" type="GLenum" />
++        <param name="level" type="GLint" />
++        <param name="format" type="GLenum" />
++        <param name="type" type="GLenum" />
++        <param name="bufSize" type="GLsizei" />
++        <param name="img" type="GLvoid *" output="true" />
++    </function>
++    <function name="GetnUniformdv" alias="GetnUniformdvARB">
++        <param name="program" type="GLuint" />
++        <param name="location" type="GLint" />
++        <param name="bufSize" type="GLsizei" />
++        <param name="params" type="GLdouble *" output="true" />
++    </function>
++</category>
++
+ </OpenGLAPI>

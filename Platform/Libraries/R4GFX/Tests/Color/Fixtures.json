@@ -1,0 +1,21 @@
+{
+  "description": "Original synthetic fixtures; no real monitor characterization. Stable ICC creation date2026-09-14. LUT XYZ components equal RGB components; VCGT channel peaks3/4,1/2,1. Descending VCGT must be rejected when calibration is requested.",
+  "generator": "MakeFixtures.c using vendored LittleCMS2.18",
+  "files": [
+    {
+      "path": "lut-display.icc",
+      "bytes": 552,
+      "sha256": "a2b3948ec7a273ea96fd15fe5e47238b301570b74883eaf103e09e3d9ddfdd60"
+    },
+    {
+      "path": "vcgt-descending.icc",
+      "bytes": 2168,
+      "sha256": "588f04be6cefc34e89d28b842b950a1dfb7e45f20b9eccce280e0908cc6eefd9"
+    },
+    {
+      "path": "vcgt-display.icc",
+      "bytes": 2168,
+      "sha256": "daebe047b7a3d33cc576b429594611b445707e791084c9b6a9cc44925a72171c"
+    }
+  ]
+}

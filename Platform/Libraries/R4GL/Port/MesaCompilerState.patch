@@ -1,0 +1,497 @@
+diff --git a/src/compiler/glsl/ast_function.cpp b/src/compiler/glsl/ast_function.cpp
+index cf28676..d75fe33 100644
+--- a/src/compiler/glsl/ast_function.cpp
++++ b/src/compiler/glsl/ast_function.cpp
+@@ -667,7 +667,7 @@ generate_call(ir_exec_list *instructions, ir_function_signature *sig,
+    ir_dereference_variable *deref = NULL;
+    if (!glsl_type_is_void(sig->return_type)) {
+       /* Create a new temporary to hold the return value. */
+-      char *const name = ir_variable::temporaries_allocate_names
++      char *const name = ir_variable::temporary_names_enabled()
+          ? ralloc_asprintf(state, "%s_retval", sig->function_name())
+          : NULL;
+ 
+diff --git a/src/compiler/glsl/glsl_parser_extras.cpp b/src/compiler/glsl/glsl_parser_extras.cpp
+index 2339818..09730d0 100644
+--- a/src/compiler/glsl/glsl_parser_extras.cpp
++++ b/src/compiler/glsl/glsl_parser_extras.cpp
+@@ -2420,8 +2420,7 @@ _mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader,
+       new(shader) _mesa_glsl_parse_state(ctx, shader->Stage, shader);
+ 
+    if (ctx->Const.GenerateTemporaryNames)
+-      (void) p_atomic_cmpxchg(&ir_variable::temporaries_allocate_names,
+-                              false, true);
++      ir_variable::enable_temporary_names();
+ 
+    if (!source_has_shader_include || !force_recompile) {
+       state->error = glcpp_preprocess(state, &source, &state->info_log,
+diff --git a/src/compiler/glsl/ir_print_visitor.cpp b/src/compiler/glsl/ir_print_visitor.cpp
+index f077905..7eecd30 100644
+--- a/src/compiler/glsl/ir_print_visitor.cpp
++++ b/src/compiler/glsl/ir_print_visitor.cpp
+@@ -131,8 +131,7 @@ ir_print_visitor::unique_name(ir_variable *var)
+     * names hash because this is the only scope where it can ever appear.
+     */
+    if (var->name == NULL) {
+-      static unsigned arg = 1;
+-      return ralloc_asprintf(this->mem_ctx, "parameter@%u", arg++);
++      return ralloc_asprintf(this->mem_ctx, "parameter@%u", next_parameter++);
+    }
+ 
+    /* Do we already have a name for this variable? */
+@@ -148,8 +147,7 @@ ir_print_visitor::unique_name(ir_variable *var)
+    if (_mesa_symbol_table_find_symbol(this->symbols, var->name) == NULL) {
+       name = var->name;
+    } else {
+-      static unsigned i = 1;
+-      name = ralloc_asprintf(this->mem_ctx, "%s@%u", var->name, ++i);
++      name = ralloc_asprintf(this->mem_ctx, "%s@%u", var->name, ++next_duplicate);
+    }
+    _mesa_hash_table_insert(this->printable_names, var, (void *) name);
+    _mesa_symbol_table_add_symbol(this->symbols, name, var);
+diff --git a/src/compiler/glsl/ir_print_visitor.h b/src/compiler/glsl/ir_print_visitor.h
+index d73a2f3..006cbed 100644
+--- a/src/compiler/glsl/ir_print_visitor.h
++++ b/src/compiler/glsl/ir_print_visitor.h
+@@ -91,6 +91,8 @@ private:
+    FILE *f;
+ 
+    int indentation;
++   unsigned next_parameter = 1;
++   unsigned next_duplicate = 1;
+ };
+ 
+ #endif /* IR_PRINT_VISITOR_H */
+diff --git a/src/compiler/glsl/ir.cpp b/src/compiler/glsl/ir.cpp
+index d67b773..4ec476b 100644
+--- a/src/compiler/glsl/ir.cpp
++++ b/src/compiler/glsl/ir.cpp
+@@ -1931,7 +1931,34 @@ ir_swizzle::variable_referenced() const
+ }
+ 
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++static const char temporary_names_key = 0;
++static void temporary_names_init(void *data) { (void)data; }
++static unsigned *temporary_names_flag()
++{
++   return static_cast<unsigned *>(r4gl_process_state(&temporary_names_key,
++      sizeof(unsigned), alignof(unsigned), temporary_names_init));
++}
++bool ir_variable::temporary_names_enabled()
++{
++   return p_atomic_read(temporary_names_flag()) != 0;
++}
++void ir_variable::enable_temporary_names()
++{
++   p_atomic_set(temporary_names_flag(), 1);
++}
++#else
+ bool ir_variable::temporaries_allocate_names = false;
++bool ir_variable::temporary_names_enabled()
++{
++   return p_atomic_read(&temporaries_allocate_names);
++}
++void ir_variable::enable_temporary_names()
++{
++   p_atomic_set(&temporaries_allocate_names, true);
++}
++#endif
+ 
+ const char ir_variable::tmp_name[] = "compiler_temp";
+ 
+@@ -1941,7 +1968,7 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
+ {
+    this->type = type;
+ 
+-   if (mode == ir_var_temporary && !ir_variable::temporaries_allocate_names)
++   if (mode == ir_var_temporary && !ir_variable::temporary_names_enabled())
+       name = NULL;
+ 
+    /* The ir_variable clone method may call this constructor with name set to
+diff --git a/src/compiler/glsl/ir.h b/src/compiler/glsl/ir.h
+index 701386a..383fcf2 100644
+--- a/src/compiler/glsl/ir.h
++++ b/src/compiler/glsl/ir.h
+@@ -1036,12 +1036,15 @@ public:
+     * \b NEVER change the mode of an \c ir_var_temporary.
+     *
+     * \warning
+-    * This variable is \b not thread-safe.  It is global, \b not
+-    * per-context. It begins life false.  A context can, at some point, make
+-    * it true.  From that point on, it will be true forever.  This should be
+-    * okay since it will only be set true while debugging.
++    * This flag is process-wide, not per-context, and begins false. A context
++    * may enable it permanently for debugging. Native R4OS uses process-owned
++    * storage; the accessors perform atomic reads/writes across compiler threads.
+     */
++#if !defined(R4OS_OPENGL)
+    static bool temporaries_allocate_names;
++#endif
++   static bool temporary_names_enabled();
++   static void enable_temporary_names();
+ };
+ 
+ /**
+diff --git a/src/compiler/nir/nir_print.c b/src/compiler/nir/nir_print.c
+index be48130..eceedbe 100644
+--- a/src/compiler/nir/nir_print.c
++++ b/src/compiler/nir/nir_print.c
+@@ -37,7 +37,23 @@
+ #include "nir.h"
+ #include "nir_builder.h"
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++static const char r4gl_nir_print_mutex_key;
++static void
++r4gl_nir_print_mutex_init(void *data)
++{
++   simple_mtx_init(data, mtx_plain);
++}
++simple_mtx_t *
++r4gl_nir_print_mutex(void)
++{
++   return r4gl_process_state(&r4gl_nir_print_mutex_key, sizeof(simple_mtx_t),
++      _Alignof(simple_mtx_t), r4gl_nir_print_mutex_init);
++}
++#else
+ simple_mtx_t nir_print_lock = SIMPLE_MTX_INITIALIZER;
++#endif
+ 
+ static void
+ print_indentation(unsigned levels, FILE *fp)
+diff --git a/src/compiler/nir/nir_shader_bisect.c b/src/compiler/nir/nir_shader_bisect.c
+index 5a824ec..5a0089c 100644
+--- a/src/compiler/nir/nir_shader_bisect.c
++++ b/src/compiler/nir/nir_shader_bisect.c
+@@ -21,6 +21,7 @@
+ /* These are expected to be hex dumps of blake3 bytes, no space and no leading
+  * '0x'
+  */
++#if !defined(R4OS_OPENGL)
+ static const char *nir_shader_bisect_lo = NULL;
+ static const char *nir_shader_bisect_hi = NULL;
+ 
+@@ -38,11 +39,24 @@ nir_shader_bisect_init(void)
+       assert(strlen(nir_shader_bisect_hi) + 1 == BLAKE3_HEX_LEN);
+ }
+ 
++#endif
++
+ bool
+ nir_shader_bisect_select(nir_shader *s)
+ {
++#if defined(R4OS_OPENGL)
++   const char *nir_shader_bisect_lo =
++      debug_get_option_cached("NIR_SHADER_BISECT_LO", NULL);
++   const char *nir_shader_bisect_hi =
++      debug_get_option_cached("NIR_SHADER_BISECT_HI", NULL);
++   if (nir_shader_bisect_lo)
++      assert(strlen(nir_shader_bisect_lo) + 1 == BLAKE3_HEX_LEN);
++   if (nir_shader_bisect_hi)
++      assert(strlen(nir_shader_bisect_hi) + 1 == BLAKE3_HEX_LEN);
++#else
+    static once_flag once = ONCE_FLAG_INIT;
+    call_once(&once, nir_shader_bisect_init);
++#endif
+ 
+    if (!nir_shader_bisect_lo && !nir_shader_bisect_hi)
+       return false;
+diff --git a/src/compiler/nir/nir_validate.c b/src/compiler/nir/nir_validate.c
+index de6b6a5..0e8b2af 100644
+--- a/src/compiler/nir/nir_validate.c
++++ b/src/compiler/nir/nir_validate.c
+@@ -2395,7 +2395,24 @@ destroy_validate_state(validate_state *state)
+    ralloc_free(state->mem_ctx);
+ }
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++static const char nir_failure_mutex_key;
++static void
++nir_failure_mutex_init(void *data)
++{
++   simple_mtx_init(data, mtx_plain);
++}
++static simple_mtx_t *
++nir_failure_mutex(void)
++{
++   return r4gl_process_state(&nir_failure_mutex_key, sizeof(simple_mtx_t),
++      _Alignof(simple_mtx_t), nir_failure_mutex_init);
++}
++#define fail_dump_mutex (*nir_failure_mutex())
++#else
+ simple_mtx_t fail_dump_mutex = SIMPLE_MTX_INITIALIZER;
++#endif
+ 
+ static void
+ dump_errors(validate_state *state, const char *when)
+diff --git a/src/compiler/nir/nir.c b/src/compiler/nir/nir.c
+index 8729ed6..5e14ddc 100644
+--- a/src/compiler/nir/nir.c
++++ b/src/compiler/nir/nir.c
+@@ -40,8 +40,10 @@
+ #include "nir_worklist.h"
+ 
+ #ifndef NDEBUG
++#if !defined(R4OS_OPENGL)
+ uint32_t nir_debug = 0;
+ bool nir_debug_print_shader[MESA_SHADER_KERNEL + 1] = { 0 };
++#endif
+ 
+ static const struct debug_named_value nir_debug_control[] = {
+    { "clone", NIR_DEBUG_CLONE,
+@@ -101,12 +103,52 @@ static const struct debug_named_value nir_debug_control[] = {
+    DEBUG_NAMED_VALUE_END
+ };
+ 
+-DEBUG_GET_ONCE_FLAGS_OPTION(nir_debug, "NIR_DEBUG", nir_debug_control, 0)
++DEBUG_GET_ONCE_FLAGS_OPTION(nir_flags, "NIR_DEBUG", nir_debug_control, 0)
++
++#if defined(R4OS_OPENGL)
++static const char nir_debug_key;
++static void
++nir_debug_initialize(void *data)
++{
++   struct r4gl_nir_debug_state *state = data;
++   state->flags = debug_get_option_nir_flags();
++
++   /* clang-format off */
++   state->print_shader[MESA_SHADER_VERTEX]       = ((state->flags & NIR_DEBUG_PRINT_VS) != 0);
++   state->print_shader[MESA_SHADER_TESS_CTRL]    = ((state->flags & NIR_DEBUG_PRINT_TCS) != 0);
++   state->print_shader[MESA_SHADER_TESS_EVAL]    = ((state->flags & NIR_DEBUG_PRINT_TES) != 0);
++   state->print_shader[MESA_SHADER_GEOMETRY]     = ((state->flags & NIR_DEBUG_PRINT_GS) != 0);
++   state->print_shader[MESA_SHADER_FRAGMENT]     = ((state->flags & NIR_DEBUG_PRINT_FS) != 0);
++   state->print_shader[MESA_SHADER_COMPUTE]      = ((state->flags & NIR_DEBUG_PRINT_CS) != 0);
++   state->print_shader[MESA_SHADER_TASK]         = ((state->flags & NIR_DEBUG_PRINT_TS) != 0);
++   state->print_shader[MESA_SHADER_MESH]         = ((state->flags & NIR_DEBUG_PRINT_MS) != 0);
++   state->print_shader[MESA_SHADER_RAYGEN]       = ((state->flags & NIR_DEBUG_PRINT_RGS) != 0);
++   state->print_shader[MESA_SHADER_ANY_HIT]      = ((state->flags & NIR_DEBUG_PRINT_AHS) != 0);
++   state->print_shader[MESA_SHADER_CLOSEST_HIT]  = ((state->flags & NIR_DEBUG_PRINT_CHS) != 0);
++   state->print_shader[MESA_SHADER_MISS]         = ((state->flags & NIR_DEBUG_PRINT_MHS) != 0);
++   state->print_shader[MESA_SHADER_INTERSECTION] = ((state->flags & NIR_DEBUG_PRINT_IS) != 0);
++   state->print_shader[MESA_SHADER_CALLABLE]     = ((state->flags & NIR_DEBUG_PRINT_CBS) != 0);
++   state->print_shader[MESA_SHADER_KERNEL]       = ((state->flags & NIR_DEBUG_PRINT_KS) != 0);
++   /* clang-format on */
++}
++
++const struct r4gl_nir_debug_state *
++r4gl_nir_debug_state(void)
++{
++   return r4gl_process_state(&nir_debug_key, sizeof(struct r4gl_nir_debug_state),
++      _Alignof(struct r4gl_nir_debug_state), nir_debug_initialize);
++}
+ 
++void
++nir_process_debug_variable(void)
++{
++   (void)r4gl_nir_debug_state();
++}
++#else
+ static void
+ nir_process_debug_variable_once(void)
+ {
+-   nir_debug = debug_get_option_nir_debug();
++   nir_debug = debug_get_option_nir_flags();
+ 
+    /* clang-format off */
+    nir_debug_print_shader[MESA_SHADER_VERTEX]       = NIR_DEBUG(PRINT_VS);
+@@ -134,6 +176,7 @@ nir_process_debug_variable(void)
+    call_once(&flag, nir_process_debug_variable_once);
+ }
+ #endif
++#endif
+ 
+ /** Return true if the component mask "mask" with bit size "old_bit_size" can
+  * be re-interpreted to be used with "new_bit_size".
+@@ -651,7 +694,7 @@ nir_alu_src_copy(nir_alu_src *dest, const nir_alu_src *src)
+ bool
+ nir_alu_src_is_trivial_ssa(const nir_alu_src *src, unsigned num_components)
+ {
+-   static uint8_t trivial_swizzle[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
++   static const uint8_t trivial_swizzle[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    STATIC_ASSERT(ARRAY_SIZE(trivial_swizzle) == NIR_MAX_VEC_COMPONENTS);
+ 
+    return (src->src.ssa->num_components == num_components) &&
+@@ -950,7 +993,7 @@ nir_cmat_call_instr_create(nir_shader *shader, nir_cmat_call_op op, nir_function
+    return instr;
+ }
+ 
+-static int8_t default_tg4_offsets[4][2] = {
++static const int8_t default_tg4_offsets[4][2] = {
+    { 0, 1 },
+    { 1, 1 },
+    { 1, 0 },
+diff --git a/src/compiler/nir/nir.h b/src/compiler/nir/nir.h
+index 01baeff..b328af5 100644
+--- a/src/compiler/nir/nir.h
++++ b/src/compiler/nir/nir.h
+@@ -62,8 +62,18 @@ extern "C" {
+ #endif
+ 
+ typedef struct u_printf_info u_printf_info;
++#if defined(R4OS_OPENGL) && !defined(NDEBUG)
++struct r4gl_nir_debug_state {
++   uint32_t flags;
++   bool print_shader[MESA_SHADER_KERNEL + 1];
++};
++const struct r4gl_nir_debug_state *r4gl_nir_debug_state(void);
++#define nir_debug (r4gl_nir_debug_state()->flags)
++#define nir_debug_print_shader (r4gl_nir_debug_state()->print_shader)
++#else
+ extern uint32_t nir_debug;
+ extern bool nir_debug_print_shader[MESA_SHADER_KERNEL + 1];
++#endif
+ 
+ #ifndef NDEBUG
+ #define NIR_DEBUG(flag) unlikely(nir_debug &(NIR_DEBUG_##flag))
+@@ -5265,7 +5275,12 @@ should_print_nir(UNUSED nir_shader *shader)
+ #define NIR_STRINGIZE_INNER(x) #x
+ #define NIR_STRINGIZE(x)       NIR_STRINGIZE_INNER(x)
+ 
++#if defined(R4OS_OPENGL)
++simple_mtx_t *r4gl_nir_print_mutex(void);
++#define nir_print_lock (*r4gl_nir_print_mutex())
++#else
+ extern simple_mtx_t nir_print_lock;
++#endif
+ 
+ #define NIR_PASS(progress, nir, pass, ...) _PASS(pass, nir, {                            \
+    nir_metadata_set_validation_flag(nir);                                                \
+diff --git a/src/compiler/spirv/spirv_to_nir.c b/src/compiler/spirv/spirv_to_nir.c
+index eea1dc9..1c824e1 100644
+--- a/src/compiler/spirv/spirv_to_nir.c
++++ b/src/compiler/spirv/spirv_to_nir.c
+@@ -218,7 +218,9 @@ static const struct spirv_capabilities implemented_capabilities = {
+    .WorkgroupMemoryExplicitLayout16BitAccessKHR = true,
+ };
+ 
++#if !defined(R4OS_OPENGL)
+ uint32_t mesa_spirv_debug = 0;
++#endif
+ 
+ static const struct debug_named_value mesa_spirv_debug_control[] = {
+    { "structured", MESA_SPIRV_DEBUG_STRUCTURED,
+@@ -231,13 +233,25 @@ static const struct debug_named_value mesa_spirv_debug_control[] = {
+    DEBUG_NAMED_VALUE_END,
+ };
+ 
+-DEBUG_GET_ONCE_FLAGS_OPTION(mesa_spirv_debug, "MESA_SPIRV_DEBUG", mesa_spirv_debug_control, 0)
++DEBUG_GET_ONCE_FLAGS_OPTION(spirv_flags, "MESA_SPIRV_DEBUG", mesa_spirv_debug_control, 0)
+ 
++#if defined(R4OS_OPENGL)
++uint32_t
++r4gl_mesa_spirv_debug(void)
++{
++   return debug_get_option_spirv_flags();
++}
++static void
++mesa_spirv_debug_init(void)
++{
++   (void)r4gl_mesa_spirv_debug();
++}
++#else
+ /* DO NOT CALL THIS FUNCTION DIRECTLY. Use mesa_spirv_debug_init() instead */
+ static void
+ initialize_mesa_spirv_debug(void)
+ {
+-   mesa_spirv_debug = debug_get_option_mesa_spirv_debug();
++   mesa_spirv_debug = debug_get_option_spirv_flags();
+ }
+ 
+ static void
+@@ -247,6 +261,8 @@ mesa_spirv_debug_init(void)
+    call_once(&initialized_debug_flag, initialize_mesa_spirv_debug);
+ }
+ 
++#endif
++
+ #ifndef NDEBUG
+ static enum nir_spirv_debug_level
+ vtn_default_log_level(void)
+@@ -271,6 +287,22 @@ vtn_default_log_level(void)
+ 
+    return level;
+ }
++#if defined(R4OS_OPENGL)
++static const char vtn_log_level_key;
++static void
++vtn_log_level_init(void *data)
++{
++   *(enum nir_spirv_debug_level *)data = vtn_default_log_level();
++}
++static enum nir_spirv_debug_level
++vtn_process_log_level(void)
++{
++   return *(enum nir_spirv_debug_level *)r4gl_process_state(
++      &vtn_log_level_key, sizeof(enum nir_spirv_debug_level),
++      _Alignof(enum nir_spirv_debug_level), vtn_log_level_init);
++}
++#endif
++
+ #endif
+ 
+ void
+@@ -283,11 +315,15 @@ vtn_log(struct vtn_builder *b, enum nir_spirv_debug_level level,
+    }
+ 
+ #ifndef NDEBUG
++#if defined(R4OS_OPENGL)
++   const enum nir_spirv_debug_level default_level = vtn_process_log_level();
++#else
+    static enum nir_spirv_debug_level default_level =
+       NIR_SPIRV_DEBUG_LEVEL_INVALID;
+ 
+    if (default_level == NIR_SPIRV_DEBUG_LEVEL_INVALID)
+       default_level = vtn_default_log_level();
++#endif
+ 
+    if (level >= default_level)
+       fprintf(stderr, "%s\n", message);
+diff --git a/src/compiler/spirv/vtn_cfg.c b/src/compiler/spirv/vtn_cfg.c
+index 9a58eec..e8f41a4 100644
+--- a/src/compiler/spirv/vtn_cfg.c
++++ b/src/compiler/spirv/vtn_cfg.c
+@@ -743,15 +743,23 @@ vtn_emit_cf_func_unstructured(struct vtn_builder *b, struct vtn_function *func,
+    }
+ }
+ 
++#if defined(R4OS_OPENGL)
++DEBUG_GET_ONCE_BOOL_OPTION(force_unstructured, "MESA_SPIRV_FORCE_UNSTRUCTURED", false)
++#endif
++
+ void
+ vtn_function_emit(struct vtn_builder *b, struct vtn_function *func,
+                   vtn_instruction_handler instruction_handler)
+ {
++#if defined(R4OS_OPENGL)
++   const bool force_unstructured = debug_get_option_force_unstructured();
++#else
+    static int force_unstructured = -1;
+    if (force_unstructured < 0) {
+       force_unstructured =
+          debug_get_bool_option("MESA_SPIRV_FORCE_UNSTRUCTURED", false);
+    }
++#endif
+ 
+    nir_function_impl *impl = func->nir_func->impl;
+    b->nb = nir_builder_at(nir_after_impl(impl));
+diff --git a/src/compiler/spirv/vtn_private.h b/src/compiler/spirv/vtn_private.h
+index 5fe50ff..bb5b9c2 100644
+--- a/src/compiler/spirv/vtn_private.h
++++ b/src/compiler/spirv/vtn_private.h
+@@ -17,7 +17,12 @@
+ #include "vtn_generator_ids.h"
+ #include "spirv_internal_exts.h"
+ 
++#if defined(R4OS_OPENGL)
++uint32_t r4gl_mesa_spirv_debug(void);
++#define mesa_spirv_debug (r4gl_mesa_spirv_debug())
++#else
+ extern uint32_t mesa_spirv_debug;
++#endif
+ 
+ #define MESA_SPIRV_DEBUG(flag) unlikely(mesa_spirv_debug & (MESA_SPIRV_DEBUG_ ## flag))
+ 

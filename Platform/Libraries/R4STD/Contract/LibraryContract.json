@@ -1,0 +1,5321 @@
+{
+  "schema_version": 1,
+  "module_name": "R4STD",
+  "zig_client": "R4Std",
+  "c_prefix": "r4std",
+  "c_header": "r4std_abi.h",
+  "description": "Unabhaengige Runtime-R4L fuer Text, R4S-Settings, Datum, Zeitzonen und atomare Konfigurationsdateien.",
+  "interfaces": [
+    {
+      "export_name": "TEXT_V1",
+      "symbol": "r4std_text_v1",
+      "zig_name": "text_v1",
+      "zig_type": "TextV1",
+      "c_type": "R4StdTextV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 2369754037310619026,
+      "interface_id_hi": 5731834224586510611,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "inspect",
+          "c_name": "r4std_text_inspect",
+          "symbol": "r4std_text_inspect_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "Zu pruefender caller-eigener Bytebereich."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Laenge der Eingabe."
+            },
+            {
+              "name": "kind",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_TEXT_KIND-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdTextInfo",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-eigene Textbeschreibung."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Prueft UTF-8-, UI-, System- oder Dokumenttext und beschreibt den Inhalt."
+        },
+        {
+          "name": "write",
+          "c_name": "r4std_text_write",
+          "symbol": "r4std_text_write_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "Caller-eigener Eingabetext."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Laenge der Eingabe."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_TEXT_WRITE-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener Ausgabebuffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Kapazitaet des Ausgabebuffers."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Tatsaechlich geschriebene Bytezahl."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Schreibt Systemtext kanonisch oder Dokumenttext bytegenau."
+        }
+      ],
+      "description": "Versionierte Text- und Kodierungsoberflaeche."
+    },
+    {
+      "export_name": "SETTINGS_V1",
+      "symbol": "r4std_settings_v1",
+      "zig_name": "settings_v1",
+      "zig_type": "SettingsV1",
+      "c_type": "R4StdSettingsV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 12046348989729486268,
+      "interface_id_hi": 12494136917853275401,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "entry_next",
+          "c_name": "r4std_settings_entry_next",
+          "symbol": "r4std_settings_entry_next_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "R4S-Dokument."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Dokumentlaenge."
+            },
+            {
+              "name": "cursor",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Bytecursor des Iterators."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdEntryRange",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Offsets und Laengen des naechsten Paars."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Liefert das naechste gueltige R4S-Schluessel-Wert-Paar."
+        },
+        {
+          "name": "value",
+          "c_name": "r4std_settings_value",
+          "symbol": "r4std_settings_value_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "R4S-Dokument."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Dokumentlaenge."
+            },
+            {
+              "name": "key",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "key_length",
+              "description": "Gesuchter Schluessel."
+            },
+            {
+              "name": "key_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Schluessellaenge."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdEntryRange",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Bereich des letzten passenden Wertes."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Sucht case-insensitiv den letzten Wert eines Schluessels."
+        },
+        {
+          "name": "parse_scalar",
+          "c_name": "r4std_settings_parse_scalar",
+          "symbol": "r4std_settings_parse_scalar_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "Zu parsende Zeichenfolge."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Eingabelaenge."
+            },
+            {
+              "name": "kind",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_SCALAR_KIND-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Normalisierter Skalarwert."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Parst Boolean, u32, i32 oder RGB24."
+        },
+        {
+          "name": "writer_append",
+          "c_name": "r4std_settings_writer_append",
+          "symbol": "r4std_settings_writer_append_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener R4S-Ausgabebuffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Kapazitaet des Puffers."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Aktuelle und neue Ausgabelaenge."
+            },
+            {
+              "name": "truncated",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Bleibt nach einem Ueberlauf gesetzt."
+            },
+            {
+              "name": "kind",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_WRITER_KIND-Konstante."
+            },
+            {
+              "name": "key",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "key_length",
+              "description": "Schluessel oder leerer Bereich."
+            },
+            {
+              "name": "key_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Schluessellaenge."
+            },
+            {
+              "name": "text_value",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "text_value_length",
+              "description": "Textwert oder Schema."
+            },
+            {
+              "name": "text_value_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Textwertlaenge."
+            },
+            {
+              "name": "numeric_value",
+              "type": {
+                "name": "i64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Numerischer Wert fuer typisierte Schreibmodi."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Fuegt Header, Kommentar oder typisiertes Schluessel-Wert-Paar an."
+        },
+        {
+          "name": "equals_key",
+          "c_name": "r4std_settings_equals_key",
+          "symbol": "r4std_settings_equals_key_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "left",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "left_length",
+              "description": "Linker Text."
+            },
+            {
+              "name": "left_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Linke Laenge."
+            },
+            {
+              "name": "right",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "right_length",
+              "description": "Rechter Text."
+            },
+            {
+              "name": "right_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Rechte Laenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer werden behalten."
+          },
+          "description": "Vergleicht R4S-Schluessel ASCII-case-insensitiv."
+        },
+        {
+          "name": "writeback_policy",
+          "c_name": "r4std_settings_writeback_policy",
+          "symbol": "r4std_settings_writeback_policy_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "durability",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_DURABILITY-Konstante."
+            },
+            {
+              "name": "ticks_per_second",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Monotone Tickfrequenz."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdWritebackPolicy",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Berechnete Policy."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Berechnet eine Writeback-Policy fuer die Host-Tickfrequenz."
+        },
+        {
+          "name": "writeback_default_delay",
+          "c_name": "r4std_settings_writeback_default_delay",
+          "symbol": "r4std_settings_writeback_default_delay_impl",
+          "slot": 6,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "durability",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_DURABILITY-Konstante."
+            },
+            {
+              "name": "retry",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Null fuer Speichern, sonst Retry."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer."
+          },
+          "description": "Liefert die Standardverzoegerung in Millisekunden."
+        },
+        {
+          "name": "writeback_init",
+          "c_name": "r4std_settings_writeback_init",
+          "symbol": "r4std_settings_writeback_init_impl",
+          "slot": 7,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdWriteback",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Zu initialisierender Zustand."
+            },
+            {
+              "name": "policy",
+              "type": {
+                "name": "R4StdWritebackPolicy",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Anfangs-Policy."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Initialisiert caller-eigenen Writeback-Zustand."
+        },
+        {
+          "name": "writeback_configure",
+          "c_name": "r4std_settings_writeback_configure",
+          "symbol": "r4std_settings_writeback_configure_impl",
+          "slot": 8,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdWriteback",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Writeback-Zustand."
+            },
+            {
+              "name": "policy",
+              "type": {
+                "name": "R4StdWritebackPolicy",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Neue Policy."
+            },
+            {
+              "name": "now",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Aktueller monotoner Tick."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Konfiguriert einen bestehenden Writeback-Zustand."
+        },
+        {
+          "name": "writeback_mark_dirty",
+          "c_name": "r4std_settings_writeback_mark_dirty",
+          "symbol": "r4std_settings_writeback_mark_dirty_impl",
+          "slot": 9,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdWriteback",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Writeback-Zustand."
+            },
+            {
+              "name": "now",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Aktueller monotoner Tick."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Markiert den Zustand als geaendert."
+        },
+        {
+          "name": "writeback_prepare",
+          "c_name": "r4std_settings_writeback_prepare",
+          "symbol": "r4std_settings_writeback_prepare_impl",
+          "slot": 10,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdWriteback",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Writeback-Zustand."
+            },
+            {
+              "name": "now",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Aktueller monotoner Tick."
+            },
+            {
+              "name": "force",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Erzwingt einen faelligen Versuch."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdWritebackFlush",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Idle- oder Deferred-Ergebnis."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Entscheidet, ob der Caller seinen Saver aufrufen muss."
+        },
+        {
+          "name": "writeback_complete",
+          "c_name": "r4std_settings_writeback_complete",
+          "symbol": "r4std_settings_writeback_complete_impl",
+          "slot": 11,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdWriteback",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Writeback-Zustand."
+            },
+            {
+              "name": "now",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Aktueller monotoner Tick."
+            },
+            {
+              "name": "result",
+              "type": {
+                "name": "i32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Ergebnis des caller-eigenen Savers."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdWritebackFlush",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Normalisiertes Abschlussresultat."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Uebernimmt das Ergebnis eines Writeback-Versuchs."
+        }
+      ],
+      "description": "Versionierter R4S-Parser, Writer und Writeback-Zustand."
+    },
+    {
+      "export_name": "DATE_V1",
+      "symbol": "r4std_date_v1",
+      "zig_name": "date_v1",
+      "zig_type": "DateV1",
+      "c_type": "R4StdDateV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 1246391787894772147,
+      "interface_id_hi": 13513900912883710916,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "days_in_month",
+          "c_name": "r4std_date_days_in_month",
+          "symbol": "r4std_date_days_in_month_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "year",
+              "type": {
+                "name": "u16",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Jahr."
+            },
+            {
+              "name": "month",
+              "type": {
+                "name": "u8",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Monat."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer."
+          },
+          "description": "Liefert die Tageszahl eines Monats."
+        },
+        {
+          "name": "valid_date",
+          "c_name": "r4std_date_valid_date",
+          "symbol": "r4std_date_valid_date_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "year",
+              "type": {
+                "name": "u16",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Jahr."
+            },
+            {
+              "name": "month",
+              "type": {
+                "name": "u8",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Monat."
+            },
+            {
+              "name": "day",
+              "type": {
+                "name": "u8",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Tag."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer."
+          },
+          "description": "Prueft ein Kalenderdatum."
+        },
+        {
+          "name": "compare_date_time",
+          "c_name": "r4std_date_compare_date_time",
+          "symbol": "r4std_date_compare_date_time_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "left",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Linker Zeitpunkt."
+            },
+            {
+              "name": "right",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Rechter Zeitpunkt."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Pointer gelten nur waehrend des Aufrufs."
+          },
+          "description": "Vergleicht zwei lokale Datumswerte."
+        },
+        {
+          "name": "weekday_number",
+          "c_name": "r4std_date_weekday_number",
+          "symbol": "r4std_date_weekday_number_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "year",
+              "type": {
+                "name": "u16",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Jahr."
+            },
+            {
+              "name": "month",
+              "type": {
+                "name": "u8",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Monat."
+            },
+            {
+              "name": "day",
+              "type": {
+                "name": "u8",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Tag."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer."
+          },
+          "description": "Liefert den Wochentag Sonntag=0 bis Samstag=6."
+        },
+        {
+          "name": "shift_minutes",
+          "c_name": "r4std_date_shift_minutes",
+          "symbol": "r4std_date_shift_minutes_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Ausgangszeitpunkt."
+            },
+            {
+              "name": "delta_minutes",
+              "type": {
+                "name": "i32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Vorzeichenbehaftete Minutenverschiebung."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdShiftedDateTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Verschobener Zeitpunkt und Tagesdelta."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Verschiebt einen Zeitpunkt um Minuten."
+        },
+        {
+          "name": "from_time_state",
+          "c_name": "r4std_date_from_time_state",
+          "symbol": "r4std_date_from_time_state_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Lokaler Plattformzeitwert."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "R4STD-Datumswert."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Konvertiert den uebersetzten Plattformzeitwert."
+        },
+        {
+          "name": "to_time_state",
+          "c_name": "r4std_date_to_time_state",
+          "symbol": "r4std_date_to_time_state_impl",
+          "slot": 6,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "R4STD-Datumswert."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Uebersetzbarer Plattformzeitwert."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Erzeugt einen lokalen Zeitstatus."
+        },
+        {
+          "name": "utc_from_date_time",
+          "c_name": "r4std_date_utc_from_date_time",
+          "symbol": "r4std_date_utc_from_date_time_impl",
+          "slot": 7,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "UTC-Datum und Uhrzeit."
+            },
+            {
+              "name": "nanosecond",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Nanosekundenanteil."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdUtcTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "UTC-Epochenwert."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Konvertiert ein UTC-Datum in Unix-Sekunden."
+        },
+        {
+          "name": "date_time_from_utc",
+          "c_name": "r4std_date_date_time_from_utc",
+          "symbol": "r4std_date_date_time_from_utc_impl",
+          "slot": 8,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdUtcTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "UTC-Epochenwert."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "UTC-Datum und Uhrzeit."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Konvertiert Unix-Sekunden in ein UTC-Datum."
+        },
+        {
+          "name": "format",
+          "c_name": "r4std_date_format",
+          "symbol": "r4std_date_format_impl",
+          "slot": 9,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zu formatierender Wert."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_DATE_FORMAT-Konstante."
+            },
+            {
+              "name": "clock_format",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zentrale 12h/24h-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener Textpuffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pufferkapazitaet."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Textlaenge ohne NUL."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Formatiert Datum oder Datum/Uhrzeit."
+        },
+        {
+          "name": "parse",
+          "c_name": "r4std_date_parse",
+          "symbol": "r4std_date_parse_impl",
+          "slot": 10,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "ASCII-Datumsdarstellung."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Eingabelaenge."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_DATE_PARSE-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Geparster Wert."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Parst ISO-Datum, Uhrzeit oder Datum/Uhrzeit."
+        },
+        {
+          "name": "decode_fat",
+          "c_name": "r4std_date_decode_fat",
+          "symbol": "r4std_date_decode_fat_impl",
+          "slot": 11,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "date_raw",
+              "type": {
+                "name": "u16",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "FAT-Datumswort."
+            },
+            {
+              "name": "time_raw",
+              "type": {
+                "name": "u16",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "FAT-Uhrzeitwort."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_FAT_DECODE-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Dekodierter Wert."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Dekodiert FAT-Datum oder FAT-Datum/Uhrzeit."
+        }
+      ],
+      "description": "Versionierte Kalender-, Format- und FAT-Konvertierung."
+    },
+    {
+      "export_name": "TIME_V1",
+      "symbol": "r4std_time_v1",
+      "zig_name": "time_v1",
+      "zig_type": "TimeV1",
+      "c_type": "R4StdTimeV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 10848947658341525796,
+      "interface_id_hi": 2922542220839145927,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "zone_count",
+          "c_name": "r4std_time_zone_count",
+          "symbol": "r4std_time_zone_count_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer."
+          },
+          "description": "Liefert die Zahl der Zeitzonen."
+        },
+        {
+          "name": "copy_zone_id",
+          "c_name": "r4std_time_copy_zone_id",
+          "symbol": "r4std_time_copy_zone_id_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "index",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zeitzonenindex."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener Puffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pufferkapazitaet."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Geschriebene Textlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Kopiert die stabile Zeitzonen-ID."
+        },
+        {
+          "name": "copy_zone_label",
+          "c_name": "r4std_time_copy_zone_label",
+          "symbol": "r4std_time_copy_zone_label_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "index",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zeitzonenindex."
+            },
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zeitpunkt fuer DST-Beschriftung."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener Puffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pufferkapazitaet."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Geschriebene Textlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Kopiert die zustandsabhaengige Zeitzonenbezeichnung."
+        },
+        {
+          "name": "index_for_id",
+          "c_name": "r4std_time_index_for_id",
+          "symbol": "r4std_time_index_for_id_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "Zeitzonen-ID."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "ID-Laenge."
+            },
+            {
+              "name": "output_index",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Gefundener Index."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Sucht eine Zeitzonen-ID."
+        },
+        {
+          "name": "offset_at_state",
+          "c_name": "r4std_time_offset_at_state",
+          "symbol": "r4std_time_offset_at_state_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "index",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zeitzonenindex."
+            },
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zeitpunkt fuer DST."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Der Pointer wird nur gelesen."
+          },
+          "description": "Liefert den UTC-Offset in Minuten."
+        },
+        {
+          "name": "seconds_in_zone",
+          "c_name": "r4std_time_seconds_in_zone",
+          "symbol": "r4std_time_seconds_in_zone_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "seconds_utc",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Sekunden seit Mitternacht UTC."
+            },
+            {
+              "name": "offset_minutes",
+              "type": {
+                "name": "i32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "UTC-Offset in Minuten."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer."
+          },
+          "description": "Verschiebt Tagessekunden in eine Zeitzone."
+        },
+        {
+          "name": "split_time",
+          "c_name": "r4std_time_split_time",
+          "symbol": "r4std_time_split_time_impl",
+          "slot": 6,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "seconds",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Sekunden seit Mitternacht."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdClockTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Stunden, Minuten und Sekunden."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Zerlegt Tagessekunden."
+        },
+        {
+          "name": "local_date_time",
+          "c_name": "r4std_time_local_date_time",
+          "symbol": "r4std_time_local_date_time_impl",
+          "slot": 7,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "index",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zeitzonenindex."
+            },
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "UTC-Plattformzeit."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdDateTime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Lokales Datum und Uhrzeit."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Berechnet lokales Datum und Uhrzeit."
+        },
+        {
+          "name": "format_clock",
+          "c_name": "r4std_time_format_clock",
+          "symbol": "r4std_time_format_clock_impl",
+          "slot": 8,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "R4StdClockTime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Uhrzeit."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_TIME_FORMAT-Konstante."
+            },
+            {
+              "name": "clock_format",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zentrale 12h/24h-Konstante."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener Puffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pufferkapazitaet."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Textlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Formatiert eine Uhrzeit."
+        },
+        {
+          "name": "format_offset",
+          "c_name": "r4std_time_format_offset",
+          "symbol": "r4std_time_format_offset_impl",
+          "slot": 9,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "offset_minutes",
+              "type": {
+                "name": "i32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "UTC-Offset in Minuten."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener Puffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pufferkapazitaet."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Textlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Formatiert einen UTC-Offset."
+        },
+        {
+          "name": "config_load",
+          "c_name": "r4std_time_config_load",
+          "symbol": "r4std_time_config_load_impl",
+          "slot": 10,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "config",
+              "type": {
+                "name": "R4StdTimeConfig",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Zu aktualisierende Zeitkonfiguration."
+            },
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "R4S-Konfiguration."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Konfigurationslaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer werden behalten."
+          },
+          "description": "Laedt Zeitzone und Uhrformat."
+        },
+        {
+          "name": "config_write",
+          "c_name": "r4std_time_config_write",
+          "symbol": "r4std_time_config_write_impl",
+          "slot": 11,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "config",
+              "type": {
+                "name": "R4StdTimeConfig",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zeitkonfiguration."
+            },
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zeitpunkt fuer DST oder Nullwert."
+            },
+            {
+              "name": "with_state",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Verwendet bei ungleich Null den Zeitpunkt."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-eigener R4S-Puffer."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pufferkapazitaet."
+            },
+            {
+              "name": "output_length",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Konfigurationslaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Schreibt die Zeitkonfiguration als R4S."
+        },
+        {
+          "name": "config_normalize",
+          "c_name": "r4std_time_config_normalize",
+          "symbol": "r4std_time_config_normalize_impl",
+          "slot": 12,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "config",
+              "type": {
+                "name": "R4StdTimeConfig",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Zu normalisierende Konfiguration."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "Alle Pointer sind nur fuer die Aufrufdauer geliehen."
+          },
+          "description": "Normalisiert Index und Uhrformat."
+        },
+        {
+          "name": "config_offset",
+          "c_name": "r4std_time_config_offset",
+          "symbol": "r4std_time_config_offset_impl",
+          "slot": 13,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "config",
+              "type": {
+                "name": "R4StdTimeConfig",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zeitkonfiguration."
+            },
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdTimeState",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Zeitpunkt fuer DST."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Pointer werden nur gelesen."
+          },
+          "description": "Liefert den konfigurierten UTC-Offset."
+        },
+        {
+          "name": "standard_offset",
+          "c_name": "r4std_time_standard_offset",
+          "symbol": "r4std_time_standard_offset_impl",
+          "slot": 14,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "index",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Zeitzonenindex."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "none",
+            "ownership": "Keine Pointer oder Besitzuebergaenge."
+          },
+          "description": "Liefert den Standardoffset der Zeitzone ohne Sommerzeit."
+        }
+      ],
+      "description": "Versionierte Zeitzonen- und Zeitkonfigurationsoberflaeche."
+    },
+    {
+      "export_name": "CONFIG_V1",
+      "symbol": "r4std_config_v1",
+      "zig_name": "config_v1",
+      "zig_type": "ConfigV1",
+      "c_type": "R4StdConfigV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 10364592225131568195,
+      "interface_id_hi": 18204068666756205756,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "read",
+          "c_name": "r4std_config_read",
+          "symbol": "r4std_config_read_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "caller_context",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Geborgte Adresse des zentralen R4X-Startkontexts."
+            },
+            {
+              "name": "path",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "path_length",
+              "description": "Absoluter Dateipfad."
+            },
+            {
+              "name": "path_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pfadlaenge."
+            },
+            {
+              "name": "key",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "key_length",
+              "description": "R4S-Schluessel."
+            },
+            {
+              "name": "key_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Schluessellaenge."
+            },
+            {
+              "name": "kind",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_CONFIG_KIND-Konstante."
+            },
+            {
+              "name": "fallback",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "fallback_length",
+              "description": "Textfallback oder leerer Bereich."
+            },
+            {
+              "name": "fallback_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Fallbacklaenge."
+            },
+            {
+              "name": "fallback_scalar",
+              "type": {
+                "name": "i64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Skalarfallback."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Textausgabe oder leerer Bereich."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Textkapazitaet."
+            },
+            {
+              "name": "output_scalar",
+              "type": {
+                "name": "u64",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Skalarausgabe."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4STD_CONFIG_RESULT",
+            "ownership": "Der Startkontext und alle Buffer bleiben caller-owned und werden nicht gespeichert."
+          },
+          "description": "Liest einen typisierten R4S-Wert ueber den Caller-eigenen R4SYS-Kontext."
+        },
+        {
+          "name": "write",
+          "c_name": "r4std_config_write",
+          "symbol": "r4std_config_write_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "caller_context",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Geborgte Adresse des zentralen R4X-Startkontexts."
+            },
+            {
+              "name": "path",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "path_length",
+              "description": "Absoluter Dateipfad."
+            },
+            {
+              "name": "path_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pfadlaenge."
+            },
+            {
+              "name": "key",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "key_length",
+              "description": "R4S-Schluessel."
+            },
+            {
+              "name": "key_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Schluessellaenge."
+            },
+            {
+              "name": "kind",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_CONFIG_KIND-Konstante."
+            },
+            {
+              "name": "value",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "value_length",
+              "description": "Textwert oder leerer Bereich."
+            },
+            {
+              "name": "value_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Textwertlaenge."
+            },
+            {
+              "name": "scalar_value",
+              "type": {
+                "name": "i64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Skalarwert."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4STD_CONFIG_RESULT",
+            "ownership": "Keine Adresse wird ueber den Aufruf hinaus behalten; Dateiseiteneffekte folgen dem Ergebnisvertrag."
+          },
+          "description": "Schreibt einen typisierten R4S-Wert atomar."
+        },
+        {
+          "name": "save_document",
+          "c_name": "r4std_config_save_document",
+          "symbol": "r4std_config_save_document_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "caller_context",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Geborgte Adresse des zentralen R4X-Startkontexts."
+            },
+            {
+              "name": "path",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "path_length",
+              "description": "Absoluter Dateipfad."
+            },
+            {
+              "name": "path_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pfadlaenge."
+            },
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "Vollstaendiges R4S-Dokument."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Dokumentlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4STD_CONFIG_RESULT",
+            "ownership": "Der Provider darf TMP- und BAK-Dateien erzeugen und bereinigt sie nach dem Vertrag."
+          },
+          "description": "Speichert ein vollstaendiges R4S-Dokument atomar."
+        },
+        {
+          "name": "recover_document",
+          "c_name": "r4std_config_recover_document",
+          "symbol": "r4std_config_recover_document_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "caller_context",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Geborgte Adresse des zentralen R4X-Startkontexts."
+            },
+            {
+              "name": "path",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "path_length",
+              "description": "Absoluter Dateipfad."
+            },
+            {
+              "name": "path_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pfadlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4STD_CONFIG_RESULT",
+            "ownership": "Kann vorhandene TMP- oder BAK-Dateien umbenennen oder entfernen."
+          },
+          "description": "Stellt einen unterbrochenen atomaren Save wieder her."
+        },
+        {
+          "name": "has_leftovers",
+          "c_name": "r4std_config_has_leftovers",
+          "symbol": "r4std_config_has_leftovers_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "caller_context",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Geborgte Adresse des zentralen R4X-Startkontexts."
+            },
+            {
+              "name": "path",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "path_length",
+              "description": "Absoluter Dateipfad."
+            },
+            {
+              "name": "path_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Pfadlaenge."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "none",
+            "ownership": "Nur lesende Dateisystemzugriffe."
+          },
+          "description": "Prueft auf TMP- oder BAK-Reste."
+        },
+        {
+          "name": "ensure_dirs",
+          "c_name": "r4std_config_ensure_dirs",
+          "symbol": "r4std_config_ensure_dirs_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "caller_context",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Geborgte Adresse des zentralen R4X-Startkontexts."
+            },
+            {
+              "name": "kind",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "R4STD_ENSURE_DIRS-Konstante."
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "caller_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4STD_CONFIG_RESULT",
+            "ownership": "Bereits vorhandene Verzeichnisse bleiben unveraendert."
+          },
+          "description": "Legt die standardisierten Konfigurationsverzeichnisse an."
+        }
+      ],
+      "description": "Versionierte, caller-identitaetstreue R4SYS-Dateioberflaeche."
+    },
+    {
+      "export_name": "CODEC_V1",
+      "symbol": "r4std_codec_v1",
+      "zig_name": "codec_v1",
+      "zig_type": "CodecV1",
+      "c_type": "R4StdCodecV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 5927954630914035524,
+      "interface_id_hi": 4990925468868030513,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "legacy_decode",
+          "c_name": "r4std_codec_legacy_decode",
+          "symbol": "r4std_codec_legacy_decode_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "codepage",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact codepage identifier437 or1252;850 is distinct and unsupported."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Controls0, or CP437-only PC graphics1."
+            },
+            {
+              "name": "byte",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Legacy/input byte0..255; values outside are invalid."
+            },
+            {
+              "name": "scalar",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Unicode scalar or caller-owned scalar output, unchanged on error."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "All buffers/state are caller-owned and borrowed only during this call; no allocation or retained pointer. Disjoint outputs. Failure preserves output/state; incomplete push accepts the one byte and retains only a valid prefix."
+          },
+          "description": "Strict official CP437/Windows1252 byte to scalar. Byte<=255. Explicit CP437 PC-graphics mode uses separate Unicode IBMGRAPH C0/DEL mapping; undefined byte returns -107. No replacement, no CP850 alias."
+        },
+        {
+          "name": "legacy_encode",
+          "c_name": "r4std_codec_legacy_encode",
+          "symbol": "r4std_codec_legacy_encode_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "codepage",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Exact codepage identifier437 or1252;850 is distinct and unsupported."
+            },
+            {
+              "name": "mode",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Controls0, or CP437-only PC graphics1."
+            },
+            {
+              "name": "scalar",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Unicode scalar or caller-owned scalar output, unchanged on error."
+            },
+            {
+              "name": "byte",
+              "type": {
+                "name": "u8",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Legacy/input byte0..255; values outside are invalid."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "All buffers/state are caller-owned and borrowed only during this call; no allocation or retained pointer. Disjoint outputs. Failure preserves output/state; incomplete push accepts the one byte and retains only a valid prefix."
+          },
+          "description": "Strict inverse. Invalid scalar -105; not representable -106; unsupported codepage/mode -100. Failure preserves output."
+        },
+        {
+          "name": "utf8_decode",
+          "c_name": "r4std_codec_utf8_decode",
+          "symbol": "r4std_codec_utf8_decode_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "input",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "length_by": "input_length",
+              "description": "Caller-owned input UTF8 bytes, at most first four examined."
+            },
+            {
+              "name": "input_length",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Available input byte count, not scalar/grapheme count."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdScalarResult",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-owned bounded result or byte output, disjoint from other outputs."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "All buffers/state are caller-owned and borrowed only during this call; no allocation or retained pointer. Disjoint outputs. Failure preserves output/state; incomplete push accepts the one byte and retains only a valid prefix."
+          },
+          "description": "Read at most first four available bytes. Strict shortest scalar UTF8, including U+0000. Complete0, valid incomplete4 (length0/required1..4), invalid -102 with unchanged result. No normalization/replacement."
+        },
+        {
+          "name": "utf8_encode",
+          "c_name": "r4std_codec_utf8_encode",
+          "symbol": "r4std_codec_utf8_encode_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "scalar",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Unicode scalar or caller-owned scalar output, unchanged on error."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "u8",
+                "pointer": "many",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "length_by": "output_capacity",
+              "description": "Caller-owned bounded result or byte output, disjoint from other outputs."
+            },
+            {
+              "name": "output_capacity",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Available output byte capacity."
+            },
+            {
+              "name": "written",
+              "type": {
+                "name": "u32",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-owned successful encoded byte count1..4, unchanged on error."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "All buffers/state are caller-owned and borrowed only during this call; no allocation or retained pointer. Disjoint outputs. Failure preserves output/state; incomplete push accepts the one byte and retains only a valid prefix."
+          },
+          "description": "Encode one valid scalar to1..4 shortest UTF8 bytes. Capacity preflight; invalid/capacity failure preserves entire output/written. NUL allowed in this scalar codec only; old TextV1 no-NUL policy unchanged."
+        },
+        {
+          "name": "utf8_push",
+          "c_name": "r4std_codec_utf8_push",
+          "symbol": "r4std_codec_utf8_push_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdUtf8State",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "inout",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-owned canonical16-byte stream state; zero initialization/reset, no retained pointer."
+            },
+            {
+              "name": "byte",
+              "type": {
+                "name": "u32",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "Legacy/input byte0..255; values outside are invalid."
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4StdScalarResult",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "Caller-owned bounded result or byte output, disjoint from other outputs."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "All buffers/state are caller-owned and borrowed only during this call; no allocation or retained pointer. Disjoint outputs. Failure preserves output/state; incomplete push accepts the one byte and retains only a valid prefix."
+          },
+          "description": "Accept one byte transactionally into caller state. At most4 examined bytes and at most3 pending bytes after return. Valid incomplete4 retains prefix, complete0 clears state; invalid byte/prefix/state preserves state/output. Caller explicitly resets/discards on error and can retry offending byte. No lost following ASCII."
+        },
+        {
+          "name": "utf8_finish",
+          "c_name": "r4std_codec_utf8_finish",
+          "symbol": "r4std_codec_utf8_finish_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "state",
+              "type": {
+                "name": "R4StdUtf8State",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "Caller-owned canonical16-byte stream state; zero initialization/reset, no retained pointer."
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "reentrancy": "reentrant",
+            "error_domain": "R4STD_STATUS",
+            "ownership": "All buffers/state are caller-owned and borrowed only during this call; no allocation or retained pointer. Disjoint outputs. Failure preserves output/state; incomplete push accepts the one byte and retains only a valid prefix."
+          },
+          "description": "Validate final state without mutation: empty0, valid unfinished prefix4, invalid state -100. Reset by zero-initializing all16 bytes. No implicit replacement or silent truncation."
+        }
+      ],
+      "description": "Independent strict scalar/legacy codecs, separate from bytes/SystemText/DocumentText and typed keyboard events. Byte/scalar/grapheme lengths are distinct. No automatic encoding guess, normalization or replacement."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4StdTextInfo",
+      "size": 40,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "content_offset",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Start des Inhalts relativ zur Eingabe."
+        },
+        {
+          "name": "content_length",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Inhaltslaenge."
+        },
+        {
+          "name": "canonical_length",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Erforderliche kanonische Ausgabelaenge."
+        },
+        {
+          "name": "scalar_count",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Unicode-Skalarzahl bei UTF-8."
+        },
+        {
+          "name": "encoding",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "R4STD_ENCODING-Konstante."
+        },
+        {
+          "name": "line_ending",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "R4STD_LINE_ENDING-Konstante."
+        }
+      ],
+      "description": "Festes Ergebnis einer Textinspektion."
+    },
+    {
+      "name": "R4StdEntryRange",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "key_offset",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Schluesseloffset."
+        },
+        {
+          "name": "key_length",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Schluessellaenge."
+        },
+        {
+          "name": "value_offset",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Wertoffset."
+        },
+        {
+          "name": "value_length",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Wertlaenge."
+        }
+      ],
+      "description": "Bereiche eines R4S-Eintrags relativ zum Dokumentanfang."
+    },
+    {
+      "name": "R4StdWritebackPolicy",
+      "size": 24,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "durability",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "R4STD_DURABILITY-Konstante."
+        },
+        {
+          "name": "reserved",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        },
+        {
+          "name": "save_delay_ticks",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Verzoegerung bis zum Save."
+        },
+        {
+          "name": "retry_delay_ticks",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Verzoegerung bis zum Retry."
+        }
+      ],
+      "description": "Caller-owned Writeback-Policy."
+    },
+    {
+      "name": "R4StdWriteback",
+      "size": 48,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "durability",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "R4STD_DURABILITY-Konstante."
+        },
+        {
+          "name": "dirty",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Ungespeicherte Aenderung."
+        },
+        {
+          "name": "save_delay_ticks",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Aktuelle Save-Verzoegerung."
+        },
+        {
+          "name": "retry_delay_ticks",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Aktuelle Retry-Verzoegerung."
+        },
+        {
+          "name": "due_tick",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Naechster faelliger Tick."
+        },
+        {
+          "name": "failures",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Fehlerzaehler."
+        },
+        {
+          "name": "last_result",
+          "offset": 36,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Letztes Saverresultat."
+        },
+        {
+          "name": "failure_reported",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Ein Fehler wurde bereits gemeldet."
+        },
+        {
+          "name": "reserved",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        }
+      ],
+      "description": "Vollstaendig caller-owned Writeback-Zustand."
+    },
+    {
+      "name": "R4StdWritebackFlush",
+      "size": 16,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "action",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "R4STD_WRITEBACK_ACTION-Konstante."
+        },
+        {
+          "name": "first_failure",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Erster Fehler dieser Serie."
+        },
+        {
+          "name": "recovered_after_failure",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Erfolg nach gemeldetem Fehler."
+        },
+        {
+          "name": "result_code",
+          "offset": 12,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Saverresultat."
+        }
+      ],
+      "description": "Ergebnis einer Writeback-Entscheidung."
+    },
+    {
+      "name": "R4StdDateTime",
+      "size": 8,
+      "alignment": 2,
+      "fields": [
+        {
+          "name": "year",
+          "offset": 0,
+          "type": {
+            "name": "u16",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Jahr."
+        },
+        {
+          "name": "month",
+          "offset": 2,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Monat."
+        },
+        {
+          "name": "day",
+          "offset": 3,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Tag."
+        },
+        {
+          "name": "hour",
+          "offset": 4,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Stunde."
+        },
+        {
+          "name": "minute",
+          "offset": 5,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Minute."
+        },
+        {
+          "name": "second",
+          "offset": 6,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sekunde."
+        },
+        {
+          "name": "reserved",
+          "offset": 7,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        }
+      ],
+      "description": "Lokales Datum und Uhrzeit ohne Plattform-ABI-Abhaengigkeit."
+    },
+    {
+      "name": "R4StdShiftedDateTime",
+      "size": 12,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "year",
+          "offset": 0,
+          "type": {
+            "name": "u16",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Jahr."
+        },
+        {
+          "name": "month",
+          "offset": 2,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Monat."
+        },
+        {
+          "name": "day",
+          "offset": 3,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Tag."
+        },
+        {
+          "name": "hour",
+          "offset": 4,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Stunde."
+        },
+        {
+          "name": "minute",
+          "offset": 5,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Minute."
+        },
+        {
+          "name": "second",
+          "offset": 6,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sekunde."
+        },
+        {
+          "name": "reserved",
+          "offset": 7,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        },
+        {
+          "name": "day_delta",
+          "offset": 8,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Tagesverschiebung gegenueber dem Eingang."
+        }
+      ],
+      "description": "Verschobener Zeitpunkt mit Tagesdelta."
+    },
+    {
+      "name": "R4StdTimeState",
+      "size": 16,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "year",
+          "offset": 0,
+          "type": {
+            "name": "u16",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Jahr."
+        },
+        {
+          "name": "month",
+          "offset": 2,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Monat."
+        },
+        {
+          "name": "day",
+          "offset": 3,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Tag."
+        },
+        {
+          "name": "hour",
+          "offset": 4,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Stunde."
+        },
+        {
+          "name": "minute",
+          "offset": 5,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Minute."
+        },
+        {
+          "name": "second",
+          "offset": 6,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sekunde."
+        },
+        {
+          "name": "weekday",
+          "offset": 7,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sonntag=0 bis Samstag=6."
+        },
+        {
+          "name": "seconds_since_midnight",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sekunden seit Mitternacht."
+        },
+        {
+          "name": "valid",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Null oder gueltig."
+        }
+      ],
+      "description": "Library-lokale Uebersetzung eines zentralen Zeitstatus."
+    },
+    {
+      "name": "R4StdUtcTime",
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "seconds_since_unix_epoch",
+          "offset": 0,
+          "type": {
+            "name": "i64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sekunden seit 1970-01-01 UTC."
+        },
+        {
+          "name": "nanosecond",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Nanosekundenanteil."
+        },
+        {
+          "name": "reserved",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        }
+      ],
+      "description": "Library-lokaler UTC-Epochenwert."
+    },
+    {
+      "name": "R4StdClockTime",
+      "size": 4,
+      "alignment": 1,
+      "fields": [
+        {
+          "name": "hours",
+          "offset": 0,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Stunden."
+        },
+        {
+          "name": "minutes",
+          "offset": 1,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Minuten."
+        },
+        {
+          "name": "seconds",
+          "offset": 2,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sekunden."
+        },
+        {
+          "name": "reserved",
+          "offset": 3,
+          "type": {
+            "name": "u8",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Muss null sein."
+        }
+      ],
+      "description": "Uhrzeit innerhalb eines Tages."
+    },
+    {
+      "name": "R4StdTimeConfig",
+      "size": 8,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "timezone_index",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Zeitzonenindex."
+        },
+        {
+          "name": "clock_format",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Zentrale 12h/24h-Konstante."
+        }
+      ],
+      "description": "Unabhaengige Zeitkonfiguration."
+    },
+    {
+      "name": "R4StdScalarResult",
+      "size": 16,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "scalar",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "scalar"
+        },
+        {
+          "name": "byte_length",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "byte length"
+        },
+        {
+          "name": "required",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "required"
+        },
+        {
+          "name": "reserved",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Reserved zero."
+        }
+      ],
+      "description": "Complete scalar with total encoded byte_length1..4. Incomplete scalar0/byte_length0/required1..4; reserved0. Byte counts are not grapheme counts."
+    },
+    {
+      "name": "R4StdUtf8State",
+      "size": 16,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "packed_bytes",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "packed bytes"
+        },
+        {
+          "name": "length",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "length"
+        },
+        {
+          "name": "reserved0",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Reserved zero."
+        },
+        {
+          "name": "reserved1",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Reserved zero."
+        }
+      ],
+      "description": "Caller-owned zero-initialized16-byte state. Pending bytes in low8*length bits in arrival order; length0..3, all unused bits/reserved words zero. Valid UTF8 prefixes only. No pointers, global state, allocation or stream intermixing."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "status_ok",
+      "c_name": "R4STD_STATUS_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "Operation erfolgreich."
+    },
+    {
+      "zig_name": "status_not_found",
+      "c_name": "R4STD_STATUS_NOT_FOUND",
+      "type": "i32",
+      "value": 1,
+      "description": "Kein passender Wert."
+    },
+    {
+      "zig_name": "status_end",
+      "c_name": "R4STD_STATUS_END",
+      "type": "i32",
+      "value": 2,
+      "description": "Iteratorende."
+    },
+    {
+      "zig_name": "status_attempt",
+      "c_name": "R4STD_STATUS_ATTEMPT",
+      "type": "i32",
+      "value": 3,
+      "description": "Binding muss den caller-eigenen Saver aufrufen."
+    },
+    {
+      "zig_name": "text_kind_utf8",
+      "c_name": "R4STD_TEXT_KIND_UTF8",
+      "type": "u32",
+      "value": 1,
+      "description": "UTF-8 ohne NUL."
+    },
+    {
+      "zig_name": "text_kind_ui",
+      "c_name": "R4STD_TEXT_KIND_UI",
+      "type": "u32",
+      "value": 2,
+      "description": "ASCII-kompatibler UI-Text."
+    },
+    {
+      "zig_name": "text_kind_system",
+      "c_name": "R4STD_TEXT_KIND_SYSTEM",
+      "type": "u32",
+      "value": 3,
+      "description": "R4OS-Systemtext."
+    },
+    {
+      "zig_name": "text_kind_document",
+      "c_name": "R4STD_TEXT_KIND_DOCUMENT",
+      "type": "u32",
+      "value": 4,
+      "description": "Bytegenauer Dokumenttext."
+    },
+    {
+      "zig_name": "text_write_canonical",
+      "c_name": "R4STD_TEXT_WRITE_CANONICAL",
+      "type": "u32",
+      "value": 1,
+      "description": "Kanonischer Systemtext."
+    },
+    {
+      "zig_name": "text_write_exact",
+      "c_name": "R4STD_TEXT_WRITE_EXACT",
+      "type": "u32",
+      "value": 2,
+      "description": "Bytegenaue Dokumentkopie."
+    },
+    {
+      "zig_name": "encoding_bytes",
+      "c_name": "R4STD_ENCODING_BYTES",
+      "type": "u32",
+      "value": 0,
+      "description": "Uninterpretierte Bytes."
+    },
+    {
+      "zig_name": "encoding_utf8",
+      "c_name": "R4STD_ENCODING_UTF8",
+      "type": "u32",
+      "value": 1,
+      "description": "UTF-8."
+    },
+    {
+      "zig_name": "encoding_utf8_bom",
+      "c_name": "R4STD_ENCODING_UTF8_BOM",
+      "type": "u32",
+      "value": 2,
+      "description": "UTF-8 mit BOM."
+    },
+    {
+      "zig_name": "line_ending_none",
+      "c_name": "R4STD_LINE_ENDING_NONE",
+      "type": "u32",
+      "value": 0,
+      "description": "Keine Zeilenenden."
+    },
+    {
+      "zig_name": "line_ending_lf",
+      "c_name": "R4STD_LINE_ENDING_LF",
+      "type": "u32",
+      "value": 1,
+      "description": "LF."
+    },
+    {
+      "zig_name": "line_ending_crlf",
+      "c_name": "R4STD_LINE_ENDING_CRLF",
+      "type": "u32",
+      "value": 2,
+      "description": "CRLF."
+    },
+    {
+      "zig_name": "line_ending_mixed",
+      "c_name": "R4STD_LINE_ENDING_MIXED",
+      "type": "u32",
+      "value": 3,
+      "description": "Gemischt."
+    },
+    {
+      "zig_name": "scalar_bool",
+      "c_name": "R4STD_SCALAR_BOOL",
+      "type": "u32",
+      "value": 1,
+      "description": "Boolean."
+    },
+    {
+      "zig_name": "scalar_u32",
+      "c_name": "R4STD_SCALAR_U32",
+      "type": "u32",
+      "value": 2,
+      "description": "u32."
+    },
+    {
+      "zig_name": "scalar_i32",
+      "c_name": "R4STD_SCALAR_I32",
+      "type": "u32",
+      "value": 3,
+      "description": "i32."
+    },
+    {
+      "zig_name": "scalar_rgb24",
+      "c_name": "R4STD_SCALAR_RGB24",
+      "type": "u32",
+      "value": 4,
+      "description": "RGB24."
+    },
+    {
+      "zig_name": "writer_header",
+      "c_name": "R4STD_WRITER_HEADER",
+      "type": "u32",
+      "value": 1,
+      "description": "R4S-Header."
+    },
+    {
+      "zig_name": "writer_comment",
+      "c_name": "R4STD_WRITER_COMMENT",
+      "type": "u32",
+      "value": 2,
+      "description": "Kommentar."
+    },
+    {
+      "zig_name": "writer_pair",
+      "c_name": "R4STD_WRITER_PAIR",
+      "type": "u32",
+      "value": 3,
+      "description": "Textpaar."
+    },
+    {
+      "zig_name": "writer_bool",
+      "c_name": "R4STD_WRITER_BOOL",
+      "type": "u32",
+      "value": 4,
+      "description": "Boolean-Paar."
+    },
+    {
+      "zig_name": "writer_u32",
+      "c_name": "R4STD_WRITER_U32",
+      "type": "u32",
+      "value": 5,
+      "description": "u32-Paar."
+    },
+    {
+      "zig_name": "writer_i32",
+      "c_name": "R4STD_WRITER_I32",
+      "type": "u32",
+      "value": 6,
+      "description": "i32-Paar."
+    },
+    {
+      "zig_name": "writer_rgb24",
+      "c_name": "R4STD_WRITER_RGB24",
+      "type": "u32",
+      "value": 7,
+      "description": "RGB24-Paar."
+    },
+    {
+      "zig_name": "durability_lazy",
+      "c_name": "R4STD_DURABILITY_LAZY",
+      "type": "u32",
+      "value": 0,
+      "description": "Lazy."
+    },
+    {
+      "zig_name": "durability_soon",
+      "c_name": "R4STD_DURABILITY_SOON",
+      "type": "u32",
+      "value": 1,
+      "description": "Soon."
+    },
+    {
+      "zig_name": "durability_sync",
+      "c_name": "R4STD_DURABILITY_SYNC",
+      "type": "u32",
+      "value": 2,
+      "description": "Synchron."
+    },
+    {
+      "zig_name": "writeback_idle",
+      "c_name": "R4STD_WRITEBACK_IDLE",
+      "type": "u32",
+      "value": 0,
+      "description": "Keine Aenderung."
+    },
+    {
+      "zig_name": "writeback_deferred",
+      "c_name": "R4STD_WRITEBACK_DEFERRED",
+      "type": "u32",
+      "value": 1,
+      "description": "Noch nicht faellig."
+    },
+    {
+      "zig_name": "writeback_saved",
+      "c_name": "R4STD_WRITEBACK_SAVED",
+      "type": "u32",
+      "value": 2,
+      "description": "Gespeichert."
+    },
+    {
+      "zig_name": "writeback_failed",
+      "c_name": "R4STD_WRITEBACK_FAILED",
+      "type": "u32",
+      "value": 3,
+      "description": "Speichern fehlgeschlagen."
+    },
+    {
+      "zig_name": "date_format_date_iso",
+      "c_name": "R4STD_DATE_FORMAT_DATE_ISO",
+      "type": "u32",
+      "value": 1,
+      "description": "YYYY-MM-DD."
+    },
+    {
+      "zig_name": "date_format_datetime_iso",
+      "c_name": "R4STD_DATE_FORMAT_DATETIME_ISO",
+      "type": "u32",
+      "value": 2,
+      "description": "ISO-Datum und Uhrzeit."
+    },
+    {
+      "zig_name": "date_format_datetime_minute",
+      "c_name": "R4STD_DATE_FORMAT_DATETIME_MINUTE",
+      "type": "u32",
+      "value": 3,
+      "description": "Datum und Minutenanzeige."
+    },
+    {
+      "zig_name": "date_parse_date",
+      "c_name": "R4STD_DATE_PARSE_DATE",
+      "type": "u32",
+      "value": 1,
+      "description": "ISO-Datum."
+    },
+    {
+      "zig_name": "date_parse_time",
+      "c_name": "R4STD_DATE_PARSE_TIME",
+      "type": "u32",
+      "value": 2,
+      "description": "24h-Uhrzeit."
+    },
+    {
+      "zig_name": "date_parse_datetime",
+      "c_name": "R4STD_DATE_PARSE_DATETIME",
+      "type": "u32",
+      "value": 3,
+      "description": "ISO-Datum und Uhrzeit."
+    },
+    {
+      "zig_name": "fat_decode_date",
+      "c_name": "R4STD_FAT_DECODE_DATE",
+      "type": "u32",
+      "value": 1,
+      "description": "Nur FAT-Datum."
+    },
+    {
+      "zig_name": "fat_decode_datetime",
+      "c_name": "R4STD_FAT_DECODE_DATETIME",
+      "type": "u32",
+      "value": 2,
+      "description": "FAT-Datum und Uhrzeit."
+    },
+    {
+      "zig_name": "time_format_display",
+      "c_name": "R4STD_TIME_FORMAT_DISPLAY",
+      "type": "u32",
+      "value": 1,
+      "description": "Stunden, Minuten und Sekunden."
+    },
+    {
+      "zig_name": "time_format_hm",
+      "c_name": "R4STD_TIME_FORMAT_HM",
+      "type": "u32",
+      "value": 2,
+      "description": "Stunden und Minuten."
+    },
+    {
+      "zig_name": "time_format_24h",
+      "c_name": "R4STD_TIME_FORMAT_24H",
+      "type": "u32",
+      "value": 3,
+      "description": "Feste 24h-Anzeige."
+    },
+    {
+      "zig_name": "config_kind_string",
+      "c_name": "R4STD_CONFIG_KIND_STRING",
+      "type": "u32",
+      "value": 1,
+      "description": "Textwert."
+    },
+    {
+      "zig_name": "config_kind_bool",
+      "c_name": "R4STD_CONFIG_KIND_BOOL",
+      "type": "u32",
+      "value": 2,
+      "description": "Boolean."
+    },
+    {
+      "zig_name": "config_kind_u32",
+      "c_name": "R4STD_CONFIG_KIND_U32",
+      "type": "u32",
+      "value": 3,
+      "description": "u32."
+    },
+    {
+      "zig_name": "config_kind_i32",
+      "c_name": "R4STD_CONFIG_KIND_I32",
+      "type": "u32",
+      "value": 4,
+      "description": "i32."
+    },
+    {
+      "zig_name": "config_kind_rgb24",
+      "c_name": "R4STD_CONFIG_KIND_RGB24",
+      "type": "u32",
+      "value": 5,
+      "description": "RGB24."
+    },
+    {
+      "zig_name": "ensure_dirs_system",
+      "c_name": "R4STD_ENSURE_DIRS_SYSTEM",
+      "type": "u32",
+      "value": 1,
+      "description": "System- und CONFIG-Verzeichnis."
+    },
+    {
+      "zig_name": "ensure_dirs_apps",
+      "c_name": "R4STD_ENSURE_DIRS_APPS",
+      "type": "u32",
+      "value": 2,
+      "description": "Zusaetzlich APPS."
+    },
+    {
+      "zig_name": "ensure_dirs_desktop",
+      "c_name": "R4STD_ENSURE_DIRS_DESKTOP",
+      "type": "u32",
+      "value": 3,
+      "description": "Desktop-Konfigurationspfad."
+    },
+    {
+      "zig_name": "current_format_version",
+      "c_name": "R4STD_CURRENT_FORMAT_VERSION",
+      "type": "u32",
+      "value": 1,
+      "description": "Aktuelle R4S-Formatversion."
+    },
+    {
+      "zig_name": "max_file_bytes",
+      "c_name": "R4STD_MAX_FILE_BYTES",
+      "type": "u32",
+      "value": 4096,
+      "description": "Maximale Konfigurationsdatei."
+    },
+    {
+      "zig_name": "max_output_bytes",
+      "c_name": "R4STD_MAX_OUTPUT_BYTES",
+      "type": "u32",
+      "value": 4096,
+      "description": "Maximale Konfigurationsausgabe."
+    },
+    {
+      "zig_name": "zone_count",
+      "c_name": "R4STD_ZONE_COUNT",
+      "type": "u32",
+      "value": 38,
+      "description": "Anzahl Zeitzonen."
+    },
+    {
+      "zig_name": "zone_id_max",
+      "c_name": "R4STD_ZONE_ID_MAX",
+      "type": "u32",
+      "value": 31,
+      "description": "Maximale ID-Laenge."
+    },
+    {
+      "zig_name": "zone_label_max",
+      "c_name": "R4STD_ZONE_LABEL_MAX",
+      "type": "u32",
+      "value": 39,
+      "description": "Maximale Label-Laenge."
+    },
+    {
+      "zig_name": "utc_index",
+      "c_name": "R4STD_UTC_INDEX",
+      "type": "u32",
+      "value": 13,
+      "description": "UTC-Index."
+    },
+    {
+      "zig_name": "seconds_per_day",
+      "c_name": "R4STD_SECONDS_PER_DAY",
+      "type": "u32",
+      "value": 86400,
+      "description": "Sekunden pro Tag."
+    },
+    {
+      "zig_name": "config_result_ok",
+      "c_name": "R4STD_CONFIG_RESULT_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "Bestehende Datei aktualisiert."
+    },
+    {
+      "zig_name": "config_result_defaulted",
+      "c_name": "R4STD_CONFIG_RESULT_DEFAULTED",
+      "type": "i32",
+      "value": 1,
+      "description": "Fallback verwendet."
+    },
+    {
+      "zig_name": "config_result_created",
+      "c_name": "R4STD_CONFIG_RESULT_CREATED",
+      "type": "i32",
+      "value": 2,
+      "description": "Datei neu erzeugt."
+    },
+    {
+      "zig_name": "config_result_recovered",
+      "c_name": "R4STD_CONFIG_RESULT_RECOVERED",
+      "type": "i32",
+      "value": 3,
+      "description": "Atomaren Save wiederhergestellt."
+    },
+    {
+      "zig_name": "codec_incomplete",
+      "c_name": "R4STD_CODEC_INCOMPLETE",
+      "type": "i32",
+      "value": 4,
+      "description": "Valid unfinished scalar; not invalid. Only valid prefix pending, no automatic EOF replacement."
+    },
+    {
+      "zig_name": "codepage_cp437",
+      "c_name": "R4STD_CODEPAGE_CP437",
+      "type": "u32",
+      "value": 437,
+      "description": "Microsoft CP437 text mapping; C0 controls preserved in control mode."
+    },
+    {
+      "zig_name": "codepage_windows1252",
+      "c_name": "R4STD_CODEPAGE_WINDOWS1252",
+      "type": "u32",
+      "value": 1252,
+      "description": "Microsoft Windows1252 mapping, five undefined bytes rejected."
+    },
+    {
+      "zig_name": "codepage_cp850",
+      "c_name": "R4STD_CODEPAGE_CP850",
+      "type": "u32",
+      "value": 850,
+      "description": "Distinct encoding identifier; not implemented by CodecV1 and never aliased to437."
+    },
+    {
+      "zig_name": "codec_mode_controls",
+      "c_name": "R4STD_CODEC_MODE_CONTROLS",
+      "type": "u32",
+      "value": 0,
+      "description": "Official text/control mapping."
+    },
+    {
+      "zig_name": "codec_mode_pc_graphics",
+      "c_name": "R4STD_CODEC_MODE_PC_GRAPHICS",
+      "type": "u32",
+      "value": 1,
+      "description": "CP437 only: separate Unicode IBMGRAPH C0/DEL display interpretation. Byte0 remains U+0000. No terminal control execution implied."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "status_invalid_argument",
+      "c_name": "R4STD_STATUS_INVALID_ARGUMENT",
+      "type": "i32",
+      "value": -100,
+      "description": "Ungueltiges Argument."
+    },
+    {
+      "zig_name": "status_buffer_too_small",
+      "c_name": "R4STD_STATUS_BUFFER_TOO_SMALL",
+      "type": "i32",
+      "value": -101,
+      "description": "Caller-Puffer zu klein."
+    },
+    {
+      "zig_name": "status_invalid_text",
+      "c_name": "R4STD_STATUS_INVALID_TEXT",
+      "type": "i32",
+      "value": -102,
+      "description": "Ungueltiger Text."
+    },
+    {
+      "zig_name": "status_invalid_value",
+      "c_name": "R4STD_STATUS_INVALID_VALUE",
+      "type": "i32",
+      "value": -103,
+      "description": "Ungueltiger Fachwert."
+    },
+    {
+      "zig_name": "status_unavailable",
+      "c_name": "R4STD_STATUS_UNAVAILABLE",
+      "type": "i32",
+      "value": -104,
+      "description": "Runtime-Kontext nicht verfuegbar."
+    },
+    {
+      "zig_name": "config_error_invalid_path",
+      "c_name": "R4STD_CONFIG_ERROR_INVALID_PATH",
+      "type": "i32",
+      "value": -1,
+      "description": "Ungueltiger Pfad."
+    },
+    {
+      "zig_name": "config_error_invalid_key",
+      "c_name": "R4STD_CONFIG_ERROR_INVALID_KEY",
+      "type": "i32",
+      "value": -2,
+      "description": "Ungueltiger Schluessel."
+    },
+    {
+      "zig_name": "config_error_buffer_too_small",
+      "c_name": "R4STD_CONFIG_ERROR_BUFFER_TOO_SMALL",
+      "type": "i32",
+      "value": -3,
+      "description": "Ausgabepuffer zu klein."
+    },
+    {
+      "zig_name": "config_error_write_failed",
+      "c_name": "R4STD_CONFIG_ERROR_WRITE_FAILED",
+      "type": "i32",
+      "value": -4,
+      "description": "Schreiben fehlgeschlagen."
+    },
+    {
+      "zig_name": "config_error_rename_failed",
+      "c_name": "R4STD_CONFIG_ERROR_RENAME_FAILED",
+      "type": "i32",
+      "value": -5,
+      "description": "Umbenennen fehlgeschlagen."
+    },
+    {
+      "zig_name": "config_error_invalid_value",
+      "c_name": "R4STD_CONFIG_ERROR_INVALID_VALUE",
+      "type": "i32",
+      "value": -6,
+      "description": "Ungueltiger Konfigurationswert."
+    },
+    {
+      "zig_name": "config_error_verify_failed",
+      "c_name": "R4STD_CONFIG_ERROR_VERIFY_FAILED",
+      "type": "i32",
+      "value": -7,
+      "description": "Rueckleseverifikation fehlgeschlagen."
+    },
+    {
+      "zig_name": "config_error_recovery_failed",
+      "c_name": "R4STD_CONFIG_ERROR_RECOVERY_FAILED",
+      "type": "i32",
+      "value": -8,
+      "description": "Recovery fehlgeschlagen."
+    },
+    {
+      "zig_name": "config_error_read_failed",
+      "c_name": "R4STD_CONFIG_ERROR_READ_FAILED",
+      "type": "i32",
+      "value": -9,
+      "description": "Vorhandene Konfigurationsdatei nicht vollstaendig lesbar; Bestand erhalten."
+    },
+    {
+      "zig_name": "status_invalid_scalar",
+      "c_name": "R4STD_STATUS_INVALID_SCALAR",
+      "type": "i32",
+      "value": -105,
+      "description": "Surrogate or scalar greater thanU+10FFFF."
+    },
+    {
+      "zig_name": "status_unrepresentable",
+      "c_name": "R4STD_STATUS_UNREPRESENTABLE",
+      "type": "i32",
+      "value": -106,
+      "description": "Valid scalar has no exact inverse in selected mode/codepage."
+    },
+    {
+      "zig_name": "status_undefined_byte",
+      "c_name": "R4STD_STATUS_UNDEFINED_BYTE",
+      "type": "i32",
+      "value": -107,
+      "description": "Byte is unassigned in selected legacy mapping."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "Caller-Speicher",
+      "text": "Alle Buffer, Strukturen und der R4X-Startkontext bleiben caller-owned; R4STD behaelt keine Adresse ueber einen Aufruf hinaus."
+    },
+    {
+      "name": "Runtime-Tabellen",
+      "text": "Tabellen- und Funktionspointer gelten bis zum Ende der geladenen R4STD-Providergeneration."
+    },
+    {
+      "name": "Plattformgrenze",
+      "text": "CONFIG_V1 erhaelt den zentralen R4X-Startkontext nur als opake Adresse und loest R4SYS pro Aufruf; R4STD definiert keine Kopie der zentralen Plattform-ABI."
+    },
+    {
+      "name": "Dateiseiteneffekte",
+      "text": "Konfigurationswrites duerfen sibling TMP- und BAK-Dateien verwenden; positive Ergebniswerte beschreiben Erzeugung oder Recovery, negative Werte die Fehlerklasse."
+    }
+  ]
+}

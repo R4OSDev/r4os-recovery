@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "mesa_source_lock": "../../R4NV/Tools/Compiler/Sources.lock.json",
+  "llvm": "19.1.7",
+  "glslang": "15.2.0",
+  "llvm_spirv_pkgconfig": "19.1.0.0",
+  "spirv_tools_pkgconfig": "2025.1.1"
+}

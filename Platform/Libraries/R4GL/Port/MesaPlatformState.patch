@@ -1,0 +1,344 @@
+diff --git a/src/util/log.c b/src/util/log.c
+index b17d52b..f553c34 100644
+--- a/src/util/log.c
++++ b/src/util/log.c
+@@ -44,7 +44,7 @@
+ #include <windows.h>
+ #endif
+ 
+-enum mesa_log_control {
++enum mesa_log_control_bits {
+    MESA_LOG_CONTROL_NULL = 1 << 0,
+    MESA_LOG_CONTROL_FILE = 1 << 1,
+    MESA_LOG_CONTROL_SYSLOG = 1 << 2,
+@@ -99,10 +99,41 @@ level_from_str(const char *str)
+    return MESA_NUM_LOG_LEVELS;
+ }
+ 
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++struct r4gl_log_state {
++   once_flag init_once, debug_once;
++   uint32_t control;
++   FILE *file;
++   enum mesa_log_level max_level;
++   int affixes, debug;
++   bool invalid_level;
++};
++static const char r4gl_log_key;
++static void r4gl_log_state_init(void *data) { (void)data; }
++static struct r4gl_log_state *r4gl_log_state(void)
++{
++   return r4gl_process_state(&r4gl_log_key, sizeof(struct r4gl_log_state),
++                            _Alignof(struct r4gl_log_state), r4gl_log_state_init);
++}
++#define mesa_log_control (r4gl_log_state()->control)
++#define mesa_log_file (r4gl_log_state()->file)
++#define mesa_max_log_level (r4gl_log_state()->max_level)
++#define mesa_log_file_affixes (r4gl_log_state()->affixes)
++
++/* Mark before invoking a logger: recursive logging must not wait on itself. */
++bool r4gl_mesa_log_first(const void *key)
++{
++   unsigned *done = r4gl_process_state(key, sizeof(unsigned),
++                                      _Alignof(unsigned), r4gl_log_state_init);
++   return p_atomic_xchg(done, 1) == 0;
++}
++#else
+ static uint32_t mesa_log_control;
+ static FILE *mesa_log_file;
+ static enum mesa_log_level mesa_max_log_level;
+ static int mesa_log_file_affixes;
++#endif
+ 
+ static const struct debug_named_value log_prefix_options[] = {
+    {"tag",     LOGGER_VASNPRINTF_AFFIX_TAG,     "include log tag"},
+@@ -135,6 +166,13 @@ mesa_log_init_once(void)
+    const char *log_level = os_get_option("MESA_LOG_LEVEL");
+    if (log_level != NULL)
+       mesa_max_log_level = level_from_str(log_level);
++#if defined(R4OS_OPENGL)
++   /* Finish policy before publication. Concurrent loggers never mutate it. */
++   if (mesa_max_log_level >= MESA_NUM_LOG_LEVELS) {
++      r4gl_log_state()->invalid_level = true;
++      mesa_max_log_level = MESA_DEFAULT_LOG_LEVEL;
++   }
++#endif
+ 
+    mesa_log_file_affixes =
+       debug_get_flags_option("MESA_LOG_PREFIX", log_prefix_options,
+@@ -177,8 +215,12 @@ mesa_log_init_once(void)
+ static void
+ mesa_log_init(void)
+ {
++#if defined(R4OS_OPENGL)
++   call_once(&r4gl_log_state()->init_once, mesa_log_init_once);
++#else
+    static once_flag once = ONCE_FLAG_INIT;
+    call_once(&once, mesa_log_init_once);
++#endif
+ }
+ 
+ static void
+@@ -191,13 +233,37 @@ mesa_warn_invalid_level_once(void)
+ static void
+ mesa_warn_invalid_level(void)
+ {
++#if defined(R4OS_OPENGL)
++   static const char warning_key;
++   if (r4gl_mesa_log_first(&warning_key))
++      mesa_warn_invalid_level_once();
++#else
+    static once_flag once = ONCE_FLAG_INIT;
+    call_once(&once, mesa_warn_invalid_level_once);
++#endif
+ }
+ 
++#if defined(R4OS_OPENGL)
++static void r4gl_log_debug_init(void)
++{
++   const char *env = os_get_option("MESA_DEBUG");
++   bool silent = env && strstr(env, "silent") != NULL;
++#ifndef NDEBUG
++   r4gl_log_state()->debug = !silent;
++#else
++   r4gl_log_state()->debug = env && !silent;
++#endif
++}
++#endif
++
+ void
+ mesa_log_if_debug(enum mesa_log_level level, const char *outputString)
+ {
++#if defined(R4OS_OPENGL)
++   struct r4gl_log_state *state = r4gl_log_state();
++   call_once(&state->debug_once, r4gl_log_debug_init);
++   int debug = state->debug;
++#else
+    static int debug = -1;
+ 
+    /* Init the local 'debug' var once. */
+@@ -217,6 +283,7 @@ mesa_log_if_debug(enum mesa_log_level level, const char *outputString)
+       debug = env && !silent;
+ #endif
+    }
++#endif
+ 
+    /* Now only print the string if we're required to do so. */
+    if (debug)
+@@ -445,7 +512,7 @@ mesa_log_v(enum mesa_log_level level, const char *tag, const char *format,
+             va_list va)
+ {
+    static const struct {
+-      enum mesa_log_control bit;
++      enum mesa_log_control_bits bit;
+       void (*log)(enum mesa_log_level level,
+                   const char *tag,
+                   const char *format,
+@@ -465,6 +532,10 @@ mesa_log_v(enum mesa_log_level level, const char *tag, const char *format,
+ 
+    mesa_log_init();
+ 
++#if defined(R4OS_OPENGL)
++   if (unlikely(r4gl_log_state()->invalid_level))
++      mesa_warn_invalid_level();
++#else
+    if (unlikely(mesa_max_log_level >= MESA_NUM_LOG_LEVELS)) {
+       /* Set to the default since this function will call back into mesa_log()
+        * and we don't want to recurse back into the once.
+@@ -472,6 +543,7 @@ mesa_log_v(enum mesa_log_level level, const char *tag, const char *format,
+       mesa_max_log_level = MESA_DEFAULT_LOG_LEVEL;
+       mesa_warn_invalid_level();
+    }
++#endif
+ 
+    if (level > mesa_max_log_level)
+       return;
+diff --git a/src/util/log.h b/src/util/log.h
+index c1d9f80..1dc9667 100644
+--- a/src/util/log.h
++++ b/src/util/log.h
+@@ -91,6 +91,15 @@ mesa_log_if_debug(enum mesa_log_level level, const char *outputString);
+ #define mesa_logd_v(fmt, va) __mesa_log_use_args((fmt), (va))
+ #endif
+ 
++#if defined(R4OS_OPENGL)
++bool r4gl_mesa_log_first(const void *key);
++#define mesa_log_once(level, fmt, ...)                         \
++   do {                                                      \
++      static const char once_key = 0;                         \
++      if (r4gl_mesa_log_first(&once_key))                      \
++         mesa_log(level, (MESA_LOG_TAG), fmt, ##__VA_ARGS__);   \
++   } while (0)
++#else
+ #define mesa_log_once(level, fmt, ...)        \
+    do                                         \
+    {                                          \
+@@ -100,6 +109,7 @@ mesa_log_if_debug(enum mesa_log_level level, const char *outputString);
+          mesa_log(level, (MESA_LOG_TAG), fmt, ##__VA_ARGS__); \
+       }                                       \
+    } while (0)
++#endif
+ 
+ #define mesa_loge_once(fmt, ...) mesa_log_once(MESA_LOG_ERROR, fmt, ##__VA_ARGS__)
+ #define mesa_logw_once(fmt, ...) mesa_log_once(MESA_LOG_WARN, fmt, ##__VA_ARGS__)
+diff --git a/src/util/u_debug.c b/src/util/u_debug.c
+index 45ea231..0699bd4 100644
+--- a/src/util/u_debug.c
++++ b/src/util/u_debug.c
+@@ -46,7 +46,11 @@
+ void
+ _debug_vprintf(const char *format, va_list ap)
+ {
++#if defined(R4OS_OPENGL)
++   char buf[4096];
++#else
+    static char buf[4096] = {'\0'};
++#endif
+ #if DETECT_OS_WINDOWS
+    /* We buffer until we find a newline. */
+    size_t len = strlen(buf);
+@@ -136,6 +140,10 @@ debug_parse_bool_option(const char *str, bool dfault)
+    return result;
+ }
+ 
++#if defined(R4OS_OPENGL)
++R4GL_PROCESS_OPTION(should_print, bool,
++   debug_parse_bool_option(os_get_option("GALLIUM_PRINT_OPTIONS"), false))
++#else
+ static bool
+ debug_get_option_should_print(void)
+ {
+@@ -151,6 +159,7 @@ debug_get_option_should_print(void)
+    /* We do not print value of GALLIUM_PRINT_OPTIONS intentionally. */
+    return value;
+ }
++#endif
+ 
+ 
+ const char *
+@@ -392,7 +401,11 @@ const char *
+ debug_dump_enum(const struct debug_named_value *names,
+                 uint64_t value)
+ {
++#if defined(R4OS_OPENGL)
++   static thread_local char rest[64];
++#else
+    static char rest[64];
++#endif
+ 
+    while (names->name) {
+       if (names->value == value)
+diff --git a/src/util/u_process.c b/src/util/u_process.c
+index 6846acd..43c7a98 100644
+--- a/src/util/u_process.c
++++ b/src/util/u_process.c
+@@ -56,7 +56,22 @@
+ 
+ #undef GET_PROGRAM_NAME_NOT_AVAILABLE
+ 
+-#if defined(__linux__) && defined(HAVE_PROGRAM_INVOCATION_NAME)
++#if defined(R4OS_OPENGL)
++#include "r4gl_state.h"
++#include "util/simple_mtx.h"
++static char *
++__getProgramName(void)
++{
++   char path[4096];
++   if (!r4gl_process_exec_path(path, sizeof(path)))
++      return NULL;
++   const char *name = path;
++   for (const char *c = path; *c; c++)
++      if (*c == '/' || *c == '\\')
++         name = c + 1;
++   return strdup(name);
++}
++#elif defined(__linux__) && defined(HAVE_PROGRAM_INVOCATION_NAME)
+ static char *
+ __getProgramName()
+ {
+@@ -192,15 +207,39 @@ __getProgramName()
+ #endif
+ #endif /* GET_PROGRAM_NAME_NOT_AVAILABLE */
+ 
++#if defined(R4OS_OPENGL)
++struct r4gl_process_name_state {
++   simple_mtx_t mutex;
++   char *name;
++};
++static const char r4gl_process_name_key;
++static void r4gl_process_name_init(void *data)
++{
++   struct r4gl_process_name_state *state = data;
++   simple_mtx_init(&state->mutex, mtx_plain);
++}
++static struct r4gl_process_name_state *r4gl_process_name_state(void)
++{
++   return r4gl_process_state(&r4gl_process_name_key,
++      sizeof(struct r4gl_process_name_state), _Alignof(struct r4gl_process_name_state),
++      r4gl_process_name_init);
++}
++#define program_name (r4gl_process_name_state()->name)
++#else
+ static char *program_name;
++#endif
+ 
+ static void
+ free_program_name(void)
+ {
+    free(program_name);
+    program_name = NULL;
++#if defined(R4OS_OPENGL)
++   simple_mtx_destroy(&r4gl_process_name_state()->mutex);
++#endif
+ }
+ 
++#if !defined(R4OS_OPENGL)
+ static void
+ util_get_process_name_callback(void)
+ {
+@@ -210,19 +249,43 @@ util_get_process_name_callback(void)
+    if (program_name)
+       atexit(free_program_name);
+ }
++#endif
+ 
+ const char *
+ util_get_process_name(void)
+ {
++#if defined(R4OS_OPENGL)
++   struct r4gl_process_name_state *state = r4gl_process_name_state();
++   char *name = p_atomic_read(&state->name);
++   if (name)
++      return name;
++   simple_mtx_lock(&state->mutex);
++   name = state->name;
++   if (!name) {
++      const char *override_name = os_get_option("MESA_PROCESS_NAME");
++      name = override_name ? strdup(override_name) : __getProgramName();
++      if (name && atexit(free_program_name) != 0) {
++         free(name);
++         name = NULL;
++      }
++      if (name)
++         p_atomic_set(&state->name, name);
++   }
++   simple_mtx_unlock(&state->mutex);
++   return name;
++#else
+    static util_once_flag once_state = UTIL_ONCE_FLAG_INIT;
+    util_call_once(&once_state, util_get_process_name_callback);
+    return program_name;
++#endif
+ }
+ 
+ size_t
+ util_get_process_exec_path(char* process_path, size_t len)
+ {
+-#if DETECT_OS_WINDOWS
++#if defined(R4OS_OPENGL)
++   return r4gl_process_exec_path(process_path, len);
++#elif DETECT_OS_WINDOWS
+    return GetModuleFileNameA(NULL, process_path, len);
+ #elif DETECT_OS_APPLE
+    uint32_t bufSize = len;

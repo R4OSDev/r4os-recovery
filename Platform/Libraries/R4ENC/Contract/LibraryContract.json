@@ -1,0 +1,2648 @@
+{
+  "schema_version": 1,
+  "module_name": "R4ENC",
+  "zig_client": "R4Enc",
+  "c_prefix": "r4enc",
+  "c_header": "r4enc.h",
+  "description": "Independent bounded video encoder. Software compression/native encoding, stream rate policy and packet ownership stay in this library; image production, clocks, presentation and network keep their owners.",
+  "interfaces": [
+    {
+      "export_name": "ENCODE_V1",
+      "symbol": "r4enc_encode_v1",
+      "zig_name": "encode_v1",
+      "zig_type": "EncodeV1",
+      "c_type": "R4EncEncodeV1",
+      "abi_major": 1,
+      "revision": 1,
+      "interface_id_lo": 3544385972374680658,
+      "interface_id_hi": 3544409066430484037,
+      "known_required_flags": 0,
+      "functions": [
+        {
+          "name": "open",
+          "c_name": "r4enc_open",
+          "symbol": "r4enc_open_impl",
+          "slot": 0,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "startup",
+              "type": {
+                "name": "R4EncStartup",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "startup"
+            },
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4EncRuntime",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "runtime"
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Bind real process/platform providers and finite runtime budget; does not activate an encoder."
+        },
+        {
+          "name": "query_caps",
+          "c_name": "r4enc_query_caps",
+          "symbol": "r4enc_query_caps_impl",
+          "slot": 1,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4EncRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "runtime"
+            },
+            {
+              "name": "query",
+              "type": {
+                "name": "R4EncCapsQuery",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "query"
+            },
+            {
+              "name": "output",
+              "type": {
+                "name": "R4EncCaps",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "output"
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Query actual implemented profile and backend. Unsupported never silently selects software."
+        },
+        {
+          "name": "create",
+          "c_name": "r4enc_create",
+          "symbol": "r4enc_create_impl",
+          "slot": 2,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4EncRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "runtime"
+            },
+            {
+              "name": "config",
+              "type": {
+                "name": "R4EncConfig",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "config"
+            },
+            {
+              "name": "encoder",
+              "type": {
+                "name": "R4EncEncoder",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "encoder"
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Reserve budgets and create one asynchronous stream outside paint or input handling."
+        },
+        {
+          "name": "send",
+          "c_name": "r4enc_send",
+          "symbol": "r4enc_send_impl",
+          "slot": 3,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "encoder",
+              "type": {
+                "name": "R4EncEncoder",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "encoder"
+            },
+            {
+              "name": "frame",
+              "type": {
+                "name": "R4EncFrame",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "frame"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Accept exactly one immutable image loan; AGAIN/error accepts nothing. Never encode or wait for GPU in this call."
+        },
+        {
+          "name": "receive",
+          "c_name": "r4enc_receive",
+          "symbol": "r4enc_receive_impl",
+          "slot": 4,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "encoder",
+              "type": {
+                "name": "R4EncEncoder",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "encoder"
+            },
+            {
+              "name": "packet",
+              "type": {
+                "name": "R4EncPacket",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "packet"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Acquire the next completion packet; AGAIN means none ready, EOS follows completed Drain and output exhaustion. Failure leaves output unchanged."
+        },
+        {
+          "name": "release",
+          "c_name": "r4enc_release",
+          "symbol": "r4enc_release_impl",
+          "slot": 5,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "lease",
+              "type": {
+                "name": "R4EncLease",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "lease"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Release immutable packet storage after readers finish. Pending release keeps the exact token for retry; acknowledged tokens must not be retried after slot reuse."
+        },
+        {
+          "name": "control",
+          "c_name": "r4enc_control",
+          "symbol": "r4enc_control_impl",
+          "slot": 6,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "encoder",
+              "type": {
+                "name": "R4EncEncoder",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "encoder"
+            },
+            {
+              "name": "request",
+              "type": {
+                "name": "R4EncControl",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "request"
+            },
+            {
+              "name": "state",
+              "type": {
+                "name": "R4EncState",
+                "pointer": "single",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "output",
+              "ownership": "caller_owned",
+              "lifetime": "call",
+              "description": "state"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Queue/query Drain, Abort or Close. Query creates no work; workers retire inputs/resources. Close never revokes leased packets."
+        },
+        {
+          "name": "destroy",
+          "c_name": "r4enc_destroy",
+          "symbol": "r4enc_destroy_impl",
+          "slot": 7,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "encoder",
+              "type": {
+                "name": "R4EncEncoder",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "encoder"
+            }
+          ],
+          "operation": {
+            "blocking": "nonblocking",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "Remove an acknowledged closed owner only after worker and packet retirement. BUSY retains the handle."
+        },
+        {
+          "name": "finish",
+          "c_name": "r4enc_finish",
+          "symbol": "r4enc_finish_impl",
+          "slot": 8,
+          "since_revision": 1,
+          "returns": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": {
+                "name": "R4EncRuntime",
+                "pointer": "single",
+                "is_const": true,
+                "nullable": false
+              },
+              "direction": "input",
+              "ownership": "borrowed",
+              "lifetime": "call",
+              "description": "runtime"
+            },
+            {
+              "name": "timeout_ns",
+              "type": {
+                "name": "u64",
+                "pointer": "value",
+                "is_const": false,
+                "nullable": false
+              },
+              "direction": "value",
+              "ownership": "none",
+              "lifetime": "none",
+              "description": "timeout_ns"
+            }
+          ],
+          "operation": {
+            "blocking": "may_block",
+            "threading": "handle_serialized",
+            "reentrancy": "not_reentrant",
+            "error_domain": "R4ENC",
+            "ownership": "Caller serializes each owner; independent streams may progress concurrently. Providers remain loaded through final retirement acknowledgement."
+          },
+          "description": "After encoder destruction, stop/join runtime workers and release process-local state. Finite timeout preserves an unfinished owner for retry."
+        }
+      ],
+      "description": "Independent asynchronous image-to-bitstream API with physical input retirement and immutable output leases."
+    }
+  ],
+  "types": [
+    {
+      "name": "R4EncRuntime",
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "address",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Opaque library-owned address; never dereference."
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact process/provider owner generation."
+        }
+      ],
+      "description": "Process-local owner. The provider remains loaded through acknowledged destruction."
+    },
+    {
+      "name": "R4EncEncoder",
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "address",
+          "offset": 0,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Opaque library-owned address; never dereference."
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact process/provider owner generation."
+        }
+      ],
+      "description": "Process-local owner. The provider remains loaded through acknowledged destruction."
+    },
+    {
+      "name": "R4EncStartup",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "application",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Actual R4XStartContext; imports and platform providers remain alive through finish."
+        },
+        {
+          "name": "memory_limit",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Aggregate charged runtime bytes including codecs, workers, queues and leased packets."
+        },
+        {
+          "name": "max_encoders",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite concurrent encoder cap, including closing owners."
+        },
+        {
+          "name": "thread_limit",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite worker cap; zero selects bounded scheduler policy."
+        }
+      ],
+      "description": "Copied runtime policy; opening alone creates no encode work."
+    },
+    {
+      "name": "R4EncCapsQuery",
+      "size": 32,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "backend",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Explicit software=0 or NVIDIA=1; no implicit substitution."
+        },
+        {
+          "name": "adapter_id",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact native adapter; zero for software."
+        },
+        {
+          "name": "codec",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Encoded bitstream codec."
+        },
+        {
+          "name": "profile",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Codec profile; zero resolves the installed default."
+        },
+        {
+          "name": "bit_depth",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Meaningful component bits."
+        },
+        {
+          "name": "chroma",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Encoded chroma subsampling."
+        }
+      ],
+      "description": "Query an implemented profile and its actual backend admission."
+    },
+    {
+      "name": "R4EncCaps",
+      "size": 104,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "query",
+          "offset": 8,
+          "type": {
+            "name": "R4EncCapsQuery",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Resolved backend and profile."
+        },
+        {
+          "name": "min_width",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Minimum visible luma width."
+        },
+        {
+          "name": "min_height",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Minimum visible luma height."
+        },
+        {
+          "name": "max_width",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Maximum visible luma width."
+        },
+        {
+          "name": "max_height",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Maximum visible luma height."
+        },
+        {
+          "name": "max_level",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Largest codec level; exact geometry/frame-rate must also pass create."
+        },
+        {
+          "name": "input_formats",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Admitted input layout mask."
+        },
+        {
+          "name": "rate_modes",
+          "offset": 64,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Supported rate-control modes mask."
+        },
+        {
+          "name": "max_pending_frames",
+          "offset": 68,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite accepted image queue cap."
+        },
+        {
+          "name": "max_packet_leases",
+          "offset": 72,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite simultaneous output lease cap."
+        },
+        {
+          "name": "flags",
+          "offset": 76,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Declared profile flags."
+        },
+        {
+          "name": "max_packet_bytes",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Largest admitted access-unit allocation."
+        },
+        {
+          "name": "device_generation",
+          "offset": 88,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact native device generation; zero for software."
+        },
+        {
+          "name": "reset_generation",
+          "offset": 96,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact native reset generation; zero for software."
+        }
+      ],
+      "description": "Capability is implementation admission, never physical encoder qualification."
+    },
+    {
+      "name": "R4EncRate",
+      "size": 48,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "mode",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "CQP, CBR or VBR; must be present in caps.rate_modes."
+        },
+        {
+          "name": "qp",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Constant/initial luma QP in codec units."
+        },
+        {
+          "name": "min_qp",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Lower quantizer bound."
+        },
+        {
+          "name": "max_qp",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Upper quantizer bound."
+        },
+        {
+          "name": "target_bps",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Target bits per second; zero in constant-QP mode."
+        },
+        {
+          "name": "peak_bps",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Peak bits per second, at least target; zero in CQP mode."
+        },
+        {
+          "name": "buffer_bits",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite coded-picture budget in bits. Zero is required for CQP; other modes require a positive supported budget."
+        }
+      ],
+      "description": "Copied immutable rate policy. Quality/performance presets are not guessed from vendor SDK names."
+    },
+    {
+      "name": "R4EncBuffer",
+      "size": 16,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "id",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Canonical GfxBufferHandle.id."
+        },
+        {
+          "name": "reserved0",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be zero."
+        },
+        {
+          "name": "generation",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Canonical GfxBufferHandle.generation."
+        }
+      ],
+      "description": "ABI-compatible view of a common graphics BO/reference handle, not a CPU address."
+    },
+    {
+      "name": "R4EncFence",
+      "size": 40,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "slot",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Canonical GfxFence slot."
+        },
+        {
+          "name": "adapter_id",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Queue adapter identity."
+        },
+        {
+          "name": "timeline",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Queue timeline."
+        },
+        {
+          "name": "point",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Queue point."
+        },
+        {
+          "name": "device_generation",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact device lifetime."
+        },
+        {
+          "name": "reset_generation",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact reset lifetime."
+        }
+      ],
+      "description": "Canonical common queue fence layout. All-zero means no consumer GPU submission; any nonzero value must be exact."
+    },
+    {
+      "name": "R4EncColor",
+      "size": 48,
+      "alignment": 4,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must equal the complete fixed payload size."
+        },
+        {
+          "name": "primaries",
+          "offset": 8,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "CICP color_primaries code point from stream; 2 means unspecified. Not an R4GFX RGB enum."
+        },
+        {
+          "name": "transfer",
+          "offset": 12,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "CICP transfer_characteristics code point from stream; 2 means unspecified. Do not substitute sRGB for BT.709."
+        },
+        {
+          "name": "range",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Common range identity: 0 unknown, 1 full, 2 limited at bit_depth. No guessed default."
+        },
+        {
+          "name": "matrix",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "CICP matrix_coefficients code point from stream; 2 means unspecified. Independent of primaries and transfer."
+        },
+        {
+          "name": "chroma_location",
+          "offset": 24,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Chroma sample position relative to luma."
+        },
+        {
+          "name": "bit_depth",
+          "offset": 28,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Number of meaningful bits per component."
+        },
+        {
+          "name": "reference_white",
+          "offset": 32,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Reference-white luminance in 1/10000 cd/m2; valid only with color_reference_white, otherwise zero."
+        },
+        {
+          "name": "peak",
+          "offset": 36,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Peak luminance in 1/10000 cd/m2; valid only with color_luminance, otherwise zero."
+        },
+        {
+          "name": "black",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Black luminance in 1/10000 cd/m2; valid only with color_luminance, otherwise zero."
+        },
+        {
+          "name": "flags",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "color_reference_white and color_luminance only. Missing metadata is preserved; policy belongs to presentation."
+        }
+      ],
+      "description": "Immutable stream color metadata. Conversion, scaling and output color policy belong to R4GFX/Desktop."
+    },
+    {
+      "name": "R4EncPlane",
+      "size": 64,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "buffer",
+          "offset": 0,
+          "type": {
+            "name": "R4EncBuffer",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Canonical BO identity."
+        },
+        {
+          "name": "reference",
+          "offset": 16,
+          "type": {
+            "name": "R4EncBuffer",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller-owned readable reference; independently retained after send acceptance."
+        },
+        {
+          "name": "offset",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Plane offset within canonical BO."
+        },
+        {
+          "name": "pitch",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Row pitch; modifier remains authoritative."
+        },
+        {
+          "name": "row_bytes",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Readable bytes per active row."
+        },
+        {
+          "name": "rows",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Active rows."
+        },
+        {
+          "name": "reserved",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be zero."
+        }
+      ],
+      "description": "Input view validated against the actual BO descriptor. Never infer linear storage from pitch."
+    },
+    {
+      "name": "R4EncConfig",
+      "size": 192,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "query",
+          "offset": 8,
+          "type": {
+            "name": "R4EncCapsQuery",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Immutable backend/profile selection."
+        },
+        {
+          "name": "memory_limit",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Per-encoder charged allocation ceiling."
+        },
+        {
+          "name": "width",
+          "offset": 48,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Visible luma width."
+        },
+        {
+          "name": "height",
+          "offset": 52,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Visible luma height."
+        },
+        {
+          "name": "fps_num",
+          "offset": 56,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Positive rational frame-rate numerator."
+        },
+        {
+          "name": "fps_den",
+          "offset": 60,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Positive frame-rate denominator."
+        },
+        {
+          "name": "pending_frames",
+          "offset": 64,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite accepted input queue slots."
+        },
+        {
+          "name": "packet_leases",
+          "offset": 68,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite complete output slots."
+        },
+        {
+          "name": "max_packet_bytes",
+          "offset": 72,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Hard access-unit allocation limit; overflow is a reported failure."
+        },
+        {
+          "name": "work_timeout_ns",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Finite native work/retirement watchdog budget."
+        },
+        {
+          "name": "gop_frames",
+          "offset": 88,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Positive maximum accepted pictures between IDRs."
+        },
+        {
+          "name": "flags",
+          "offset": 92,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Defined configuration flags only."
+        },
+        {
+          "name": "rate",
+          "offset": 96,
+          "type": {
+            "name": "R4EncRate",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Immutable rate policy."
+        },
+        {
+          "name": "color",
+          "offset": 144,
+          "type": {
+            "name": "R4EncColor",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Explicit encoded color metadata; no inferred HDR."
+        }
+      ],
+      "description": "Create reserves all finite budgets. Revision1 uses one encode worker per stream and no B-frame reorder. Reconfigure by closing and opening at a new IDR."
+    },
+    {
+      "name": "R4EncFrame",
+      "size": 288,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "stream_generation",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Current encoder stream generation."
+        },
+        {
+          "name": "tag",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Caller input identity returned exactly in its completion packet."
+        },
+        {
+          "name": "pts_ns",
+          "offset": 24,
+          "type": {
+            "name": "i64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Media presentation timestamp."
+        },
+        {
+          "name": "duration_ns",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Positive media duration; never a wall-clock tick."
+        },
+        {
+          "name": "format",
+          "offset": 40,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Declared input pixel layout."
+        },
+        {
+          "name": "plane_count",
+          "offset": 44,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact plane count for layout."
+        },
+        {
+          "name": "plane0",
+          "offset": 48,
+          "type": {
+            "name": "R4EncPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Luma or packed pixels."
+        },
+        {
+          "name": "plane1",
+          "offset": 112,
+          "type": {
+            "name": "R4EncPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Interleaved chroma or U."
+        },
+        {
+          "name": "plane2",
+          "offset": 176,
+          "type": {
+            "name": "R4EncPlane",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "V or all-zero unused plane."
+        },
+        {
+          "name": "ready",
+          "offset": 240,
+          "type": {
+            "name": "R4EncFence",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Borrowed producer completion fence, retained by caller through input completion."
+        },
+        {
+          "name": "flags",
+          "offset": 280,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Force-IDR flag; first frame and post-abort frame always become IDR."
+        },
+        {
+          "name": "reserved",
+          "offset": 284,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be zero."
+        }
+      ],
+      "description": "Send copies metadata and retains deduplicated BO references. Caller keeps all pixels immutable until receive returns the matching completion or control confirms all prior inputs retired."
+    },
+    {
+      "name": "R4EncLease",
+      "size": 32,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "encoder",
+          "offset": 0,
+          "type": {
+            "name": "R4EncEncoder",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact owner retained until packet release."
+        },
+        {
+          "name": "token",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Non-reused packet token within owner lifetime."
+        },
+        {
+          "name": "stream_generation",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Generation which produced the packet; retained across Abort."
+        }
+      ],
+      "description": "Immutable process-local output lease. A control request never revokes a delivered packet."
+    },
+    {
+      "name": "R4EncPacket",
+      "size": 96,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "lease",
+          "offset": 8,
+          "type": {
+            "name": "R4EncLease",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Exact packet lease, including skipped-frame receipts."
+        },
+        {
+          "name": "tag",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Input tag; this receipt also ends its immutable input loan."
+        },
+        {
+          "name": "pts_ns",
+          "offset": 48,
+          "type": {
+            "name": "i64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Input presentation timestamp."
+        },
+        {
+          "name": "dts_ns",
+          "offset": 56,
+          "type": {
+            "name": "i64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Decode timestamp; equals PTS in the no-B-frame profile."
+        },
+        {
+          "name": "duration_ns",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Input duration."
+        },
+        {
+          "name": "data_address",
+          "offset": 72,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Read-only process-local bytes held until release; zero for a skipped frame."
+        },
+        {
+          "name": "data_bytes",
+          "offset": 80,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete Annex-B access unit, including SPS/PPS for each IDR; zero for a skipped frame."
+        },
+        {
+          "name": "flags",
+          "offset": 88,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Keyframe, configuration and skipped flags."
+        },
+        {
+          "name": "result",
+          "offset": 92,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Zero for encoded output, skip reason for explicit dropped-frame receipt."
+        }
+      ],
+      "description": "Receive returns accepted inputs in encode order after physical input retirement. Only compressed output is made CPU-readable in a native path; no full-image readback."
+    },
+    {
+      "name": "R4EncControl",
+      "size": 24,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "request_id",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Strictly increasing mutation ID. Query uses zero; identical latest retries are idempotent."
+        },
+        {
+          "name": "operation",
+          "offset": 16,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Query, Drain, Abort or Close."
+        },
+        {
+          "name": "reserved",
+          "offset": 20,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be zero."
+        }
+      ],
+      "description": "Nonblocking request acceptance is distinct from completion. Abort cancels unstarted inputs, retires active work and starts a new stream generation at an IDR."
+    },
+    {
+      "name": "R4EncState",
+      "size": 96,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "version",
+          "offset": 0,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be 1."
+        },
+        {
+          "name": "size",
+          "offset": 4,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Complete fixed payload size."
+        },
+        {
+          "name": "stream_generation",
+          "offset": 8,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Starts at1; successful Abort advances once after all old inputs retire."
+        },
+        {
+          "name": "pending_request",
+          "offset": 16,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Accepted incomplete control ID or zero."
+        },
+        {
+          "name": "completed_request",
+          "offset": 24,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Last completed control ID."
+        },
+        {
+          "name": "memory_bytes",
+          "offset": 32,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Charged owned bytes including old-generation packet leases."
+        },
+        {
+          "name": "accepted_frames",
+          "offset": 40,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Cumulative accepted inputs."
+        },
+        {
+          "name": "encoded_frames",
+          "offset": 48,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Successful encoded pictures."
+        },
+        {
+          "name": "skipped_frames",
+          "offset": 56,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Explicitly dropped accepted pictures."
+        },
+        {
+          "name": "output_bytes",
+          "offset": 64,
+          "type": {
+            "name": "u64",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Cumulative complete bitstream bytes."
+        },
+        {
+          "name": "phase",
+          "offset": 72,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Owner phase."
+        },
+        {
+          "name": "queued_frames",
+          "offset": 76,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Accepted inputs awaiting work."
+        },
+        {
+          "name": "ready_packets",
+          "offset": 80,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Unleased completion packets."
+        },
+        {
+          "name": "leased_packets",
+          "offset": 84,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Outstanding consumer packet leases."
+        },
+        {
+          "name": "last_error",
+          "offset": 88,
+          "type": {
+            "name": "i32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Sticky terminal encode/backend error; Close remains legal."
+        },
+        {
+          "name": "reserved",
+          "offset": 92,
+          "type": {
+            "name": "u32",
+            "pointer": "value",
+            "is_const": false,
+            "nullable": false
+          },
+          "description": "Must be zero."
+        }
+      ],
+      "description": "Read-only progress. Drain preserves outputs and ends in EOS. Abort/Close discard unleased output, but retain externally delivered packets through release."
+    }
+  ],
+  "constants": [
+    {
+      "zig_name": "ok",
+      "c_name": "R4ENC_OK",
+      "type": "i32",
+      "value": 0,
+      "description": "Success; control acceptance is distinct from completion."
+    },
+    {
+      "zig_name": "again",
+      "c_name": "R4ENC_AGAIN",
+      "type": "i32",
+      "value": 1,
+      "description": "No acceptance/output yet; retry from the event loop."
+    },
+    {
+      "zig_name": "eos",
+      "c_name": "R4ENC_EOS",
+      "type": "i32",
+      "value": 2,
+      "description": "Drain complete and no unreceived completion packets remain."
+    },
+    {
+      "zig_name": "backend_software",
+      "c_name": "R4ENC_BACKEND_SOFTWARE",
+      "type": "u32",
+      "value": 0,
+      "description": "Explicit CPU encoder."
+    },
+    {
+      "zig_name": "backend_nvidia",
+      "c_name": "R4ENC_BACKEND_NVIDIA",
+      "type": "u32",
+      "value": 1,
+      "description": "Explicit admitted NVIDIA encoder."
+    },
+    {
+      "zig_name": "codec_h264",
+      "c_name": "R4ENC_CODEC_H264",
+      "type": "u32",
+      "value": 1,
+      "description": "Annex-B H.264."
+    },
+    {
+      "zig_name": "profile_default",
+      "c_name": "R4ENC_PROFILE_DEFAULT",
+      "type": "u32",
+      "value": 0,
+      "description": "Installed default."
+    },
+    {
+      "zig_name": "profile_h264_baseline",
+      "c_name": "R4ENC_PROFILE_H264_BASELINE",
+      "type": "u32",
+      "value": 66,
+      "description": "Constrained Baseline profile_idc."
+    },
+    {
+      "zig_name": "chroma_420",
+      "c_name": "R4ENC_CHROMA_420",
+      "type": "u32",
+      "value": 1,
+      "description": "4:2:0."
+    },
+    {
+      "zig_name": "format_nv12",
+      "c_name": "R4ENC_FORMAT_NV12",
+      "type": "u32",
+      "value": 1,
+      "description": "8-bit Y and interleaved UV."
+    },
+    {
+      "zig_name": "format_yuv420p",
+      "c_name": "R4ENC_FORMAT_YUV420P",
+      "type": "u32",
+      "value": 3,
+      "description": "8-bit Y/U/V planes."
+    },
+    {
+      "zig_name": "formats_nv12",
+      "c_name": "R4ENC_FORMATS_NV12",
+      "type": "u32",
+      "value": 1,
+      "description": "NV12 capability bit."
+    },
+    {
+      "zig_name": "formats_yuv420p",
+      "c_name": "R4ENC_FORMATS_YUV420P",
+      "type": "u32",
+      "value": 4,
+      "description": "Planar YUV420 capability bit."
+    },
+    {
+      "zig_name": "rate_cqp",
+      "c_name": "R4ENC_RATE_CQP",
+      "type": "u32",
+      "value": 0,
+      "description": "Constant QP."
+    },
+    {
+      "zig_name": "rate_cbr",
+      "c_name": "R4ENC_RATE_CBR",
+      "type": "u32",
+      "value": 1,
+      "description": "Constant target bitrate within admitted buffer model."
+    },
+    {
+      "zig_name": "rate_vbr",
+      "c_name": "R4ENC_RATE_VBR",
+      "type": "u32",
+      "value": 2,
+      "description": "Variable bitrate with target and peak."
+    },
+    {
+      "zig_name": "rates_cqp",
+      "c_name": "R4ENC_RATES_CQP",
+      "type": "u32",
+      "value": 1,
+      "description": "CQP support bit."
+    },
+    {
+      "zig_name": "rates_cbr",
+      "c_name": "R4ENC_RATES_CBR",
+      "type": "u32",
+      "value": 2,
+      "description": "CBR support bit."
+    },
+    {
+      "zig_name": "rates_vbr",
+      "c_name": "R4ENC_RATES_VBR",
+      "type": "u32",
+      "value": 4,
+      "description": "VBR support bit."
+    },
+    {
+      "zig_name": "config_allow_skip",
+      "c_name": "R4ENC_CONFIG_ALLOW_SKIP",
+      "type": "u32",
+      "value": 1,
+      "description": "Permit rate-control skipping; each accepted skipped input still receives a completion packet."
+    },
+    {
+      "zig_name": "frame_force_idr",
+      "c_name": "R4ENC_FRAME_FORCE_IDR",
+      "type": "u32",
+      "value": 1,
+      "description": "Force an independent access point and configuration NALs."
+    },
+    {
+      "zig_name": "packet_key",
+      "c_name": "R4ENC_PACKET_KEY",
+      "type": "u32",
+      "value": 1,
+      "description": "IDR/random-access picture."
+    },
+    {
+      "zig_name": "packet_config",
+      "c_name": "R4ENC_PACKET_CONFIG",
+      "type": "u32",
+      "value": 2,
+      "description": "SPS/PPS included."
+    },
+    {
+      "zig_name": "packet_skipped",
+      "c_name": "R4ENC_PACKET_SKIPPED",
+      "type": "u32",
+      "value": 4,
+      "description": "Accepted image was retired without a coded picture."
+    },
+    {
+      "zig_name": "skip_rate_control",
+      "c_name": "R4ENC_SKIP_RATE_CONTROL",
+      "type": "u32",
+      "value": 1,
+      "description": "Codec rate control dropped this accepted picture."
+    },
+    {
+      "zig_name": "phase_open",
+      "c_name": "R4ENC_PHASE_OPEN",
+      "type": "u32",
+      "value": 0,
+      "description": "Accepting input."
+    },
+    {
+      "zig_name": "phase_draining",
+      "c_name": "R4ENC_PHASE_DRAINING",
+      "type": "u32",
+      "value": 1,
+      "description": "Finishing accepted inputs."
+    },
+    {
+      "zig_name": "phase_drained",
+      "c_name": "R4ENC_PHASE_DRAINED",
+      "type": "u32",
+      "value": 2,
+      "description": "Drain complete; Abort required before further input."
+    },
+    {
+      "zig_name": "phase_aborting",
+      "c_name": "R4ENC_PHASE_ABORTING",
+      "type": "u32",
+      "value": 3,
+      "description": "Retiring old inputs and resetting stream."
+    },
+    {
+      "zig_name": "phase_closing",
+      "c_name": "R4ENC_PHASE_CLOSING",
+      "type": "u32",
+      "value": 4,
+      "description": "Retiring worker, inputs and outputs."
+    },
+    {
+      "zig_name": "phase_closed",
+      "c_name": "R4ENC_PHASE_CLOSED",
+      "type": "u32",
+      "value": 5,
+      "description": "Ready for destruction."
+    },
+    {
+      "zig_name": "phase_failed",
+      "c_name": "R4ENC_PHASE_FAILED",
+      "type": "u32",
+      "value": 6,
+      "description": "Terminal failure; close/release/query remain legal."
+    },
+    {
+      "zig_name": "control_query",
+      "c_name": "R4ENC_CONTROL_QUERY",
+      "type": "u32",
+      "value": 0,
+      "description": "Read progress."
+    },
+    {
+      "zig_name": "control_drain",
+      "c_name": "R4ENC_CONTROL_DRAIN",
+      "type": "u32",
+      "value": 1,
+      "description": "Preserve outputs and finish accepted input."
+    },
+    {
+      "zig_name": "control_abort",
+      "c_name": "R4ENC_CONTROL_ABORT",
+      "type": "u32",
+      "value": 2,
+      "description": "Discard unleased results; wait physical input retirement, then advance stream generation."
+    },
+    {
+      "zig_name": "control_close",
+      "c_name": "R4ENC_CONTROL_CLOSE",
+      "type": "u32",
+      "value": 3,
+      "description": "Retire stream; preserve delivered packet leases."
+    },
+    {
+      "zig_name": "color_reference_white",
+      "c_name": "R4ENC_COLOR_REFERENCE_WHITE",
+      "type": "u32",
+      "value": 1,
+      "description": "Reference-white luminance is present."
+    },
+    {
+      "zig_name": "color_luminance",
+      "c_name": "R4ENC_COLOR_LUMINANCE",
+      "type": "u32",
+      "value": 2,
+      "description": "Peak and black luminance are present."
+    },
+    {
+      "zig_name": "color_unspecified",
+      "c_name": "R4ENC_COLOR_UNSPECIFIED",
+      "type": "u32",
+      "value": 2,
+      "description": "CICP unspecified primaries, transfer or matrix."
+    },
+    {
+      "zig_name": "chroma_unspecified",
+      "c_name": "R4ENC_CHROMA_UNSPECIFIED",
+      "type": "u32",
+      "value": 0,
+      "description": "Unknown chroma siting."
+    },
+    {
+      "zig_name": "chroma_left",
+      "c_name": "R4ENC_CHROMA_LEFT",
+      "type": "u32",
+      "value": 1,
+      "description": "Left, vertically centered."
+    },
+    {
+      "zig_name": "chroma_center",
+      "c_name": "R4ENC_CHROMA_CENTER",
+      "type": "u32",
+      "value": 2,
+      "description": "Horizontally and vertically centered."
+    },
+    {
+      "zig_name": "chroma_top_left",
+      "c_name": "R4ENC_CHROMA_TOP_LEFT",
+      "type": "u32",
+      "value": 3,
+      "description": "Top-left co-sited."
+    },
+    {
+      "zig_name": "error_cancelled",
+      "c_name": "R4ENC_ERROR_CANCELLED",
+      "type": "i32",
+      "value": -10,
+      "description": "Control request superseded by an explicitly accepted Abort/Close; no successful completion implied."
+    },
+    {
+      "zig_name": "backend_amd",
+      "c_name": "R4ENC_BACKEND_AMD",
+      "type": "u32",
+      "value": 2,
+      "description": "Explicit AMD provider. Query requires an implemented codec and an admitted VCN1 device; never silently selects software."
+    },
+    {
+      "zig_name": "codec_hevc",
+      "c_name": "R4ENC_CODEC_HEVC",
+      "type": "u32",
+      "value": 2,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "codec_vp9",
+      "c_name": "R4ENC_CODEC_VP9",
+      "type": "u32",
+      "value": 3,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "codec_mpeg2",
+      "c_name": "R4ENC_CODEC_MPEG2",
+      "type": "u32",
+      "value": 4,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "codec_vc1",
+      "c_name": "R4ENC_CODEC_VC1",
+      "type": "u32",
+      "value": 5,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "codec_jpeg",
+      "c_name": "R4ENC_CODEC_JPEG",
+      "type": "u32",
+      "value": 6,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "codec_av1",
+      "c_name": "R4ENC_CODEC_AV1",
+      "type": "u32",
+      "value": 7,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "codec_mpeg4_part2",
+      "c_name": "R4ENC_CODEC_MPEG4_PART2",
+      "type": "u32",
+      "value": 8,
+      "description": "Stable codec identity; availability is reported by QueryCaps, never inferred from the enum."
+    },
+    {
+      "zig_name": "profile_hevc_main",
+      "c_name": "R4ENC_PROFILE_HEVC_MAIN",
+      "type": "u32",
+      "value": 1,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_hevc_main10",
+      "c_name": "R4ENC_PROFILE_HEVC_MAIN10",
+      "type": "u32",
+      "value": 2,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_vp9_0",
+      "c_name": "R4ENC_PROFILE_VP9_0",
+      "type": "u32",
+      "value": 0,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_vp9_2",
+      "c_name": "R4ENC_PROFILE_VP9_2",
+      "type": "u32",
+      "value": 2,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_mpeg2_simple",
+      "c_name": "R4ENC_PROFILE_MPEG2_SIMPLE",
+      "type": "u32",
+      "value": 5,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_mpeg2_main",
+      "c_name": "R4ENC_PROFILE_MPEG2_MAIN",
+      "type": "u32",
+      "value": 4,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_vc1_simple",
+      "c_name": "R4ENC_PROFILE_VC1_SIMPLE",
+      "type": "u32",
+      "value": 0,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_vc1_main",
+      "c_name": "R4ENC_PROFILE_VC1_MAIN",
+      "type": "u32",
+      "value": 1,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_vc1_advanced",
+      "c_name": "R4ENC_PROFILE_VC1_ADVANCED",
+      "type": "u32",
+      "value": 3,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    },
+    {
+      "zig_name": "profile_jpeg_baseline",
+      "c_name": "R4ENC_PROFILE_JPEG_BASELINE",
+      "type": "u32",
+      "value": 0,
+      "description": "Codec-scoped profile identity; no implicit support claim."
+    }
+  ],
+  "errors": [
+    {
+      "zig_name": "error_invalid",
+      "c_name": "R4ENC_ERROR_INVALID",
+      "type": "i32",
+      "value": -1,
+      "description": "Malformed header, extent, color, enum or configuration."
+    },
+    {
+      "zig_name": "error_unsupported",
+      "c_name": "R4ENC_ERROR_UNSUPPORTED",
+      "type": "i32",
+      "value": -2,
+      "description": "Requested codec/profile/backend combination not implemented or admitted."
+    },
+    {
+      "zig_name": "error_busy",
+      "c_name": "R4ENC_ERROR_BUSY",
+      "type": "i32",
+      "value": -3,
+      "description": "Owner, control or bounded resource temporarily unavailable; no acceptance."
+    },
+    {
+      "zig_name": "error_no_memory",
+      "c_name": "R4ENC_ERROR_NO_MEMORY",
+      "type": "i32",
+      "value": -4,
+      "description": "Charged memory/budget failure."
+    },
+    {
+      "zig_name": "error_stale",
+      "c_name": "R4ENC_ERROR_STALE",
+      "type": "i32",
+      "value": -5,
+      "description": "Wrong owner/token or stream generation."
+    },
+    {
+      "zig_name": "error_encode",
+      "c_name": "R4ENC_ERROR_ENCODE",
+      "type": "i32",
+      "value": -6,
+      "description": "Codec failure, output overflow or failed native picture status."
+    },
+    {
+      "zig_name": "error_device_lost",
+      "c_name": "R4ENC_ERROR_DEVICE_LOST",
+      "type": "i32",
+      "value": -7,
+      "description": "Exact native device lifetime invalidated."
+    },
+    {
+      "zig_name": "error_closed",
+      "c_name": "R4ENC_ERROR_CLOSED",
+      "type": "i32",
+      "value": -8,
+      "description": "Owner is closing or closed."
+    },
+    {
+      "zig_name": "error_internal",
+      "c_name": "R4ENC_ERROR_INTERNAL",
+      "type": "i32",
+      "value": -9,
+      "description": "Invariant failure; owner becomes failed."
+    }
+  ],
+  "ownership_rules": [
+    {
+      "name": "Immutable input",
+      "text": "Send success retains metadata and common BO references. Source pixels and the producer fence remain immutable until the matching receive receipt or completed Abort/Close. Busy/error accepts nothing."
+    },
+    {
+      "name": "Physical completion",
+      "text": "Logical timeout/cancel never frees active GPU resources. Input receipt follows engine and mapping retirement; packet and provider lifetimes remain reachable on errors."
+    },
+    {
+      "name": "Output ownership",
+      "text": "Receive supplies one complete access unit or an explicit skipped-input receipt. Data is read-only until release. Delivered leases survive Abort and Close."
+    },
+    {
+      "name": "Backpressure",
+      "text": "Queues and byte budgets are finite. Consumer chooses frames to omit before Send; no silent replacement of an accepted input. Slow output never blocks local presentation."
+    },
+    {
+      "name": "Control identity",
+      "text": "Strictly increasing mutation IDs; identical pending retries do not repeat work. Accepted differs from completed. Abort/Close may supersede pending Drain, and Close may supersede Abort. Retrying a superseded ID returns CANCELLED or STALE, never success. Abort advances generation only after old inputs retire; first new input is IDR."
+    },
+    {
+      "name": "Errors",
+      "text": "A failed control preserves the old stream generation. Close/release/query remain possible. Failed encode never publishes partial bytes as success."
+    },
+    {
+      "name": "Media time",
+      "text": "PTS/duration belong to the caller timeline. Revision1 has no B-frame reorder. No wall clock, hidden frame scheduler or network transport exists inside the encoder."
+    },
+    {
+      "name": "Format and color",
+      "text": "Canonical BO descriptors retain placement, modifier and device epoch. Explicit CICP metadata is immutable per stream; unknown or unsupported color/layout is rejected."
+    },
+    {
+      "name": "Activation",
+      "text": "Opening a runtime or querying capabilities produces no encode work. Only explicit accepted frame input in an admitted encoder may activate the engine."
+    },
+    {
+      "name": "Implementation status",
+      "text": "This is the 0.79.41 implementation target. Generated contracts do not imply a working codec or physical qualification."
+    }
+  ]
+}

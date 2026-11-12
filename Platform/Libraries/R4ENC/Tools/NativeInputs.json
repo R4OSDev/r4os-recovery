@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "openh264": "2.6.0",
+  "units": [
+    {
+      "source": "codec/common/src/common_tables.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/copy_mb.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/cpu.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/crt_util_safe_x.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/deblocking_common.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/expand_pic.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/intra_pred_common.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/mc.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/memory_align.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/sad_common.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/utils.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/welsCodecTrace.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/WelsTaskThread.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/WelsThread.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/src/WelsThreadPool.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/common/x86/cpuid.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/dct.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/deblock.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/expand_picture.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/intra_pred_com.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/mb_copy.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/mc_chroma.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/mc_luma.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/satd_sad.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/common/x86/vaa.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/src/au_set.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/deblocking.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/decode_mb_aux.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/encode_mb_aux.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/encoder.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/encoder_data_tables.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/encoder_ext.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/get_intra_predictor.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/md.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/mv_pred.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/nal_encap.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/paraset_strategy.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/picture_handle.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/ratectl.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/ref_list_mgr_svc.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/sample.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/set_mb_syn_cabac.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/set_mb_syn_cavlc.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/slice_multi_threading.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_base_layer_md.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_enc_slice_segment.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_encode_mb.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_encode_slice.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_mode_decision.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_motion_estimate.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_set_mb_syn_cabac.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/svc_set_mb_syn_cavlc.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/wels_preprocess.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/wels_task_base.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/wels_task_encoder.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/src/wels_task_management.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/plus/src/welsEncoderExt.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/encoder/core/x86/coeff.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/dct.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/intra_pred.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/matrix_transpose.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/memzero.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/quant.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/sample_sc.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/encoder/core/x86/score.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/processing/src/adaptivequantization/AdaptiveQuantization.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/backgrounddetection/BackgroundDetection.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/common/memory.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/common/WelsFrameWork.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/common/WelsFrameWorkEx.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/complexityanalysis/ComplexityAnalysis.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/denoise/denoise.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/denoise/denoise_filter.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/downsample/downsample.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/downsample/downsamplefuncs.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/imagerotate/imagerotate.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/imagerotate/imagerotatefuncs.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/scenechangedetection/SceneChangeDetection.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/scrolldetection/ScrollDetection.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/scrolldetection/ScrollDetectionFuncs.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/vaacalc/vaacalcfuncs.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/vaacalc/vaacalculation.cpp",
+      "kind": "cpp"
+    },
+    {
+      "source": "codec/processing/src/x86/denoisefilter.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/processing/src/x86/downsample_bilinear.asm",
+      "kind": "asm"
+    },
+    {
+      "source": "codec/processing/src/x86/vaa.asm",
+      "kind": "asm"
+    }
+  ]
+}

@@ -1,0 +1,1253 @@
+{
+  "schema": 1,
+  "mesa": "26.2.2",
+  "origin": "Pinned Mesa Meson custom commands; host-neutral argument arrays, no host library build.",
+  "steps": [
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/driconf_static.py",
+        "${source}/src/util/00-mesa-defaults.conf",
+        "${source}/src/gallium/drivers/zink/00-zink-defaults.conf",
+        "src/util/driconf_static.h"
+      ],
+      "outputs": [
+        "src/util/driconf_static.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format_srgb.py"
+      ],
+      "outputs": [
+        "src/util/format_srgb.c"
+      ],
+      "capture": "src/util/format_srgb.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/process_shader_stats.py",
+        "${source}/src/util/shader_stats.rnc",
+        "${source}/src/util/shader_stats.xml"
+      ],
+      "outputs": [
+        "src/util/shader_stats.h"
+      ],
+      "capture": "src/util/shader_stats.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format/u_format_table.py",
+        "${source}/src/util/format/u_format.yaml",
+        "--enums"
+      ],
+      "outputs": [
+        "src/util/format/u_format_gen.h"
+      ],
+      "capture": "src/util/format/u_format_gen.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format/u_format_table.py",
+        "${source}/src/util/format/u_format.yaml",
+        "--header"
+      ],
+      "outputs": [
+        "src/util/format/u_format_pack.h"
+      ],
+      "capture": "src/util/format/u_format_pack.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/format/u_format_table.py",
+        "${source}/src/util/format/u_format.yaml"
+      ],
+      "outputs": [
+        "src/util/format/u_format_table.c"
+      ],
+      "capture": "src/util/format/u_format_table.c"
+    },
+    {
+      "outputs": [
+        "src/git_sha1.h"
+      ],
+      "text": "#define MESA_GIT_SHA1 \"\"\n"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/builtin_types_h.py",
+        "src/compiler/builtin_types.h"
+      ],
+      "outputs": [
+        "src/compiler/builtin_types.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/builtin_types_c.py",
+        "src/compiler/builtin_types.c"
+      ],
+      "outputs": [
+        "src/compiler/builtin_types.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/glsl/ir_expression_operation.py",
+        "enum"
+      ],
+      "outputs": [
+        "src/compiler/ir_expression_operation.h"
+      ],
+      "capture": "src/compiler/ir_expression_operation.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_builder_opcodes_h.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_builder_opcodes.h"
+      ],
+      "capture": "src/compiler/nir/nir_builder_opcodes.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_constant_expressions.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_constant_expressions.c"
+      ],
+      "capture": "src/compiler/nir/nir_constant_expressions.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_opcodes_h.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_opcodes.h"
+      ],
+      "capture": "src/compiler/nir/nir_opcodes.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_opcodes_c.py"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_opcodes.c"
+      ],
+      "capture": "src/compiler/nir/nir_opcodes.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_opt_algebraic.py",
+        "--out",
+        "src/compiler/nir/nir_opt_algebraic.c"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_opt_algebraic.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_intrinsics_h.py",
+        "--out",
+        "src/compiler/nir/nir_intrinsics.h"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_intrinsics.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_intrinsics_indices_h.py",
+        "--out",
+        "src/compiler/nir/nir_intrinsics_indices.h"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_intrinsics_indices.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/nir/nir_intrinsics_c.py",
+        "--out",
+        "src/compiler/nir/nir_intrinsics.c"
+      ],
+      "outputs": [
+        "src/compiler/nir/nir_intrinsics.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/spirv/vtn_gather_types_c.py",
+        "${source}/src/compiler/spirv/spirv.core.grammar.json",
+        "src/compiler/spirv/vtn_gather_types.c"
+      ],
+      "outputs": [
+        "src/compiler/spirv/vtn_gather_types.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/spirv/spirv_info_gen.py",
+        "--json",
+        "${source}/src/compiler/spirv/spirv.core.grammar.json",
+        "--out-h",
+        "src/compiler/spirv/spirv_info.h",
+        "--out-c",
+        "src/compiler/spirv/spirv_info.c"
+      ],
+      "outputs": [
+        "src/compiler/spirv/spirv_info.h",
+        "src/compiler/spirv/spirv_info.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/spirv/vtn_generator_ids_h.py",
+        "${source}/src/compiler/spirv/spir-v.xml",
+        "src/compiler/spirv/vtn_generator_ids.h"
+      ],
+      "outputs": [
+        "src/compiler/spirv/vtn_generator_ids.h"
+      ]
+    },
+    {
+      "tool": "bison",
+      "arguments": [
+        "-Wno-deprecated",
+        "-o",
+        "src/compiler/glsl/glcpp/glcpp-parse.c",
+        "-p",
+        "glcpp_parser_",
+        "--defines=src/compiler/glsl/glcpp/glcpp-parse.h",
+        "${source}/src/compiler/glsl/glcpp/glcpp-parse.y"
+      ],
+      "outputs": [
+        "src/compiler/glsl/glcpp/glcpp-parse.c",
+        "src/compiler/glsl/glcpp/glcpp-parse.h"
+      ]
+    },
+    {
+      "tool": "flex",
+      "arguments": [
+        "-o",
+        "src/compiler/glsl/glcpp/glcpp-lex.c",
+        "${source}/src/compiler/glsl/glcpp/glcpp-lex.l"
+      ],
+      "outputs": [
+        "src/compiler/glsl/glcpp/glcpp-lex.c"
+      ]
+    },
+    {
+      "tool": "bison",
+      "arguments": [
+        "-Wno-deprecated",
+        "-o",
+        "src/compiler/glsl/glsl_parser.cpp",
+        "-p",
+        "_mesa_glsl_",
+        "--defines=src/compiler/glsl/glsl_parser.h",
+        "${source}/src/compiler/glsl/glsl_parser.yy"
+      ],
+      "outputs": [
+        "src/compiler/glsl/glsl_parser.cpp",
+        "src/compiler/glsl/glsl_parser.h"
+      ]
+    },
+    {
+      "tool": "flex",
+      "arguments": [
+        "-o",
+        "src/compiler/glsl/glsl_lexer.cpp",
+        "${source}/src/compiler/glsl/glsl_lexer.ll"
+      ],
+      "outputs": [
+        "src/compiler/glsl/glsl_lexer.cpp"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/glsl/ir_expression_operation.py",
+        "constant"
+      ],
+      "outputs": [
+        "src/compiler/glsl/ir_expression_operation_constant.h"
+      ],
+      "capture": "src/compiler/glsl/ir_expression_operation_constant.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/compiler/glsl/ir_expression_operation.py",
+        "strings"
+      ],
+      "outputs": [
+        "src/compiler/glsl/ir_expression_operation_strings.h"
+      ],
+      "capture": "src/compiler/glsl/ir_expression_operation_strings.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/xxd.py",
+        "${source}/src/compiler/glsl/float64.glsl",
+        "src/compiler/glsl/float64_glsl.h",
+        "-n",
+        "float64_source"
+      ],
+      "outputs": [
+        "src/compiler/glsl/float64_glsl.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/xxd.py",
+        "${source}/src/compiler/glsl/CrossPlatformSettings_piece_all.glsl",
+        "src/compiler/glsl/cross_platform_settings_piece_all.h",
+        "-n",
+        "cross_platform_settings_piece_all_header"
+      ],
+      "outputs": [
+        "src/compiler/glsl/cross_platform_settings_piece_all.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/xxd.py",
+        "${source}/src/compiler/glsl/bc1.glsl",
+        "src/compiler/glsl/bc1_glsl.h",
+        "-n",
+        "bc1_source"
+      ],
+      "outputs": [
+        "src/compiler/glsl/bc1_glsl.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/xxd.py",
+        "${source}/src/compiler/glsl/bc4.glsl",
+        "src/compiler/glsl/bc4_glsl.h",
+        "-n",
+        "bc4_source"
+      ],
+      "outputs": [
+        "src/compiler/glsl/bc4_glsl.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/xxd.py",
+        "${source}/src/compiler/glsl/etc2_rgba_stitch.glsl",
+        "src/compiler/glsl/etc2_rgba_stitch_glsl.h",
+        "-n",
+        "etc2_rgba_stitch_source"
+      ],
+      "outputs": [
+        "src/compiler/glsl/etc2_rgba_stitch_glsl.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/util/xxd.py",
+        "${source}/src/compiler/glsl/astc_decoder.glsl",
+        "src/compiler/glsl/astc_glsl.h",
+        "-n",
+        "astc_source"
+      ],
+      "outputs": [
+        "src/compiler/glsl/astc_glsl.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_dispatch_table_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/util/vk_dispatch_table.c",
+        "--out-h",
+        "src/vulkan/util/vk_dispatch_table.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/util/vk_dispatch_table.c",
+        "src/vulkan/util/vk_dispatch_table.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/gen_enum_to_str.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/util/vk_enum_to_str.c",
+        "--out-h",
+        "src/vulkan/util/vk_enum_to_str.h",
+        "--out-d",
+        "src/vulkan/util/vk_enum_defines.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/util/vk_enum_to_str.c",
+        "src/vulkan/util/vk_enum_to_str.h",
+        "src/vulkan/util/vk_enum_defines.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_struct_type_cast_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out",
+        "src/vulkan/util/vk_struct_type_cast.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/util/vk_struct_type_cast.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_extensions_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/util/vk_extensions.c",
+        "--out-h",
+        "src/vulkan/util/vk_extensions.h"
+      ],
+      "outputs": [
+        "src/vulkan/util/vk_extensions.c",
+        "src/vulkan/util/vk_extensions.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_entrypoints_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--proto",
+        "--weak",
+        "--out-h",
+        "src/vulkan/runtime/vk_common_entrypoints.h",
+        "--out-c",
+        "src/vulkan/runtime/vk_common_entrypoints.c",
+        "--prefix",
+        "vk_common",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_common_entrypoints.h",
+        "src/vulkan/runtime/vk_common_entrypoints.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_cmd_queue_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_cmd_queue.c",
+        "--out-h",
+        "src/vulkan/runtime/vk_cmd_queue.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_cmd_queue.c",
+        "src/vulkan/runtime/vk_cmd_queue.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_entrypoints_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--proto",
+        "--weak",
+        "--out-h",
+        "src/vulkan/runtime/vk_cmd_enqueue_entrypoints.h",
+        "--out-c",
+        "src/vulkan/runtime/vk_cmd_enqueue_entrypoints.c",
+        "--prefix",
+        "vk_cmd_enqueue",
+        "--prefix",
+        "vk_cmd_enqueue_unless_primary",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_cmd_enqueue_entrypoints.h",
+        "src/vulkan/runtime/vk_cmd_enqueue_entrypoints.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_dispatch_trampolines_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_dispatch_trampolines.c",
+        "--out-h",
+        "src/vulkan/runtime/vk_dispatch_trampolines.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_dispatch_trampolines.c",
+        "src/vulkan/runtime/vk_dispatch_trampolines.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_physical_device_features_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_physical_device_features.c",
+        "--out-h",
+        "src/vulkan/runtime/vk_physical_device_features.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_physical_device_features.c",
+        "src/vulkan/runtime/vk_physical_device_features.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_physical_device_properties_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_physical_device_properties.c",
+        "--out-h",
+        "src/vulkan/runtime/vk_physical_device_properties.h",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_physical_device_properties.c",
+        "src/vulkan/runtime/vk_physical_device_properties.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_physical_device_spirv_caps_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_physical_device_spirv_caps.c",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_physical_device_spirv_caps.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_synchronization_helpers_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_synchronization_helpers.c",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_synchronization_helpers.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/runtime/vk_format_info_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--out-c",
+        "src/vulkan/runtime/vk_format_info.c",
+        "--out-h",
+        "src/vulkan/runtime/vk_format_info.h"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/vk_format_info.c",
+        "src/vulkan/runtime/vk_format_info.h"
+      ]
+    },
+    {
+      "tool": "glslangValidator",
+      "arguments": [
+        "-V",
+        "-S",
+        "comp",
+        "-x",
+        "-o",
+        "src/vulkan/runtime/astc_spv.h",
+        "${source}/src/compiler/glsl/astc_decoder.glsl",
+        "--quiet",
+        "--depfile",
+        "src/vulkan/runtime/astc_spv.h.d"
+      ],
+      "outputs": [
+        "src/vulkan/runtime/astc_spv.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/vulkan/util/vk_entrypoints_gen.py",
+        "--xml",
+        "${source}/src/vulkan/registry/vk.xml",
+        "--proto",
+        "--weak",
+        "--out-h",
+        "src/vulkan/wsi/wsi_common_entrypoints.h",
+        "--out-c",
+        "src/vulkan/wsi/wsi_common_entrypoints.c",
+        "--prefix",
+        "wsi",
+        "--beta",
+        "false"
+      ],
+      "outputs": [
+        "src/vulkan/wsi/wsi_common_entrypoints.h",
+        "src/vulkan/wsi/wsi_common_entrypoints.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/../../mapi_abi.py",
+        "--printer",
+        "glapi",
+        "--gl_symbols",
+        "${source}/src/mesa/glapi/glapi/gen/../../../../glx/libgl-symbols.txt",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/glapi_mapi_tmp.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/glapi_mapi_tmp.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/gl_gentable.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/glapi_gentable.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/glapi_gentable.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/gl_enums.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/../registry/gl.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/enums.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/enums.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_exec_init.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_exec_init.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_exec_init.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_exec_decl_h.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_exec_decl.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_exec_decl.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_save_init_h.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_save_init.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_save_init.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_save_h.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_save.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_save.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_beginend_init_h.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_beginend_init.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_beginend_init.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_hw_select_init_h.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_hw_select_init.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_hw_select_init.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/gl_table.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "-m",
+        "dispatch"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/dispatch.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/dispatch.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_h.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/unmarshal_table_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/unmarshal_table.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/unmarshal_table.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/api_trace_c.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/api_trace.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/api_trace.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "0",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated0.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated0.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "1",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated1.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated1.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "2",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated2.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated2.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "3",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated3.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated3.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "4",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated4.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated4.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "5",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated5.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated5.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "6",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated6.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated6.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/marshal_generated_c.py",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml",
+        "7",
+        "8",
+        "8"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/marshal_generated7.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/marshal_generated7.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/glX_proto_send.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_API.xml",
+        "-m",
+        "proto",
+        "-s",
+        "${source}/src/mesa/glapi/glapi/gen/../../../../glx/libgl-symbols.txt"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/indirect.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/indirect.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/glX_proto_send.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_API.xml",
+        "-m",
+        "init_h",
+        "-s",
+        "${source}/src/mesa/glapi/glapi/gen/../../../../glx/libgl-symbols.txt"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/indirect.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/indirect.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/glX_proto_send.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_API.xml",
+        "-m",
+        "init_c",
+        "-s",
+        "${source}/src/mesa/glapi/glapi/gen/../../../../glx/libgl-symbols.txt"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/indirect_init.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/indirect_init.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/glX_proto_size.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_API.xml",
+        "--only-set",
+        "-m",
+        "size_h",
+        "--header-tag",
+        "_INDIRECT_SIZE_H_"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/indirect_size.h"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/indirect_size.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/glapi/gen/glX_proto_size.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_API.xml",
+        "--only-set",
+        "-m",
+        "size_c"
+      ],
+      "outputs": [
+        "src/mesa/glapi/glapi/gen/indirect_size.c"
+      ],
+      "capture": "src/mesa/glapi/glapi/gen/indirect_size.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/shared-glapi/../mapi_abi.py",
+        "--printer",
+        "shared-glapi",
+        "--gl_symbols",
+        "${source}/src/mesa/glapi/shared-glapi/../../../glx/libgl-symbols.txt",
+        "${source}/src/mesa/glapi/shared-glapi/../glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/shared-glapi/shared_glapi_mapi_tmp.h"
+      ],
+      "capture": "src/mesa/glapi/shared-glapi/shared_glapi_mapi_tmp.h"
+    },
+    {
+      "tool": "flex",
+      "arguments": [
+        "-o",
+        "src/mesa/program/lex.yy.c",
+        "${source}/src/mesa/program/program_lexer.l"
+      ],
+      "outputs": [
+        "src/mesa/program/lex.yy.c"
+      ]
+    },
+    {
+      "tool": "bison",
+      "arguments": [
+        "-Wno-deprecated",
+        "-o",
+        "src/mesa/program/program_parse.tab.c",
+        "--defines=src/mesa/program/program_parse.tab.h",
+        "${source}/src/mesa/program/program_parse.y"
+      ],
+      "outputs": [
+        "src/mesa/program/program_parse.tab.c",
+        "src/mesa/program/program_parse.tab.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/main/format_fallback.py",
+        "${source}/src/mesa/main/formats.csv",
+        "src/mesa/format_fallback.c"
+      ],
+      "outputs": [
+        "src/mesa/format_fallback.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/main/get_hash_generator.py",
+        "-f",
+        "${source}/src/mesa/glapi/glapi/gen/gl_and_es_API.xml"
+      ],
+      "outputs": [
+        "src/mesa/get_hash.h"
+      ],
+      "capture": "src/mesa/get_hash.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/main/format_info.py",
+        "${source}/src/mesa/main/formats.csv"
+      ],
+      "outputs": [
+        "src/mesa/format_info.h"
+      ],
+      "capture": "src/mesa/format_info.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/auxiliary/draw/draw_nir_lower_opcodes.py",
+        "-p",
+        "${source}/src/compiler/nir/"
+      ],
+      "outputs": [
+        "src/gallium/auxiliary/draw_nir_lower_opcodes.c"
+      ],
+      "capture": "src/gallium/auxiliary/draw_nir_lower_opcodes.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/auxiliary/driver_trace/enums2names.py",
+        "${source}/src/gallium/auxiliary/../include/pipe/p_defines.h",
+        "${source}/src/gallium/auxiliary/../include/pipe/p_video_enums.h",
+        "${source}/src/gallium/auxiliary/../../util/blend.h",
+        "-C",
+        "src/gallium/auxiliary/tr_util.c",
+        "-H",
+        "src/gallium/auxiliary/tr_util.h"
+      ],
+      "outputs": [
+        "src/gallium/auxiliary/tr_util.c",
+        "src/gallium/auxiliary/tr_util.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/auxiliary/util/u_tracepoints.py",
+        "-p",
+        "${source}/src/util/perf/",
+        "-C",
+        "src/gallium/auxiliary/u_tracepoints.c"
+      ],
+      "outputs": [
+        "src/gallium/auxiliary/u_tracepoints.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/auxiliary/util/u_tracepoints.py",
+        "-p",
+        "${source}/src/util/perf/",
+        "-H",
+        "src/gallium/auxiliary/u_tracepoints.h"
+      ],
+      "outputs": [
+        "src/gallium/auxiliary/u_tracepoints.h"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/auxiliary/indices/u_indices_gen.py",
+        "src/gallium/auxiliary/u_indices_gen.c"
+      ],
+      "outputs": [
+        "src/gallium/auxiliary/u_indices_gen.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/auxiliary/indices/u_unfilled_gen.py",
+        "src/gallium/auxiliary/u_unfilled_gen.c"
+      ],
+      "outputs": [
+        "src/gallium/auxiliary/u_unfilled_gen.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/drivers/zink/zink_device_info.py",
+        "src/gallium/drivers/zink/zink_device_info.h",
+        "src/gallium/drivers/zink/zink_device_info.c",
+        "${source}/src/vulkan/registry/vk.xml"
+      ],
+      "outputs": [
+        "src/gallium/drivers/zink/zink_device_info.h",
+        "src/gallium/drivers/zink/zink_device_info.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/drivers/zink/zink_instance.py",
+        "src/gallium/drivers/zink/zink_instance.h",
+        "src/gallium/drivers/zink/zink_instance.c",
+        "${source}/src/vulkan/registry/vk.xml"
+      ],
+      "outputs": [
+        "src/gallium/drivers/zink/zink_instance.h",
+        "src/gallium/drivers/zink/zink_instance.c"
+      ]
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/gallium/drivers/zink/nir_to_spirv/zink_nir_algebraic.py",
+        "-p",
+        "${source}/src/compiler/nir/"
+      ],
+      "outputs": [
+        "src/gallium/drivers/zink/zink_nir_algebraic.c"
+      ],
+      "capture": "src/gallium/drivers/zink/zink_nir_algebraic.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/es1api/../new/gen_gldispatch_mapi.py",
+        "glesv1",
+        "${source}/src/mesa/glapi/es1api/../glapi/registry/gl.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/es1api/es1_glapi_mapi_tmp.h"
+      ],
+      "capture": "src/mesa/glapi/es1api/es1_glapi_mapi_tmp.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/mesa/glapi/es2api/../new/gen_gldispatch_mapi.py",
+        "glesv2",
+        "${source}/src/mesa/glapi/es2api/../glapi/registry/gl.xml"
+      ],
+      "outputs": [
+        "src/mesa/glapi/es2api/es2_glapi_mapi_tmp.h"
+      ],
+      "capture": "src/mesa/glapi/es2api/es2_glapi_mapi_tmp.h"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/egl/generate/gen_egl_dispatch.py",
+        "source",
+        "${source}/src/egl/generate/egl.xml",
+        "${source}/src/egl/generate/egl_other.xml"
+      ],
+      "outputs": [
+        "src/egl/g_egldispatchstubs.c"
+      ],
+      "capture": "src/egl/g_egldispatchstubs.c"
+    },
+    {
+      "tool": "python",
+      "arguments": [
+        "${source}/src/egl/generate/gen_egl_dispatch.py",
+        "header",
+        "${source}/src/egl/generate/egl.xml",
+        "${source}/src/egl/generate/egl_other.xml"
+      ],
+      "outputs": [
+        "src/egl/g_egldispatchstubs.h"
+      ],
+      "capture": "src/egl/g_egldispatchstubs.h"
+    }
+  ]
+}

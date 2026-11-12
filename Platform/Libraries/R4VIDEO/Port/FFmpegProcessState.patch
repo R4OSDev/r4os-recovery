@@ -1,0 +1,199 @@
+--- a/libavcodec/avcodec.c
++++ b/libavcodec/avcodec.c
+@@ -97,7 +97,12 @@
+     return 0;
+ }
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define codec_mutex (r4video_ffmpeg_state()->codec_mutex)
++#else
+ static AVMutex codec_mutex = AV_MUTEX_INITIALIZER;
++#endif
+ 
+ static void lock_avcodec(const FFCodec *codec)
+ {
+--- a/libavutil/cpu.c
++++ b/libavutil/cpu.c
+@@ -53,8 +53,14 @@
+ #include <sys/auxv.h>
+ #endif
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define cpu_flags (r4video_ffmpeg_state()->cpu_flags)
++#define cpu_count (r4video_ffmpeg_state()->cpu_count)
++#else
+ static atomic_int cpu_flags = -1;
+ static atomic_int cpu_count = -1;
++#endif
+ 
+ static int get_cpu_flags(void)
+ {
+@@ -79,6 +85,9 @@
+ }
+ 
+ void av_force_cpu_flags(int arg){
++#ifdef R4OS_VIDEO
++    if (arg != -1) arg &= get_cpu_flags() & ~(AV_CPU_FLAG_AVX512 | AV_CPU_FLAG_AVX512ICL);
++#endif
+     if (ARCH_X86 &&
+            (arg & ( AV_CPU_FLAG_3DNOW    |
+                     AV_CPU_FLAG_3DNOWEXT |
+@@ -111,6 +120,9 @@
+     int flags = atomic_load_explicit(&cpu_flags, memory_order_relaxed);
+     if (flags == -1) {
+         flags = get_cpu_flags();
++#ifdef R4OS_VIDEO
++        flags &= ~(AV_CPU_FLAG_AVX512 | AV_CPU_FLAG_AVX512ICL);
++#endif
+         atomic_store_explicit(&cpu_flags, flags, memory_order_relaxed);
+     }
+     return flags;
+@@ -227,7 +239,11 @@
+ 
+ int av_cpu_count(void)
+ {
++#ifdef R4OS_VIDEO
++    atomic_int *printed = &r4video_ffmpeg_state()->cpu_printed;
++#else
+     static atomic_int printed = 0;
++#endif
+ 
+     int nb_cpus = 1;
+     int count   = 0;
+@@ -266,7 +282,12 @@
+     nb_cpus = sysinfo.dwNumberOfProcessors;
+ #endif
+ 
++#ifdef R4OS_VIDEO
++    nb_cpus = r4video_cpu_count();
++    if (!atomic_exchange_explicit(printed, 1, memory_order_relaxed))
++#else
+     if (!atomic_exchange_explicit(&printed, 1, memory_order_relaxed))
++#endif
+         av_log(NULL, AV_LOG_DEBUG, "detected %d logical cores\n", nb_cpus);
+ 
+     count = atomic_load_explicit(&cpu_count, memory_order_relaxed);
+--- a/libavutil/log.c
++++ b/libavutil/log.c
+@@ -46,7 +46,12 @@
+ #include "time.h"
+ #include "time_internal.h"
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define mutex (r4video_ffmpeg_state()->log_mutex)
++#else
+ static AVMutex mutex = AV_MUTEX_INITIALIZER;
++#endif
+ 
+ #define LINE_SZ 1024
+ 
+@@ -56,8 +61,14 @@
+ #define BACKTRACE_LOGLEVEL AV_LOG_ERROR
+ #endif
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define av_log_level (r4video_ffmpeg_state()->log_level)
++#define av_log_flags (r4video_ffmpeg_state()->log_flags)
++#else
+ static atomic_int av_log_level = AV_LOG_INFO;
+ static atomic_int av_log_flags = 0;
++#endif
+ 
+ #define NB_LEVELS 8
+ #if defined(_WIN32) && HAVE_SETCONSOLETEXTATTRIBUTE && HAVE_GETSTDHANDLE
+@@ -125,7 +136,12 @@
+ };
+ 
+ #endif
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define use_color (r4video_ffmpeg_state()->log_color)
++#else
+ static int use_color = -1;
++#endif
+ 
+ #if defined(_WIN32) && HAVE_SETCONSOLETEXTATTRIBUTE && HAVE_GETSTDHANDLE
+ static void win_console_puts(const char *str)
+@@ -379,12 +395,20 @@
+ 
+ void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
+ {
++#ifdef R4OS_VIDEO
++    struct r4video_ffmpeg_state *state = r4video_ffmpeg_state();
++#define print_prefix (state->log_prefix)
++#define count (state->log_count)
++#define prev (state->log_previous)
++#define is_atty (state->log_atty)
++#else
+     static int print_prefix = 1;
+     static int count;
+     static char prev[LINE_SZ];
++    static int is_atty;
++#endif
+     AVBPrint part[5];
+     char line[LINE_SZ];
+-    static int is_atty;
+     int type[2];
+     unsigned tint = 0;
+ 
+@@ -438,7 +462,19 @@
+     ff_mutex_unlock(&mutex);
+ }
+ 
++#ifdef R4OS_VIDEO
++#undef print_prefix
++#undef count
++#undef prev
++#undef is_atty
++#endif
++
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define av_log_callback (r4video_ffmpeg_state()->log_callback)
++#else
+ static atomic_uintptr_t av_log_callback = (uintptr_t)av_log_default_callback;
++#endif
+ 
+ void av_log(void* avcl, int level, const char *fmt, ...)
+ {
+--- a/libavutil/mem.c
++++ b/libavutil/mem.c
+@@ -71,7 +71,12 @@
+  * dynamic libraries and remove -Wl,-Bsymbolic from the linker flags.
+  * Note that this will cost performance. */
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++#define max_alloc_size (r4video_ffmpeg_state()->max_alloc_size)
++#else
+ static atomic_size_t max_alloc_size = INT_MAX;
++#endif
+ 
+ void av_max_alloc(size_t max){
+     atomic_store_explicit(&max_alloc_size, max, memory_order_relaxed);
+--- a/libavutil/random_seed.c
++++ b/libavutil/random_seed.c
+@@ -72,6 +72,10 @@
+ #endif
+ }
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_state.h"
++static uint32_t get_generic_seed(void) { return r4video_random_seed(); }
++#else
+ static uint32_t get_generic_seed(void)
+ {
+     uint64_t tmp[120/8];
+@@ -156,6 +160,8 @@
+     return AV_RB32(digest) + AV_RB32(digest + 16);
+ }
+ 
++#endif /* R4OS_VIDEO */
++
+ int av_random_bytes(uint8_t* buf, size_t len)
+ {
+     int err;

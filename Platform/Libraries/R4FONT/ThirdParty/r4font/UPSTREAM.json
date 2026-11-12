@@ -1,0 +1,111 @@
+{
+  "schema_version": 2,
+  "freetype": {
+    "project": "FreeType",
+    "version": "2.14.3",
+    "source": "https://gitlab.freedesktop.org/freetype/freetype.git",
+    "mirror": "https://github.com/freetype/freetype.git",
+    "tag": "VER-2-14-3",
+    "tag_object": "c740f0fda4274d6ffd2e5b64a25b06ef69803a07",
+    "commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+    "version_file": "freetype/include/freetype/freetype.h",
+    "version_markers": [
+      "#define FREETYPE_MAJOR  2",
+      "#define FREETYPE_MINOR  14",
+      "#define FREETYPE_PATCH  3"
+    ],
+    "license_choice": "FreeType License 1.0",
+    "license_files": {
+      "freetype/LICENSE.TXT": "84f47dc7f0887dd56b05f2f218060581c055e443bd7af18e46677bec3dcc2473",
+      "freetype/FTL.TXT": "308dca54b5aaa4a6ba0880621fe3bcf287956821aa948430263062a8333625c0",
+      "freetype/GPLv2.TXT": "6046da9f0fbc470892625b2f1313f16b5ca375b5c869b3540ea7ef2ad8877a12"
+    },
+    "vendored": [
+      "freetype/include",
+      "freetype/src/autofit",
+      "freetype/src/base",
+      "freetype/src/cff",
+      "freetype/src/gzip",
+      "freetype/src/psaux",
+      "freetype/src/pshinter",
+      "freetype/src/psnames",
+      "freetype/src/sfnt",
+      "freetype/src/smooth",
+      "freetype/src/truetype"
+    ],
+    "local_patches": [
+      {
+        "target": "src/sfnt/sfwoff2.c",
+        "patch": "Patches/freetype-2.14.3-r4font.patch",
+        "upstream_sha256": "9c67d2b0e2d0a88520bbfe132827252d0f7bd731bb735fba7a36575222d7cc72",
+        "patched_sha256": "b3b8f6286c522cf37f217a49ff12169db5e9351f8dd0462b21ca0e0954544875",
+        "patch_sha256": "ab49f2aceeddd0ddf365106375f83a59ea7ab74091df2c396ac1ff64f5e22442",
+        "apply": "git -c core.autocrlf=false apply Patches/freetype-2.14.3-r4font.patch",
+        "changes": [
+          "Use the owning FT_Memory for all Brotli decoder allocations.",
+          "Require complete Brotli input and output consumption.",
+          "Limit reconstructed SFNT data to 32 MiB."
+        ]
+      }
+    ]
+  },
+  "brotli": {
+    "project": "Google Brotli",
+    "version": "1.2.0",
+    "source": "https://github.com/google/brotli.git",
+    "tag": "v1.2.0",
+    "commit": "028fb5a23661f123017c060daa546b55cf4bde29",
+    "version_file": "brotli/common/version.h",
+    "version_markers": [
+      "#define BROTLI_VERSION_MAJOR 1",
+      "#define BROTLI_VERSION_MINOR 2",
+      "#define BROTLI_VERSION_PATCH 0"
+    ],
+    "license": "MIT",
+    "license_file": "brotli/LICENSE",
+    "license_file_sha256": "60ae0f13e76cc2eaaa108677eefa4ce16b647f6bbe8cf0a1ac9429d82eca7248",
+    "vendored": [
+      "brotli/common",
+      "brotli/dec",
+      "brotli/include"
+    ],
+    "local_patches": []
+  },
+  "zlib": {
+    "project": "zlib",
+    "version": "1.3.1",
+    "source": "https://github.com/madler/zlib.git",
+    "tag": "v1.3.1",
+    "tag_object": "925af44f3cde53c6b076611c297850091b5dc7bb",
+    "commit": "51b7f2abdade71cd9bb0e7a373ef2610ec6f9daf",
+    "version_file": "freetype/src/gzip/zlib.h",
+    "version_markers": [
+      "version 1.3.1, January 22nd, 2024"
+    ],
+    "provenance": "The zlib 1.3.1 subset is the snapshot bundled by the pinned FreeType 2.14.3 commit.",
+    "license": "Zlib",
+    "license_file": "ZLIB-LICENSE",
+    "license_file_sha256": "ee1e64c3fcad42e638318e43217d89791e1e61a50a1a2fa516ccee8725909d1e",
+    "included_by": "freetype/src/gzip/ftgzip.c",
+    "compiled_sources": [
+      "freetype/src/gzip/zutil.c",
+      "freetype/src/gzip/inffast.c",
+      "freetype/src/gzip/inflate.c",
+      "freetype/src/gzip/inftrees.c",
+      "freetype/src/gzip/adler32.c",
+      "freetype/src/gzip/crc32.c"
+    ],
+    "local_patches": [
+      "freetype/src/gzip/patches/freetype-zlib.diff is part of the pinned FreeType source snapshot."
+    ]
+  },
+  "verification": {
+    "file_manifest": "VENDOR.sha256",
+    "file_manifest_sha256": "d6e0b7d67c16b03c00dda57ac97ef2321c97d6b730ce76be0e7e7f74f5373c71",
+    "tracked_file_count": 399,
+    "check_script": "Tools/verify_vendor.py",
+    "check_script_sha256": "2402885a0a91aec1c4171e4e0074341cbd7a7af4c48894e148570ed049b6e548",
+    "check": "python R4FONT/ThirdParty/r4font/Tools/verify_vendor.py --check",
+    "write": "python R4FONT/ThirdParty/r4font/Tools/verify_vendor.py --write"
+  }
+}

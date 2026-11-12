@@ -1,0 +1,366 @@
+--- a/libavcodec/mpeg12.c
++++ b/libavcodec/mpeg12.c
+@@ -124,6 +124,10 @@
+ /******************************************/
+ /* decoding */
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_mpeg12_tables.h"
++void ff_mpeg12_init_vlcs(void) {}
++#else
+ VLCElem ff_mv_vlc[266];
+ 
+ VLCElem ff_dc_lum_vlc[512];
+@@ -178,6 +182,8 @@
+     ff_thread_once(&init_static_once, mpeg12_init_vlcs);
+ }
+ 
++#endif
++
+ #define MAX_INDEX (64 - 1)
+ 
+ int ff_mpeg1_decode_block_intra(GetBitContext *gb,
+--- a/libavcodec/msmpeg4_vc1_data.c
++++ b/libavcodec/msmpeg4_vc1_data.c
+@@ -32,12 +32,16 @@
+ #include "libavutil/attributes.h"
+ #include "libavutil/thread.h"
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_msmp4_tables.h"
++void ff_msmp4_vc1_vlcs_init_once(void) {}
++#else
+ VLCElem ff_msmp4_mb_i_vlc[536];
+ const VLCElem *ff_msmp4_dc_vlc[2][2];
+ 
++static VLCElem vlc_buf[1158 + 1118 + 1476 + 1216];
+ static av_cold void msmp4_vc1_vlcs_init(void)
+ {
+-    static VLCElem vlc_buf[1158 + 1118 + 1476 + 1216];
+     VLCInitState state = VLC_INIT_STATE(vlc_buf);
+ 
+     for (int i = 0; i < 2; i++) {
+@@ -58,6 +62,8 @@
+     static AVOnce init_static_once = AV_ONCE_INIT;
+     ff_thread_once(&init_static_once, msmp4_vc1_vlcs_init);
+ }
++
++#endif
+ 
+ /* intra picture macroblock coded block pattern */
+ const uint16_t ff_msmp4_mb_i_table[64][2] = {
+--- a/libavcodec/intrax8.c
++++ b/libavcodec/intrax8.c
+@@ -46,6 +46,9 @@
+ #define AC_VLC_MTD MAX_TABLE_DEPTH(AC_VLC_BITS, MAX_AC_VLC_BITS)
+ #define OR_VLC_MTD MAX_TABLE_DEPTH(OR_VLC_BITS, MAX_OR_VLC_BITS)
+ 
++#ifdef R4OS_VIDEO
++#include "r4video_intrax8_tables.h"
++#else
+ static const VLCElem *j_ac_vlc[2][2][8];  // [quant < 13], [intra / inter], [select]
+ static const VLCElem *j_dc_vlc[2][8];     // [quant], [select]
+ static const VLCElem *j_orient_vlc[2][4]; // [quant], [select]
+@@ -57,9 +60,9 @@
+                                            &table[0][0], 2, 1, 0, 0);
+ }
+ 
++static VLCElem vlc_buf[VLC_BUFFER_SIZE];
+ static av_cold void x8_vlc_init(void)
+ {
+-    static VLCElem vlc_buf[VLC_BUFFER_SIZE];
+     VLCInitState state = VLC_INIT_STATE(vlc_buf);
+     int i;
+ 
+@@ -84,6 +87,8 @@
+         j_orient_vlc[1][i] = x8_init_vlc(&state, OR_VLC_BITS, 12,
+                                          x8_orient_lowquant_table[i]);
+ }
++#endif
++
+ 
+ static void x8_reset_vlc_tables(IntraX8Context *w)
+ {
+@@ -681,7 +686,9 @@
+                                    int16_t block[64],
+                                    int mb_width, int mb_height)
+ {
++#ifndef R4OS_VIDEO
+     static AVOnce init_static_once = AV_ONCE_INIT;
++#endif
+ 
+     w->avctx = avctx;
+     w->mb_width  = mb_width;
+@@ -705,7 +712,9 @@
+     ff_intrax8dsp_init(&w->dsp);
+     ff_blockdsp_init(&w->bdsp);
+ 
++#ifndef R4OS_VIDEO
+     ff_thread_once(&init_static_once, x8_vlc_init);
++#endif
+ 
+     return 0;
+ }
+--- a/libavcodec/vc1dec.c
++++ b/libavcodec/vc1dec.c
+@@ -494,9 +494,10 @@
+     v->top_blk_sh  = 3;
+ }
+ 
++#ifndef R4OS_VIDEO
++static VLCElem vlc_table[32372];
+ static av_cold void vc1_init_static(void)
+ {
+-    static VLCElem vlc_table[32372];
+     VLCInitState state = VLC_INIT_STATE(vlc_table);
+ 
+     VLC_INIT_STATIC_TABLE(ff_vc1_norm2_vlc, VC1_NORM2_VLC_BITS, 4,
+@@ -583,6 +584,8 @@
+     }
+     ff_msmp4_vc1_vlcs_init_once();
+ }
++#endif
++
+ 
+ /**
+  * Init VC-1 specific tables and VC1Context members
+@@ -591,7 +594,9 @@
+  */
+ av_cold void ff_vc1_init_common(VC1Context *v)
+ {
++#ifndef R4OS_VIDEO
+     static AVOnce init_static_once = AV_ONCE_INIT;
++#endif
+     MpegEncContext *const s = &v->s;
+ 
+     /* defaults */
+@@ -610,7 +615,9 @@
+     ff_qpeldsp_init(&s->qdsp);
+ 
+     /* VLC tables */
++#ifndef R4OS_VIDEO
+     ff_thread_once(&init_static_once, vc1_init_static);
++#endif
+ }
+ 
+ /** Initialize a VC1/WMV3 decoder
+--- a/libavcodec/vc1data.c
++++ b/libavcodec/vc1data.c
+@@ -102,6 +102,9 @@
+  *  @todo TODO move this into the context
+  */
+ //@{
++#ifdef R4OS_VIDEO
++#include "r4video_vc1_tables.h"
++#else
+ VLCElem ff_vc1_imode_vlc[1 << VC1_IMODE_VLC_BITS];
+ VLCElem ff_vc1_norm2_vlc[1 << VC1_NORM2_VLC_BITS];
+ VLCElem ff_vc1_norm6_vlc[556];
+@@ -122,6 +125,8 @@
+ const VLCElem *ff_vc1_2ref_mvdata_vlc[8];
+ 
+ const VLCElem *ff_vc1_ac_coeff_table[8];
++#endif
++
+ 
+ //@}
+ 
+--- a/libavcodec/mpeg12vlc.h
++++ b/libavcodec/mpeg12vlc.h
+@@ -39,13 +39,41 @@
+ #define MB_PTYPE_VLC_BITS 6
+ #define MB_BTYPE_VLC_BITS 6
+ 
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_dc_lum_vlc[];
++#else
+ extern VLCElem ff_dc_lum_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_dc_chroma_vlc[];
++#else
+ extern VLCElem ff_dc_chroma_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_mbincr_vlc[];
++#else
+ extern VLCElem ff_mbincr_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_mb_ptype_vlc[];
++#else
+ extern VLCElem ff_mb_ptype_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_mb_btype_vlc[];
++#else
+ extern VLCElem ff_mb_btype_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_mb_pat_vlc[];
++#else
+ extern VLCElem ff_mb_pat_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_mv_vlc[];
++#else
+ extern VLCElem ff_mv_vlc[];
++#endif
+ 
+ void ff_mpeg12_init_vlcs(void);
+ 
+@@ -57,8 +85,16 @@
+ extern const uint16_t ff_mpeg1_vlc_table[MPEG12_RL_NB_ELEMS + 2][2];
+ extern const uint16_t ff_mpeg2_vlc_table[MPEG12_RL_NB_ELEMS + 2][2];
+ 
++#ifdef R4OS_VIDEO
++extern const RL_VLC_ELEM ff_mpeg1_rl_vlc[];
++#else
+ extern RL_VLC_ELEM ff_mpeg1_rl_vlc[];
++#endif
++#ifdef R4OS_VIDEO
++extern const RL_VLC_ELEM ff_mpeg2_rl_vlc[];
++#else
+ extern RL_VLC_ELEM ff_mpeg2_rl_vlc[];
++#endif
+ 
+ void ff_init_2d_vlc_rl(const uint16_t table_vlc[][2], RL_VLC_ELEM rl_vlc[],
+                        const int8_t table_run[], const uint8_t table_level[],
+--- a/libavcodec/msmpeg4_vc1_data.h
++++ b/libavcodec/msmpeg4_vc1_data.h
+@@ -34,9 +34,17 @@
+ void ff_msmp4_vc1_vlcs_init_once(void);
+ 
+ #define MSMP4_MB_INTRA_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_msmp4_mb_i_vlc[];
++#else
+ extern VLCElem ff_msmp4_mb_i_vlc[];
++#endif
+ #define MSMP4_DC_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_msmp4_dc_vlc[2 /* dc_table_index */][2 /* 0: luma, 1: chroma */];
++#else
+ extern const VLCElem *ff_msmp4_dc_vlc[2 /* dc_table_index */][2 /* 0: luma, 1: chroma */];
++#endif
+ 
+ /* intra picture macroblock coded block pattern */
+ extern const uint16_t ff_msmp4_mb_i_table[64][2];
+--- a/libavcodec/vc1data.h
++++ b/libavcodec/vc1data.h
+@@ -56,42 +56,114 @@
+  */
+ //@{
+ #define VC1_IMODE_VLC_BITS 4
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_vc1_imode_vlc[1 << VC1_IMODE_VLC_BITS];
++#else
+ extern VLCElem ff_vc1_imode_vlc[1 << VC1_IMODE_VLC_BITS];
++#endif
+ #define VC1_NORM2_VLC_BITS 3
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_vc1_norm2_vlc[1 << VC1_NORM2_VLC_BITS];
++#else
+ extern VLCElem ff_vc1_norm2_vlc[1 << VC1_NORM2_VLC_BITS];
++#endif
+ #define VC1_NORM6_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem ff_vc1_norm6_vlc[556];
++#else
+ extern VLCElem ff_vc1_norm6_vlc[556];
++#endif
+ /* Could be optimized, one table only needs 8 bits */
+ #define VC1_TTMB_VLC_BITS 9 //12
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_ttmb_vlc[3];
++#else
+ extern const VLCElem *ff_vc1_ttmb_vlc[3];
++#endif
+ #define VC1_MV_DIFF_VLC_BITS 9 //15
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_mv_diff_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_mv_diff_vlc[4];
++#endif
+ #define VC1_CBPCY_P_VLC_BITS 9 //14
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_cbpcy_p_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_cbpcy_p_vlc[4];
++#endif
+ #define VC1_ICBPCY_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_icbpcy_vlc[8];
++#else
+ extern const VLCElem *ff_vc1_icbpcy_vlc[8];
++#endif
+ #define VC1_4MV_BLOCK_PATTERN_VLC_BITS 6
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_4mv_block_pattern_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_4mv_block_pattern_vlc[4];
++#endif
+ #define VC1_2MV_BLOCK_PATTERN_VLC_BITS 3
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_2mv_block_pattern_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_2mv_block_pattern_vlc[4];
++#endif
+ #define VC1_TTBLK_VLC_BITS 5
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_ttblk_vlc[3];
++#else
+ extern const VLCElem *ff_vc1_ttblk_vlc[3];
++#endif
+ #define VC1_SUBBLKPAT_VLC_BITS 6
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_subblkpat_vlc[3];
++#else
+ extern const VLCElem *ff_vc1_subblkpat_vlc[3];
++#endif
+ #define VC1_INTFR_4MV_MBMODE_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_intfr_4mv_mbmode_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_intfr_4mv_mbmode_vlc[4];
++#endif
+ #define VC1_INTFR_NON4MV_MBMODE_VLC_BITS 6
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_intfr_non4mv_mbmode_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_intfr_non4mv_mbmode_vlc[4];
++#endif
+ #define VC1_IF_MMV_MBMODE_VLC_BITS 5
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_if_mmv_mbmode_vlc[8];
++#else
+ extern const VLCElem *ff_vc1_if_mmv_mbmode_vlc[8];
++#endif
+ #define VC1_IF_1MV_MBMODE_VLC_BITS 5
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_if_1mv_mbmode_vlc[8];
++#else
+ extern const VLCElem *ff_vc1_if_1mv_mbmode_vlc[8];
++#endif
+ #define VC1_1REF_MVDATA_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_1ref_mvdata_vlc[4];
++#else
+ extern const VLCElem *ff_vc1_1ref_mvdata_vlc[4];
++#endif
+ #define VC1_2REF_MVDATA_VLC_BITS 9
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_2ref_mvdata_vlc[8];
++#else
+ extern const VLCElem *ff_vc1_2ref_mvdata_vlc[8];
+-
++#endif
++
++#ifdef R4OS_VIDEO
++extern const VLCElem *const ff_vc1_ac_coeff_table[8];
++#else
+ extern const VLCElem *ff_vc1_ac_coeff_table[8];
++#endif
+ 
+ #define VC1_IF_MBMODE_VLC_BITS 5    // as a placeholder for VC1_IF_MMV_MBMODE_VLC_BITS
+                                     // or VC1_IF_1MV_MBMODE_VLC_BITS since they are the same
