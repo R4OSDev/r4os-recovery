@@ -48182,7 +48182,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "bf2067fda151909c8d1420b17e70614be9162fed8f7e5996a423f6df9df7503a",
+      "sha256": "bef693c98f000d6117eedc68ccc123379d06be18e5f570a9169d0679d80ace28",
       "originalSha256": null,
       "origin": null
     },
@@ -48206,7 +48206,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "a076d3b7a1d47bd3b106b4fc00c83b718e600ee5b5d8318df837c6685b17ee41",
+      "sha256": "412f48a7a432893d1e349eda69879d0e8ebe3196afe41abb4489f051f3e6a341",
       "originalSha256": null,
       "origin": null
     },
@@ -75621,6 +75621,21 @@
           "path": "Platform/Contract/Tools/ApiContractGen/src/generation2_technical.zig.in"
         }
       ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "bf2067fda151909c8d1420b17e70614be9162fed8f7e5996a423f6df9df7503a",
+          "after": "bef693c98f000d6117eedc68ccc123379d06be18e5f570a9169d0679d80ace28"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "a076d3b7a1d47bd3b106b4fc00c83b718e600ee5b5d8318df837c6685b17ee41",
+          "after": "412f48a7a432893d1e349eda69879d0e8ebe3196afe41abb4489f051f3e6a341"
+        }
+      ],
+      "reason": "0.90.88 Recovery72 Laufzeitidentitaeten an unveraenderten Menu28 anschliessen"
     }
   ],
   "sdkProfile": {
