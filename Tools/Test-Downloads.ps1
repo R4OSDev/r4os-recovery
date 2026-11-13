@@ -116,9 +116,14 @@ function Stop-Guest {
 }
 # Current source-bearing ZIPs exceed65MB. The complete witness includes
 # transfer, ZIP/file hashes, durable journal and verified cache publication.
-# Keep the existing R4OS300s bound for both complete-package workflows;
-# individual probes keep180s and product deadlines/retry limits stay intact.
-$packageWitnessTimeoutMs=300000
+# The observed65MB Recovery workflow completes in275s; the74MB R4OS
+# workflow reaches its final cache check at294s. Scale only this host
+# workflow allowance with actual ZIP bytes, with a hard ten-minute ceiling.
+# Individual probes keep180s and product deadlines/retry limits stay intact.
+$packageWitnessBytes=[Math]::Max(([IO.FileInfo]$good).Length,([IO.FileInfo]$normal).Length)
+$packageWitnessTimeoutMs=[int][Math]::Max(300000,120000+5000*[Math]::Ceiling($packageWitnessBytes/1MB))
+if($packageWitnessTimeoutMs -gt 600000){throw 'Fixture package exceeds the bounded ten-minute workflow allowance.'}
+Write-Host ("Full-package host witness bound: {0}ms, largest actual ZIP: {1} bytes." -f $packageWitnessTimeoutMs,$packageWitnessBytes)
 function Witness([string]$Argument,[int]$ExitCode=0,[int]$TimeoutMs=180000){
  $elapsed=[Diagnostics.Stopwatch]::StartNew()
  $text=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /DOWNLOADSMOKE $Argument")) '' $TimeoutMs $ExitCode
@@ -208,7 +213,7 @@ try{
   }
  }
  if((Get-RecoveryHash $scratch) -cne $targetBefore){throw 'An installation target was modified.'}
- $report=@{schema=1;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;targetBefore=$targetBefore;targetAfter=Get-RecoveryHash $scratch;runs=$runs;liveOnly=[bool]$LiveOnly;onlyR4OS=[bool]$OnlyR4OS;cuts=[bool](!$OnlyR4OS -and !$NoCuts -and !$LiveOnly)}
+ $report=@{schema=1;kernel=Get-RecoveryHash $kernel;runtime=Get-RecoveryHash $runtime;targetBefore=$targetBefore;targetAfter=Get-RecoveryHash $scratch;runs=$runs;liveOnly=[bool]$LiveOnly;onlyR4OS=[bool]$OnlyR4OS;cuts=[bool](!$OnlyR4OS -and !$NoCuts -and !$LiveOnly);packageWitnessTimeoutMs=$packageWitnessTimeoutMs;packageWitnessBytes=$packageWitnessBytes}
  Write-RecoveryJson (Join-Path $output 'download-results.json') $report
  Write-Host 'Recovery downloads: all requested witnesses passed; installation target unchanged.'
 }finally{

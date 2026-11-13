@@ -1056,11 +1056,12 @@
   },
   "download_host_witness_budget": {
     "observed_failure": "Research/API-ABI/Migration/0.90.85/DownloadTimeout180/Proof.json",
-    "change": "Only full-package publication and named-cut witnesses use existing300s R4OS host budget. Individual probes retain180s. Current source-bearing Recovery ZIP65.5MB reached verified publication at172s and exceeded180 before completion.",
+    "change": "Only full-package publication and named-cut host allowance: max300s,120s+5s perMiB of larger actual ZIP; hard600s ceiling. Individual probes180s and other Client defaults remain unchanged.",
     "product_inputs_unchanged": true,
     "product_deadlines_unchanged": true,
     "retry_limit": 3,
     "correctness_oracles_unchanged": true,
-    "native_status": "Full8 matrix rerun required; no success inferred from timeout."
+    "native_status": "Full matrix needs rerun after observed275s Recovery completion and R4OS final cache check at294s; product kernel/runtime/source39/Menu unchanged.",
+    "second_failure": "Research/API-ABI/Migration/0.90.85/DownloadTimeout300/Proof.json"
   }
 }
