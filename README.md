@@ -25,9 +25,27 @@ and deployment matrices retain their separate completion status.
 
 The current Linux/KVM qualification and exact source/artifact identities are
 recorded in Provenance and DOCUMENTATION.de.txt. Older candidate results keep
-their original pair identities. The 0.90.85 qualification is in progress;
-installation, update, fault-recovery and final normal-system benchmark results
-must be read at their actual recorded scope. This source work does not publish
+their original pair identities. The 0.90.85 Linux/KVM4 qualification passes
+RAM6/storage7/input8/menu6/package2/download8/install9/system-update3/recovery-
+update6 and the original host-fault cases. Download8 joins the exact main
+component and seven original cut/FAT cases; the original90s startup failure
+remains failed evidence. The original RAM UEFI pre-kernel Limine-open failure
+remains unresolved and tracked in Problems/coldboot audit87; the same-image
+fresh-variable diagnostic and one complete original6 countercheck pass.
+Install9 joins5 original operations and4 VerifyInstalled result boots after
+the preserved early-keyboard failure; actual second Terminal prompt admission,
+normal typedPOWEROFF and whole base-image oracles remain. System update
+uses the same visual host admission; Slim need not auto-start SSH.
+Recovery update retains all original6 native and6 injected host-fault
+cases with a private512MiB fault fixture and actual-GPT bounded host
+state/write-plan adapters; original256MiB pre-guest ImageFull is retained.
+Package READY reached69.277s; its ZIP-size-bounded host allowance preserves
+the original detach/hash/RAM/target oracles and product acknowledgement.
+One UEFI menu case lacks retained live-FD observation after an interruption;
+its original functional result remains intact. One independently verified normal STANDARD uses the
+unchanged five scored normal artifacts; it is not a Recovery performance claim.
+Claim/original import/fullGET/independent server scoring remain pending under
+the explicit local closure exception. This source work does not publish
 a binary release or qualify execution on Windows or physical hardware.
 The old technical platform provider remains until the controlled0.90.89 cutover.
 

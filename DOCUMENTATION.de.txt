@@ -24,8 +24,57 @@ freigegeben. Ein reales UEFI8GB-Repro zeigte zuvor eine fehlende fruehe
 Abbildung an4GB; daraus wird keine unbewiesene Bootloaderursache abgeleitet.
 Die bestehende UI-Probe reserviert danach eine Seite ab4GB, schreibt und
 liest zwei Marken, nullt sie und gibt sie frei. Der komplette UEFI-Menuefall
-und die BIOS-/lokalen Menuefaelle bestehen mit Kernel68. Weitere native
-Abnahmen und der einmalige normale STANDARD werden noch abgeschlossen.
+und die BIOS-/lokalen Menuefaelle bestehen mit Kernel69.
+Die aktuelle Linux/KVM4-Abnahme besteht: RAM6, Storage7, Input8,
+Menue6, Pakete2, Download8, Installation9, SYSTEMupdate3 und Recoveryupdate6
+samt bestehenden Host-Faultfaellen. Quellen, Container und reale Funktionen
+sind getrennt belegt; alte Kandidaten behalten ihre echten Paaridentitaeten.
+Die direkte TCP-/UDP-Grenzprobe laeuft am finalen Produktionspaar. Die
+urspruengliche Netzwerk3-Matrix stammt vom unmittelbaren Vorgaenger;
+das einzige folgende Kernel-Delta ist der getrennt gepruefte UDP-Erfolgsstatus.
+Ein urspruenglicher RAM-UEFI-Lauf scheitert vor dem Kerneintritt beim
+Limine-Oeffnen des vorhandenen, hashgleichen ELF. Derselbe Datentraeger
+startet mit frischen Firmwarevariablen; der begrenzte komplette Original6-
+Gegencheck besteht. Die Ursache bleibt offen (Problems.txt/Kaltstartaudit87),
+kein behobener Bootloaderfehler oder allgemeiner Zuverlaessigkeitsbeleg.
+Der letzte UEFI-Menuefall behaelt seinen originalen Funktionsnachweis;
+nach einer unterbrochenen Beobachtung fehlt nur dort die Live-vCPU-FD-Aufnahme.
+Die originale Paketmatrix besteht mit unveraenderten Quellenabzugs-, Hash-,
+RAM- und Zielschutzorakeln. READY braucht69.277s statt der alten Hostgrenze60s.
+Die Hostallowance ist max(60s,30s+2s/MiB), gedeckelt180s, Fallbudget300s;
+die produktive30s-Quittungsfrist nach READY bleibt unveraendert.
+Der originale Installationszeuge mit300s bleibt fehlgeschlagen erhalten;
+die fuenf originalen Installationsfaelle bestehen mit dem vorhandenen600s-
+Budget je erwarteter Gastquittung. Der anschliessende erste Ergebnisboot
+scheitert am zu fruehen Host-Tippen: Zuordnung der Platten ist noch kein
+abgeschlossener Desktopstart. Die Bildaufzeichnung und Originalfehlermeldung
+bleiben erhalten. Die vier originalen BIOS-/UEFI-Ergebnisbootorakel bestehen
+in einer getrennten VerifyInstalled-Fortsetzung: Nach der originalen TasteD
+wartet der Host begrenzt auf die tatsaechliche zweite Terminal-Eingabezeile.
+Die Bildvorlage stammt aus der erhaltenen erfolgreichen Diagnose; fruehere
+Bootbilder werden nachweislich abgelehnt. Normales Slim muss dafuer keinen
+SSH-Dienst automatisch starten. Der verworfene SSH-Hostversuch bleibt belegt.
+Beim aktualisierten SYSTEM ist auch eine einzige saubere Promptzeile
+gueltig; die fruehere enge Zweitzeilenpruefung bleibt als Fehlversuch
+erhalten. SYSTEMupdate3 verbindet zwei unveraenderte Operationsorakel mit
+einem getrennt fortgesetzten Ergebnisboot. Identitaeten,
+Terminal-POWEROFF und vollstaendige Unveraendertheit der Basisbilder werden
+weiter geprueft. Erhaltene gesamte Falldauern sind keine Produktzeitlimits;
+ein erfolgreicher monolithischer Installationsprozess wird nicht behauptet.
+Der urspruengliche Recoveryupdate-Hostlauf scheitert vor dem ersten Gast
+an seiner festen256MB-Faultfixture. Der neue unveraenderte Runtimeinhalt
+benoetigt mit zwei Slots und Cache mehr Platz. Die private512MB-Fortsetzung
+behaelt alle sechs injizierten Fehler, drei Erhaltungsfaelle, die komplette
+Rotation und alle sechs originalen Gastfaelle bei. Die Hosthilfen fuer
+Zustand und Writeplan lesen die tatsaechliche GPT und verwenden dieselbe
+begrenzte FAT-Backinglogik; feste2GB-Adressen entfallen nur im Hostzeugen.
+Alle6 Gastfallberichte enthalten PASS nach ihren originalen Nachbedingungen.
+Der Exitbeleg ihres Eltern-Wrappers fehlt; dessen OS-Exit bleibt unbekannt.
+Der getrennte lesende Vollstaendigkeitspruefer endet mit0 und wird nicht als
+erfundener Exit0 des urspruenglichen Gast-Gesamtprozesses ausgegeben.
+Produkt-/Paketstand bleibt unveraendert. Keine Installationserfolgssicht aus SSH
+oder bloss fortbestehendem Gast, keine Recoveryperformancewertung.
+
 
 Hostfixtures nutzen die bestehende sparse-faehige QemuMediaCopy-Grundlage
 mit vollstaendigem Bytevergleich. Die UI-Testmedien folgen der wirklichen
@@ -37,7 +86,7 @@ kohaerenten Paketabschluss separat; kein neues Binaerrelease aus diesem Text.
 Projektweite Abnahme: Docs/API/ConsumerMigration.txt und
 Research/API-ABI/Migration/0.90.85/ im koordinierenden Workspace.
 
-Netzanschluss der Generation2 (Qualifikation in Arbeit)
+Netzanschluss der Generation2 (lokal qualifiziert)
 --------------------------------------------------
 Der neue App2-Resolver verwendet den Familienvertrag der DNS-/TCP-/UDP-
 Dienste. Die uebernommenen alten Dienstimplementierungen beantworteten diese
@@ -55,8 +104,8 @@ andernfalls seine vorhandene Dispatcherplanung, ohne einen Anbieter zu erfinden.
 Direkte KVM4-App2-Proben pruefen Daten vor FIN/Reset, wiederholtes EOF/Reset,
 Closequittung, alte Identitaeten sowie UDP-Trunkierung, Leerpaket, Reihenfolge,
 Nullpuffer und WouldBlock. Der echte GitHub-API-/HTTPS-/Redirect-/Digestabruf
-besteht. Die komplette Download-/Install-/Updateabnahme bleibt bis zu ihrem
-eigenen nachgewiesenen Abschluss offen. Alte vollstaendige Netzfaelle behalten
+besteht. Die komplette Download-/Install-/Updateabnahme besteht im oben
+benannten lokalen Umfang. Alte vollstaendige Netzfaelle behalten
 ihre echten vorherigen Kernelhashes; die nachfolgende UDP-Korrektur aendert
 ausschliesslich den Erfolgsstatus des neuen privaten Empfangsaufrufs.
 
@@ -69,8 +118,26 @@ Der Host begrenzt Vollpaket- und benannte Cutpoint-Zeugen deshalb auf
 max(300s,120s+5s je angefangener MiB des groesseren ZIP), hoechstens600s;
 aktuell490s. Einzelne Fehlerproben behalten180s. Produktdeadlines und das
 Retrylimit3 sowie alle Cache-/Journal-/Zielschutzorakel bleiben unveraendert.
-Der neue Gesamtmatrixlauf ist weiterhin offen; einzelne bestandene Proben
-sind weder sein Abschluss noch ein Performanceziel.
+Die originale Download8-Matrix besteht in zwei expliziten Bloecken:
+vollstaendiger Hauptfall und sieben Hardcut-/FAT-Faelle, mit unveraenderten
+Cachehash-/Journal-/Zielschutzorakeln am selben finalen Produktpaar.
+Der fruehere Gesamtlauf mit90s-Startguard bleibt fehlgeschlagen erhalten.
+Eine unveraenderte Journalbild-Gegenprobe war nach156.436s bereit und pruefte
+beide kompletten Cachehashes ohne PART/TXN/Backup. Ausschliesslich Starts
+mit ausstehender Cachereparatur erhalten denselben groessenbegrenzten
+Hostzeugenzeitraum; normale Starts behalten90s. Keine Recoveryperformance-
+wertung oder vorgetaeuschter erfolgreicher monolithischer Gesamtlauf.
+
+
+Genau ein normaler STANDARD/Suite3/KVM4 ist lokal unabhaengig validiert:
+da33229a-9607-4d44-9ca7-dabb81130983, Gesamtindex130.000951. Alle30 Samples besitzen4/4 Worker,
+fuenf Metriken und sechs Scores sind aus Originaldaten rekonstruiert.
+Alle fuenf bewerteten Normalartefakte bleiben bytegleich zu84; daraus wird
+keine isolierte Recoveryperformance abgeleitet. Der normale Rust-Kernel477
+bleibt unveraendert. Lokal validiert; R4OS Server ausstehend: Claim,
+Originalimport, fullGET und unabhaengiges Serverscoring. Keine Windows- oder
+Realhardwareausfuehrung; keine neue Binaerveroeffentlichung durch85.
+Der kohaerente Distributionspin folgt in86, Altabschaltung in89.
 
 Historische Anbieterqualifikation0.90.84 folgt unveraendert.
 

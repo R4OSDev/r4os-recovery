@@ -838,7 +838,7 @@
     "normal_profile_sha256": "45909e9f8fe61dd3fe7f85cc8eed61d05a932755e14a91cfc94e94a15df18625",
     "runtime_codegen_unchanged": true
   },
-  "native_status": "pending",
+  "native_status": "PASS Linux/KVM4: RAM6/storage7/input8/UI6/package2/download8/install9/SYSTEMupdate3/Recoveryupdate6 and original host faults. Final typed network-family boundaries PASS; original network3 retains exact immediate ancestor identity and isolated UDP success-status delta. Original failures retained; no Windows/physical hardware or Recovery performance claim.",
   "public_binary_release": "not published; Distribution still pins68 until coherent release work.",
   "original_source_archives_unchanged": true,
   "runtime39_source_rebuilt_generation2": true,
@@ -1077,5 +1077,23 @@
     "ready_seconds": "max(60,30+2*ceil(actual normal ZIP MiB)), ceiling180",
     "case_default_seconds": 300,
     "product_unchanged": "Original30s post-READY release deadline, digest/source detach/close/target-write oracles unchanged. Product kernel/runtime/Menu bytes unchanged."
+  },
+  "local_qualification": {
+    "release": "0.90.85",
+    "normal_standard_run_id": "da33229a-9607-4d44-9ca7-dabb81130983",
+    "normal_standard_original_sha256": "272ceb2c350ed52e3b0c12dedec7b01b7ae5d3f1d16a503ee89e8ae660b7f1a8",
+    "normal_standard_scope": "One Suite3 with all4KVM CPUs, unchanged5 scored normal artifacts. No Recovery performance score.",
+    "server_rest": [
+      "Claim",
+      "original import",
+      "fullGET",
+      "independent server scoring"
+    ],
+    "source_archive_checkpoint": "560af57c16453bb1f15c201f5db817972121f71a",
+    "source_input_files": 4740,
+    "source_archives": 53,
+    "download_scope": "Actual complete original main component plus actual original7 continuation, same product and producer fixtures; original overall90s startup failure preserved.",
+    "install_scope": "Actual5 original operations plus4 exact source-derived VerifyInstalled result boots; original early-input failure retained, actual second Terminal prompt readiness, all original identity/keyboard shutdown/whole base unchanged oracles and actual4KVM each.",
+    "system_update_host_admission": "Joined2 original successful operation oracles plus1 separately resumed actual updated boot after preserving the narrow prompt-shape failure. Exact first clean or second transcript prompt admission; original identity/foreign partition/typed shutdown/base unchanged. No automatic SSHD prerequisite in Slim."
   }
 }
