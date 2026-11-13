@@ -114,6 +114,11 @@ function Stop-Guest {
   $process.Dispose();$script:process=$null
  }
 }
+# Current source-bearing ZIPs exceed65MB. The complete witness includes
+# transfer, ZIP/file hashes, durable journal and verified cache publication.
+# Keep the existing R4OS300s bound for both complete-package workflows;
+# individual probes keep180s and product deadlines/retry limits stay intact.
+$packageWitnessTimeoutMs=300000
 function Witness([string]$Argument,[int]$ExitCode=0,[int]$TimeoutMs=180000){
  $elapsed=[Diagnostics.Stopwatch]::StartNew()
  $text=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /DOWNLOADSMOKE $Argument")) '' $TimeoutMs $ExitCode
@@ -132,7 +137,7 @@ try{
  Start-Guest $image main
  if($OnlyR4OS){
   Cache-Matches $oldRecovery -Complete;Cache-Matches $oldNormal -R4OS -Complete
-  $null=Witness "R4OS $base normal" 0 300000
+  $null=Witness "R4OS $base normal" 0 $packageWitnessTimeoutMs
   Cache-Matches $normal -R4OS -Complete;Cache-Matches $oldRecovery -Complete
  }else{
  $null=Witness LIVE
@@ -149,14 +154,14 @@ try{
   $text=Witness "FIXTURE $base retry4" 1
   if($text -notmatch 'error=NetworkDownload' -or $server.Retry4Count -ne 4){throw 'Retry limit exceeded or wrong interruption result.'}
   Cache-Matches $oldRecovery -Complete
-  $text=Witness "FIXTURE $base retry3"
+  $text=Witness "FIXTURE $base retry3" 0 $packageWitnessTimeoutMs
   if($server.Retry3Count -ne 4 -or $text -notmatch 'Retry 3/3' -or $text -notmatch 'Loaded .* / .* \| [0-9]+% \| [0-9]+\.[0-9]+ (KB|MB)/s'){
    throw 'Three resumable retries or visible progress were not observed.'
   }
   Cache-Matches $good -Complete
-  $null=Witness "FIXTURE $base redirect";Cache-Matches $good -Complete;Cache-Matches $oldNormal -R4OS -Complete
-  $null=Witness "FIXTURE $base good";Cache-Matches $good -Complete
-  $null=Witness "R4OS $base normal" 0 300000;Cache-Matches $normal -R4OS -Complete;Cache-Matches $good -Complete
+  $null=Witness "FIXTURE $base redirect" 0 $packageWitnessTimeoutMs;Cache-Matches $good -Complete;Cache-Matches $oldNormal -R4OS -Complete
+  $null=Witness "FIXTURE $base good" 0 $packageWitnessTimeoutMs;Cache-Matches $good -Complete
+  $null=Witness "R4OS $base normal" 0 $packageWitnessTimeoutMs;Cache-Matches $normal -R4OS -Complete;Cache-Matches $good -Complete
  }
  }
  $runs+=@{name='main';seconds=$watch.Elapsed.TotalSeconds};Stop-Guest
@@ -170,7 +175,7 @@ try{
    foreach($argument in (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /DOWNLOADSMOKE CUT $base $cut"))){$start.ArgumentList.Add($argument)}
    $holder=[Diagnostics.Process]::Start($start);$holder.StandardInput.Close();$holderOut=$holder.StandardOutput.ReadToEndAsync();$holderErr=$holder.StandardError.ReadToEndAsync()
    try{
-    $ready=$false;$deadline=[DateTime]::UtcNow.AddSeconds(180)
+    $ready=$false;$deadline=[DateTime]::UtcNow.AddMilliseconds($packageWitnessTimeoutMs)
     while(!$holder.HasExited -and [DateTime]::UtcNow -lt $deadline){
      if((Ssh 'DIR C:\TEMP') -match 'DOWNLOAD.RDY'){$ready=$true;break};Start-Sleep -Milliseconds 250
     }
@@ -196,7 +201,7 @@ try{
    Start-Guest $image "fat-$fault"
    if($fault -eq 'orphan-create'){Cache-Matches $oldRecovery -Complete}
    else{Cache-Matches $good -Complete}
-   if($fault -in @('lfn-detached','orphan-create')){$null=Witness LFN;$null=Witness "FIXTURE $base good";Cache-Matches $good -Complete}
+   if($fault -in @('lfn-detached','orphan-create')){$null=Witness LFN;$null=Witness "FIXTURE $base good" 0 $packageWitnessTimeoutMs;Cache-Matches $good -Complete}
    Cache-Matches $oldNormal -R4OS -Complete
    $runs+=@{name="fat-$fault";seconds=$watch.Elapsed.TotalSeconds};Stop-Guest
    $null=[RecoveryDownloadFatFaults]::Check($image)

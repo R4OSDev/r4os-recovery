@@ -1053,5 +1053,14 @@
       "delta": "Capability-check absent optional thread_current_handle/thread_placement_set/thread_placement_get before preferred-dispatcher policy. Existing Recovery scheduling retained; real present placement providers still require ACK. No fabricated provider capability."
     },
     "udp_result_correction": "Actual wire regression found missing result=0 on private receive success/would-block. Existing owner LIMIT and typed TCP EOF/reset passed. New UDP qualification pending; previous native3 belongs to exact previous production69 hash."
+  },
+  "download_host_witness_budget": {
+    "observed_failure": "Research/API-ABI/Migration/0.90.85/DownloadTimeout180/Proof.json",
+    "change": "Only full-package publication and named-cut witnesses use existing300s R4OS host budget. Individual probes retain180s. Current source-bearing Recovery ZIP65.5MB reached verified publication at172s and exceeded180 before completion.",
+    "product_inputs_unchanged": true,
+    "product_deadlines_unchanged": true,
+    "retry_limit": 3,
+    "correctness_oracles_unchanged": true,
+    "native_status": "Full8 matrix rerun required; no success inferred from timeout."
   }
 }
