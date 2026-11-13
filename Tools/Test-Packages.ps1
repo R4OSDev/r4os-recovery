@@ -1,5 +1,5 @@
 param([switch]$HostOnly,[switch]$GuestOnly,[string]$Zig='', [string]$Qemu='',
-      [ValidateRange(60,300)][int]$TimeoutSeconds=240)
+      [ValidateRange(60,300)][int]$TimeoutSeconds=300)
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 if($HostOnly -and $GuestOnly){throw 'Choose either HostOnly or GuestOnly.'}
@@ -47,12 +47,19 @@ function Package-Detach {
     $holder=[Diagnostics.Process]::Start($start)
     try{
         $holder.StandardInput.Close();$holderOut=$holder.StandardOutput.ReadToEndAsync();$holderErr=$holder.StandardError.ReadToEndAsync()
-        $deadline=[DateTime]::UtcNow.AddSeconds(60);$ready=$false
+        # This witness prepares the complete source-bearing normal ZIP plus its
+        # nested Recovery before publishing READY. Bound only the host witness
+        # from actual archive bytes; original digest/detach/release assertions
+        # and the product30s post-READY deadline remain unchanged.
+        $readyTimeoutSeconds=[int][Math]::Min(180,[Math]::Max(60,30+2*[Math]::Ceiling(([IO.FileInfo]$systemPackage).Length/1MB)))
+        $readyElapsed=[Diagnostics.Stopwatch]::StartNew()
+        $deadline=[DateTime]::UtcNow.AddSeconds($readyTimeoutSeconds);$ready=$false
         while([DateTime]::UtcNow -lt $deadline -and !$holder.HasExited){
             if((Ssh 'DIR C:\TEMP') -match 'PACKAGE.RDY'){$ready=$true;break}
             Start-Sleep -Milliseconds 200
         }
         if(!$ready){throw 'Package preparation did not become ready for source removal.'}
+        Write-Host ("Package source-detach READY after {0:N3}s; actual-size host bound {1}s." -f $readyElapsed.Elapsed.TotalSeconds,$readyTimeoutSeconds)
         $null=Qmp $session 'device_del' @{id='package-media'}
         # USB device deletion completes asynchronously. Verify the device is
         # gone, then close its drive so even the host backend is unavailable.

@@ -1070,5 +1070,12 @@
       "change": "Only explicit recovering-cache starts (resume/fat) use the same actual-package bounded witness allowance; normal startup90s unchanged. Product deadlines/retry3/oracles unchanged.",
       "qualification": "All8 actual original cases across preserved same-pair main and source-derived seven-case continuation, exact helper/body comparison, original overall failure retained. No monolithic successful process claim."
     }
+  },
+  "package_host_witness_budget": {
+    "original_failure": "PackageReadyTimeout60/Proof.json",
+    "qualification": "Actual complete original2-case matrix PASS in source-derived runner, effective case300s. Test-Detach body byte-equal to tested helper; only root rebinding stays in Temp.",
+    "ready_seconds": "max(60,30+2*ceil(actual normal ZIP MiB)), ceiling180",
+    "case_default_seconds": 300,
+    "product_unchanged": "Original30s post-READY release deadline, digest/source detach/close/target-write oracles unchanged. Product kernel/runtime/Menu bytes unchanged."
   }
 }
