@@ -843,10 +843,10 @@
   "original_source_archives_unchanged": true,
   "runtime39_source_rebuilt_generation2": true,
   "corresponding_sources": {
-    "commit": "8e6bf547e8e70e7eb2ae21687b98a94886409331",
+    "commit": "7db8313265219bf4ea27a75b242738fab11f3a10",
     "files": 684,
     "archive": "Recovery-Embedded-0.90.85.zip",
-    "sha256": "8d2d2c95b68a6343df9b85a8a3c72b701eea87e3eb65cc86ef7ddb3bbbf6cb40",
+    "sha256": "3a45b2184e96a53a6bcf32ffcb6aca07072f6a137a4d556fbaf3a54098b252bd",
     "controller_commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
     "controller_archive": "SDK-Controller-0.90.85.zip",
     "controller_sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",

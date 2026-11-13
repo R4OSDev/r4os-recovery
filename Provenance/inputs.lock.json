@@ -331,8 +331,8 @@
     {
       "id": "Recovery-Embedded-0.90.85",
       "archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
-      "archiveSha256": "8d2d2c95b68a6343df9b85a8a3c72b701eea87e3eb65cc86ef7ddb3bbbf6cb40",
-      "commit": "8e6bf547e8e70e7eb2ae21687b98a94886409331",
+      "archiveSha256": "3a45b2184e96a53a6bcf32ffcb6aca07072f6a137a4d556fbaf3a54098b252bd",
+      "commit": "7db8313265219bf4ea27a75b242738fab11f3a10",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     },
     {
@@ -7106,7 +7106,7 @@
         "path": "Legal/Sources/README-0.90.85.txt",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "47b5479618ac332222543b340022cb0da9a86bd79150d9f100a836388bd994ae",
+      "sha256": "52627c0c534a5451288adee2bcc986e3473c420401aae467a06e8afb447660aa",
       "bytes": 2352
     },
     {
@@ -7117,8 +7117,8 @@
         "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "8d2d2c95b68a6343df9b85a8a3c72b701eea87e3eb65cc86ef7ddb3bbbf6cb40",
-      "bytes": 8116086
+      "sha256": "3a45b2184e96a53a6bcf32ffcb6aca07072f6a137a4d556fbaf3a54098b252bd",
+      "bytes": 8116203
     },
     {
       "path": "Legal/Sources/SDK-0.90.84.zip",
