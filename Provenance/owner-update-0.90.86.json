@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "release": "0.90.86",
+  "scope": "Current source/artifact binding; full final native and release closure remain pending.",
+  "previous_owner_record": "Provenance/owner-update-0.90.85.json",
+  "versions": {
+    "recovery": "0.1.71",
+    "recovery_kernel": "0.1.70",
+    "menu": "0.1.28",
+    "controller_sdk": "0.64.214",
+    "snapshot_contract": "0.64.93",
+    "snapshot_sdk": "0.64.210",
+    "snapshot_libraries": "0.64.58"
+  },
+  "corresponding_sources": {
+    "recovery_commit": "93d1b8d1c8174f168e27e3b16be49e06a98d5c11",
+    "recovery_archive": "Legal/Sources/Recovery-Embedded-0.90.86.zip",
+    "recovery_sha256": "471d04c85eecf5a6e3335333ba3d19f7b52e4e47a03793cb44e880936d7c95e7",
+    "recovery_files": 691,
+    "controller_commit": "2de035e42ee40982f344a1e8d76f8dd925fd9057",
+    "controller_archive": "Legal/Sources/SDK-Controller-0.90.86.zip",
+    "controller_sha256": "025cce489668902cbd323e109ad9e803af4ddd9d7d2eed5d0b201c23e216a1a8",
+    "controller_files": 1166,
+    "controller_eol_projection": [
+      {
+        "path": "Build.bat",
+        "committed_sha256": "c1c1f557edcaba4064637d9622a96d9ea618ca8c2219f0258021986978844060",
+        "archive_sha256": "5c5dc20f60c336b7305194d89124929f1ca6d7ff3574591cedbb52e8ee9db881",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Templates/HostShared/Build.bat",
+        "committed_sha256": "98fbb06d5ee2617fbfd540279b281c71b21c02ec1a8ef75d305426fa9db477c4",
+        "archive_sha256": "f343e0516a203625f61f6fa606747f09c2312edb5f309752368ca0f37c4f58dc",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Templates/R4L/Rust/Build.bat",
+        "committed_sha256": "98fbb06d5ee2617fbfd540279b281c71b21c02ec1a8ef75d305426fa9db477c4",
+        "archive_sha256": "f343e0516a203625f61f6fa606747f09c2312edb5f309752368ca0f37c4f58dc",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Templates/R4OS/RustShared/Build.bat",
+        "committed_sha256": "98fbb06d5ee2617fbfd540279b281c71b21c02ec1a8ef75d305426fa9db477c4",
+        "archive_sha256": "f343e0516a203625f61f6fa606747f09c2312edb5f309752368ca0f37c4f58dc",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Tools/Build-Project.bat",
+        "committed_sha256": "4603681b4f4c37ee302075d4010df5255aae95694a14af30df15349e6a834175",
+        "archive_sha256": "861fe669488c1d524f93c7d12e6c4515765839244f92b1cd75cc69fdd5c68ae0",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Tools/New-Project.bat",
+        "committed_sha256": "ec4db65df7685723c0e02dbbcc139acb86b6d3d966ce7260b40695021ab78485",
+        "archive_sha256": "946babff8f8360d9fea0e5409f380c4bbaa006f96a177df20a3e293e61523f81",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Tools/New-Project.ps1",
+        "committed_sha256": "3c68f2f18536d442bf436983f8fc8ddfe7600ef4cd38ad20ea1e872a338b8a86",
+        "archive_sha256": "22b33c6497482578494c36a86ecfb1562b6f31f4bbcba67d74e7fe1bd0dd19bc",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Tools/New-RustProject.ps1",
+        "committed_sha256": "5d57087da566c5cee25657b0d1f6f57860537d752eb7429e1b8709503fafec72",
+        "archive_sha256": "142921b54976c9c65b3ff46a740a860adb09cba4485d7aa8e0faa195a0ea8177",
+        "attribute": "eol=crlf"
+      },
+      {
+        "path": "Tools/Setup.bat",
+        "committed_sha256": "aa603888e1e4ec2b7bdb2ac86fc0f4b33985ccad899d8d09e82c9c9758582b88",
+        "archive_sha256": "19133d0172f16908143666a33f143da31e7f883a36c34e76de2ef0b9e50ca18b",
+        "attribute": "eol=crlf"
+      }
+    ]
+  },
+  "original53_source_archives_unchanged": true,
+  "all39_and_menu28_byte_unchanged": true,
+  "built_pair": {
+    "runtime.img": {
+      "bytes": 67108864,
+      "sha256": "786ec5ca420497988bdc19e19d124a10c41abbe633ac88246a0cec048cc3e1e4"
+    },
+    "recovery.elf": {
+      "bytes": 18284816,
+      "sha256": "ac2a859a576782927049bd5d9fc8cbe6c58d56bae14f6f94257f1b2a8db9d315"
+    },
+    "RECOVERY.R4X": {
+      "bytes": 1174631,
+      "sha256": "c0c3a027ae0ceb414554d98f0fe836ff717b2ae6bb285ee04a0d48fb5b91fdac"
+    }
+  },
+  "source_plan": "Provenance/embedded-build-plan.json",
+  "builder": "Tools/Embedded.ps1",
+  "builder_sha256": "cedd20788effe6270b5a9e569f4727cd09cc7083b047e670f02b1fe0ef2c8318",
+  "host_witness": "Bounded visible terminal readiness for existing Install/SYSTEM-update cases; dynamic package-sized host fixture budget. Both adopted from actual prior qualification, preserving original native oracles.",
+  "native_status": "Pending on this exact71/70 paired artifact and final coherent normal86 target set.",
+  "public_binary_release": false
+}
