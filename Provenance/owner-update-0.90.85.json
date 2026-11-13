@@ -561,11 +561,11 @@
       "name": "TCPSVC",
       "version": "0.1.7",
       "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
-      "sha256": "12c0fd4bf95e03d29569e25a75b65109d70757d4fd663199e5c93f55b0180275",
+      "sha256": "d3b8e28699825588206be92c32b372b4a36d82f957d1ba8537cda72b32122e79",
       "bytes": 275760,
       "source": "Services-TcpService",
       "source_path": "RecoveryTools/Embedded/Services-TcpService",
-      "source_tree_sha256": "48f845bac7716659f89f5aa6367cb635509932282001a921c285577cae601ce3",
+      "source_tree_sha256": "2c17af052790470efcc3555be81013c5d135eac908f9e8676fbb9fe3674042b3",
       "imports": [
         "R4SYS:Query2:2",
         "R4NET:Query2:2"
@@ -843,19 +843,17 @@
   "original_source_archives_unchanged": true,
   "runtime39_source_rebuilt_generation2": true,
   "corresponding_sources": {
-    "commit": "d0740fe257f8b172dd333cb9f6b86aa9e52bc80c",
-    "files": 393,
+    "commit": "8e6bf547e8e70e7eb2ae21687b98a94886409331",
+    "files": 684,
     "archive": "Recovery-Embedded-0.90.85.zip",
-    "sha256": "b9a84499e523d72fd3ecdaf5bfecfec424fbd7875932fb337d717f1a37a345a0",
+    "sha256": "8d2d2c95b68a6343df9b85a8a3c72b701eea87e3eb65cc86ef7ddb3bbbf6cb40",
     "controller_commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
     "controller_archive": "SDK-Controller-0.90.85.zip",
     "controller_sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
-    "archive_method": "raw committed blob bytes; commit timestamp and Git file modes; all393 independently compared",
     "all_curated_source_bytes_equal_current_checkout": true,
-    "all39_module_sources_unchanged": true,
     "all_checkpoint_locked_bytes_match_raw_git_archive": true,
-    "checkpoint_locked_files": 4733,
-    "scope": "Source build checkpoint only. All39 admitted module sources/artifacts unchanged; Menu controlled memory-refusal witness and actual host fixture revisions included. Final native acceptance and public publication separate."
+    "checkpoint_locked_files": 4740,
+    "archive_method": "Raw committed blobs, Git modes and commit time; every raw source independently compared. Includes complete ownKernel69 and all38 derivatives, Menu, builders; native pending."
   },
   "ssh_completion_correction": {
     "reason": "Observed native truncated successful SSH exec during UEFI GPT repair; guest serial proves command completed.",
@@ -1044,6 +1042,15 @@
     "kernel_reference_commit": "d35c52d69ce6d9cf247f17c8d70905d7e65fd344",
     "scope": "IPv4 private backend Info and retained TCP client slot/cause, original-length UDP datagrams. Existing legacy service wire remains for actual low-level SSH/FTP consumers; App2 resolver/download uses real typed family RPC, no silent old-provider fallback.",
     "capability_limits": "IPv4 client TCP and UDP. No typed retained listener, IPv6 transport or dual-stack capability advertised.",
-    "native_status": "Pending: exact source builds and host retained FIN/RST lifetime regression passed; native download/deployment qualification follows."
+    "native_status": "Pending after first real native69 missing-thread-placement failure and explicit optional-policy capability check. Private source fixture retains first failure.",
+    "optional_dispatcher_policy": {
+      "source": "Services-TcpService-NetworkFamily-0.90.85",
+      "path": "src/main.zig",
+      "commit": "05efdb2e9f05338e1bea22a0104f1f57d9a047ea",
+      "sha256": "74f8742fcbf11be2f3a2439c54018bba67348670b62a2d988387224b5ab7623e",
+      "canonicalBytes": false,
+      "recoveryDerivativeSha256": "97a5149020d1dc76765408441e4fe7b4b2fed80cfada30f8c17a2771171f2a10",
+      "delta": "Capability-check absent optional thread_current_handle/thread_placement_set/thread_placement_get before preferred-dispatcher policy. Existing Recovery scheduling retained; real present placement providers still require ACK. No fabricated provider capability."
+    }
   }
 }

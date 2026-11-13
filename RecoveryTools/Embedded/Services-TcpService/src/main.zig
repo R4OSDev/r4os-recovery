@@ -261,6 +261,10 @@ pub fn r4_app_main(r4_app: *r4os.App2) i32 {
 }
 
 fn configureDispatcherScheduling(app: *const App) i32 {
+    // Recovery has no optional thread-placement provider. Keep its existing
+    // dispatcher scheduling; a missing performance policy is not a failed
+    // TCP endpoint. Present providers still require the real placement ACK.
+    if (!app.sys.hasFn("thread_current_handle") or !app.sys.hasFn("thread_placement_set") or !app.sys.hasFn("thread_placement_get")) return r4os.abi.thread_ok;
     // TCP dispatch is on the finite-deadline path of several independent
     // clients. Use the existing bounded completion class without changing
     // CPU admission, caller deadlines or the scheduler's fairness budget.
