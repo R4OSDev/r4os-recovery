@@ -88,7 +88,9 @@ $scratch=Join-Path $output 'untouched.img';$file=[IO.File]::Create($scratch);try
 $targetBefore=Get-RecoveryHash $scratch
 $server=[RecoveryDownloadFixtureServer]::new($output);$base="http://10.0.2.2:$($server.Port)"
 $script:process=$null;$runs=@()
-function Start-Guest([string]$Image,[string]$Label){
+function Start-Guest([string]$Image,[string]$Label,[switch]$RecoveringCache){
+ # Cache journal recovery validates complete source-bearing ZIPs before bootReady.
+ $startupTimeoutMs=if($RecoveringCache){$packageWitnessTimeoutMs}else{90000}
  $script:name=$Label;$script:serialLog=Join-Path $output "$Label-serial.log";$script:clientLog=Join-Path $output "$Label-clients.log"
  if(Test-Path -LiteralPath $serialLog){Remove-Item -LiteralPath $serialLog -Force}
  [IO.File]::WriteAllText($clientLog,'',$utf8);$script:sshPort=Free-Port
@@ -101,7 +103,7 @@ function Start-Guest([string]$Image,[string]$Label){
  $script:process=[Diagnostics.Process]::Start($start);$script:qemuOut=$process.StandardOutput.ReadToEndAsync();$script:qemuErr=$process.StandardError.ReadToEndAsync();$script:watch=[Diagnostics.Stopwatch]::StartNew()
  while($true){
   $text=if(Test-Path $serialLog){Get-Content -Raw $serialLog}else{''}
-  if($text -match '\[CRASH\]' -or $process.HasExited -or $watch.Elapsed.TotalSeconds -gt 90){throw "Guest startup failed: $Label"}
+  if($text -match '\[CRASH\]' -or $process.HasExited -or $watch.Elapsed.TotalMilliseconds -gt $startupTimeoutMs){throw "Guest startup failed: $Label"}
   if($text -match '\[RECOVERY\] shell=READY' -and $text -match '\[RECOVERYNET\] autostart=RETURNED' -and $text -match 'DHCP05913 state=bound'){break}
   Start-Sleep -Milliseconds 100
  }
@@ -192,7 +194,7 @@ try{
     if(!$holder.HasExited){$holder.Kill($true);$holder.WaitForExit()}
     [IO.File]::WriteAllText((Join-Path $output "cut-$cut-holder.log"),$holderOut.GetAwaiter().GetResult()+$holderErr.GetAwaiter().GetResult(),$utf8);$holder.Dispose()
    }
-   Start-Guest $image "resume-$cut"
+   Start-Guest $image "resume-$cut" -RecoveringCache
    Cache-Matches $good -Complete;Cache-Matches $oldNormal -R4OS -Complete
    $runs+=@{name="power-cut-$cut";seconds=$watch.Elapsed.TotalSeconds};Stop-Guest
    $null=[RecoveryDownloadFatFaults]::Check($image)
@@ -203,7 +205,7 @@ try{
    $source=Join-Path $output $(if($fault -eq 'orphan-create'){'disk-1.img'}else{'journal-durable.img'})
    Copy-Item -LiteralPath $source -Destination $image -Force
    [RecoveryDownloadFatFaults]::Patch($image,$fault)
-   Start-Guest $image "fat-$fault"
+   Start-Guest $image "fat-$fault" -RecoveringCache
    if($fault -eq 'orphan-create'){Cache-Matches $oldRecovery -Complete}
    else{Cache-Matches $good -Complete}
    if($fault -in @('lfn-detached','orphan-create')){$null=Witness LFN;$null=Witness "FIXTURE $base good" 0 $packageWitnessTimeoutMs;Cache-Matches $good -Complete}

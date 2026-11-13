@@ -3,8 +3,8 @@
 
 Stand 0.90.85: Recovery0.1.70 / eigener Kernel0.1.69 / Menue0.1.28
 ----------------------------------------------------------------
-Aktueller Quellstand:39 aus Quellen gebaute Runtimevarianten mit58 echten
-Query2:2-Imports;14 Start2-,8 DriverInit2-,16 ProtocolInit2-Einstiege und
+Aktueller Quellstand:39 aus Quellen gebaute Runtimevarianten mit58 Imports:
+56 Query2:2 sowie R4STDs eigene DATE_V1/TIME_V1.14 Start2-,8 DriverInit2-,16 ProtocolInit2-Einstiege und
 R4STDs unabhaengiger Libraryvertrag mit technischem Query2-Einstieg.
 38 ausdrueckliche Besitzerableitungen liegen in RecoveryTools/Embedded/;
 R4STD0.2.9 stammt kanonisch aus Platform/Libraries/ mit Libraries0.64.58.
@@ -59,6 +59,18 @@ besteht. Die komplette Download-/Install-/Updateabnahme bleibt bis zu ihrem
 eigenen nachgewiesenen Abschluss offen. Alte vollstaendige Netzfaelle behalten
 ihre echten vorherigen Kernelhashes; die nachfolgende UDP-Korrektur aendert
 ausschliesslich den Erfolgsstatus des neuen privaten Empfangsaufrufs.
+
+Groessenabhaengige Hostzeugenfristen
+----------------------------------
+Die mitgelieferten Quellen vergroessern die Vollpakete. Reale Hostfristen
+von180s und300s endeten waehrend weiter fortschreitender Paketvalidierung
+und Cacheveroeffentlichung; diese Fehlversuche bleiben als solche erhalten.
+Der Host begrenzt Vollpaket- und benannte Cutpoint-Zeugen deshalb auf
+max(300s,120s+5s je angefangener MiB des groesseren ZIP), hoechstens600s;
+aktuell490s. Einzelne Fehlerproben behalten180s. Produktdeadlines und das
+Retrylimit3 sowie alle Cache-/Journal-/Zielschutzorakel bleiben unveraendert.
+Der neue Gesamtmatrixlauf ist weiterhin offen; einzelne bestandene Proben
+sind weder sein Abschluss noch ein Performanceziel.
 
 Historische Anbieterqualifikation0.90.84 folgt unveraendert.
 
@@ -279,7 +291,8 @@ Zertifikate, Tastatur-/Zeitkonfiguration und eingebettete Modulressourcen
 werden ebenfalls festgehalten. Weitere Recovery-eigene Laufzeitdateien
 kommen mit ihren jeweiligen Implementierungsschritten hinzu.
 
-Aktueller Bestand0.90.85:39 Binaerdateien mit58 expliziten Query2:2-Imports.
+Aktueller Bestand0.90.85:39 Binaerdateien mit58 expliziten Imports:
+56 Query2:2 sowie R4STDs unveraenderte DATE_V1/TIME_V1.
 Die Plattformprovider sind R4SYS, R4DESK, R4DEV und R4NET; das separate
 Menue bindet zusaetzlich R4DRAW ueber Query2:2. Der vollstaendige gepinnte
 Contract bleibt erhalten; seine Tabellen werden nicht aufgrund

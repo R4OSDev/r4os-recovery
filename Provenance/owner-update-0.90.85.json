@@ -1061,7 +1061,14 @@
     "product_deadlines_unchanged": true,
     "retry_limit": 3,
     "correctness_oracles_unchanged": true,
-    "native_status": "Full matrix needs rerun after observed275s Recovery completion and R4OS final cache check at294s; product kernel/runtime/source39/Menu unchanged.",
-    "second_failure": "Research/API-ABI/Migration/0.90.85/DownloadTimeout300/Proof.json"
+    "native_status": "PASS actual joined8, current production pair unchanged; main/cut/fault scopes and original failures retained.",
+    "second_failure": "Research/API-ABI/Migration/0.90.85/DownloadTimeout300/Proof.json",
+    "startup_recovery": {
+      "original_failure": "Research/API-ABI/Migration/0.90.85/DownloadResumeStartup90/Proof.json",
+      "unchanged_replay": "Research/API-ABI/Migration/0.90.85/DownloadJournalReplay69/Proof.json",
+      "ready_seconds": 156.43604100693483,
+      "change": "Only explicit recovering-cache starts (resume/fat) use the same actual-package bounded witness allowance; normal startup90s unchanged. Product deadlines/retry3/oracles unchanged.",
+      "qualification": "All8 actual original cases across preserved same-pair main and source-derived seven-case continuation, exact helper/body comparison, original overall failure retained. No monolithic successful process claim."
+    }
   }
 }
