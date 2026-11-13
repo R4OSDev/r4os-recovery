@@ -15,7 +15,7 @@ pub const Slot = struct {
     pub fn read(a: std.mem.Allocator, bytes: []const u8, hidden: u64, prefix: []const u8, pump: Pump) !Slot {
         return readSource(a, tools.byte_source.Source.slice(bytes), hidden, prefix, pump, null);
     }
-    fn readSource(a: std.mem.Allocator, source: tools.byte_source.Source, hidden: u64, prefix: []const u8, pump: Pump, backing: ?*tools.fat32_update.Backing) !Slot {
+    pub fn readSource(a: std.mem.Allocator, source: tools.byte_source.Source, hidden: u64, prefix: []const u8, pump: Pump, backing: ?*tools.fat32_update.Backing) !Slot {
         const view = try tools.fat32_view.View.initSource(source, hidden);
         const manifest_path = try std.fmt.allocPrint(a, "{s}/manifest.json", .{prefix});
         const manifest_bytes = try view.readFile(a, manifest_path, package.max_manifest_bytes);

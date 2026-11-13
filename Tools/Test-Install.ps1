@@ -183,7 +183,7 @@ try {
     }else{
      $text=Wait-Guest '\[INSTALLBOOT\] mapping=verified C=SYSTEM D=DATA BOOT=unlettered'
      if(!$text.Contains('installation='+$result.structure.installation.installationId)){throw 'Installed normal boot identity differs.'}
-     Start-Sleep -Milliseconds 10000;Send-Keys $session @('d');Start-Sleep -Milliseconds 1500
+     Start-Sleep -Milliseconds 10000;Send-Keys $session @('d');Wait-RecoveryNormalTerminalPrompt
     }
     Keys 'POWEROFF';Send-Keys $session @('ret')
     if(!$process.WaitForExit(20000) -or $process.ExitCode -ne 0){throw 'Installed system did not shut down through its Terminal.'}

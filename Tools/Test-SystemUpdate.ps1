@@ -1,5 +1,5 @@
 param([Parameter(Mandatory)][string]$SourcePackage,[Parameter(Mandatory)][string]$BaseImage,
-      [switch]$ReuseFixture,[switch]$SkipResultBoots,[string[]]$Cases=@(),[string]$Zig='', [string]$Qemu='',
+      [switch]$ReuseFixture,[switch]$VerifyUpdated,[switch]$SkipResultBoots,[string[]]$Cases=@(),[string]$Zig='', [string]$Qemu='',
       [ValidateRange(60,600)][int]$TimeoutSeconds=300,
       [ValidateRange(512,32768)][int]$RamMB=8192)
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
@@ -160,6 +160,13 @@ try {
  $script:process=$null;$script:session=$null;$runs=@();$updated=@()
  $matrix=@(@{name='System768';size=768},@{name='SystemTooSmall';size=16})
  if($Cases.Count){$matrix=@($matrix|Where-Object {$_.name -in $Cases});if($matrix.Count -ne $Cases.Count){throw 'Unknown system-update case.'}}
+ if($VerifyUpdated){
+  $saved=Get-Content -Raw -LiteralPath (Join-Path $output 'update-results.json')|ConvertFrom-Json -AsHashtable
+  foreach($key in $inputs.Keys){if($saved.inputs[$key] -cne $inputs[$key]){throw "Stale system-update result: $key"}}
+  if($saved.runs.Count -ne 2 -or $saved.updated.Count -ne 1){throw 'Original2 update results required.'}
+  $runs=@($saved.runs);$updated=@($saved.updated);$matrix=@()
+  foreach($result in $updated){$result.structure=Test-R4OSInstallationImage -Image $result.image -AllowNonstandardSystem -PreservedMenu}
+ }
  foreach($case in $matrix){
   $name=$case.name;$watch=[Diagnostics.Stopwatch]::StartNew()
   $target=Join-Path $output "$name-target.img";Copy-RecoveryFixture (Join-Path $output "fixture-$($case.size).img") $target
@@ -202,7 +209,7 @@ try {
    Start-Guest @('-m',"$RamMB",'-drive',"if=none,id=result,format=raw,file=$($result.image),snapshot=on",'-device','nvme,drive=result,serial=UPDATED,bootindex=1')
    $text=Wait-Guest '\[INSTALLBOOT\] mapping=verified C=SYSTEM D=DATA BOOT=unlettered'
    if(!$text.Contains('installation='+$result.structure.installation.installationId)){throw 'Updated normal boot identity differs.'}
-   $script:session=Open-Qmp $qmpPort;Start-Sleep -Milliseconds 10000;Send-Keys $session @('d');Start-Sleep -Milliseconds 1500
+   $script:session=Open-Qmp $qmpPort;Start-Sleep -Milliseconds 10000;Send-Keys $session @('d');Wait-RecoveryNormalTerminalPrompt
    Keys 'POWEROFF';Send-Keys $session @('ret')
    if(!$process.WaitForExit(20000) -or $process.ExitCode -ne 0){throw 'Updated R4OS did not shut down through Terminal.'}
   }finally{Stop-Guest}

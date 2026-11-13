@@ -71,42 +71,107 @@ fn matches(a: std.mem.Allocator, bytes: []const u8, prefix: []const u8, source: 
     var buffer: [80]u8 = undefined;
     try view.matches(try std.fmt.bufPrint(&buffer, "{s}/manifest.json", .{prefix}), source.recovery_archive.manifest);
 }
+// Host-only bounded access to the actual GPT fixture. No whole-disk
+// allocation or rewrite is needed for the existing state/slot-plan oracles.
+const HostDisk = struct {
+    file: std.Io.File,
+    io: std.Io,
+    length: u64,
+    fn bytes(raw: *const anyopaque, at: usize, out: []u8) !void {
+        const self: *const HostDisk = @ptrCast(@alignCast(raw));
+        if (at > self.length or out.len > self.length - at) return error.Bounds;
+        if (try self.file.readPositionalAll(self.io, out, at) != out.len) return error.ShortRead;
+    }
+    fn read(raw: *anyopaque, lba: u64, out: []u8) i32 {
+        const self: *HostDisk = @ptrCast(@alignCast(raw));
+        if (lba > self.length / 512) return -1;
+        bytes(self, @intCast(lba * 512), out) catch return -1;
+        return 0;
+    }
+    fn write(_: *anyopaque, _: u64, _: []const u8) i32 { return -1; }
+    fn flush(_: *anyopaque) i32 { return -1; }
+    fn source(self: *const HostDisk) tools.byte_source.Source {
+        return .{ .context = self, .length = @intCast(self.length), .read_fn = bytes };
+    }
+    fn table(self: *HostDisk, a: std.mem.Allocator) !tools.partition.Plan {
+        const work = try a.alloc(u8, tools.io.scratch_bytes);
+        return tools.partition.Plan.read(.{ .context = self, .sectors = self.length / 512, .read_fn = read, .write_fn = write, .flush_fn = flush }, work);
+    }
+};
+const HostPartition = struct {
+    disk: *HostDisk,
+    part: tools.partition.Entry,
+    fn read(raw: *anyopaque, lba: u64, out: []u8) i32 {
+        const self: *HostPartition = @ptrCast(@alignCast(raw));
+        if (lba > self.part.count or out.len > (self.part.count - lba) * 512) return -1;
+        return HostDisk.read(self.disk, self.part.first + lba, out);
+    }
+    fn write(raw: *anyopaque, lba: u64, data: []const u8) i32 {
+        const self: *HostPartition = @ptrCast(@alignCast(raw));
+        if (lba > self.part.count or data.len > (self.part.count - lba) * 512) return -1;
+        self.disk.file.writePositionalAll(self.disk.io, data, (self.part.first + lba) * 512) catch return -1;
+        return 0;
+    }
+    fn flush(raw: *anyopaque) i32 {
+        const self: *HostPartition = @ptrCast(@alignCast(raw));
+        self.disk.file.sync(self.disk.io) catch return -1;
+        return 0;
+    }
+    fn device(self: *HostPartition, progress: *tools.io.Progress) tools.io.Device {
+        return .{ .context = self, .sectors = self.part.count, .exclusive = true, .read_fn = read, .write_fn = write, .flush_fn = flush, .progress = progress };
+    }
+};
+
 pub fn main(init: std.process.Init) !void {
     const a = init.arena.allocator();
     const args = try init.minimal.args.toSlice(a);
     if (args.len == 7 and std.mem.eql(u8, args[1], "--budget")) return runBudget(init, args[2..]);
-    if (args.len == 4 and std.mem.eql(u8, args[1], "--set-state")) {
-        const image = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(2048 * 1024 * 1024 + 1));
-        const record = try std.Io.Dir.cwd().readFileAlloc(init.io, args[3], a, .limited(state.maximum + 1));
-        try expect(image.len == 2048 * 1024 * 1024);
-        const recovery = image[2363392 * 512 ..][0 .. 512 * 1024 * 1024];
-        const plan = try tools.fat32_update.prepare(a, recovery, 2363392, &.{.{ .path = "state.r4s", .bytes = record }});
-        @memcpy(recovery, plan.bytes);
-        try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = args[2], .data = image });
-        return;
-    }
-    if (args.len == 4 and std.mem.eql(u8, args[1], "--slot")) {
-        const image = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(2048 * 1024 * 1024 + 1));
-        const slot = try slots.Slot.read(a, image[2363392 * 512 ..][0 .. 512 * 1024 * 1024], 2363392, args[3], .{});
-        std.debug.print("[RECOVERYSLOTHOST] slot={s} files={d} version={s} result=OK\n", .{ args[3], slot.files.len, slot.manifest.recoveryVersion });
-        return;
-    }
-    if (args.len == 5 and std.mem.eql(u8, args[1], "--write-plan")) {
-        const image = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], a, .limited(2048 * 1024 * 1024 + 1));
+    if ((args.len == 4 and (std.mem.eql(u8, args[1], "--set-state") or std.mem.eql(u8, args[1], "--slot"))) or
+        (args.len == 5 and std.mem.eql(u8, args[1], "--write-plan"))) {
+        const setting = std.mem.eql(u8, args[1], "--set-state");
+        const file = try std.Io.Dir.cwd().openFile(init.io, args[2], .{ .mode = if (setting) .read_write else .read_only });
+        defer file.close(init.io);
+        var disk = HostDisk{ .file = file, .io = init.io, .length = try file.length(init.io) };
+        if (disk.length != 2 * 1024 * 1024 * 1024 and disk.length != 16 * 1024 * 1024 * 1024 and disk.length != 22 * 1024 * 1024 * 1024) return error.Geometry;
+        const table = try disk.table(a);
+        if (table.kind != .gpt or !table.entries[1].present or !table.entries[3].present or
+            !tools.partition.guid.eql(table.entries[1].type_guid, tools.partition.esp_type) or
+            !tools.partition.guid.eql(table.entries[3].type_guid, tools.partition.basic_type)) return error.SourceLayout;
+        const part = table.entries[3];
+        const recovery = try disk.source().range(@intCast(part.first * 512), @intCast(part.count * 512));
+        if (std.mem.eql(u8, args[1], "--slot")) {
+            const slot = try slots.Slot.readSource(a, recovery, part.first, args[3], .{}, null);
+            std.debug.print("[RECOVERYSLOTHOST] slot={s} files={d} version={s} result=OK\n", .{ args[3], slot.files.len, slot.manifest.recoveryVersion });
+            return;
+        }
+        var backing = try tools.fat32_update.Backing.init(a, recovery, part.first);
+        defer backing.deinit();
+        if (setting) {
+            const record = try std.Io.Dir.cwd().readFileAlloc(init.io, args[3], a, .limited(state.maximum + 1));
+            var plan = try tools.fat32_update.prepareBacking(a, &backing, &.{.{ .path = "state.r4s", .bytes = record }});
+            defer plan.deinit();
+            var target = HostPartition{ .disk = &disk, .part = part };
+            var progress = tools.io.Progress{};
+            const work = try a.alloc(u8, tools.io.scratch_bytes);
+            try plan.execute(target.device(&progress), work);
+            try expect(progress.verified);
+            return;
+        }
         const zip = try std.Io.Dir.cwd().readFileAlloc(init.io, args[3], a, .limited(package.max_archive_bytes));
         const source = try package.prepare(a, Codec{}, zip, .recovery, .{});
-        const boot = try tools.fat32_view.View.init(image[4096 * 512 ..][0 .. 128 * 1024 * 1024], 4096);
+        const boot_part = table.entries[1];
+        const boot = try tools.fat32_view.View.initSource(try disk.source().range(@intCast(boot_part.first * 512), @intCast(boot_part.count * 512)), boot_part.first);
         const manifest_bytes = try boot.readFile(a, "boot/r4os-installation.json", 16384);
         const Identity = struct { installationId: []const u8 };
         const identity = try std.json.parseFromSlice(Identity, a, r4os.version_info.stripBom(manifest_bytes), .{ .ignore_unknown_fields = true });
-        const plan = try slots.Plan.prepareDelta(a, image[2363392 * 512 ..][0 .. 512 * 1024 * 1024], 2363392, state.guid.parse(identity.value.installationId) orelse return error.InvalidTarget, source, false, .{});
+        const plan = try slots.Plan.prepareBacking(a, &backing, part.first, state.guid.parse(identity.value.installationId) orelse return error.InvalidTarget, source, false, .{});
         try expect(plan.previous != null);
         var result: std.Io.Writer.Allocating = .init(a);
         try result.writer.writeAll("{\"rotate\":true,\"currentPayloadWrites\":[");
         var first = true;
         for (plan.current.writes) |write| {
             if (write.order != 0) continue;
-            try result.writer.print("{s}{{\"first\":{d},\"count\":{d}}}", .{ if (first) "" else ",", @as(u64, write.first) + 2363392, write.count });
+            try result.writer.print("{s}{{\"first\":{d},\"count\":{d}}}", .{ if (first) "" else ",", @as(u64, write.first) + part.first, write.count });
             first = false;
         }
         try result.writer.writeAll("]}\n");
@@ -130,7 +195,7 @@ pub fn main(init: std.process.Init) !void {
     try files.append(a, .{ .path = "state.r4s", .bytes = try state.encode(&record_buffer, id, old.recovery.recoveryVersion, old.recovery_archive.manifest, true) });
     try files.append(a, .{ .path = "INSTALL/RELEASE.ZIP", .bytes = "original R4OS ZIP witness" });
     try files.append(a, .{ .path = "INSTALL/RECOVERY.ZIP", .bytes = next.archive.original });
-    const original = try tools.fat32_image.prepare(a, 256 * 2048, 2048, "RECOVERY", 20, files.items);
+    const original = try tools.fat32_image.prepare(a, 512 * 2048, 2048, "RECOVERY", 20, files.items);
     const scratch = try a.dupe(u8, original.bytes);
     const plan = try slots.Plan.prepareDelta(a, scratch, 2048, id, next, false, .{});
     const work = try a.alloc(u8, tools.io.scratch_bytes);
@@ -232,7 +297,20 @@ fn runBudget(init: std.process.Init, args: []const []const u8) !void {
     var record: [state.maximum]u8 = undefined;
     try files.append(a, .{ .path = "state.r4s", .bytes = try state.encode(&record, id, old.recovery.recoveryVersion, old.recovery_archive.manifest, true) });
     try files.append(a, .{ .path = "INSTALL/RELEASE.ZIP", .bytes = release });
-    const base = try tools.fat32_image.prepare(a, 512 * 2048, hidden, "RECOVERY", 23, files.items);
+    // Host budget witness scales to the actual source-bearing packages.
+    // Keep both slots, both complete/partial cache archives and metadata
+    // reserve; the unchanged overfull probe still requests an entire extra
+    // volume and must fail before any write.
+    var required_bytes: u64 = 16 * 1024 * 1024 + @import("capacity.zig").metadata_reserve;
+    for (old.recovery.files) |entry| required_bytes += 2 * entry.bytes;
+    required_bytes += 2 * old.recovery_archive.manifest.len + 2 * release.len + 2 * next_zip.len;
+    var volume_bytes: u64 = 512 * 1024 * 1024;
+    while (volume_bytes < required_bytes) {
+        if (volume_bytes >= 8 * 1024 * 1024 * 1024) return error.VolumeLimit;
+        volume_bytes *= 2;
+    }
+    const volume_sectors = volume_bytes / 512;
+    const base = try tools.fat32_image.prepare(a, volume_sectors, hidden, "RECOVERY", 23, files.items);
     const free = @as(u64, base.stats.geometry.sectors - base.stats.used_sectors) * 512;
     try @import("capacity.zig").requireCacheHeadroom(free, release.len, next_zip.len, base.stats.geometry.sectors_per_cluster * 512);
     try std.testing.expectError(error.RecoveryCapacity, @import("capacity.zig").requireCacheHeadroom(free, base.bytes.len, next_zip.len, base.stats.geometry.sectors_per_cluster * 512));
@@ -240,7 +318,7 @@ fn runBudget(init: std.process.Init, args: []const []const u8) !void {
     const reserve = try a.alloc(u8, @import("capacity.zig").metadata_reserve);
     @memset(reserve, 0);
     try files.append(a, .{ .path = "INSTALL/BUDGET.RES", .bytes = reserve });
-    const complete = try tools.fat32_image.prepare(a, 512 * 2048, hidden, "RECOVERY", 23, files.items);
+    const complete = try tools.fat32_image.prepare(a, volume_sectors, hidden, "RECOVERY", 23, files.items);
     const plan = try slots.Plan.prepare(a, complete.bytes, hidden, id, next, false, .{});
     try expect(plan.previous != null and !plan.unchanged);
     const view = try tools.fat32_view.View.init(plan.current.bytes, hidden);
