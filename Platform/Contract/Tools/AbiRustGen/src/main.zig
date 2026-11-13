@@ -369,34 +369,7 @@ pub fn main(init: std.process.Init) !void {
 }
 
 fn generation2Projection(out: *Output, comptime name: []const u8, comptime T: type) !void {
-    if (comptime std.mem.eql(u8, name, "DriverApi2") or std.mem.eql(u8, name, "ProtocolApi2")) {
-        const driver = comptime std.mem.eql(u8, name, "DriverApi2");
-        try out.print("\nimpl {s} {{\n    pub const fn project_provider(source: &{s}", .{ name, if (driver) "DriverApi" else "ProtocolApi" });
-        if (driver) try out.text(", register_audio: AudioBackendRegisterFn2");
-        try out.text(") -> Self { Self {\n");
-        inline for (std.meta.fields(T)) |field| {
-            try out.print("        {s}: ", .{comptime identifier(field.name)});
-            if (comptime std.mem.eql(u8, field.name, "magic")) {
-                try out.text(if (driver) "driver_api2_magic" else "protocol_api2_magic");
-            } else if (comptime std.mem.eql(u8, field.name, "version")) {
-                try out.text(if (driver) "driver_api2_version" else "protocol_api2_version");
-            } else if (comptime std.mem.eql(u8, field.name, "size")) {
-                try out.text("core::mem::size_of::<Self>() as u32");
-            } else if (comptime std.mem.eql(u8, field.name, "reserved")) {
-                try out.text("0");
-            } else if (comptime driver and std.mem.eql(u8, field.name, "register_audio_output_backend")) {
-                try out.text("register_audio");
-            } else if (comptime driver and std.mem.eql(u8, field.name, "register_audio_capture_backend")) {
-                try out.text("None");
-            } else if (comptime !driver and (std.mem.eql(u8, field.name, "protocol_dispatch") or std.mem.eql(u8, field.name, "link_io") or std.mem.eql(u8, field.name, "process_status"))) {
-                // Source is the exact original legacy table. New optional
-                // protocol mechanisms are supplied separately by the owner.
-                try out.text("None");
-            } else try out.print("source.{s}", .{comptime identifier(field.name)});
-            try out.text(",\n");
-        }
-        try out.text("    } }\n}\n");
-    } else if (comptime std.mem.eql(u8, name, "AudioBackendStatus2")) {
+    if (comptime std.mem.eql(u8, name, "AudioBackendStatus2")) {
         try out.text("\nimpl AudioBackendStatus2 {\n    pub fn expand_legacy(self) -> AudioBackendStatus { AudioBackendStatus {\n");
         inline for (std.meta.fields(T)) |field| try out.print("        {s}: self.{s},\n", .{ comptime identifier(field.name), comptime identifier(field.name) });
         try out.text("        ..AudioBackendStatus::default()\n    } }\n}\n");

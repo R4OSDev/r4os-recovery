@@ -1,5 +1,6 @@
 const std = @import("std");
 const generation2 = @import("generation2.zig");
+const legacy_projection = @import("legacy_projection.zig");
 
 const default_schema_path = "API/ApiContract.json";
 const default_baseline_path = "API/ApiContract.baseline.json";
@@ -454,35 +455,40 @@ pub fn main(init: std.process.Init) !void {
     var parsed = try std.json.parseFromSlice(Contract, allocator, schema_bytes, .{});
     defer parsed.deinit();
 
+    var compatibility_arena = std.heap.ArenaAllocator.init(allocator);
+    defer compatibility_arena.deinit();
+    var legacy_current = try legacy_projection.project(compatibility_arena.allocator(), io, &parsed.value);
+
     if (options.action == .selftest) {
         const baseline_bytes = try cwd.readFileAlloc(io, options.baseline_path, allocator, .limited(max_contract_bytes));
         defer allocator.free(baseline_bytes);
         var baseline = try std.json.parseFromSlice(Contract, allocator, baseline_bytes, .{});
         defer baseline.deinit();
-        try validateContract(allocator, &parsed.value, &baseline.value);
-        try runSelftest(allocator, &parsed.value, &baseline.value);
+        var legacy_baseline = try legacy_projection.project(compatibility_arena.allocator(), io, &baseline.value);
+        try validateContract(allocator, &legacy_current, &legacy_baseline);
+        try runSelftest(allocator, &legacy_current, &legacy_baseline);
         try generation2.selftest(allocator, io, &parsed.value);
         std.debug.print("ApiContractGen selftest OK: 26/26 Mutationen erkannt; zentrale Runtime-R4L-Gruppen abgelehnt, gueltige Slot-/Payload-Appends, Extensible-Canaries und API-Inventarauswahl akzeptiert.\n", .{});
         return;
     }
 
-    try validateInternal(&parsed.value, options.update_baseline);
-    try generation2.process(allocator, io, &parsed.value, false, false);
-    const payload_reference = try renderPayloadReference(allocator, &parsed.value);
+    try validateInternal(&legacy_current, options.update_baseline);
+    try generation2.process(allocator, io, &parsed.value, false, false, options.update_baseline, CurrentSignatures);
+    const payload_reference = try renderPayloadReference(allocator, &legacy_current);
     defer allocator.free(payload_reference);
-    const zig_abi = try renderZigAbi(allocator, &parsed.value);
+    const zig_abi = try renderZigAbi(allocator, &legacy_current);
     defer allocator.free(zig_abi);
-    const zig_exports = try renderZigExports(allocator, &parsed.value);
+    const zig_exports = try renderZigExports(allocator, &legacy_current);
     defer allocator.free(zig_exports);
-    const kernel_abi = try renderKernelAbi(allocator, &parsed.value);
+    const kernel_abi = try renderKernelAbi(allocator, &legacy_current);
     defer allocator.free(kernel_abi);
-    const kernel_exports = try renderKernelExports(allocator, &parsed.value);
+    const kernel_exports = try renderKernelExports(allocator, &legacy_current);
     defer allocator.free(kernel_exports);
-    const c_abi = try renderCAbi(allocator, &parsed.value);
+    const c_abi = try renderCAbi(allocator, &legacy_current);
     defer allocator.free(c_abi);
-    const zig_conformance = try renderZigConformance(allocator, &parsed.value);
+    const zig_conformance = try renderZigConformance(allocator, &legacy_current);
     defer allocator.free(zig_conformance);
-    const c_conformance = try renderCConformance(allocator, &parsed.value);
+    const c_conformance = try renderCConformance(allocator, &legacy_current);
     defer allocator.free(c_conformance);
     const start_doc = try renderStartDoc(allocator, &parsed.value);
     defer allocator.free(start_doc);
@@ -490,7 +496,7 @@ pub fn main(init: std.process.Init) !void {
     defer allocator.free(r4l_contract);
 
     if (options.action == .write and options.update_baseline) {
-        try generation2.process(allocator, io, &parsed.value, true, false);
+        try generation2.process(allocator, io, &parsed.value, true, false, options.update_baseline, CurrentSignatures);
         const canonical = try canonicalAlloc(allocator, parsed.value);
         defer allocator.free(canonical);
         try cwd.writeFile(io, .{ .sub_path = options.schema_path, .data = canonical });
@@ -500,7 +506,7 @@ pub fn main(init: std.process.Init) !void {
         try cwd.writeFile(io, .{ .sub_path = options.zig_exports_path, .data = zig_exports });
         try cwd.writeFile(io, .{ .sub_path = options.kernel_abi_path, .data = kernel_abi });
         try cwd.writeFile(io, .{ .sub_path = options.kernel_exports_path, .data = kernel_exports });
-        try writeGeneratedOutputs(io, cwd, allocator, &parsed.value, options, c_abi, zig_conformance, c_conformance, start_doc, r4l_contract);
+        try writeGeneratedOutputs(io, cwd, allocator, &legacy_current, &parsed.value, options, c_abi, zig_conformance, c_conformance, start_doc, r4l_contract);
         printHash(canonical);
         std.debug.print("ApiContractGen baseline written: {s}\n", .{options.baseline_path});
         return;
@@ -510,9 +516,10 @@ pub fn main(init: std.process.Init) !void {
     defer allocator.free(baseline_bytes);
     var baseline = try std.json.parseFromSlice(Contract, allocator, baseline_bytes, .{});
     defer baseline.deinit();
-    try validateContract(allocator, &parsed.value, &baseline.value);
+    var legacy_baseline = try legacy_projection.project(compatibility_arena.allocator(), io, &baseline.value);
+    try validateContract(allocator, &legacy_current, &legacy_baseline);
 
-    try generation2.process(allocator, io, &parsed.value, options.action == .write, options.action == .check);
+    try generation2.process(allocator, io, &parsed.value, options.action == .write, options.action == .check, options.update_baseline, CurrentSignatures);
 
     const canonical = try canonicalAlloc(allocator, parsed.value);
     defer allocator.free(canonical);
@@ -534,7 +541,7 @@ pub fn main(init: std.process.Init) !void {
             defer allocator.free(kernel_abi_bytes);
             if (!std.mem.eql(u8, kernel_abi_bytes, kernel_abi)) return error.KernelAbiDrift;
             try checkExactFile(io, cwd, allocator, options.kernel_exports_path, kernel_exports, error.KernelExportsDrift);
-            try checkGeneratedOutputs(io, cwd, allocator, &parsed.value, options, c_abi, zig_conformance, c_conformance, start_doc, r4l_contract);
+            try checkGeneratedOutputs(io, cwd, allocator, &legacy_current, &parsed.value, options, c_abi, zig_conformance, c_conformance, start_doc, r4l_contract);
         },
         .write => {
             try cwd.writeFile(io, .{ .sub_path = options.schema_path, .data = canonical });
@@ -543,7 +550,7 @@ pub fn main(init: std.process.Init) !void {
             try cwd.writeFile(io, .{ .sub_path = options.zig_exports_path, .data = zig_exports });
             try cwd.writeFile(io, .{ .sub_path = options.kernel_abi_path, .data = kernel_abi });
             try cwd.writeFile(io, .{ .sub_path = options.kernel_exports_path, .data = kernel_exports });
-            try writeGeneratedOutputs(io, cwd, allocator, &parsed.value, options, c_abi, zig_conformance, c_conformance, start_doc, r4l_contract);
+            try writeGeneratedOutputs(io, cwd, allocator, &legacy_current, &parsed.value, options, c_abi, zig_conformance, c_conformance, start_doc, r4l_contract);
         },
         .selftest => unreachable,
     }
@@ -1228,7 +1235,7 @@ fn renderR4LGenerated(allocator: std.mem.Allocator, contract: *const Contract, g
     try appendFmt(&out, allocator, "pub const r4l_abi_magic: u32 = {d};\npub const r4l_abi_version: u32 = {d};\npub const r4l_query_struct_size: u32 = {d};\npub const r4l_query_struct_len: usize = r4l_query_struct_size;\n\n", .{ contract.r4l_query.magic, contract.r4l_query.abi_version, contract.r4l_query.layout.size });
     try appendStructContract(&out, allocator, &contract.r4l_query.layout);
     try appendFmt(&out, allocator, "pub const name = \"{s}\";\npub const group_id: u32 = {d};\npub const import_query = \"{s}\";\n\n", .{ group.name, group.id, group.query_import });
-    try out.appendSlice(allocator, "pub const query = R4LQuery{\n");
+    try appendFmt(&out, allocator, "pub const query = {s}{{\n", .{contract.r4l_query.layout.name});
     for (contract.r4l_query.layout.fields) |field| {
         if (std.mem.eql(u8, field.name, "magic")) try appendFmt(&out, allocator, "    .magic = {d},\n", .{contract.r4l_query.magic}) else if (std.mem.eql(u8, field.name, "abi_version")) try appendFmt(&out, allocator, "    .abi_version = {d},\n", .{contract.r4l_query.abi_version}) else if (std.mem.eql(u8, field.name, "size")) try appendFmt(&out, allocator, "    .size = {d},\n", .{contract.r4l_query.layout.size}) else if (std.mem.eql(u8, field.name, "group")) try appendFmt(&out, allocator, "    .group = {d},\n", .{group.id}) else try appendFmt(&out, allocator, "    .{s} = 0,\n", .{field.name});
     }
@@ -1549,17 +1556,17 @@ fn appendJoined(out: *std.ArrayList(u8), allocator: std.mem.Allocator, values: [
     }
 }
 
-fn checkGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocator, contract: *const Contract, options: Options, c_abi: []const u8, zig_conformance: []const u8, c_conformance: []const u8, start_doc: []const u8, r4l_contract: []const u8) !void {
+fn checkGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocator, contract: *const Contract, active: *const Contract, options: Options, c_abi: []const u8, zig_conformance: []const u8, c_conformance: []const u8, start_doc: []const u8, r4l_contract: []const u8) !void {
     try checkExactFile(io, cwd, allocator, options.c_abi_path, c_abi, error.CAbiDrift);
     try checkExactFile(io, cwd, allocator, options.zig_conformance_path, zig_conformance, error.ZigConformanceDrift);
     try checkExactFile(io, cwd, allocator, options.c_conformance_path, c_conformance, error.CConformanceDrift);
-    const operation_matrix = try renderOperationMatrix(allocator, contract);
+    const operation_matrix = try renderOperationMatrix(allocator, active);
     defer allocator.free(operation_matrix);
     try checkExactFile(io, cwd, allocator, default_operation_matrix_path, operation_matrix, error.OperationMatrixDrift);
-    const parity_report = try renderParityReport(allocator, contract);
+    const parity_report = try renderParityReport(allocator, active);
     defer allocator.free(parity_report);
     try checkExactFile(io, cwd, allocator, default_parity_report_path, parity_report, error.ParityReportDrift);
-    const api_inventory = try renderApiInventory(allocator, contract);
+    const api_inventory = try renderApiInventory(allocator, active);
     defer allocator.free(api_inventory);
     try checkExactFile(io, cwd, allocator, default_api_inventory_path, api_inventory, error.ApiInventoryDrift);
     const zig_exports = try renderZigExports(allocator, contract);
@@ -1573,8 +1580,8 @@ fn checkGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocat
     const r4l_doc = try cwd.readFileAlloc(io, options.r4l_contract_path, allocator, .limited(max_contract_bytes));
     defer allocator.free(r4l_doc);
     try checkGeneratedFacade(r4l_doc, r4l_contract, r4l_contract_begin, r4l_contract_end);
-    for (contract.groups) |group| {
-        const r4l_generated = try renderR4LGenerated(allocator, contract, &group);
+    for (active.groups) |group| {
+        const r4l_generated = try renderR4LGenerated(allocator, active, &group);
         defer allocator.free(r4l_generated);
         const r4l_path = try std.fmt.allocPrint(allocator, "{s}/{s}/api_contract_generated.zig", .{ default_group_output_root, group.name });
         defer allocator.free(r4l_path);
@@ -1589,17 +1596,17 @@ fn checkGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocat
     }
 }
 
-fn writeGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocator, contract: *const Contract, options: Options, c_abi: []const u8, zig_conformance: []const u8, c_conformance: []const u8, start_doc: []const u8, r4l_contract: []const u8) !void {
+fn writeGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocator, contract: *const Contract, active: *const Contract, options: Options, c_abi: []const u8, zig_conformance: []const u8, c_conformance: []const u8, start_doc: []const u8, r4l_contract: []const u8) !void {
     try cwd.writeFile(io, .{ .sub_path = options.c_abi_path, .data = c_abi });
     try cwd.writeFile(io, .{ .sub_path = options.zig_conformance_path, .data = zig_conformance });
     try cwd.writeFile(io, .{ .sub_path = options.c_conformance_path, .data = c_conformance });
-    const operation_matrix = try renderOperationMatrix(allocator, contract);
+    const operation_matrix = try renderOperationMatrix(allocator, active);
     defer allocator.free(operation_matrix);
     try cwd.writeFile(io, .{ .sub_path = default_operation_matrix_path, .data = operation_matrix });
-    const parity_report = try renderParityReport(allocator, contract);
+    const parity_report = try renderParityReport(allocator, active);
     defer allocator.free(parity_report);
     try cwd.writeFile(io, .{ .sub_path = default_parity_report_path, .data = parity_report });
-    const api_inventory = try renderApiInventory(allocator, contract);
+    const api_inventory = try renderApiInventory(allocator, active);
     defer allocator.free(api_inventory);
     try cwd.writeFile(io, .{ .sub_path = default_api_inventory_path, .data = api_inventory });
     const zig_exports = try renderZigExports(allocator, contract);
@@ -1607,8 +1614,8 @@ fn writeGeneratedOutputs(io: std.Io, cwd: std.Io.Dir, allocator: std.mem.Allocat
     try writeGeneratedFacade(io, cwd, allocator, default_zig_facade_path, zig_exports, zig_exports_begin, zig_exports_end);
     try writeGeneratedFacade(io, cwd, allocator, options.start_doc_path, start_doc, start_doc_begin, start_doc_end);
     try writeGeneratedFacade(io, cwd, allocator, options.r4l_contract_path, r4l_contract, r4l_contract_begin, r4l_contract_end);
-    for (contract.groups) |group| {
-        const r4l_generated = try renderR4LGenerated(allocator, contract, &group);
+    for (active.groups) |group| {
+        const r4l_generated = try renderR4LGenerated(allocator, active, &group);
         defer allocator.free(r4l_generated);
         const r4l_path = try std.fmt.allocPrint(allocator, "{s}/{s}/api_contract_generated.zig", .{ default_group_output_root, group.name });
         defer allocator.free(r4l_path);
@@ -2882,3 +2889,61 @@ fn expectRejected(allocator: std.mem.Allocator, contract: *const Contract, basel
     validateContract(allocator, contract, baseline) catch return;
     return error.MutationNotRejected;
 }
+
+// Reuse the canonical Zig/C declarator formatters. The active Rust namespace
+// comes directly from exactly the same signature records, not a legacy alias.
+const CurrentSignatures = struct {
+    pub fn zigNamespace(a: std.mem.Allocator, group: Group) ![]const u8 {
+        var out: std.ArrayList(u8) = .empty;
+        try appendFnNamespace(&out, a, &group);
+        return out.toOwnedSlice(a);
+    }
+    pub fn cNamespace(a: std.mem.Allocator, group: Group) ![]const u8 {
+        var out: std.ArrayList(u8) = .empty;
+        for (group.slots) |slot| if (slot.signature) |signature| {
+            try out.appendSlice(a, "typedef ");
+            try appendCType(&out, a, &signature.returns, false);
+            try appendFmt(&out, a, " (*{s}", .{group.fn_namespace[0 .. group.fn_namespace.len - 4]});
+            try appendPascal(&out, a, slot.name);
+            try out.appendSlice(a, "Fn2)(");
+            try appendCParameters(&out, a, signature.parameters);
+            try out.appendSlice(a, ");\n");
+        };
+        return out.toOwnedSlice(a);
+    }
+    fn rustType(out: *std.ArrayList(u8), a: std.mem.Allocator, t: *const TypeRef) anyerror!void {
+        switch (t.kind) {
+            .scalar => {
+                const name = t.name.?;
+                try out.appendSlice(a, if (std.mem.eql(u8, name, "void")) "()" else if (std.mem.eql(u8, name, "anyopaque")) "core::ffi::c_void" else name);
+            },
+            .named => try appendFmt(out, a, "super::super::{s}", .{t.name.?}),
+            .pointer => {
+                try out.appendSlice(a, if (t.is_const == true) "*const " else "*mut ");
+                try rustType(out, a, t.child.?);
+            },
+            .array => {
+                try out.appendSlice(a, "[");
+                try rustType(out, a, t.child.?);
+                try appendFmt(out, a, "; {d}]", .{t.length.?});
+            },
+            else => return error.GenerationRustSignatureType,
+        }
+    }
+    pub fn rustNamespace(a: std.mem.Allocator, group: Group) ![]const u8 {
+        var out: std.ArrayList(u8) = .empty;
+        try appendFmt(&out, a, "pub mod {s} {{\n", .{group.fn_namespace});
+        for (group.slots) |slot| if (slot.signature) |signature| {
+            try appendFmt(&out, a, "    pub type {s} = unsafe extern \"C\" fn(", .{slot.name});
+            for (signature.parameters, 0..) |parameter, i| {
+                if (i != 0) try out.appendSlice(a, ", ");
+                try rustType(&out, a, &parameter.type);
+            }
+            try out.appendSlice(a, ") -> ");
+            try rustType(&out, a, &signature.returns);
+            try out.appendSlice(a, ";\n");
+        };
+        try out.appendSlice(a, "}\n");
+        return out.toOwnedSlice(a);
+    }
+};

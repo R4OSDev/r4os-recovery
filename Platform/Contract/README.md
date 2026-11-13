@@ -5,6 +5,18 @@ It contains the R4M0 container contract, shared layouts and error codes,
 platform API groups, generated bindings, conformance fixtures, and the
 contract generator.
 
+The active platform contract is generation 2. `API/ApiContract.json` owns all
+533 slots, their signatures and semantics, `Query2:2` and `R4XStart2:2`.
+`API/Generation2.json` independently describes the driver, protocol and audio
+records, typed callbacks and SDK selection. Current tables and technical
+records are emitted directly; they do not compact or copy an older ABI.
+
+The accepted baselines cover both canonical files. During the planned
+provider cutover, `API/LegacyProjection.json` contains only the four inert
+historical holes and reverse header metadata. The generator derives that
+temporary compatibility view from the active slots. Independent Runtime-R4L
+interfaces and shared payload revisions keep their own contracts.
+
 R4AUDIO v3 (Contract0.64.51, 0.87.53) appends stream progress, explicit
 continuous-source expectation and close-with-progress after the unchanged
 200-byte prefix (total224). Its original23 slots, including both tombstones,

@@ -1,0 +1,729 @@
+{
+  "source_archive": {
+    "id": "Contract-0.90.88",
+    "archive": "Legal/Sources/Contract-0.90.88.zip",
+    "archiveSha256": "1fd7ca2690c08183bd2f217f6df064333254d908103cec959cabdb740d2a6b1a",
+    "commit": "8fb41b466fb64a6df866c564feb4d598c66411b2",
+    "remote": "https://github.com/R4OSDev/r4os-contract.git"
+  },
+  "kernel_version": "0.1.71",
+  "inventory": {
+    "schema": 1,
+    "result": "ok",
+    "files": 4746,
+    "modules": 39,
+    "imports": 58,
+    "runtimeModuleBytes": 5541809,
+    "baselineRelease": "0.75.21",
+    "scope": "Pinned local input integrity and static dependency closure; not a guest runtime acceptance."
+  },
+  "source_admitted": true,
+  "recovery_version": "0.1.72",
+  "changed_inputs": [
+    {
+      "after": "a199daa3a866667c761c30ab1ed0cf81424c7b111e9c8061e61a349c653df908",
+      "before": "093c7bad89a152efcdbfe7a98d6eab8462915f538438538516512aa723ba4a75",
+      "path": "Kernel/build.zig.zon"
+    },
+    {
+      "after": "8cf49aba31467a4a03ee691cda734ddbd3f6771d2e1da4537c766bf14ed461da",
+      "before": "2a83bdc60f4c493af3c91d8c08e8a2ffd0c29e2707ad31feae7cb3f8dd0c977a",
+      "path": "Kernel/kernel/driver_api.zig"
+    },
+    {
+      "after": "107e946afa4cefc0a80649267f4bfebc2a2de091aa6932ef5577dafbaf1a3bba",
+      "before": "b42e0c64db2201860e0e3b8f0e9585f53732bb54b16cf058c46e10f4a5159ba7",
+      "path": "Kernel/kernel/protocol_api.zig"
+    },
+    {
+      "after": "b129bb4a22abef7312ba798089605c4f70cd87a8eed891b68a9500813b3222fa",
+      "before": "43cc9270e1350d17dd10ebd6c47bb5f884d0f16166de95765bfa0ba24a08c0ce",
+      "path": "Kernel/program/generation2.zig"
+    },
+    {
+      "after": "6d72a71d84e5146424568efe9810af5685a634e73b70464e558b2495e96342c2",
+      "before": "4958d7fee7e5e890ce70cdce7cce8cdd7720d77bca5bb532d9aa23e3e176fea3",
+      "path": "Kernel/program/r4x.zig"
+    },
+    {
+      "after": "d5ba7148d43a720f3941e20176fda865562c5038c3fce11e689a26cfded3ce70",
+      "before": "fa8ff8eb626fccd9b68f9ae752920a98195d2512b1897a9e499687a6d4d7803c",
+      "path": "Kernel/VERSION.R4S"
+    },
+    {
+      "after": "1fd7ca2690c08183bd2f217f6df064333254d908103cec959cabdb740d2a6b1a",
+      "before": null,
+      "path": "Legal/Sources/Contract-0.90.88.zip"
+    },
+    {
+      "after": "fdf80bb5afac507d3b8985d1bcf0e5ff012b6af7398cabe4c2648fca1971a54b",
+      "before": "6f4fcaa66653eb20221fbf29fe4daa23cf60a6538e77e5c1d47234bada391963",
+      "path": "Platform/Contract/ABI/R4LQuery.txt"
+    },
+    {
+      "after": "71edcaf9b2caa4cc296dabc041f4b3edf2c00f56a29fb22ded6683f80bd764a9",
+      "before": "0f58e043a0fcaad2c14a0b8af41cff66ce6123df69a0460c966a39d7b6990246",
+      "path": "Platform/Contract/ABI/R4XStart.txt"
+    },
+    {
+      "after": "536e25513c405ac5b96d7609aeb8da89db4e5ff1ea4b34b439ea0242ddb5d0a3",
+      "before": "5d7d1f631a75b4f3b7b4a6206a0a353258932c594b777cd0ca594177e3485f4c",
+      "path": "Platform/Contract/API/ApiContract.baseline.json"
+    },
+    {
+      "after": "536e25513c405ac5b96d7609aeb8da89db4e5ff1ea4b34b439ea0242ddb5d0a3",
+      "before": "5d7d1f631a75b4f3b7b4a6206a0a353258932c594b777cd0ca594177e3485f4c",
+      "path": "Platform/Contract/API/ApiContract.json"
+    },
+    {
+      "after": "0be6677ab2572b26ca8c09b16012ffcbf90c3f2478bd0490981130b08fd1e878",
+      "before": null,
+      "path": "Platform/Contract/API/Generation2.baseline.json"
+    },
+    {
+      "after": "0be6677ab2572b26ca8c09b16012ffcbf90c3f2478bd0490981130b08fd1e878",
+      "before": "08147d7960dddc7a368accb54d7c3508e99ca624fc3f808df2127c14b0a994a2",
+      "path": "Platform/Contract/API/Generation2.json"
+    },
+    {
+      "after": "dfea92dc5967ca7594d3f1679bdce69440b01b5771826e6635e07e7e5f27bce7",
+      "before": null,
+      "path": "Platform/Contract/API/LegacyProjection.json"
+    },
+    {
+      "after": "7c3c21826feb2f23ee88414eac9ad29291cf1cb057db80195d0615de244cacc1",
+      "before": "ca767607a593e30f67e02e52be31fe88a3e1f35f3bd29abe22888c8ee0537d19",
+      "path": "Platform/Contract/API/README.txt"
+    },
+    {
+      "after": "c6db8b1b6e251f7825594058a766b535327d99b8c3bf5c0d377b0766e6425243",
+      "before": "51fb51d5e7bba4f238dee8fe6a84ac6436bcfe14602ba6b7909b3666b1d5b2b7",
+      "path": "Platform/Contract/build.zig.zon"
+    },
+    {
+      "after": "90354068783a1753cd72ce7f586ee736cfeffaa92a5808cd29bed4a6723f9b07",
+      "before": "4e6716a96702d4d057445fde093219cf3ccc1e5afea319f880258834d69935fe",
+      "path": "Platform/Contract/DOCUMENTATION.de.txt"
+    },
+    {
+      "after": "9112d3976bb9315bac8753474ab9f22198872aaf7f5349ea617e30f198a4233d",
+      "before": "4a7bb1b3a065705ebe99f1453e06ff84fba981a43b47a699c825ed39d7aeecee",
+      "path": "Platform/Contract/Generated/Docs/API/R4AUDIO.md"
+    },
+    {
+      "after": "cf3eee77aa9a1ef3e41535a354bf4ae7a778192a5f2b2fb9b743b32f3910a0b0",
+      "before": "a4d0640be3368c777cb90bb1048a6ac963f1ebbc00230965ab72c6b70ce156e1",
+      "path": "Platform/Contract/Generated/Docs/API/R4DESK.md"
+    },
+    {
+      "after": "2000dbb0c56fffd929f2a4261e5df8b4f48704fbf95a840d616a5d655943b72b",
+      "before": "26cbc2a3d1fa1102d86cbd51585f8b93ef48be602f9796ba92a7a5d3cc9c4431",
+      "path": "Platform/Contract/Generated/Docs/API/R4DEV.md"
+    },
+    {
+      "after": "49075a8563adf94cbefee0edbf860d51c9f495a00718e416a339120bd0364ce4",
+      "before": "8a2eaf4a83382bfc518163eaf1c4ec941c10d931b1b53a242d1d427a0fa101b0",
+      "path": "Platform/Contract/Generated/Docs/API/R4DRAW.md"
+    },
+    {
+      "after": "f6fcffff1cb9e1e53a6194c7efd6d2c11e7d721188bc93a2b7fcbabb8fb293e5",
+      "before": "dc7763b9d7bbca61aa95de66e86904b6a5f0b409343a97d68927faf71948e045",
+      "path": "Platform/Contract/Generated/Docs/API/R4NET.md"
+    },
+    {
+      "after": "aba92a81d6b1be0e8ebf5d2136a8ec2499f522ebb83ee5fdaf41c706ee024281",
+      "before": "41996a8a5d0759ed52c09bc0f03a499d4df964a38f79fd1f3cf062ac263c026b",
+      "path": "Platform/Contract/Generated/Docs/API/R4SYS.md"
+    },
+    {
+      "after": "09f235d861ea3ca2c51f5e04d5d9ccdcc10095d1b1c0ed74f6763d8023f4d6f9",
+      "before": "2667fb71791b8681ddefbf9e98ed1a42c6ea4cf2604cfcda19ab5bbd5150a185",
+      "path": "Platform/Contract/Generated/Docs/OperationContracts.md"
+    },
+    {
+      "after": "80b1c0e7f222b754c17485834c774c364d770ed2bbf2defe99932da9401a8f1c",
+      "before": "a93f4594cdb254164ee02ec9a29035034003a5178b03867a8687c4132dddea06",
+      "path": "Platform/Contract/Generated/Docs/ZigCParity.json"
+    },
+    {
+      "after": "2b89052fe66fc75587ec8e6f99a30a3d1de9e1f1bcb88812d8eb42dfd533c1af",
+      "before": "aff5482159b9fb08a420f96d784d139969eadbd0d58ae838b1b985ad2cb8ffb0",
+      "path": "Platform/Contract/Generated/Generation2/C/include/r4os/generation2.h"
+    },
+    {
+      "after": "c903909a5f62ce37b084d91a7647732eb20ad27ccdf6fb3fa937c332f36cddf6",
+      "before": "aa842b126fcfa1d14aee7b543e72aa642f2988e453aba3261692c98adf996815",
+      "path": "Platform/Contract/Generated/Generation2/Inventory.json"
+    },
+    {
+      "after": "87262572445c56dea4d06bfc0dd5b8f21a325ddf402fc06fc37b91a9bd87c816",
+      "before": "15d0bf2ff8e3aa6cda3737b3a689b0c00389ea1852deafb875bc3b2df61d2ce7",
+      "path": "Platform/Contract/Generated/Generation2/Rust/generation2.rs"
+    },
+    {
+      "after": "9e9e2483254f5c4991ab54162cf7c01c63b680b2ed951e49223e1becece24617",
+      "before": "d38f2dbe6159a7e9142c4086585f26143a854ea6b4f1e3663acd74fc749feeec",
+      "path": "Platform/Contract/Generated/Generation2/Zig/abi.zig"
+    },
+    {
+      "after": "9692a673aee129cd1df8f652733b40a9bae12b90054a4df19c9bae6677cd2747",
+      "before": "311ea13a75f61b25f1219b7a8943e15f8ad434919a60e669279dbbac7ccfa931",
+      "path": "Platform/Contract/Generated/Groups/R4AUDIO/api_contract_generated.zig"
+    },
+    {
+      "after": "e46568aa9fea03cb45e814a2c5b77ad59fb99fb8c5d76bda6abfcbe6451291de",
+      "before": "6e4089252cc98d6e1c7c2aed9300fc9d393bf2e27d13a7965b00413279ad0d47",
+      "path": "Platform/Contract/Generated/Groups/R4DESK/api_contract_generated.zig"
+    },
+    {
+      "after": "2d191e0a07be52b46a131cb358e7783628ea1d2ca35f8bb2a2e89cb9aa0b84b9",
+      "before": "a1d7c9627ae3b06870ea983019b0e5ea7ffa11f633187d373adc9af7c2752216",
+      "path": "Platform/Contract/Generated/Groups/R4DEV/api_contract_generated.zig"
+    },
+    {
+      "after": "024f24587685b695ca62584ee3727f421fc97da9a1559ab51d4971f9f6317975",
+      "before": "822b5ad03e443e7f0bcc52109f34c47384a3433f9b205c0aa8b652b537200bbe",
+      "path": "Platform/Contract/Generated/Groups/R4DRAW/api_contract_generated.zig"
+    },
+    {
+      "after": "e4141fc7eb1f2a43144cfa1646a985d9651a3ebe2b8e305a76c9da8704b85bdd",
+      "before": "9e6fb51b27b5ae59e3152ec877bd5cff724f83787c5495edd134990bbf9b2546",
+      "path": "Platform/Contract/Generated/Groups/R4NET/api_contract_generated.zig"
+    },
+    {
+      "after": "f926ec729422d06456285d1cb33c63f5fcce541b4114c75acb5e601a2087567c",
+      "before": "1d1948e551528b89e216a2ecafb28daf79e8c062d46045b995f863dd8e3253c4",
+      "path": "Platform/Contract/Generated/Groups/R4SYS/api_contract_generated.zig"
+    },
+    {
+      "after": "05468be62618c51d1ef98687847805d39102c5bfe79667c3836a3b654dec6b16",
+      "before": "ecbcf513028dfadde448852e2aace8a015ea7655c5bd9dc76d4a8cbd96b32402",
+      "path": "Platform/Contract/Generated/Inventory/API.json"
+    },
+    {
+      "after": "a5b073a14650b7c4044b59c10fee1ccea358b3f44f5ecb128f5d46eb825eb22a",
+      "before": "98b925e0a8fa070bb0ec67b49bfbd0db69d8f6330fed72aff5b44e9767d22043",
+      "path": "Platform/Contract/Generated/README.txt"
+    },
+    {
+      "after": "75b154a95484213ccb1b4b845196887c42b294ab14c50668123986685e6c4692",
+      "before": "d3db6f761ef25784b08efa92cd43e2721124d58215a70a9b1ed0f7cfeb6caf2d",
+      "path": "Platform/Contract/Generated/SDK/Rust/src/lib.rs"
+    },
+    {
+      "after": "98df0a381107809dc49e950aa6656e203631814bba3f19d7015c5c2b4255cd0f",
+      "before": "43551ad1faf1668199a2ce1df048374fa1aa2b221869d29a4d0d4bfa4f4498ce",
+      "path": "Platform/Contract/Generated/SDK/Zig/technical2_generated.zig"
+    },
+    {
+      "after": "b95128474c37e21e1a6f59a2002cab0c46a913a646bf442d83c6aa5a1fdfb717",
+      "before": "45f24b2031c14794dcf8fcf4c9202b9d5f907eb9da9b21eee5c6d9bae84d57b3",
+      "path": "Platform/Contract/README.md"
+    },
+    {
+      "after": "c098aa5f0e8e66f60617e8ce9b0d30873c8233aa0826fb3657f9dae9b11a5a33",
+      "before": "c2575a9315b4cbb6b6a82878bdfddd485b64554b53c61dfb4a639dfc1dd3adf2",
+      "path": "Platform/Contract/Tests/RustInterop/interop.c"
+    },
+    {
+      "after": "fb754440c5931d35ce432ce14c7920b8ca9ba1c71dd6d4432eef98a38c2e6105",
+      "before": "1661e19b6934347f2a48690d006dc13362f43dd4387514d958cd733f7e292ed9",
+      "path": "Platform/Contract/Tests/RustInterop/src/lib.rs"
+    },
+    {
+      "after": "766518aa1cb4aaae63bb6d23ee4037904fd98cd090bfa0f2ea79cdca98d9b892",
+      "before": "17cabdec5304aec2dc88c4e08a405534543e234fe41f33d9a2277ed50636ce30",
+      "path": "Platform/Contract/Tools/AbiRustGen/src/main.zig"
+    },
+    {
+      "after": "d1bc1ca342bbc6363fd33bd6491a3c22c4c6efd118464f42af33fe62070a2131",
+      "before": "d42079a6797861f3bf4f182666292c327254672c0240989175bdcbdf2b867dd8",
+      "path": "Platform/Contract/Tools/ApiContractGen/src/generation2.zig"
+    },
+    {
+      "after": "58a2259a813322078c45b97af60da84604da5090213a637a00003ae283ce3c26",
+      "before": null,
+      "path": "Platform/Contract/Tools/ApiContractGen/src/legacy_projection.zig"
+    },
+    {
+      "after": "5bfd3f0f137fc75ac948dd0ee4243bd005be124040706760d7656d73ed2cafb7",
+      "before": "27ae05404555844090ca4a48d45cb73ea8a5e3ca84b8469c02494be368396afe",
+      "path": "Platform/Contract/Tools/ApiContractGen/src/main.zig"
+    },
+    {
+      "after": "f9f92b3487a7d2a7b0c8e599ece5b49fdf75439766d3b3f89d75315cc030b611",
+      "before": "2f3cbccff3781ad3056c00a5bc531db74add0833f98ac7d4679ccf2b2c008edf",
+      "path": "Platform/SDK/build.zig.zon"
+    },
+    {
+      "after": null,
+      "before": "49af5079355b84d34afeb0db357d20fec18b2e5dcec528ca8f3b449b1dcd49ef",
+      "path": "Platform/Contract/Tools/ApiContractGen/src/generation2_technical.zig.in"
+    }
+  ],
+  "canonical_files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "15afdff956b928ee27ab38d771c2d47087e5c6c4f8715a6b6005b90ec389d997",
+      "canonical_byte_identical": false
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "b1967a4264a751b323ffa3510825e215f24c7eb5d9ed5f461b7287f2be55ed6e",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/R4DDriver.txt",
+      "sha256": "4faeb34f692e8b48d4d2b3f2ba5ef36bb5c5e781502268996ebaeaea884c7f72",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/R4LInterface.txt",
+      "sha256": "21dc0af48800a2ed69fc659443f998d52429fb791960efe8255fff8d44a7c312",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/R4LQuery.txt",
+      "sha256": "fdf80bb5afac507d3b8985d1bcf0e5ff012b6af7398cabe4c2648fca1971a54b",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/R4M0.txt",
+      "sha256": "d75d365a795155979cf9d7851c1f471ee9c132fb0fe28d834815e247321547d8",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/R4M0TitleAppearance.txt",
+      "sha256": "b3d0e0962d990400f72586d20f9f1990b89eb4b7adc0379da2cf55e085448193",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/R4XStart.txt",
+      "sha256": "71edcaf9b2caa4cc296dabc041f4b3edf2c00f56a29fb22ded6683f80bd764a9",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/README.txt",
+      "sha256": "c89d2c5ffd2e1dfa998c114fccdb82cffd30a0a4c76071ab3c606bb8d40c267e",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "ABI/SubsystemLaunch.txt",
+      "sha256": "c5ca4f6ee2a874e398de4b4fe52869b69065312e8a6db55b68125b2ac7b84041",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/ApiContract.baseline.json",
+      "sha256": "536e25513c405ac5b96d7609aeb8da89db4e5ff1ea4b34b439ea0242ddb5d0a3",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/ApiContract.json",
+      "sha256": "536e25513c405ac5b96d7609aeb8da89db4e5ff1ea4b34b439ea0242ddb5d0a3",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/AudioCapture.txt",
+      "sha256": "ef820c36df0d940ed8c00c3841a4c4db18db7f78a5b8e66caee63e5d633f8f5d",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/BytePipes.txt",
+      "sha256": "d79f9a8c4ddd1899f6fc88e626f5906a71d04c904938e74281937195dc635109",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/ClipboardOffers.txt",
+      "sha256": "c8ffda1586f33a29ae0a165024e3d5a28677cd398f3dc53d956bfc8e09f4e264",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/DeviceInventorySnapshot.txt",
+      "sha256": "270c64ab0426d0c94f22efde1458ba72365856adea985001f570a532769d6e8b",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/FileMetadata2.txt",
+      "sha256": "56525743c989459ff2e28f5e2fd814e521f994e2fb4c3783e5aee8d6e906e688",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/FontPrefixMetrics2.txt",
+      "sha256": "c68eaf8c4235271610a410e52d38bb18c87bba89bf84e2b23041277a2dfa601d",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/Generation2.baseline.json",
+      "sha256": "0be6677ab2572b26ca8c09b16012ffcbf90c3f2478bd0490981130b08fd1e878",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/Generation2.json",
+      "sha256": "0be6677ab2572b26ca8c09b16012ffcbf90c3f2478bd0490981130b08fd1e878",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/Groups.txt",
+      "sha256": "7fa0c083b33996d7b39669ddb711b772a715a82d7cb9f59d37369359bb6cc33d",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/Ipv6Providers.txt",
+      "sha256": "d25e3122e6f83a7f9c0206b36f7641c30ad9c9e8d5bbab5490562a5b2ed7403a",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/Ipv6Transport.txt",
+      "sha256": "4a35deabd22bc2310050a15ce9f19939221b02f6d0cf799a71eb91714b6ca525",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/LaunchIo.txt",
+      "sha256": "0cd3c046a097ff23500aff97a56095b459b0b1015243c514ac78a6020c00e810",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/LegacyProjection.json",
+      "sha256": "dfea92dc5967ca7594d3f1679bdce69440b01b5771826e6635e07e7e5f27bce7",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/NetworkFamily.txt",
+      "sha256": "164f394c6400ac88cb9da55ff4c388252c1a6b4ec4987a40803a2fbbe1daf398",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/README.txt",
+      "sha256": "7c3c21826feb2f23ee88414eac9ad29291cf1cb057db80195d0615de244cacc1",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "API/TextComposition.txt",
+      "sha256": "552fde882690faa0e90e98693420852b482dae6362a2b01c2266d36009cb9950",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Build.bat",
+      "sha256": "c1c1f557edcaba4064637d9622a96d9ea618ca8c2219f0258021986978844060",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Build.ps1",
+      "sha256": "7b2088697b06bce6d270fe900659808a9df6fbdb0b9b1675d3bc84cdc617c52f",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Build.sh",
+      "sha256": "c5eae6da87f3171e4cb3fba6f0ae0712030cac34b1b87bbf0ce26d9b9e92e05f",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "DOCUMENTATION.de.txt",
+      "sha256": "90354068783a1753cd72ce7f586ee736cfeffaa92a5808cd29bed4a6723f9b07",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Conformance/C/ApiContractConformanceGenerated.c",
+      "sha256": "48a9b5e55650fa3f505e76377b3ffb596445a1396b91fcaad9a65afcd1cd70a8",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Conformance/Zig/ApiContractConformanceGenerated.zig",
+      "sha256": "9b3202ae55382892d71acf790cb5c0eac0b46aaeb0c23141db1a3d9010105ebe",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/API/R4AUDIO.md",
+      "sha256": "9112d3976bb9315bac8753474ab9f22198872aaf7f5349ea617e30f198a4233d",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/API/R4DESK.md",
+      "sha256": "cf3eee77aa9a1ef3e41535a354bf4ae7a778192a5f2b2fb9b743b32f3910a0b0",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/API/R4DEV.md",
+      "sha256": "2000dbb0c56fffd929f2a4261e5df8b4f48704fbf95a840d616a5d655943b72b",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/API/R4DRAW.md",
+      "sha256": "49075a8563adf94cbefee0edbf860d51c9f495a00718e416a339120bd0364ce4",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/API/R4NET.md",
+      "sha256": "f6fcffff1cb9e1e53a6194c7efd6d2c11e7d721188bc93a2b7fcbabb8fb293e5",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/API/R4SYS.md",
+      "sha256": "aba92a81d6b1be0e8ebf5d2136a8ec2499f522ebb83ee5fdaf41c706ee024281",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/OperationContracts.md",
+      "sha256": "09f235d861ea3ca2c51f5e04d5d9ccdcc10095d1b1c0ed74f6763d8023f4d6f9",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/PayloadTypes.md",
+      "sha256": "672fb6e300e8db00e8a9ac6e50d2bc4297a56f5bf1607bfd4dd76247d2d1e4dd",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Docs/ZigCParity.json",
+      "sha256": "80b1c0e7f222b754c17485834c774c364d770ed2bbf2defe99932da9401a8f1c",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Generation2/C/include/r4os/generation2.h",
+      "sha256": "2b89052fe66fc75587ec8e6f99a30a3d1de9e1f1bcb88812d8eb42dfd533c1af",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Generation2/Inventory.json",
+      "sha256": "c903909a5f62ce37b084d91a7647732eb20ad27ccdf6fb3fa937c332f36cddf6",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Generation2/Rust/generation2.rs",
+      "sha256": "87262572445c56dea4d06bfc0dd5b8f21a325ddf402fc06fc37b91a9bd87c816",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Generation2/Zig/abi.zig",
+      "sha256": "9e9e2483254f5c4991ab54162cf7c01c63b680b2ed951e49223e1becece24617",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Groups/R4AUDIO/api_contract_generated.zig",
+      "sha256": "9692a673aee129cd1df8f652733b40a9bae12b90054a4df19c9bae6677cd2747",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Groups/R4DESK/api_contract_generated.zig",
+      "sha256": "e46568aa9fea03cb45e814a2c5b77ad59fb99fb8c5d76bda6abfcbe6451291de",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Groups/R4DEV/api_contract_generated.zig",
+      "sha256": "2d191e0a07be52b46a131cb358e7783628ea1d2ca35f8bb2a2e89cb9aa0b84b9",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Groups/R4DRAW/api_contract_generated.zig",
+      "sha256": "024f24587685b695ca62584ee3727f421fc97da9a1559ab51d4971f9f6317975",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Groups/R4NET/api_contract_generated.zig",
+      "sha256": "e4141fc7eb1f2a43144cfa1646a985d9651a3ebe2b8e305a76c9da8704b85bdd",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Groups/R4SYS/api_contract_generated.zig",
+      "sha256": "f926ec729422d06456285d1cb33c63f5fcce541b4114c75acb5e601a2087567c",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Inventory/API.json",
+      "sha256": "05468be62618c51d1ef98687847805d39102c5bfe79667c3836a3b654dec6b16",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Inventory/RustABI.json",
+      "sha256": "869db47628eb31508781510131e8bbb88c1e17db039ee3bcd4bdde5db53706d9",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Kernel/Zig/r4x_api_exports.zig",
+      "sha256": "1be70cb85add4bdb7daadc6d75c855cfe8b7202ee5af9ab1b10152573f830f56",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/Kernel/Zig/r4x_api_generated.zig",
+      "sha256": "2ad268be2fdfd1847879eadd6933cbdd5c107e714fc215ad7b5eaa4811a1ab6b",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/README.txt",
+      "sha256": "a5b073a14650b7c4044b59c10fee1ccea358b3f44f5ecb128f5d46eb825eb22a",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/C/include/r4os/abi_generated.h",
+      "sha256": "25879175afafbae9ca50b80876aac07a7ee993717ebb3c25f6a32a8afa6cf637",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/C/include/r4os/abi_technical_generated.h",
+      "sha256": "b3c262b72ebcea7ac1da914afa5299e2688eabbed75a17c523b6ab2b5c45fdaf",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Rust/Cargo.lock",
+      "sha256": "12bf133b6b385084ef883d13529916cc4a6e75a7d67e64e85322e4b2d6594d8f",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Rust/Cargo.toml",
+      "sha256": "de464f2f9243e3d153c06b701a2126839c3e8a921a6d466467d3042370023263",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Rust/src/lib.rs",
+      "sha256": "75b154a95484213ccb1b4b845196887c42b294ab14c50668123986685e6c4692",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Zig/abi.zig",
+      "sha256": "0411b7fbf787e3d8fb334acb11c858cc3b6e8e85a6fa4509a324ac8e35122483",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Zig/abi_exports.zig",
+      "sha256": "df1c112b3e0b90237247ab5d5dfdc315c92abfa4c52cac212688e8ee4d39aaec",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Zig/abi_generated.zig",
+      "sha256": "9733c75b1fe911c966081d2f0d496be8d5c9fd4cfbac1f088bc56d9a42e9b0ab",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Zig/package.zig",
+      "sha256": "32fa2f4214c153fb4325361c9308ef8bc0a80a0d9c45c96423dcfb1edf828ff8",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Generated/SDK/Zig/technical2_generated.zig",
+      "sha256": "98df0a381107809dc49e950aa6656e203631814bba3f19d7015c5c2b4255cd0f",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Module/CpuBaseline.json",
+      "sha256": "eeeee03aa8fd41051c09e61e9d70ca35660f2b413c3f878fb6e5a3bb51aad10c",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Module/R4MFv2.txt",
+      "sha256": "0244d1c309489d1041063d75cc2b95adb6fdfd68f8c00d1ce3cad6cbf05ce2a2",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Module/RustModuleV2.txt",
+      "sha256": "fe8659f079cdc0be40a6c55bdbc288fe59a2a69e48f7fc0b19d10ec7a92e7410",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "f7891159dc5eaba8977cab0176af1a37b1b0727b156d77ebf23b46955aefa998",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "PROVENANCE.txt",
+      "sha256": "9a85f9c3cba5a9cd59b14f0f1e633711050eb81208db7224929db2f60be5b67f",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "README.md",
+      "sha256": "b95128474c37e21e1a6f59a2002cab0c46a913a646bf442d83c6aa5a1fdfb717",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "93cd99eec1948acb3d3af9ee968f4a2cc034ca3fa175966e75cdbdfbad0700ab",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tests/Generation2.zig",
+      "sha256": "7640cbab82333da7143b1c97aee4a4da9e8c51c8eb3f3aec286398d146493770",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tests/RustInterop/Cargo.lock",
+      "sha256": "c03106d46a4929d4e5a9c5204316f7247c33aa5d98627af297069f8ccf07d439",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tests/RustInterop/Cargo.toml",
+      "sha256": "aa05aa9b304db129d5fb1dfc1aee00a7ca6c97473c0ca492c1ad64adbfc70267",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tests/RustInterop/interop.c",
+      "sha256": "c098aa5f0e8e66f60617e8ce9b0d30873c8233aa0826fb3657f9dae9b11a5a33",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tests/RustInterop/interop.zig",
+      "sha256": "2cde456c7236ba174751a3cfb4e3c722f5c7f0d58276be97a9e711686674f4f3",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tests/RustInterop/src/lib.rs",
+      "sha256": "fb754440c5931d35ce432ce14c7920b8ca9ba1c71dd6d4432eef98a38c2e6105",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tools/AbiRustGen/src/c_projection.zig",
+      "sha256": "ba10b605e8385eb69cfdcdcf030f896f114f76adbe7050921cb0efc8a896243a",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tools/AbiRustGen/src/main.zig",
+      "sha256": "766518aa1cb4aaae63bb6d23ee4037904fd98cd090bfa0f2ea79cdca98d9b892",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tools/ApiContractGen/src/generation2.zig",
+      "sha256": "d1bc1ca342bbc6363fd33bd6491a3c22c4c6efd118464f42af33fe62070a2131",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tools/ApiContractGen/src/legacy_projection.zig",
+      "sha256": "58a2259a813322078c45b97af60da84604da5090213a637a00003ae283ce3c26",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tools/ApiContractGen/src/main.zig",
+      "sha256": "5bfd3f0f137fc75ac948dd0ee4243bd005be124040706760d7656d73ed2cafb7",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "Tools/Test-RustABI.ps1",
+      "sha256": "08b3023f4b776efbce887549797038ebfb8efceca88b9c003512fff5aca14423",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "build.zig",
+      "sha256": "3f2024f232af4ebc8273aa4126a5f41693506c607e831ab21eb90a74161f7b54",
+      "canonical_byte_identical": true
+    },
+    {
+      "path": "build.zig.zon",
+      "sha256": "c6db8b1b6e251f7825594058a766b535327d99b8c3bf5c0d377b0766e6425243",
+      "canonical_byte_identical": true
+    }
+  ],
+  "scope": "Explicit owner source transfer and whole input admission. Existing39 runtime bytes/manifests and all55 original source archives immutable. Direct new providers retain owner mechanisms and null decisions. Native, rebuild and candidate package qualification remain pending.",
+  "old_source_archives_preserved": 55,
+  "canonical_contract": {
+    "at": "2026-11-13T19:59:10.324995+01:00",
+    "commit": "8fb41b466fb64a6df866c564feb4d598c66411b2",
+    "zig_hash": "r4os_contract-0.64.95-ELhbYUmucgEqHNyLzdLH5v1X5D4tUkiOiBSx20BAe_Fv",
+    "archive": "Temp/ApiMigrationRun/088/Contract95Canonical.tar.gz",
+    "reviewed_changed_paths": 40,
+    "scope": "Clean local owner checkpoint after original full tests, current stronger17/26 mutations/check, independent frozen type graph/defaults and both original C/Rust/Zig crossover directions. No88 native/package/push/closure claim."
+  },
+  "metadata_overlay": [
+    ".gitattributes"
+  ]
+}

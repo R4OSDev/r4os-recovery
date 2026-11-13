@@ -2898,27 +2898,93 @@ const api2 = @import("../program/generation2.zig");
 pub const table2: api2.abi.DriverApi2 = initTable2();
 fn initTable2() api2.abi.DriverApi2 {
     @setEvalBranchQuota(2_000_000);
-    const source = initialTable();
-    var result: api2.abi.DriverApi2 = undefined;
-    inline for (@typeInfo(api2.abi.DriverApi2).@"struct".fields) |field| {
-        if (comptime @offsetOf(api2.abi.DriverApi2, field.name) < 16) continue;
-        if (comptime std.mem.eql(u8, field.name, "register_audio_output_backend")) {
-            // Recovery has no generation2 audio backend owner. Never hand a
-            // compact AudioBackend2/status callback to the old descriptor ABI.
-            @field(result, field.name) = audioOutputUnavailable2;
-        } else if (comptime @hasField(Table, field.name)) {
-            @field(result, field.name) = api2.callback(field.type, @field(source, field.name));
-        } else if (comptime std.mem.eql(u8, field.name, "monotonic_clock")) {
-            @field(result, field.name) = api2.callback(field.type, &@import("../program/r4sys.zig").monotonicClock);
-        } else if (comptime @typeInfo(field.type) == .optional) {
-            @field(result, field.name) = null;
-        } else @compileError("Missing Recovery DriverApi2 owner: " ++ field.name);
-    }
-    result.magic = api2.abi.driver_magic;
-    result.version = api2.abi.driver_version;
-    result.size = @sizeOf(api2.abi.DriverApi2);
-    result.reserved = 0;
-    return result;
+    return .{
+        .magic = api2.abi.driver_magic,
+        .version = api2.abi.driver_version,
+        .size = @sizeOf(api2.abi.DriverApi2),
+        .reserved = 0,
+        .log_info = api2.callback(@FieldType(api2.abi.DriverApi2, "log_info"), &logInfo),
+        .log_warn = api2.callback(@FieldType(api2.abi.DriverApi2, "log_warn"), &logWarn),
+        .log_error = api2.callback(@FieldType(api2.abi.DriverApi2, "log_error"), &logError),
+        .port_inb = api2.callback(@FieldType(api2.abi.DriverApi2, "port_inb"), &portInb),
+        .port_outb = api2.callback(@FieldType(api2.abi.DriverApi2, "port_outb"), &portOutb),
+        .alloc_dma_buffer = api2.callback(@FieldType(api2.abi.DriverApi2, "alloc_dma_buffer"), &allocDmaBuffer),
+        .free_dma_buffer = api2.callback(@FieldType(api2.abi.DriverApi2, "free_dma_buffer"), &freeDmaBuffer),
+        .request_irq = api2.callback(@FieldType(api2.abi.DriverApi2, "request_irq"), &requestIrq),
+        .release_irq = api2.callback(@FieldType(api2.abi.DriverApi2, "release_irq"), &releaseIrq),
+        .get_option = api2.callback(@FieldType(api2.abi.DriverApi2, "get_option"), &getOption),
+        .register_storage_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "register_storage_backend"), &registerStorageBackend),
+        .register_input_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "register_input_backend"), &registerInputBackend),
+        .register_mixer_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "register_mixer_backend"), &registerMixerBackend),
+        .register_net_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "register_net_backend"), &registerNetBackend),
+        .alloc_dma_region = api2.callback(@FieldType(api2.abi.DriverApi2, "alloc_dma_region"), &allocDmaRegion),
+        .free_dma_region = api2.callback(@FieldType(api2.abi.DriverApi2, "free_dma_region"), &freeDmaRegion),
+        .pci_device_count = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_device_count"), &pciDeviceCount),
+        .pci_device_at = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_device_at"), &pciDeviceAt),
+        .pci_find_by_class = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_find_by_class"), &pciFindByClass),
+        .pci_read_config32 = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_read_config32"), &pciReadConfig32),
+        .pci_write_config32 = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_write_config32"), &pciWriteConfig32),
+        .pci_read_bar = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_read_bar"), &pciReadBar),
+        .pci_enable_bus_master = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_enable_bus_master"), &pciEnableBusMaster),
+        .irq_register = api2.callback(@FieldType(api2.abi.DriverApi2, "irq_register"), &irqRegister),
+        .irq_unregister = api2.callback(@FieldType(api2.abi.DriverApi2, "irq_unregister"), &irqUnregister),
+        .irq_stats = api2.callback(@FieldType(api2.abi.DriverApi2, "irq_stats"), &irqStats),
+        .pci_map_bar = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_map_bar"), &pciMapBar),
+        .port_inw = api2.callback(@FieldType(api2.abi.DriverApi2, "port_inw"), &portInw),
+        .port_outw = api2.callback(@FieldType(api2.abi.DriverApi2, "port_outw"), &portOutw),
+        .port_inl = api2.callback(@FieldType(api2.abi.DriverApi2, "port_inl"), &portInl),
+        .port_outl = api2.callback(@FieldType(api2.abi.DriverApi2, "port_outl"), &portOutl),
+        .net_receive_frame = api2.callback(@FieldType(api2.abi.DriverApi2, "net_receive_frame"), &netReceiveFrame),
+        .register_audio_output_backend = &audioOutputUnavailable2,
+        .unregister_audio_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "unregister_audio_backend"), &unregisterAudioBackend),
+        .tick_count = api2.callback(@FieldType(api2.abi.DriverApi2, "tick_count"), &tickCount),
+        .timer_frequency = api2.callback(@FieldType(api2.abi.DriverApi2, "timer_frequency"), &timerFrequency),
+        .wait_ticks = api2.callback(@FieldType(api2.abi.DriverApi2, "wait_ticks"), &waitTicks),
+        .register_synth_engine_v2 = api2.callback(@FieldType(api2.abi.DriverApi2, "register_synth_engine_v2"), &registerSynthEngineV2),
+        .unregister_storage_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "unregister_storage_backend"), &unregisterStorageBackend),
+        .storage_backend_recovery_begin = api2.callback(@FieldType(api2.abi.DriverApi2, "storage_backend_recovery_begin"), &storageBackendRecoveryBegin),
+        .storage_backend_recovery_finish = api2.callback(@FieldType(api2.abi.DriverApi2, "storage_backend_recovery_finish"), &storageBackendRecoveryFinish),
+        .register_usb_host_controller = api2.callback(@FieldType(api2.abi.DriverApi2, "register_usb_host_controller"), &registerUsbHostController),
+        .unregister_usb_host_controller = api2.callback(@FieldType(api2.abi.DriverApi2, "unregister_usb_host_controller"), &unregisterUsbHostController),
+        .driver_work_submit = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_work_submit"), &driverWorkSubmit),
+        .driver_work_cancel = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_work_cancel"), &driverWorkCancel),
+        .driver_completion_wait = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_completion_wait"), &driverCompletionWait),
+        .driver_completion_status = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_completion_status"), &driverCompletionStatus),
+        .driver_completion_release = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_completion_release"), &driverCompletionRelease),
+        .driver_work_summary = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_work_summary"), &driverWorkSummary),
+        .pci_enable_msi = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_enable_msi"), &pciEnableMsi),
+        .alloc_dma_region_constrained = api2.callback(@FieldType(api2.abi.DriverApi2, "alloc_dma_region_constrained"), &allocDmaRegionConstrained),
+        .pci_disable_msi = api2.callback(@FieldType(api2.abi.DriverApi2, "pci_disable_msi"), &pciDisableMsi),
+        .protocol_dispatch = api2.callback(@FieldType(api2.abi.DriverApi2, "protocol_dispatch"), &protocolDispatch),
+        .dma_pin_buffer = api2.callback(@FieldType(api2.abi.DriverApi2, "dma_pin_buffer"), &dmaPinBuffer),
+        .dma_map_pinned = api2.callback(@FieldType(api2.abi.DriverApi2, "dma_map_pinned"), &dmaMapPinned),
+        .dma_sync_for_device = api2.callback(@FieldType(api2.abi.DriverApi2, "dma_sync_for_device"), &dmaSyncForDevice),
+        .dma_sync_for_cpu = api2.callback(@FieldType(api2.abi.DriverApi2, "dma_sync_for_cpu"), &dmaSyncForCpu),
+        .dma_unmap = api2.callback(@FieldType(api2.abi.DriverApi2, "dma_unmap"), &dmaUnmap),
+        .dma_unpin_buffer = api2.callback(@FieldType(api2.abi.DriverApi2, "dma_unpin_buffer"), &dmaUnpinBuffer),
+        .driver_work_submit_request = api2.callback(@FieldType(api2.abi.DriverApi2, "driver_work_submit_request"), &driverWorkSubmitRequest),
+        .activate_usb_host_controller = api2.callback(@FieldType(api2.abi.DriverApi2, "activate_usb_host_controller"), &activateUsbHostController),
+        .register_display_blit_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "register_display_blit_backend"), &registerDisplayBlitBackend),
+        .unregister_display_blit_backend = api2.callback(@FieldType(api2.abi.DriverApi2, "unregister_display_blit_backend"), &unregisterDisplayBlitBackend),
+        .net_schedule_rx = api2.callback(@FieldType(api2.abi.DriverApi2, "net_schedule_rx"), &netScheduleRx),
+        .net_backend_query = api2.callback(@FieldType(api2.abi.DriverApi2, "net_backend_query"), &netBackendQuery),
+        .net_receive_packet = api2.callback(@FieldType(api2.abi.DriverApi2, "net_receive_packet"), &netReceivePacket),
+        .gfx_memory_query = null,
+        .gfx_queue_query = null,
+        .gfx_output_query = null,
+        .gfx_display_query = null,
+        .resource_query = null,
+        .heap_query = null,
+        .monotonic_clock = api2.callback(@FieldType(api2.abi.DriverApi2, "monotonic_clock"), &@import("../program/r4sys.zig").monotonicClock),
+        .thread_query = null,
+        .semaphore_query = null,
+        .dma_sync_range_for_device = null,
+        .dma_sync_range_for_cpu = null,
+        .driver_work_submit_owned = null,
+        .serial_query = null,
+        .register_audio_output_epoch = null,
+        .register_audio_capture_backend = null,
+    };
 }
 fn audioOutputUnavailable2(_: [*:0]const u8, _: *const api2.abi.AudioBackend2) callconv(.c) i32 {
     return -5;

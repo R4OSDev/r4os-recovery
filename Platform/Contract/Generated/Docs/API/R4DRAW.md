@@ -3,8 +3,8 @@
 <!-- R4OS-APIREF:BEGIN R4DRAW (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4DRAW (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Draw` v40, 920 Bytes, 113 Funktionsfelder und 113 Slots insgesamt.
-Signatur-Wahrheit: `abi.R4DrawFns` (Feldname == Tabellenfeld).
+Kernel-Gruppentabelle `R4XStartR4Draw2` v2, 920 Bytes, 113 Funktionsfelder und 113 Slots insgesamt.
+Signatur-Wahrheit: `abi.R4DrawFns2` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
 | Slot | Offset | Zustand | Tabellenfeld | Signatur |

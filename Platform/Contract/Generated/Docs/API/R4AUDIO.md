@@ -3,8 +3,8 @@
 <!-- R4OS-APIREF:BEGIN R4AUDIO (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4AUDIO (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Audio` v5, 240 Bytes, 26 Funktionsfelder und 28 Slots insgesamt.
-Signatur-Wahrheit: `abi.R4AudioFns` (Feldname == Tabellenfeld).
+Kernel-Gruppentabelle `R4XStartR4Audio2` v2, 240 Bytes, 26 Funktionsfelder und 28 Slots insgesamt.
+Signatur-Wahrheit: `abi.R4AudioFns2` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
 | Slot | Offset | Zustand | Tabellenfeld | Signatur |

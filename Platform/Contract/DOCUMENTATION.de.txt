@@ -1,6 +1,19 @@
 ﻿R4OS Plattform-Contract
 =======================
 
+Aktiver kanonischer Vertrag (0.64.95)
+-----------------------------------
+ApiContract.json beschreibt direkt die533 Slots und Query2/Start2 mit ihren
+bereits freigegebenen Nummern, Signaturen, Fehlern und gemeinsamen Payloads.
+Generation2.json beschreibt die fuenf technischen2-Records und Callbacks ohne
+Verdichtung alter Typen. Die beiden Baselines schuetzen die vorhandene ABI.
+LegacyProjection.json haelt waehrend des geplanten Cutovers ausschliesslich
+vier inaktive alte Loecher und Rueckprojektionsmetadaten. Daraus entstehen
+voruebergehend alte Anbieter-/SDKansichten; aktuelle2-Tabellen werden direkt
+gebunden. Die folgenden frueheren Revisionsangaben beschreiben ihre damaligen
+Praefixe beziehungsweise ausdruecklich erhaltene gemeinsame Datenvertraege.
+
+
 Dieses Repository ist die zentrale API-/ABI-Wahrheit der R4OS-Plattform.
 Es beschreibt den gemeinsamen R4M0-, R4XStart- und R4L-Mechanismus sowie die
 sechs vom Kernel bereitgestellten Plattformgruppen.

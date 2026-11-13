@@ -1,0 +1,180 @@
+{
+  "groups": [
+    {
+      "name": "R4SYS",
+      "source_version": 41,
+      "source_magic": 827937618,
+      "current_version": 6,
+      "tombstones": [
+        {
+          "number": 49,
+          "offset": 408,
+          "name": "reserved_shell_run",
+          "state": "tombstone",
+          "required": false,
+          "description": "R4SYS reserved shell_run tombstone.",
+          "semantics": {
+            "exposure": "internal",
+            "requirements": [
+              "R4SYS"
+            ],
+            "optional_capability": false,
+            "error_domain": "internal",
+            "ownership": "none",
+            "buffer_lifetime": "none",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "serialized",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "none",
+            "language_parity": "internal_only"
+          }
+        }
+      ]
+    },
+    {
+      "name": "R4DESK",
+      "source_version": 21,
+      "source_magic": 826623058,
+      "current_version": 1,
+      "tombstones": []
+    },
+    {
+      "name": "R4DRAW",
+      "source_version": 40,
+      "source_magic": 827802706,
+      "current_version": 2,
+      "tombstones": []
+    },
+    {
+      "name": "R4NET",
+      "source_version": 2,
+      "source_magic": 826625618,
+      "current_version": 1,
+      "tombstones": []
+    },
+    {
+      "name": "R4AUDIO",
+      "source_version": 5,
+      "source_magic": 827670866,
+      "current_version": 2,
+      "tombstones": []
+    },
+    {
+      "name": "R4DEV",
+      "source_version": 37,
+      "source_magic": 827737170,
+      "current_version": 2,
+      "tombstones": [
+        {
+          "number": 27,
+          "offset": 232,
+          "name": "reserved_program_instance_storage_summary_v1",
+          "state": "tombstone",
+          "required": false,
+          "description": "Retired R4DEV V1 diagnostic slot. Always zero; never reused. Use the explicit current V2 diagnostic.",
+          "semantics": {
+            "exposure": "internal",
+            "requirements": [
+              "R4DEV"
+            ],
+            "optional_capability": false,
+            "error_domain": "internal",
+            "ownership": "none",
+            "buffer_lifetime": "none",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "serialized",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "none",
+            "language_parity": "internal_only"
+          }
+        },
+        {
+          "number": 29,
+          "offset": 248,
+          "name": "reserved_program_registry_summary_v1",
+          "state": "tombstone",
+          "required": false,
+          "description": "Retired R4DEV V1 diagnostic slot. Always zero; never reused. Use the explicit current V2 diagnostic.",
+          "semantics": {
+            "exposure": "internal",
+            "requirements": [
+              "R4DEV"
+            ],
+            "optional_capability": false,
+            "error_domain": "internal",
+            "ownership": "none",
+            "buffer_lifetime": "none",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "serialized",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "none",
+            "language_parity": "internal_only"
+          }
+        },
+        {
+          "number": 30,
+          "offset": 256,
+          "name": "reserved_program_registry_self_test_v1",
+          "state": "tombstone",
+          "required": false,
+          "description": "Retired R4DEV V1 diagnostic slot. Always zero; never reused. Use the explicit current V2 diagnostic.",
+          "semantics": {
+            "exposure": "internal",
+            "requirements": [
+              "R4DEV"
+            ],
+            "optional_capability": false,
+            "error_domain": "internal",
+            "ownership": "none",
+            "buffer_lifetime": "none",
+            "blocking": "nonblocking",
+            "threading": "thread_safe",
+            "timeout": "none",
+            "cancel": "not_cancellable",
+            "timeout_outcome": "none",
+            "reentrancy": "serialized",
+            "callback_context": "none",
+            "buffer_completion": "none",
+            "shutdown": "none",
+            "close_rule": "none",
+            "outputs": "none",
+            "side_effects": "none",
+            "retry": "never_automatic",
+            "buffer_too_small": "none",
+            "language_parity": "internal_only"
+          }
+        }
+      ]
+    }
+  ]
+}

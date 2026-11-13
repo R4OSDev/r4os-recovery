@@ -121,23 +121,26 @@ const api2 = @import("../program/generation2.zig");
 pub const table2: api2.abi.ProtocolApi2 = initTable2();
 fn initTable2() api2.abi.ProtocolApi2 {
     @setEvalBranchQuota(2_000_000);
-    const source = initialTable();
-    var result: api2.abi.ProtocolApi2 = undefined;
-    inline for (@typeInfo(api2.abi.ProtocolApi2).@"struct".fields) |field| {
-        if (comptime @offsetOf(api2.abi.ProtocolApi2, field.name) < 16) continue;
-        if (comptime std.mem.eql(u8, field.name, "cpu_acceleration_info")) {
-            @field(result, field.name) = api2.callback(field.type, &@import("../platform/cpu_acceleration.zig").info);
-        } else if (comptime std.mem.eql(u8, field.name, "cpu_acceleration_work")) {
-            @field(result, field.name) = api2.callback(field.type, &@import("../platform/cpu_acceleration.zig").work);
-        } else if (comptime @hasField(Table, field.name)) {
-            @field(result, field.name) = api2.callback(field.type, @field(source, field.name));
-        } else if (comptime @typeInfo(field.type) == .optional) {
-            @field(result, field.name) = null;
-        } else @compileError("Missing Recovery ProtocolApi2 owner: " ++ field.name);
-    }
-    result.magic = api2.abi.protocol_magic;
-    result.version = api2.abi.protocol_version;
-    result.size = @sizeOf(api2.abi.ProtocolApi2);
-    result.reserved = 0;
-    return result;
+    return .{
+        .magic = api2.abi.protocol_magic,
+        .version = api2.abi.protocol_version,
+        .size = @sizeOf(api2.abi.ProtocolApi2),
+        .reserved = 0,
+        .log_info = api2.callback(@FieldType(api2.abi.ProtocolApi2, "log_info"), &logInfo),
+        .log_warn = api2.callback(@FieldType(api2.abi.ProtocolApi2, "log_warn"), &logWarn),
+        .log_error = api2.callback(@FieldType(api2.abi.ProtocolApi2, "log_error"), &logError),
+        .register_role = api2.callback(@FieldType(api2.abi.ProtocolApi2, "register_role"), &registerRole),
+        .set_status = api2.callback(@FieldType(api2.abi.ProtocolApi2, "set_status"), &setStatus),
+        .dependency_status = api2.callback(@FieldType(api2.abi.ProtocolApi2, "dependency_status"), &dependencyStatus),
+        .alloc = api2.callback(@FieldType(api2.abi.ProtocolApi2, "alloc"), &alloc),
+        .free = api2.callback(@FieldType(api2.abi.ProtocolApi2, "free"), &free),
+        .file_read = api2.callback(@FieldType(api2.abi.ProtocolApi2, "file_read"), &fileRead),
+        .cpu_acceleration_info = api2.callback(@FieldType(api2.abi.ProtocolApi2, "cpu_acceleration_info"), &@import("../platform/cpu_acceleration.zig").info),
+        .cpu_acceleration_work = api2.callback(@FieldType(api2.abi.ProtocolApi2, "cpu_acceleration_work"), &@import("../platform/cpu_acceleration.zig").work),
+        .entropy_source_info = null,
+        .entropy_fill = null,
+        .protocol_dispatch = null,
+        .link_io = null,
+        .process_status = null,
+    };
 }

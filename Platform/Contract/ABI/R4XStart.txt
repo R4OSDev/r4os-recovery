@@ -19,14 +19,14 @@ Dieser Block wird aus ApiContract.json erzeugt und darf nicht von Hand geaendert
 Konstanten
 ----------
 
-    R4XSTART_MAGIC        = 0x53583452
-    R4XSTART_ABI_MAJOR    = 1
-    R4XSTART_ABI_MINOR    = 1
-    R4XSTART_CONTEXT_SIZE = 128
+    R4XSTART_MAGIC        = 0x32583452
+    R4XSTART_ABI_MAJOR    = 2
+    R4XSTART_ABI_MINOR    = 0
+    R4XSTART_CONTEXT_SIZE = 120
     R4XSTART_IMPORT_SIZE  = 40
 
-R4XStartContext
----------------
+R4XStartContext2
+----------------
 
 Offset  Typ  Feld
 0       u32  magic
@@ -48,10 +48,9 @@ Offset  Typ  Feld
 88      u64  exit
 96      u64  should_close
 104     u64  yield
-112     u64  reserved_runtime
-120     u64  reserved2
+112     u64  reserved2
 
-Groesse: 128 Byte
+Groesse: 120 Byte
 
 R4XStartImport
 --------------
@@ -87,18 +86,18 @@ App-Profile
 Gruppentabellen
 ---------------
 
-    R4XSTART_R4SYS_VERSION = 41
-    R4XSTART_R4SYS_SIZE    = 1560
-    R4XSTART_R4DESK_VERSION = 21
+    R4XSTART_R4SYS_VERSION = 6
+    R4XSTART_R4SYS_SIZE    = 1552
+    R4XSTART_R4DESK_VERSION = 1
     R4XSTART_R4DESK_SIZE    = 632
-    R4XSTART_R4DRAW_VERSION = 40
+    R4XSTART_R4DRAW_VERSION = 2
     R4XSTART_R4DRAW_SIZE    = 920
-    R4XSTART_R4NET_VERSION = 2
+    R4XSTART_R4NET_VERSION = 1
     R4XSTART_R4NET_SIZE    = 296
-    R4XSTART_R4AUDIO_VERSION = 5
+    R4XSTART_R4AUDIO_VERSION = 2
     R4XSTART_R4AUDIO_SIZE    = 240
-    R4XSTART_R4DEV_VERSION = 37
-    R4XSTART_R4DEV_SIZE    = 744
+    R4XSTART_R4DEV_VERSION = 2
+    R4XSTART_R4DEV_SIZE    = 720
 
 Diese Zahlen beschreiben die aktuellen Provider-Tabellen. Die gleichnamigen
 generierten SDK-Importkonstanten bezeichnen den unterstuetzten Mindestprefix

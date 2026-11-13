@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_from": "API/ApiContract.json",
-  "contract_schema_version": 11,
+  "contract_schema_version": 12,
   "c_binding": "Generated/SDK/C/include/r4os/abi_generated.h",
   "c_technical_binding": "Generated/SDK/C/include/r4os/abi_technical_generated.h",
   "rust_binding": "Generated/SDK/Rust/src/lib.rs",
@@ -582,7 +582,7 @@
       "name": "R4SYS.system_halt",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 50,
+      "slot": 49,
       "exposure": "advanced",
       "description": "Halts processor execution without rebooting.",
       "locations": {
@@ -594,7 +594,7 @@
       "name": "R4SYS.system_reboot",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 51,
+      "slot": 50,
       "exposure": "advanced",
       "description": "Requests an immediate system reboot.",
       "locations": {
@@ -606,7 +606,7 @@
       "name": "R4SYS.system_poweroff",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 52,
+      "slot": 51,
       "exposure": "advanced",
       "description": "Requests an orderly system poweroff.",
       "locations": {
@@ -618,7 +618,7 @@
       "name": "R4SYS.time_state",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 53,
+      "slot": 52,
       "exposure": "public",
       "description": "Reads the current UTC, local offset, and clock configuration state.",
       "locations": {
@@ -630,7 +630,7 @@
       "name": "R4SYS.time_set_state",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 54,
+      "slot": 53,
       "exposure": "public",
       "description": "Applies a validated system time and clock configuration state.",
       "locations": {
@@ -642,7 +642,7 @@
       "name": "R4SYS.time_seconds_since_midnight",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 55,
+      "slot": 54,
       "exposure": "public",
       "description": "Returns local seconds elapsed since midnight.",
       "locations": {
@@ -654,7 +654,7 @@
       "name": "R4SYS.dir_list",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 56,
+      "slot": 55,
       "exposure": "public",
       "description": "Lists directory entries into a caller-owned result buffer.",
       "locations": {
@@ -666,7 +666,7 @@
       "name": "R4SYS.dir_create",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 57,
+      "slot": 56,
       "exposure": "public",
       "description": "Creates a directory at an absolute path.",
       "locations": {
@@ -678,7 +678,7 @@
       "name": "R4SYS.dir_delete",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 58,
+      "slot": 57,
       "exposure": "public",
       "description": "Deletes an empty directory at an absolute path.",
       "locations": {
@@ -690,7 +690,7 @@
       "name": "R4SYS.drive_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 59,
+      "slot": 58,
       "exposure": "public",
       "description": "Returns mounted drive metadata and scalar filesystem geometry, then performs the exact FREE query under the existing mounted request owner. May wait for request admission and cold bitmap I/O. DriveInfo.reserved bit drive_info_flag_free_valid is set only when the FREE backend supplied a value; zero free space with that bit set is valid. Other reserved bits remain zero.",
       "locations": {
@@ -702,7 +702,7 @@
       "name": "R4SYS.file_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 60,
+      "slot": 59,
       "exposure": "public",
       "description": "Returns size, attributes, and identity information for a file.",
       "locations": {
@@ -714,7 +714,7 @@
       "name": "R4SYS.file_delete",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 61,
+      "slot": 60,
       "exposure": "public",
       "description": "Deletes a file at an absolute path.",
       "locations": {
@@ -726,7 +726,7 @@
       "name": "R4SYS.file_rename",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 62,
+      "slot": 61,
       "exposure": "public",
       "description": "Renames a file within its directory.",
       "locations": {
@@ -738,7 +738,7 @@
       "name": "R4SYS.file_copy",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 63,
+      "slot": 62,
       "exposure": "public",
       "description": "Copies a file while reporting completed byte progress.",
       "locations": {
@@ -750,7 +750,7 @@
       "name": "R4SYS.file_move",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 64,
+      "slot": 63,
       "exposure": "public",
       "description": "Moves a file while reporting completed byte progress.",
       "locations": {
@@ -762,7 +762,7 @@
       "name": "R4SYS.file_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 65,
+      "slot": 64,
       "exposure": "public",
       "description": "Reads a complete file into a caller-owned buffer.",
       "locations": {
@@ -774,7 +774,7 @@
       "name": "R4SYS.file_write",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 66,
+      "slot": 65,
       "exposure": "public",
       "description": "Creates or replaces a file with the supplied bytes.",
       "locations": {
@@ -786,7 +786,7 @@
       "name": "R4SYS.file_read_at",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 67,
+      "slot": 66,
       "exposure": "public",
       "description": "Reads file bytes starting at the requested offset.",
       "locations": {
@@ -798,7 +798,7 @@
       "name": "R4SYS.file_append",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 68,
+      "slot": 67,
       "exposure": "public",
       "description": "Appends bytes to an existing file.",
       "locations": {
@@ -810,7 +810,7 @@
       "name": "R4SYS.file_stream_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 69,
+      "slot": 68,
       "exposure": "public",
       "description": "Creates a staged sequential file stream.",
       "locations": {
@@ -822,7 +822,7 @@
       "name": "R4SYS.file_stream_write",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 70,
+      "slot": 69,
       "exposure": "public",
       "description": "Writes the next sequential chunk to a staged file stream.",
       "locations": {
@@ -834,7 +834,7 @@
       "name": "R4SYS.file_stream_finish",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 71,
+      "slot": 70,
       "exposure": "public",
       "description": "Publishes a completed staged file stream.",
       "locations": {
@@ -846,7 +846,7 @@
       "name": "R4SYS.file_stream_abort",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 72,
+      "slot": 71,
       "exposure": "public",
       "description": "Aborts a staged file stream and removes its private data.",
       "locations": {
@@ -858,7 +858,7 @@
       "name": "R4SYS.env_set",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 73,
+      "slot": 72,
       "exposure": "public",
       "description": "Creates or replaces one environment variable for the calling program.",
       "locations": {
@@ -870,7 +870,7 @@
       "name": "R4SYS.registry_key_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 74,
+      "slot": 73,
       "exposure": "public",
       "description": "Returns metadata for a registry key.",
       "locations": {
@@ -882,7 +882,7 @@
       "name": "R4SYS.registry_enum_key",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 75,
+      "slot": 74,
       "exposure": "public",
       "description": "Enumerates one child key by index.",
       "locations": {
@@ -894,7 +894,7 @@
       "name": "R4SYS.registry_enum_value",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 76,
+      "slot": 75,
       "exposure": "public",
       "description": "Enumerates one registry value by index.",
       "locations": {
@@ -906,7 +906,7 @@
       "name": "R4SYS.registry_get_value",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 77,
+      "slot": 76,
       "exposure": "public",
       "description": "Reads a registry value into a caller-owned buffer.",
       "locations": {
@@ -918,7 +918,7 @@
       "name": "R4SYS.registry_set_value",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 78,
+      "slot": 77,
       "exposure": "public",
       "description": "Creates or replaces a registry value.",
       "locations": {
@@ -930,7 +930,7 @@
       "name": "R4SYS.registry_delete_value",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 79,
+      "slot": 78,
       "exposure": "public",
       "description": "Deletes a registry value.",
       "locations": {
@@ -942,7 +942,7 @@
       "name": "R4SYS.service_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 80,
+      "slot": 79,
       "exposure": "public",
       "description": "Returns summary information for a registered service.",
       "locations": {
@@ -954,7 +954,7 @@
       "name": "R4SYS.service_detail",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 81,
+      "slot": 80,
       "exposure": "public",
       "description": "Returns detailed information for a service by catalogue index.",
       "locations": {
@@ -966,7 +966,7 @@
       "name": "R4SYS.service_set_start_mode",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 82,
+      "slot": 81,
       "exposure": "public",
       "description": "Changes the configured start mode of a service.",
       "locations": {
@@ -978,7 +978,7 @@
       "name": "R4SYS.service_endpoint_wait",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 83,
+      "slot": 82,
       "exposure": "public",
       "description": "Waits until a service endpoint has a request or the budget expires.",
       "locations": {
@@ -990,7 +990,7 @@
       "name": "R4SYS.program_run",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 84,
+      "slot": 83,
       "exposure": "public",
       "description": "Starts a program and waits for its completion.",
       "locations": {
@@ -1002,7 +1002,7 @@
       "name": "R4SYS.program_launch",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 85,
+      "slot": 84,
       "exposure": "public",
       "description": "Launches a program without waiting for completion.",
       "locations": {
@@ -1014,7 +1014,7 @@
       "name": "R4SYS.program_spawn",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 86,
+      "slot": 85,
       "exposure": "public",
       "description": "Starts a child program and returns its public instance identifier.",
       "locations": {
@@ -1026,7 +1026,7 @@
       "name": "R4SYS.program_kill",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 87,
+      "slot": 86,
       "exposure": "public",
       "description": "Terminates a program instance by identifier.",
       "locations": {
@@ -1038,7 +1038,7 @@
       "name": "R4SYS.program_status",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 88,
+      "slot": 87,
       "exposure": "public",
       "description": "Returns the current state of a program instance.",
       "locations": {
@@ -1050,7 +1050,7 @@
       "name": "R4SYS.program_request_close",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 89,
+      "slot": 88,
       "exposure": "public",
       "description": "Requests cooperative closure of a program instance.",
       "locations": {
@@ -1062,7 +1062,7 @@
       "name": "R4SYS.program_reap_instance",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 90,
+      "slot": 89,
       "exposure": "public",
       "description": "Consumes the retained completion of a finished program instance.",
       "locations": {
@@ -1074,7 +1074,7 @@
       "name": "R4SYS.boot_log_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 91,
+      "slot": 90,
       "exposure": "advanced",
       "description": "Returns boot-log size, revision, and wrap information.",
       "locations": {
@@ -1086,7 +1086,7 @@
       "name": "R4SYS.boot_log_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 92,
+      "slot": 91,
       "exposure": "advanced",
       "description": "Reads a byte range from the persistent boot log.",
       "locations": {
@@ -1098,7 +1098,7 @@
       "name": "R4SYS.program_spawn_handle",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 93,
+      "slot": 92,
       "exposure": "public",
       "description": "Starts a child program and returns its exact generation-safe handle.",
       "locations": {
@@ -1110,7 +1110,7 @@
       "name": "R4SYS.program_open_handle",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 94,
+      "slot": 93,
       "exposure": "public",
       "description": "R4SYS atomically opens a borrowed generation-safe program handle.",
       "locations": {
@@ -1122,7 +1122,7 @@
       "name": "R4SYS.program_handle_status",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 95,
+      "slot": 94,
       "exposure": "public",
       "description": "Returns state for the exact generation carried by a program handle.",
       "locations": {
@@ -1134,7 +1134,7 @@
       "name": "R4SYS.program_handle_request_close",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 96,
+      "slot": 95,
       "exposure": "public",
       "description": "Requests cooperative closure of the exact program generation.",
       "locations": {
@@ -1146,7 +1146,7 @@
       "name": "R4SYS.program_handle_kill",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 97,
+      "slot": 96,
       "exposure": "public",
       "description": "Terminates the exact program generation carried by a handle.",
       "locations": {
@@ -1158,7 +1158,7 @@
       "name": "R4SYS.program_handle_wait",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 98,
+      "slot": 97,
       "exposure": "public",
       "description": "R4SYS waits for but does not consume a generation-safe program completion.",
       "locations": {
@@ -1170,7 +1170,7 @@
       "name": "R4SYS.program_handle_reap",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 99,
+      "slot": 98,
       "exposure": "public",
       "description": "R4SYS atomically consumes a generation-safe program completion.",
       "locations": {
@@ -1182,7 +1182,7 @@
       "name": "R4SYS.program_completion_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 100,
+      "slot": 99,
       "exposure": "public",
       "description": "R4SYS reads retained output from an unconsumed program completion.",
       "locations": {
@@ -1194,7 +1194,7 @@
       "name": "R4SYS.program_inventory_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 101,
+      "slot": 100,
       "exposure": "public",
       "description": "R4SYS starts a generation-keyed program, task, and thread inventory snapshot without allocating kernel memory.",
       "locations": {
@@ -1206,7 +1206,7 @@
       "name": "R4SYS.program_inventory_programs",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 102,
+      "slot": 101,
       "exposure": "public",
       "description": "R4SYS reads one mutation-safe program inventory page and returns an explicit restart status if the captured epochs changed.",
       "locations": {
@@ -1218,7 +1218,7 @@
       "name": "R4SYS.program_inventory_tasks",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 103,
+      "slot": 102,
       "exposure": "public",
       "description": "R4SYS reads one mutation-safe task inventory page and returns an explicit restart status if the captured epochs changed.",
       "locations": {
@@ -1230,7 +1230,7 @@
       "name": "R4SYS.program_inventory_threads",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 104,
+      "slot": 103,
       "exposure": "public",
       "description": "R4SYS reads one mutation-safe thread inventory page and returns an explicit restart status if the captured epochs changed.",
       "locations": {
@@ -1242,7 +1242,7 @@
       "name": "R4SYS.thread_create_handle",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 105,
+      "slot": 104,
       "exposure": "public",
       "description": "R4SYS creates a joinable thread and returns its exact generation-safe identity. Flags accept zero or thread_create_flag_compute_worker; unknown bits or missing runtime.workers=owned-v1 return thread_error_unsupported. A compute caller passes its compute role to descendants even with zero flags. Foreground main scheduling and console ownership are unchanged; compute workers retain exact instance VM/resource and join/exit ownership.",
       "locations": {
@@ -1254,7 +1254,7 @@
       "name": "R4SYS.thread_handle_join",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 106,
+      "slot": 105,
       "exposure": "public",
       "description": "R4SYS joins only the exact thread generation carried by a ProgramJoinHandle.",
       "locations": {
@@ -1266,7 +1266,7 @@
       "name": "R4SYS.thread_handle_status",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 107,
+      "slot": 106,
       "exposure": "public",
       "description": "R4SYS queries only the exact thread generation carried by a ProgramJoinHandle.",
       "locations": {
@@ -1278,7 +1278,7 @@
       "name": "R4SYS.file_replace_atomic",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 108,
+      "slot": 107,
       "exposure": "advanced",
       "description": "R4SYS transfers a staged FAT file into a target with a durable sibling backup and without a copy/delete fallback.",
       "locations": {
@@ -1290,7 +1290,7 @@
       "name": "R4SYS.file_delete_if_match",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 109,
+      "slot": 108,
       "exposure": "advanced",
       "description": "R4SYS deletes a file only when its size, FNV-1a checksum and filesystem identity still match under one serialized filesystem gate.",
       "locations": {
@@ -1302,7 +1302,7 @@
       "name": "R4SYS.file_update_atomic_checked",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 110,
+      "slot": 109,
       "exposure": "advanced",
       "description": "R4SYS completes or reverses one SYSUPD ownership transfer only after target, stage and backup fingerprints plus transient filesystem identities match a legitimate journal state under one serialized filesystem gate. The additive long_stage flag permits an existing FAT32 long-name stage for forward completion only; the backup and newly created target remain short names, and the stage short entry is durably detached before its LFN slots are reclaimed.",
       "locations": {
@@ -1314,7 +1314,7 @@
       "name": "R4SYS.path_names_equal_collated",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 111,
+      "slot": 110,
       "exposure": "advanced",
       "description": "R4SYS reports whether two paths would resolve to the same object on their shared volume using the filesystem own collation (NTFS $UpCase, FAT32 ASCII case fold), so callers never mistake a byte-wise fold for identity.",
       "locations": {
@@ -1326,7 +1326,7 @@
       "name": "R4SYS.file_update_cleanup_checked",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 112,
+      "slot": 111,
       "exposure": "advanced",
       "description": "R4SYS completes one SYSUPD per-payload cleanup with target, stage, current backup and previous backup bound together to expected identity, size and checksum under one serialized filesystem gate.",
       "locations": {
@@ -1338,7 +1338,7 @@
       "name": "R4SYS.file_stream_declare_publish",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 113,
+      "slot": 112,
       "exposure": "advanced",
       "description": "R4SYS records the create-only publish intent of an already open stream, including which protocol owns it, so the durable claim brackets the whole transfer instead of only the final hand-over and recovery telemetry can attribute an abandoned stage to SFTP, SCP or FTP.",
       "locations": {
@@ -1350,7 +1350,7 @@
       "name": "R4SYS.module_resource_stat",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 114,
+      "slot": 113,
       "exposure": "public",
       "description": "R4SYS resolves one embedded resource of an R4M0 module file by type plus index or name and returns its exact size without reading the payload.",
       "locations": {
@@ -1362,7 +1362,7 @@
       "name": "R4SYS.module_resource_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 115,
+      "slot": 114,
       "exposure": "public",
       "description": "R4SYS reads one embedded resource of an R4M0 module file completely into a caller-owned buffer; a too small buffer is a visible error, never a silent truncation.",
       "locations": {
@@ -1374,7 +1374,7 @@
       "name": "R4SYS.program_module_path",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 116,
+      "slot": 115,
       "exposure": "public",
       "description": "R4SYS writes the absolute module file path of the calling program into a caller-owned buffer, so a program can read its own embedded resources without a hardcoded second truth beside the manifest TARGET.",
       "locations": {
@@ -1386,7 +1386,7 @@
       "name": "R4SYS.program_module_running",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 117,
+      "slot": 116,
       "exposure": "public",
       "description": "Returns one when a published R4X instance from the exact absolute module path is still running, zero when no such instance exists, and a negative program error when the query cannot be completed.",
       "locations": {
@@ -1398,7 +1398,7 @@
       "name": "R4SYS.monotonic_clock",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 118,
+      "slot": 117,
       "exposure": "public",
       "description": "Reads the backend-stable monotonic nanosecond instant together with calibrated source and periodic-event metadata without reading the RTC.",
       "locations": {
@@ -1410,7 +1410,7 @@
       "name": "R4SYS.boot_ready",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 119,
+      "slot": 118,
       "exposure": "public",
       "description": "Lets the active boot shell mark its first usable frame or prompt exactly once; repeated calls by that shell are idempotent.",
       "locations": {
@@ -1422,7 +1422,7 @@
       "name": "R4SYS.registry_snapshot_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 120,
+      "slot": 119,
       "exposure": "public",
       "description": "Starts a caller-owned, generation-keyed registry child-key or value snapshot without allocating kernel memory.",
       "locations": {
@@ -1434,7 +1434,7 @@
       "name": "R4SYS.registry_snapshot_page",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 121,
+      "slot": 120,
       "exposure": "public",
       "description": "Reads one bounded registry snapshot page directly from the captured key range and reports restart instead of exposing mixed generations.",
       "locations": {
@@ -1446,7 +1446,7 @@
       "name": "R4SYS.registry_batch_mutate",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 122,
+      "slot": 121,
       "exposure": "public",
       "description": "Validates and commits one bounded set/delete batch as a single registry generation with no partial visible mutation.",
       "locations": {
@@ -1458,7 +1458,7 @@
       "name": "R4SYS.io_file_write_at",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 123,
+      "slot": 122,
       "exposure": "public",
       "description": "Starts an asynchronous, progress-reporting file write at an absolute byte offset without truncating unrelated data.",
       "locations": {
@@ -1470,7 +1470,7 @@
       "name": "R4SYS.io_file_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 124,
+      "slot": 123,
       "exposure": "public",
       "description": "Starts an asynchronous metadata query; the terminal IoStatus result is the file size in bytes or an I/O error.",
       "locations": {
@@ -1482,7 +1482,7 @@
       "name": "R4SYS.io_file_lock",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 125,
+      "slot": 124,
       "exposure": "public",
       "description": "Asynchronously acquires or exactly releases a caller-owned advisory byte-range lock; conflicts complete with io_error_lock_violation.",
       "locations": {
@@ -1494,7 +1494,7 @@
       "name": "R4SYS.storage_inventory",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 126,
+      "slot": 125,
       "exposure": "public",
       "description": "Refresh newly registered devices and return a topology snapshot. All payloads are copied; no borrowed driver strings escape.",
       "locations": {
@@ -1506,7 +1506,7 @@
       "name": "R4SYS.storage_device",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 127,
+      "slot": 126,
       "exposure": "public",
       "description": "Read one device slot from the exact inventory generation. Absent slots return zero.",
       "locations": {
@@ -1518,7 +1518,7 @@
       "name": "R4SYS.storage_partition",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 128,
+      "slot": 127,
       "exposure": "public",
       "description": "Read one partition from the exact complete inventory; invalid or partial tables remain explicit.",
       "locations": {
@@ -1530,7 +1530,7 @@
       "name": "R4SYS.storage_volume",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 129,
+      "slot": 128,
       "exposure": "public",
       "description": "Read one exact mounted-volume snapshot, including the internal boot alias.",
       "locations": {
@@ -1542,7 +1542,7 @@
       "name": "R4SYS.storage_claim_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 130,
+      "slot": 129,
       "exposure": "public",
       "description": "Reject stale, partial, protected or used targets before modification; close admissions, drain, flush and unmount, then return an exact logical-thread-owned exclusive claim. Failure returns no claim and performs no raw mutation.",
       "locations": {
@@ -1554,7 +1554,7 @@
       "name": "R4SYS.storage_claim_end",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 131,
+      "slot": 130,
       "exposure": "public",
       "description": "Close raw admission, flush, rescan and remount prior identities unless KEEP_UNMOUNTED is set. A completed close consumes the claim even when I/O or remount fails; BUSY retains a finishing claim for retry. Failed targets remain visible.",
       "locations": {
@@ -1566,7 +1566,7 @@
       "name": "R4SYS.storage_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 132,
+      "slot": 131,
       "exposure": "public",
       "description": "Read at most storage_raw_max_sectors from a complete validated target; concurrent exclusive claims return BUSY. The output buffer holds sectors times 512 bytes.",
       "locations": {
@@ -1578,7 +1578,7 @@
       "name": "R4SYS.storage_claim_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 133,
+      "slot": 132,
       "exposure": "public",
       "description": "Perform bounded synchronous read within an active caller-owned claim. Buffer remains caller-owned for the call. An I/O error may follow partial hardware progress; never replay writes automatically.",
       "locations": {
@@ -1590,7 +1590,7 @@
       "name": "R4SYS.storage_claim_write",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 134,
+      "slot": 133,
       "exposure": "public",
       "description": "Perform bounded synchronous write within an active caller-owned claim. Buffer remains caller-owned for the call. An I/O error may follow partial hardware progress; never replay writes automatically.",
       "locations": {
@@ -1602,7 +1602,7 @@
       "name": "R4SYS.storage_claim_flush",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 135,
+      "slot": 134,
       "exposure": "public",
       "description": "Issue the durability barrier for an active caller-owned claim and report backend failure.",
       "locations": {
@@ -1614,7 +1614,7 @@
       "name": "R4SYS.storage_rescan",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 136,
+      "slot": 135,
       "exposure": "public",
       "description": "Acquire the complete device, drain/unmount, reread its table and remount matching previous identities. Open uses reject rescan before unmount.",
       "locations": {
@@ -1626,7 +1626,7 @@
       "name": "R4SYS.storage_mount",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 137,
+      "slot": 136,
       "exposure": "public",
       "description": "Probe and mount a complete partition with a fresh generation. Letter zero assigns the first free D through Z except reserved R; C and R cannot be reassigned through this call.",
       "locations": {
@@ -1638,7 +1638,7 @@
       "name": "R4SYS.storage_unmount",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 138,
+      "slot": 137,
       "exposure": "public",
       "description": "Drain and unmount the selected physical volume and its aliases. Required runtime volumes and open uses reject the operation.",
       "locations": {
@@ -1650,7 +1650,7 @@
       "name": "R4SYS.storage_use_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 139,
+      "slot": 138,
       "exposure": "public",
       "description": "Acquire a real physical-volume use lease for a resolved path, including the system boot alias. File and directory handles hold this lease until close or logical owner retirement.",
       "locations": {
@@ -1662,7 +1662,7 @@
       "name": "R4SYS.storage_use_end",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 140,
+      "slot": 139,
       "exposure": "public",
       "description": "Release an exact caller-owned volume use lease; stale or foreign identifiers are rejected.",
       "locations": {
@@ -1674,7 +1674,7 @@
       "name": "R4SYS.directory_change_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 141,
+      "slot": 140,
       "exposure": "public",
       "description": "Capture a directory identity and current change sequence under the filesystem request gate. Returns 0 on success, -1 for invalid cursor/path, -3 for missing mount/directory, -9 for an I/O failure. Register before the initial enumeration.",
       "locations": {
@@ -1686,7 +1686,7 @@
       "name": "R4SYS.directory_change_poll",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 142,
+      "slot": 141,
       "exposure": "public",
       "description": "Consume RAM-only changes for the captured directory. Returns 1 if a reload is needed (also on bounded history overflow), 0 if unchanged, -1 for invalid cursor, -3 for a retired mount. Mutations wake desktop_activity_wait. No persistent allocation and no close.",
       "locations": {
@@ -1698,7 +1698,7 @@
       "name": "R4SYS.file_copy_buffered",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 143,
+      "slot": 142,
       "exposure": "public",
       "description": "Copies under one paired filesystem request, rejecting source aliases before destination mutation. Caller exclusively owns the supplied nonempty buffer until return. File-stream result codes: 0 success, invalid for identical files, too_large above 4 GB, I/O on failure. Progress reports completed appends; failure may leave a partial target. No automatic retry or rollback.",
       "locations": {
@@ -1710,7 +1710,7 @@
       "name": "R4SYS.notification_create",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 144,
+      "slot": 143,
       "exposure": "public",
       "description": "Create a resident process-owned notification with revision zero. Handles never repeat within a boot. Returns notification status; output changes only on success. Allocation failure is explicit. Close explicitly or let exact process retirement reclaim it.",
       "locations": {
@@ -1722,7 +1722,7 @@
       "name": "R4SYS.notification_query",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 145,
+      "slot": 144,
       "exposure": "public",
       "description": "Read the notification revision. Read before testing the userland predicate, then wait with that revision to avoid a lost wake. Foreign or consumed handles are stale; output changes only on success.",
       "locations": {
@@ -1734,7 +1734,7 @@
       "name": "R4SYS.notification_notify",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 146,
+      "slot": 145,
       "exposure": "public",
       "description": "Increment the revision and wake at most wake_count enrolled tasks atomically. Count must be positive; UINT32_MAX broadcasts. A caller racing enrollment observes the changed revision. No permit, CPU-memory ownership or GPU completion is manufactured. Revision exhaustion closes the object and wakes all with closed.",
       "locations": {
@@ -1746,7 +1746,7 @@
       "name": "R4SYS.notification_wait",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 147,
+      "slot": 146,
       "exposure": "public",
       "description": "Wait only while the resident revision equals observed_sequence. Zero polls; UINT64_MAX waits indefinitely. Predicate check, scheduler enrollment and notify share one owner. Returns 0 on change/wake, 1 on timeout, negative on failure/close; caller must recheck its own predicate. Close cancels enrolled waits. Hard kill detaches the actual task node and needs no caller destructor. No caller address or unwind guard is retained across sleep.",
       "locations": {
@@ -1758,7 +1758,7 @@
       "name": "R4SYS.notification_close",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 148,
+      "slot": 147,
       "exposure": "public",
       "description": "Close admission, cancel enrolled waits and release resident backing. Returns 0 after release; retry notification_error_release for the same closed handle. A failed free retains backing and prevents process-slot reuse. Further ordinary operations on a closed retained object fail; a consumed handle is stale.",
       "locations": {
@@ -1770,7 +1770,7 @@
       "name": "R4SYS.program_local_get",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 149,
+      "slot": 148,
       "exposure": "public",
       "description": "Read a process-local immutable publication by nonzero key. Returns program_local_ok and zero if absent. A key can be a boot-stable library token address. Output changes only on success. No other process, user pointer ownership or current-thread identity is exposed.",
       "locations": {
@@ -1782,7 +1782,7 @@
       "name": "R4SYS.program_local_publish",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 150,
+      "slot": 149,
       "exposure": "public",
       "description": "Publish a nonzero process-local value exactly once for a nonzero key. Returns program_local_ok if installed, program_local_existing if another caller already installed a value; both write the winning value. Caller owns candidate memory and discards it when it loses. Published data must outlive all program threads; no replacement, destructor or allocator policy is provided. The process reaper removes metadata after thread retirement and before VM teardown. Errors leave output unchanged.",
       "locations": {
@@ -1794,7 +1794,7 @@
       "name": "R4SYS.thread_current_handle",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 151,
+      "slot": 150,
       "exposure": "public",
       "description": "Copy the calling program thread identity, including thread and process generations, into ProgramJoinHandle. Returns thread_ok on success, thread_error_no_instance outside a program thread, or thread_error_invalid for a null output. Errors leave output unchanged. The identity is borrowed: no pin, join lease, allocation or wait is created; normal status/join admission and retirement rules still apply. Lookup uses the current task execution owner and never scans a registry. Valid for the main thread as well as secondary threads.",
       "locations": {
@@ -1806,7 +1806,7 @@
       "name": "R4SYS.cpu_capacity",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 152,
+      "slot": 151,
       "exposure": "public",
       "description": "Copy current schedulable CPU capacity for ordinary program threads. Returns thread_ok, thread_error_invalid for null output, or thread_error_busy before capacity is available; errors leave output unchanged. available_cpus counts one atomic scheduler-admission mask snapshot (no process affinity restrictions currently exist). configured_cpus counts dense CPU slots admitted by the boot SMP plan, including failed/offline slots; it is not the CPUID package count, firmware total or kernel maximum. Capacity is advisory, not a reservation, affinity mask, cache topology or performance guarantee. No allocation or wait.",
       "locations": {
@@ -1818,7 +1818,7 @@
       "name": "R4SYS.program_exit",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 153,
+      "slot": 152,
       "exposure": "public",
       "description": "Terminates the entire calling program from its main or a secondary thread. On admission this does not return. reason accepts program_exit_reason_natural or program_exit_reason_failed only; invalid reason returns thread_error_invalid, missing program-thread ownership returns thread_error_no_instance, and a non-sleepable context or held kernel lock/unwind lifetime returns thread_error_busy without initiating exit. The first committed concurrent process exit wins. The existing exit/reaper path closes admission, stops peers and retains stacks, I/O and graphics resources through actual retirement; the caller transfers its own terminal Task to the scheduler reaper. Does not run user destructors, atexit, TLS callbacks, stream flushing or foreign stack unwinding; normal userland shutdown precedes this primitive, fatal shutdown may omit it. External kill still rejects self. Older providers may omit this optional tail.",
       "locations": {
@@ -1830,7 +1830,7 @@
       "name": "R4SYS.platform_input_snapshot",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 154,
+      "slot": 153,
       "exposure": "public",
       "description": "Copy the canonical ACPI/USB Consumer input snapshot without consuming events.1 success, negative invalid output. Caller initializes version1/size64; output unchanged on failure. No hardware access, callback or allocation. Desktop policy observes counter deltas and lid state independently from normal keyboard text.",
       "locations": {
@@ -1842,7 +1842,7 @@
       "name": "R4SYS.directory_next",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 155,
+      "slot": 154,
       "exposure": "public",
       "description": "Resume owner-bound directory enumeration without prefix scans. Initialize DirectoryScanCursor to defaults. Returns 0 file, 1 directory, 2 bounded progress without an entry (retry), -5 complete EOF, -10 restart after directory mutation, history overflow, owner/path/mount change; other negatives are errors (-1 invalid, -3 missing mount, -7 output too small, -9 I/O). On restart/error discard all partial results; no truncated successful generation. Cursor and output are unchanged on errors; progress and EOF publish cursor only. Success copies a NUL-terminated absolute path. One call examines at most 256 physical directory entries, with a bounded NTFS ancestor stack. Internal state is opaque, must not be edited or used concurrently. No persistent kernel resource, allocation or mount pin; discarding/resetting cursor cancels/closes immediately. A call pins its mount and holds the filesystem request gate; an unmount between calls invalidates continuation. Old dir_entry ABI remains unchanged. A found entry also copies FileInfo metadata from the same enumeration record; no second name lookup. NTFS directory-index metadata has the same snapshot semantics as its index entry. On progress, EOF or failure metadata is unchanged.",
       "locations": {
@@ -1854,7 +1854,7 @@
       "name": "R4SYS.thread_placement_get",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 156,
+      "slot": 155,
       "exposure": "public",
       "description": "Get placement of the exact live thread/instance generations (including main). Returns thread_ok, thread_error_invalid/no_instance/not_found/busy or thread_placement_error_capacity. Validate info version1 and capacity>=64. word_capacity0 allows null cpus and returns metadata including required word count; otherwise capacity must suffice and cpus must be nonnull. Copy exactly cpu_word_count words and64 info bytes on success; all outputs and tails unchanged on errors. Caller buffers must not overlap. No allocation or retained caller pointer.",
       "locations": {
@@ -1866,7 +1866,7 @@
       "name": "R4SYS.thread_placement_set",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 157,
+      "slot": 156,
       "exposure": "public",
       "description": "Set placement of an exact live thread/instance generation (including main). Returns thread_ok, thread_error_invalid/no_instance/not_found/busy/unsupported or thread_placement_error_capacity. Reject unknown flags/class/reserved data, empty sets, unavailable or module-disallowed CPUs and hints outside the set, without state changes. Explicit input length must equal the discovered required word count; default-cpus requires word_count0. Running acceptance may remain pending until full outgoing RSP/FPU save; query revisions. No synchronous wait or realtime guarantee. Repeated equal requests do not renew preferred-class budgets; class toggles share one bounded activation budget. No retained caller pointer.",
       "locations": {
@@ -1878,7 +1878,7 @@
       "name": "R4SYS.system_power_transition",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 158,
+      "slot": 157,
       "exposure": "advanced",
       "description": "Explicit bounded blocking orderly system transition: power_transition_action_halt/reboot/poweroff. Closes new CPU control ownership and pins current CPU membership before cooperative POWERSVC stop and real same-CPU request return. No Runtime owner over waits. Refusal returns a negative power_transition_error_* and retains real resources without stopping APs; CPU ownership reopens. Accepted transition becomes terminal and does not return. Missing/disabled provider stays functional. Existing nonblocking raw system_halt/reboot/poweroff slots retain their signatures/meanings; with held requests they refuse immediately rather than waiting or falsely acknowledging return. Profiles/parameter policy stay external. timeout_ticks is an explicit wait budget, clamped to5 seconds;0 requests only a bounded poll. Timeout/refusal may follow an already requested cooperative service stop; query status rather than automatic retry. The immediate legacy slots never perform this new service wait.",
       "locations": {
@@ -1890,7 +1890,7 @@
       "name": "R4SYS.entropy_source_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 159,
+      "slot": 158,
       "exposure": "advanced",
       "description": "Purely cached registered-device source observation. Original source/driver epoch and module generation retained after close. No callback/device/CPU instruction, I/O or entropy consumption.",
       "locations": {
@@ -1902,7 +1902,7 @@
       "name": "R4SYS.entropy_fill",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 160,
+      "slot": 159,
       "exposure": "advanced",
       "description": "Explicit bounded registered-device source read,1..4096bytes. Ordinary task with IF on, exact task admission through output, exact driver instance/lifecycle lease through resident callback/staging, no Runtime owner over wait. Release driver owner before potentially paged caller copy. Positive exact count only with confirmed full receipt; failure discards/clears valid caller range, never initial/partial entropy. No RNG pool or clock/ID substitute; SDK owns RDRAND-first/source choice.",
       "locations": {
@@ -1914,7 +1914,7 @@
       "name": "R4SYS.program_lifecycle_begin",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 161,
+      "slot": 160,
       "exposure": "public",
       "description": "Nonblocking process-registry epoch admission only. Initializes the existing cursor with initialized|lifecycle, snapshot_generation=program_epoch, no registry traversal, allocation, VM, heap, task or thread diagnostics. Failure leaves cursor unchanged; Busy is not lifecycle authority. Does not cache or equate program epochs with all mutable metadata.",
       "locations": {
@@ -1926,7 +1926,7 @@
       "name": "R4SYS.program_lifecycle_programs",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 162,
+      "slot": 161,
       "exposure": "public",
       "description": "One bounded generation-ordered lifecycle page from the canonical process registry, including pending/done completions. Forty-byte records carry exact handles and current process fields without VM statistics. Epoch mismatch returns restart with no row/cursor advancement; Busy/invalid has no complete authority. Complete paging must finish before adoption/disappearance decisions; revalidate exact handles at actions. A lifecycle cursor cannot be used by full inventory calls or vice versa.",
       "locations": {
@@ -1938,7 +1938,7 @@
       "name": "R4SYS.drive_info_geometry",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 163,
+      "slot": 162,
       "exposure": "public",
       "description": "Returns the same mounted drive identity/capacity and scalar cluster geometry without executing FREE or reading a free-space bitmap. Existing exact mount/request admission can wait. Free fields and drive_info_flag_free_valid are zero: explicitly unknown, not measured zero. Existing DriveInfo56 layout unchanged. index0..25; returns1 mounted,0 unmounted,-1 invalid index,-2 request unavailable.",
       "locations": {
@@ -1950,7 +1950,7 @@
       "name": "R4SYS.directory_batch",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 164,
+      "slot": 163,
       "exposure": "public",
       "description": "Initialize with path and default2160-byte cursor; continuation uses its captured node/path with exact logical-owner, mount and mutation validation. Return1..capacity complete1120-byte records,0 bounded progress,-5 EOF; -1 invalid,-3 absent/not-directory initially,-7 full-path bounds,-9 I/O/admission,-10 stale/foreign/cancel. Capacity1..8; one shared256-step backend budget and prepared metadata per visit. Initialized capacity0/out=NULL validates without advancing (RAM-only while namespace unchanged); input path is ignored on continuation. No persistent kernel allocation/scan lease; call guards always release, including caller unwind. Outputs/cursor have no authority on error. A caller must not modify or concurrently reuse a cursor.",
       "locations": {
@@ -1962,7 +1962,7 @@
       "name": "R4SYS.program_observation_retain",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 165,
+      "slot": 164,
       "exposure": "public",
       "description": "Create an independent observation binding to the exact process handle and generation while its completion record still exists. A first binding can be admitted before owner reap; after consuming owner reap, a new independent binding can still be admitted while an existing reference retains that exact record. Copying the same observation token creates no additional binding or reference. Once the last retaining reference is released and the consumed record is removed, retain fails; it never reconstructs missing completion or output evidence. flags0 binds cleanup to the calling process generation; PORTABLE explicitly survives creator exit until release. Existing generation checks and owner reap authority are unchanged.",
       "locations": {
@@ -1974,7 +1974,7 @@
       "name": "R4SYS.program_observation_wait",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 166,
+      "slot": 165,
       "exposure": "public",
       "description": "Nonconsuming observation of the exact retained terminal record, including after owner reap. Zero polls and FOREVER waits; completion wins at timeout. Release/creator cleanup invalidates only this binding and wakes a blocked observer.",
       "locations": {
@@ -1986,7 +1986,7 @@
       "name": "R4SYS.program_observation_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 167,
+      "slot": 166,
       "exposure": "public",
       "description": "Read the immutable retained normalized UTF-8 console transcript, merging stdout/stderr in accepted order. OUTPUT_AVAILABLE distinguishes captured empty output from unavailable evidence; OUTPUT_TRUNCATED/OUTPUT_INCOMPLETE forbid a full-output claim. Offset refers to retained bytes, not discarded prefixes.",
       "locations": {
@@ -1998,7 +1998,7 @@
       "name": "R4SYS.program_observation_release",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 168,
+      "slot": 167,
       "exposure": "public",
       "description": "Release exactly one independent retention binding. Last release after owner consumption frees only retained completion/output storage. Normal bound observations also close when their creator ends; portable observations require explicit release. Stale/wrong-generation handles cannot close another binding.",
       "locations": {
@@ -2010,7 +2010,7 @@
       "name": "R4SYS.file_name_limits",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 169,
+      "slot": 168,
       "exposure": "public",
       "description": "Resolve the actual target mount (the final file need not exist) and return its name/operation limits without mutation or free-space scanning. C:\\BOOT may differ from its visible drive provider. Return FileStream errors, including NAME_TOO_LONG; unsupported providers leave output untouched. The exact mount identity is a snapshot, not a reservation; file operations revalidate normally.",
       "locations": {
@@ -2022,7 +2022,7 @@
       "name": "R4SYS.service_bound_detail",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 170,
+      "slot": 169,
       "exposure": "public",
       "description": "Returns ServiceDetail and its exact current or last retained ProgramProcessHandle from one generation-validated registry selection. Terminal rows may retain the last process identity until next start/removal; an unbound row returns a zero process handle. The identity value grants no retention lease. Use service_stop_bound for service shutdown or program_handle_status, program_handle_request_close and program_handle_kill with this full handle; never reopen the displayed ID. Concurrent replacement returns BUSY, not another generation. Endpoint counters remain per-owner snapshots. No wait for process completion; normal owner/lifecycle admission may block.",
       "locations": {
@@ -2034,7 +2034,7 @@
       "name": "R4SYS.service_stop_bound",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 171,
+      "slot": 170,
       "exposure": "public",
       "description": "Request cooperative stop only if the named service is still bound to the supplied full ProgramProcessHandle; mismatch returns BUSY before Close. The same captured registry target is used throughout status/Close/completion, including restart/reinstall races. One absolute monotonic entry wait budget includes owner/status work; zero polls, FOREVER waits. Only actual retained physical completion succeeds; TIMEOUT remains an unknown outcome. The expected handle must be nonzero/valid; unbound starts use the existing named stop contract.",
       "locations": {
@@ -2046,7 +2046,7 @@
       "name": "R4SYS.service_inventory_page",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 172,
+      "slot": 171,
       "exposure": "public",
       "description": "Read a bounded page from a dynamic service inventory. Zero cursor begins; later calls bind revision/total/last ID. Returns copied row count, END explicitly proves EOF, DYNAMIC reports no compiled count limit. Membership/configuration changes return RESTART; callers discard all partial pages. Cursor/rows remain unchanged on errors; buffer tail remains untouched. capacity must be positive and only bounds one transfer; arbitrary many pages are supported. Complete 1024-byte paths and exact registration/start/process bindings are returned. Runtime and endpoint counters are per-owner observations. No new process/endpoint lease is granted.",
       "locations": {
@@ -2058,7 +2058,7 @@
       "name": "R4SYS.service_control_bound",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 173,
+      "slot": 172,
       "exposure": "public",
       "description": "Apply START/STOP/RESTART/MODE/REMOVE only to the original registration ID and expected full process/start binding. A removed/reinstalled name, reused process ID or changed start returns BUSY/NOT_FOUND before effects. Uses existing native generation-aware start/stop/reap, absolute stop deadline, restart/disable and self-restart policy. MODE requires a valid public mode; other operations require mode0. Only STOP accepts timeout_ticks; other operations require0. Timeout is unknown completion, never automatic retry or permission for a second close/start. Returns the existing service status domain; no caller pointers are retained.",
       "locations": {
@@ -2070,7 +2070,7 @@
       "name": "R4SYS.system_update_target_supported",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 174,
+      "slot": 173,
       "exposure": "public",
       "description": "Read-only admission query for the installed early-update-recovery target scope. Borrowed NUL-terminated native journal path, at most1023 UTF8 bytes; returns1 if normalized target is supported,0 if outside the scope,-1 for invalid path/Unicode. No filesystem access, reservation, installation or version/dependency check. Mount, capacity, artifact identity, ownership and lifecycle remain the updater preflight responsibility.",
       "locations": {
@@ -2082,7 +2082,7 @@
       "name": "R4SYS.file_metadata2",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 175,
+      "slot": 174,
       "exposure": "public",
       "description": "Read actual VFS metadata under the existing exact mount/request owner, preserving full u64 backend node. Returns1 found,0 absent; negative errors leave output unchanged. Qualified identity uses exact mount plus nonreused global namespace observation and tagged FAT directory slot or NTFS node/sequence; no generic first-cluster identity, handle, retain, stable infinite incarnation or content revision. Current providers do not certify content revision; flags distinguish unknown size/times/revision. Namespace change during observation returns-10; namespace exhaustion returns-12. No allocation or retained caller pointers. Synchronous return ends the output loan. Current backend admission limits remain; this API does not add real NTFS>u32 support.",
       "locations": {
@@ -2094,7 +2094,7 @@
       "name": "R4SYS.directory_metadata_batch2",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 176,
+      "slot": 175,
       "exposure": "public",
       "description": "Use the same canonical bounded directory engine and exact owner/mount/path guards with a distinct2184-byte cursor and1136-byte records. Capacity1..8, shared256physical-step budget; positive count publishes rows,0 bounded progress,-5 EOF. Bound capacity0/out=NULL validates without advancing. Any global namespace publication or mount/owner mismatch returns-10; discard all prior pages. Errors leave caller cursor unchanged and grant no row authority; buffer contents on errors are unspecified. Whole paths and same FileMetadata2 identity projection as single lookup. No persistent Kernel allocation, mount pin or scan; reset closes/cancels. Current content metadata remains per-entry observations, not one atomic directory-wide content snapshot. Namespace exhaustion-12 never reuses an identity.",
       "locations": {
@@ -2106,7 +2106,7 @@
       "name": "R4SYS.waitset_create",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 177,
+      "slot": 176,
       "exposure": "public",
       "description": "Create a resident process namespace record with explicit1..32capacity and exact creating native Task ID/generation. Handles never repeat. Allocation/publication guarded outside Runtime. No caller pointer retained. Creator death closes/unlinks all actual source registrations during real thread retirement; no stack Drop assumption.",
       "locations": {
@@ -2118,7 +2118,7 @@
       "name": "R4SYS.waitset_enroll",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 178,
+      "slot": 177,
       "exposure": "public",
       "description": "Creator-only exact source admission and predicate registration share Runtime with source notify/close. Copies80bytes; notification handle resolves only in this process. Per-source cap32; timer source has one fixed absolute clock-bound deadline. New registration and outputs publish only after complete validation; no caller buffer retained.",
       "locations": {
@@ -2130,7 +2130,7 @@
       "name": "R4SYS.waitset_rearm",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 179,
+      "slot": 178,
       "exposure": "public",
       "description": "Creator-only rearm of same kind/object/generation/tag/flags. Notification updates observed revision; timer supplies new explicit absolute deadline and clock. Closed notification cannot be resurrected. Changes wake existing owner if necessary, never consume source state or renew a wait deadline implicitly.",
       "locations": {
@@ -2142,7 +2142,7 @@
       "name": "R4SYS.waitset_remove",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 180,
+      "slot": 179,
       "exposure": "public",
       "description": "Creator-only removal detaches the actual resident source link atomically before slot reuse. Registration IDs never repeat within set. Removing a source grants no source Close, read/reap, work cancel or buffer/DMA release.",
       "locations": {
@@ -2154,7 +2154,7 @@
       "name": "R4SYS.waitset_wait",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 181,
+      "slot": 180,
       "exposure": "public",
       "description": "Creator-only non-consuming wait-any. Poll/Finite/Forever explicit; finite outer deadline and timer clocks are revalidated without rebasing. All outputs disjoint/mapped/borrowed through real return. Bounded local rows copy after Runtime release; no caller/stack pointer or unwind pin is retained by scheduler through sleep. Original one Task wait_node enrolls only in resident set queue. Source publications and enrollment are atomic; close/kill detach real links. More/rescan/coalesced flags disclose incomplete batch; level results repeat until rearm/remove. Timeout/cancel never authorizes source data/DMA release.",
       "locations": {
@@ -2166,7 +2166,7 @@
       "name": "R4SYS.waitset_close",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 182,
+      "slot": 181,
       "exposure": "public",
       "description": "Any same-process task may close to cancel an owner wait. Close atomically detaches every source link and wakes original Task queue before heap free. Failed backing free preserves exact closed identity for retry. Waiter never dereferences old set after park. Process cleanup drains sets before notification sources and Runtime backing. Already removed handles are stale; SDK owner may make its own completed close idempotent.",
       "locations": {
@@ -2178,7 +2178,7 @@
       "name": "R4SYS.waitset_source_prepare",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 183,
+      "slot": 182,
       "exposure": "public",
       "description": "Prepare kinds3..7 from copied64byte complete identities under each canonical IO/Program/Thread/Service/GUI owner, then Runtime. Output existing80byte source publishes only on success. Globally never-reused observer epoch prevents enrollment from following a replacement after prepare. No resource retain, work consumption, polling worker or new registry. Legacy IO/endpoint identifies current incarnation only; ambiguous IO IDs rejected. Main GUI only. Unsupported remains explicit. Preparation can race Close; Enroll then returns Stale/Closed.",
       "locations": {
@@ -2190,7 +2190,7 @@
       "name": "R4SYS.byte_pipe_create",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 184,
+      "slot": 183,
       "exposure": "public",
       "description": "Create one bounded resident byte channel and two exact caller-owned references. Capacity1..65536,64channels globally,4MB total admitted payload including unfinished frees. Allocation/free outside Runtime; caller output publishes only on success. No worker, handler or application migration.",
       "locations": {
@@ -2202,7 +2202,7 @@
       "name": "R4SYS.byte_pipe_dup",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 185,
+      "slot": 184,
       "exposure": "public",
       "description": "Create a distinct same-direction reference in the same exact process. At most32 live or unreleased references per pipe. Simple handle copies do not keep an end alive. No transfer to another process or launch.",
       "locations": {
@@ -2214,7 +2214,7 @@
       "name": "R4SYS.byte_pipe_read",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 186,
+      "slot": 185,
       "exposure": "public",
       "description": "Read one bounded prefix, up to4096bytes, under one original Poll/Finite/Forever absolute budget. Nonzero length required; caller spans disjoint and borrowed until actual return. Finite identity/regression/expiry revalidated before admission, never rebased by wakes. A <=atomic_limit write waits for the whole offered record; larger writes may return an exact partial prefix. Caller spans remain borrowed through actual return. No resident queue stores caller pointers; no Unwind guard survives scheduler park. Cancel/close wakes actual waiters; every wake re-resolves full endpoint identity. Last writer close then drain yields EOF; last reader close yields BrokenPipe with zero accepted bytes. No peer-delivery or physical-DMA claim.",
       "locations": {
@@ -2226,7 +2226,7 @@
       "name": "R4SYS.byte_pipe_write",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 187,
+      "slot": 186,
       "exposure": "public",
       "description": "Write one bounded prefix, up to4096bytes, under one original Poll/Finite/Forever absolute budget. Nonzero length required; caller spans disjoint and borrowed until actual return. Finite identity/regression/expiry revalidated before admission, never rebased by wakes. A <=atomic_limit write waits for the whole offered record; larger writes may return an exact partial prefix. Caller spans remain borrowed through actual return. No resident queue stores caller pointers; no Unwind guard survives scheduler park. Cancel/close wakes actual waiters; every wake re-resolves full endpoint identity. Last writer close then drain yields EOF; last reader close yields BrokenPipe with zero accepted bytes. No peer-delivery or physical-DMA claim.",
       "locations": {
@@ -2238,7 +2238,7 @@
       "name": "R4SYS.byte_pipe_cancel",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 188,
+      "slot": 187,
       "exposure": "public",
       "description": "Advance the exact reference cancellation epoch and wake current operations. Applies to calls already admitted, including staging; a later call uses a fresh epoch. No close, byte discard, reference release or cancellation of other duplicate ends. Epoch never wraps.",
       "locations": {
@@ -2250,7 +2250,7 @@
       "name": "R4SYS.byte_pipe_close",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 189,
+      "slot": 188,
       "exposure": "public",
       "description": "Close only this exact reference, waking all blocked directions. Last writer permits buffered drain then EOF. Last reader discards unread bytes and forbids later writes with BrokenPipe. Last reference frees real backing outside Runtime; failed free retains a closed exact retry identity and all resource accounting. Process retirement closes its own references, never peers in other processes.",
       "locations": {
@@ -2262,7 +2262,7 @@
       "name": "R4SYS.byte_pipe_info",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 190,
+      "slot": 189,
       "exposure": "public",
       "description": "Copy advisory coherent channel capacity/queued/reference counts and atomic/step limits. Does not reserve capacity or prove drain, delivery or shutdown.",
       "locations": {
@@ -2274,7 +2274,7 @@
       "name": "R4SYS.program_launch_io",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 191,
+      "slot": 190,
       "exposure": "public",
       "description": "Copy and validate LaunchIo and launch strings, then create one Start2 child. All selected pipe references bind atomically to its full reserved generation before first Ready. Both stdout/stderr create distinct refs even for the same parent End. No automatic inheritance; every failure rolls child refs back. Parent references remain untouched; caller out_handle only publishes complete success.",
       "locations": {
@@ -2286,7 +2286,7 @@
       "name": "R4SYS.program_stdio",
       "group": "R4SYS",
       "kind": "group_slot",
-      "slot": 192,
+      "slot": 191,
       "exposure": "public",
       "description": "Return this exact Start2 process startup binding snapshot; defaults use existing console routes. Pipe End values are borrowed references owned by this process, not a new retain. Query does not reopen closed ends; Dup explicitly if another owning reference is needed. No parent pointers or context-reserved fields are used.",
       "locations": {
@@ -5598,7 +5598,7 @@
       "name": "R4DEV.program_instance_storage_self_test",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 28,
+      "slot": 27,
       "exposure": "advanced",
       "description": "Runs the bounded dynamic program-instance storage diagnostic.",
       "locations": {
@@ -5610,7 +5610,7 @@
       "name": "R4DEV.program_registry_summary_v2",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 31,
+      "slot": 28,
       "exposure": "advanced",
       "description": "Returns full lifecycle and allocation data for the dynamic program registry.",
       "locations": {
@@ -5622,7 +5622,7 @@
       "name": "R4DEV.program_registry_self_test_v2",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 32,
+      "slot": 29,
       "exposure": "advanced",
       "description": "Runs the full program-lifecycle and dynamic-registry diagnostic.",
       "locations": {
@@ -5634,7 +5634,7 @@
       "name": "R4DEV.execution_inventory_summary",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 33,
+      "slot": 30,
       "exposure": "advanced",
       "description": "R4DEV returns the compact generation-safe program, task, and thread inventory summary.",
       "locations": {
@@ -5646,7 +5646,7 @@
       "name": "R4DEV.program_instance_storage_summary_v2",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 34,
+      "slot": 31,
       "exposure": "advanced",
       "description": "Returns the complete current v2/336-byte dynamic program-instance storage summary, including transactional GUI-frame telemetry. Caller versions 2 or newer with size at least 336 are accepted and answered as v2/336; version zero, version 1 or a smaller size returns -1 without modifying the buffer.",
       "locations": {
@@ -5658,7 +5658,7 @@
       "name": "R4DEV.kernel_version",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 35,
+      "slot": 32,
       "exposure": "advanced",
       "description": "Returns the semantic version of the currently running kernel from its embedded ELF metadata source.",
       "locations": {
@@ -5670,7 +5670,7 @@
       "name": "R4DEV.performance_boot_phase_clock",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 36,
+      "slot": 33,
       "exposure": "advanced",
       "description": "Returns the calibrated nanosecond timing and explicit availability state for one recorded boot phase; endpoint clock metadata is frozen after terminal boot completion.",
       "locations": {
@@ -5682,7 +5682,7 @@
       "name": "R4DEV.performance_irq_timing",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 37,
+      "slot": 34,
       "exposure": "advanced",
       "description": "Returns IRQ-router dispatch and external-handler nanosecond timing with explicit coverage and observer-read counts.",
       "locations": {
@@ -5694,7 +5694,7 @@
       "name": "R4DEV.performance_boot_summary",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 38,
+      "slot": 35,
       "exposure": "advanced",
       "description": "Returns the small passive boot completion and frozen timing dataset without collecting broad subsystem summaries.",
       "locations": {
@@ -5706,7 +5706,7 @@
       "name": "R4DEV.performance_driver_work",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 39,
+      "slot": 36,
       "exposure": "advanced",
       "description": "Returns the compact owner-selectable driver-work queue state, timing, wake, release, scan, critical-section and cleanup counters without collecting broad subsystem summaries.",
       "locations": {
@@ -5718,7 +5718,7 @@
       "name": "R4DEV.performance_pci_inventory",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 40,
+      "slot": 37,
       "exposure": "advanced",
       "description": "Returns the compact canonical PCI inventory coverage, bounded-enumeration, config-access, mapping and consumer-materialization counters.",
       "locations": {
@@ -5730,7 +5730,7 @@
       "name": "R4DEV.performance_input",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 41,
+      "slot": 38,
       "exposure": "advanced",
       "description": "Returns compact i8042, keyboard, GUI-event, console-input and program-entry queue counters.",
       "locations": {
@@ -5742,7 +5742,7 @@
       "name": "R4DEV.display_state",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 42,
+      "slot": 39,
       "exposure": "advanced",
       "description": "Returns one coherent display owner, candidate, generation, capability and fallback snapshot without PCI or MMIO reads.",
       "locations": {
@@ -5754,7 +5754,7 @@
       "name": "R4DEV.driver_module_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 43,
+      "slot": 40,
       "exposure": "advanced",
       "description": "Copies retained metadata of the initialized R4D owner; no file, PCI or MMIO reads. Returns 1 on success, 0 for no runtime R4D, -1 for invalid capacity/version/owner, -2 while the lifecycle is busy. No output on failure. Firmware version names the declared embedded bundle, never successful device execution.",
       "locations": {
@@ -5766,7 +5766,7 @@
       "name": "R4DEV.performance_instrumentation",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 44,
+      "slot": 41,
       "exposure": "advanced",
       "description": "Reads instrumentation mode, sampling rates, enumeration bounds and clock quality without collecting the broad performance summary. Returns 1 on success, -1 for invalid version/capacity; no output on failure.",
       "locations": {
@@ -5778,7 +5778,7 @@
       "name": "R4DEV.performance_lock",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 45,
+      "slot": 42,
       "exposure": "advanced",
       "description": "Read-only resident instrumentation snapshot. Returns 1 on success, 0 beyond the index range, -1 for invalid version/capacity; no output on failure.",
       "locations": {
@@ -5790,7 +5790,7 @@
       "name": "R4DEV.performance_stack",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 46,
+      "slot": 43,
       "exposure": "advanced",
       "description": "Read-only resident instrumentation snapshot. Returns 1 on success, 0 beyond the index range, -1 for invalid version/capacity; no output on failure.",
       "locations": {
@@ -5802,7 +5802,7 @@
       "name": "R4DEV.stack_fault",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 47,
+      "slot": 44,
       "exposure": "advanced",
       "description": "Read the latest resident stack failure for CPU slot index. Returns 1 for a coherent snapshot (sequence zero means no recorded failure), 0 beyond CPU slots, -1 for invalid version/capacity and -2 for a concurrently changing record after three attempts. Failure never changes output. No allocation, owner acquisition, scan, wait, trace activation or state reset.",
       "locations": {
@@ -5814,7 +5814,7 @@
       "name": "R4DEV.memory_kernel_heap_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 48,
+      "slot": 45,
       "exposure": "advanced",
       "description": "Explicit bounded kernel-heap check after boot. Runs the existing allocator, patterns, alignment, double-free, 2000-op churn, 16-iteration acceptance and resident-commit cases with exact owned cleanup. Never assumes the global heap is empty and never resets global counters. Returns 1 for a versioned report (including failed, busy or cancelled), 0 when unavailable and -1 for invalid version/capacity without changing output. At most one check runs; normal heap users remain admitted. Close is cooperative; caller task lifetime is retained through cleanup. Deliberate double-free and VM errors are counted separately. Global before/after usage is observational, not a leak oracle. An unacknowledged release retains its exact diagnostic identity and blocks further checks.",
       "locations": {
@@ -5826,7 +5826,7 @@
       "name": "R4DEV.scheduler_kernel_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 49,
+      "slot": 46,
       "exposure": "advanced",
       "description": "Explicit bounded scheduler/synchronization checks using the existing native cases on a BSP-only controller. Selection is a nonzero kernel_scheduler_check_case_* mask. Exact own task generations and work tickets remain resident until actual exit/release acknowledgments. Caller lifetime survives waits; close requests cooperative cancellation. Exclusive with native boot probes. No global reserve-failure injection, timer reprogramming or artificial clock advancement; those isolated cases are advertised separately. Returns 1 for a fixed report, 0 when unavailable, -1 for invalid selection/header/capacity without output mutation. Failed cleanup retains the resident session and prevents new work; never retry automatically.",
       "locations": {
@@ -5838,7 +5838,7 @@
       "name": "R4DEV.smp_kernel_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 50,
+      "slot": 47,
       "exposure": "advanced",
       "description": "Explicit bounded functional SMP check on an owned BSP controller and one FPU-ready pinned worker per schedulable CPU. Reuses native placement/checksum, actual old/new mapping reads, exact request-generation remote TLB acknowledgments, monotonic clock and own heap/mutex contracts. Own task retirement precedes mapping/frame cleanup. No global DROP_ACK injection, global counter resets/empty baselines, speedup threshold, heap boot acceptance or R4L/serial boot assertions. Missing second CPU reports unavailable without work. Exact resources and failed releases remain resident; cooperative close cannot discard live workers or backing. Returns 1 for a fixed report including busy/failure/cancellation, 0 when context unavailable, -1 for invalid header/capacity unchanged output.",
       "locations": {
@@ -5850,7 +5850,7 @@
       "name": "R4DEV.performance_smp_tlb",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 51,
+      "slot": 48,
       "exposure": "advanced",
       "description": "Passive current CPU/schedulable and clock-registration/quality snapshot plus actual remote TLB request/ACK/timeout counters since boot. Reports an active isolated injection explicitly; never starts work or presents historical boot outcomes as a new passing check. Loads are individually current, not atomic across owners; clock quality is functional even without detail metrics. Returns 1 for fixed snapshot, -1 for invalid version/capacity without output mutation.",
       "locations": {
@@ -5862,7 +5862,7 @@
       "name": "R4DEV.storage_block_queue_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 52,
+      "slot": 49,
       "exposure": "advanced",
       "description": "Explicit bounded synthetic blockqueue diagnosis on an owned BSP controller. Shares existing independent-controller, bounded queue, reordered/duplicate completion, kill/unregister barrier, reset/late callback, real timeout/cancel, ordered flush and partial-batch cases. Uses own exact device/request/task generations, actual completion and retirement receipts; never touches physical test disks or resets global queues/counters. Failed resources remain resident and block another session. Returns1 for fixed report incl unavailable/busy/failure/cancel,0 for context unavailable,-1 for invalid header/capacity without output mutation.",
       "locations": {
@@ -5874,7 +5874,7 @@
       "name": "R4DEV.storage_nvme_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 53,
+      "slot": 50,
       "exposure": "advanced",
       "description": "Explicit bounded read-only NVMe IRQ/completion proof. Binds one exact device generation and resident buffer through actual read completion and release. Matches native request/backend identity to a driver observation of its own hardware CQE, namespace/controller epochs and IRQ-driven worker pass after DMA release acknowledgment. Passive per-device before/after counters are descriptive only. Missing hardware/observation/IRQ capability is unavailable, not a pass. No deliberate write/reset/reconfiguration/fault injection. Caller output never reaches a worker; late or uncertain state retains resources/session. Returns1 for fixed report,0 for context unavailable,-1 for invalid header/capacity unchanged output.",
       "locations": {
@@ -5886,7 +5886,7 @@
       "name": "R4DEV.usb_contract_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 54,
+      "slot": 51,
       "exposure": "advanced",
       "description": "Explicit bounded synthetic USB ring-cycle and event-router contracts using the existing native owner functions. Only private stack-local state; no allocation, waits, tasks, live mailbox access, real TRB submission, port reset or hardware reconfiguration. Reentrant and repeatable without USB hardware. This is not a physical USB/liveboot qualification. Returns1 for a fixed32-byte report,-1 for invalid header/capacity with output unchanged.",
       "locations": {
@@ -5898,7 +5898,7 @@
       "name": "R4DEV.serial_count",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 55,
+      "slot": 52,
       "exposure": "public",
       "description": "Count currently registered ports, including reserved debug ports. Dynamic count, no two-port maximum.",
       "locations": {
@@ -5910,7 +5910,7 @@
       "name": "R4DEV.serial_port_at",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 56,
+      "slot": 53,
       "exposure": "public",
       "description": "Copy one current port descriptor by catalog index;0success, NotFound at end. Enumeration is not an open reservation; use copied port_id+generation.",
       "locations": {
@@ -5922,7 +5922,7 @@
       "name": "R4DEV.serial_open",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 57,
+      "slot": 54,
       "exposure": "public",
       "description": "Exclusively bind exact port generation to current process generation. Out handle zero on failure. Debug COM1 remains Busy until actual handoff.0success; provider open bounded/no retained buffers.",
       "locations": {
@@ -5934,7 +5934,7 @@
       "name": "R4DEV.serial_configure",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 58,
+      "slot": 55,
       "exposure": "public",
       "description": "Configure exact process-owned open port; Busy until previous TX physically drains. Unsupported settings unchanged.",
       "locations": {
@@ -5946,7 +5946,7 @@
       "name": "R4DEV.serial_read",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 59,
+      "slot": 56,
       "exposure": "public",
       "description": "Read_some raw bytes, wait for at least one only.0timeout polls. Finite logical-tick deadline, UINT64_MAX invalid. Per-port IRQ event wait leaves Ready list. Valid transfer output retains partial bytes/errors even on failure; no automatic replay. Empty call has no device effects.",
       "locations": {
@@ -5958,7 +5958,7 @@
       "name": "R4DEV.serial_write",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 60,
+      "slot": 57,
       "exposure": "public",
       "description": "Queue raw bytes with exact accepted prefix; no framing.0timeout polls, finite ticks only. Per-port IRQ queue-space wait leaves Ready list. Partial bytes retained on timeout/cancel/error; caller keeps buffer through return. Physical completion requires drain.",
       "locations": {
@@ -5970,7 +5970,7 @@
       "name": "R4DEV.serial_drain",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 61,
+      "slot": 58,
       "exposure": "public",
       "description": "Confirm empty software TX and actual hardware TEMT, not remote receipt. Finite ticks,0polls. IRQ readiness plus bounded timer for final shift completion; no yield spin.",
       "locations": {
@@ -5982,7 +5982,7 @@
       "name": "R4DEV.serial_status",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 62,
+      "slot": 59,
       "exposure": "public",
       "description": "Coherent exact open-handle line/modem/buffer/error snapshot. No UART access through a reserved debug port.",
       "locations": {
@@ -5994,7 +5994,7 @@
       "name": "R4DEV.serial_cancel",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 63,
+      "slot": 60,
       "exposure": "public",
       "description": "Cancel already admitted operations on this exact process-owned opening; wake only its serial waiters. Retain actual accepted bytes and device-owned buffers. Future operations may continue; no unrelated task/work completion signaled.",
       "locations": {
@@ -6006,7 +6006,7 @@
       "name": "R4DEV.serial_close",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 64,
+      "slot": 61,
       "exposure": "public",
       "description": "Close admission, cancel/wake operations, await real callback references and hardware stop. Normal flags0 drains; serial_close_abort discards own queued bytes with accounting. Finite ticks;0polls. Timeout/unknown retains same closing handle and port/context for retry, successful0 alone releases ownership. Process/driver exit uses explicit abort with same actual quiescence.",
       "locations": {
@@ -6018,7 +6018,7 @@
       "name": "R4DEV.cpu_topology",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 65,
+      "slot": 62,
       "exposure": "advanced",
       "description": "Copy one passive immutable boot CPU record. Returns cpu_topology_result_ok, _end, _invalid or _busy. Validate version1/caller capacity; errors and end leave output and any tail unchanged. No CPUID, allocation, wait, new hardware scan or hardware mutation during this query. Current online/schedulable flags are advisory per-call snapshots; calls across CPUs are not one transaction.",
       "locations": {
@@ -6030,7 +6030,7 @@
       "name": "R4DEV.cpu_cache_topology",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 66,
+      "slot": 63,
       "exposure": "advanced",
       "description": "Copy one passive local cache descriptor for an exact boot CPU. Returns cpu_topology_result_ok, _end, _invalid or _busy; errors/end leave output and tail unchanged. Read CpuTopologyInfo cache_status to distinguish unavailable/invalid/truncated catalogs. No CPUID or new scan during this query.",
       "locations": {
@@ -6042,7 +6042,7 @@
       "name": "R4DEV.cpu_lifecycle",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 67,
+      "slot": 64,
       "exposure": "advanced",
       "description": "Query0 is passive and requires expected_epoch0; any configured CPU including BSP is queryable. Offline1/online2 require the exact current nonzero epoch, BSP caller with IF on and no held owners, an admitted task, no concurrent CPU-sensitive probe, and a configured non-BSP target. Returns cpu_lifecycle_ok0, error_invalid/busy/index/epoch/context/qualification/state. Success writes exactly128 bytes and preserves caller tail. Every error leaves output unchanged; Busy may have moved safe saved tasks or IRQs and must be followed by query, never automatic retry. Before TLB withdrawal a rejected drain restores scheduling only after exact AP cancellation; after withdrawal uncertainty remains quarantined. Confirmed stop and fresh module baseline, CPUID, xstate, PAT, tables, LAPIC, clock and scheduler qualification are mandatory for reuse. No retained caller pointer, forced kernel-context migration, physical hotplug or CPU reservation.",
       "locations": {
@@ -6054,7 +6054,7 @@
       "name": "R4DEV.kernel_cpu_lifecycle_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 68,
+      "slot": 65,
       "exposure": "advanced",
       "description": "Explicit bounded native CPU lifecycle work on an admitted BSP task with IF on and no owners. Returns1 for a fixed report (including Busy/failure/unavailable),0 when caller context unavailable, -1 invalid header/capacity with unchanged output. Exact task retirement and true hardware receipts govern success; retained resources block reuse. Leaves tested CPU freshly online after a successful cycle; never runs implicitly from metrics or boot.",
       "locations": {
@@ -6066,7 +6066,7 @@
       "name": "R4DEV.cpu_capabilities",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 69,
+      "slot": 66,
       "exposure": "advanced",
       "description": "Passive CPU capture query. Returns cpu_capabilities_ok or error_invalid/index/busy. Any configured CPU including offline is observable; current lifecycle state is advisory. Only captured controls have validity flags. Unknown optional fields never block boot. Writes exactly272 bytes on success; every error leaves output and tail unchanged.",
       "locations": {
@@ -6078,7 +6078,7 @@
       "name": "R4DEV.cpu_feature",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 70,
+      "slot": 67,
       "exposure": "advanced",
       "description": "Passive indexed query within CpuCapabilitiesInfo.feature_count for the exact nonzero current epoch; returns end after enumeration, error_epoch across reuse, busy during capture. Writes exactly112 bytes on success. Hardware, OS activation and unknown actual use are independent; raw data only when flagged. No output/tail changes on end/error.",
       "locations": {
@@ -6090,7 +6090,7 @@
       "name": "R4DEV.cpu_register_read",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 71,
+      "slot": 68,
       "exposure": "advanced",
       "description": "Explicit named current-CPU read only. Returns cpu_capabilities_ok/error_invalid/index/busy/epoch/context/offline/unsupported/fault. Preserves caller IF and entire output/tail on failure. Caller routes through existing approved compute worker if needed; no general cross-CPU RPC or arbitrary MSR number. Architectural EFER/APIC_BASE/PAT/MTRRCAP require explicit capability; APERF/MPERF require exact Intel/AMD vendor and CPUID6.ECX0; Intel platform info limited to verified family6 models3C/45/46. Raw counters and nominal ratios are not current frequency. No public write. IF-on admitted task without held owners required at entry; refusal also preserves IF-off callers. Append-only CPUPOWER named IDs add proven Intel6:3C/45/46 sensor/energy reads and AMD19h:01h:B1 PPR reads. Named Intel microcode capture performs only the architectural zero-preload/CPUID1 latch; AMD patch8B never receives that write. No caller-controlled write or power request.",
       "locations": {
@@ -6102,7 +6102,7 @@
       "name": "R4DEV.kernel_cpu_register_check",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 72,
+      "slot": 69,
       "exposure": "advanced",
       "description": "Explicit bounded local native instruction/#GP/IF check. Returns cpu_capabilities_ok with passed/failed report, or exact admission/header errors with unchanged output. IF-on task/no-held-owner context required at entry. Own membership lease prevents concurrent logical offline through final restoration. Exactly four fixed reserved-ID read/write probes; unsupported feature refuses before instruction. Writes exactly128 bytes; never implicitly runs in metrics/boot.",
       "locations": {
@@ -6114,7 +6114,7 @@
       "name": "R4DEV.cpu_power_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 73,
+      "slot": 70,
       "exposure": "advanced",
       "description": "Passive cached external CPUPOWER observation. No register access, sampling worker, wait or policy write. Exact requested CPU epoch and provider instance; stale clock/CPU data lose valid bits. Returns cpu_capabilities_ok with explicit missing/unknown states, or exact header/index/epoch/busy errors preserving all output/tail.",
       "locations": {
@@ -6126,7 +6126,7 @@
       "name": "R4DEV.cpu_power_capture",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 74,
+      "slot": 71,
       "exposure": "advanced",
       "description": "Explicit bounded local passive CPUPOWER capture. IF-on admitted task with no held owners, exact current CPU/start epoch and stable clock required. Caller routes via existing approved compute workers; no remote RPC or implicit wait. Reads never alter power requests/limits. Intel microcode signature may use its exact zero-preload/CPUID1 latch, AMD patch level is read only. Optional inaccessible values are reported unknown with raw/fault context. Returns cpu_capabilities_ok or exact errors with output/tail unchanged.",
       "locations": {
@@ -6138,7 +6138,7 @@
       "name": "R4DEV.cpu_performance",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 75,
+      "slot": 72,
       "exposure": "advanced",
       "description": "Explicit local external performance provider operation with exact CPU/start/provider/ownership epochs. No governor or remote dispatch. Bad/unsupported requests preserve output and never write. Return0 provides the complete fixed receipt, including real fault/uncertain/conflict and reset-only activation; examine state/last_error and retain hardware until actual explicit release. Caller tail preserved. Request readback never claims physical delivered performance.",
       "locations": {
@@ -6150,7 +6150,7 @@
       "name": "R4DEV.cpu_cppc",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 76,
+      "slot": 73,
       "exposure": "advanced",
       "description": "Explicit current-CPU external AMD CPPC operation. Abstract local request, separately consented one-way activation, exact baseline/token/revision and complete fault/readback receipt. Unsupported model/transport/epoch or invalid request performs no write. A return0 result supplies the receipt including uncertain/conflict; read state/last_error and retain hardware until actual local return. No governor, arbitrary MSR, physical frequency/energy or package-broadcast claim.",
       "locations": {
@@ -6162,7 +6162,7 @@
       "name": "R4DEV.cpu_performance_hint",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 77,
+      "slot": 74,
       "exposure": "advanced",
       "description": "Passive cached same-catalogue preferred-core observation bound to exact CPU/provider/clock epochs and maximum1s sampling age. No model-register access, provider callback, work or policy. Missing/stale/incomparable observations are unknown, never low capacity or a placement guarantee. Refusal preserves caller output/tail.",
       "locations": {
@@ -6174,7 +6174,7 @@
       "name": "R4DEV.cpu_firmware_performance",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 78,
+      "slot": 75,
       "exposure": "advanced",
       "description": "Explicit CPUPOWER firmware performance request, separately typed from local HWP/CPPC. May wait for actual external ACPIPLAT worker completion. Task/CPU/provider identities remain pinned; no Runtime/local-register owner spans the call. Refusal preserves output; complete receipt may report uncertain hardware and retained resources. No arbitrary model register, governor, automatic mutation retry or physical energy/clock claim.",
       "locations": {
@@ -6186,7 +6186,7 @@
       "name": "R4DEV.cpu_idle_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 79,
+      "slot": 76,
       "exposure": "advanced",
       "description": "Passive copy of independent idle declaration, local qualification and software counters. Hardware residency, wake latency and energy remain unavailable without own readback; never execute CPUID/MSR/MONITOR on this query.",
       "locations": {
@@ -6198,7 +6198,7 @@
       "name": "R4DEV.cpu_machine_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 80,
+      "slot": 77,
       "exposure": "advanced",
       "description": "Passive copy of bounded resident MCA boot/terminal receipt. No hardware work, lock, module callback or automatic retry. Error preserves output/tail.",
       "locations": {
@@ -6210,7 +6210,7 @@
       "name": "R4DEV.cpu_machine_bank",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 81,
+      "slot": 78,
       "exposure": "advanced",
       "description": "Passive bank copy bound to exact CPU/original epoch/complete capture sequence. End or stale/busy/index/header error preserves all output/tail. Never arbitrary MSR access.",
       "locations": {
@@ -6222,7 +6222,7 @@
       "name": "R4DEV.cpu_microcode_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 82,
+      "slot": 79,
       "exposure": "advanced",
       "description": "Passive fixed early microcode receipt. Exact CPU/execution epoch, real revision-read validity, loaded/supplied/virtual/prerequisite/failure states and post-baseline capture stay distinct. No update operation, hardware access or callback. Error preserves full output/tail.",
       "locations": {
@@ -6234,7 +6234,7 @@
       "name": "R4DEV.cpu_pmu_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 83,
+      "slot": 80,
       "exposure": "advanced",
       "description": "Passive cached interface/model/current epoch and exact retained measurement ownership. No hardware access or callback.",
       "locations": {
@@ -6246,7 +6246,7 @@
       "name": "R4DEV.cpu_pmu_measure",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 84,
+      "slot": 81,
       "exposure": "advanced",
       "description": "Explicit synchronous private CPU-counter scope, exact CPU/epoch/nonreused generation. Native supported named event only, virtual/unknown refused before MSR/work.1..4096 pure resident callback iterations, no allocation/fault/block/yield/API/placement call, IF0 only during short owned transaction then original IF. Original register state and exact readbacks before release; uncertain restoration retains quarantined PMU and lifecycle lease. Return0 means a complete receipt, not count validity; inspect status/flags. No arbitrary MSR/event/firmware interface. Work is a borrowed nullable pointer to one typed callback slot; null slot/address is invalid. SDK convenience facades pass a copied local function slot. No host-dependent optional-by-value callback enters the ABI.",
       "locations": {
@@ -6258,7 +6258,7 @@
       "name": "R4DEV.cpu_pmu_result",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 85,
+      "slot": 82,
       "exposure": "advanced",
       "description": "Passive latest retained result copy for exact original CPU/epoch/generation. Offline/restart never relabel data; stale identity/error leaves all output/tail unchanged.",
       "locations": {
@@ -6270,7 +6270,7 @@
       "name": "R4DEV.cpu_acceleration_info",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 86,
+      "slot": 83,
       "exposure": "advanced",
       "description": "Passive cached local optional CPU/OS facts and conservative all-configured hardware hints. No CPU instruction, measurement, callback or execution grant. Current CPU may change after return.",
       "locations": {
@@ -6282,7 +6282,7 @@
       "name": "R4DEV.cpu_acceleration_work",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 87,
+      "slot": 84,
       "exposure": "advanced",
       "description": "Explicit synchronous pure resident baseline/SHA execution window. Exact TaskAdmission/lifecycle lease through output, original actual IF immediately before CLI, exact physical CPU/epoch/feature/OS revalidation. Virtual exposed ISA allowed, never PMU or physical qualification.1..64iterations,2ms accepted hardware clock. No allocation/fault/wait/yield/API/placement change; no Runtime owner across callback. No arbitrary feature mask/registers. Receipt0 alone not accepted: inspect flags/status/callback/identity/IF/clock. Refusal before work preserves output/tail; no automatic retry.",
       "locations": {
@@ -6294,7 +6294,7 @@
       "name": "R4DEV.fpu_observation",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 88,
+      "slot": 85,
       "exposure": "advanced",
       "description": "Explicitly begin/end one current native task-generation/token/RIP-window observation. Scope records actual qualified local timer delivery, actual task switches and actual registered R4D hardware IRQ callbacks. No normal SysV call may be assumed to preserve XMM/YMM data. Direct IRQ guard calls do not count. Caller owns audited register-live bounds inside its retained module image. No caller pointer, lock or runtime borrow spans userland work; task retirement discards metadata, no hardware cleanup. Every failure preserves output and any existing observation. Zero events are unavailable hardware coverage.",
       "locations": {
@@ -6306,7 +6306,7 @@
       "name": "R4DEV.firmware_system_uuid",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 89,
+      "slot": 86,
       "exposure": "advanced",
       "description": "Passive validated SMBIOS Type 1 system UUID in canonical RFC byte order. Returns 0 only for a nontrivial UUID; unavailable or invalid firmware preserves caller output. No network or storage side effects.",
       "locations": {
@@ -6318,7 +6318,7 @@
       "name": "R4DEV.device_inventory_capture",
       "group": "R4DEV",
       "kind": "group_slot",
-      "slot": 90,
+      "slot": 87,
       "exposure": "advanced",
       "description": "Copy one complete passive device inventory into caller record storage in one existing collect traversal. Returns0 for a complete frozen copy; -2 reports insufficient capacity with generation0 and required_count, -3 refuses overflow, -4 refuses identity exhaustion. Existing per-source metadata copies are not globally atomic. No new scan, IO, allocation, persistent Kernel snapshot or device retain. Rows on any failure are private and must be discarded; receipt is valid on the documented capacity/overflow errors. All pointers are exclusively borrowed for the synchronous call; buffers must be mapped, aligned and disjoint. Null rows allowed only at capacity0. Actual return ends the loan; caller cancellation cannot forcibly end an active callback.",
       "locations": {

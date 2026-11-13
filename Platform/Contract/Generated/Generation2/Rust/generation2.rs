@@ -61,7 +61,198 @@ impl Default for R4XStartContext2 { fn default() -> Self { Self {
     reserved2: 0,
 } } }
 const _: () = { assert!(core::mem::size_of::<R4LQuery2>() == 24); assert!(core::mem::size_of::<R4XStartContext2>() == 120); assert!(core::mem::offset_of!(R4XStartContext2,reserved2) == 112); };
-pub use super::R4SysFns as R4SysFns2;
+pub mod R4SysFns2 {
+    pub type write = unsafe extern "C" fn(*const u8, u32) -> i32;
+    pub type putc = unsafe extern "C" fn(u8) -> ();
+    pub type sleep_ticks = unsafe extern "C" fn(u64) -> ();
+    pub type ticks = unsafe extern "C" fn() -> u64;
+    pub type env_get = unsafe extern "C" fn(*const u8, *mut u8, u32) -> i32;
+    pub type dir_entry = unsafe extern "C" fn(*const u8, u32, *mut u8, u32) -> i32;
+    pub type program_should_close = unsafe extern "C" fn() -> u32;
+    pub type program_class = unsafe extern "C" fn(*const u8, u32) -> i32;
+    pub type program_instance = unsafe extern "C" fn(u32, *mut super::super::ProgramInstanceInfo) -> i32;
+    pub type service_status = unsafe extern "C" fn(*const u8, *mut super::super::ServiceInfo) -> i32;
+    pub type service_open = unsafe extern "C" fn(*const u8, *mut super::super::ServiceInfo) -> i32;
+    pub type service_close = unsafe extern "C" fn(u32) -> i32;
+    pub type service_call = unsafe extern "C" fn(u32, u16, *const u8, u32, *mut super::super::ServiceMessageHeader, *mut u8, u32, u64) -> i32;
+    pub type service_endpoint_register = unsafe extern "C" fn(*const u8, u32, *mut super::super::ServiceInfo) -> i32;
+    pub type service_endpoint_unregister = unsafe extern "C" fn(u32) -> i32;
+    pub type service_endpoint_poll = unsafe extern "C" fn(u32) -> i32;
+    pub type service_endpoint_recv = unsafe extern "C" fn(u32, *mut super::super::ServiceMessageHeader, *mut u8, u32) -> i32;
+    pub type service_endpoint_reply = unsafe extern "C" fn(u32, u32, i32, *const u8, u32) -> i32;
+    pub type service_detail_by_name = unsafe extern "C" fn(*const u8, *mut super::super::ServiceDetail) -> i32;
+    pub type service_start = unsafe extern "C" fn(*const u8, *mut super::super::ServiceInfo) -> i32;
+    pub type service_stop = unsafe extern "C" fn(*const u8, *mut super::super::ServiceInfo, u64) -> i32;
+    pub type service_restart = unsafe extern "C" fn(*const u8, *mut super::super::ServiceInfo) -> i32;
+    pub type service_install = unsafe extern "C" fn(*const u8, *const u8, *const u8, u32, *const u8, *mut super::super::ServiceInfo) -> i32;
+    pub type service_remove = unsafe extern "C" fn(*const u8) -> i32;
+    pub type vm_reserve = unsafe extern "C" fn(u64, u64, u64, *mut super::super::ProgramVmRegionInfo) -> i32;
+    pub type vm_commit = unsafe extern "C" fn(u32, u64, u64, u64) -> i32;
+    pub type vm_decommit = unsafe extern "C" fn(u32, u64, u64) -> i32;
+    pub type vm_release = unsafe extern "C" fn(u32) -> i32;
+    pub type vm_query = unsafe extern "C" fn(u32, *mut super::super::ProgramVmRegionInfo) -> i32;
+    pub type thread_create = unsafe extern "C" fn(super::super::ThreadEntryFn, u64, u64, u32, *mut u32) -> i32;
+    pub type thread_exit = unsafe extern "C" fn(i32) -> ();
+    pub type thread_join = unsafe extern "C" fn(u32, u64, *mut i32) -> i32;
+    pub type thread_current = unsafe extern "C" fn() -> u32;
+    pub type thread_status = unsafe extern "C" fn(u32, *mut super::super::ProgramThreadInfo) -> i32;
+    pub type io_file_read = unsafe extern "C" fn(*const u8, *mut u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_read_at = unsafe extern "C" fn(*const u8, u64, *mut u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_write = unsafe extern "C" fn(*const u8, *const u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_append = unsafe extern "C" fn(*const u8, *const u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_stream_begin = unsafe extern "C" fn(*const u8, u32, *mut u32) -> i32;
+    pub type io_file_stream_write = unsafe extern "C" fn(*const u8, u64, *const u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_stream_finish = unsafe extern "C" fn(*const u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_stream_abort = unsafe extern "C" fn(*const u8, *mut u32) -> i32;
+    pub type io_service_call = unsafe extern "C" fn(u32, u16, *const u8, u32, *mut super::super::ServiceMessageHeader, *mut u8, u32, u64, u32, *mut u32) -> i32;
+    pub type io_status = unsafe extern "C" fn(u32, *mut super::super::ProgramIoInfo) -> i32;
+    pub type io_wait = unsafe extern "C" fn(u32, u64, *mut super::super::ProgramIoInfo) -> i32;
+    pub type io_close = unsafe extern "C" fn(u32) -> i32;
+    pub type task_yield = unsafe extern "C" fn() -> ();
+    pub type system_halt = unsafe extern "C" fn() -> ();
+    pub type system_reboot = unsafe extern "C" fn() -> ();
+    pub type system_poweroff = unsafe extern "C" fn() -> ();
+    pub type time_state = unsafe extern "C" fn(*mut super::super::TimeState) -> ();
+    pub type time_set_state = unsafe extern "C" fn(*const super::super::TimeState) -> i32;
+    pub type time_seconds_since_midnight = unsafe extern "C" fn() -> u32;
+    pub type dir_list = unsafe extern "C" fn(*const u8, *mut u8, u32) -> i32;
+    pub type dir_create = unsafe extern "C" fn(*const u8) -> i32;
+    pub type dir_delete = unsafe extern "C" fn(*const u8) -> i32;
+    pub type drive_info = unsafe extern "C" fn(u32, *mut super::super::DriveInfo) -> i32;
+    pub type file_info = unsafe extern "C" fn(*const u8, *mut super::super::FileInfo) -> i32;
+    pub type file_delete = unsafe extern "C" fn(*const u8) -> i32;
+    pub type file_rename = unsafe extern "C" fn(*const u8, *const u8) -> i32;
+    pub type file_copy = unsafe extern "C" fn(*const u8, *const u8) -> i32;
+    pub type file_move = unsafe extern "C" fn(*const u8, *const u8) -> i32;
+    pub type file_read = unsafe extern "C" fn(*const u8, *mut u8, u32) -> i32;
+    pub type file_write = unsafe extern "C" fn(*const u8, *const u8, u32) -> i32;
+    pub type file_read_at = unsafe extern "C" fn(*const u8, u32, *mut u8, u32) -> i32;
+    pub type file_append = unsafe extern "C" fn(*const u8, *const u8, u32) -> i32;
+    pub type file_stream_begin = unsafe extern "C" fn(*const u8, u32) -> i32;
+    pub type file_stream_write = unsafe extern "C" fn(*const u8, u64, *const u8, u32, u32) -> i32;
+    pub type file_stream_finish = unsafe extern "C" fn(*const u8, u64, u32) -> i32;
+    pub type file_stream_abort = unsafe extern "C" fn(*const u8) -> i32;
+    pub type env_set = unsafe extern "C" fn(*const u8, *const u8, u32) -> i32;
+    pub type registry_key_info = unsafe extern "C" fn(*const u8, *mut super::super::RegistryKeyInfo) -> i32;
+    pub type registry_enum_key = unsafe extern "C" fn(*const u8, u32, *mut u8, u32) -> i32;
+    pub type registry_enum_value = unsafe extern "C" fn(*const u8, u32, *mut super::super::RegistryValueInfo) -> i32;
+    pub type registry_get_value = unsafe extern "C" fn(*const u8, *const u8, *mut super::super::RegistryValueInfo, *mut u8, u32) -> i32;
+    pub type registry_set_value = unsafe extern "C" fn(*const u8, *const u8, u16, *const u8, u32) -> i32;
+    pub type registry_delete_value = unsafe extern "C" fn(*const u8, *const u8) -> i32;
+    pub type service_info = unsafe extern "C" fn(u32, *mut super::super::ServiceInfo) -> i32;
+    pub type service_detail = unsafe extern "C" fn(u32, *mut super::super::ServiceDetail) -> i32;
+    pub type service_set_start_mode = unsafe extern "C" fn(*const u8, u32, *mut super::super::ServiceInfo) -> i32;
+    pub type service_endpoint_wait = unsafe extern "C" fn(u32, u64) -> i32;
+    pub type program_run = unsafe extern "C" fn(*const u8, *const u8) -> i32;
+    pub type program_launch = unsafe extern "C" fn(*const u8, *const u8, u32) -> i32;
+    pub type program_spawn = unsafe extern "C" fn(*const u8, *const u8, u32) -> i32;
+    pub type program_kill = unsafe extern "C" fn(u32) -> i32;
+    pub type program_status = unsafe extern "C" fn(*mut super::super::ProgramStatus) -> ();
+    pub type program_request_close = unsafe extern "C" fn(u32) -> i32;
+    pub type program_reap_instance = unsafe extern "C" fn(u32) -> i32;
+    pub type boot_log_info = unsafe extern "C" fn(*mut super::super::BootLogInfo) -> i32;
+    pub type boot_log_read = unsafe extern "C" fn(u32, *mut u8, u32) -> i32;
+    pub type program_spawn_handle = unsafe extern "C" fn(*const u8, *const u8, u32, *mut super::super::ProgramProcessHandle) -> i32;
+    pub type program_open_handle = unsafe extern "C" fn(u32, *mut super::super::ProgramProcessHandle) -> i32;
+    pub type program_handle_status = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, *mut super::super::ProgramInstanceInfo) -> i32;
+    pub type program_handle_request_close = unsafe extern "C" fn(*const super::super::ProgramProcessHandle) -> i32;
+    pub type program_handle_kill = unsafe extern "C" fn(*const super::super::ProgramProcessHandle) -> i32;
+    pub type program_handle_wait = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u64, *mut super::super::ProgramProcessCompletion) -> i32;
+    pub type program_handle_reap = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, *mut super::super::ProgramProcessCompletion) -> i32;
+    pub type program_completion_read = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u32, *mut u8, u32, *mut u32) -> i32;
+    pub type program_inventory_begin = unsafe extern "C" fn(*mut super::super::ProgramInventoryCursor, *mut super::super::ProgramInventorySummary) -> i32;
+    pub type program_inventory_programs = unsafe extern "C" fn(*mut super::super::ProgramInventoryCursor, *mut super::super::ProgramInstanceSnapshot, u32, *mut super::super::ProgramInventoryPageInfo) -> i32;
+    pub type program_inventory_tasks = unsafe extern "C" fn(*mut super::super::ProgramInventoryCursor, *mut super::super::ProgramTaskSnapshot, u32, *mut super::super::ProgramInventoryPageInfo) -> i32;
+    pub type program_inventory_threads = unsafe extern "C" fn(*mut super::super::ProgramInventoryCursor, *mut super::super::ProgramThreadSnapshot, u32, *mut super::super::ProgramInventoryPageInfo) -> i32;
+    pub type thread_create_handle = unsafe extern "C" fn(super::super::ThreadEntryFn, u64, u64, u32, *mut super::super::ProgramJoinHandle) -> i32;
+    pub type thread_handle_join = unsafe extern "C" fn(*const super::super::ProgramJoinHandle, u64, *mut i32) -> i32;
+    pub type thread_handle_status = unsafe extern "C" fn(*const super::super::ProgramJoinHandle, *mut super::super::ProgramThreadInfo) -> i32;
+    pub type file_replace_atomic = unsafe extern "C" fn(*const u8, *const u8, *const u8, u32) -> i32;
+    pub type file_delete_if_match = unsafe extern "C" fn(*const u8, u64, u32) -> i32;
+    pub type file_update_atomic_checked = unsafe extern "C" fn(*const u8, *const u8, *const u8, u64, u32, u64, u32, u32) -> i32;
+    pub type path_names_equal_collated = unsafe extern "C" fn(*const u8, *const u8) -> i32;
+    pub type file_update_cleanup_checked = unsafe extern "C" fn(*const u8, *const u8, *const u8, *const u8, u64, u32, u64, u32, u64, u32, u32) -> i32;
+    pub type file_stream_declare_publish = unsafe extern "C" fn(*const u8, *const u8, *const u8, u32) -> i32;
+    pub type module_resource_stat = unsafe extern "C" fn(*const u8, u32, u32, *const u8) -> i32;
+    pub type module_resource_read = unsafe extern "C" fn(*const u8, u32, u32, *const u8, *mut u8, u32) -> i32;
+    pub type program_module_path = unsafe extern "C" fn(*mut u8, u32) -> i32;
+    pub type program_module_running = unsafe extern "C" fn(*const u8) -> i32;
+    pub type monotonic_clock = unsafe extern "C" fn(*mut super::super::MonotonicClockInfo) -> i32;
+    pub type boot_ready = unsafe extern "C" fn() -> i32;
+    pub type registry_snapshot_begin = unsafe extern "C" fn(*const u8, u32, *mut super::super::RegistrySnapshotCursor) -> i32;
+    pub type registry_snapshot_page = unsafe extern "C" fn(*mut super::super::RegistrySnapshotCursor, *mut super::super::RegistrySnapshotEntry, u32, *mut u8, u32, *mut super::super::RegistrySnapshotPageInfo) -> i32;
+    pub type registry_batch_mutate = unsafe extern "C" fn(*const super::super::RegistryBatchOperation, u32, *const u8, u32, *mut super::super::RegistryBatchResult) -> i32;
+    pub type io_file_write_at = unsafe extern "C" fn(*const u8, u64, *const u8, u64, u32, *mut u32) -> i32;
+    pub type io_file_info = unsafe extern "C" fn(*const u8, u32, *mut u32) -> i32;
+    pub type io_file_lock = unsafe extern "C" fn(*const u8, u64, u64, u32, *mut u32) -> i32;
+    pub type storage_inventory = unsafe extern "C" fn(*mut super::super::StorageInventory) -> i32;
+    pub type storage_device = unsafe extern "C" fn(u64, u32, *mut super::super::StorageDeviceInfo) -> i32;
+    pub type storage_partition = unsafe extern "C" fn(u64, *const super::super::StorageDeviceRef, u32, *mut super::super::StoragePartitionInfo) -> i32;
+    pub type storage_volume = unsafe extern "C" fn(u64, u32, *mut super::super::StorageVolumeInfo) -> i32;
+    pub type storage_claim_begin = unsafe extern "C" fn(*const super::super::StorageTarget, *mut u64) -> i32;
+    pub type storage_claim_end = unsafe extern "C" fn(u64, u32) -> i32;
+    pub type storage_read = unsafe extern "C" fn(*const super::super::StorageTarget, u64, u32, *mut u8, u32) -> i32;
+    pub type storage_claim_read = unsafe extern "C" fn(u64, u64, u32, *mut u8, u32) -> i32;
+    pub type storage_claim_write = unsafe extern "C" fn(u64, u64, u32, *const u8, u32) -> i32;
+    pub type storage_claim_flush = unsafe extern "C" fn(u64) -> i32;
+    pub type storage_rescan = unsafe extern "C" fn(*const super::super::StorageDeviceRef) -> i32;
+    pub type storage_mount = unsafe extern "C" fn(*const super::super::StorageTarget, u32, *mut super::super::StorageVolumeRef) -> i32;
+    pub type storage_unmount = unsafe extern "C" fn(*const super::super::StorageVolumeRef) -> i32;
+    pub type storage_use_begin = unsafe extern "C" fn(*const u8, *mut u64) -> i32;
+    pub type storage_use_end = unsafe extern "C" fn(u64) -> i32;
+    pub type directory_change_begin = unsafe extern "C" fn(*const u8, *mut super::super::DirectoryChangeCursor) -> i32;
+    pub type directory_change_poll = unsafe extern "C" fn(*mut super::super::DirectoryChangeCursor) -> i32;
+    pub type file_copy_buffered = unsafe extern "C" fn(*const u8, *const u8, *mut u8, u32, *mut super::super::FileCopyProgress) -> i32;
+    pub type notification_create = unsafe extern "C" fn(*mut u64) -> i32;
+    pub type notification_query = unsafe extern "C" fn(u64, *mut u64) -> i32;
+    pub type notification_notify = unsafe extern "C" fn(u64, u32) -> i32;
+    pub type notification_wait = unsafe extern "C" fn(u64, u64, u64) -> i32;
+    pub type notification_close = unsafe extern "C" fn(u64) -> i32;
+    pub type program_local_get = unsafe extern "C" fn(u64, *mut u64) -> i32;
+    pub type program_local_publish = unsafe extern "C" fn(u64, u64, *mut u64) -> i32;
+    pub type thread_current_handle = unsafe extern "C" fn(*mut super::super::ProgramJoinHandle) -> i32;
+    pub type cpu_capacity = unsafe extern "C" fn(*mut super::super::CpuCapacity) -> i32;
+    pub type program_exit = unsafe extern "C" fn(i32, u32) -> i32;
+    pub type platform_input_snapshot = unsafe extern "C" fn(*mut super::super::PlatformInputSnapshot) -> i32;
+    pub type directory_next = unsafe extern "C" fn(*const u8, *mut super::super::DirectoryScanCursor, *mut u8, u32, *mut super::super::FileInfo) -> i32;
+    pub type thread_placement_get = unsafe extern "C" fn(*const super::super::ProgramJoinHandle, *mut super::super::ThreadPlacementInfo, *mut u64, u32) -> i32;
+    pub type thread_placement_set = unsafe extern "C" fn(*const super::super::ProgramJoinHandle, *const super::super::ThreadPlacementRequest, *const u64, u32) -> i32;
+    pub type system_power_transition = unsafe extern "C" fn(u32, u64) -> i32;
+    pub type entropy_source_info = unsafe extern "C" fn(*mut super::super::EntropySourceInfo) -> i32;
+    pub type entropy_fill = unsafe extern "C" fn(*mut u8, u32) -> i32;
+    pub type program_lifecycle_begin = unsafe extern "C" fn(*mut super::super::ProgramInventoryCursor) -> i32;
+    pub type program_lifecycle_programs = unsafe extern "C" fn(*mut super::super::ProgramInventoryCursor, *mut super::super::ProgramLifecycleSnapshot, u32, *mut super::super::ProgramInventoryPageInfo) -> i32;
+    pub type drive_info_geometry = unsafe extern "C" fn(u32, *mut super::super::DriveInfo) -> i32;
+    pub type directory_batch = unsafe extern "C" fn(*const u8, *mut super::super::DirectoryBatchCursor, *mut super::super::DirectoryBatchEntry, u32) -> i32;
+    pub type program_observation_retain = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u32, *mut super::super::ProgramObservationHandle) -> i32;
+    pub type program_observation_wait = unsafe extern "C" fn(*const super::super::ProgramObservationHandle, u64, *mut super::super::ProgramProcessCompletion) -> i32;
+    pub type program_observation_read = unsafe extern "C" fn(*const super::super::ProgramObservationHandle, u32, *mut u8, u32, *mut u32) -> i32;
+    pub type program_observation_release = unsafe extern "C" fn(*const super::super::ProgramObservationHandle) -> i32;
+    pub type file_name_limits = unsafe extern "C" fn(*const u8, *mut super::super::FileNameLimits) -> i32;
+    pub type service_bound_detail = unsafe extern "C" fn(*const u8, *mut super::super::ServiceDetail, *mut super::super::ProgramProcessHandle) -> i32;
+    pub type service_stop_bound = unsafe extern "C" fn(*const u8, *const super::super::ProgramProcessHandle, *mut super::super::ServiceInfo, u64) -> i32;
+    pub type service_inventory_page = unsafe extern "C" fn(*mut super::super::ServiceInventoryCursor, *mut super::super::ServiceInventoryRow, u32) -> i32;
+    pub type service_control_bound = unsafe extern "C" fn(*const super::super::ServiceControlRequest) -> i32;
+    pub type system_update_target_supported = unsafe extern "C" fn(*const u8) -> i32;
+    pub type file_metadata2 = unsafe extern "C" fn(*const u8, *mut super::super::FileMetadata2) -> i32;
+    pub type directory_metadata_batch2 = unsafe extern "C" fn(*const u8, *mut super::super::DirectoryMetadataCursor2, *mut super::super::DirectoryMetadataEntry2, u32) -> i32;
+    pub type waitset_create = unsafe extern "C" fn(u32, *mut u64) -> i32;
+    pub type waitset_enroll = unsafe extern "C" fn(u64, *const super::super::WaitSource, *mut u64) -> i32;
+    pub type waitset_rearm = unsafe extern "C" fn(u64, u64, *const super::super::WaitSource) -> i32;
+    pub type waitset_remove = unsafe extern "C" fn(u64, u64) -> i32;
+    pub type waitset_wait = unsafe extern "C" fn(u64, *const super::super::WaitSetDeadline, *mut super::super::WaitSetEvent, u32, *mut super::super::WaitSetBatch) -> i32;
+    pub type waitset_close = unsafe extern "C" fn(u64) -> i32;
+    pub type waitset_source_prepare = unsafe extern "C" fn(*const super::super::WaitSourceRequest, *mut super::super::WaitSource) -> i32;
+    pub type byte_pipe_create = unsafe extern "C" fn(u64, *mut super::super::BytePipePair) -> i32;
+    pub type byte_pipe_dup = unsafe extern "C" fn(super::super::BytePipeEnd, *mut super::super::BytePipeEnd) -> i32;
+    pub type byte_pipe_read = unsafe extern "C" fn(super::super::BytePipeEnd, *mut u8, u64, *const super::super::WaitSetDeadline, *mut super::super::BytePipeProgress) -> i32;
+    pub type byte_pipe_write = unsafe extern "C" fn(super::super::BytePipeEnd, *const u8, u64, *const super::super::WaitSetDeadline, *mut super::super::BytePipeProgress) -> i32;
+    pub type byte_pipe_cancel = unsafe extern "C" fn(super::super::BytePipeEnd) -> i32;
+    pub type byte_pipe_close = unsafe extern "C" fn(super::super::BytePipeEnd) -> i32;
+    pub type byte_pipe_info = unsafe extern "C" fn(super::super::BytePipeEnd, *mut super::super::BytePipeInfo) -> i32;
+    pub type program_launch_io = unsafe extern "C" fn(*const u8, *const u8, *const super::super::LaunchIo, *mut super::super::ProgramProcessHandle) -> i32;
+    pub type program_stdio = unsafe extern "C" fn(*mut super::super::LaunchIo) -> i32;
+}
 pub const R4SYS_MAGIC: u32 = 844714834;
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -648,202 +839,84 @@ const _: () = { assert!(core::mem::size_of::<R4XStartR4Sys2>() == 1552);
     assert!(core::mem::offset_of!(R4XStartR4Sys2,program_launch_io) == 1536);
     assert!(core::mem::offset_of!(R4XStartR4Sys2,program_stdio) == 1544);
 };
-impl R4XStartR4Sys2 {
-    pub fn project_provider(source: &super::R4XStartR4Sys) -> Self { Self {
-        write: source.write as u64,
-        putc: source.putc as u64,
-        sleep_ticks: source.sleep_ticks as u64,
-        ticks: source.ticks as u64,
-        env_get: source.env_get as u64,
-        dir_entry: source.dir_entry as u64,
-        program_should_close: source.program_should_close as u64,
-        program_class: source.program_class as u64,
-        program_instance: source.program_instance as u64,
-        service_status: source.service_status as u64,
-        service_open: source.service_open as u64,
-        service_close: source.service_close as u64,
-        service_call: source.service_call as u64,
-        service_endpoint_register: source.service_endpoint_register as u64,
-        service_endpoint_unregister: source.service_endpoint_unregister as u64,
-        service_endpoint_poll: source.service_endpoint_poll as u64,
-        service_endpoint_recv: source.service_endpoint_recv as u64,
-        service_endpoint_reply: source.service_endpoint_reply as u64,
-        service_detail_by_name: source.service_detail_by_name as u64,
-        service_start: source.service_start as u64,
-        service_stop: source.service_stop as u64,
-        service_restart: source.service_restart as u64,
-        service_install: source.service_install as u64,
-        service_remove: source.service_remove as u64,
-        vm_reserve: source.vm_reserve as u64,
-        vm_commit: source.vm_commit as u64,
-        vm_decommit: source.vm_decommit as u64,
-        vm_release: source.vm_release as u64,
-        vm_query: source.vm_query as u64,
-        thread_create: source.thread_create as u64,
-        thread_exit: source.thread_exit as u64,
-        thread_join: source.thread_join as u64,
-        thread_current: source.thread_current as u64,
-        thread_status: source.thread_status as u64,
-        io_file_read: source.io_file_read as u64,
-        io_file_read_at: source.io_file_read_at as u64,
-        io_file_write: source.io_file_write as u64,
-        io_file_append: source.io_file_append as u64,
-        io_file_stream_begin: source.io_file_stream_begin as u64,
-        io_file_stream_write: source.io_file_stream_write as u64,
-        io_file_stream_finish: source.io_file_stream_finish as u64,
-        io_file_stream_abort: source.io_file_stream_abort as u64,
-        io_service_call: source.io_service_call as u64,
-        io_status: source.io_status as u64,
-        io_wait: source.io_wait as u64,
-        io_close: source.io_close as u64,
-        task_yield: source.task_yield as u64,
-        system_halt: source.system_halt as u64,
-        system_reboot: source.system_reboot as u64,
-        system_poweroff: source.system_poweroff as u64,
-        time_state: source.time_state as u64,
-        time_set_state: source.time_set_state as u64,
-        time_seconds_since_midnight: source.time_seconds_since_midnight as u64,
-        dir_list: source.dir_list as u64,
-        dir_create: source.dir_create as u64,
-        dir_delete: source.dir_delete as u64,
-        drive_info: source.drive_info as u64,
-        file_info: source.file_info as u64,
-        file_delete: source.file_delete as u64,
-        file_rename: source.file_rename as u64,
-        file_copy: source.file_copy as u64,
-        file_move: source.file_move as u64,
-        file_read: source.file_read as u64,
-        file_write: source.file_write as u64,
-        file_read_at: source.file_read_at as u64,
-        file_append: source.file_append as u64,
-        file_stream_begin: source.file_stream_begin as u64,
-        file_stream_write: source.file_stream_write as u64,
-        file_stream_finish: source.file_stream_finish as u64,
-        file_stream_abort: source.file_stream_abort as u64,
-        env_set: source.env_set as u64,
-        registry_key_info: source.registry_key_info as u64,
-        registry_enum_key: source.registry_enum_key as u64,
-        registry_enum_value: source.registry_enum_value as u64,
-        registry_get_value: source.registry_get_value as u64,
-        registry_set_value: source.registry_set_value as u64,
-        registry_delete_value: source.registry_delete_value as u64,
-        service_info: source.service_info as u64,
-        service_detail: source.service_detail as u64,
-        service_set_start_mode: source.service_set_start_mode as u64,
-        service_endpoint_wait: source.service_endpoint_wait as u64,
-        program_run: source.program_run as u64,
-        program_launch: source.program_launch as u64,
-        program_spawn: source.program_spawn as u64,
-        program_kill: source.program_kill as u64,
-        program_status: source.program_status as u64,
-        program_request_close: source.program_request_close as u64,
-        program_reap_instance: source.program_reap_instance as u64,
-        boot_log_info: source.boot_log_info as u64,
-        boot_log_read: source.boot_log_read as u64,
-        program_spawn_handle: source.program_spawn_handle as u64,
-        program_open_handle: source.program_open_handle as u64,
-        program_handle_status: source.program_handle_status as u64,
-        program_handle_request_close: source.program_handle_request_close as u64,
-        program_handle_kill: source.program_handle_kill as u64,
-        program_handle_wait: source.program_handle_wait as u64,
-        program_handle_reap: source.program_handle_reap as u64,
-        program_completion_read: source.program_completion_read as u64,
-        program_inventory_begin: source.program_inventory_begin as u64,
-        program_inventory_programs: source.program_inventory_programs as u64,
-        program_inventory_tasks: source.program_inventory_tasks as u64,
-        program_inventory_threads: source.program_inventory_threads as u64,
-        thread_create_handle: source.thread_create_handle as u64,
-        thread_handle_join: source.thread_handle_join as u64,
-        thread_handle_status: source.thread_handle_status as u64,
-        file_replace_atomic: source.file_replace_atomic as u64,
-        file_delete_if_match: source.file_delete_if_match as u64,
-        file_update_atomic_checked: source.file_update_atomic_checked as u64,
-        path_names_equal_collated: source.path_names_equal_collated as u64,
-        file_update_cleanup_checked: source.file_update_cleanup_checked as u64,
-        file_stream_declare_publish: source.file_stream_declare_publish as u64,
-        module_resource_stat: source.module_resource_stat as u64,
-        module_resource_read: source.module_resource_read as u64,
-        program_module_path: source.program_module_path as u64,
-        program_module_running: source.program_module_running as u64,
-        monotonic_clock: source.monotonic_clock as u64,
-        boot_ready: source.boot_ready as u64,
-        registry_snapshot_begin: source.registry_snapshot_begin as u64,
-        registry_snapshot_page: source.registry_snapshot_page as u64,
-        registry_batch_mutate: source.registry_batch_mutate as u64,
-        io_file_write_at: source.io_file_write_at as u64,
-        io_file_info: source.io_file_info as u64,
-        io_file_lock: source.io_file_lock as u64,
-        storage_inventory: source.storage_inventory as u64,
-        storage_device: source.storage_device as u64,
-        storage_partition: source.storage_partition as u64,
-        storage_volume: source.storage_volume as u64,
-        storage_claim_begin: source.storage_claim_begin as u64,
-        storage_claim_end: source.storage_claim_end as u64,
-        storage_read: source.storage_read as u64,
-        storage_claim_read: source.storage_claim_read as u64,
-        storage_claim_write: source.storage_claim_write as u64,
-        storage_claim_flush: source.storage_claim_flush as u64,
-        storage_rescan: source.storage_rescan as u64,
-        storage_mount: source.storage_mount as u64,
-        storage_unmount: source.storage_unmount as u64,
-        storage_use_begin: source.storage_use_begin as u64,
-        storage_use_end: source.storage_use_end as u64,
-        directory_change_begin: source.directory_change_begin as u64,
-        directory_change_poll: source.directory_change_poll as u64,
-        file_copy_buffered: source.file_copy_buffered as u64,
-        notification_create: source.notification_create as u64,
-        notification_query: source.notification_query as u64,
-        notification_notify: source.notification_notify as u64,
-        notification_wait: source.notification_wait as u64,
-        notification_close: source.notification_close as u64,
-        program_local_get: source.program_local_get as u64,
-        program_local_publish: source.program_local_publish as u64,
-        thread_current_handle: source.thread_current_handle as u64,
-        cpu_capacity: source.cpu_capacity as u64,
-        program_exit: source.program_exit as u64,
-        platform_input_snapshot: source.platform_input_snapshot as u64,
-        directory_next: source.directory_next as u64,
-        thread_placement_get: source.thread_placement_get as u64,
-        thread_placement_set: source.thread_placement_set as u64,
-        system_power_transition: source.system_power_transition as u64,
-        entropy_source_info: source.entropy_source_info as u64,
-        entropy_fill: source.entropy_fill as u64,
-        program_lifecycle_begin: source.program_lifecycle_begin as u64,
-        program_lifecycle_programs: source.program_lifecycle_programs as u64,
-        drive_info_geometry: source.drive_info_geometry as u64,
-        directory_batch: source.directory_batch as u64,
-        program_observation_retain: source.program_observation_retain as u64,
-        program_observation_wait: source.program_observation_wait as u64,
-        program_observation_read: source.program_observation_read as u64,
-        program_observation_release: source.program_observation_release as u64,
-        file_name_limits: source.file_name_limits as u64,
-        service_bound_detail: source.service_bound_detail as u64,
-        service_stop_bound: source.service_stop_bound as u64,
-        service_inventory_page: source.service_inventory_page as u64,
-        service_control_bound: source.service_control_bound as u64,
-        system_update_target_supported: source.system_update_target_supported as u64,
-        file_metadata2: source.file_metadata2 as u64,
-        directory_metadata_batch2: source.directory_metadata_batch2 as u64,
-        waitset_create: source.waitset_create as u64,
-        waitset_enroll: source.waitset_enroll as u64,
-        waitset_rearm: source.waitset_rearm as u64,
-        waitset_remove: source.waitset_remove as u64,
-        waitset_wait: source.waitset_wait as u64,
-        waitset_close: source.waitset_close as u64,
-        waitset_source_prepare: source.waitset_source_prepare as u64,
-        byte_pipe_create: source.byte_pipe_create as u64,
-        byte_pipe_dup: source.byte_pipe_dup as u64,
-        byte_pipe_read: source.byte_pipe_read as u64,
-        byte_pipe_write: source.byte_pipe_write as u64,
-        byte_pipe_cancel: source.byte_pipe_cancel as u64,
-        byte_pipe_close: source.byte_pipe_close as u64,
-        byte_pipe_info: source.byte_pipe_info as u64,
-        program_launch_io: source.program_launch_io as u64,
-        program_stdio: source.program_stdio as u64,
-        ..Self::default()
-    } }
+pub mod R4DeskFns2 {
+    pub type read_key = unsafe extern "C" fn() -> u8;
+    pub type mouse_state = unsafe extern "C" fn(*mut super::super::Mouse) -> ();
+    pub type mouse_show = unsafe extern "C" fn() -> ();
+    pub type mouse_hide = unsafe extern "C" fn() -> ();
+    pub type keyboard_layout_current = unsafe extern "C" fn(*mut super::super::KeyboardLayoutInfo) -> i32;
+    pub type keyboard_layout_at = unsafe extern "C" fn(u32, *mut super::super::KeyboardLayoutInfo) -> i32;
+    pub type keyboard_layout_set = unsafe extern "C" fn(*const u8) -> i32;
+    pub type program_set_window = unsafe extern "C" fn(u32, i32) -> i32;
+    pub type program_set_console_host = unsafe extern "C" fn(u32, u32) -> i32;
+    pub type program_request_host_launch = unsafe extern "C" fn(*const u8, *const u8, u32) -> i32;
+    pub type program_take_host_launch = unsafe extern "C" fn(u32, *mut super::super::ProgramHostLaunchRequest) -> i32;
+    pub type program_window_id = unsafe extern "C" fn() -> i32;
+    pub type gui_window_info = unsafe extern "C" fn(*mut super::super::GuiWindowInfo) -> i32;
+    pub type gui_set_window_info = unsafe extern "C" fn(u32, *const super::super::GuiWindowInfo) -> i32;
+    pub type gui_poll_event = unsafe extern "C" fn(*mut super::super::GuiEvent) -> i32;
+    pub type gui_push_event = unsafe extern "C" fn(u32, *const super::super::GuiEvent) -> i32;
+    pub type gui_set_text = unsafe extern "C" fn(*const u8) -> i32;
+    pub type gui_text = unsafe extern "C" fn(u32, *mut u8, u32) -> i32;
+    pub type gui_revision = unsafe extern "C" fn(u32) -> u32;
+    pub type gui_command = unsafe extern "C" fn(u32, u32, *mut super::super::GuiCommand) -> i32;
+    pub type gui_set_title = unsafe extern "C" fn(*const u8) -> i32;
+    pub type gui_title = unsafe extern "C" fn(u32, *mut u8, u32) -> i32;
+    pub type gui_set_min_size = unsafe extern "C" fn(i32, i32) -> i32;
+    pub type gui_min_size = unsafe extern "C" fn(u32, *mut super::super::GuiSize) -> i32;
+    pub type console_output = unsafe extern "C" fn(u32, *mut u8, u32) -> i32;
+    pub type console_revision = unsafe extern "C" fn(u32) -> u32;
+    pub type console_state = unsafe extern "C" fn(u32, *mut super::super::ConsoleState) -> i32;
+    pub type console_set_metrics = unsafe extern "C" fn(u32, u32, u32) -> i32;
+    pub type console_push_key = unsafe extern "C" fn(u32, u8) -> i32;
+    pub type console_write = unsafe extern "C" fn(u32, *const u8, u32) -> i32;
+    pub type console_read = unsafe extern "C" fn(*mut u8, u32) -> i32;
+    pub type clipboard_write = unsafe extern "C" fn(*const u8, u32) -> i32;
+    pub type clipboard_read = unsafe extern "C" fn(*mut u8, u32) -> i32;
+    pub type clipboard_revision = unsafe extern "C" fn() -> u32;
+    pub type clipboard_info = unsafe extern "C" fn(*mut super::super::ClipboardInfo) -> i32;
+    pub type clipboard_clear = unsafe extern "C" fn() -> i32;
+    pub type read_key_codepoint = unsafe extern "C" fn() -> u32;
+    pub type remote_frame_info = unsafe extern "C" fn(*mut super::super::RemoteFrameInfo) -> i32;
+    pub type remote_frame_read = unsafe extern "C" fn(u32, *mut u32, u32, *mut super::super::RemoteFrameInfo) -> i32;
+    pub type remote_frame_wait = unsafe extern "C" fn(u32, u64, *mut super::super::RemoteFrameInfo) -> i32;
+    pub type remote_frame_publish = unsafe extern "C" fn(*const super::super::RemoteFrameInfo, *const u32, u32) -> i32;
+    pub type remote_input_push = unsafe extern "C" fn(*const super::super::RemoteInputEvent) -> i32;
+    pub type remote_input_poll = unsafe extern "C" fn(*mut super::super::RemoteInputEvent) -> i32;
+    pub type remote_input_status = unsafe extern "C" fn(*mut super::super::RemoteInputStatus) -> i32;
+    pub type desktop_activity_wait = unsafe extern "C" fn(u64, u64, *mut u64) -> i32;
+    pub type remote_frame_map = unsafe extern "C" fn(*mut super::super::RemoteFrameMapInfo) -> i32;
+    pub type program_current_console_host = unsafe extern "C" fn() -> u32;
+    pub type program_request_desktop = unsafe extern "C" fn() -> i32;
+    pub type program_spawn_with_console_host = unsafe extern "C" fn(*const u8, *const u8, u32, u32) -> i32;
+    pub type program_spawn_with_console_host_handle = unsafe extern "C" fn(*const u8, *const u8, u32, u32, *mut super::super::ProgramProcessHandle) -> i32;
+    pub type program_set_window_handle = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, i32) -> i32;
+    pub type console_push_input = unsafe extern "C" fn(u32, *const u8, u32) -> i32;
+    pub type remote_frame_acquire = unsafe extern "C" fn() -> i32;
+    pub type remote_frame_release = unsafe extern "C" fn() -> i32;
+    pub type remote_frame_consumers = unsafe extern "C" fn() -> u32;
+    pub type remote_frame_publish_regions = unsafe extern "C" fn(*const super::super::RemoteFrameInfo, *const u32, u32, *const super::super::DisplayDamageRect, u32) -> i32;
+    pub type console_input_wait = unsafe extern "C" fn(u64, u64, *mut u64) -> i32;
+    pub type physical_key_poll = unsafe extern "C" fn(*mut super::super::PhysicalKeyEvent) -> i32;
+    pub type mouse_motion = unsafe extern "C" fn(*mut super::super::MouseMotion) -> i32;
+    pub type remote_frame_snapshot_acquire = unsafe extern "C" fn(u32, *mut super::super::RemoteFrameInfo, *mut super::super::RemoteFrameLease) -> i32;
+    pub type remote_frame_snapshot_release = unsafe extern "C" fn(*const super::super::RemoteFrameLease) -> i32;
+    pub type remote_frame_source_reset = unsafe extern "C" fn() -> i32;
+    pub type remote_frame_capture_stats = unsafe extern "C" fn(*mut super::super::RemoteFrameCaptureStats) -> i32;
+    pub type desktop_activity_notify = unsafe extern "C" fn() -> i32;
+    pub type console_read_events = unsafe extern "C" fn(*mut super::super::ConsoleInputEvent, u32) -> i32;
+    pub type console_push_events = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, *const super::super::ConsoleInputEvent, u32) -> i32;
+    pub type console_text_info = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, *mut super::super::ConsoleTextInfo) -> i32;
+    pub type console_set_encoding = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u32) -> i32;
+    pub type gui_activity_wait = unsafe extern "C" fn(u64, u64, u32, *mut u64) -> i32;
+    pub type gui_activity_notify = unsafe extern "C" fn(u32) -> i32;
+    pub type gui_pointer_capture_info = unsafe extern "C" fn(*const super::super::GuiPointerCaptureHandle, *mut super::super::GuiPointerCaptureInfo) -> i32;
+    pub type gui_pointer_capture_acquire = unsafe extern "C" fn(*const super::super::GuiPointerWindowIdentity, u32, *mut super::super::GuiPointerCaptureHandle) -> i32;
+    pub type gui_pointer_capture_release = unsafe extern "C" fn(*const super::super::GuiPointerCaptureHandle) -> i32;
+    pub type gui_pointer_capture_host = unsafe extern "C" fn(*const super::super::GuiPointerHostRequest, *mut super::super::GuiPointerCaptureInfo) -> i32;
+    pub type gui_host_input = unsafe extern "C" fn(*const super::super::GuiHostInputRequest, *mut super::super::GuiPointerWindowIdentity) -> i32;
+    pub type gui_window_appearance = unsafe extern "C" fn(*const super::super::GuiPointerWindowIdentity, *mut super::super::GuiWindowAppearance) -> i32;
 }
-pub use super::R4DeskFns as R4DeskFns2;
 pub const R4DESK_MAGIC: u32 = 843400274;
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1085,88 +1158,121 @@ const _: () = { assert!(core::mem::size_of::<R4XStartR4Desk2>() == 632);
     assert!(core::mem::offset_of!(R4XStartR4Desk2,gui_host_input) == 616);
     assert!(core::mem::offset_of!(R4XStartR4Desk2,gui_window_appearance) == 624);
 };
-impl R4XStartR4Desk2 {
-    pub fn project_provider(source: &super::R4XStartR4Desk) -> Self { Self {
-        read_key: source.read_key as u64,
-        mouse_state: source.mouse_state as u64,
-        mouse_show: source.mouse_show as u64,
-        mouse_hide: source.mouse_hide as u64,
-        keyboard_layout_current: source.keyboard_layout_current as u64,
-        keyboard_layout_at: source.keyboard_layout_at as u64,
-        keyboard_layout_set: source.keyboard_layout_set as u64,
-        program_set_window: source.program_set_window as u64,
-        program_set_console_host: source.program_set_console_host as u64,
-        program_request_host_launch: source.program_request_host_launch as u64,
-        program_take_host_launch: source.program_take_host_launch as u64,
-        program_window_id: source.program_window_id as u64,
-        gui_window_info: source.gui_window_info as u64,
-        gui_set_window_info: source.gui_set_window_info as u64,
-        gui_poll_event: source.gui_poll_event as u64,
-        gui_push_event: source.gui_push_event as u64,
-        gui_set_text: source.gui_set_text as u64,
-        gui_text: source.gui_text as u64,
-        gui_revision: source.gui_revision as u64,
-        gui_command: source.gui_command as u64,
-        gui_set_title: source.gui_set_title as u64,
-        gui_title: source.gui_title as u64,
-        gui_set_min_size: source.gui_set_min_size as u64,
-        gui_min_size: source.gui_min_size as u64,
-        console_output: source.console_output as u64,
-        console_revision: source.console_revision as u64,
-        console_state: source.console_state as u64,
-        console_set_metrics: source.console_set_metrics as u64,
-        console_push_key: source.console_push_key as u64,
-        console_write: source.console_write as u64,
-        console_read: source.console_read as u64,
-        clipboard_write: source.clipboard_write as u64,
-        clipboard_read: source.clipboard_read as u64,
-        clipboard_revision: source.clipboard_revision as u64,
-        clipboard_info: source.clipboard_info as u64,
-        clipboard_clear: source.clipboard_clear as u64,
-        read_key_codepoint: source.read_key_codepoint as u64,
-        remote_frame_info: source.remote_frame_info as u64,
-        remote_frame_read: source.remote_frame_read as u64,
-        remote_frame_wait: source.remote_frame_wait as u64,
-        remote_frame_publish: source.remote_frame_publish as u64,
-        remote_input_push: source.remote_input_push as u64,
-        remote_input_poll: source.remote_input_poll as u64,
-        remote_input_status: source.remote_input_status as u64,
-        desktop_activity_wait: source.desktop_activity_wait as u64,
-        remote_frame_map: source.remote_frame_map as u64,
-        program_current_console_host: source.program_current_console_host as u64,
-        program_request_desktop: source.program_request_desktop as u64,
-        program_spawn_with_console_host: source.program_spawn_with_console_host as u64,
-        program_spawn_with_console_host_handle: source.program_spawn_with_console_host_handle as u64,
-        program_set_window_handle: source.program_set_window_handle as u64,
-        console_push_input: source.console_push_input as u64,
-        remote_frame_acquire: source.remote_frame_acquire as u64,
-        remote_frame_release: source.remote_frame_release as u64,
-        remote_frame_consumers: source.remote_frame_consumers as u64,
-        remote_frame_publish_regions: source.remote_frame_publish_regions as u64,
-        console_input_wait: source.console_input_wait as u64,
-        physical_key_poll: source.physical_key_poll as u64,
-        mouse_motion: source.mouse_motion as u64,
-        remote_frame_snapshot_acquire: source.remote_frame_snapshot_acquire as u64,
-        remote_frame_snapshot_release: source.remote_frame_snapshot_release as u64,
-        remote_frame_source_reset: source.remote_frame_source_reset as u64,
-        remote_frame_capture_stats: source.remote_frame_capture_stats as u64,
-        desktop_activity_notify: source.desktop_activity_notify as u64,
-        console_read_events: source.console_read_events as u64,
-        console_push_events: source.console_push_events as u64,
-        console_text_info: source.console_text_info as u64,
-        console_set_encoding: source.console_set_encoding as u64,
-        gui_activity_wait: source.gui_activity_wait as u64,
-        gui_activity_notify: source.gui_activity_notify as u64,
-        gui_pointer_capture_info: source.gui_pointer_capture_info as u64,
-        gui_pointer_capture_acquire: source.gui_pointer_capture_acquire as u64,
-        gui_pointer_capture_release: source.gui_pointer_capture_release as u64,
-        gui_pointer_capture_host: source.gui_pointer_capture_host as u64,
-        gui_host_input: source.gui_host_input as u64,
-        gui_window_appearance: source.gui_window_appearance as u64,
-        ..Self::default()
-    } }
+pub mod R4DrawFns2 {
+    pub type screen_width = unsafe extern "C" fn() -> u32;
+    pub type screen_height = unsafe extern "C" fn() -> u32;
+    pub type clear = unsafe extern "C" fn(u32) -> ();
+    pub type rect = unsafe extern "C" fn(i32, i32, u32, u32, u32) -> ();
+    pub type text = unsafe extern "C" fn(i32, i32, *const u8, u32, u32) -> ();
+    pub type display_revision = unsafe extern "C" fn() -> u32;
+    pub type display_begin_frame = unsafe extern "C" fn() -> i32;
+    pub type display_begin_frame_rect = unsafe extern "C" fn(i32, i32, u32, u32) -> i32;
+    pub type display_present = unsafe extern "C" fn() -> i32;
+    pub type display_blit_xrgb32 = unsafe extern "C" fn(i32, i32, u32, u32, *const u32, u32) -> i32;
+    pub type gui_clear = unsafe extern "C" fn(u32) -> i32;
+    pub type gui_rect = unsafe extern "C" fn(i32, i32, u32, u32, u32) -> i32;
+    pub type gui_draw_text = unsafe extern "C" fn(i32, i32, *const u8, u32, u32) -> i32;
+    pub type gui_draw_text_ex = unsafe extern "C" fn(i32, i32, *const u8, u32, u32, u32, u32) -> i32;
+    pub type gui_blit = unsafe extern "C" fn(i32, i32, u32, u32, u32, *const u32, u32) -> i32;
+    pub type gui_raster_read = unsafe extern "C" fn(u32, u32, *mut u32, u32) -> i32;
+    pub type gui_present = unsafe extern "C" fn() -> i32;
+    pub type font_count = unsafe extern "C" fn() -> u32;
+    pub type font_info = unsafe extern "C" fn(u32, *mut super::super::GuiFontInfo) -> i32;
+    pub type font_measure = unsafe extern "C" fn(u32, *const u8, *mut super::super::GuiTextMetrics) -> i32;
+    pub type gui_set_font = unsafe extern "C" fn(u32) -> i32;
+    pub type gui_font = unsafe extern "C" fn(u32, *mut super::super::GuiFontInfo) -> i32;
+    pub type text_font = unsafe extern "C" fn(u32, i32, i32, *const u8, u32, u32) -> ();
+    pub type font_reload = unsafe extern "C" fn() -> i32;
+    pub type font_glyph_row = unsafe extern "C" fn(u32, u32, u32) -> u64;
+    pub type gui_blend_alpha8 = unsafe extern "C" fn(i32, i32, u32, u32, u32, u32, *const u8, u32) -> i32;
+    pub type gui_frame_begin = unsafe extern "C" fn() -> i32;
+    pub type gui_frame_append = unsafe extern "C" fn(*const super::super::GuiFrameCommand, u64, *const u8, u64) -> i32;
+    pub type gui_frame_commit = unsafe extern "C" fn() -> i32;
+    pub type gui_frame_cancel = unsafe extern "C" fn() -> i32;
+    pub type gui_frame_info = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, *mut super::super::GuiFrameInfo) -> i32;
+    pub type gui_frame_read = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u64, *mut super::super::GuiFrameCommand, u64, *mut u8, u64, *mut super::super::GuiFrameInfo) -> i32;
+    pub type display_blit_xrgb32_stride = unsafe extern "C" fn(i32, i32, u32, u32, *const u32, u32, u32) -> i32;
+    pub type display_present_regions = unsafe extern "C" fn(*const super::super::DisplayPresentRequest, *const u32, u32, *const super::super::DisplayDamageRect, u32, *mut super::super::DisplayPresentResult) -> i32;
+    pub type display_present_capabilities = unsafe extern "C" fn(*mut super::super::DisplayPresentCapabilities) -> i32;
+    pub type display_present_completion = unsafe extern "C" fn(u64, *mut super::super::DisplayPresentCompletion) -> i32;
+    pub type gui_frame_begin_damage = unsafe extern "C" fn(*const super::super::DisplayDamageRect, u32) -> i32;
+    pub type gui_frame_generation_info = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u64, *mut super::super::GuiFrameGenerationInfo) -> i32;
+    pub type gui_frame_generation_read = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u64, *mut super::super::GuiFrameCommand, u64, *mut u8, u64, *mut super::super::DisplayDamageRect, u32, *mut super::super::GuiFrameGenerationInfo) -> i32;
+    pub type font_glyph_bitmap = unsafe extern "C" fn(u32, u32, *mut super::super::GuiGlyphBitmap) -> i32;
+    pub type font_revision = unsafe extern "C" fn() -> u32;
+    pub type gui_frame_begin_replace = unsafe extern "C" fn(*const super::super::DisplayDamageRect, u32) -> i32;
+    pub type gui_frame_stream_info = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, *mut super::super::GuiFrameStreamInfo) -> i32;
+    pub type gui_shared_raster_create = unsafe extern "C" fn(*const super::super::GuiSharedRasterCreateInfo, *mut super::super::GuiSharedRasterHandle) -> i32;
+    pub type gui_shared_raster_destroy = unsafe extern "C" fn(*const super::super::GuiSharedRasterHandle) -> i32;
+    pub type gui_shared_raster_map_write = unsafe extern "C" fn(*const super::super::GuiSharedRasterHandle, *mut super::super::GuiSharedRasterWriteMap) -> i32;
+    pub type gui_shared_raster_publish = unsafe extern "C" fn(*const super::super::GuiSharedRasterWriteMap, *mut u64) -> i32;
+    pub type gui_shared_raster_acquire = unsafe extern "C" fn(*const super::super::ProgramProcessHandle, u64, *const super::super::GuiSharedRasterHandle, u64, *mut super::super::GuiSharedRasterMap) -> i32;
+    pub type gui_shared_raster_release = unsafe extern "C" fn(*const super::super::GuiSharedRasterLease) -> i32;
+    pub type gfx_buffer_create = unsafe extern "C" fn(*const super::super::GfxBufferDescriptor, *mut super::super::GfxBufferReference) -> i32;
+    pub type gfx_buffer_describe = unsafe extern "C" fn(*const super::super::GfxBufferHandle, *mut super::super::GfxBufferDescriptor) -> i32;
+    pub type gfx_buffer_import = unsafe extern "C" fn(*const super::super::GfxBufferHandle, *mut super::super::GfxBufferReference) -> i32;
+    pub type gfx_buffer_release = unsafe extern "C" fn(*const super::super::GfxBufferHandle) -> i32;
+    pub type gfx_buffer_map = unsafe extern "C" fn(*const super::super::GfxBufferHandle, u32, u64, u64, *mut super::super::GfxBufferMap) -> i32;
+    pub type gfx_buffer_unmap = unsafe extern "C" fn(*const super::super::GfxBufferHandle) -> i32;
+    pub type gfx_buffer_export_raster = unsafe extern "C" fn(*const super::super::GuiSharedRasterLease, *mut super::super::GfxBufferReference) -> i32;
+    pub type gfx_buffer_stats = unsafe extern "C" fn(*mut super::super::GfxBufferStats) -> i32;
+    pub type gfx_queue_open = unsafe extern "C" fn(*const super::super::GfxQueueConfig, *mut super::super::GfxQueueHandle) -> i32;
+    pub type gfx_queue_close = unsafe extern "C" fn(*const super::super::GfxQueueHandle) -> i32;
+    pub type gfx_queue_submit = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_fence_query = unsafe extern "C" fn(*const super::super::GfxFence, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_fence_wait = unsafe extern "C" fn(*const super::super::GfxFence, u64, u32, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_fence_cancel = unsafe extern "C" fn(*const super::super::GfxFence) -> i32;
+    pub type gfx_fence_release = unsafe extern "C" fn(*const super::super::GfxFence) -> i32;
+    pub type gfx_queue_backend = unsafe extern "C" fn(u32, *mut super::super::GfxBackendBinding) -> i32;
+    pub type gfx_output_revision = unsafe extern "C" fn(*mut super::super::GfxDisplayRevision) -> i32;
+    pub type gfx_output_info = unsafe extern "C" fn(u32, *mut super::super::GfxOutputInfo) -> i32;
+    pub type gfx_output_mode = unsafe extern "C" fn(*const super::super::GfxOutputId, u32, *mut super::super::GfxOutputMode) -> i32;
+    pub type gfx_output_edid = unsafe extern "C" fn(*const super::super::GfxOutputId, u32, *mut super::super::GfxEdidBlock) -> i32;
+    pub type gfx_atomic_test = unsafe extern "C" fn(*const super::super::GfxAtomicState, *mut super::super::GfxAtomicResult) -> i32;
+    pub type gfx_atomic_commit = unsafe extern "C" fn(*const super::super::GfxAtomicState, *mut super::super::GfxAtomicResult) -> i32;
+    pub type gfx_atomic_submit = unsafe extern "C" fn(*const super::super::GfxAtomicState, u32, *mut super::super::GfxModeStatus) -> i32;
+    pub type gfx_atomic_status = unsafe extern "C" fn(u64, *mut super::super::GfxModeStatus) -> i32;
+    pub type gfx_atomic_resolve = unsafe extern "C" fn(u64, u32, *mut super::super::GfxModeStatus) -> i32;
+    pub type display_presentation_stats = unsafe extern "C" fn(u32, *mut super::super::DisplayPresentationStats) -> i32;
+    pub type display_cursor_info = unsafe extern "C" fn(*mut super::super::DisplayCursorInfo) -> i32;
+    pub type display_cursor_submit = unsafe extern "C" fn(*const super::super::DisplayCursorRequest, *mut super::super::DisplayCursorStatus) -> i32;
+    pub type display_cursor_status = unsafe extern "C" fn(*mut super::super::DisplayCursorStatus) -> i32;
+    pub type gfx_queue_backend_info = unsafe extern "C" fn(u32, *mut super::super::GfxBackendInfo) -> i32;
+    pub type gfx_native_start = unsafe extern "C" fn(*const super::super::GfxNativeAllocation, *mut super::super::GfxNativeStatus) -> i32;
+    pub type gfx_native_query = unsafe extern "C" fn(*const super::super::GfxBufferHandle, *mut super::super::GfxNativeStatus) -> i32;
+    pub type gfx_native_receive = unsafe extern "C" fn(*const super::super::GfxBufferHandle, *mut super::super::GfxBufferReference) -> i32;
+    pub type gfx_native_close = unsafe extern "C" fn(*const super::super::GfxBufferHandle) -> i32;
+    pub type gfx_native_wait = unsafe extern "C" fn(*const super::super::GfxBufferHandle, u64, *mut super::super::GfxNativeStatus) -> i32;
+    pub type gfx_queue_submit_render_list = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *const super::super::GfxRenderList, *mut super::super::GfxFenceStatus) -> i32;
+    pub type display_presentation_info = unsafe extern "C" fn(u32, *mut super::super::DisplayPresentationInfo) -> i32;
+    pub type display_presentation_feedback = unsafe extern "C" fn(u32, *const super::super::GfxFence, *mut super::super::DisplayPresentationStats) -> i32;
+    pub type display_output_target = unsafe extern "C" fn(u32, u32, *mut super::super::GfxOutputTarget) -> i32;
+    pub type gfx_queue_submit_output = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *const super::super::GfxOutputTarget, *mut super::super::GfxFenceStatus) -> i32;
+    pub type display_output_presentation_info = unsafe extern "C" fn(*const super::super::GfxOutputTarget, *mut super::super::DisplayPresentationInfo) -> i32;
+    pub type display_output_presentation_feedback = unsafe extern "C" fn(*const super::super::GfxOutputTarget, *const super::super::GfxFence, *mut super::super::DisplayPresentationStats) -> i32;
+    pub type gfx_queue_submit_render_grid_list = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *const super::super::GfxRenderGridList, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_output_color = unsafe extern "C" fn(*const super::super::GfxOutputId, *mut super::super::GfxOutputColorState) -> i32;
+    pub type gfx_queue_submit_render_color_list = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *const super::super::GfxRenderColorList, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_atomic_test_color = unsafe extern "C" fn(*const super::super::GfxModeColorRequest, *mut super::super::GfxAtomicResult) -> i32;
+    pub type gfx_atomic_submit_color = unsafe extern "C" fn(*const super::super::GfxModeColorRequest, u32, *mut super::super::GfxModeStatus) -> i32;
+    pub type gfx_output_refresh = unsafe extern "C" fn(*const super::super::GfxOutputTarget, *mut super::super::GfxOutputRefresh) -> i32;
+    pub type gfx_refresh_request = unsafe extern "C" fn(*const super::super::GfxRefreshRequest, *mut super::super::GfxRefreshRequest) -> i32;
+    pub type gfx_memory_budget = unsafe extern "C" fn(*const super::super::GfxDeviceBudgetRequest, *mut super::super::GfxDeviceBudgetState) -> i32;
+    pub type gfx_telemetry = unsafe extern "C" fn(*const super::super::GfxTelemetryRequest, *mut super::super::GfxTelemetryState) -> i32;
+    pub type gfx_output_power = unsafe extern "C" fn(*const super::super::GfxOutputId, *mut super::super::GfxOutputPower) -> i32;
+    pub type gfx_power_request = unsafe extern "C" fn(*const super::super::GfxPowerRequest, *mut super::super::GfxPowerRequest) -> i32;
+    pub type gfx_virtual_start = unsafe extern "C" fn(*const super::super::GfxVirtualRequest, *mut super::super::GfxVirtualStatus) -> i32;
+    pub type gfx_virtual_query = unsafe extern "C" fn(*const super::super::GfxBufferHandle, *mut super::super::GfxVirtualStatus) -> i32;
+    pub type gfx_virtual_close = unsafe extern "C" fn(*const super::super::GfxBufferHandle, u32) -> i32;
+    pub type gfx_virtual_wait = unsafe extern "C" fn(*const super::super::GfxBufferHandle, u32, u64, *mut super::super::GfxVirtualStatus) -> i32;
+    pub type gfx_buffer_map_persistent = unsafe extern "C" fn(*const super::super::GfxBufferHandle, u32, u64, u64, *mut super::super::GfxBufferMap) -> i32;
+    pub type gfx_queue_backend_properties = unsafe extern "C" fn(*const super::super::GfxBackendBinding, *mut super::super::GfxBackendProperties) -> i32;
+    pub type gfx_queue_submit_native = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *const super::super::GfxNativeSubmission, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_queue_submit_render_color_grid_list = unsafe extern "C" fn(*const super::super::GfxQueueHandle, *const super::super::GfxSubmission, *const super::super::GfxRenderColorGridList, *mut super::super::GfxFenceStatus) -> i32;
+    pub type gfx_output_brightness = unsafe extern "C" fn(*const super::super::GfxOutputId, *mut super::super::GfxOutputBrightness) -> i32;
+    pub type gfx_brightness_request = unsafe extern "C" fn(*const super::super::GfxBrightnessRequest, *mut super::super::GfxBrightnessRequest) -> i32;
+    pub type font_prefix_metrics2 = unsafe extern "C" fn(u32, *const u8, u32, *mut super::super::FontAdvance2, u32, *mut super::super::FontAdvanceInfo2) -> i32;
 }
-pub use super::R4DrawFns as R4DrawFns2;
 pub const R4DRAW_MAGIC: u32 = 844579922;
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1516,125 +1622,43 @@ const _: () = { assert!(core::mem::size_of::<R4XStartR4Draw2>() == 920);
     assert!(core::mem::offset_of!(R4XStartR4Draw2,gfx_brightness_request) == 904);
     assert!(core::mem::offset_of!(R4XStartR4Draw2,font_prefix_metrics2) == 912);
 };
-impl R4XStartR4Draw2 {
-    pub fn project_provider(source: &super::R4XStartR4Draw) -> Self { Self {
-        screen_width: source.screen_width as u64,
-        screen_height: source.screen_height as u64,
-        clear: source.clear as u64,
-        rect: source.rect as u64,
-        text: source.text as u64,
-        display_revision: source.display_revision as u64,
-        display_begin_frame: source.display_begin_frame as u64,
-        display_begin_frame_rect: source.display_begin_frame_rect as u64,
-        display_present: source.display_present as u64,
-        display_blit_xrgb32: source.display_blit_xrgb32 as u64,
-        gui_clear: source.gui_clear as u64,
-        gui_rect: source.gui_rect as u64,
-        gui_draw_text: source.gui_draw_text as u64,
-        gui_draw_text_ex: source.gui_draw_text_ex as u64,
-        gui_blit: source.gui_blit as u64,
-        gui_raster_read: source.gui_raster_read as u64,
-        gui_present: source.gui_present as u64,
-        font_count: source.font_count as u64,
-        font_info: source.font_info as u64,
-        font_measure: source.font_measure as u64,
-        gui_set_font: source.gui_set_font as u64,
-        gui_font: source.gui_font as u64,
-        text_font: source.text_font as u64,
-        font_reload: source.font_reload as u64,
-        font_glyph_row: source.font_glyph_row as u64,
-        gui_blend_alpha8: source.gui_blend_alpha8 as u64,
-        gui_frame_begin: source.gui_frame_begin as u64,
-        gui_frame_append: source.gui_frame_append as u64,
-        gui_frame_commit: source.gui_frame_commit as u64,
-        gui_frame_cancel: source.gui_frame_cancel as u64,
-        gui_frame_info: source.gui_frame_info as u64,
-        gui_frame_read: source.gui_frame_read as u64,
-        display_blit_xrgb32_stride: source.display_blit_xrgb32_stride as u64,
-        display_present_regions: source.display_present_regions as u64,
-        display_present_capabilities: source.display_present_capabilities as u64,
-        display_present_completion: source.display_present_completion as u64,
-        gui_frame_begin_damage: source.gui_frame_begin_damage as u64,
-        gui_frame_generation_info: source.gui_frame_generation_info as u64,
-        gui_frame_generation_read: source.gui_frame_generation_read as u64,
-        font_glyph_bitmap: source.font_glyph_bitmap as u64,
-        font_revision: source.font_revision as u64,
-        gui_frame_begin_replace: source.gui_frame_begin_replace as u64,
-        gui_frame_stream_info: source.gui_frame_stream_info as u64,
-        gui_shared_raster_create: source.gui_shared_raster_create as u64,
-        gui_shared_raster_destroy: source.gui_shared_raster_destroy as u64,
-        gui_shared_raster_map_write: source.gui_shared_raster_map_write as u64,
-        gui_shared_raster_publish: source.gui_shared_raster_publish as u64,
-        gui_shared_raster_acquire: source.gui_shared_raster_acquire as u64,
-        gui_shared_raster_release: source.gui_shared_raster_release as u64,
-        gfx_buffer_create: source.gfx_buffer_create as u64,
-        gfx_buffer_describe: source.gfx_buffer_describe as u64,
-        gfx_buffer_import: source.gfx_buffer_import as u64,
-        gfx_buffer_release: source.gfx_buffer_release as u64,
-        gfx_buffer_map: source.gfx_buffer_map as u64,
-        gfx_buffer_unmap: source.gfx_buffer_unmap as u64,
-        gfx_buffer_export_raster: source.gfx_buffer_export_raster as u64,
-        gfx_buffer_stats: source.gfx_buffer_stats as u64,
-        gfx_queue_open: source.gfx_queue_open as u64,
-        gfx_queue_close: source.gfx_queue_close as u64,
-        gfx_queue_submit: source.gfx_queue_submit as u64,
-        gfx_fence_query: source.gfx_fence_query as u64,
-        gfx_fence_wait: source.gfx_fence_wait as u64,
-        gfx_fence_cancel: source.gfx_fence_cancel as u64,
-        gfx_fence_release: source.gfx_fence_release as u64,
-        gfx_queue_backend: source.gfx_queue_backend as u64,
-        gfx_output_revision: source.gfx_output_revision as u64,
-        gfx_output_info: source.gfx_output_info as u64,
-        gfx_output_mode: source.gfx_output_mode as u64,
-        gfx_output_edid: source.gfx_output_edid as u64,
-        gfx_atomic_test: source.gfx_atomic_test as u64,
-        gfx_atomic_commit: source.gfx_atomic_commit as u64,
-        gfx_atomic_submit: source.gfx_atomic_submit as u64,
-        gfx_atomic_status: source.gfx_atomic_status as u64,
-        gfx_atomic_resolve: source.gfx_atomic_resolve as u64,
-        display_presentation_stats: source.display_presentation_stats as u64,
-        display_cursor_info: source.display_cursor_info as u64,
-        display_cursor_submit: source.display_cursor_submit as u64,
-        display_cursor_status: source.display_cursor_status as u64,
-        gfx_queue_backend_info: source.gfx_queue_backend_info as u64,
-        gfx_native_start: source.gfx_native_start as u64,
-        gfx_native_query: source.gfx_native_query as u64,
-        gfx_native_receive: source.gfx_native_receive as u64,
-        gfx_native_close: source.gfx_native_close as u64,
-        gfx_native_wait: source.gfx_native_wait as u64,
-        gfx_queue_submit_render_list: source.gfx_queue_submit_render_list as u64,
-        display_presentation_info: source.display_presentation_info as u64,
-        display_presentation_feedback: source.display_presentation_feedback as u64,
-        display_output_target: source.display_output_target as u64,
-        gfx_queue_submit_output: source.gfx_queue_submit_output as u64,
-        display_output_presentation_info: source.display_output_presentation_info as u64,
-        display_output_presentation_feedback: source.display_output_presentation_feedback as u64,
-        gfx_queue_submit_render_grid_list: source.gfx_queue_submit_render_grid_list as u64,
-        gfx_output_color: source.gfx_output_color as u64,
-        gfx_queue_submit_render_color_list: source.gfx_queue_submit_render_color_list as u64,
-        gfx_atomic_test_color: source.gfx_atomic_test_color as u64,
-        gfx_atomic_submit_color: source.gfx_atomic_submit_color as u64,
-        gfx_output_refresh: source.gfx_output_refresh as u64,
-        gfx_refresh_request: source.gfx_refresh_request as u64,
-        gfx_memory_budget: source.gfx_memory_budget as u64,
-        gfx_telemetry: source.gfx_telemetry as u64,
-        gfx_output_power: source.gfx_output_power as u64,
-        gfx_power_request: source.gfx_power_request as u64,
-        gfx_virtual_start: source.gfx_virtual_start as u64,
-        gfx_virtual_query: source.gfx_virtual_query as u64,
-        gfx_virtual_close: source.gfx_virtual_close as u64,
-        gfx_virtual_wait: source.gfx_virtual_wait as u64,
-        gfx_buffer_map_persistent: source.gfx_buffer_map_persistent as u64,
-        gfx_queue_backend_properties: source.gfx_queue_backend_properties as u64,
-        gfx_queue_submit_native: source.gfx_queue_submit_native as u64,
-        gfx_queue_submit_render_color_grid_list: source.gfx_queue_submit_render_color_grid_list as u64,
-        gfx_output_brightness: source.gfx_output_brightness as u64,
-        gfx_brightness_request: source.gfx_brightness_request as u64,
-        font_prefix_metrics2: source.font_prefix_metrics2 as u64,
-        ..Self::default()
-    } }
+pub mod R4NetFns2 {
+    pub type tcp_connect = unsafe extern "C" fn(u8, u8, u8, u8, u16) -> i32;
+    pub type tcp_write = unsafe extern "C" fn(u32, *const u8, u32) -> i32;
+    pub type tcp_read = unsafe extern "C" fn(u32, *mut u8, u32) -> i32;
+    pub type tcp_close = unsafe extern "C" fn(u32) -> i32;
+    pub type tcp_summary = unsafe extern "C" fn(*mut super::super::TcpSummary) -> i32;
+    pub type tcp_connection = unsafe extern "C" fn(u32, *mut super::super::TcpConnectionInfo) -> i32;
+    pub type tcp_echo_listen_once = unsafe extern "C" fn(u16, *mut u8, u32) -> i32;
+    pub type tcp_accept_read_once = unsafe extern "C" fn(u16, *mut u8, u32, *mut super::super::TcpAcceptResult) -> i32;
+    pub type net_ipv4_send = unsafe extern "C" fn(u8, u8, u8, u8, u8, *const u8, u32) -> i32;
+    pub type net_ipv4_recv = unsafe extern "C" fn(u8, *mut super::super::NetIpv4Packet, *mut u8, u32) -> i32;
+    pub type net_config_get = unsafe extern "C" fn(*mut super::super::NetConfigSnapshot) -> i32;
+    pub type net_config_set = unsafe extern "C" fn(*const super::super::NetConfigRequest) -> i32;
+    pub type net_dns_resolve = unsafe extern "C" fn(*const u8, u32, *mut [u8; 4]) -> i32;
+    pub type net_dns_resolve_server = unsafe extern "C" fn(u8, u8, u8, u8, *const u8, u32, *mut [u8; 4]) -> i32;
+    pub type net_dhcp_acquire = unsafe extern "C" fn() -> i32;
+    pub type net_dhcp_renew = unsafe extern "C" fn() -> i32;
+    pub type net_dhcp_release = unsafe extern "C" fn() -> i32;
+    pub type net_dhcp_status = unsafe extern "C" fn(*mut super::super::DhcpStatus) -> i32;
+    pub type net_detail_get = unsafe extern "C" fn(u32, *mut super::super::NetDetailSnapshot) -> i32;
+    pub type net_diag_run = unsafe extern "C" fn(u32, *mut super::super::NetDiagResult) -> i32;
+    pub type ipc_open = unsafe extern "C" fn(u32) -> i32;
+    pub type ipc_send = unsafe extern "C" fn(u32, *const u8, u32) -> i32;
+    pub type ipc_recv = unsafe extern "C" fn(u32, *mut u8, u32) -> i32;
+    pub type ipc_poll = unsafe extern "C" fn(u32) -> i32;
+    pub type ipc_close = unsafe extern "C" fn(u32) -> i32;
+    pub type ipc_summary = unsafe extern "C" fn(*mut super::super::IpcSummary) -> i32;
+    pub type ipc_channel = unsafe extern "C" fn(u32, *mut super::super::IpcChannelInfo) -> i32;
+    pub type serial_link_status = unsafe extern "C" fn(*mut super::super::SerialLinkStatus) -> i32;
+    pub type serial_link_poll = unsafe extern "C" fn() -> i32;
+    pub type serial_link_send_message = unsafe extern "C" fn(*const u8, u32) -> i32;
+    pub type serial_link_host_test = unsafe extern "C" fn() -> i32;
+    pub type serial_link_inbox = unsafe extern "C" fn(*mut super::super::SerialLinkMessage) -> i32;
+    pub type net_service_request = unsafe extern "C" fn(u32, u16, u32, u16, *const u8, u32, *mut u8, u32) -> i32;
+    pub type ipc_performance = unsafe extern "C" fn(u32, *mut super::super::IpcPerformanceSummary) -> i32;
+    pub type tcp_performance = unsafe extern "C" fn(*mut super::super::TcpPerformanceInfo) -> i32;
 }
-pub use super::R4NetFns as R4NetFns2;
 pub const R4NET_MAGIC: u32 = 843402834;
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1750,47 +1774,34 @@ const _: () = { assert!(core::mem::size_of::<R4XStartR4Net2>() == 296);
     assert!(core::mem::offset_of!(R4XStartR4Net2,ipc_performance) == 280);
     assert!(core::mem::offset_of!(R4XStartR4Net2,tcp_performance) == 288);
 };
-impl R4XStartR4Net2 {
-    pub fn project_provider(source: &super::R4XStartR4Net) -> Self { Self {
-        tcp_connect: source.tcp_connect as u64,
-        tcp_write: source.tcp_write as u64,
-        tcp_read: source.tcp_read as u64,
-        tcp_close: source.tcp_close as u64,
-        tcp_summary: source.tcp_summary as u64,
-        tcp_connection: source.tcp_connection as u64,
-        tcp_echo_listen_once: source.tcp_echo_listen_once as u64,
-        tcp_accept_read_once: source.tcp_accept_read_once as u64,
-        net_ipv4_send: source.net_ipv4_send as u64,
-        net_ipv4_recv: source.net_ipv4_recv as u64,
-        net_config_get: source.net_config_get as u64,
-        net_config_set: source.net_config_set as u64,
-        net_dns_resolve: source.net_dns_resolve as u64,
-        net_dns_resolve_server: source.net_dns_resolve_server as u64,
-        net_dhcp_acquire: source.net_dhcp_acquire as u64,
-        net_dhcp_renew: source.net_dhcp_renew as u64,
-        net_dhcp_release: source.net_dhcp_release as u64,
-        net_dhcp_status: source.net_dhcp_status as u64,
-        net_detail_get: source.net_detail_get as u64,
-        net_diag_run: source.net_diag_run as u64,
-        ipc_open: source.ipc_open as u64,
-        ipc_send: source.ipc_send as u64,
-        ipc_recv: source.ipc_recv as u64,
-        ipc_poll: source.ipc_poll as u64,
-        ipc_close: source.ipc_close as u64,
-        ipc_summary: source.ipc_summary as u64,
-        ipc_channel: source.ipc_channel as u64,
-        serial_link_status: source.serial_link_status as u64,
-        serial_link_poll: source.serial_link_poll as u64,
-        serial_link_send_message: source.serial_link_send_message as u64,
-        serial_link_host_test: source.serial_link_host_test as u64,
-        serial_link_inbox: source.serial_link_inbox as u64,
-        net_service_request: source.net_service_request as u64,
-        ipc_performance: source.ipc_performance as u64,
-        tcp_performance: source.tcp_performance as u64,
-        ..Self::default()
-    } }
+pub mod R4AudioFns2 {
+    pub type audio_open_stream = unsafe extern "C" fn(u32, u16, u16) -> i32;
+    pub type audio_write = unsafe extern "C" fn(u32, *const u8, u32) -> i32;
+    pub type audio_close = unsafe extern "C" fn(u32) -> i32;
+    pub type audio_set_volume = unsafe extern "C" fn(u32, u32) -> i32;
+    pub type sid_acquire = unsafe extern "C" fn() -> i32;
+    pub type sid_write_register = unsafe extern "C" fn(u32, u8, u8) -> i32;
+    pub type sid_release = unsafe extern "C" fn(u32) -> i32;
+    pub type sid_load_data = unsafe extern "C" fn(u32, u16, *const u8, u32) -> i32;
+    pub type sid_init = unsafe extern "C" fn(u32, u16, u16) -> i32;
+    pub type sid_play_frame = unsafe extern "C" fn(u32, u16, u16) -> i32;
+    pub type sid_stop = unsafe extern "C" fn(u32) -> i32;
+    pub type sid_model_name = unsafe extern "C" fn() -> *const u8;
+    pub type midi_open_synth = unsafe extern "C" fn(*const u8) -> i32;
+    pub type midi_send = unsafe extern "C" fn(u32, u8, u8, u8, u8) -> i32;
+    pub type midi_close = unsafe extern "C" fn(u32) -> i32;
+    pub type opl3_write_register = unsafe extern "C" fn(u8, u8, u8) -> i32;
+    pub type opl3_reset = unsafe extern "C" fn() -> i32;
+    pub type opl3_render_block = unsafe extern "C" fn() -> i32;
+    pub type opl3_stop = unsafe extern "C" fn() -> i32;
+    pub type audio_output_info = unsafe extern "C" fn(u32, *mut super::super::AudioOutputInfo) -> i32;
+    pub type audio_select_output = unsafe extern "C" fn(*const [u8; 64]) -> i32;
+    pub type audio_stream_progress = unsafe extern "C" fn(u32, u64, *mut super::super::AudioStreamProgress) -> i32;
+    pub type audio_set_stream_expectation = unsafe extern "C" fn(u32, *const super::super::AudioStreamExpectation) -> i32;
+    pub type audio_close_stream_progress = unsafe extern "C" fn(u32, u64, *mut super::super::AudioStreamProgress) -> i32;
+    pub type audio_output_catalog = unsafe extern "C" fn(*mut super::super::AudioOutputInfo, u32, *mut super::super::AudioOutputCatalog) -> i32;
+    pub type audio_capture_io = unsafe extern "C" fn(*const super::super::AudioCaptureRequest, *mut super::super::AudioCaptureReply, *mut u8, u32) -> i32;
 }
-pub use super::R4AudioFns as R4AudioFns2;
 pub const R4AUDIO_MAGIC: u32 = 844448082;
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1885,38 +1896,94 @@ const _: () = { assert!(core::mem::size_of::<R4XStartR4Audio2>() == 240);
     assert!(core::mem::offset_of!(R4XStartR4Audio2,audio_output_catalog) == 224);
     assert!(core::mem::offset_of!(R4XStartR4Audio2,audio_capture_io) == 232);
 };
-impl R4XStartR4Audio2 {
-    pub fn project_provider(source: &super::R4XStartR4Audio) -> Self { Self {
-        audio_open_stream: source.audio_open_stream as u64,
-        audio_write: source.audio_write as u64,
-        audio_close: source.audio_close as u64,
-        audio_set_volume: source.audio_set_volume as u64,
-        sid_acquire: source.sid_acquire as u64,
-        sid_write_register: source.sid_write_register as u64,
-        sid_release: source.sid_release as u64,
-        sid_load_data: source.sid_load_data as u64,
-        sid_init: source.sid_init as u64,
-        sid_play_frame: source.sid_play_frame as u64,
-        sid_stop: source.sid_stop as u64,
-        sid_model_name: source.sid_model_name as u64,
-        midi_open_synth: source.midi_open_synth as u64,
-        midi_send: source.midi_send as u64,
-        midi_close: source.midi_close as u64,
-        opl3_write_register: source.opl3_write_register as u64,
-        opl3_reset: source.opl3_reset as u64,
-        opl3_render_block: source.opl3_render_block as u64,
-        opl3_stop: source.opl3_stop as u64,
-        audio_output_info: source.audio_output_info as u64,
-        audio_select_output: source.audio_select_output as u64,
-        audio_stream_progress: source.audio_stream_progress as u64,
-        audio_set_stream_expectation: source.audio_set_stream_expectation as u64,
-        audio_close_stream_progress: source.audio_close_stream_progress as u64,
-        audio_output_catalog: source.audio_output_catalog as u64,
-        audio_capture_io: source.audio_capture_io as u64,
-        ..Self::default()
-    } }
+pub mod R4DevFns2 {
+    pub type device_inventory_summary = unsafe extern "C" fn(*mut super::super::DeviceInventorySummary) -> i32;
+    pub type device_inventory_record = unsafe extern "C" fn(u32, *mut super::super::DeviceInventoryRecord) -> i32;
+    pub type memory_summary = unsafe extern "C" fn(*mut super::super::ProgramMemorySummary) -> i32;
+    pub type memory_block_count = unsafe extern "C" fn() -> u32;
+    pub type memory_block = unsafe extern "C" fn(u32, *mut super::super::ProgramMemoryBlockInfo) -> i32;
+    pub type memory_pressure_snapshot = unsafe extern "C" fn(*mut super::super::ProgramMemoryPressureSnapshot) -> i32;
+    pub type memory_reclaim_probe = unsafe extern "C" fn(u32, *mut super::super::ProgramMemoryReclaimProbe) -> i32;
+    pub type memory_backing_store_probe = unsafe extern "C" fn(*const u8, u64, u32, *mut super::super::ProgramMemoryBackingStoreProbe) -> i32;
+    pub type memory_backing_store_slot_probe = unsafe extern "C" fn(*const u8, u64, u32, u64, u32, u32, u32, u32, u32, *mut super::super::ProgramMemoryBackingStoreSlotProbe) -> i32;
+    pub type memory_pager_gate_probe = unsafe extern "C" fn(*const u8, u64, u32, u64, u32, *mut super::super::ProgramMemoryPagerGateProbe) -> i32;
+    pub type memory_page_io_probe = unsafe extern "C" fn(*const u8, u64, u32, u32, u64, u32, u64, u64, u32, u32, u64, *mut u8, u32, *mut super::super::ProgramMemoryPageIoProbe) -> i32;
+    pub type memory_vm_page_state_probe = unsafe extern "C" fn(u32, u64, u64, u32, u32, u64, u64, u32, *mut super::super::ProgramMemoryVmPageStateProbe) -> i32;
+    pub type memory_vm_reserve_probe = unsafe extern "C" fn(u64, *mut super::super::ProgramVmReserveProbe) -> i32;
+    pub type paging_summary = unsafe extern "C" fn(*mut super::super::PagingSummary) -> i32;
+    pub type performance_summary = unsafe extern "C" fn(*mut super::super::ProgramPerformanceSummary) -> i32;
+    pub type performance_task = unsafe extern "C" fn(u32, *mut super::super::ProgramTaskPerformanceInfo) -> i32;
+    pub type performance_storage = unsafe extern "C" fn(u32, *mut super::super::ProgramStoragePerformanceInfo) -> i32;
+    pub type performance_boot_phase = unsafe extern "C" fn(u32, *mut super::super::ProgramBootPhasePerformanceInfo) -> i32;
+    pub type protocol_status = unsafe extern "C" fn(*const u8, u32, *mut super::super::ProtocolStatus) -> i32;
+    pub type protocol_dispatch = unsafe extern "C" fn(*const u8, u32, u32, *const super::super::ProtocolBuffer, *mut super::super::ProtocolBuffer) -> i32;
+    pub type display_summary = unsafe extern "C" fn(*mut super::super::DisplaySummary) -> i32;
+    pub type hardware_summary = unsafe extern "C" fn(*mut super::super::HardwareSummary) -> i32;
+    pub type boot_info_summary = unsafe extern "C" fn(*mut super::super::BootInfoSummary) -> i32;
+    pub type boot_info_memory_count = unsafe extern "C" fn() -> u32;
+    pub type boot_info_memory_entry = unsafe extern "C" fn(u32, *mut super::super::BootInfoMemoryEntry) -> i32;
+    pub type program_instance_storage_self_test = unsafe extern "C" fn(*mut super::super::ProgramInstanceStorageSelfTestResult) -> i32;
+    pub type program_registry_summary_v2 = unsafe extern "C" fn(*mut super::super::ProgramRegistrySummaryV2) -> i32;
+    pub type program_registry_self_test_v2 = unsafe extern "C" fn(*mut super::super::ProgramRegistrySelfTestResultV2) -> i32;
+    pub type execution_inventory_summary = unsafe extern "C" fn(*mut super::super::ProgramInventorySummary) -> i32;
+    pub type program_instance_storage_summary_v2 = unsafe extern "C" fn(*mut super::super::ProgramInstanceStorageSummary) -> i32;
+    pub type kernel_version = unsafe extern "C" fn(*mut super::super::KernelVersion) -> i32;
+    pub type performance_boot_phase_clock = unsafe extern "C" fn(u32, *mut super::super::ProgramBootPhaseClockInfo) -> i32;
+    pub type performance_irq_timing = unsafe extern "C" fn(u32, *mut super::super::ProgramIrqTimingInfo) -> i32;
+    pub type performance_boot_summary = unsafe extern "C" fn(*mut super::super::ProgramBootPerformanceInfo) -> i32;
+    pub type performance_driver_work = unsafe extern "C" fn(u32, *mut super::super::ProgramDriverWorkPerformanceInfo) -> i32;
+    pub type performance_pci_inventory = unsafe extern "C" fn(*mut super::super::ProgramPciInventoryPerformanceInfo) -> i32;
+    pub type performance_input = unsafe extern "C" fn(*mut super::super::ProgramInputPerformanceInfo) -> i32;
+    pub type display_state = unsafe extern "C" fn(*mut super::super::DisplayStateInfo) -> i32;
+    pub type driver_module_info = unsafe extern "C" fn(u32, *mut super::super::DriverModuleInfo) -> i32;
+    pub type performance_instrumentation = unsafe extern "C" fn(*mut super::super::ProgramInstrumentationInfo) -> i32;
+    pub type performance_lock = unsafe extern "C" fn(u32, *mut super::super::ProgramLockPerformanceInfo) -> i32;
+    pub type performance_stack = unsafe extern "C" fn(u32, *mut super::super::ProgramStackPerformanceInfo) -> i32;
+    pub type stack_fault = unsafe extern "C" fn(u32, *mut super::super::ProgramStackFaultInfo) -> i32;
+    pub type memory_kernel_heap_check = unsafe extern "C" fn(*mut super::super::ProgramKernelHeapCheck) -> i32;
+    pub type scheduler_kernel_check = unsafe extern "C" fn(u32, *mut super::super::ProgramKernelSchedulerCheck) -> i32;
+    pub type smp_kernel_check = unsafe extern "C" fn(*mut super::super::ProgramKernelSmpCheck) -> i32;
+    pub type performance_smp_tlb = unsafe extern "C" fn(*mut super::super::ProgramSmpTlbSnapshot) -> i32;
+    pub type storage_block_queue_check = unsafe extern "C" fn(*mut super::super::ProgramKernelBlockQueueCheck) -> i32;
+    pub type storage_nvme_check = unsafe extern "C" fn(*mut super::super::ProgramKernelNvmeCheck) -> i32;
+    pub type usb_contract_check = unsafe extern "C" fn(*mut super::super::ProgramKernelUsbCheck) -> i32;
+    pub type serial_count = unsafe extern "C" fn() -> u32;
+    pub type serial_port_at = unsafe extern "C" fn(u32, *mut super::super::SerialPortInfo) -> i32;
+    pub type serial_open = unsafe extern "C" fn(u64, u64, *const super::super::SerialConfig, *mut u64) -> i32;
+    pub type serial_configure = unsafe extern "C" fn(u64, *const super::super::SerialConfig) -> i32;
+    pub type serial_read = unsafe extern "C" fn(u64, *mut u8, u32, u64, *mut super::super::SerialTransfer) -> i32;
+    pub type serial_write = unsafe extern "C" fn(u64, *const u8, u32, u64, *mut super::super::SerialTransfer) -> i32;
+    pub type serial_drain = unsafe extern "C" fn(u64, u64) -> i32;
+    pub type serial_status = unsafe extern "C" fn(u64, *mut super::super::SerialStatus) -> i32;
+    pub type serial_cancel = unsafe extern "C" fn(u64) -> i32;
+    pub type serial_close = unsafe extern "C" fn(u64, u32, u64) -> i32;
+    pub type cpu_topology = unsafe extern "C" fn(u32, *mut super::super::CpuTopologyInfo) -> i32;
+    pub type cpu_cache_topology = unsafe extern "C" fn(u32, u32, *mut super::super::CpuCacheTopologyInfo) -> i32;
+    pub type cpu_lifecycle = unsafe extern "C" fn(u32, u32, u64, *mut super::super::CpuLifecycleInfo) -> i32;
+    pub type kernel_cpu_lifecycle_check = unsafe extern "C" fn(*mut super::super::ProgramKernelCpuLifecycleCheck) -> i32;
+    pub type cpu_capabilities = unsafe extern "C" fn(u32, *mut super::super::CpuCapabilitiesInfo) -> i32;
+    pub type cpu_feature = unsafe extern "C" fn(u32, u64, u32, *mut super::super::CpuFeatureInfo) -> i32;
+    pub type cpu_register_read = unsafe extern "C" fn(u32, u64, u32, *mut super::super::CpuRegisterInfo) -> i32;
+    pub type kernel_cpu_register_check = unsafe extern "C" fn(u32, u64, *mut super::super::ProgramKernelCpuRegisterCheck) -> i32;
+    pub type cpu_power_info = unsafe extern "C" fn(u32, u64, *mut super::super::CpuPowerInfo) -> i32;
+    pub type cpu_power_capture = unsafe extern "C" fn(u32, u64, *mut super::super::CpuPowerInfo) -> i32;
+    pub type cpu_performance = unsafe extern "C" fn(*const super::super::CpuPerformanceRequest, *mut super::super::CpuPerformanceInfo) -> i32;
+    pub type cpu_cppc = unsafe extern "C" fn(*const super::super::CpuPerformanceRequest, *mut super::super::CpuCppcInfo) -> i32;
+    pub type cpu_performance_hint = unsafe extern "C" fn(u32, u64, *mut super::super::CpuPerformanceHintInfo) -> i32;
+    pub type cpu_firmware_performance = unsafe extern "C" fn(*const super::super::CpuPerformanceRequest, *mut super::super::CpuFirmwareInfo) -> i32;
+    pub type cpu_idle_info = unsafe extern "C" fn(u32, *mut super::super::CpuIdleInfo) -> i32;
+    pub type cpu_machine_info = unsafe extern "C" fn(u32, *mut super::super::CpuMachineInfo) -> i32;
+    pub type cpu_machine_bank = unsafe extern "C" fn(u32, u64, u64, u32, *mut super::super::CpuMachineBank) -> i32;
+    pub type cpu_microcode_info = unsafe extern "C" fn(u32, *mut super::super::CpuMicrocodeInfo) -> i32;
+    pub type cpu_pmu_info = unsafe extern "C" fn(u32, *mut super::super::CpuPmuInfo) -> i32;
+    pub type cpu_pmu_measure = unsafe extern "C" fn(u32, u64, u32, u32, *const super::super::PmuWorkFn, u64, *mut super::super::CpuPmuResult) -> i32;
+    pub type cpu_pmu_result = unsafe extern "C" fn(u32, u64, u64, *mut super::super::CpuPmuResult) -> i32;
+    pub type cpu_acceleration_info = unsafe extern "C" fn(*mut super::super::CpuAccelerationInfo) -> i32;
+    pub type cpu_acceleration_work = unsafe extern "C" fn(u32, u32, *const super::super::CpuPureWorkFn, u64, *mut super::super::CpuAccelerationWork) -> i32;
+    pub type fpu_observation = unsafe extern "C" fn(*const super::super::FpuObservationRequest, *mut super::super::FpuObservationInfo) -> i32;
+    pub type firmware_system_uuid = unsafe extern "C" fn(*mut super::super::FirmwareSystemUuidInfo) -> i32;
+    pub type device_inventory_capture = unsafe extern "C" fn(*mut super::super::DeviceInventoryRecord, u32, *mut super::super::DeviceInventorySnapshotInfo) -> i32;
 }
-pub use super::R4DevFns as R4DevFns2;
 pub const R4DEV_MAGIC: u32 = 844514386;
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -2191,94 +2258,3 @@ const _: () = { assert!(core::mem::size_of::<R4XStartR4Dev2>() == 720);
     assert!(core::mem::offset_of!(R4XStartR4Dev2,firmware_system_uuid) == 704);
     assert!(core::mem::offset_of!(R4XStartR4Dev2,device_inventory_capture) == 712);
 };
-impl R4XStartR4Dev2 {
-    pub fn project_provider(source: &super::R4XStartR4Dev) -> Self { Self {
-        device_inventory_summary: source.device_inventory_summary as u64,
-        device_inventory_record: source.device_inventory_record as u64,
-        memory_summary: source.memory_summary as u64,
-        memory_block_count: source.memory_block_count as u64,
-        memory_block: source.memory_block as u64,
-        memory_pressure_snapshot: source.memory_pressure_snapshot as u64,
-        memory_reclaim_probe: source.memory_reclaim_probe as u64,
-        memory_backing_store_probe: source.memory_backing_store_probe as u64,
-        memory_backing_store_slot_probe: source.memory_backing_store_slot_probe as u64,
-        memory_pager_gate_probe: source.memory_pager_gate_probe as u64,
-        memory_page_io_probe: source.memory_page_io_probe as u64,
-        memory_vm_page_state_probe: source.memory_vm_page_state_probe as u64,
-        memory_vm_reserve_probe: source.memory_vm_reserve_probe as u64,
-        paging_summary: source.paging_summary as u64,
-        performance_summary: source.performance_summary as u64,
-        performance_task: source.performance_task as u64,
-        performance_storage: source.performance_storage as u64,
-        performance_boot_phase: source.performance_boot_phase as u64,
-        protocol_status: source.protocol_status as u64,
-        protocol_dispatch: source.protocol_dispatch as u64,
-        display_summary: source.display_summary as u64,
-        hardware_summary: source.hardware_summary as u64,
-        boot_info_summary: source.boot_info_summary as u64,
-        boot_info_memory_count: source.boot_info_memory_count as u64,
-        boot_info_memory_entry: source.boot_info_memory_entry as u64,
-        program_instance_storage_self_test: source.program_instance_storage_self_test as u64,
-        program_registry_summary_v2: source.program_registry_summary_v2 as u64,
-        program_registry_self_test_v2: source.program_registry_self_test_v2 as u64,
-        execution_inventory_summary: source.execution_inventory_summary as u64,
-        program_instance_storage_summary_v2: source.program_instance_storage_summary_v2 as u64,
-        kernel_version: source.kernel_version as u64,
-        performance_boot_phase_clock: source.performance_boot_phase_clock as u64,
-        performance_irq_timing: source.performance_irq_timing as u64,
-        performance_boot_summary: source.performance_boot_summary as u64,
-        performance_driver_work: source.performance_driver_work as u64,
-        performance_pci_inventory: source.performance_pci_inventory as u64,
-        performance_input: source.performance_input as u64,
-        display_state: source.display_state as u64,
-        driver_module_info: source.driver_module_info as u64,
-        performance_instrumentation: source.performance_instrumentation as u64,
-        performance_lock: source.performance_lock as u64,
-        performance_stack: source.performance_stack as u64,
-        stack_fault: source.stack_fault as u64,
-        memory_kernel_heap_check: source.memory_kernel_heap_check as u64,
-        scheduler_kernel_check: source.scheduler_kernel_check as u64,
-        smp_kernel_check: source.smp_kernel_check as u64,
-        performance_smp_tlb: source.performance_smp_tlb as u64,
-        storage_block_queue_check: source.storage_block_queue_check as u64,
-        storage_nvme_check: source.storage_nvme_check as u64,
-        usb_contract_check: source.usb_contract_check as u64,
-        serial_count: source.serial_count as u64,
-        serial_port_at: source.serial_port_at as u64,
-        serial_open: source.serial_open as u64,
-        serial_configure: source.serial_configure as u64,
-        serial_read: source.serial_read as u64,
-        serial_write: source.serial_write as u64,
-        serial_drain: source.serial_drain as u64,
-        serial_status: source.serial_status as u64,
-        serial_cancel: source.serial_cancel as u64,
-        serial_close: source.serial_close as u64,
-        cpu_topology: source.cpu_topology as u64,
-        cpu_cache_topology: source.cpu_cache_topology as u64,
-        cpu_lifecycle: source.cpu_lifecycle as u64,
-        kernel_cpu_lifecycle_check: source.kernel_cpu_lifecycle_check as u64,
-        cpu_capabilities: source.cpu_capabilities as u64,
-        cpu_feature: source.cpu_feature as u64,
-        cpu_register_read: source.cpu_register_read as u64,
-        kernel_cpu_register_check: source.kernel_cpu_register_check as u64,
-        cpu_power_info: source.cpu_power_info as u64,
-        cpu_power_capture: source.cpu_power_capture as u64,
-        cpu_performance: source.cpu_performance as u64,
-        cpu_cppc: source.cpu_cppc as u64,
-        cpu_performance_hint: source.cpu_performance_hint as u64,
-        cpu_firmware_performance: source.cpu_firmware_performance as u64,
-        cpu_idle_info: source.cpu_idle_info as u64,
-        cpu_machine_info: source.cpu_machine_info as u64,
-        cpu_machine_bank: source.cpu_machine_bank as u64,
-        cpu_microcode_info: source.cpu_microcode_info as u64,
-        cpu_pmu_info: source.cpu_pmu_info as u64,
-        cpu_pmu_measure: source.cpu_pmu_measure as u64,
-        cpu_pmu_result: source.cpu_pmu_result as u64,
-        cpu_acceleration_info: source.cpu_acceleration_info as u64,
-        cpu_acceleration_work: source.cpu_acceleration_work as u64,
-        fpu_observation: source.fpu_observation as u64,
-        firmware_system_uuid: source.firmware_system_uuid as u64,
-        device_inventory_capture: source.device_inventory_capture as u64,
-        ..Self::default()
-    } }
-}

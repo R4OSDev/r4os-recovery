@@ -18,23 +18,22 @@ Identitaetsmetadaten und ist keine Funktionstabelle.
 R4OS-CONTRACT-GENERATED:BEGIN R4LQUERY
 Dieser Block wird aus ApiContract.json erzeugt und darf nicht von Hand geaendert werden.
 
-R4LQuery
---------
+R4LQuery2
+---------
 
 Offset  Typ  Feld
 0       u32  magic
 4       u32  abi_version
 8       u32  size
 12      u32  group
-16      u64  kernel_bridge
-24      u64  reserved
+16      u64  reserved
 
-Groesse: 32 Byte
+Groesse: 24 Byte
 
-Magic: 0x314C3452
-Version: 1
+Magic: 0x324C3452
+Version: 2
 Pointergroesse: 8
-Entry: Query:1
+Entry: Query2:2
 
 Gruppen-IDs
 -----------

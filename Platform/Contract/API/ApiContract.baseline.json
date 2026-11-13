@@ -1,6 +1,6 @@
 {
-  "schema_version": 11,
-  "baseline_id": "standalone-contract-0.64.11",
+  "schema_version": 12,
+  "baseline_id": "canonical-generation2-0.64.95",
   "target": {
     "architecture": "x86_64",
     "endianness": "little",
@@ -13,11 +13,11 @@
       "contract": "ABI/R4M0.txt"
     },
     {
-      "name": "R4XStart",
+      "name": "R4XStart2",
       "contract": "ABI/R4XStart.txt"
     },
     {
-      "name": "R4LQuery",
+      "name": "R4LQuery2",
       "contract": "ABI/R4LQuery.txt"
     },
     {
@@ -26,12 +26,12 @@
     }
   ],
   "r4x_start": {
-    "magic": 1398289490,
-    "abi_major": 1,
-    "abi_minor": 1,
+    "magic": 844641362,
+    "abi_major": 2,
+    "abi_minor": 0,
     "entry": {
-      "symbol": "R4XStart",
-      "version": 1,
+      "symbol": "R4XStart2",
+      "version": 2,
       "required": true,
       "description": "Current R4X program entry.",
       "signature": {
@@ -45,7 +45,7 @@
               "is_const": true,
               "child": {
                 "kind": "named",
-                "name": "R4XStartContext"
+                "name": "R4XStartContext2"
               },
               "direction": "input",
               "nullable": false,
@@ -64,20 +64,20 @@
     "metadata": [
       {
         "key": "r4x.start",
-        "value": "r4xstart"
+        "value": "r4xstart2"
       },
       {
         "key": "r4x.entry",
-        "value": "R4XStart"
+        "value": "R4XStart2"
       },
       {
         "key": "r4x.context",
-        "value": "R4XStartContext"
+        "value": "R4XStartContext2"
       }
     ],
     "context": {
-      "name": "R4XStartContext",
-      "size": 128,
+      "name": "R4XStartContext2",
+      "size": 120,
       "fields": [
         {
           "name": "magic",
@@ -88,7 +88,7 @@
           },
           "description": "magic",
           "default_kind": "integer",
-          "default_value": "1398289490"
+          "default_value": "844641362"
         },
         {
           "name": "abi_major",
@@ -99,7 +99,7 @@
           },
           "description": "abi major",
           "default_kind": "integer",
-          "default_value": "1"
+          "default_value": "2"
         },
         {
           "name": "abi_minor",
@@ -110,7 +110,7 @@
           },
           "description": "abi minor",
           "default_kind": "integer",
-          "default_value": "1"
+          "default_value": "0"
         },
         {
           "name": "size",
@@ -121,7 +121,7 @@
           },
           "description": "size",
           "default_kind": "integer",
-          "default_value": "128"
+          "default_value": "120"
         },
         {
           "name": "flags",
@@ -289,19 +289,8 @@
           "default_value": "0"
         },
         {
-          "name": "reserved_runtime",
-          "offset": 112,
-          "type": {
-            "kind": "scalar",
-            "name": "u64"
-          },
-          "description": "reserved runtime",
-          "default_kind": "integer",
-          "default_value": "0"
-        },
-        {
           "name": "reserved2",
-          "offset": 120,
+          "offset": 112,
           "type": {
             "kind": "scalar",
             "name": "u64"
@@ -464,7 +453,7 @@
                 "is_const": true,
                 "child": {
                   "kind": "named",
-                  "name": "R4XStartContext"
+                  "name": "R4XStartContext2"
                 },
                 "direction": "input",
                 "nullable": false,
@@ -496,7 +485,7 @@
                 "is_const": true,
                 "child": {
                   "kind": "named",
-                  "name": "R4XStartContext"
+                  "name": "R4XStartContext2"
                 },
                 "direction": "input",
                 "nullable": false,
@@ -515,14 +504,14 @@
     ]
   },
   "r4l_query": {
-    "magic": 827077714,
-    "abi_version": 1,
-    "entry_symbol": "Query",
-    "entry_version": 1,
+    "magic": 843854930,
+    "abi_version": 2,
+    "entry_symbol": "Query2",
+    "entry_version": 2,
     "pointer_size": 8,
     "layout": {
-      "name": "R4LQuery",
-      "size": 32,
+      "name": "R4LQuery2",
+      "size": 24,
       "fields": [
         {
           "name": "magic",
@@ -565,18 +554,8 @@
           "default_kind": "none"
         },
         {
-          "name": "kernel_bridge",
-          "offset": 16,
-          "type": {
-            "kind": "scalar",
-            "name": "u64"
-          },
-          "description": "kernel bridge",
-          "default_kind": "none"
-        },
-        {
           "name": "reserved",
-          "offset": 24,
+          "offset": 16,
           "type": {
             "kind": "scalar",
             "name": "u64"
@@ -591,16 +570,16 @@
     {
       "id": 1,
       "name": "R4SYS",
-      "query_import": "R4SYS:Query:1",
+      "query_import": "R4SYS:Query2:2",
       "kind": "kernel_table",
-      "table_type": "R4XStartR4Sys",
-      "fn_namespace": "R4SysFns",
+      "table_type": "R4XStartR4Sys2",
+      "fn_namespace": "R4SysFns2",
       "required": true,
-      "magic": 827937618,
-      "abi_version": 41,
+      "magic": 844714834,
+      "abi_version": 6,
       "header_size": 16,
       "pointer_size": 8,
-      "size": 1560,
+      "size": 1552,
       "slots": [
         {
           "number": 0,
@@ -4259,39 +4238,6 @@
         {
           "number": 49,
           "offset": 408,
-          "name": "reserved_shell_run",
-          "state": "tombstone",
-          "required": false,
-          "description": "R4SYS reserved shell_run tombstone.",
-          "semantics": {
-            "exposure": "internal",
-            "requirements": [
-              "R4SYS"
-            ],
-            "optional_capability": false,
-            "error_domain": "internal",
-            "ownership": "none",
-            "buffer_lifetime": "none",
-            "blocking": "nonblocking",
-            "threading": "thread_safe",
-            "timeout": "none",
-            "cancel": "not_cancellable",
-            "timeout_outcome": "none",
-            "reentrancy": "serialized",
-            "callback_context": "none",
-            "buffer_completion": "none",
-            "shutdown": "none",
-            "close_rule": "none",
-            "outputs": "none",
-            "side_effects": "none",
-            "retry": "never_automatic",
-            "buffer_too_small": "none",
-            "language_parity": "internal_only"
-          }
-        },
-        {
-          "number": 50,
-          "offset": 416,
           "name": "system_halt",
           "state": "function",
           "required": false,
@@ -4331,8 +4277,8 @@
           }
         },
         {
-          "number": 51,
-          "offset": 424,
+          "number": 50,
+          "offset": 416,
           "name": "system_reboot",
           "state": "function",
           "required": false,
@@ -4372,8 +4318,8 @@
           }
         },
         {
-          "number": 52,
-          "offset": 432,
+          "number": 51,
+          "offset": 424,
           "name": "system_poweroff",
           "state": "function",
           "required": false,
@@ -4413,8 +4359,8 @@
           }
         },
         {
-          "number": 53,
-          "offset": 440,
+          "number": 52,
+          "offset": 432,
           "name": "time_state",
           "state": "function",
           "required": false,
@@ -4472,8 +4418,8 @@
           }
         },
         {
-          "number": 54,
-          "offset": 448,
+          "number": 53,
+          "offset": 440,
           "name": "time_set_state",
           "state": "function",
           "required": false,
@@ -4531,8 +4477,8 @@
           }
         },
         {
-          "number": 55,
-          "offset": 456,
+          "number": 54,
+          "offset": 448,
           "name": "time_seconds_since_midnight",
           "state": "function",
           "required": false,
@@ -4572,8 +4518,8 @@
           }
         },
         {
-          "number": 56,
-          "offset": 464,
+          "number": 55,
+          "offset": 456,
           "name": "dir_list",
           "state": "function",
           "required": false,
@@ -4656,8 +4602,8 @@
           }
         },
         {
-          "number": 57,
-          "offset": 472,
+          "number": 56,
+          "offset": 464,
           "name": "dir_create",
           "state": "function",
           "required": false,
@@ -4716,8 +4662,8 @@
           }
         },
         {
-          "number": 58,
-          "offset": 480,
+          "number": 57,
+          "offset": 472,
           "name": "dir_delete",
           "state": "function",
           "required": false,
@@ -4776,8 +4722,8 @@
           }
         },
         {
-          "number": 59,
-          "offset": 488,
+          "number": 58,
+          "offset": 480,
           "name": "drive_info",
           "state": "function",
           "required": false,
@@ -4842,8 +4788,8 @@
           }
         },
         {
-          "number": 60,
-          "offset": 496,
+          "number": 59,
+          "offset": 488,
           "name": "file_info",
           "state": "function",
           "required": false,
@@ -4919,8 +4865,8 @@
           }
         },
         {
-          "number": 61,
-          "offset": 504,
+          "number": 60,
+          "offset": 496,
           "name": "file_delete",
           "state": "function",
           "required": false,
@@ -4979,8 +4925,8 @@
           }
         },
         {
-          "number": 62,
-          "offset": 512,
+          "number": 61,
+          "offset": 504,
           "name": "file_rename",
           "state": "function",
           "required": false,
@@ -5057,8 +5003,8 @@
           }
         },
         {
-          "number": 63,
-          "offset": 520,
+          "number": 62,
+          "offset": 512,
           "name": "file_copy",
           "state": "function",
           "required": false,
@@ -5135,8 +5081,8 @@
           }
         },
         {
-          "number": 64,
-          "offset": 528,
+          "number": 63,
+          "offset": 520,
           "name": "file_move",
           "state": "function",
           "required": false,
@@ -5213,8 +5159,8 @@
           }
         },
         {
-          "number": 65,
-          "offset": 536,
+          "number": 64,
+          "offset": 528,
           "name": "file_read",
           "state": "function",
           "required": false,
@@ -5297,8 +5243,8 @@
           }
         },
         {
-          "number": 66,
-          "offset": 544,
+          "number": 65,
+          "offset": 536,
           "name": "file_write",
           "state": "function",
           "required": false,
@@ -5381,8 +5327,8 @@
           }
         },
         {
-          "number": 67,
-          "offset": 552,
+          "number": 66,
+          "offset": 544,
           "name": "file_read_at",
           "state": "function",
           "required": false,
@@ -5472,8 +5418,8 @@
           }
         },
         {
-          "number": 68,
-          "offset": 560,
+          "number": 67,
+          "offset": 552,
           "name": "file_append",
           "state": "function",
           "required": false,
@@ -5556,8 +5502,8 @@
           }
         },
         {
-          "number": 69,
-          "offset": 568,
+          "number": 68,
+          "offset": 560,
           "name": "file_stream_begin",
           "state": "function",
           "required": false,
@@ -5623,8 +5569,8 @@
           }
         },
         {
-          "number": 70,
-          "offset": 576,
+          "number": 69,
+          "offset": 568,
           "name": "file_stream_write",
           "state": "function",
           "required": false,
@@ -5721,8 +5667,8 @@
           }
         },
         {
-          "number": 71,
-          "offset": 584,
+          "number": 70,
+          "offset": 576,
           "name": "file_stream_finish",
           "state": "function",
           "required": false,
@@ -5795,8 +5741,8 @@
           }
         },
         {
-          "number": 72,
-          "offset": 592,
+          "number": 71,
+          "offset": 584,
           "name": "file_stream_abort",
           "state": "function",
           "required": false,
@@ -5855,8 +5801,8 @@
           }
         },
         {
-          "number": 73,
-          "offset": 600,
+          "number": 72,
+          "offset": 592,
           "name": "env_set",
           "state": "function",
           "required": false,
@@ -5939,8 +5885,8 @@
           }
         },
         {
-          "number": 74,
-          "offset": 608,
+          "number": 73,
+          "offset": 600,
           "name": "registry_key_info",
           "state": "function",
           "required": false,
@@ -6016,8 +5962,8 @@
           }
         },
         {
-          "number": 75,
-          "offset": 616,
+          "number": 74,
+          "offset": 608,
           "name": "registry_enum_key",
           "state": "function",
           "required": false,
@@ -6107,8 +6053,8 @@
           }
         },
         {
-          "number": 76,
-          "offset": 624,
+          "number": 75,
+          "offset": 616,
           "name": "registry_enum_value",
           "state": "function",
           "required": false,
@@ -6191,8 +6137,8 @@
           }
         },
         {
-          "number": 77,
-          "offset": 632,
+          "number": 76,
+          "offset": 624,
           "name": "registry_get_value",
           "state": "function",
           "required": false,
@@ -6310,8 +6256,8 @@
           }
         },
         {
-          "number": 78,
-          "offset": 640,
+          "number": 77,
+          "offset": 632,
           "name": "registry_set_value",
           "state": "function",
           "required": false,
@@ -6419,8 +6365,8 @@
           }
         },
         {
-          "number": 79,
-          "offset": 648,
+          "number": 78,
+          "offset": 640,
           "name": "registry_delete_value",
           "state": "function",
           "required": false,
@@ -6497,8 +6443,8 @@
           }
         },
         {
-          "number": 80,
-          "offset": 656,
+          "number": 79,
+          "offset": 648,
           "name": "service_info",
           "state": "function",
           "required": false,
@@ -6563,8 +6509,8 @@
           }
         },
         {
-          "number": 81,
-          "offset": 664,
+          "number": 80,
+          "offset": 656,
           "name": "service_detail",
           "state": "function",
           "required": false,
@@ -6629,8 +6575,8 @@
           }
         },
         {
-          "number": 82,
-          "offset": 672,
+          "number": 81,
+          "offset": 664,
           "name": "service_set_start_mode",
           "state": "function",
           "required": false,
@@ -6713,8 +6659,8 @@
           }
         },
         {
-          "number": 83,
-          "offset": 680,
+          "number": 82,
+          "offset": 672,
           "name": "service_endpoint_wait",
           "state": "function",
           "required": false,
@@ -6769,8 +6715,8 @@
           }
         },
         {
-          "number": 84,
-          "offset": 688,
+          "number": 83,
+          "offset": 680,
           "name": "program_run",
           "state": "function",
           "required": false,
@@ -6847,8 +6793,8 @@
           }
         },
         {
-          "number": 85,
-          "offset": 696,
+          "number": 84,
+          "offset": 688,
           "name": "program_launch",
           "state": "function",
           "required": false,
@@ -6932,8 +6878,8 @@
           }
         },
         {
-          "number": 86,
-          "offset": 704,
+          "number": 85,
+          "offset": 696,
           "name": "program_spawn",
           "state": "function",
           "required": false,
@@ -7017,8 +6963,8 @@
           }
         },
         {
-          "number": 87,
-          "offset": 712,
+          "number": 86,
+          "offset": 704,
           "name": "program_kill",
           "state": "function",
           "required": false,
@@ -7066,8 +7012,8 @@
           }
         },
         {
-          "number": 88,
-          "offset": 720,
+          "number": 87,
+          "offset": 712,
           "name": "program_status",
           "state": "function",
           "required": false,
@@ -7125,8 +7071,8 @@
           }
         },
         {
-          "number": 89,
-          "offset": 728,
+          "number": 88,
+          "offset": 720,
           "name": "program_request_close",
           "state": "function",
           "required": false,
@@ -7174,8 +7120,8 @@
           }
         },
         {
-          "number": 90,
-          "offset": 736,
+          "number": 89,
+          "offset": 728,
           "name": "program_reap_instance",
           "state": "function",
           "required": false,
@@ -7223,8 +7169,8 @@
           }
         },
         {
-          "number": 91,
-          "offset": 744,
+          "number": 90,
+          "offset": 736,
           "name": "boot_log_info",
           "state": "function",
           "required": false,
@@ -7282,8 +7228,8 @@
           }
         },
         {
-          "number": 92,
-          "offset": 752,
+          "number": 91,
+          "offset": 744,
           "name": "boot_log_read",
           "state": "function",
           "required": false,
@@ -7355,8 +7301,8 @@
           }
         },
         {
-          "number": 93,
-          "offset": 760,
+          "number": 92,
+          "offset": 752,
           "name": "program_spawn_handle",
           "state": "function",
           "required": false,
@@ -7457,8 +7403,8 @@
           }
         },
         {
-          "number": 94,
-          "offset": 768,
+          "number": 93,
+          "offset": 760,
           "name": "program_open_handle",
           "state": "function",
           "required": false,
@@ -7523,8 +7469,8 @@
           }
         },
         {
-          "number": 95,
-          "offset": 776,
+          "number": 94,
+          "offset": 768,
           "name": "program_handle_status",
           "state": "function",
           "required": false,
@@ -7599,8 +7545,8 @@
           }
         },
         {
-          "number": 96,
-          "offset": 784,
+          "number": 95,
+          "offset": 776,
           "name": "program_handle_request_close",
           "state": "function",
           "required": false,
@@ -7658,8 +7604,8 @@
           }
         },
         {
-          "number": 97,
-          "offset": 792,
+          "number": 96,
+          "offset": 784,
           "name": "program_handle_kill",
           "state": "function",
           "required": false,
@@ -7717,8 +7663,8 @@
           }
         },
         {
-          "number": 98,
-          "offset": 800,
+          "number": 97,
+          "offset": 792,
           "name": "program_handle_wait",
           "state": "function",
           "required": false,
@@ -7800,8 +7746,8 @@
           }
         },
         {
-          "number": 99,
-          "offset": 808,
+          "number": 98,
+          "offset": 800,
           "name": "program_handle_reap",
           "state": "function",
           "required": false,
@@ -7876,8 +7822,8 @@
           }
         },
         {
-          "number": 100,
-          "offset": 816,
+          "number": 99,
+          "offset": 808,
           "name": "program_completion_read",
           "state": "function",
           "required": false,
@@ -7983,8 +7929,8 @@
           }
         },
         {
-          "number": 101,
-          "offset": 824,
+          "number": 100,
+          "offset": 816,
           "name": "program_inventory_begin",
           "state": "function",
           "required": false,
@@ -8059,8 +8005,8 @@
           }
         },
         {
-          "number": 102,
-          "offset": 832,
+          "number": 101,
+          "offset": 824,
           "name": "program_inventory_programs",
           "state": "function",
           "required": false,
@@ -8159,8 +8105,8 @@
           }
         },
         {
-          "number": 103,
-          "offset": 840,
+          "number": 102,
+          "offset": 832,
           "name": "program_inventory_tasks",
           "state": "function",
           "required": false,
@@ -8259,8 +8205,8 @@
           }
         },
         {
-          "number": 104,
-          "offset": 848,
+          "number": 103,
+          "offset": 840,
           "name": "program_inventory_threads",
           "state": "function",
           "required": false,
@@ -8359,8 +8305,8 @@
           }
         },
         {
-          "number": 105,
-          "offset": 856,
+          "number": 104,
+          "offset": 848,
           "name": "thread_create_handle",
           "state": "function",
           "required": false,
@@ -8446,8 +8392,8 @@
           }
         },
         {
-          "number": 106,
-          "offset": 864,
+          "number": 105,
+          "offset": 856,
           "name": "thread_handle_join",
           "state": "function",
           "required": false,
@@ -8529,8 +8475,8 @@
           }
         },
         {
-          "number": 107,
-          "offset": 872,
+          "number": 106,
+          "offset": 864,
           "name": "thread_handle_status",
           "state": "function",
           "required": false,
@@ -8605,8 +8551,8 @@
           }
         },
         {
-          "number": 108,
-          "offset": 880,
+          "number": 107,
+          "offset": 872,
           "name": "file_replace_atomic",
           "state": "function",
           "required": false,
@@ -8708,8 +8654,8 @@
           }
         },
         {
-          "number": 109,
-          "offset": 888,
+          "number": 108,
+          "offset": 880,
           "name": "file_delete_if_match",
           "state": "function",
           "required": false,
@@ -8782,8 +8728,8 @@
           }
         },
         {
-          "number": 110,
-          "offset": 896,
+          "number": 109,
+          "offset": 888,
           "name": "file_update_atomic_checked",
           "state": "function",
           "required": false,
@@ -8913,8 +8859,8 @@
           }
         },
         {
-          "number": 111,
-          "offset": 904,
+          "number": 110,
+          "offset": 896,
           "name": "path_names_equal_collated",
           "state": "function",
           "required": false,
@@ -8991,8 +8937,8 @@
           }
         },
         {
-          "number": 112,
-          "offset": 912,
+          "number": 111,
+          "offset": 904,
           "name": "file_update_cleanup_checked",
           "state": "function",
           "required": false,
@@ -9154,8 +9100,8 @@
           }
         },
         {
-          "number": 113,
-          "offset": 920,
+          "number": 112,
+          "offset": 912,
           "name": "file_stream_declare_publish",
           "state": "function",
           "required": false,
@@ -9257,8 +9203,8 @@
           }
         },
         {
-          "number": 114,
-          "offset": 928,
+          "number": 113,
+          "offset": 920,
           "name": "module_resource_stat",
           "state": "function",
           "required": false,
@@ -9349,8 +9295,8 @@
           }
         },
         {
-          "number": 115,
-          "offset": 936,
+          "number": 114,
+          "offset": 928,
           "name": "module_resource_read",
           "state": "function",
           "required": false,
@@ -9465,8 +9411,8 @@
           }
         },
         {
-          "number": 116,
-          "offset": 944,
+          "number": 115,
+          "offset": 936,
           "name": "program_module_path",
           "state": "function",
           "required": false,
@@ -9531,8 +9477,8 @@
           }
         },
         {
-          "number": 117,
-          "offset": 952,
+          "number": 116,
+          "offset": 944,
           "name": "program_module_running",
           "state": "function",
           "required": false,
@@ -9591,8 +9537,8 @@
           }
         },
         {
-          "number": 118,
-          "offset": 960,
+          "number": 117,
+          "offset": 952,
           "name": "monotonic_clock",
           "state": "function",
           "required": false,
@@ -9650,8 +9596,8 @@
           }
         },
         {
-          "number": 119,
-          "offset": 968,
+          "number": 118,
+          "offset": 960,
           "name": "boot_ready",
           "state": "function",
           "required": false,
@@ -9691,8 +9637,8 @@
           }
         },
         {
-          "number": 120,
-          "offset": 976,
+          "number": 119,
+          "offset": 968,
           "name": "registry_snapshot_begin",
           "state": "function",
           "required": false,
@@ -9775,8 +9721,8 @@
           }
         },
         {
-          "number": 121,
-          "offset": 984,
+          "number": 120,
+          "offset": 976,
           "name": "registry_snapshot_page",
           "state": "function",
           "required": false,
@@ -9899,8 +9845,8 @@
           }
         },
         {
-          "number": 122,
-          "offset": 992,
+          "number": 121,
+          "offset": 984,
           "name": "registry_batch_mutate",
           "state": "function",
           "required": false,
@@ -10006,8 +9952,8 @@
           }
         },
         {
-          "number": 123,
-          "offset": 1000,
+          "number": 122,
+          "offset": 992,
           "name": "io_file_write_at",
           "state": "function",
           "required": false,
@@ -10121,8 +10067,8 @@
           }
         },
         {
-          "number": 124,
-          "offset": 1008,
+          "number": 123,
+          "offset": 1000,
           "name": "io_file_info",
           "state": "function",
           "required": false,
@@ -10205,8 +10151,8 @@
           }
         },
         {
-          "number": 125,
-          "offset": 1016,
+          "number": 124,
+          "offset": 1008,
           "name": "io_file_lock",
           "state": "function",
           "required": false,
@@ -10303,8 +10249,8 @@
           }
         },
         {
-          "number": 126,
-          "offset": 1024,
+          "number": 125,
+          "offset": 1016,
           "name": "storage_inventory",
           "state": "function",
           "required": false,
@@ -10362,8 +10308,8 @@
           }
         },
         {
-          "number": 127,
-          "offset": 1032,
+          "number": 126,
+          "offset": 1024,
           "name": "storage_device",
           "state": "function",
           "required": false,
@@ -10435,8 +10381,8 @@
           }
         },
         {
-          "number": 128,
-          "offset": 1040,
+          "number": 127,
+          "offset": 1032,
           "name": "storage_partition",
           "state": "function",
           "required": false,
@@ -10525,8 +10471,8 @@
           }
         },
         {
-          "number": 129,
-          "offset": 1048,
+          "number": 128,
+          "offset": 1040,
           "name": "storage_volume",
           "state": "function",
           "required": false,
@@ -10598,8 +10544,8 @@
           }
         },
         {
-          "number": 130,
-          "offset": 1056,
+          "number": 129,
+          "offset": 1048,
           "name": "storage_claim_begin",
           "state": "function",
           "required": false,
@@ -10674,8 +10620,8 @@
           }
         },
         {
-          "number": 131,
-          "offset": 1064,
+          "number": 130,
+          "offset": 1056,
           "name": "storage_claim_end",
           "state": "function",
           "required": false,
@@ -10730,8 +10676,8 @@
           }
         },
         {
-          "number": 132,
-          "offset": 1072,
+          "number": 131,
+          "offset": 1064,
           "name": "storage_read",
           "state": "function",
           "required": false,
@@ -10827,8 +10773,8 @@
           }
         },
         {
-          "number": 133,
-          "offset": 1080,
+          "number": 132,
+          "offset": 1072,
           "name": "storage_claim_read",
           "state": "function",
           "required": false,
@@ -10914,8 +10860,8 @@
           }
         },
         {
-          "number": 134,
-          "offset": 1088,
+          "number": 133,
+          "offset": 1080,
           "name": "storage_claim_write",
           "state": "function",
           "required": false,
@@ -11001,8 +10947,8 @@
           }
         },
         {
-          "number": 135,
-          "offset": 1096,
+          "number": 134,
+          "offset": 1088,
           "name": "storage_claim_flush",
           "state": "function",
           "required": false,
@@ -11050,8 +10996,8 @@
           }
         },
         {
-          "number": 136,
-          "offset": 1104,
+          "number": 135,
+          "offset": 1096,
           "name": "storage_rescan",
           "state": "function",
           "required": false,
@@ -11109,8 +11055,8 @@
           }
         },
         {
-          "number": 137,
-          "offset": 1112,
+          "number": 136,
+          "offset": 1104,
           "name": "storage_mount",
           "state": "function",
           "required": false,
@@ -11192,8 +11138,8 @@
           }
         },
         {
-          "number": 138,
-          "offset": 1120,
+          "number": 137,
+          "offset": 1112,
           "name": "storage_unmount",
           "state": "function",
           "required": false,
@@ -11251,8 +11197,8 @@
           }
         },
         {
-          "number": 139,
-          "offset": 1128,
+          "number": 138,
+          "offset": 1120,
           "name": "storage_use_begin",
           "state": "function",
           "required": false,
@@ -11328,8 +11274,8 @@
           }
         },
         {
-          "number": 140,
-          "offset": 1136,
+          "number": 139,
+          "offset": 1128,
           "name": "storage_use_end",
           "state": "function",
           "required": false,
@@ -11377,8 +11323,8 @@
           }
         },
         {
-          "number": 141,
-          "offset": 1144,
+          "number": 140,
+          "offset": 1136,
           "name": "directory_change_begin",
           "state": "function",
           "required": false,
@@ -11454,8 +11400,8 @@
           }
         },
         {
-          "number": 142,
-          "offset": 1152,
+          "number": 141,
+          "offset": 1144,
           "name": "directory_change_poll",
           "state": "function",
           "required": false,
@@ -11513,8 +11459,8 @@
           }
         },
         {
-          "number": 143,
-          "offset": 1160,
+          "number": 142,
+          "offset": 1152,
           "name": "file_copy_buffered",
           "state": "function",
           "required": false,
@@ -11632,8 +11578,8 @@
           }
         },
         {
-          "number": 144,
-          "offset": 1168,
+          "number": 143,
+          "offset": 1160,
           "name": "notification_create",
           "state": "function",
           "required": false,
@@ -11691,8 +11637,8 @@
           }
         },
         {
-          "number": 145,
-          "offset": 1176,
+          "number": 144,
+          "offset": 1168,
           "name": "notification_query",
           "state": "function",
           "required": false,
@@ -11757,8 +11703,8 @@
           }
         },
         {
-          "number": 146,
-          "offset": 1184,
+          "number": 145,
+          "offset": 1176,
           "name": "notification_notify",
           "state": "function",
           "required": false,
@@ -11813,8 +11759,8 @@
           }
         },
         {
-          "number": 147,
-          "offset": 1192,
+          "number": 146,
+          "offset": 1184,
           "name": "notification_wait",
           "state": "function",
           "required": false,
@@ -11876,8 +11822,8 @@
           }
         },
         {
-          "number": 148,
-          "offset": 1200,
+          "number": 147,
+          "offset": 1192,
           "name": "notification_close",
           "state": "function",
           "required": false,
@@ -11925,8 +11871,8 @@
           }
         },
         {
-          "number": 149,
-          "offset": 1208,
+          "number": 148,
+          "offset": 1200,
           "name": "program_local_get",
           "state": "function",
           "required": false,
@@ -11991,8 +11937,8 @@
           }
         },
         {
-          "number": 150,
-          "offset": 1216,
+          "number": 149,
+          "offset": 1208,
           "name": "program_local_publish",
           "state": "function",
           "required": false,
@@ -12064,8 +12010,8 @@
           }
         },
         {
-          "number": 151,
-          "offset": 1224,
+          "number": 150,
+          "offset": 1216,
           "name": "thread_current_handle",
           "state": "function",
           "required": false,
@@ -12123,8 +12069,8 @@
           }
         },
         {
-          "number": 152,
-          "offset": 1232,
+          "number": 151,
+          "offset": 1224,
           "name": "cpu_capacity",
           "state": "function",
           "required": false,
@@ -12182,8 +12128,8 @@
           }
         },
         {
-          "number": 153,
-          "offset": 1240,
+          "number": 152,
+          "offset": 1232,
           "name": "program_exit",
           "state": "function",
           "required": false,
@@ -12238,8 +12184,8 @@
           }
         },
         {
-          "number": 154,
-          "offset": 1248,
+          "number": 153,
+          "offset": 1240,
           "name": "platform_input_snapshot",
           "state": "function",
           "required": false,
@@ -12297,8 +12243,8 @@
           }
         },
         {
-          "number": 155,
-          "offset": 1256,
+          "number": 154,
+          "offset": 1248,
           "name": "directory_next",
           "state": "function",
           "required": false,
@@ -12415,8 +12361,8 @@
           }
         },
         {
-          "number": 156,
-          "offset": 1264,
+          "number": 155,
+          "offset": 1256,
           "name": "thread_placement_get",
           "state": "function",
           "required": false,
@@ -12515,8 +12461,8 @@
           }
         },
         {
-          "number": 157,
-          "offset": 1272,
+          "number": 156,
+          "offset": 1264,
           "name": "thread_placement_set",
           "state": "function",
           "required": false,
@@ -12615,8 +12561,8 @@
           }
         },
         {
-          "number": 158,
-          "offset": 1280,
+          "number": 157,
+          "offset": 1272,
           "name": "system_power_transition",
           "state": "function",
           "required": false,
@@ -12671,8 +12617,8 @@
           }
         },
         {
-          "number": 159,
-          "offset": 1288,
+          "number": 158,
+          "offset": 1280,
           "name": "entropy_source_info",
           "state": "function",
           "required": false,
@@ -12730,8 +12676,8 @@
           }
         },
         {
-          "number": 160,
-          "offset": 1296,
+          "number": 159,
+          "offset": 1288,
           "name": "entropy_fill",
           "state": "function",
           "required": false,
@@ -12796,8 +12742,8 @@
           }
         },
         {
-          "number": 161,
-          "offset": 1304,
+          "number": 160,
+          "offset": 1296,
           "name": "program_lifecycle_begin",
           "state": "function",
           "required": false,
@@ -12855,8 +12801,8 @@
           }
         },
         {
-          "number": 162,
-          "offset": 1312,
+          "number": 161,
+          "offset": 1304,
           "name": "program_lifecycle_programs",
           "state": "function",
           "required": false,
@@ -12955,8 +12901,8 @@
           }
         },
         {
-          "number": 163,
-          "offset": 1320,
+          "number": 162,
+          "offset": 1312,
           "name": "drive_info_geometry",
           "state": "function",
           "required": false,
@@ -13021,8 +12967,8 @@
           }
         },
         {
-          "number": 164,
-          "offset": 1328,
+          "number": 163,
+          "offset": 1320,
           "name": "directory_batch",
           "state": "function",
           "required": false,
@@ -13122,8 +13068,8 @@
           }
         },
         {
-          "number": 165,
-          "offset": 1336,
+          "number": 164,
+          "offset": 1328,
           "name": "program_observation_retain",
           "state": "function",
           "required": false,
@@ -13205,8 +13151,8 @@
           }
         },
         {
-          "number": 166,
-          "offset": 1344,
+          "number": 165,
+          "offset": 1336,
           "name": "program_observation_wait",
           "state": "function",
           "required": false,
@@ -13288,8 +13234,8 @@
           }
         },
         {
-          "number": 167,
-          "offset": 1352,
+          "number": 166,
+          "offset": 1344,
           "name": "program_observation_read",
           "state": "function",
           "required": false,
@@ -13395,8 +13341,8 @@
           }
         },
         {
-          "number": 168,
-          "offset": 1360,
+          "number": 167,
+          "offset": 1352,
           "name": "program_observation_release",
           "state": "function",
           "required": false,
@@ -13454,8 +13400,8 @@
           }
         },
         {
-          "number": 169,
-          "offset": 1368,
+          "number": 168,
+          "offset": 1360,
           "name": "file_name_limits",
           "state": "function",
           "required": false,
@@ -13531,8 +13477,8 @@
           }
         },
         {
-          "number": 170,
-          "offset": 1376,
+          "number": 169,
+          "offset": 1368,
           "name": "service_bound_detail",
           "state": "function",
           "required": false,
@@ -13625,8 +13571,8 @@
           }
         },
         {
-          "number": 171,
-          "offset": 1384,
+          "number": 170,
+          "offset": 1376,
           "name": "service_stop_bound",
           "state": "function",
           "required": false,
@@ -13726,8 +13672,8 @@
           }
         },
         {
-          "number": 172,
-          "offset": 1392,
+          "number": 171,
+          "offset": 1384,
           "name": "service_inventory_page",
           "state": "function",
           "required": false,
@@ -13809,8 +13755,8 @@
           }
         },
         {
-          "number": 173,
-          "offset": 1400,
+          "number": 172,
+          "offset": 1392,
           "name": "service_control_bound",
           "state": "function",
           "required": false,
@@ -13868,8 +13814,8 @@
           }
         },
         {
-          "number": 174,
-          "offset": 1408,
+          "number": 173,
+          "offset": 1400,
           "name": "system_update_target_supported",
           "state": "function",
           "required": false,
@@ -13928,8 +13874,8 @@
           }
         },
         {
-          "number": 175,
-          "offset": 1416,
+          "number": 174,
+          "offset": 1408,
           "name": "file_metadata2",
           "state": "function",
           "required": false,
@@ -14005,8 +13951,8 @@
           }
         },
         {
-          "number": 176,
-          "offset": 1424,
+          "number": 175,
+          "offset": 1416,
           "name": "directory_metadata_batch2",
           "state": "function",
           "required": false,
@@ -14106,8 +14052,8 @@
           }
         },
         {
-          "number": 177,
-          "offset": 1432,
+          "number": 176,
+          "offset": 1424,
           "name": "waitset_create",
           "state": "function",
           "required": false,
@@ -14172,8 +14118,8 @@
           }
         },
         {
-          "number": 178,
-          "offset": 1440,
+          "number": 177,
+          "offset": 1432,
           "name": "waitset_enroll",
           "state": "function",
           "required": false,
@@ -14255,8 +14201,8 @@
           }
         },
         {
-          "number": 179,
-          "offset": 1448,
+          "number": 178,
+          "offset": 1440,
           "name": "waitset_rearm",
           "state": "function",
           "required": false,
@@ -14328,8 +14274,8 @@
           }
         },
         {
-          "number": 180,
-          "offset": 1456,
+          "number": 179,
+          "offset": 1448,
           "name": "waitset_remove",
           "state": "function",
           "required": false,
@@ -14384,8 +14330,8 @@
           }
         },
         {
-          "number": 181,
-          "offset": 1464,
+          "number": 180,
+          "offset": 1456,
           "name": "waitset_wait",
           "state": "function",
           "required": false,
@@ -14491,8 +14437,8 @@
           }
         },
         {
-          "number": 182,
-          "offset": 1472,
+          "number": 181,
+          "offset": 1464,
           "name": "waitset_close",
           "state": "function",
           "required": false,
@@ -14540,8 +14486,8 @@
           }
         },
         {
-          "number": 183,
-          "offset": 1480,
+          "number": 182,
+          "offset": 1472,
           "name": "waitset_source_prepare",
           "state": "function",
           "required": false,
@@ -14616,8 +14562,8 @@
           }
         },
         {
-          "number": 184,
-          "offset": 1488,
+          "number": 183,
+          "offset": 1480,
           "name": "byte_pipe_create",
           "state": "function",
           "required": false,
@@ -14682,8 +14628,8 @@
           }
         },
         {
-          "number": 185,
-          "offset": 1496,
+          "number": 184,
+          "offset": 1488,
           "name": "byte_pipe_dup",
           "state": "function",
           "required": false,
@@ -14748,8 +14694,8 @@
           }
         },
         {
-          "number": 186,
-          "offset": 1504,
+          "number": 185,
+          "offset": 1496,
           "name": "byte_pipe_read",
           "state": "function",
           "required": false,
@@ -14855,8 +14801,8 @@
           }
         },
         {
-          "number": 187,
-          "offset": 1512,
+          "number": 186,
+          "offset": 1504,
           "name": "byte_pipe_write",
           "state": "function",
           "required": false,
@@ -14962,8 +14908,8 @@
           }
         },
         {
-          "number": 188,
-          "offset": 1520,
+          "number": 187,
+          "offset": 1512,
           "name": "byte_pipe_cancel",
           "state": "function",
           "required": false,
@@ -15011,8 +14957,8 @@
           }
         },
         {
-          "number": 189,
-          "offset": 1528,
+          "number": 188,
+          "offset": 1520,
           "name": "byte_pipe_close",
           "state": "function",
           "required": false,
@@ -15060,8 +15006,8 @@
           }
         },
         {
-          "number": 190,
-          "offset": 1536,
+          "number": 189,
+          "offset": 1528,
           "name": "byte_pipe_info",
           "state": "function",
           "required": false,
@@ -15126,8 +15072,8 @@
           }
         },
         {
-          "number": 191,
-          "offset": 1544,
+          "number": 190,
+          "offset": 1536,
           "name": "program_launch_io",
           "state": "function",
           "required": false,
@@ -15238,8 +15184,8 @@
           }
         },
         {
-          "number": 192,
-          "offset": 1552,
+          "number": 191,
+          "offset": 1544,
           "name": "program_stdio",
           "state": "function",
           "required": false,
@@ -15301,13 +15247,13 @@
     {
       "id": 2,
       "name": "R4DESK",
-      "query_import": "R4DESK:Query:1",
+      "query_import": "R4DESK:Query2:2",
       "kind": "kernel_table",
-      "table_type": "R4XStartR4Desk",
-      "fn_namespace": "R4DeskFns",
+      "table_type": "R4XStartR4Desk2",
+      "fn_namespace": "R4DeskFns2",
       "required": false,
-      "magic": 826623058,
-      "abi_version": 21,
+      "magic": 843400274,
+      "abi_version": 1,
       "header_size": 16,
       "pointer_size": 8,
       "size": 632,
@@ -20148,13 +20094,13 @@
     {
       "id": 3,
       "name": "R4DRAW",
-      "query_import": "R4DRAW:Query:1",
+      "query_import": "R4DRAW:Query2:2",
       "kind": "kernel_table",
-      "table_type": "R4XStartR4Draw",
-      "fn_namespace": "R4DrawFns",
+      "table_type": "R4XStartR4Draw2",
+      "fn_namespace": "R4DrawFns2",
       "required": false,
-      "magic": 827802706,
-      "abi_version": 40,
+      "magic": 844579922,
+      "abi_version": 2,
       "header_size": 16,
       "pointer_size": 8,
       "size": 920,
@@ -28687,13 +28633,13 @@
     {
       "id": 4,
       "name": "R4NET",
-      "query_import": "R4NET:Query:1",
+      "query_import": "R4NET:Query2:2",
       "kind": "kernel_table",
-      "table_type": "R4XStartR4Net",
-      "fn_namespace": "R4NetFns",
+      "table_type": "R4XStartR4Net2",
+      "fn_namespace": "R4NetFns2",
       "required": false,
-      "magic": 826625618,
-      "abi_version": 2,
+      "magic": 843402834,
+      "abi_version": 1,
       "header_size": 16,
       "pointer_size": 8,
       "size": 296,
@@ -31015,13 +30961,13 @@
     {
       "id": 5,
       "name": "R4AUDIO",
-      "query_import": "R4AUDIO:Query:1",
+      "query_import": "R4AUDIO:Query2:2",
       "kind": "kernel_table",
-      "table_type": "R4XStartR4Audio",
-      "fn_namespace": "R4AudioFns",
+      "table_type": "R4XStartR4Audio2",
+      "fn_namespace": "R4AudioFns2",
       "required": false,
-      "magic": 827670866,
-      "abi_version": 5,
+      "magic": 844448082,
+      "abi_version": 2,
       "header_size": 16,
       "pointer_size": 8,
       "size": 240,
@@ -32694,16 +32640,16 @@
     {
       "id": 6,
       "name": "R4DEV",
-      "query_import": "R4DEV:Query:1",
+      "query_import": "R4DEV:Query2:2",
       "kind": "kernel_table",
-      "table_type": "R4XStartR4Dev",
-      "fn_namespace": "R4DevFns",
+      "table_type": "R4XStartR4Dev2",
+      "fn_namespace": "R4DevFns2",
       "required": false,
-      "magic": 827737170,
-      "abi_version": 37,
+      "magic": 844514386,
+      "abi_version": 2,
       "header_size": 16,
       "pointer_size": 8,
-      "size": 744,
+      "size": 720,
       "slots": [
         {
           "number": 0,
@@ -34661,39 +34607,6 @@
         {
           "number": 27,
           "offset": 232,
-          "name": "reserved_program_instance_storage_summary_v1",
-          "state": "tombstone",
-          "required": false,
-          "description": "Retired R4DEV V1 diagnostic slot. Always zero; never reused. Use the explicit current V2 diagnostic.",
-          "semantics": {
-            "exposure": "internal",
-            "requirements": [
-              "R4DEV"
-            ],
-            "optional_capability": false,
-            "error_domain": "internal",
-            "ownership": "none",
-            "buffer_lifetime": "none",
-            "blocking": "nonblocking",
-            "threading": "thread_safe",
-            "timeout": "none",
-            "cancel": "not_cancellable",
-            "timeout_outcome": "none",
-            "reentrancy": "serialized",
-            "callback_context": "none",
-            "buffer_completion": "none",
-            "shutdown": "none",
-            "close_rule": "none",
-            "outputs": "none",
-            "side_effects": "none",
-            "retry": "never_automatic",
-            "buffer_too_small": "none",
-            "language_parity": "internal_only"
-          }
-        },
-        {
-          "number": 28,
-          "offset": 240,
           "name": "program_instance_storage_self_test",
           "state": "function",
           "required": false,
@@ -34751,74 +34664,8 @@
           }
         },
         {
-          "number": 29,
-          "offset": 248,
-          "name": "reserved_program_registry_summary_v1",
-          "state": "tombstone",
-          "required": false,
-          "description": "Retired R4DEV V1 diagnostic slot. Always zero; never reused. Use the explicit current V2 diagnostic.",
-          "semantics": {
-            "exposure": "internal",
-            "requirements": [
-              "R4DEV"
-            ],
-            "optional_capability": false,
-            "error_domain": "internal",
-            "ownership": "none",
-            "buffer_lifetime": "none",
-            "blocking": "nonblocking",
-            "threading": "thread_safe",
-            "timeout": "none",
-            "cancel": "not_cancellable",
-            "timeout_outcome": "none",
-            "reentrancy": "serialized",
-            "callback_context": "none",
-            "buffer_completion": "none",
-            "shutdown": "none",
-            "close_rule": "none",
-            "outputs": "none",
-            "side_effects": "none",
-            "retry": "never_automatic",
-            "buffer_too_small": "none",
-            "language_parity": "internal_only"
-          }
-        },
-        {
-          "number": 30,
-          "offset": 256,
-          "name": "reserved_program_registry_self_test_v1",
-          "state": "tombstone",
-          "required": false,
-          "description": "Retired R4DEV V1 diagnostic slot. Always zero; never reused. Use the explicit current V2 diagnostic.",
-          "semantics": {
-            "exposure": "internal",
-            "requirements": [
-              "R4DEV"
-            ],
-            "optional_capability": false,
-            "error_domain": "internal",
-            "ownership": "none",
-            "buffer_lifetime": "none",
-            "blocking": "nonblocking",
-            "threading": "thread_safe",
-            "timeout": "none",
-            "cancel": "not_cancellable",
-            "timeout_outcome": "none",
-            "reentrancy": "serialized",
-            "callback_context": "none",
-            "buffer_completion": "none",
-            "shutdown": "none",
-            "close_rule": "none",
-            "outputs": "none",
-            "side_effects": "none",
-            "retry": "never_automatic",
-            "buffer_too_small": "none",
-            "language_parity": "internal_only"
-          }
-        },
-        {
-          "number": 31,
-          "offset": 264,
+          "number": 28,
+          "offset": 240,
           "name": "program_registry_summary_v2",
           "state": "function",
           "required": false,
@@ -34876,8 +34723,8 @@
           }
         },
         {
-          "number": 32,
-          "offset": 272,
+          "number": 29,
+          "offset": 248,
           "name": "program_registry_self_test_v2",
           "state": "function",
           "required": false,
@@ -34935,8 +34782,8 @@
           }
         },
         {
-          "number": 33,
-          "offset": 280,
+          "number": 30,
+          "offset": 256,
           "name": "execution_inventory_summary",
           "state": "function",
           "required": false,
@@ -34994,8 +34841,8 @@
           }
         },
         {
-          "number": 34,
-          "offset": 288,
+          "number": 31,
+          "offset": 264,
           "name": "program_instance_storage_summary_v2",
           "state": "function",
           "required": false,
@@ -35053,8 +34900,8 @@
           }
         },
         {
-          "number": 35,
-          "offset": 296,
+          "number": 32,
+          "offset": 272,
           "name": "kernel_version",
           "state": "function",
           "required": false,
@@ -35112,8 +34959,8 @@
           }
         },
         {
-          "number": 36,
-          "offset": 304,
+          "number": 33,
+          "offset": 280,
           "name": "performance_boot_phase_clock",
           "state": "function",
           "required": false,
@@ -35178,8 +35025,8 @@
           }
         },
         {
-          "number": 37,
-          "offset": 312,
+          "number": 34,
+          "offset": 288,
           "name": "performance_irq_timing",
           "state": "function",
           "required": false,
@@ -35244,8 +35091,8 @@
           }
         },
         {
-          "number": 38,
-          "offset": 320,
+          "number": 35,
+          "offset": 296,
           "name": "performance_boot_summary",
           "state": "function",
           "required": false,
@@ -35303,8 +35150,8 @@
           }
         },
         {
-          "number": 39,
-          "offset": 328,
+          "number": 36,
+          "offset": 304,
           "name": "performance_driver_work",
           "state": "function",
           "required": false,
@@ -35369,8 +35216,8 @@
           }
         },
         {
-          "number": 40,
-          "offset": 336,
+          "number": 37,
+          "offset": 312,
           "name": "performance_pci_inventory",
           "state": "function",
           "required": false,
@@ -35428,8 +35275,8 @@
           }
         },
         {
-          "number": 41,
-          "offset": 344,
+          "number": 38,
+          "offset": 320,
           "name": "performance_input",
           "state": "function",
           "required": false,
@@ -35487,8 +35334,8 @@
           }
         },
         {
-          "number": 42,
-          "offset": 352,
+          "number": 39,
+          "offset": 328,
           "name": "display_state",
           "state": "function",
           "required": false,
@@ -35546,8 +35393,8 @@
           }
         },
         {
-          "number": 43,
-          "offset": 360,
+          "number": 40,
+          "offset": 336,
           "name": "driver_module_info",
           "state": "function",
           "required": false,
@@ -35612,8 +35459,8 @@
           }
         },
         {
-          "number": 44,
-          "offset": 368,
+          "number": 41,
+          "offset": 344,
           "name": "performance_instrumentation",
           "state": "function",
           "required": false,
@@ -35671,8 +35518,8 @@
           }
         },
         {
-          "number": 45,
-          "offset": 376,
+          "number": 42,
+          "offset": 352,
           "name": "performance_lock",
           "state": "function",
           "required": false,
@@ -35737,8 +35584,8 @@
           }
         },
         {
-          "number": 46,
-          "offset": 384,
+          "number": 43,
+          "offset": 360,
           "name": "performance_stack",
           "state": "function",
           "required": false,
@@ -35803,8 +35650,8 @@
           }
         },
         {
-          "number": 47,
-          "offset": 392,
+          "number": 44,
+          "offset": 368,
           "name": "stack_fault",
           "state": "function",
           "required": false,
@@ -35869,8 +35716,8 @@
           }
         },
         {
-          "number": 48,
-          "offset": 400,
+          "number": 45,
+          "offset": 376,
           "name": "memory_kernel_heap_check",
           "state": "function",
           "required": false,
@@ -35928,8 +35775,8 @@
           }
         },
         {
-          "number": 49,
-          "offset": 408,
+          "number": 46,
+          "offset": 384,
           "name": "scheduler_kernel_check",
           "state": "function",
           "required": false,
@@ -35994,8 +35841,8 @@
           }
         },
         {
-          "number": 50,
-          "offset": 416,
+          "number": 47,
+          "offset": 392,
           "name": "smp_kernel_check",
           "state": "function",
           "required": false,
@@ -36053,8 +35900,8 @@
           }
         },
         {
-          "number": 51,
-          "offset": 424,
+          "number": 48,
+          "offset": 400,
           "name": "performance_smp_tlb",
           "state": "function",
           "required": false,
@@ -36112,8 +35959,8 @@
           }
         },
         {
-          "number": 52,
-          "offset": 432,
+          "number": 49,
+          "offset": 408,
           "name": "storage_block_queue_check",
           "state": "function",
           "required": false,
@@ -36171,8 +36018,8 @@
           }
         },
         {
-          "number": 53,
-          "offset": 440,
+          "number": 50,
+          "offset": 416,
           "name": "storage_nvme_check",
           "state": "function",
           "required": false,
@@ -36230,8 +36077,8 @@
           }
         },
         {
-          "number": 54,
-          "offset": 448,
+          "number": 51,
+          "offset": 424,
           "name": "usb_contract_check",
           "state": "function",
           "required": false,
@@ -36289,8 +36136,8 @@
           }
         },
         {
-          "number": 55,
-          "offset": 456,
+          "number": 52,
+          "offset": 432,
           "name": "serial_count",
           "state": "function",
           "required": false,
@@ -36330,8 +36177,8 @@
           }
         },
         {
-          "number": 56,
-          "offset": 464,
+          "number": 53,
+          "offset": 440,
           "name": "serial_port_at",
           "state": "function",
           "required": false,
@@ -36396,8 +36243,8 @@
           }
         },
         {
-          "number": 57,
-          "offset": 472,
+          "number": 54,
+          "offset": 448,
           "name": "serial_open",
           "state": "function",
           "required": false,
@@ -36486,8 +36333,8 @@
           }
         },
         {
-          "number": 58,
-          "offset": 480,
+          "number": 55,
+          "offset": 456,
           "name": "serial_configure",
           "state": "function",
           "required": false,
@@ -36552,8 +36399,8 @@
           }
         },
         {
-          "number": 59,
-          "offset": 488,
+          "number": 56,
+          "offset": 464,
           "name": "serial_read",
           "state": "function",
           "required": false,
@@ -36649,8 +36496,8 @@
           }
         },
         {
-          "number": 60,
-          "offset": 496,
+          "number": 57,
+          "offset": 472,
           "name": "serial_write",
           "state": "function",
           "required": false,
@@ -36746,8 +36593,8 @@
           }
         },
         {
-          "number": 61,
-          "offset": 504,
+          "number": 58,
+          "offset": 480,
           "name": "serial_drain",
           "state": "function",
           "required": false,
@@ -36802,8 +36649,8 @@
           }
         },
         {
-          "number": 62,
-          "offset": 512,
+          "number": 59,
+          "offset": 488,
           "name": "serial_status",
           "state": "function",
           "required": false,
@@ -36868,8 +36715,8 @@
           }
         },
         {
-          "number": 63,
-          "offset": 520,
+          "number": 60,
+          "offset": 496,
           "name": "serial_cancel",
           "state": "function",
           "required": false,
@@ -36917,8 +36764,8 @@
           }
         },
         {
-          "number": 64,
-          "offset": 528,
+          "number": 61,
+          "offset": 504,
           "name": "serial_close",
           "state": "function",
           "required": false,
@@ -36980,8 +36827,8 @@
           }
         },
         {
-          "number": 65,
-          "offset": 536,
+          "number": 62,
+          "offset": 512,
           "name": "cpu_topology",
           "state": "function",
           "required": false,
@@ -37046,8 +36893,8 @@
           }
         },
         {
-          "number": 66,
-          "offset": 544,
+          "number": 63,
+          "offset": 520,
           "name": "cpu_cache_topology",
           "state": "function",
           "required": false,
@@ -37119,8 +36966,8 @@
           }
         },
         {
-          "number": 67,
-          "offset": 552,
+          "number": 64,
+          "offset": 528,
           "name": "cpu_lifecycle",
           "state": "function",
           "required": false,
@@ -37199,8 +37046,8 @@
           }
         },
         {
-          "number": 68,
-          "offset": 560,
+          "number": 65,
+          "offset": 536,
           "name": "kernel_cpu_lifecycle_check",
           "state": "function",
           "required": false,
@@ -37258,8 +37105,8 @@
           }
         },
         {
-          "number": 69,
-          "offset": 568,
+          "number": 66,
+          "offset": 544,
           "name": "cpu_capabilities",
           "state": "function",
           "required": false,
@@ -37324,8 +37171,8 @@
           }
         },
         {
-          "number": 70,
-          "offset": 576,
+          "number": 67,
+          "offset": 552,
           "name": "cpu_feature",
           "state": "function",
           "required": false,
@@ -37404,8 +37251,8 @@
           }
         },
         {
-          "number": 71,
-          "offset": 584,
+          "number": 68,
+          "offset": 560,
           "name": "cpu_register_read",
           "state": "function",
           "required": false,
@@ -37484,8 +37331,8 @@
           }
         },
         {
-          "number": 72,
-          "offset": 592,
+          "number": 69,
+          "offset": 568,
           "name": "kernel_cpu_register_check",
           "state": "function",
           "required": false,
@@ -37557,8 +37404,8 @@
           }
         },
         {
-          "number": 73,
-          "offset": 600,
+          "number": 70,
+          "offset": 576,
           "name": "cpu_power_info",
           "state": "function",
           "required": false,
@@ -37630,8 +37477,8 @@
           }
         },
         {
-          "number": 74,
-          "offset": 608,
+          "number": 71,
+          "offset": 584,
           "name": "cpu_power_capture",
           "state": "function",
           "required": false,
@@ -37703,8 +37550,8 @@
           }
         },
         {
-          "number": 75,
-          "offset": 616,
+          "number": 72,
+          "offset": 592,
           "name": "cpu_performance",
           "state": "function",
           "required": false,
@@ -37779,8 +37626,8 @@
           }
         },
         {
-          "number": 76,
-          "offset": 624,
+          "number": 73,
+          "offset": 600,
           "name": "cpu_cppc",
           "state": "function",
           "required": false,
@@ -37855,8 +37702,8 @@
           }
         },
         {
-          "number": 77,
-          "offset": 632,
+          "number": 74,
+          "offset": 608,
           "name": "cpu_performance_hint",
           "state": "function",
           "required": false,
@@ -37928,8 +37775,8 @@
           }
         },
         {
-          "number": 78,
-          "offset": 640,
+          "number": 75,
+          "offset": 616,
           "name": "cpu_firmware_performance",
           "state": "function",
           "required": false,
@@ -38004,8 +37851,8 @@
           }
         },
         {
-          "number": 79,
-          "offset": 648,
+          "number": 76,
+          "offset": 624,
           "name": "cpu_idle_info",
           "state": "function",
           "required": false,
@@ -38070,8 +37917,8 @@
           }
         },
         {
-          "number": 80,
-          "offset": 656,
+          "number": 77,
+          "offset": 632,
           "name": "cpu_machine_info",
           "state": "function",
           "required": false,
@@ -38136,8 +37983,8 @@
           }
         },
         {
-          "number": 81,
-          "offset": 664,
+          "number": 78,
+          "offset": 640,
           "name": "cpu_machine_bank",
           "state": "function",
           "required": false,
@@ -38223,8 +38070,8 @@
           }
         },
         {
-          "number": 82,
-          "offset": 672,
+          "number": 79,
+          "offset": 648,
           "name": "cpu_microcode_info",
           "state": "function",
           "required": false,
@@ -38289,8 +38136,8 @@
           }
         },
         {
-          "number": 83,
-          "offset": 680,
+          "number": 80,
+          "offset": 656,
           "name": "cpu_pmu_info",
           "state": "function",
           "required": false,
@@ -38355,8 +38202,8 @@
           }
         },
         {
-          "number": 84,
-          "offset": 688,
+          "number": 81,
+          "offset": 664,
           "name": "cpu_pmu_measure",
           "state": "function",
           "required": false,
@@ -38466,8 +38313,8 @@
           }
         },
         {
-          "number": 85,
-          "offset": 696,
+          "number": 82,
+          "offset": 672,
           "name": "cpu_pmu_result",
           "state": "function",
           "required": false,
@@ -38546,8 +38393,8 @@
           }
         },
         {
-          "number": 86,
-          "offset": 704,
+          "number": 83,
+          "offset": 680,
           "name": "cpu_acceleration_info",
           "state": "function",
           "required": false,
@@ -38605,8 +38452,8 @@
           }
         },
         {
-          "number": 87,
-          "offset": 712,
+          "number": 84,
+          "offset": 688,
           "name": "cpu_acceleration_work",
           "state": "function",
           "required": false,
@@ -38702,8 +38549,8 @@
           }
         },
         {
-          "number": 88,
-          "offset": 720,
+          "number": 85,
+          "offset": 696,
           "name": "fpu_observation",
           "state": "function",
           "required": false,
@@ -38778,8 +38625,8 @@
           }
         },
         {
-          "number": 89,
-          "offset": 728,
+          "number": 86,
+          "offset": 704,
           "name": "firmware_system_uuid",
           "state": "function",
           "required": false,
@@ -38837,8 +38684,8 @@
           }
         },
         {
-          "number": 90,
-          "offset": 736,
+          "number": 87,
+          "offset": 712,
           "name": "device_inventory_capture",
           "state": "function",
           "required": false,
@@ -177155,15 +177002,15 @@
     "r4x_required_metadata": [
       {
         "key": "r4x.start",
-        "value": "r4xstart"
+        "value": "r4xstart2"
       },
       {
         "key": "r4x.entry",
-        "value": "R4XStart"
+        "value": "R4XStart2"
       },
       {
         "key": "r4x.context",
-        "value": "R4XStartContext"
+        "value": "R4XStartContext2"
       }
     ],
     "extensible_fields": [

@@ -3,8 +3,8 @@
 <!-- R4OS-APIREF:BEGIN R4NET (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4NET (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Net` v2, 296 Bytes, 35 Funktionsfelder und 35 Slots insgesamt.
-Signatur-Wahrheit: `abi.R4NetFns` (Feldname == Tabellenfeld).
+Kernel-Gruppentabelle `R4XStartR4Net2` v1, 296 Bytes, 35 Funktionsfelder und 35 Slots insgesamt.
+Signatur-Wahrheit: `abi.R4NetFns2` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
 | Slot | Offset | Zustand | Tabellenfeld | Signatur |

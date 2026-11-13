@@ -3,8 +3,8 @@
 <!-- R4OS-APIREF:BEGIN R4SYS (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4SYS (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Sys` v41, 1560 Bytes, 190 Funktionsfelder und 193 Slots insgesamt.
-Signatur-Wahrheit: `abi.R4SysFns` (Feldname == Tabellenfeld).
+Kernel-Gruppentabelle `R4XStartR4Sys2` v6, 1552 Bytes, 190 Funktionsfelder und 192 Slots insgesamt.
+Signatur-Wahrheit: `abi.R4SysFns2` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
 | Slot | Offset | Zustand | Tabellenfeld | Signatur |
@@ -58,148 +58,147 @@ Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 | 46 | 384 | function | `io_wait` | `*const fn (u32, u64, *ProgramIoInfo) callconv(.c) i32` |
 | 47 | 392 | function | `io_close` | `*const fn (u32) callconv(.c) i32` |
 | 48 | 400 | function | `task_yield` | `*const fn () callconv(.c) void` |
-| 49 | 408 | tombstone | `reserved_shell_run` | - |
-| 50 | 416 | function | `system_halt` | `*const fn () callconv(.c) void` |
-| 51 | 424 | function | `system_reboot` | `*const fn () callconv(.c) void` |
-| 52 | 432 | function | `system_poweroff` | `*const fn () callconv(.c) void` |
-| 53 | 440 | function | `time_state` | `*const fn (*TimeState) callconv(.c) void` |
-| 54 | 448 | function | `time_set_state` | `*const fn (*const TimeState) callconv(.c) i32` |
-| 55 | 456 | function | `time_seconds_since_midnight` | `*const fn () callconv(.c) u32` |
-| 56 | 464 | function | `dir_list` | `*const fn ([*:0]const u8, [*]u8, u32) callconv(.c) i32` |
-| 57 | 472 | function | `dir_create` | `*const fn ([*:0]const u8) callconv(.c) i32` |
-| 58 | 480 | function | `dir_delete` | `*const fn ([*:0]const u8) callconv(.c) i32` |
-| 59 | 488 | function | `drive_info` | `*const fn (u32, *DriveInfo) callconv(.c) i32` |
-| 60 | 496 | function | `file_info` | `*const fn ([*:0]const u8, *FileInfo) callconv(.c) i32` |
-| 61 | 504 | function | `file_delete` | `*const fn ([*:0]const u8) callconv(.c) i32` |
-| 62 | 512 | function | `file_rename` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
-| 63 | 520 | function | `file_copy` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
-| 64 | 528 | function | `file_move` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
-| 65 | 536 | function | `file_read` | `*const fn ([*:0]const u8, [*]u8, u32) callconv(.c) i32` |
-| 66 | 544 | function | `file_write` | `*const fn ([*:0]const u8, [*]const u8, u32) callconv(.c) i32` |
-| 67 | 552 | function | `file_read_at` | `*const fn ([*:0]const u8, u32, [*]u8, u32) callconv(.c) i32` |
-| 68 | 560 | function | `file_append` | `*const fn ([*:0]const u8, [*]const u8, u32) callconv(.c) i32` |
-| 69 | 568 | function | `file_stream_begin` | `*const fn ([*:0]const u8, u32) callconv(.c) i32` |
-| 70 | 576 | function | `file_stream_write` | `*const fn ([*:0]const u8, u64, [*]const u8, u32, u32) callconv(.c) i32` |
-| 71 | 584 | function | `file_stream_finish` | `*const fn ([*:0]const u8, u64, u32) callconv(.c) i32` |
-| 72 | 592 | function | `file_stream_abort` | `*const fn ([*:0]const u8) callconv(.c) i32` |
-| 73 | 600 | function | `env_set` | `*const fn ([*:0]const u8, [*]const u8, u32) callconv(.c) i32` |
-| 74 | 608 | function | `registry_key_info` | `*const fn ([*:0]const u8, *RegistryKeyInfo) callconv(.c) i32` |
-| 75 | 616 | function | `registry_enum_key` | `*const fn ([*:0]const u8, u32, [*]u8, u32) callconv(.c) i32` |
-| 76 | 624 | function | `registry_enum_value` | `*const fn ([*:0]const u8, u32, *RegistryValueInfo) callconv(.c) i32` |
-| 77 | 632 | function | `registry_get_value` | `*const fn ([*:0]const u8, [*:0]const u8, *RegistryValueInfo, [*]u8, u32) callconv(.c) i32` |
-| 78 | 640 | function | `registry_set_value` | `*const fn ([*:0]const u8, [*:0]const u8, u16, [*]const u8, u32) callconv(.c) i32` |
-| 79 | 648 | function | `registry_delete_value` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
-| 80 | 656 | function | `service_info` | `*const fn (u32, *ServiceInfo) callconv(.c) i32` |
-| 81 | 664 | function | `service_detail` | `*const fn (u32, *ServiceDetail) callconv(.c) i32` |
-| 82 | 672 | function | `service_set_start_mode` | `*const fn ([*:0]const u8, u32, *ServiceInfo) callconv(.c) i32` |
-| 83 | 680 | function | `service_endpoint_wait` | `*const fn (u32, u64) callconv(.c) i32` |
-| 84 | 688 | function | `program_run` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
-| 85 | 696 | function | `program_launch` | `*const fn ([*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
-| 86 | 704 | function | `program_spawn` | `*const fn ([*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
-| 87 | 712 | function | `program_kill` | `*const fn (u32) callconv(.c) i32` |
-| 88 | 720 | function | `program_status` | `*const fn (*ProgramStatus) callconv(.c) void` |
-| 89 | 728 | function | `program_request_close` | `*const fn (u32) callconv(.c) i32` |
-| 90 | 736 | function | `program_reap_instance` | `*const fn (u32) callconv(.c) i32` |
-| 91 | 744 | function | `boot_log_info` | `*const fn (*BootLogInfo) callconv(.c) i32` |
-| 92 | 752 | function | `boot_log_read` | `*const fn (u32, [*]u8, u32) callconv(.c) i32` |
-| 93 | 760 | function | `program_spawn_handle` | `*const fn ([*:0]const u8, [*:0]const u8, u32, *ProgramProcessHandle) callconv(.c) i32` |
-| 94 | 768 | function | `program_open_handle` | `*const fn (u32, *ProgramProcessHandle) callconv(.c) i32` |
-| 95 | 776 | function | `program_handle_status` | `*const fn (*const ProgramProcessHandle, *ProgramInstanceInfo) callconv(.c) i32` |
-| 96 | 784 | function | `program_handle_request_close` | `*const fn (*const ProgramProcessHandle) callconv(.c) i32` |
-| 97 | 792 | function | `program_handle_kill` | `*const fn (*const ProgramProcessHandle) callconv(.c) i32` |
-| 98 | 800 | function | `program_handle_wait` | `*const fn (*const ProgramProcessHandle, u64, *ProgramProcessCompletion) callconv(.c) i32` |
-| 99 | 808 | function | `program_handle_reap` | `*const fn (*const ProgramProcessHandle, *ProgramProcessCompletion) callconv(.c) i32` |
-| 100 | 816 | function | `program_completion_read` | `*const fn (*const ProgramProcessHandle, u32, [*]u8, u32, *u32) callconv(.c) i32` |
-| 101 | 824 | function | `program_inventory_begin` | `*const fn (*ProgramInventoryCursor, *ProgramInventorySummary) callconv(.c) i32` |
-| 102 | 832 | function | `program_inventory_programs` | `*const fn (*ProgramInventoryCursor, [*]ProgramInstanceSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
-| 103 | 840 | function | `program_inventory_tasks` | `*const fn (*ProgramInventoryCursor, [*]ProgramTaskSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
-| 104 | 848 | function | `program_inventory_threads` | `*const fn (*ProgramInventoryCursor, [*]ProgramThreadSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
-| 105 | 856 | function | `thread_create_handle` | `*const fn (ThreadEntryFn, u64, u64, u32, *ProgramJoinHandle) callconv(.c) i32` |
-| 106 | 864 | function | `thread_handle_join` | `*const fn (*const ProgramJoinHandle, u64, *i32) callconv(.c) i32` |
-| 107 | 872 | function | `thread_handle_status` | `*const fn (*const ProgramJoinHandle, *ProgramThreadInfo) callconv(.c) i32` |
-| 108 | 880 | function | `file_replace_atomic` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
-| 109 | 888 | function | `file_delete_if_match` | `*const fn ([*:0]const u8, u64, u32) callconv(.c) i32` |
-| 110 | 896 | function | `file_update_atomic_checked` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, u64, u32, u64, u32, u32) callconv(.c) i32` |
-| 111 | 904 | function | `path_names_equal_collated` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
-| 112 | 912 | function | `file_update_cleanup_checked` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, [*:0]const u8, u64, u32, u64, u32, u64, u32, u32) callconv(.c) i32` |
-| 113 | 920 | function | `file_stream_declare_publish` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
-| 114 | 928 | function | `module_resource_stat` | `*const fn ([*:0]const u8, u32, u32, ?[*:0]const u8) callconv(.c) i32` |
-| 115 | 936 | function | `module_resource_read` | `*const fn ([*:0]const u8, u32, u32, ?[*:0]const u8, [*]u8, u32) callconv(.c) i32` |
-| 116 | 944 | function | `program_module_path` | `*const fn ([*]u8, u32) callconv(.c) i32` |
-| 117 | 952 | function | `program_module_running` | `*const fn ([*:0]const u8) callconv(.c) i32` |
-| 118 | 960 | function | `monotonic_clock` | `*const fn (*MonotonicClockInfo) callconv(.c) i32` |
-| 119 | 968 | function | `boot_ready` | `*const fn () callconv(.c) i32` |
-| 120 | 976 | function | `registry_snapshot_begin` | `*const fn ([*:0]const u8, u32, *RegistrySnapshotCursor) callconv(.c) i32` |
-| 121 | 984 | function | `registry_snapshot_page` | `*const fn (*RegistrySnapshotCursor, [*]RegistrySnapshotEntry, u32, [*]u8, u32, *RegistrySnapshotPageInfo) callconv(.c) i32` |
-| 122 | 992 | function | `registry_batch_mutate` | `*const fn ([*]const RegistryBatchOperation, u32, [*]const u8, u32, *RegistryBatchResult) callconv(.c) i32` |
-| 123 | 1000 | function | `io_file_write_at` | `*const fn ([*:0]const u8, u64, [*]const u8, u64, u32, *u32) callconv(.c) i32` |
-| 124 | 1008 | function | `io_file_info` | `*const fn ([*:0]const u8, u32, *u32) callconv(.c) i32` |
-| 125 | 1016 | function | `io_file_lock` | `*const fn ([*:0]const u8, u64, u64, u32, *u32) callconv(.c) i32` |
-| 126 | 1024 | function | `storage_inventory` | `*const fn (*StorageInventory) callconv(.c) i32` |
-| 127 | 1032 | function | `storage_device` | `*const fn (u64, u32, *StorageDeviceInfo) callconv(.c) i32` |
-| 128 | 1040 | function | `storage_partition` | `*const fn (u64, *const StorageDeviceRef, u32, *StoragePartitionInfo) callconv(.c) i32` |
-| 129 | 1048 | function | `storage_volume` | `*const fn (u64, u32, *StorageVolumeInfo) callconv(.c) i32` |
-| 130 | 1056 | function | `storage_claim_begin` | `*const fn (*const StorageTarget, *u64) callconv(.c) i32` |
-| 131 | 1064 | function | `storage_claim_end` | `*const fn (u64, u32) callconv(.c) i32` |
-| 132 | 1072 | function | `storage_read` | `*const fn (*const StorageTarget, u64, u32, [*]u8, u32) callconv(.c) i32` |
-| 133 | 1080 | function | `storage_claim_read` | `*const fn (u64, u64, u32, [*]u8, u32) callconv(.c) i32` |
-| 134 | 1088 | function | `storage_claim_write` | `*const fn (u64, u64, u32, [*]const u8, u32) callconv(.c) i32` |
-| 135 | 1096 | function | `storage_claim_flush` | `*const fn (u64) callconv(.c) i32` |
-| 136 | 1104 | function | `storage_rescan` | `*const fn (*const StorageDeviceRef) callconv(.c) i32` |
-| 137 | 1112 | function | `storage_mount` | `*const fn (*const StorageTarget, u32, *StorageVolumeRef) callconv(.c) i32` |
-| 138 | 1120 | function | `storage_unmount` | `*const fn (*const StorageVolumeRef) callconv(.c) i32` |
-| 139 | 1128 | function | `storage_use_begin` | `*const fn ([*:0]const u8, *u64) callconv(.c) i32` |
-| 140 | 1136 | function | `storage_use_end` | `*const fn (u64) callconv(.c) i32` |
-| 141 | 1144 | function | `directory_change_begin` | `*const fn ([*:0]const u8, *DirectoryChangeCursor) callconv(.c) i32` |
-| 142 | 1152 | function | `directory_change_poll` | `*const fn (*DirectoryChangeCursor) callconv(.c) i32` |
-| 143 | 1160 | function | `file_copy_buffered` | `*const fn ([*:0]const u8, [*:0]const u8, [*]u8, u32, *FileCopyProgress) callconv(.c) i32` |
-| 144 | 1168 | function | `notification_create` | `*const fn (*u64) callconv(.c) i32` |
-| 145 | 1176 | function | `notification_query` | `*const fn (u64, *u64) callconv(.c) i32` |
-| 146 | 1184 | function | `notification_notify` | `*const fn (u64, u32) callconv(.c) i32` |
-| 147 | 1192 | function | `notification_wait` | `*const fn (u64, u64, u64) callconv(.c) i32` |
-| 148 | 1200 | function | `notification_close` | `*const fn (u64) callconv(.c) i32` |
-| 149 | 1208 | function | `program_local_get` | `*const fn (u64, *u64) callconv(.c) i32` |
-| 150 | 1216 | function | `program_local_publish` | `*const fn (u64, u64, *u64) callconv(.c) i32` |
-| 151 | 1224 | function | `thread_current_handle` | `*const fn (*ProgramJoinHandle) callconv(.c) i32` |
-| 152 | 1232 | function | `cpu_capacity` | `*const fn (*CpuCapacity) callconv(.c) i32` |
-| 153 | 1240 | function | `program_exit` | `*const fn (i32, u32) callconv(.c) i32` |
-| 154 | 1248 | function | `platform_input_snapshot` | `*const fn (*PlatformInputSnapshot) callconv(.c) i32` |
-| 155 | 1256 | function | `directory_next` | `*const fn ([*:0]const u8, *DirectoryScanCursor, [*]u8, u32, *FileInfo) callconv(.c) i32` |
-| 156 | 1264 | function | `thread_placement_get` | `*const fn (*const ProgramJoinHandle, *ThreadPlacementInfo, ?[*]u64, u32) callconv(.c) i32` |
-| 157 | 1272 | function | `thread_placement_set` | `*const fn (*const ProgramJoinHandle, *const ThreadPlacementRequest, ?[*]const u64, u32) callconv(.c) i32` |
-| 158 | 1280 | function | `system_power_transition` | `*const fn (u32, u64) callconv(.c) i32` |
-| 159 | 1288 | function | `entropy_source_info` | `*const fn (*EntropySourceInfo) callconv(.c) i32` |
-| 160 | 1296 | function | `entropy_fill` | `*const fn ([*]u8, u32) callconv(.c) i32` |
-| 161 | 1304 | function | `program_lifecycle_begin` | `*const fn (*ProgramInventoryCursor) callconv(.c) i32` |
-| 162 | 1312 | function | `program_lifecycle_programs` | `*const fn (*ProgramInventoryCursor, [*]ProgramLifecycleSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
-| 163 | 1320 | function | `drive_info_geometry` | `*const fn (u32, *DriveInfo) callconv(.c) i32` |
-| 164 | 1328 | function | `directory_batch` | `*const fn (?[*:0]const u8, *DirectoryBatchCursor, ?[*]DirectoryBatchEntry, u32) callconv(.c) i32` |
-| 165 | 1336 | function | `program_observation_retain` | `*const fn (*const ProgramProcessHandle, u32, *ProgramObservationHandle) callconv(.c) i32` |
-| 166 | 1344 | function | `program_observation_wait` | `*const fn (*const ProgramObservationHandle, u64, *ProgramProcessCompletion) callconv(.c) i32` |
-| 167 | 1352 | function | `program_observation_read` | `*const fn (*const ProgramObservationHandle, u32, [*]u8, u32, *u32) callconv(.c) i32` |
-| 168 | 1360 | function | `program_observation_release` | `*const fn (*const ProgramObservationHandle) callconv(.c) i32` |
-| 169 | 1368 | function | `file_name_limits` | `*const fn ([*:0]const u8, *FileNameLimits) callconv(.c) i32` |
-| 170 | 1376 | function | `service_bound_detail` | `*const fn ([*:0]const u8, *ServiceDetail, *ProgramProcessHandle) callconv(.c) i32` |
-| 171 | 1384 | function | `service_stop_bound` | `*const fn ([*:0]const u8, *const ProgramProcessHandle, *ServiceInfo, u64) callconv(.c) i32` |
-| 172 | 1392 | function | `service_inventory_page` | `*const fn (*ServiceInventoryCursor, [*]ServiceInventoryRow, u32) callconv(.c) i32` |
-| 173 | 1400 | function | `service_control_bound` | `*const fn (*const ServiceControlRequest) callconv(.c) i32` |
-| 174 | 1408 | function | `system_update_target_supported` | `*const fn ([*:0]const u8) callconv(.c) i32` |
-| 175 | 1416 | function | `file_metadata2` | `*const fn ([*:0]const u8, *FileMetadata2) callconv(.c) i32` |
-| 176 | 1424 | function | `directory_metadata_batch2` | `*const fn (?[*:0]const u8, *DirectoryMetadataCursor2, ?[*]DirectoryMetadataEntry2, u32) callconv(.c) i32` |
-| 177 | 1432 | function | `waitset_create` | `*const fn (u32, *u64) callconv(.c) i32` |
-| 178 | 1440 | function | `waitset_enroll` | `*const fn (u64, *const WaitSource, *u64) callconv(.c) i32` |
-| 179 | 1448 | function | `waitset_rearm` | `*const fn (u64, u64, *const WaitSource) callconv(.c) i32` |
-| 180 | 1456 | function | `waitset_remove` | `*const fn (u64, u64) callconv(.c) i32` |
-| 181 | 1464 | function | `waitset_wait` | `*const fn (u64, *const WaitSetDeadline, [*]WaitSetEvent, u32, *WaitSetBatch) callconv(.c) i32` |
-| 182 | 1472 | function | `waitset_close` | `*const fn (u64) callconv(.c) i32` |
-| 183 | 1480 | function | `waitset_source_prepare` | `*const fn (*const WaitSourceRequest, *WaitSource) callconv(.c) i32` |
-| 184 | 1488 | function | `byte_pipe_create` | `*const fn (u64, *BytePipePair) callconv(.c) i32` |
-| 185 | 1496 | function | `byte_pipe_dup` | `*const fn (BytePipeEnd, *BytePipeEnd) callconv(.c) i32` |
-| 186 | 1504 | function | `byte_pipe_read` | `*const fn (BytePipeEnd, [*]u8, u64, *const WaitSetDeadline, *BytePipeProgress) callconv(.c) i32` |
-| 187 | 1512 | function | `byte_pipe_write` | `*const fn (BytePipeEnd, [*]const u8, u64, *const WaitSetDeadline, *BytePipeProgress) callconv(.c) i32` |
-| 188 | 1520 | function | `byte_pipe_cancel` | `*const fn (BytePipeEnd) callconv(.c) i32` |
-| 189 | 1528 | function | `byte_pipe_close` | `*const fn (BytePipeEnd) callconv(.c) i32` |
-| 190 | 1536 | function | `byte_pipe_info` | `*const fn (BytePipeEnd, *BytePipeInfo) callconv(.c) i32` |
-| 191 | 1544 | function | `program_launch_io` | `*const fn ([*:0]const u8, [*:0]const u8, *const LaunchIo, *ProgramProcessHandle) callconv(.c) i32` |
-| 192 | 1552 | function | `program_stdio` | `*const fn (*LaunchIo) callconv(.c) i32` |
+| 49 | 408 | function | `system_halt` | `*const fn () callconv(.c) void` |
+| 50 | 416 | function | `system_reboot` | `*const fn () callconv(.c) void` |
+| 51 | 424 | function | `system_poweroff` | `*const fn () callconv(.c) void` |
+| 52 | 432 | function | `time_state` | `*const fn (*TimeState) callconv(.c) void` |
+| 53 | 440 | function | `time_set_state` | `*const fn (*const TimeState) callconv(.c) i32` |
+| 54 | 448 | function | `time_seconds_since_midnight` | `*const fn () callconv(.c) u32` |
+| 55 | 456 | function | `dir_list` | `*const fn ([*:0]const u8, [*]u8, u32) callconv(.c) i32` |
+| 56 | 464 | function | `dir_create` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 57 | 472 | function | `dir_delete` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 58 | 480 | function | `drive_info` | `*const fn (u32, *DriveInfo) callconv(.c) i32` |
+| 59 | 488 | function | `file_info` | `*const fn ([*:0]const u8, *FileInfo) callconv(.c) i32` |
+| 60 | 496 | function | `file_delete` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 61 | 504 | function | `file_rename` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
+| 62 | 512 | function | `file_copy` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
+| 63 | 520 | function | `file_move` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
+| 64 | 528 | function | `file_read` | `*const fn ([*:0]const u8, [*]u8, u32) callconv(.c) i32` |
+| 65 | 536 | function | `file_write` | `*const fn ([*:0]const u8, [*]const u8, u32) callconv(.c) i32` |
+| 66 | 544 | function | `file_read_at` | `*const fn ([*:0]const u8, u32, [*]u8, u32) callconv(.c) i32` |
+| 67 | 552 | function | `file_append` | `*const fn ([*:0]const u8, [*]const u8, u32) callconv(.c) i32` |
+| 68 | 560 | function | `file_stream_begin` | `*const fn ([*:0]const u8, u32) callconv(.c) i32` |
+| 69 | 568 | function | `file_stream_write` | `*const fn ([*:0]const u8, u64, [*]const u8, u32, u32) callconv(.c) i32` |
+| 70 | 576 | function | `file_stream_finish` | `*const fn ([*:0]const u8, u64, u32) callconv(.c) i32` |
+| 71 | 584 | function | `file_stream_abort` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 72 | 592 | function | `env_set` | `*const fn ([*:0]const u8, [*]const u8, u32) callconv(.c) i32` |
+| 73 | 600 | function | `registry_key_info` | `*const fn ([*:0]const u8, *RegistryKeyInfo) callconv(.c) i32` |
+| 74 | 608 | function | `registry_enum_key` | `*const fn ([*:0]const u8, u32, [*]u8, u32) callconv(.c) i32` |
+| 75 | 616 | function | `registry_enum_value` | `*const fn ([*:0]const u8, u32, *RegistryValueInfo) callconv(.c) i32` |
+| 76 | 624 | function | `registry_get_value` | `*const fn ([*:0]const u8, [*:0]const u8, *RegistryValueInfo, [*]u8, u32) callconv(.c) i32` |
+| 77 | 632 | function | `registry_set_value` | `*const fn ([*:0]const u8, [*:0]const u8, u16, [*]const u8, u32) callconv(.c) i32` |
+| 78 | 640 | function | `registry_delete_value` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
+| 79 | 648 | function | `service_info` | `*const fn (u32, *ServiceInfo) callconv(.c) i32` |
+| 80 | 656 | function | `service_detail` | `*const fn (u32, *ServiceDetail) callconv(.c) i32` |
+| 81 | 664 | function | `service_set_start_mode` | `*const fn ([*:0]const u8, u32, *ServiceInfo) callconv(.c) i32` |
+| 82 | 672 | function | `service_endpoint_wait` | `*const fn (u32, u64) callconv(.c) i32` |
+| 83 | 680 | function | `program_run` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
+| 84 | 688 | function | `program_launch` | `*const fn ([*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
+| 85 | 696 | function | `program_spawn` | `*const fn ([*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
+| 86 | 704 | function | `program_kill` | `*const fn (u32) callconv(.c) i32` |
+| 87 | 712 | function | `program_status` | `*const fn (*ProgramStatus) callconv(.c) void` |
+| 88 | 720 | function | `program_request_close` | `*const fn (u32) callconv(.c) i32` |
+| 89 | 728 | function | `program_reap_instance` | `*const fn (u32) callconv(.c) i32` |
+| 90 | 736 | function | `boot_log_info` | `*const fn (*BootLogInfo) callconv(.c) i32` |
+| 91 | 744 | function | `boot_log_read` | `*const fn (u32, [*]u8, u32) callconv(.c) i32` |
+| 92 | 752 | function | `program_spawn_handle` | `*const fn ([*:0]const u8, [*:0]const u8, u32, *ProgramProcessHandle) callconv(.c) i32` |
+| 93 | 760 | function | `program_open_handle` | `*const fn (u32, *ProgramProcessHandle) callconv(.c) i32` |
+| 94 | 768 | function | `program_handle_status` | `*const fn (*const ProgramProcessHandle, *ProgramInstanceInfo) callconv(.c) i32` |
+| 95 | 776 | function | `program_handle_request_close` | `*const fn (*const ProgramProcessHandle) callconv(.c) i32` |
+| 96 | 784 | function | `program_handle_kill` | `*const fn (*const ProgramProcessHandle) callconv(.c) i32` |
+| 97 | 792 | function | `program_handle_wait` | `*const fn (*const ProgramProcessHandle, u64, *ProgramProcessCompletion) callconv(.c) i32` |
+| 98 | 800 | function | `program_handle_reap` | `*const fn (*const ProgramProcessHandle, *ProgramProcessCompletion) callconv(.c) i32` |
+| 99 | 808 | function | `program_completion_read` | `*const fn (*const ProgramProcessHandle, u32, [*]u8, u32, *u32) callconv(.c) i32` |
+| 100 | 816 | function | `program_inventory_begin` | `*const fn (*ProgramInventoryCursor, *ProgramInventorySummary) callconv(.c) i32` |
+| 101 | 824 | function | `program_inventory_programs` | `*const fn (*ProgramInventoryCursor, [*]ProgramInstanceSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
+| 102 | 832 | function | `program_inventory_tasks` | `*const fn (*ProgramInventoryCursor, [*]ProgramTaskSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
+| 103 | 840 | function | `program_inventory_threads` | `*const fn (*ProgramInventoryCursor, [*]ProgramThreadSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
+| 104 | 848 | function | `thread_create_handle` | `*const fn (ThreadEntryFn, u64, u64, u32, *ProgramJoinHandle) callconv(.c) i32` |
+| 105 | 856 | function | `thread_handle_join` | `*const fn (*const ProgramJoinHandle, u64, *i32) callconv(.c) i32` |
+| 106 | 864 | function | `thread_handle_status` | `*const fn (*const ProgramJoinHandle, *ProgramThreadInfo) callconv(.c) i32` |
+| 107 | 872 | function | `file_replace_atomic` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
+| 108 | 880 | function | `file_delete_if_match` | `*const fn ([*:0]const u8, u64, u32) callconv(.c) i32` |
+| 109 | 888 | function | `file_update_atomic_checked` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, u64, u32, u64, u32, u32) callconv(.c) i32` |
+| 110 | 896 | function | `path_names_equal_collated` | `*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) i32` |
+| 111 | 904 | function | `file_update_cleanup_checked` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, [*:0]const u8, u64, u32, u64, u32, u64, u32, u32) callconv(.c) i32` |
+| 112 | 912 | function | `file_stream_declare_publish` | `*const fn ([*:0]const u8, [*:0]const u8, [*:0]const u8, u32) callconv(.c) i32` |
+| 113 | 920 | function | `module_resource_stat` | `*const fn ([*:0]const u8, u32, u32, ?[*:0]const u8) callconv(.c) i32` |
+| 114 | 928 | function | `module_resource_read` | `*const fn ([*:0]const u8, u32, u32, ?[*:0]const u8, [*]u8, u32) callconv(.c) i32` |
+| 115 | 936 | function | `program_module_path` | `*const fn ([*]u8, u32) callconv(.c) i32` |
+| 116 | 944 | function | `program_module_running` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 117 | 952 | function | `monotonic_clock` | `*const fn (*MonotonicClockInfo) callconv(.c) i32` |
+| 118 | 960 | function | `boot_ready` | `*const fn () callconv(.c) i32` |
+| 119 | 968 | function | `registry_snapshot_begin` | `*const fn ([*:0]const u8, u32, *RegistrySnapshotCursor) callconv(.c) i32` |
+| 120 | 976 | function | `registry_snapshot_page` | `*const fn (*RegistrySnapshotCursor, [*]RegistrySnapshotEntry, u32, [*]u8, u32, *RegistrySnapshotPageInfo) callconv(.c) i32` |
+| 121 | 984 | function | `registry_batch_mutate` | `*const fn ([*]const RegistryBatchOperation, u32, [*]const u8, u32, *RegistryBatchResult) callconv(.c) i32` |
+| 122 | 992 | function | `io_file_write_at` | `*const fn ([*:0]const u8, u64, [*]const u8, u64, u32, *u32) callconv(.c) i32` |
+| 123 | 1000 | function | `io_file_info` | `*const fn ([*:0]const u8, u32, *u32) callconv(.c) i32` |
+| 124 | 1008 | function | `io_file_lock` | `*const fn ([*:0]const u8, u64, u64, u32, *u32) callconv(.c) i32` |
+| 125 | 1016 | function | `storage_inventory` | `*const fn (*StorageInventory) callconv(.c) i32` |
+| 126 | 1024 | function | `storage_device` | `*const fn (u64, u32, *StorageDeviceInfo) callconv(.c) i32` |
+| 127 | 1032 | function | `storage_partition` | `*const fn (u64, *const StorageDeviceRef, u32, *StoragePartitionInfo) callconv(.c) i32` |
+| 128 | 1040 | function | `storage_volume` | `*const fn (u64, u32, *StorageVolumeInfo) callconv(.c) i32` |
+| 129 | 1048 | function | `storage_claim_begin` | `*const fn (*const StorageTarget, *u64) callconv(.c) i32` |
+| 130 | 1056 | function | `storage_claim_end` | `*const fn (u64, u32) callconv(.c) i32` |
+| 131 | 1064 | function | `storage_read` | `*const fn (*const StorageTarget, u64, u32, [*]u8, u32) callconv(.c) i32` |
+| 132 | 1072 | function | `storage_claim_read` | `*const fn (u64, u64, u32, [*]u8, u32) callconv(.c) i32` |
+| 133 | 1080 | function | `storage_claim_write` | `*const fn (u64, u64, u32, [*]const u8, u32) callconv(.c) i32` |
+| 134 | 1088 | function | `storage_claim_flush` | `*const fn (u64) callconv(.c) i32` |
+| 135 | 1096 | function | `storage_rescan` | `*const fn (*const StorageDeviceRef) callconv(.c) i32` |
+| 136 | 1104 | function | `storage_mount` | `*const fn (*const StorageTarget, u32, *StorageVolumeRef) callconv(.c) i32` |
+| 137 | 1112 | function | `storage_unmount` | `*const fn (*const StorageVolumeRef) callconv(.c) i32` |
+| 138 | 1120 | function | `storage_use_begin` | `*const fn ([*:0]const u8, *u64) callconv(.c) i32` |
+| 139 | 1128 | function | `storage_use_end` | `*const fn (u64) callconv(.c) i32` |
+| 140 | 1136 | function | `directory_change_begin` | `*const fn ([*:0]const u8, *DirectoryChangeCursor) callconv(.c) i32` |
+| 141 | 1144 | function | `directory_change_poll` | `*const fn (*DirectoryChangeCursor) callconv(.c) i32` |
+| 142 | 1152 | function | `file_copy_buffered` | `*const fn ([*:0]const u8, [*:0]const u8, [*]u8, u32, *FileCopyProgress) callconv(.c) i32` |
+| 143 | 1160 | function | `notification_create` | `*const fn (*u64) callconv(.c) i32` |
+| 144 | 1168 | function | `notification_query` | `*const fn (u64, *u64) callconv(.c) i32` |
+| 145 | 1176 | function | `notification_notify` | `*const fn (u64, u32) callconv(.c) i32` |
+| 146 | 1184 | function | `notification_wait` | `*const fn (u64, u64, u64) callconv(.c) i32` |
+| 147 | 1192 | function | `notification_close` | `*const fn (u64) callconv(.c) i32` |
+| 148 | 1200 | function | `program_local_get` | `*const fn (u64, *u64) callconv(.c) i32` |
+| 149 | 1208 | function | `program_local_publish` | `*const fn (u64, u64, *u64) callconv(.c) i32` |
+| 150 | 1216 | function | `thread_current_handle` | `*const fn (*ProgramJoinHandle) callconv(.c) i32` |
+| 151 | 1224 | function | `cpu_capacity` | `*const fn (*CpuCapacity) callconv(.c) i32` |
+| 152 | 1232 | function | `program_exit` | `*const fn (i32, u32) callconv(.c) i32` |
+| 153 | 1240 | function | `platform_input_snapshot` | `*const fn (*PlatformInputSnapshot) callconv(.c) i32` |
+| 154 | 1248 | function | `directory_next` | `*const fn ([*:0]const u8, *DirectoryScanCursor, [*]u8, u32, *FileInfo) callconv(.c) i32` |
+| 155 | 1256 | function | `thread_placement_get` | `*const fn (*const ProgramJoinHandle, *ThreadPlacementInfo, ?[*]u64, u32) callconv(.c) i32` |
+| 156 | 1264 | function | `thread_placement_set` | `*const fn (*const ProgramJoinHandle, *const ThreadPlacementRequest, ?[*]const u64, u32) callconv(.c) i32` |
+| 157 | 1272 | function | `system_power_transition` | `*const fn (u32, u64) callconv(.c) i32` |
+| 158 | 1280 | function | `entropy_source_info` | `*const fn (*EntropySourceInfo) callconv(.c) i32` |
+| 159 | 1288 | function | `entropy_fill` | `*const fn ([*]u8, u32) callconv(.c) i32` |
+| 160 | 1296 | function | `program_lifecycle_begin` | `*const fn (*ProgramInventoryCursor) callconv(.c) i32` |
+| 161 | 1304 | function | `program_lifecycle_programs` | `*const fn (*ProgramInventoryCursor, [*]ProgramLifecycleSnapshot, u32, *ProgramInventoryPageInfo) callconv(.c) i32` |
+| 162 | 1312 | function | `drive_info_geometry` | `*const fn (u32, *DriveInfo) callconv(.c) i32` |
+| 163 | 1320 | function | `directory_batch` | `*const fn (?[*:0]const u8, *DirectoryBatchCursor, ?[*]DirectoryBatchEntry, u32) callconv(.c) i32` |
+| 164 | 1328 | function | `program_observation_retain` | `*const fn (*const ProgramProcessHandle, u32, *ProgramObservationHandle) callconv(.c) i32` |
+| 165 | 1336 | function | `program_observation_wait` | `*const fn (*const ProgramObservationHandle, u64, *ProgramProcessCompletion) callconv(.c) i32` |
+| 166 | 1344 | function | `program_observation_read` | `*const fn (*const ProgramObservationHandle, u32, [*]u8, u32, *u32) callconv(.c) i32` |
+| 167 | 1352 | function | `program_observation_release` | `*const fn (*const ProgramObservationHandle) callconv(.c) i32` |
+| 168 | 1360 | function | `file_name_limits` | `*const fn ([*:0]const u8, *FileNameLimits) callconv(.c) i32` |
+| 169 | 1368 | function | `service_bound_detail` | `*const fn ([*:0]const u8, *ServiceDetail, *ProgramProcessHandle) callconv(.c) i32` |
+| 170 | 1376 | function | `service_stop_bound` | `*const fn ([*:0]const u8, *const ProgramProcessHandle, *ServiceInfo, u64) callconv(.c) i32` |
+| 171 | 1384 | function | `service_inventory_page` | `*const fn (*ServiceInventoryCursor, [*]ServiceInventoryRow, u32) callconv(.c) i32` |
+| 172 | 1392 | function | `service_control_bound` | `*const fn (*const ServiceControlRequest) callconv(.c) i32` |
+| 173 | 1400 | function | `system_update_target_supported` | `*const fn ([*:0]const u8) callconv(.c) i32` |
+| 174 | 1408 | function | `file_metadata2` | `*const fn ([*:0]const u8, *FileMetadata2) callconv(.c) i32` |
+| 175 | 1416 | function | `directory_metadata_batch2` | `*const fn (?[*:0]const u8, *DirectoryMetadataCursor2, ?[*]DirectoryMetadataEntry2, u32) callconv(.c) i32` |
+| 176 | 1424 | function | `waitset_create` | `*const fn (u32, *u64) callconv(.c) i32` |
+| 177 | 1432 | function | `waitset_enroll` | `*const fn (u64, *const WaitSource, *u64) callconv(.c) i32` |
+| 178 | 1440 | function | `waitset_rearm` | `*const fn (u64, u64, *const WaitSource) callconv(.c) i32` |
+| 179 | 1448 | function | `waitset_remove` | `*const fn (u64, u64) callconv(.c) i32` |
+| 180 | 1456 | function | `waitset_wait` | `*const fn (u64, *const WaitSetDeadline, [*]WaitSetEvent, u32, *WaitSetBatch) callconv(.c) i32` |
+| 181 | 1464 | function | `waitset_close` | `*const fn (u64) callconv(.c) i32` |
+| 182 | 1472 | function | `waitset_source_prepare` | `*const fn (*const WaitSourceRequest, *WaitSource) callconv(.c) i32` |
+| 183 | 1480 | function | `byte_pipe_create` | `*const fn (u64, *BytePipePair) callconv(.c) i32` |
+| 184 | 1488 | function | `byte_pipe_dup` | `*const fn (BytePipeEnd, *BytePipeEnd) callconv(.c) i32` |
+| 185 | 1496 | function | `byte_pipe_read` | `*const fn (BytePipeEnd, [*]u8, u64, *const WaitSetDeadline, *BytePipeProgress) callconv(.c) i32` |
+| 186 | 1504 | function | `byte_pipe_write` | `*const fn (BytePipeEnd, [*]const u8, u64, *const WaitSetDeadline, *BytePipeProgress) callconv(.c) i32` |
+| 187 | 1512 | function | `byte_pipe_cancel` | `*const fn (BytePipeEnd) callconv(.c) i32` |
+| 188 | 1520 | function | `byte_pipe_close` | `*const fn (BytePipeEnd) callconv(.c) i32` |
+| 189 | 1528 | function | `byte_pipe_info` | `*const fn (BytePipeEnd, *BytePipeInfo) callconv(.c) i32` |
+| 190 | 1536 | function | `program_launch_io` | `*const fn ([*:0]const u8, [*:0]const u8, *const LaunchIo, *ProgramProcessHandle) callconv(.c) i32` |
+| 191 | 1544 | function | `program_stdio` | `*const fn (*LaunchIo) callconv(.c) i32` |
 <!-- R4OS-APIREF:END R4SYS -->

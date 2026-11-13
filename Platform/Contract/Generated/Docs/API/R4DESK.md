@@ -3,8 +3,8 @@
 <!-- R4OS-APIREF:BEGIN R4DESK (generiert von ApiContractGen aus ApiContract.json - NICHT von Hand editieren) -->
 ## Tabellen-Referenz R4DESK (generiert)
 
-Kernel-Gruppentabelle `R4XStartR4Desk` v21, 632 Bytes, 76 Funktionsfelder und 77 Slots insgesamt.
-Signatur-Wahrheit: `abi.R4DeskFns` (Feldname == Tabellenfeld).
+Kernel-Gruppentabelle `R4XStartR4Desk2` v1, 632 Bytes, 76 Funktionsfelder und 77 Slots insgesamt.
+Signatur-Wahrheit: `abi.R4DeskFns2` (Feldname == Tabellenfeld).
 Ein Feld ist nutzbar, wenn `hasFn("feld")` es als vorhanden meldet.
 
 | Slot | Offset | Zustand | Tabellenfeld | Signatur |

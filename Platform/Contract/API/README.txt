@@ -1,9 +1,17 @@
 ﻿R4OS API Contract
 =================
 
-ApiContract.json is the canonical language-neutral definition of R4XStart,
-R4LQuery, the six platform groups, public payload types, signatures, status
+ApiContract.json is the canonical language-neutral definition of R4XStart2,
+R4LQuery2, the six platform groups, public payload types, signatures, status
 and error domains, constants, limits, and operation semantics.
+
+Generation2.json owns the independent current DriverApi2, ProtocolApi2,
+AudioBackend2, AudioBackendStatus2 and AudioCaptureBackend2 records and their
+callback signatures and selection. It contains no second platform slot list.
+Generation2.baseline.json protects their exact accepted technical shape.
+LegacyProjection.json temporarily retains only four inert historical holes
+and reverse revision/header metadata until the planned provider/SDK cutover.
+Old views derive from the current533 slots; current2 never derives from them.
 
 ApiContract.baseline.json is the accepted compatibility baseline. It is not a
 second source of truth and changes only with an intentionally accepted

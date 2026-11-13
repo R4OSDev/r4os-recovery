@@ -11,28 +11,18 @@ pub var net: abi.R4XStartR4Net2 = .{};
 pub var audio: abi.R4XStartR4Audio2 = .{};
 pub var dev: abi.R4XStartR4Dev2 = .{};
 
-// This is a value projection by canonical field name. An old table pointer
-// is never reinterpreted as a compact new table. Missing provider slots stay
-// zero; a newer schema/header does not fabricate a capability.
-fn project(comptime T: type, source: anytype) T {
-    var value: T = .{};
-    inline for (@typeInfo(T).@"struct".fields) |field| {
-        if (comptime @offsetOf(T, field.name) >= 16 and @hasField(@TypeOf(source), field.name))
-            @field(value, field.name) = @field(source, field.name);
+// Only callback addresses and the current canonical header are published.
+// Missing owner mechanisms remain absent. Structural checks retain the exact
+// C ABI of legitimate Recovery-private shared payload names.
+pub fn buildGroup(comptime Table: type, comptime Namespace: type, functions: anytype) Table {
+    @setEvalBranchQuota(2_000_000);
+    var result: Table = .{};
+    inline for (std.meta.fields(@TypeOf(functions))) |field| {
+        if (!@hasField(Table, field.name) or !@hasDecl(Namespace, field.name)) @compileError("Unknown current Recovery callback: " ++ field.name);
+        const Function = @field(Namespace, field.name);
+        @field(result, field.name) = @intFromPtr(callback(Function, @field(functions, field.name)));
     }
-    return value;
-}
-
-pub fn configure(s: anytype, d: anytype, r: anytype, n: anytype, a: anytype, v: anytype) void {
-    sys = project(abi.R4XStartR4Sys2, s);
-    desk = project(abi.R4XStartR4Desk2, d);
-    draw = project(abi.R4XStartR4Draw2, r);
-    net = project(abi.R4XStartR4Net2, n);
-    audio = project(abi.R4XStartR4Audio2, a);
-    dev = project(abi.R4XStartR4Dev2, v);
-    const system = @import("r4sys.zig");
-    sys.file_metadata2 = @intFromPtr(@as(abi.R4SysFns2.file_metadata2, &system.fileMetadata2));
-    sys.directory_metadata_batch2 = @intFromPtr(@as(abi.R4SysFns2.directory_metadata_batch2, &system.directoryMetadataBatch2));
+    return result;
 }
 
 pub fn group(id: u32) ?u64 {

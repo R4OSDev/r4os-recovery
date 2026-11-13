@@ -37,7 +37,7 @@ pub unsafe extern "C" fn r4os_rust_generation2(
             core::mem::size_of_val(&default) as u32
         )
     );
-    let call: abi::R4SysFns::write = unsafe { core::mem::transmute(table.write as usize) };
+    let call: abi::generation2::R4SysFns2::write = unsafe { core::mem::transmute(table.write as usize) };
     unsafe { call(b"API2".as_ptr(), 4) }
 }
 

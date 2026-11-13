@@ -1,0 +1,957 @@
+{
+  "schema": 2,
+  "generation": 2,
+  "source": "API/ApiContract.json",
+  "driver": {
+    "init_symbol": "DriverInit2",
+    "protocol_init_symbol": "ProtocolInit2",
+    "export_version": 2,
+    "magic": 843665476,
+    "version": 1,
+    "protocol_magic": 843665488,
+    "protocol_version": 1
+  },
+  "audio": {
+    "magic": 843208001,
+    "version": 3
+  },
+  "selection": {
+    "default_generation": 2,
+    "profile_selection": "SDK/Profiles",
+    "mixed_start_generations": "reject",
+    "missing_generation": "reject",
+    "shared_resource_owners": true,
+    "profiles": [
+      "r4os-zig-generation2",
+      "r4os-c-generation2",
+      "r4os-rust-generation2",
+      "r4os-zig-r4d-generation2",
+      "r4os-c-r4d-generation2",
+      "r4os-rust-r4d-generation2",
+      "r4os-zig-r4p-generation2",
+      "r4os-c-r4p-generation2",
+      "r4os-rust-r4p-generation2"
+    ]
+  },
+  "technical": [
+    {
+      "name": "DriverApi2",
+      "size": 664,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "magic",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 0
+        },
+        {
+          "name": "version",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 4
+        },
+        {
+          "name": "size",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 8
+        },
+        {
+          "name": "reserved",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 12
+        },
+        {
+          "name": "log_info",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 16
+        },
+        {
+          "name": "log_warn",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 24
+        },
+        {
+          "name": "log_error",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 32
+        },
+        {
+          "name": "port_inb",
+          "zig_type": "*const fn (u16) callconv(.c) u8",
+          "default_value": null,
+          "offset": 40
+        },
+        {
+          "name": "port_outb",
+          "zig_type": "*const fn (u16, u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 48
+        },
+        {
+          "name": "alloc_dma_buffer",
+          "zig_type": "*const fn (u32, u32) callconv(.c) u64",
+          "default_value": null,
+          "offset": 56
+        },
+        {
+          "name": "free_dma_buffer",
+          "zig_type": "*const fn (u64, u32) callconv(.c) void",
+          "default_value": null,
+          "offset": 64
+        },
+        {
+          "name": "request_irq",
+          "zig_type": "*const fn (u8, *const anyopaque) callconv(.c) i32",
+          "default_value": null,
+          "offset": 72
+        },
+        {
+          "name": "release_irq",
+          "zig_type": "*const fn (u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 80
+        },
+        {
+          "name": "get_option",
+          "zig_type": "*const fn ([*:0]const u8, [*:0]const u8) callconv(.c) [*:0]const u8",
+          "default_value": null,
+          "offset": 88
+        },
+        {
+          "name": "register_storage_backend",
+          "zig_type": "*const fn ([*:0]const u8, *const anyopaque) callconv(.c) i32",
+          "default_value": null,
+          "offset": 96
+        },
+        {
+          "name": "register_input_backend",
+          "zig_type": "*const fn ([*:0]const u8, *const anyopaque) callconv(.c) i32",
+          "default_value": null,
+          "offset": 104
+        },
+        {
+          "name": "register_mixer_backend",
+          "zig_type": "*const fn ([*:0]const u8, *const anyopaque) callconv(.c) i32",
+          "default_value": null,
+          "offset": 112
+        },
+        {
+          "name": "register_net_backend",
+          "zig_type": "*const fn ([*:0]const u8, *const anyopaque) callconv(.c) i32",
+          "default_value": null,
+          "offset": 120
+        },
+        {
+          "name": "alloc_dma_region",
+          "zig_type": "*const fn (u32, u32, *base.DmaBuffer) callconv(.c) i32",
+          "default_value": null,
+          "offset": 128
+        },
+        {
+          "name": "free_dma_region",
+          "zig_type": "*const fn (*base.DmaBuffer) callconv(.c) void",
+          "default_value": null,
+          "offset": 136
+        },
+        {
+          "name": "pci_device_count",
+          "zig_type": "*const fn () callconv(.c) u32",
+          "default_value": null,
+          "offset": 144
+        },
+        {
+          "name": "pci_device_at",
+          "zig_type": "*const fn (u32, *base.PciDeviceInfo) callconv(.c) i32",
+          "default_value": null,
+          "offset": 152
+        },
+        {
+          "name": "pci_find_by_class",
+          "zig_type": "*const fn (u8, u8, u32, *base.PciDeviceInfo) callconv(.c) i32",
+          "default_value": null,
+          "offset": 160
+        },
+        {
+          "name": "pci_read_config32",
+          "zig_type": "*const fn (u8, u8, u8, u8, u16) callconv(.c) u32",
+          "default_value": null,
+          "offset": 168
+        },
+        {
+          "name": "pci_write_config32",
+          "zig_type": "*const fn (u8, u8, u8, u8, u16, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 176
+        },
+        {
+          "name": "pci_read_bar",
+          "zig_type": "*const fn (u8, u8, u8, u8, u8) callconv(.c) u32",
+          "default_value": null,
+          "offset": 184
+        },
+        {
+          "name": "pci_enable_bus_master",
+          "zig_type": "*const fn (u8, u8, u8, u8, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 192
+        },
+        {
+          "name": "irq_register",
+          "zig_type": "*const fn (u8, base.IrqHandler, usize, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 200
+        },
+        {
+          "name": "irq_unregister",
+          "zig_type": "*const fn (u8, base.IrqHandler, usize) callconv(.c) i32",
+          "default_value": null,
+          "offset": 208
+        },
+        {
+          "name": "irq_stats",
+          "zig_type": "*const fn (u8, *base.IrqStats) callconv(.c) i32",
+          "default_value": null,
+          "offset": 216
+        },
+        {
+          "name": "pci_map_bar",
+          "zig_type": "*const fn (u8, u8, u8, u8, u8, u32, u32, *base.MmioRegion) callconv(.c) i32",
+          "default_value": null,
+          "offset": 224
+        },
+        {
+          "name": "port_inw",
+          "zig_type": "*const fn (u16) callconv(.c) u16",
+          "default_value": null,
+          "offset": 232
+        },
+        {
+          "name": "port_outw",
+          "zig_type": "*const fn (u16, u16) callconv(.c) void",
+          "default_value": null,
+          "offset": 240
+        },
+        {
+          "name": "port_inl",
+          "zig_type": "*const fn (u16) callconv(.c) u32",
+          "default_value": null,
+          "offset": 248
+        },
+        {
+          "name": "port_outl",
+          "zig_type": "*const fn (u16, u32) callconv(.c) void",
+          "default_value": null,
+          "offset": 256
+        },
+        {
+          "name": "net_receive_frame",
+          "zig_type": "*const fn (i32, [*]const u8, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 264
+        },
+        {
+          "name": "register_audio_output_backend",
+          "zig_type": "AudioBackendRegisterFn2",
+          "default_value": null,
+          "offset": 272
+        },
+        {
+          "name": "unregister_audio_backend",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 280
+        },
+        {
+          "name": "tick_count",
+          "zig_type": "*const fn () callconv(.c) u64",
+          "default_value": null,
+          "offset": 288
+        },
+        {
+          "name": "timer_frequency",
+          "zig_type": "*const fn () callconv(.c) u32",
+          "default_value": null,
+          "offset": 296
+        },
+        {
+          "name": "wait_ticks",
+          "zig_type": "*const fn (u64) callconv(.c) void",
+          "default_value": null,
+          "offset": 304
+        },
+        {
+          "name": "register_synth_engine_v2",
+          "zig_type": "*const fn ([*:0]const u8, *const base.SynthEngine) callconv(.c) i32",
+          "default_value": null,
+          "offset": 312
+        },
+        {
+          "name": "unregister_storage_backend",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 320
+        },
+        {
+          "name": "storage_backend_recovery_begin",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 328
+        },
+        {
+          "name": "storage_backend_recovery_finish",
+          "zig_type": "*const fn ([*:0]const u8, i32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 336
+        },
+        {
+          "name": "register_usb_host_controller",
+          "zig_type": "*const fn ([*:0]const u8, *const base.UsbHostController) callconv(.c) i32",
+          "default_value": null,
+          "offset": 344
+        },
+        {
+          "name": "unregister_usb_host_controller",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 352
+        },
+        {
+          "name": "driver_work_submit",
+          "zig_type": "*const fn (base.DriverWorkHandler, usize, u32, *u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 360
+        },
+        {
+          "name": "driver_work_cancel",
+          "zig_type": "*const fn (u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 368
+        },
+        {
+          "name": "driver_completion_wait",
+          "zig_type": "*const fn (u32, u64, *i32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 376
+        },
+        {
+          "name": "driver_completion_status",
+          "zig_type": "*const fn (u32, *base.DriverCompletionStatus) callconv(.c) i32",
+          "default_value": null,
+          "offset": 384
+        },
+        {
+          "name": "driver_completion_release",
+          "zig_type": "*const fn (u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 392
+        },
+        {
+          "name": "driver_work_summary",
+          "zig_type": "*const fn (*base.DriverWorkSummary) callconv(.c) i32",
+          "default_value": null,
+          "offset": 400
+        },
+        {
+          "name": "pci_enable_msi",
+          "zig_type": "*const fn (u8, u8, u8, u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 408
+        },
+        {
+          "name": "alloc_dma_region_constrained",
+          "zig_type": "*const fn (u32, u32, u64, *base.DmaBuffer) callconv(.c) i32",
+          "default_value": null,
+          "offset": 416
+        },
+        {
+          "name": "pci_disable_msi",
+          "zig_type": "*const fn (u8, u8, u8, u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 424
+        },
+        {
+          "name": "protocol_dispatch",
+          "zig_type": "?*const fn ([*:0]const u8, u32, *const base.ProtocolBuffer, *base.ProtocolBuffer) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 432
+        },
+        {
+          "name": "dma_pin_buffer",
+          "zig_type": "*const fn (u64, u32, u32, *base.DmaPinnedBuffer) callconv(.c) i32",
+          "default_value": null,
+          "offset": 440
+        },
+        {
+          "name": "dma_map_pinned",
+          "zig_type": "*const fn (*const base.DmaPinnedBuffer, *const base.DmaConstraints, u32, *base.DmaMapping) callconv(.c) i32",
+          "default_value": null,
+          "offset": 448
+        },
+        {
+          "name": "dma_sync_for_device",
+          "zig_type": "*const fn (*const base.DmaMapping) callconv(.c) i32",
+          "default_value": null,
+          "offset": 456
+        },
+        {
+          "name": "dma_sync_for_cpu",
+          "zig_type": "*const fn (*const base.DmaMapping) callconv(.c) i32",
+          "default_value": null,
+          "offset": 464
+        },
+        {
+          "name": "dma_unmap",
+          "zig_type": "*const fn (*base.DmaMapping) callconv(.c) i32",
+          "default_value": null,
+          "offset": 472
+        },
+        {
+          "name": "dma_unpin_buffer",
+          "zig_type": "*const fn (*base.DmaPinnedBuffer) callconv(.c) i32",
+          "default_value": null,
+          "offset": 480
+        },
+        {
+          "name": "driver_work_submit_request",
+          "zig_type": "*const fn (*const base.DriverWorkRequest, *u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 488
+        },
+        {
+          "name": "activate_usb_host_controller",
+          "zig_type": "*const fn ([*:0]const u8, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 496
+        },
+        {
+          "name": "register_display_blit_backend",
+          "zig_type": "*const fn ([*:0]const u8, *const base.DisplayBlitBackend) callconv(.c) i32",
+          "default_value": null,
+          "offset": 504
+        },
+        {
+          "name": "unregister_display_blit_backend",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 512
+        },
+        {
+          "name": "net_schedule_rx",
+          "zig_type": "*const fn (i32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 520
+        },
+        {
+          "name": "net_backend_query",
+          "zig_type": "*const fn (i32, *base.NetBackendNegotiation) callconv(.c) i32",
+          "default_value": null,
+          "offset": 528
+        },
+        {
+          "name": "net_receive_packet",
+          "zig_type": "*const fn (i32, *const base.NetPacket) callconv(.c) i32",
+          "default_value": null,
+          "offset": 536
+        },
+        {
+          "name": "gfx_memory_query",
+          "zig_type": "?*const fn (*base.GfxDriverMemoryApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 544
+        },
+        {
+          "name": "gfx_queue_query",
+          "zig_type": "?*const fn (*base.GfxDriverQueueApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 552
+        },
+        {
+          "name": "gfx_output_query",
+          "zig_type": "?*const fn (*base.GfxDriverOutputApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 560
+        },
+        {
+          "name": "gfx_display_query",
+          "zig_type": "?*const fn (*base.GfxDriverDisplayApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 568
+        },
+        {
+          "name": "resource_query",
+          "zig_type": "?*const fn (*base.DriverResourceApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 576
+        },
+        {
+          "name": "heap_query",
+          "zig_type": "?*const fn (*base.DriverHeapApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 584
+        },
+        {
+          "name": "monotonic_clock",
+          "zig_type": "?*const fn (*base.MonotonicClockInfo) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 592
+        },
+        {
+          "name": "thread_query",
+          "zig_type": "?*const fn (*base.DriverThreadApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 600
+        },
+        {
+          "name": "semaphore_query",
+          "zig_type": "?*const fn (*base.DriverSemaphoreApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 608
+        },
+        {
+          "name": "dma_sync_range_for_device",
+          "zig_type": "?*const fn (*const base.DmaMapping, u32, u32) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 616
+        },
+        {
+          "name": "dma_sync_range_for_cpu",
+          "zig_type": "?*const fn (*const base.DmaMapping, u32, u32) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 624
+        },
+        {
+          "name": "driver_work_submit_owned",
+          "zig_type": "?*const fn (base.DriverWorkHandler, usize, *u32) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 632
+        },
+        {
+          "name": "serial_query",
+          "zig_type": "?*const fn (*base.DriverSerialApi) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 640
+        },
+        {
+          "name": "register_audio_output_epoch",
+          "zig_type": "?*const fn ([*:0]const u8, base.AudioOutputEpochFn) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 648
+        },
+        {
+          "name": "register_audio_capture_backend",
+          "zig_type": "?AudioCaptureRegisterFn2",
+          "default_value": "null",
+          "offset": 656
+        }
+      ]
+    },
+    {
+      "name": "ProtocolApi2",
+      "size": 144,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "magic",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 0
+        },
+        {
+          "name": "version",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 4
+        },
+        {
+          "name": "size",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 8
+        },
+        {
+          "name": "reserved",
+          "zig_type": "u32",
+          "default_value": null,
+          "offset": 12
+        },
+        {
+          "name": "log_info",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 16
+        },
+        {
+          "name": "log_warn",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 24
+        },
+        {
+          "name": "log_error",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) void",
+          "default_value": null,
+          "offset": 32
+        },
+        {
+          "name": "register_role",
+          "zig_type": "*const fn ([*:0]const u8, u32, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 40
+        },
+        {
+          "name": "set_status",
+          "zig_type": "*const fn (u32, [*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 48
+        },
+        {
+          "name": "dependency_status",
+          "zig_type": "*const fn ([*:0]const u8) callconv(.c) i32",
+          "default_value": null,
+          "offset": 56
+        },
+        {
+          "name": "alloc",
+          "zig_type": "*const fn (u32, u32) callconv(.c) ?*anyopaque",
+          "default_value": null,
+          "offset": 64
+        },
+        {
+          "name": "free",
+          "zig_type": "*const fn (?*anyopaque, u32) callconv(.c) void",
+          "default_value": null,
+          "offset": 72
+        },
+        {
+          "name": "file_read",
+          "zig_type": "*const fn ([*:0]const u8, [*]u8, u32) callconv(.c) i32",
+          "default_value": null,
+          "offset": 80
+        },
+        {
+          "name": "cpu_acceleration_info",
+          "zig_type": "?*const fn (*base.CpuAccelerationInfo) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 88
+        },
+        {
+          "name": "cpu_acceleration_work",
+          "zig_type": "?*const fn (u32, u32, ?*const base.CpuPureWorkFn, u64, *base.CpuAccelerationWork) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 96
+        },
+        {
+          "name": "entropy_source_info",
+          "zig_type": "?*const fn (*base.EntropySourceInfo) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 104
+        },
+        {
+          "name": "entropy_fill",
+          "zig_type": "?*const fn ([*]u8, u32) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 112
+        },
+        {
+          "name": "protocol_dispatch",
+          "zig_type": "?*const fn ([*]const u8, u32, u32, *const base.ProtocolBuffer, *base.ProtocolBuffer) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 120
+        },
+        {
+          "name": "link_io",
+          "zig_type": "?*const fn (*const base.NetworkLinkRequest, *base.NetworkLinkInfo) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 128
+        },
+        {
+          "name": "process_status",
+          "zig_type": "?*const fn (*const base.ProgramProcessHandle, *base.ProgramInstanceInfo) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 136
+        }
+      ]
+    },
+    {
+      "name": "AudioBackendStatus2",
+      "size": 80,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "active",
+          "zig_type": "u32",
+          "default_value": "0",
+          "offset": 0
+        },
+        {
+          "name": "writes",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 8
+        },
+        {
+          "name": "underruns",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 16
+        },
+        {
+          "name": "errors",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 24
+        },
+        {
+          "name": "last_result",
+          "zig_type": "i32",
+          "default_value": "0",
+          "offset": 32
+        },
+        {
+          "name": "reserved",
+          "zig_type": "u32",
+          "default_value": "0",
+          "offset": 36
+        },
+        {
+          "name": "refills",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 40
+        },
+        {
+          "name": "silence_refills",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 48
+        },
+        {
+          "name": "buffer_bytes",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 56
+        },
+        {
+          "name": "queued_buffers",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 64
+        },
+        {
+          "name": "last_buffer_bytes",
+          "zig_type": "u64",
+          "default_value": "0",
+          "offset": 72
+        }
+      ]
+    },
+    {
+      "name": "AudioBackend2",
+      "size": 136,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "magic",
+          "zig_type": "u32",
+          "default_value": "audio_backend2_magic",
+          "offset": 0
+        },
+        {
+          "name": "version",
+          "zig_type": "u32",
+          "default_value": "audio_backend2_version",
+          "offset": 4
+        },
+        {
+          "name": "size",
+          "zig_type": "u32",
+          "default_value": "@sizeOf(AudioBackend2)",
+          "offset": 8
+        },
+        {
+          "name": "flags",
+          "zig_type": "u32",
+          "default_value": "0",
+          "offset": 12
+        },
+        {
+          "name": "formats",
+          "zig_type": "u32",
+          "default_value": "base.audio_backend_format_s16le",
+          "offset": 16
+        },
+        {
+          "name": "min_rate",
+          "zig_type": "u32",
+          "default_value": "0",
+          "offset": 20
+        },
+        {
+          "name": "max_rate",
+          "zig_type": "u32",
+          "default_value": "0",
+          "offset": 24
+        },
+        {
+          "name": "preferred_rate",
+          "zig_type": "u32",
+          "default_value": "48000",
+          "offset": 28
+        },
+        {
+          "name": "max_channels",
+          "zig_type": "u16",
+          "default_value": "2",
+          "offset": 32
+        },
+        {
+          "name": "reserved",
+          "zig_type": "u16",
+          "default_value": "0",
+          "offset": 34
+        },
+        {
+          "name": "context",
+          "zig_type": "?*anyopaque",
+          "default_value": "null",
+          "offset": 40
+        },
+        {
+          "name": "write_pcm",
+          "zig_type": "?*const fn (?*anyopaque, [*]const u8, u32, u32, u16, u16) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 48
+        },
+        {
+          "name": "stop",
+          "zig_type": "?*const fn (?*anyopaque) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 56
+        },
+        {
+          "name": "shutdown",
+          "zig_type": "?*const fn (?*anyopaque) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 64
+        },
+        {
+          "name": "status",
+          "zig_type": "?AudioBackendStatusFn2",
+          "default_value": "null",
+          "offset": 72
+        },
+        {
+          "name": "output_query",
+          "zig_type": "?@FieldType(base.AudioOutputExtension, \"query\")",
+          "default_value": "null",
+          "offset": 80
+        },
+        {
+          "name": "output_select",
+          "zig_type": "?@FieldType(base.AudioOutputExtension, \"select\")",
+          "default_value": "null",
+          "offset": 88
+        },
+        {
+          "name": "output_active",
+          "zig_type": "?@FieldType(base.AudioOutputExtension, \"active\")",
+          "default_value": "null",
+          "offset": 96
+        },
+        {
+          "name": "idle",
+          "zig_type": "?*const fn (?*anyopaque) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 104
+        },
+        {
+          "name": "write_tracked",
+          "zig_type": "?*const fn (?*anyopaque, [*]const u8, u32, u32, u16, u16, *base.AudioBackendWriteReceipt) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 112
+        },
+        {
+          "name": "playback",
+          "zig_type": "?*const fn (?*anyopaque, *base.AudioBackendPlayback) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 120
+        },
+        {
+          "name": "flow",
+          "zig_type": "?*const fn (?*anyopaque, *const base.AudioBackendFlow) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 128
+        }
+      ]
+    },
+    {
+      "name": "AudioCaptureBackend2",
+      "size": 40,
+      "alignment": 8,
+      "fields": [
+        {
+          "name": "magic",
+          "zig_type": "u32",
+          "default_value": "base.audio_capture_backend_magic",
+          "offset": 0
+        },
+        {
+          "name": "version",
+          "zig_type": "u32",
+          "default_value": "1",
+          "offset": 4
+        },
+        {
+          "name": "size",
+          "zig_type": "u32",
+          "default_value": "@sizeOf(AudioCaptureBackend2)",
+          "offset": 8
+        },
+        {
+          "name": "flags",
+          "zig_type": "u32",
+          "default_value": "0",
+          "offset": 12
+        },
+        {
+          "name": "context",
+          "zig_type": "?*anyopaque",
+          "default_value": "null",
+          "offset": 16
+        },
+        {
+          "name": "io",
+          "zig_type": "?*const fn (?*anyopaque, *const base.AudioCaptureRequest, *base.AudioCaptureReply, [*]u8, u32) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 24
+        },
+        {
+          "name": "shutdown",
+          "zig_type": "?*const fn (?*anyopaque) callconv(.c) i32",
+          "default_value": "null",
+          "offset": 32
+        }
+      ]
+    }
+  ],
+  "callbacks": [
+    {
+      "name": "AudioBackendStatusFn2",
+      "zig_type": "*const fn (?*anyopaque, *AudioBackendStatus2) callconv(.c) i32"
+    },
+    {
+      "name": "AudioBackendRegisterFn2",
+      "zig_type": "*const fn ([*:0]const u8, *const AudioBackend2) callconv(.c) i32"
+    },
+    {
+      "name": "AudioCaptureRegisterFn2",
+      "zig_type": "*const fn ([*:0]const u8, *const AudioCaptureBackend2) callconv(.c) i32"
+    }
+  ]
+}
