@@ -217,6 +217,10 @@ pub fn finalizeDeviceMappings(acpi_info: anytype) bool {
         page_tables.dumpCr3SwitchStatus();
         return fail("R4OS CR3 switch failed");
     }
+    if (!phys.completeBootstrapMapping()) return fail("Physical bootstrap mapping transition failed");
+    if (comptime config.recovery_probe == .ui) {
+        if (!phys.verifyHighFrameAccess()) return fail("High physical memory readback failed");
+    }
     cr3_switch_done = true;
     k.puts("  R4OS CR3 switch ");
     k.puts("[OK]\r\n");

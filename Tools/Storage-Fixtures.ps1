@@ -99,3 +99,32 @@ function New-Installation([int]$Number,[bool]$BadManifest=$false,[string]$Resolu
     Checked $limine @('bios-install',$diskPath)
     return $diskPath
 }
+
+# Existing migration fixtures keep their small, identified partitions while
+# their physical capacity must meet the current installation target policy.
+function Get-RecoveryFixtureDiskBytes {
+    $profile=Join-Path $PSScriptRoot '../../Distribution/Profiles/Slim.R4S'
+    $values=@([IO.File]::ReadAllLines($profile)|Where-Object {$_ -cmatch '^IMAGE_MB=[0-9]+$'})
+    if($values.Count -ne 1){throw 'Missing unique Slim fixture capacity.'}
+    return [long]$values[0].Substring('IMAGE_MB='.Length)*1MB
+}
+function Grow-LocalFixture([string]$Path){
+ # Preserve the legacy installation, IDs and volume bytes. Only the free
+ # tail and both GPT copies grow to the actual Slim source capacity.
+ $f=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite)
+ try{
+  [long]$bytes=Get-RecoveryFixtureDiskBytes
+  [long]$oldSectors=$f.Length/512;[long]$sectors=$bytes/512
+  if($bytes -le $f.Length -or $sectors -gt [uint32]::MaxValue){throw 'Fixture growth requires a larger supported source capacity.'}
+  $entries=[byte[]]::new(16384);$f.Position=1024;$f.ReadExactly($entries)
+  $h=[byte[]]::new(512);$f.Position=512;$f.ReadExactly($h)
+  $diskGuid=[Guid]::new([byte[]]$h[56..71]).ToString()
+  $mbr=[byte[]]::new(512);$f.Position=0;$f.ReadExactly($mbr)
+  $f.SetLength($bytes);U32 $mbr 458 ([uint32]($sectors-1));Write-At $f 0 $mbr
+  Write-At $f (($oldSectors-33)*512) ([byte[]]::new(33*512))
+  Write-At $f 512 (Header $entries $diskGuid 1 ($sectors-1) 2 $sectors)
+  Write-At $f (($sectors-33)*512) $entries
+  Write-At $f (($sectors-1)*512) (Header $entries $diskGuid ($sectors-1) 1 ($sectors-33) $sectors)
+  $f.Flush($true)
+ }finally{$f.Dispose()}
+}

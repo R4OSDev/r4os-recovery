@@ -19,7 +19,7 @@
   "original_runtime39_unchanged": false,
   "versions": {
     "recovery": "0.1.70",
-    "recovery_kernel": "0.1.67",
+    "recovery_kernel": "0.1.68",
     "menu": "0.1.28",
     "snapshot_contract": "0.64.93",
     "snapshot_sdk": "0.64.210",
@@ -826,11 +826,11 @@
   "menu": {
     "path": "Artifacts/RecoveryTools/Menu/RECOVERY.R4X",
     "version": "0.1.28",
-    "sha256": "c064eb5cbcdd2b5223d715785d8cda4bc8bdeb3c6173e803524960460c8f77ff",
+    "sha256": "c0c3a027ae0ceb414554d98f0fe836ff717b2ae6bb285ee04a0d48fb5b91fdac",
     "source": "RecoveryTools/Menu",
     "entry": "R4XStart2:2",
     "platform_query": "Query2:2",
-    "qualification": "Actual bare build and canonical container check pass; native work pending."
+    "qualification": "Source build/App2 admission pass; final native package/menu/installation cases pending after diagnostic-only controlled memory-refusal correction."
   },
   "qualified_normal_context": {
     "kernel_version": "0.1.477",
@@ -843,16 +843,18 @@
   "original_source_archives_unchanged": true,
   "runtime39_source_rebuilt_generation2": true,
   "corresponding_sources": {
-    "commit": "97f7ccd69a4c074b5f149fec897669449560e2c5",
-    "files": 392,
+    "commit": "dfc39f12c25ea362ca55dabbe504ff6ee7fea8c7",
+    "files": 393,
     "archive": "Recovery-Embedded-0.90.85.zip",
-    "sha256": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
+    "sha256": "30e69ccea35ec9b18950e528503b09b972f223cea4573b7f2b4148587566291b",
     "controller_commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
     "controller_archive": "SDK-Controller-0.90.85.zip",
     "controller_sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
     "all_archive_source_bytes_equal_actual_passed_build_inputs": true,
     "canonical_r4std_source": "Legal/Sources/Libraries-0.90.85.zip",
-    "scope": "Current38 derivative source projects, Menu and builder scripts. Whole canonical Contract93/SDK210/Libraries58 archives remain separately supplied; controller SDK212 exact source also supplied. Original archives and licensing retained."
+    "scope": "Current38 derivative source projects, Menu and builder scripts. Whole canonical Contract93/SDK210/Libraries58 archives remain separately supplied; controller SDK212 exact source also supplied. Original archives and licensing retained.",
+    "includes_observed_ssh_completion_fix": true,
+    "includes_shared_sparse_fixture_copy": true
   },
   "ssh_completion_correction": {
     "reason": "Observed native truncated successful SSH exec during UEFI GPT repair; guest serial proves command completed.",
@@ -869,5 +871,68 @@
     "original_failure": "Research/API-ABI/Migration/0.90.85/NetworkBeforeSshDrain/Proof.json",
     "source_archive": "Services-SshService-0.90.85.zip",
     "source_archive_sha256": "f34f4671c98ad25376debb18d47b5eaeecf731a7f40bea4338202f524c87fd01"
+  },
+  "high_ram_bootstrap_fix": {
+    "scope": "Kernel-owned bitmap/allocation bootstrap bound; complete physical capacity admitted after existing owned-CR3 checks; actual high-frame readback in existing8GB UI diagnostic.",
+    "original": "Research/API-ABI/Migration/0.90.85/UefiHighRamDiag/Proof.json",
+    "qualification": "pending"
+  },
+  "package_memory_witness_correction": {
+    "reason": "Original1GB /PACKAGESMOKE OOM reaches explicit manifest minimum refusal instead of allocator exhaustion. Accept exactly OutOfMemory or InsufficientRam, verify required>capacity for latter, retain full deinit acknowledgement and zero writes.",
+    "original_failure": "Research/API-ABI/Migration/0.90.85/PackageLowRamFailure/Proof.json",
+    "scope": "Existing diagnostic branch only; product2GB default and production installation semantics unchanged; current70/68/28 candidates not published."
+  },
+  "ui_low_ram_guard": {
+    "passed": true,
+    "records": [
+      {
+        "probe": "none",
+        "before_sha256": "d9613efde7d17753434dc9efecc618617f5d873dd98f71a17b1cfa9bde3d81e8",
+        "after_sha256": "d9613efde7d17753434dc9efecc618617f5d873dd98f71a17b1cfa9bde3d81e8",
+        "byte_identical": true,
+        "path": "/root/Projekte/R4OS/Temp/ApiMigrationRun/085/UiGuardBuilds/none/bin/recovery.elf",
+        "exit_code": 0
+      },
+      {
+        "probe": "ram",
+        "before_sha256": "16c50e26038c33e6e77d75864aec033c47e617003d415a1273cc3a35c6b35fff",
+        "after_sha256": "16c50e26038c33e6e77d75864aec033c47e617003d415a1273cc3a35c6b35fff",
+        "byte_identical": true,
+        "path": "/root/Projekte/R4OS/Temp/ApiMigrationRun/085/UiGuardBuilds/ram/bin/recovery.elf",
+        "exit_code": 0
+      },
+      {
+        "probe": "storage",
+        "before_sha256": "635bc9b34f1433893abaaedb35155a0cc7d9b183fd594d213a1fc05c6051a327",
+        "after_sha256": "635bc9b34f1433893abaaedb35155a0cc7d9b183fd594d213a1fc05c6051a327",
+        "byte_identical": true,
+        "path": "/root/Projekte/R4OS/Temp/ApiMigrationRun/085/UiGuardBuilds/storage/bin/recovery.elf",
+        "exit_code": 0
+      },
+      {
+        "probe": "input",
+        "before_sha256": "c7d8855c88735a549c87ad05c12bf371b2554d0efafd00eaa3f2ae8acafd4a5f",
+        "after_sha256": "c7d8855c88735a549c87ad05c12bf371b2554d0efafd00eaa3f2ae8acafd4a5f",
+        "byte_identical": true,
+        "path": "/root/Projekte/R4OS/Temp/ApiMigrationRun/085/UiGuardBuilds/input/bin/recovery.elf",
+        "exit_code": 0
+      },
+      {
+        "probe": "ui",
+        "before_sha256": "67ef6bee74241ef8486a48cb36124f4885c898ca2953c6409177c74515664e65",
+        "after_sha256": "101230213f2aa9834edfeffc52c55187d7aeeb4f473a3ed09e03acfefecc0f7e",
+        "byte_identical": false,
+        "path": "/root/Projekte/R4OS/Temp/ApiMigrationRun/085/UiGuardBuilds/ui/bin/recovery.elf",
+        "exit_code": 0
+      }
+    ],
+    "only_ui_probe_binary_changes": true,
+    "production_pair_and_other_native_probe_bytes_unchanged": true,
+    "scope": "Direct recompilation of all five exact runtime/configuration variants after UI-only low-RAM guard. Prior non-UI native results retain identical actual whole binary identities; UI qualification must run on its changed probe."
+  },
+  "uefi_timeout": {
+    "original": "Research/API-ABI/Migration/0.90.85/UefiGuardBootFailure/Proof.json",
+    "status": "Single120s pre-kernel timeout not reproduced in unchanged live replay or complete28-frame UI rerun. Root cause unproven; existing runner now captures early QMP state on failure.",
+    "full_replay": "Research/API-ABI/Migration/0.90.85/UIUefiGuard68Replay/Proof.json"
   }
 }

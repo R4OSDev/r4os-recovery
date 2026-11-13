@@ -331,8 +331,8 @@
     {
       "id": "Recovery-Embedded-0.90.85",
       "archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
-      "archiveSha256": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
-      "commit": "97f7ccd69a4c074b5f149fec897669449560e2c5",
+      "archiveSha256": "30e69ccea35ec9b18950e528503b09b972f223cea4573b7f2b4148587566291b",
+      "commit": "dfc39f12c25ea362ca55dabbe504ff6ee7fea8c7",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     },
     {
@@ -1382,7 +1382,8 @@
         "frozen_sdk": "0.64.210",
         "source_tree_sha256": "e2f8cb7d78d9c002f56db571cbbccdbb59739c121a039ae7a18668591908f70a",
         "manifest_sha256": "5423a08d4e8edb44b92a015a85bf67a12d5f746c47297792256ef15fefded36b",
-        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip"
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
+        "auxiliary_source_archive": "Legal/Sources/Services-SshService-0.90.85.zip"
       }
     },
     {
@@ -2072,7 +2073,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "6c49ab315f9f341eba23ae90ea826f11ee75c996760b2cf18ff2a7d78184b2c3",
+      "sha256": "cbd38e500a53c53489643d3043aa8f15993faae9b0b279f66161a25ba8b8f20f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -3313,8 +3314,8 @@
     },
     {
       "path": "Kernel/kernel/memory_boot.zig",
-      "bytes": 6662,
-      "sha256": "ac159afe91d47a16c526315bc1d90835a3eac4149bcf39311047427d4a0f2087",
+      "bytes": 6916,
+      "sha256": "eed916d20c2312976cef8faeacc2738044dfd87bf71d2c37da04c9e98521b655",
       "originalSha256": "f5e22bd361c3ea530c8a85bed5a1b3ceacb0ab1de2f9e2422f1ed89a96165b5b",
       "origin": {
         "path": "kernel/memory_boot.zig",
@@ -3779,8 +3780,8 @@
     },
     {
       "path": "Kernel/memory/phys.zig",
-      "bytes": 13881,
-      "sha256": "b25ccc0415d021af69fbb07f3c3c8dbac61372afb8db9082ab52122e079c9982",
+      "bytes": 16950,
+      "sha256": "b80f9655b6a63580652e526032c190de17900182108f8e74916dd0ee90bdec0f",
       "originalSha256": "b25ccc0415d021af69fbb07f3c3c8dbac61372afb8db9082ab52122e079c9982",
       "origin": {
         "path": "memory/phys.zig",
@@ -7071,8 +7072,8 @@
         "path": "Legal/Sources/README-0.90.85.txt",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "2aae60e2b3c78ab5ab1648c98d6ed4629673e8028080f34ec3fce1b786df820e",
-      "bytes": 1524
+      "sha256": "0bc76c69cd00e697001a058845fce3dbb874037a5e2bf169e3b5a1cc7ba6baa9",
+      "bytes": 1678
     },
     {
       "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
@@ -7082,8 +7083,8 @@
         "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
-      "bytes": 887835
+      "sha256": "30e69ccea35ec9b18950e528503b09b972f223cea4573b7f2b4148587566291b",
+      "bytes": 891196
     },
     {
       "path": "Legal/Sources/SDK-0.90.84.zip",
@@ -44216,8 +44217,8 @@
     },
     {
       "path": "RecoveryTools/Contracts.de.txt",
-      "bytes": 23911,
-      "sha256": "8ce9273726cf1f57b8a2f4902e3cb866ae9087fe2f7c493e2c28909883979cdb",
+      "bytes": 24275,
+      "sha256": "b2c146f578875193474573a4bfb4fe1015a0cb6a719552c7c77b38f37638d8cc",
       "originalSha256": null,
       "origin": null
     },
@@ -47806,8 +47807,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package_diagnostic.zig",
-      "bytes": 6696,
-      "sha256": "4dd5e0a8550fa8af6a976549cf520483fa2c09bdeaaa723a1a3d0adf9f77ad6a",
+      "bytes": 7241,
+      "sha256": "60dadc7961722538312f882c460e9516ca687d00ea6efe6b4fb3b4aa3d298c72",
       "originalSha256": null,
       "origin": null
     },
@@ -74937,6 +74938,71 @@
           "path": "RecoveryTools/Embedded/Services-SshService/src/main.zig",
           "before": "44c6cdb2ce30034617e8b8a3b149cf52f38f00945e4e123734d6ab196b02f23d",
           "after": "73e9f0143b5252b9345acb5296706f127e301f71c27a7903d4874fc930e30fd4"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 unpublished derived-source archive refreshed from exact admitted current sources after native-observed SSH final-output race fix. Original45 archives and canonical snapshots unchanged; first candidate archive retained in local evidence.",
+      "changes": [
+        {
+          "path": "Legal/Sources/README-0.90.85.txt",
+          "before": "2aae60e2b3c78ab5ab1648c98d6ed4629673e8028080f34ec3fce1b786df820e",
+          "after": "0bc76c69cd00e697001a058845fce3dbb874037a5e2bf169e3b5a1cc7ba6baa9"
+        },
+        {
+          "path": "Legal/Sources/Recovery-Embedded-0.90.85.zip",
+          "before": "80bf2c78ff3f6bd055b1bc8ec7220c698fe343811e88f0b623a85de9a0cf3d96",
+          "after": "30e69ccea35ec9b18950e528503b09b972f223cea4573b7f2b4148587566291b"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 actual UEFI8GB PF: live original page-table walk proves HHDM high RAM absent before own CR3. Place PMM bitmap in guaranteed low usable RAM; constrain every allocator until owned direct-map transition. Existing UI diagnostic reserves/writes/reads/zeros/returns one actual high frame. Main Rust Kernel unchanged.",
+      "changes": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "6c49ab315f9f341eba23ae90ea826f11ee75c996760b2cf18ff2a7d78184b2c3",
+          "after": "cbd38e500a53c53489643d3043aa8f15993faae9b0b279f66161a25ba8b8f20f"
+        },
+        {
+          "path": "Kernel/kernel/memory_boot.zig",
+          "before": "ac159afe91d47a16c526315bc1d90835a3eac4149bcf39311047427d4a0f2087",
+          "after": "eed916d20c2312976cef8faeacc2738044dfd87bf71d2c37da04c9e98521b655"
+        },
+        {
+          "path": "Kernel/memory/phys.zig",
+          "before": "b25ccc0415d021af69fbb07f3c3c8dbac61372afb8db9082ab52122e079c9982",
+          "after": "d31fefb9cf32a2b8fa9ff466f6628165033ec0fd30c2620095e8d0d6c9d21304"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 existing UI probe is also used by original low-RAM install refusals. Skip only the inapplicable high-page diagnostic on machines whose usable RAM ends below4GiB;8GB UI still requires actual high-frame write/read. Production and other probes have no call; exact binary equivalence must be checked before accepting prior results.",
+      "changes": [
+        {
+          "path": "Kernel/memory/phys.zig",
+          "before": "d31fefb9cf32a2b8fa9ff466f6628165033ec0fd30c2620095e8d0d6c9d21304",
+          "after": "b80f9655b6a63580652e526032c190de17900182108f8e74916dd0ee90bdec0f"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 documentation only: current source-built R4ZIP3, three supported source geometries and existing streamed-image/ordinary-payload limits; preserve2GB product RAM default and label historical measurements.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Contracts.de.txt",
+          "before": "8ce9273726cf1f57b8a2f4902e3cb866ae9087fe2f7c493e2c28909883979cdb",
+          "after": "b2c146f578875193474573a4bfb4fe1015a0cb6a719552c7c77b38f37638d8cc"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 observed1GB native package witness: preparation fits available RAM and correctly refuses the manifest minimum with InsufficientRam. Accept only the two actual memory refusals; InsufficientRam additionally checks required>detected capacity; preserve full deinit acknowledgement, invalid-package oracles and writes=0. Unpublished Menu28/Recovery70/Kernel68 candidates are rebuilt; no product minimum change.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Menu/src/package_diagnostic.zig",
+          "before": "4dd5e0a8550fa8af6a976549cf520483fa2c09bdeaaa723a1a3d0adf9f77ad6a",
+          "after": "60dadc7961722538312f882c460e9516ca687d00ea6efe6b4fb3b4aa3d298c72"
         }
       ]
     }

@@ -1,11 +1,13 @@
 const std = @import("std");
 const boot_info = @import("../bootloader/boot_info.zig");
 const blocks = @import("blocks.zig");
-const mem_map = @import("map.zig");
 const owner_locks = @import("owner_locks.zig");
 const k = @import("../kernel/log.zig");
 
 pub const FRAME_SIZE: u64 = 4096;
+// The legacy Limine handoff maps the low4GiB. Observed UEFI page tables
+// can omit higher usable RAM until our own complete direct map is active.
+const BOOTSTRAP_PHYS_LIMIT: u64 = 4 * 1024 * 1024 * 1024;
 
 pub const Stats = struct {
     total_frames: u64 = 0,
@@ -59,6 +61,7 @@ var free_frames: u64 = 0;
 var next_hint: u64 = 0;
 var hhdm_offset: u64 = 0;
 var initialized = false;
+var allocation_frame_limit: u64 = 0;
 
 pub fn init() bool {
     const lock_token = owner_locks.physical_memory.acquire();
@@ -66,17 +69,25 @@ pub fn init() bool {
     const entries = boot_info.memoryMap();
     if (entries.len == 0) return false;
     hhdm_offset = boot_info.hhdmOffset() orelse return false;
-    const summary = mem_map.summarize();
-    if (summary.largest_usable_len == 0) return false;
 
     const max_addr = highestUsableAddress(entries);
     total_frames = (alignUpChecked(max_addr, FRAME_SIZE) orelse return false) / FRAME_SIZE;
     bitmap_bytes = (alignUpChecked(total_frames, 8) orelse return false) / 8;
 
-    const bitmap_phys = summary.largest_usable_base;
+    allocation_frame_limit = @min(total_frames, BOOTSTRAP_PHYS_LIMIT / FRAME_SIZE);
+    var bitmap_base: ?u64 = null;
+    var largest_mapped_len: u64 = 0;
+    const needed = alignUpChecked(bitmap_bytes, FRAME_SIZE) orelse return false;
+    for (entries) |entry| {
+        if (entry.kind != .usable or entry.usable_base >= BOOTSTRAP_PHYS_LIMIT) continue;
+        const base = @max(entry.usable_base, FRAME_SIZE);
+        const end = @min(checkedAdd(entry.usable_base, entry.usable_len) orelse return false, BOOTSTRAP_PHYS_LIMIT);
+        if (end <= base or end - base < needed or end - base <= largest_mapped_len) continue;
+        bitmap_base = base;
+        largest_mapped_len = end - base;
+    }
+    const bitmap_phys = bitmap_base orelse return false;
     const bitmap_end = checkedAdd(bitmap_phys, bitmap_bytes) orelse return false;
-    const largest_end = checkedAdd(summary.largest_usable_base, summary.largest_usable_len) orelse return false;
-    if (bitmap_end > largest_end) return false;
 
     bitmap = @ptrFromInt(physToVirt(bitmap_phys));
     @memset(bitmap[0..@intCast(bitmap_bytes)], 0xFF);
@@ -108,6 +119,57 @@ pub fn init() bool {
     return true;
 }
 
+// Called only after the owned CR3 and its complete direct map passed the
+// existing switch/readback checks. All allocation paths share this bound.
+pub fn completeBootstrapMapping() bool {
+    const lock_token = owner_locks.physical_memory.acquire();
+    defer owner_locks.physical_memory.release(lock_token);
+    if (!initialized) return false;
+    allocation_frame_limit = total_frames;
+    return true;
+}
+
+// Existing UI diagnostic: reserve a real high frame through the physical
+// owner, verify both ends through the active direct map, zero and return it.
+// Production does not call this diagnostic and exposes no new module API.
+pub fn verifyHighFrameAccess() bool {
+    var frame: ?u64 = null;
+    {
+        const lock_token = owner_locks.physical_memory.acquire();
+        defer owner_locks.physical_memory.release(lock_token);
+        if (!initialized or allocation_frame_limit != total_frames) return false;
+        // The same UI diagnostic kernel runs the original low-RAM install
+        // refusals. Such a machine has no high frame to test; it must still
+        // reach the package owner's memory checks.8GB UI cases require OK.
+        if (total_frames <= BOOTSTRAP_PHYS_LIMIT / FRAME_SIZE) {
+            k.puts("[RECOVERYMEMORY] high_frame_readback=NOT_APPLICABLE reason=no-high-usable-frame\r\n");
+            return true;
+        }
+        var index = BOOTSTRAP_PHYS_LIMIT / FRAME_SIZE;
+        while (index < total_frames) : (index += 1) {
+            if (isUsed(index)) continue;
+            setUsed(index, true);
+            free_frames -= 1;
+            frame = index * FRAME_SIZE;
+            break;
+        }
+    }
+    const physical = frame orelse return false;
+    defer freeFrame(physical);
+    const first: *volatile u64 = @ptrFromInt(physToVirt(physical));
+    const last: *volatile u64 = @ptrFromInt(physToVirt(physical + FRAME_SIZE - @sizeOf(u64)));
+    first.* = 0x1690_85ad_4a6b_c123;
+    last.* = 0xcafe_0123_890a_bcd4;
+    const ok = first.* == 0x1690_85ad_4a6b_c123 and last.* == 0xcafe_0123_890a_bcd4;
+    const bytes: [*]u8 = @ptrFromInt(physToVirt(physical));
+    @memset(bytes[0..FRAME_SIZE], 0);
+    if (!ok) return false;
+    k.puts("[RECOVERYMEMORY] high_frame_readback=OK physical=0x");
+    k.putHex(physical, 16);
+    k.puts("\r\n");
+    return true;
+}
+
 // 0.56.12: Bitmap wortweise als u64 lesen, wenn die Basis 8-Byte-
 // ausgerichtet ist (HHDM ist seitenausgerichtet, in der Praxis immer der
 // Fall). Volle Woerter (0xFF..) werden mit EINEM Vergleich uebersprungen
@@ -128,7 +190,8 @@ pub fn allocFrame() ?u64 {
     if (!initialized) return null;
     const words = bitmapWords() orelse return allocFrameLinear();
 
-    const wc = wordCount();
+    const wc = (allocation_frame_limit + 63) / 64;
+    if (wc == 0) return null;
     var scanned: u64 = 0;
     var wi = next_hint / 64;
     var start_bit: u6 = @intCast(next_hint % 64);
@@ -148,7 +211,7 @@ pub fn allocFrame() ?u64 {
                 start_bit = 1;
                 continue;
             }
-            if (frame < total_frames) {
+            if (frame < allocation_frame_limit) {
                 words[wi] |= @as(u64, 1) << bit;
                 free_frames -= 1;
                 next_hint = frame + 1;
@@ -172,7 +235,7 @@ pub fn allocFrameExtent(max_count: u64) ?FrameExtent {
     const base = allocFrame() orelse return null;
     const start = base / FRAME_SIZE;
     var count: u64 = 1;
-    while (count < max_count and start + count < total_frames and !isUsed(start + count)) : (count += 1) {
+    while (count < max_count and start + count < allocation_frame_limit and !isUsed(start + count)) : (count += 1) {
         setUsed(start + count, true);
         free_frames -= 1;
     }
@@ -186,8 +249,8 @@ pub fn allocFrameExtent(max_count: u64) ?FrameExtent {
 fn allocFrameLinear() ?u64 {
     var scanned: u64 = 0;
     var frame = next_hint;
-    while (scanned < total_frames) : (scanned += 1) {
-        if (frame >= total_frames) frame = 0;
+    while (scanned < allocation_frame_limit) : (scanned += 1) {
+        if (frame >= allocation_frame_limit) frame = 0;
         if (frame == 0) {
             frame = 1;
             continue;
@@ -214,9 +277,9 @@ pub fn allocContiguousFramesBelow(count: u64, max_phys_addr: u64) ?u64 {
     defer owner_locks.physical_memory.release(lock_token);
     if (!initialized or count == 0) return null;
     const addressable_frames = if (max_phys_addr == std.math.maxInt(u64))
-        total_frames
+        allocation_frame_limit
     else
-        @min(total_frames, (max_phys_addr + 1) / FRAME_SIZE);
+        @min(allocation_frame_limit, (max_phys_addr + 1) / FRAME_SIZE);
     if (count > addressable_frames) return null;
     const words = bitmapWords();
     var start: u64 = 1;

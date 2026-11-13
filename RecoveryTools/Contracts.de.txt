@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: technische Vertraege, Format 1
 ===========================================
 
-Stand 0.78.12. Formatvertrag der implementierten Recovery-Abläufe;
+Stand 0.90.85. Formatvertrag der implementierten Recovery-Abläufe;
 konkrete Abnahmen und Hardwaregrenzen stehen in DOCUMENTATION.de.txt.
 1 MB = 1048576 Bytes. Alle Sektoradressen sind logische 512-Byte-Sektoren.
 
@@ -139,14 +139,15 @@ zusaetzlich vollstaendig physisch reserviert; minimumRamBytes deckt keinen
 beliebig grossen Auftrag ab. Ab Recovery 0.1.23 verlangt der Paketstandard
 2 GB OS-RAM aus usable, bootloader_reclaimable und kernel_and_modules;
 reservierte Bereiche, MMIO, Framebuffer und Adressluecken zaehlen nicht mit.
-Die drei gezielten SMP4-Ablaeufe mit 6 GB installiertem RAM messen maximal
+Die historischen drei SMP4-Ablaeufe mit 6 GB installiertem RAM massen maximal
 1466601472 Bytes Gesamtverbrauch. Zusaetzlich 512 MB Reserve und Aufrundung
 auf volle GB ergeben 2147483648 Bytes Mindestumfang. Dies ersetzt nicht die
-physische Vorabreservierung jedes Auftrags; die abschliessende Pruefung der
-konkreten Release-Dateien steht in Roadmap 0.78.14. Ein reiner Menue-/Reparaturboot kann mit weniger RAM gelingen,
+physische Vorabreservierung jedes konkreten Auftrags. Ein reiner
+Menue-/Reparaturboot kann mit weniger RAM gelingen,
 er verspricht damit keine erfolgreiche Paketvorbereitung.
-Seit 0.76.15 prueft Recovery diesen Paketvertrag ueber
-das eingefrorene R4ZIP.R4P; die Veroeffentlichung folgt separat.
+Seit 0.76.15 prueft Recovery diesen Paketvertrag ueber R4ZIP.R4P.
+Seit0.90.85 ist R4ZIP0.1.3 eine neu aus den festgehaltenen Besitzerquellen
+gebaute Generation2-Variante; Herkunftsarchiv und Lizenz bleiben erhalten.
 
 R4OS-Paket ab 0.76.X
 -------------------
@@ -169,12 +170,14 @@ bootFiles ist eine eindeutige Liste relativer BOOT-Pfade;
 boot/r4os.elf ist Pflicht. limine.conf darf in keinem verwalteten Pfad
 vorkommen. Das verschachtelte eigenstaendige Recovery-ZIP muss vollstaendig
 gueltig sein und genau zur angegebenen Recovery-Version passen. Das
-Diskimage ist das vereinbarte einzelne 2048-MB-GPT-Image mit fuenf Rollen.
+Diskimage ist ein einzelnes GPT-Image mit fuenf Rollen. Der aktuelle
+Standard hat22528MB; die frueheren16384MB und2048MB bleiben als ausdruecklich
+unterstuetzte Quellgeometrien erhalten.
 Es gibt kein DATA-Ersatzimage. Alte ZIP-Formate und GitHub-Source-ZIPs ohne
 diesen Vertrag gelten nicht als Installationspaket.
 
 Das Original-ZIP bleibt fuer die spaetere INSTALL-Ablage unveraenderlich
-erhalten. R4ZIP 0.1.2 entpackt disk.img ueber ein 160-KB-Fenster; der Import
+erhalten. R4ZIP entpackt disk.img ueber ein 160-KB-Fenster; der Import
 haelt nur nichtleere 64-KB-Bloecke. CRC32, Gesamtgroesse und SHA256 betreffen
 weiterhin alle logischen Imagebytes, einschliesslich ausgelassener Nullbloecke.
 Die uebrigen Archiveintraege haben getrennte Ausgaben, keinen gemeinsamen
@@ -182,12 +185,15 @@ Block von ueber 2 GB. Der gemeinsame NTFS-Leser loest daraus unabhaengige
 SYSTEM-Dateien auf. Nach dem vollstaendigen inneren BOOT-/Recovery-/Versions-
 abgleich wird die temporaere Imagearena vor der Zielplanung freigegeben.
 BOOT und neue RECOVERY-Volumes besitzen nur Metadaten und geborgte Nutzdaten;
-es entstehen keine vollen 128-/512-MB-Zielbilder. SYSTEM/DATA werden fuer die
+es entstehen keine vollen128-/5120-MB-Zielbilder. SYSTEM/DATA werden fuer die
 echte Zielgeometrie vorbereitet. Alle Quelldateien, Metadaten und Arbeits-
 puffer bleiben bis zum letzten Schreib-/Flush-Aufruf physisch gebunden.
 
-Ein Archiv ist auf 2 GB komprimiert, 4 GB Gesamtausgabe, 4096 Eintraege und
-255 ASCII-Bytes pro ZIP-Pfad begrenzt. Ein Manifest darf hoechstens 1 MB
+Ein Archiv ist auf2GB komprimiert,4096 Eintraege und255 ASCII-Bytes pro
+ZIP-Pfad begrenzt. Die gewoehnlichen Ausgaben sind gemeinsam auf4GB begrenzt.
+Ein R4OS-Installationspaket darf zusaetzlich das logisch grosse disk.img
+streamen; package.max_system_payload_bytes leitet die Gesamtgrenze aus
+storage_tools.installation.standard_bytes plus4GB ab. Ein Manifest darf hoechstens 1 MB
 haben. Der SYSTEM-Import erlaubt 4000 Baumknoten, 1023 UTF-8-Pfadbytes und
 24 Ebenen; Reparse-Punkte, Hardlinks und inkonsistentes NTFS werden verworfen.
 Diese technischen Grenzen sind keine Zusage fuer das finale RAM-Minimum.

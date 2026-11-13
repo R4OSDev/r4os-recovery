@@ -88,6 +88,10 @@ try{
                 (Test-Path -LiteralPath (Join-Path $output 'disk-1.img')) -and (Test-Path -LiteralPath (Join-Path $output 'disk-2.img')) -and (Test-Path -LiteralPath (Join-Path $output 'blank.img'))
             if(!$cached){
                 $null=New-Installation 1 $false $size
+                # Both media meet the size rule, so excluding the boot USB
+                # and hiding USB during a local boot still test their actual
+                # identity policy rather than an incidental capacity refusal.
+                Grow-LocalFixture (Join-Path $output 'disk-1.img')
                 # Deliberate non-executable marker fixtures. A filename alone
                 # does not identify an OS; these exercise the readable headers.
                 $mz=Join-Path $output 'marker-mz.bin';[IO.File]::WriteAllBytes($mz,[byte[]]@(77,90))
@@ -95,8 +99,12 @@ try{
                 $linux=Join-Path $output 'marker-linux.bin';$header=[byte[]]::new(1024);$header[510]=85;$header[511]=170
                 [Text.Encoding]::ASCII.GetBytes('HdrS').CopyTo($header,514);[IO.File]::WriteAllBytes($linux,$header)
                 $null=New-Installation 2 $false $size @{SYSTEM=@("$mz|/Windows/System32/ntoskrnl.exe","$regf|/Windows/System32/config/SYSTEM");DATA=@("$linux|/boot/vmlinuz-fixture")}
+                # Original2GB target images no longer satisfy the canonical
+                # installation minimum. Preserve their identified volumes;
+                # grow only the disposable local disk's unallocated tail.
+                Grow-LocalFixture (Join-Path $output 'disk-2.img')
                 $blank=[IO.File]::Open((Join-Path $output 'blank.img'),[IO.FileMode]::Create,[IO.FileAccess]::ReadWrite)
-                try{$blank.SetLength(2048MB)}finally{$blank.Dispose()}
+                try{$blank.SetLength((Get-RecoveryFixtureDiskBytes))}finally{$blank.Dispose()}
                 [IO.File]::WriteAllText($cache,$serialized,$utf8)
             }
             $serialLog=Join-Path $output "$name-serial.log";$errorLog=Join-Path $output "$name-qemu.log"
@@ -124,6 +132,7 @@ try{
                 if(!$process.Start()){throw 'QEMU did not start.'}
                 $started=$true;$stdout=$process.StandardOutput.ReadToEndAsync();$stderr=$process.StandardError.ReadToEndAsync()
                 Wait-Marker '\[RECOVERYUI\] progress=READY'
+                Wait-Marker '\[RECOVERYMEMORY\] high_frame_readback=OK physical=0x0000000[1-9A-Fa-f][0-9A-Fa-f]{8}'
                 $session=Open-Qmp $port
                 $baseline=Capture 'progress'
                 if("$($baseline.Width)x$($baseline.Height)x32" -cne $size){throw 'Limine did not provide the requested framebuffer mode.'}
@@ -205,7 +214,21 @@ try{
                 while(!$process.WaitForExit(100)){if($watch.Elapsed.TotalSeconds -ge $TimeoutSeconds){throw 'Recovery restart timed out.'}}
                 if($process.ExitCode -ne 0){throw 'QEMU did not exit normally on guest reset.'}
             }catch{
-                if($null -ne $session -and !$process.HasExited){try{$null=Qmp $session 'screendump' @{filename=(Join-Path $output "$name-failed.ppm")}}catch{}}
+                # An early firmware/kernel timeout precedes our normal QMP
+                # connection. Preserve its real state before terminating it.
+                if(!$process.HasExited){
+                    if($null -eq $session){try{$session=Open-Qmp $port}catch{}}
+                    if($null -ne $session){
+                        try{$null=Qmp $session 'stop'}catch{}
+                        try{$null=Qmp $session 'screendump' @{filename=(Join-Path $output "$name-failed.ppm")}}catch{}
+                        foreach($command in @('info registers','info cpus','info mem')){
+                            try{
+                                $state=Qmp $session 'human-monitor-command' @{'command-line'=$command;'cpu-index'=0}
+                                [IO.File]::WriteAllText((Join-Path $output ("$name-failed-"+$command.Replace(' ','-')+'.txt')),[string]$state,$utf8)
+                            }catch{}
+                        }
+                    }
+                }
                 throw
             }finally{
                 if($null -ne $session){$session.Writer.Dispose();$session.Reader.Dispose();$session.Client.Dispose()}

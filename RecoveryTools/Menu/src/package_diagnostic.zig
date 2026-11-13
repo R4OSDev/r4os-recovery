@@ -69,10 +69,17 @@ fn witness(sys: *const r4os.r4sys.Context, dev: *const r4os.r4dev.Context, args:
     const kind: packages.package.Kind = if (recovery or reject) .recovery else .r4os;
     const path = if (recovery or reject) "R:\\INSTALL\\RECOVERY.ZIP" else "R:\\INSTALL\\RELEASE.ZIP";
     session.prepare(path, kind, null) catch |err| {
-        if ((oom and err == error.OutOfMemory) or (reject and (err == error.HashMismatch or err == error.InvalidArchive or err == error.Inflate or err == error.Checksum or err == error.FileSetMismatch))) {
+        const memory_refused = oom and (err == error.OutOfMemory or err == error.InsufficientRam);
+        if (memory_refused or (reject and (err == error.HashMismatch or err == error.InvalidArchive or err == error.Inflate or err == error.Checksum or err == error.FileSetMismatch))) {
+            const ram_capacity = session.pool.ram_bytes;
+            const ram_required = if (session.prepared) |prepared| prepared.recovery.minimumRamBytes else 0;
+            if (err == error.InsufficientRam) try check(ram_required > ram_capacity);
             try check(session.deinit());
             cleaned = true;
-            sys.write(if (oom) "[PACKAGESMOKE] insufficient-ram=CONTROLLED result=OK writes=0\r\n" else "[PACKAGESMOKE] invalid-package=REJECTED result=OK writes=0\r\n");
+            if (oom) {
+                var text: [192]u8 = undefined;
+                sys.write(try std.fmt.bufPrint(&text, "[PACKAGESMOKE] insufficient-ram=CONTROLLED reason={s} ram_capacity={d} ram_required={d} result=OK writes=0\r\n", .{ @errorName(err), ram_capacity, ram_required }));
+            } else sys.write("[PACKAGESMOKE] invalid-package=REJECTED result=OK writes=0\r\n");
             return;
         }
         return err;

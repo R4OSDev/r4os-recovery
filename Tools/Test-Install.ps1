@@ -57,24 +57,6 @@ function Start-Guest([string[]]$Arguments){
  $script:session=$null
 }
 function Blank([string]$Path,[long]$Bytes){$f=[IO.File]::Create($Path);try{$f.SetLength($Bytes)}finally{$f.Dispose()}}
-function Grow-LocalFixture([string]$Path){
- # Keep the legacy installation and its small volumes, with unused tail
- # space for a local reinstall using today's larger SYSTEM default.
- $f=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite)
- try{
-  [long]$oldSectors=$f.Length/512;[long]$sectors=22GB/512
-  $entries=[byte[]]::new(16384);$f.Position=1024;$f.ReadExactly($entries)
-  $h=[byte[]]::new(512);$f.Position=512;$f.ReadExactly($h)
-  $diskGuid=[Guid]::new([byte[]]$h[56..71]).ToString()
-  $mbr=[byte[]]::new(512);$f.Position=0;$f.ReadExactly($mbr)
-  $f.SetLength(22GB);U32 $mbr 458 ([uint32]($sectors-1));Write-At $f 0 $mbr
-  Write-At $f (($oldSectors-33)*512) ([byte[]]::new(33*512))
-  Write-At $f 512 (Header $entries $diskGuid 1 ($sectors-1) 2 $sectors)
-  Write-At $f (($sectors-33)*512) $entries
-  Write-At $f (($sectors-1)*512) (Header $entries $diskGuid ($sectors-1) 1 ($sectors-33) $sectors)
-  $f.Flush($true)
- }finally{$f.Dispose()}
-}
 function Set-FixtureBootLabel([string]$Path){
  # Regress the real FAT lookup: the volume label BOOT must not shadow /boot.
  $f=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite)

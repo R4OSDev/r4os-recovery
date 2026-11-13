@@ -4,22 +4,25 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.69 / its own Zig Kernel0.1.66 implements separate canonical
-Query2/Start2/DriverInit2/ProtocolInit2 bindings. Contract0.64.93 and SDK0.64.210
-are pinned at their owners; only the snapshots' Git attributes use Recovery's
-byte-preserving host policy. All other canonical source bytes and the complete
-upstream archives remain exact. SDK0.64.211 controls the shared build.
+Recovery0.1.70 / its own Zig Kernel0.1.68 and Menu0.1.28 implement the
+canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. The Recovery
+owner builds all39 embedded modules:38 explicit source derivatives under
+`RecoveryTools/Embedded/`, plus canonical R4STD0.2.9 from the pinned
+Libraries0.64.58 snapshot. Their original source archives remain available.
+Contract0.64.93, snapshot SDK0.64.210 and Libraries0.64.58 retain their exact
+canonical source bytes, except for the three documented `.gitattributes`
+host policies. SDK0.64.212 controls the shared Linux/Windows build.
 
-The provider is qualified on Linux/KVM using real BIOS/UEFI API2 RAM modules,
-CPU RDRAND, lifetime and storage/clock calls, the original image refusals and
-production HTTPS/retry/cache checks. Current source and artifact identities are
-recorded in Provenance; earlier storage/input/network candidate hashes keep
-their original scope. This does not publish a binary release or qualify Windows
-or physical hardware. The original39 runtime modules and Menu27's App1 entry
-remain until the separately planned embedded consumer migration.
+The current Linux/KVM qualification and exact source/artifact identities are
+recorded in Provenance and DOCUMENTATION.de.txt. Older candidate results keep
+their original pair identities. The 0.90.85 qualification is in progress;
+installation, update, fault-recovery and final normal-system benchmark results
+must be read at their actual recorded scope. This source work does not publish
+a binary release or qualify execution on Windows or physical hardware.
+The old technical platform provider remains until the controlled0.90.89 cutover.
 
 The current baseline contains pinned kernel, platform contract and SDK sources,
-39 precompiled console, service, driver, protocol and library modules, and
+39 source-built console, service, driver, protocol and library modules, and
 their original source archives and license notices. Since 0.76.2 the separate
 Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
 complete 64-MB FAT32 runtime is loaded by Limine, checked against its kernel's
@@ -37,7 +40,10 @@ from the normal workspace or fetch dependencies. Results are written to
 
 Add `-Mode Kernel` to build `Artifacts/Kernel/bin/recovery.elf` using the
 recorded Zig version and the paired `Artifacts/Runtime/runtime.img`.
-`-Mode Runtime` builds that volume and the Recovery-owned console tools.
+`-Mode Embedded` builds all39 modules from their locked sources using the
+shared SDK profiles. It verifies the admitted runtime artifacts and refuses
+an unrecorded replacement. `-Mode Runtime` builds the paired volume and the
+Recovery-owned console tools.
 `-Mode RuntimeTest` uses a separate `Artifacts/RuntimeApi2/runtime.img` and
 real App2/DriverInit2/ProtocolInit2 diagnostic fixtures. It checks late module
 and media access after actual USB removal,32 imports, metadata/clock/RDRAND,
@@ -127,13 +133,14 @@ explicit local acceptance candidates; `Publish` refuses technical mode.
 
 ## Repository layout
 
-The frozen inputs and their owners are separated explicitly:
+The pinned inputs and their owners are separated explicitly:
 
     Kernel/             Recovery kernel sources
     Platform/Contract/  Pinned platform API and ABI contract
     Platform/SDK/       Pinned SDK sources
+    Platform/Libraries/ Pinned canonical library sources
     Platform/Distribution/  Explicitly frozen ImageCreator sources
-    RecoveryTools/      Recovery menu and installation/update workflows
+    RecoveryTools/      Recovery menu, embedded source derivatives and workflows
     Runtime/            Configuration, imported modules, and recovery media
     Provenance/         Import versions, source commits, hashes, and manifests
     Legal/              Original source archives, manifests and notices
@@ -208,12 +215,12 @@ short affected cases; other installation/network tests need no repetition.
 ## Recovery console host
 
 `RecoveryTools/Menu` owns RECOVERY.R4X and builds against the pinned SDK and
-Contract. The 39 imported binaries stay fixed; the runtime image additionally
-contains the locally built Recovery application. Its manifest and source
+Contract. The39 embedded source builds and the separate Recovery application are
+verified together before creating the runtime image. Its manifest and source
 participate in input verification, and the build checks its real imports.
 
 The six English menu entries use Up/Down and Enter. Terminal starts the
-unchanged TERMINAL.R4X in a separate console session; EXIT restores the menu.
+Generation2 TERMINAL.R4X in a separate console session; EXIT restores the menu.
 Image scaling, text, cursor, scrolling and clear are confined to the source
 image's monitor. The shell uses existing R4DRAW and console-host APIs without
 a desktop. The footer shows the actual SSH address or network waiting state.
