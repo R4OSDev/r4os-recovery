@@ -906,6 +906,7 @@ noinline fn truncatedDatagramReply(response: []u8, channel_id: u32, op: u16, req
             setUdpLifecycle(&out, SOCKET_LIFECYCLE_BAD_HANDLE_PUBLIC);
             return writeTruncatedDatagramResult(response, channel_id, op, request_id, &out, &body, 0, 0);
         };
+        out.result = 0;
         out.flags |= UDP_FLAG_OK | UDP_FLAG_HANDLE_VALID;
         if (packet) |info| {
             original = info.length;

@@ -1051,6 +1051,7 @@
       "canonicalBytes": false,
       "recoveryDerivativeSha256": "97a5149020d1dc76765408441e4fe7b4b2fed80cfada30f8c17a2771171f2a10",
       "delta": "Capability-check absent optional thread_current_handle/thread_placement_set/thread_placement_get before preferred-dispatcher policy. Existing Recovery scheduling retained; real present placement providers still require ACK. No fabricated provider capability."
-    }
+    },
+    "udp_result_correction": "Actual wire regression found missing result=0 on private receive success/would-block. Existing owner LIMIT and typed TCP EOF/reset passed. New UDP qualification pending; previous native3 belongs to exact previous production69 hash."
   }
 }

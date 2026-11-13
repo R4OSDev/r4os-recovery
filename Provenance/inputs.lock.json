@@ -3937,8 +3937,8 @@
     },
     {
       "path": "Kernel/net/ipc_services.zig",
-      "bytes": 125189,
-      "sha256": "135ead0a060dce4629befa3e8f7e67e0fd1bb52a436af9cd1b248319cec1c98d",
+      "bytes": 125213,
+      "sha256": "761364995d7546795e089b7982e92946e57601fff275db76ed05ecb747004aad",
       "originalSha256": "7a0cfea92f2e9cb86ab92e776edec6fdcfc5f50a58602ad167cde7874ec0fd30",
       "origin": {
         "path": "net/ipc_services.zig",
@@ -75277,6 +75277,16 @@
           "path": "RecoveryTools/Embedded/Services-TcpService/src/main.zig",
           "before": "74f8742fcbf11be2f3a2439c54018bba67348670b62a2d988387224b5ab7623e",
           "after": "97a5149020d1dc76765408441e4fe7b4b2fed80cfada30f8c17a2771171f2a10"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.85 actual typed UDP native wire failure: explicitly acknowledge successful packet/would-block result instead of record default -1. Isolated new private network_op_recv branch, old service wire paths and all39 source/artifact hashes unchanged.",
+      "changes": [
+        {
+          "path": "Kernel/net/ipc_services.zig",
+          "before": "135ead0a060dce4629befa3e8f7e67e0fd1bb52a436af9cd1b248319cec1c98d",
+          "after": "761364995d7546795e089b7982e92946e57601fff275db76ed05ecb747004aad"
         }
       ]
     }
