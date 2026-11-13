@@ -4,7 +4,7 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.70 / its own Zig Kernel0.1.68 and Menu0.1.28 implement the
+Recovery0.1.70 / its own Zig Kernel0.1.69 and Menu0.1.28 implement the
 canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. The Recovery
 owner builds all39 embedded modules:38 explicit source derivatives under
 `RecoveryTools/Embedded/`, plus canonical R4STD0.2.9 from the pinned
@@ -12,6 +12,16 @@ Libraries0.64.58 snapshot. Their original source archives remain available.
 Contract0.64.93, snapshot SDK0.64.210 and Libraries0.64.58 retain their exact
 canonical source bytes, except for the three documented `.gitattributes`
 host policies. SDK0.64.212 controls the shared Linux/Windows build.
+
+The IPv4 family service path uses the current DNS/TCP/UDP owner sources and
+the canonical DNS address codec. The kernel supplies only resident backend
+capabilities, retained TCP terminal states until explicit close, and UDP
+datagram truncation with original length and zero-byte packet identity.
+Typed listeners, IPv6 transport and dual-stack are not advertised by this
+Recovery backend. Optional preferred dispatcher placement is requested only
+when its actual provider functions exist. Direct App2 network boundary probes
+and the real GitHub HTTPS/redirect/digest witness pass; the complete download
+and deployment matrices retain their separate completion status.
 
 The current Linux/KVM qualification and exact source/artifact identities are
 recorded in Provenance and DOCUMENTATION.de.txt. Older candidate results keep
@@ -28,7 +38,7 @@ Recovery kernel boots under BIOS and UEFI without a SYSTEM partition. The
 complete 64-MB FAT32 runtime is loaded by Limine, checked against its kernel's
 recorded runtime hash, and mounted as writable RAM drive C: in 0.76.3. Since 0.76.6,
 RECOVERY.R4X hosts the menu and the standard Terminal inside the supplied
-background's monitor. Since 0.76.7, DHCP and the frozen SSH/FTP services start
+background's monitor. Since 0.76.7, DHCP and the included SSH/FTP services start
 from RAM; independent remote shells and transfers can repair offline volumes.
 Both services use the agreed `r4os` / `rosebud` login.
 

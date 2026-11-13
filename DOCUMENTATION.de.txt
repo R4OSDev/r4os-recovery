@@ -1,7 +1,7 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
-Stand 0.90.85: Recovery0.1.70 / eigener Kernel0.1.68 / Menue0.1.28
+Stand 0.90.85: Recovery0.1.70 / eigener Kernel0.1.69 / Menue0.1.28
 ----------------------------------------------------------------
 Aktueller Quellstand:39 aus Quellen gebaute Runtimevarianten mit58 echten
 Query2:2-Imports;14 Start2-,8 DriverInit2-,16 ProtocolInit2-Einstiege und
@@ -36,6 +36,29 @@ originalen4GB-Ablehnungsfall. Der Distributionspin bleibt bis zum
 kohaerenten Paketabschluss separat; kein neues Binaerrelease aus diesem Text.
 Projektweite Abnahme: Docs/API/ConsumerMigration.txt und
 Research/API-ABI/Migration/0.90.85/ im koordinierenden Workspace.
+
+Netzanschluss der Generation2 (Qualifikation in Arbeit)
+--------------------------------------------------
+Der neue App2-Resolver verwendet den Familienvertrag der DNS-/TCP-/UDP-
+Dienste. Die uebernommenen alten Dienstimplementierungen beantworteten diese
+Aufrufe nicht; der erste echte GitHub-Download scheiterte deshalb an DNS.
+Die aktuellen drei Dienstquellen und der kanonische DNS-Adresscodec sind
+jetzt ausdruecklich portiert und mit ihren kompletten Quellarchiven geliefert.
+Recovery besitzt den notwendigen residenten IPv4-Anschluss: Backend-Info,
+TCP-Endzustaende bis zum bestaetigten Close sowie UDP-Empfang mit originaler
+Datagrammlaenge, gekuerztem Praefix und echten Leerpaketen. Typisierte
+Listener, IPv6-Transport und Dual-Stack werden dabei nicht angeboten.
+Die optionale bevorzugte Threadplatzierung des normalen TCP-Dienstes wird
+nur bei wirklich vorhandenen Funktionen angefordert; Recovery behaelt
+andernfalls seine vorhandene Dispatcherplanung, ohne einen Anbieter zu erfinden.
+
+Direkte KVM4-App2-Proben pruefen Daten vor FIN/Reset, wiederholtes EOF/Reset,
+Closequittung, alte Identitaeten sowie UDP-Trunkierung, Leerpaket, Reihenfolge,
+Nullpuffer und WouldBlock. Der echte GitHub-API-/HTTPS-/Redirect-/Digestabruf
+besteht. Die komplette Download-/Install-/Updateabnahme bleibt bis zu ihrem
+eigenen nachgewiesenen Abschluss offen. Alte vollstaendige Netzfaelle behalten
+ihre echten vorherigen Kernelhashes; die nachfolgende UDP-Korrektur aendert
+ausschliesslich den Erfolgsstatus des neuen privaten Empfangsaufrufs.
 
 Historische Anbieterqualifikation0.90.84 folgt unveraendert.
 
