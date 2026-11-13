@@ -1,4 +1,7 @@
 const r4os = @import("r4os");
+const std = @import("std");
+const network = r4os.network_family.common;
+const transport = r4os.network_transport;
 
 const service_name = "UDPSVC";
 const selftest_arg = "/SELFTEST";
@@ -10,6 +13,14 @@ const no_socket_result: i32 = -1;
 const bind_in_use_result: i32 = -2;
 
 const FrontHandle = struct {
+    v6_provider: u64 = 0,
+    v6_socket: u64 = 0,
+    v6_generation: u64 = 0,
+    dual_stack: bool = false,
+    typed_retiring: bool = false,
+    typed_generation: u64 = 0,
+    typed_owner: r4os.abi.ProgramProcessHandle = .{},
+    typed_endpoint: r4os.abi.NetworkEndpoint = .{},
     used: bool = false,
     handle: u32 = 0,
     backend_handle: u32 = 0,
@@ -18,6 +29,10 @@ const FrontHandle = struct {
 };
 
 const ServiceState = struct {
+    provider: u64 = 0,
+    next_typed_generation: u64 = 1,
+    typed_count: u32 = 0,
+    typed_sweep_tick: u64 = 0,
     requests: u64 = 0,
     status_requests: u64 = 0,
     action_requests: u64 = 0,
@@ -52,16 +67,19 @@ const ServiceState = struct {
 const App = struct {
     sys: r4os.r4sys.Context,
     net: r4os.r4net.Context,
+    dev: ?r4os.r4dev.Context = null,
 
     fn init(r4_app: *r4os.App2) ?App {
         return .{
             .sys = r4_app.system(),
             .net = r4_app.networkLowLevel() orelse return null,
+            .dev = r4_app.devicesLowLevel(),
         };
     }
 };
 
 const UdpReply = struct {
+    original_bytes: u32 = 0,
     result: r4os.abi.NetServiceUdpResult,
     data: []const u8 = "",
 };
@@ -87,8 +105,8 @@ var selftest_result_response: [@sizeOf(r4os.abi.NetServiceUdpResult) + 32]u8 = .
 
 pub fn r4_app_main(r4_app: *r4os.App2) i32 {
     var app = App.init(r4_app) orelse return r4os.abi.err_no_group;
-    if (hasArg(app.sys.argsRaw(), selftest_arg)) return runSelfTest(&app);
-    if (hasArg(app.sys.argsRaw(), ping_arg)) return runPing(&app);
+    if (hasArg(app.sys.argsRaw(), selftest_arg) catch return r4os.abi.service_api_result_invalid) return runSelfTest(&app);
+    if (hasArg(app.sys.argsRaw(), ping_arg) catch return r4os.abi.service_api_result_invalid) return runPing(&app);
     return runService(&app);
 }
 
@@ -97,8 +115,14 @@ fn runService(app: *const App) i32 {
 
     var info: r4os.abi.ServiceInfo = .{};
     var handle: u32 = 0;
-    var waited: u32 = 0;
-    while (waited < 100 and handle == 0) : (waited += 1) {
+    const actual = app.sys.base.generation2 orelse return r4os.abi.err_no_group;
+    const clock = r4os.inventory_reader.PlatformClock.fromContext2(actual) catch return r4os.abi.err_no_fn;
+    var registration_budget = r4os.rpc_budget.Budget.fromTicks(clock.read, 100) catch |err| return r4os.rpc_budget.code(err);
+    while (handle == 0 and !app.sys.programShouldClose()) {
+        _ = registration_budget.remainingTicks() catch |err| {
+            if (err == error.TimedOut) break;
+            return r4os.rpc_budget.code(err);
+        };
         const rc = app.sys.serviceEndpointRegister(service_name, 0, &info);
         if (rc == r4os.abi.service_api_result_ok and info.handle != 0) {
             handle = info.handle;
@@ -114,11 +138,13 @@ fn runService(app: *const App) i32 {
         return r4os.abi.service_api_result_no_endpoint;
     }
 
-    var state = ServiceState{};
+    var state = ServiceState{ .provider = network.provider(app.sys) catch 0 };
     setLastError(&state, "ready");
     var service_loop = r4os.ServiceLoop.init(app.sys, handle, .{});
     while (true) {
-        switch (service_loop.wait(null)) {
+        sweepNetworkOwners(app, &state);
+        const deadline = networkSweepDeadline(app, &state);
+        switch (service_loop.wait(deadline)) {
             .requests => |pending| {
                 const rc = service_loop.drain(pending, handleRequest, .{ app, handle, &state });
                 if (rc >= 0) continue;
@@ -152,6 +178,7 @@ fn handleRequest(app: *const App, handle: u32, state: *ServiceState) i32 {
     state.requests +%= 1;
     const payload_len: usize = @intCast(got);
     const request = service_payload_buffer[0..payload_len];
+    if (header.op >= r4os.abi.network_op_info and header.op <= r4os.abi.network_op_release) return replyNetwork(app, handle, header.request_id, state, header.client_id, header.op, request);
     return switch (header.op) {
         r4os.abi.net_service_op_status => replyTextStatus(app, handle, header.request_id, state, header.client_id),
         r4os.abi.net_service_op_udp_status_result => replyStatusResult(app, handle, header.request_id, state, header.client_id),
@@ -298,13 +325,17 @@ fn backendResult(app: *const App, op: u16, request: []const u8, data_out: []u8) 
     copyStruct(&result, payload[0..@sizeOf(r4os.abi.NetServiceUdpResult)]);
     if (result.magic != r4os.abi.net_service_udp_result_magic or result.version != r4os.abi.net_service_udp_result_version) return null;
     var data_len: usize = 0;
-    const available = payload[@sizeOf(r4os.abi.NetServiceUdpResult)..];
+    const base = @sizeOf(r4os.abi.NetServiceUdpResult);
+    const extra: usize = if (op == r4os.abi.network_op_recv) 4 else 0;
+    if (payload.len < base + extra) return null;
+    const original = if (extra != 0) readLe32(payload, base) else result.bytes;
+    const available = payload[base + extra ..];
     if ((result.flags & r4os.abi.net_service_udp_flag_data) != 0 and result.bytes != 0) {
         data_len = @intCast(result.bytes);
         if (data_len > available.len or data_len > data_out.len) return null;
         copyBytes(data_out[0..data_len], available[0..data_len]);
     }
-    return .{ .result = result, .data = data_out[0..data_len] };
+    return .{ .result = result, .data = data_out[0..data_len], .original_bytes = original };
 }
 
 fn backendError(app: *const App, state: *ServiceState, op: u16, label: []const u8) UdpReply {
@@ -461,7 +492,7 @@ fn writeOperationText(w: *Writer, result: *const r4os.abi.NetServiceUdpResult, d
 fn allocateFrontHandle(state: *ServiceState, owner_id: u32, backend_handle: u32, local_port: u16) ?u32 {
     var i: usize = 0;
     while (i < state.handles.len) : (i += 1) {
-        if (state.handles[i].used and state.handles[i].backend_handle == backend_handle and ownerMatches(state.handles[i].owner_id, owner_id)) return state.handles[i].handle;
+        if (backend_handle != 0 and state.handles[i].used and state.handles[i].backend_handle == backend_handle and ownerMatches(state.handles[i].owner_id, owner_id)) return state.handles[i].handle;
     }
     i = 0;
     while (i < state.handles.len) : (i += 1) {
@@ -502,6 +533,7 @@ fn resolveFrontHandle(state: *ServiceState, handle: u32, owner_id: u32) FrontLoo
 
 fn releaseFrontHandleAt(state: *ServiceState, index: usize) void {
     if (index >= state.handles.len) return;
+    if (state.handles[index].typed_generation != 0) state.typed_count -= 1;
     state.handles[index] = .{};
 }
 
@@ -526,6 +558,13 @@ fn cleanupService(app: *const App, state: *ServiceState, reason: []const u8) voi
     var i: usize = 0;
     while (i < state.handles.len) : (i += 1) {
         if (!state.handles[i].used) continue;
+        if (state.handles[i].v6_provider != 0) {
+            if (retireNetwork6(app, &state.handles[i])) {
+                releaseFrontHandleAt(state, i);
+                state.cleanup_handles +%= 1;
+            }
+            continue;
+        }
         writeLe32(request[0..], 0, state.handles[i].backend_handle);
         _ = backendResult(app, r4os.abi.net_service_op_udp_close_result, request[0..], backend_result_data[0..]);
         state.handles[i] = .{};
@@ -823,6 +862,9 @@ fn localContractSelfTest(app: *const App) bool {
 }
 
 fn ensureRunningAndOpen(app: *const App, out_handle: *u32) bool {
+    const actual = app.sys.base.generation2 orelse return false;
+    const clock = r4os.inventory_reader.PlatformClock.fromContext2(actual) catch return false;
+    var open_budget = r4os.rpc_budget.Budget.fromTicks(clock.read, 160) catch return false;
     var info: r4os.abi.ServiceInfo = .{};
     const status = app.sys.serviceStatus(service_name, &info);
     if (status != r4os.abi.service_api_result_ok) return false;
@@ -830,8 +872,8 @@ fn ensureRunningAndOpen(app: *const App, out_handle: *u32) bool {
         const start = app.sys.serviceStart(service_name, &info);
         if (start != r4os.abi.service_api_result_ok) return false;
     }
-    var tick: u32 = 0;
-    while (tick < 160) : (tick += 1) {
+    while (!app.sys.programShouldClose()) {
+        _ = open_budget.remainingTicks() catch return false;
         const open_rc = app.sys.serviceOpen(service_name, &info);
         if (open_rc == r4os.abi.service_api_result_ok and info.handle != 0) {
             out_handle.* = info.handle;
@@ -848,13 +890,12 @@ fn fail(app: *const App, label: []const u8) i32 {
     return 1;
 }
 
-fn hasArg(args: [*:0]const u8, wanted: []const u8) bool {
-    var offset: usize = 0;
-    while (offset < 256 and args[offset] != 0) {
-        while (offset < 256 and (args[offset] == ' ' or args[offset] == '\t')) : (offset += 1) {}
-        const start = offset;
-        while (offset < 256 and args[offset] != 0 and args[offset] != ' ' and args[offset] != '\t') : (offset += 1) {}
-        if (equalsIgnoreCase(args[start..offset], wanted)) return true;
+fn hasArg(args: [*:0]const u8, wanted: []const u8) r4os.arguments.Error!bool {
+    const raw = std.mem.span(args);
+    var failure: r4os.arguments.Failure = .{};
+    var cursor = try r4os.arguments.ArgCursor.init(raw, .{ .quotes = @intFromEnum(r4os.arguments.Quotes.none), .max_bytes = 256 }, &failure);
+    while (try cursor.next()) |token| {
+        if (std.ascii.eqlIgnoreCase(try token.bytes(raw), wanted)) return true;
     }
     return false;
 }
@@ -989,3 +1030,311 @@ const Writer = struct {
         return self.out[0..self.pos];
     }
 };
+
+fn replyNetwork(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, owner: u32, op: u16, payload: []const u8) i32 {
+    return networkRequest(app, endpoint, request_id, state, owner, op, payload) catch |err|
+        finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, network.code(err), ""));
+}
+fn networkRequest(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, owner: u32, op: u16, payload: []const u8) network.Error!i32 {
+    const a = r4os.abi;
+    if (state.provider == 0) return error.Backend;
+    if (op == a.network_op_info) {
+        if (payload.len != 0) return error.Invalid;
+        var info: a.NetworkProviderInfo = .{ .provider = state.provider };
+        if (network.backendInfo(app.net, a.ipc_channel_net_udp)) |backend| {
+            const required = a.network_cap_ipv4 | a.network_cap_udp | a.network_cap_datagram_truncate;
+            if (backend.capabilities & required == required and backend.max_send != 0 and backend.max_recv != 0) {
+                info.capabilities = required;
+                info.max_send = backend.max_send;
+                info.max_recv = backend.max_recv;
+            }
+        }
+        if (app.dev) |dev| {
+            if (transport.providerInfo(dev, "net.udp")) |backend| {
+                const required = a.network_cap_ipv6 | a.network_cap_udp | a.network_cap_datagram_truncate;
+                if (backend.capabilities & required == required and backend.max_send != 0 and backend.max_recv != 0) {
+                    info.capabilities |= required;
+                    if (info.capabilities & a.network_cap_ipv4 != 0) info.capabilities |= a.network_cap_dual_stack;
+                    info.max_send = if (info.max_send == 0) backend.max_send else @min(info.max_send, backend.max_send);
+                    info.max_recv = @max(info.max_recv, backend.max_recv);
+                    info.interface_id = backend.interface_id;
+                }
+            } else |_| {}
+        }
+        return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&info)));
+    }
+    if (op != a.network_op_bind and op != a.network_op_send and op != a.network_op_recv and op != a.network_op_close) return error.UnsupportedPolicy;
+    if (payload.len < @sizeOf(a.NetworkSocketRequest)) return error.Invalid;
+    const req = try network.record(a.NetworkSocketRequest, payload[0..@sizeOf(a.NetworkSocketRequest)]);
+    if (req.provider != state.provider) return error.ProviderChanged;
+    const process = try network.owner(app.sys, owner);
+    const data = payload[@sizeOf(a.NetworkSocketRequest)..];
+    if (data.len != (if (op == a.network_op_send) req.bytes else @as(u32, 0))) return error.Invalid;
+    try network.checkAttempt(app.sys, req.deadline);
+    if (op == a.network_op_bind and req.endpoint.address.family == 6) return networkBind6(app, endpoint, request_id, state, process, req);
+    try network.policy(req.flags);
+    if (op == a.network_op_bind) {
+        const ip = try network.ipv4(req.endpoint, false);
+        if (!std.mem.allEqual(u8, &ip, 0)) return error.UnsupportedScope;
+        if (req.socket != 0 or req.generation != 0 or req.bytes != 0) return error.Invalid;
+        const backend = network.backendInfo(app.net, a.ipc_channel_net_udp) orelse return error.Backend;
+        const required = a.network_cap_ipv4 | a.network_cap_udp | a.network_cap_datagram_truncate;
+        if (backend.capabilities & required != required or backend.max_send == 0 or backend.max_recv == 0) return error.Backend;
+        if (state.next_typed_generation == 0) return error.Capacity;
+        var free_front = false;
+        for (state.handles) |entry| {
+            if (!entry.used) {
+                free_front = true;
+                break;
+            }
+        }
+        if (!free_front) return error.Capacity;
+        var bytes: [2]u8 = undefined;
+        writeLe16(&bytes, 0, req.endpoint.port);
+        const reply = performBind(app, state, owner, a.net_service_op_udp_bind_result, &bytes, backend_result_data[0..]);
+        if (reply.result.result != 0 or reply.result.handle == 0) return if (reply.result.result == bind_in_use_result) error.Capacity else error.Backend;
+        const lookup = resolveFrontHandle(state, reply.result.handle, owner);
+        const generation = state.next_typed_generation;
+        state.next_typed_generation = std.math.add(u64, generation, 1) catch 0;
+        state.handles[lookup.index].typed_generation = generation;
+        state.handles[lookup.index].typed_owner = process;
+        state.typed_count += 1;
+        const out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = reply.result.handle, .generation = generation, .endpoint = req.endpoint, .state = a.network_state_ready };
+        if (!network.ownerAlive(app.sys, process)) {
+            if (closeTypedBackend(app, lookup.entry.backend_handle)) releaseFrontHandleAt(state, lookup.index);
+            return error.BadSocket;
+        }
+        const rc = app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out));
+        if (rc != 0 and closeTypedBackend(app, lookup.entry.backend_handle)) releaseFrontHandleAt(state, lookup.index);
+        return finishReply(state, rc);
+    }
+    if (req.socket == 0 or req.socket > std.math.maxInt(u32) or req.generation == 0) return error.Invalid;
+    var index: ?usize = null;
+    for (&state.handles, 0..) |entry, i| {
+        if (entry.used and (!entry.typed_retiring or op == a.network_op_close) and entry.handle == req.socket and entry.typed_generation == req.generation and entry.owner_id == owner and entry.typed_owner.generation == process.generation) {
+            index = i;
+            break;
+        }
+    }
+    const slot = index orelse return error.BadSocket;
+    if (state.handles[slot].v6_provider != 0) {
+        if (try networkTransfer6(app, endpoint, request_id, state, slot, op, req, data)) |finished| return finished;
+    }
+    const entry = state.handles[slot];
+    var out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = req.socket, .generation = req.generation, .endpoint = network.v4Endpoint(.{0} ** 4, entry.local_port), .state = a.network_state_ready };
+    var input: [4096]u8 = undefined;
+    writeLe32(&input, 0, entry.backend_handle);
+    var backend_op = a.net_service_op_udp_close_result;
+    var size: usize = 4;
+    if (op == a.network_op_send) {
+        const ip = try network.ipv4(req.endpoint, false);
+        if (std.mem.allEqual(u8, &ip, 0)) return error.Invalid;
+        if (req.bytes > @min(@min(a.net_service_udp_send_max, 1472), 3968)) return error.Capacity;
+        @memcpy(input[4..8], &ip);
+        writeLe16(&input, 8, req.endpoint.port);
+        @memcpy(input[10..][0..data.len], data);
+        size = 10 + data.len;
+        backend_op = a.net_service_op_udp_sendto_result;
+        out.endpoint = req.endpoint;
+    } else {
+        if (!std.mem.allEqual(u8, std.mem.asBytes(&req.endpoint), 0)) return error.Invalid;
+        if (op == a.network_op_close) {
+            if (req.bytes != 0) return error.Invalid;
+        } else {
+            if (req.bytes > @min(a.net_service_udp_read_max - 4, 4008)) return error.Capacity;
+            writeLe16(&input, 4, @intCast(req.bytes));
+            size = 6;
+            backend_op = a.network_op_recv;
+        }
+    }
+    const reply = backendResult(app, backend_op, input[0..size], backend_result_data[0..]) orelse return error.Backend;
+    if (reply.result.result != 0) return if (reply.result.lifecycle_cause == a.net_service_socket_lifecycle_bad_handle) error.BadSocket else error.Backend;
+    var body: []const u8 = "";
+    if (op == a.network_op_close) {
+        releaseFrontHandleAt(state, slot);
+        out.state = a.network_state_local_closed;
+    } else if (op == a.network_op_recv) {
+        if (reply.result.lifecycle_cause == a.net_service_socket_lifecycle_would_block) out.state = a.network_state_would_block else {
+            if (reply.result.bytes > req.bytes or reply.original_bytes < reply.result.bytes or reply.data.len != reply.result.bytes) return error.Backend;
+            out.endpoint = network.v4Endpoint(reply.result.source_ip, reply.result.source_port);
+            out.bytes = reply.result.bytes;
+            out.original_bytes = reply.original_bytes;
+            if (out.original_bytes > out.bytes) out.flags |= a.network_flag_truncated;
+            body = reply.data;
+        }
+    } else {
+        if (reply.result.bytes > req.bytes) return error.Backend;
+        out.bytes = reply.result.bytes;
+        out.original_bytes = out.bytes;
+    }
+    var response: [4096]u8 = undefined;
+    @memcpy(response[0..@sizeOf(a.NetworkSocketResult)], std.mem.asBytes(&out));
+    @memcpy(response[@sizeOf(a.NetworkSocketResult)..][0..body.len], body);
+    return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, response[0 .. @sizeOf(a.NetworkSocketResult) + body.len]));
+}
+
+fn finishReply(state: *ServiceState, rc: i32) i32 {
+    _ = state;
+    return if (rc == r4os.abi.service_api_result_not_found) 0 else rc;
+}
+
+// Poll only while new typed resources exist. Existing old-only service idle
+// waits remain unbounded. No process registry borrow spans backend work.
+fn sweepNetworkOwners(app: *const App, state: *ServiceState) void {
+    if (state.typed_count == 0 or app.sys.ticks() < state.typed_sweep_tick) return;
+    state.typed_sweep_tick = app.sys.ticks() +| app.sys.ticksFromMilliseconds(1000);
+    if (app.dev) |dev| {
+        const info = transport.providerInfo(dev, "net.udp") catch null;
+        if (info) |backend| {
+            if (app.sys.base.generation2) |actual| {
+                const id = std.math.cast(u32, actual.raw.instance_id) orelse 0;
+                const process = network.owner(app.sys, id) catch null;
+                if (process) |own| {
+                    var response: [4096]u8 = undefined;
+                    _ = transport.broker(app.sys, dev, "net.udp", backend.provider, own, r4os.abi.network_transport_op_tick, .{}, "", &response) catch null;
+                }
+            }
+        }
+    }
+    for (&state.handles, 0..) |entry, i| {
+        if (!entry.used or entry.typed_generation == 0 or !entry.typed_retiring and !network.ownerGone(app.sys, entry.typed_owner)) continue;
+        if (entry.v6_provider != 0) {
+            if (retireNetwork6(app, &state.handles[i])) releaseFrontHandleAt(state, i);
+            continue;
+        }
+        var request: [4]u8 = undefined;
+        writeLe32(&request, 0, entry.backend_handle);
+        const reply = backendResult(app, r4os.abi.net_service_op_udp_close_result, &request, backend_result_data[0..]) orelse continue;
+        // Uncertain transport failure retains this bounded front entry until
+        // a later actual owner acknowledgement; it is no retirement proof.
+        if (reply.result.result == 0) releaseFrontHandleAt(state, i);
+    }
+}
+
+fn closeTypedBackend(app: *const App, backend_handle: u32) bool {
+    var request: [4]u8 = undefined;
+    writeLe32(&request, 0, backend_handle);
+    const reply = backendResult(app, r4os.abi.net_service_op_udp_close_result, &request, backend_result_data[0..]) orelse return false;
+    return reply.result.result == 0;
+}
+
+fn networkSweepDeadline(app: *const App, state: *const ServiceState) ?u64 {
+    if (state.typed_count == 0) return null;
+    // A missing logical frequency must not turn owner cleanup into a busy
+    // poll loop. Without it, retain resources and check on ordinary requests.
+    if (app.sys.ticksFromMilliseconds(1000) == 0) return null;
+    return state.typed_sweep_tick;
+}
+
+fn networkBind6(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, owner: r4os.abi.ProgramProcessHandle, req: r4os.abi.NetworkSocketRequest) network.Error!i32 {
+    const a = r4os.abi;
+    const dev = app.dev orelse return error.UnsupportedFamily;
+    if (req.socket != 0 or req.generation != 0 or req.bytes != 0 or !network.endpointValid(req.endpoint)) return error.Invalid;
+    if (req.flags != 0 and req.flags != a.network_policy_dual_stack) return error.UnsupportedPolicy;
+    if (req.flags != 0 and (!transport.zero(req.endpoint.address) or req.endpoint.address.scope_id != 0)) return error.UnsupportedPolicy;
+    if (state.next_typed_generation == 0 or req.endpoint.port != 0 and frontForPort(state, req.endpoint.port) != null) return error.Capacity;
+    const info = try transport.providerInfo(dev, "net.udp");
+    if (info.capabilities & a.network_cap_ipv6 == 0) return error.UnsupportedFamily;
+    const handle = allocateFrontHandle(state, owner.instance_id, 0, req.endpoint.port) orelse return error.Capacity;
+    const lookup = resolveFrontHandle(state, handle, owner.instance_id);
+    const entry = &state.handles[lookup.index];
+    entry.typed_generation = state.next_typed_generation;
+    state.next_typed_generation = std.math.add(u64, entry.typed_generation, 1) catch 0;
+    entry.typed_owner = owner;
+    state.typed_count += 1;
+    var response: [4096]u8 = undefined;
+    var backend_request = req;
+    backend_request.flags = 0;
+    const reply = transport.broker(app.sys, dev, "net.udp", info.provider, owner, a.network_op_bind, backend_request, "", &response) catch |err| {
+        releaseFrontHandleAt(state, lookup.index);
+        return err;
+    };
+    if (reply.result.socket == 0 or reply.result.generation == 0 or reply.result.endpoint.address.family != 6) return error.Backend;
+    entry.v6_provider = info.provider;
+    entry.v6_socket = reply.result.socket;
+    entry.v6_generation = reply.result.generation;
+    entry.typed_endpoint = reply.result.endpoint;
+    entry.local_port = reply.result.endpoint.port;
+    if (req.flags == a.network_policy_dual_stack) {
+        var bytes: [2]u8 = undefined;
+        writeLe16(&bytes, 0, entry.local_port);
+        const backend = backendResult(app, a.net_service_op_udp_bind_result, &bytes, backend_result_data[0..]);
+        if (backend == null or backend.?.result.result != 0 or backend.?.result.handle == 0) {
+            if (retireNetwork6(app, entry)) releaseFrontHandleAt(state, lookup.index);
+            return error.Capacity;
+        }
+        entry.backend_handle = backend.?.result.handle;
+        entry.dual_stack = true;
+    }
+    var out = reply.result;
+    out.provider = state.provider;
+    out.socket = handle;
+    out.generation = entry.typed_generation;
+    if (!network.ownerAlive(app.sys, owner)) {
+        if (retireNetwork6(app, entry)) releaseFrontHandleAt(state, lookup.index);
+        return error.BadSocket;
+    }
+    const rc = app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out));
+    if (rc != 0 and retireNetwork6(app, entry)) releaseFrontHandleAt(state, lookup.index);
+    return finishReply(state, rc);
+}
+
+fn retireNetwork6(app: *const App, entry: *FrontHandle) bool {
+    const a = r4os.abi;
+    entry.typed_retiring = true;
+    if (entry.v6_socket != 0) {
+        const dev = app.dev orelse return false;
+        var response: [4096]u8 = undefined;
+        const req: a.NetworkSocketRequest = .{ .socket = entry.v6_socket, .generation = entry.v6_generation };
+        if (transport.broker(app.sys, dev, "net.udp", entry.v6_provider, entry.typed_owner, a.network_op_close, req, "", &response)) |_| {
+            entry.v6_socket = 0;
+        } else |err| {
+            if (err == error.BadSocket or err == error.ProviderChanged) entry.v6_socket = 0 else return false;
+        }
+    }
+    if (entry.backend_handle != 0) {
+        if (!closeTypedBackend(app, entry.backend_handle)) return false;
+        entry.backend_handle = 0;
+    }
+    return true;
+}
+
+/// null allows the same explicit dual-stack front to dispatch to its IPv4
+/// backend. Each received endpoint retains its observed wire family.
+fn networkTransfer6(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, slot: usize, op: u16, req: r4os.abi.NetworkSocketRequest, data: []const u8) network.Error!?i32 {
+    const a = r4os.abi;
+    const entry = &state.handles[slot];
+    if (op == a.network_op_send and req.endpoint.address.family == 4) {
+        if (!entry.dual_stack) return error.UnsupportedFamily;
+        return null;
+    }
+    var out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = entry.handle, .generation = entry.typed_generation, .endpoint = entry.typed_endpoint, .state = a.network_state_ready };
+    if (op == a.network_op_close) {
+        if (req.bytes != 0 or !std.mem.allEqual(u8, std.mem.asBytes(&req.endpoint), 0)) return error.Invalid;
+        if (!retireNetwork6(app, entry)) return error.Backend;
+        out.state = a.network_state_local_closed;
+        releaseFrontHandleAt(state, slot);
+        return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out)));
+    }
+    if (op != a.network_op_send and op != a.network_op_recv) return error.UnsupportedPolicy;
+    if (op == a.network_op_recv and !std.mem.allEqual(u8, std.mem.asBytes(&req.endpoint), 0)) return error.Invalid;
+    if (req.bytes > (if (op == a.network_op_send) @as(u32, 1232) else 4008)) return if (op == a.network_op_send) error.PacketTooBig else error.Capacity;
+    const dev = app.dev orelse return error.UnsupportedFamily;
+    var backend_request = req;
+    backend_request.socket = entry.v6_socket;
+    backend_request.generation = entry.v6_generation;
+    var response: [4096]u8 = undefined;
+    const reply = transport.broker(app.sys, dev, "net.udp", entry.v6_provider, entry.typed_owner, op, backend_request, data, &response) catch |err| {
+        if (err != error.WouldBlock) return err;
+        if (op == a.network_op_send) return err;
+        if (entry.dual_stack) return null;
+        out.state = a.network_state_would_block;
+        return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out)));
+    };
+    out = reply.result;
+    out.provider = state.provider;
+    out.socket = entry.handle;
+    out.generation = entry.typed_generation;
+    @memcpy(response[0..@sizeOf(a.NetworkSocketResult)], std.mem.asBytes(&out));
+    return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, response[0 .. @sizeOf(a.NetworkSocketResult) + reply.data.len]));
+}

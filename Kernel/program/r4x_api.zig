@@ -2045,3 +2045,15 @@ pub const FileCopyProgress = generated.FileCopyProgress;
 
 pub const DirectoryChangeCursor = generated.DirectoryChangeCursor;
 pub const DirectoryScanCursor = generated.DirectoryScanCursor;
+
+// Recovery's private IPv4 service adapters share the canonical family wire
+// types and constants; this facade supplies no separate ABI definition.
+pub const NetworkProviderInfo = generated.NetworkProviderInfo;
+pub const network_op_info = generated.network_op_info;
+pub const network_op_recv = generated.network_op_recv;
+pub const network_cap_ipv4 = generated.network_cap_ipv4;
+pub const network_cap_tcp = generated.network_cap_tcp;
+pub const network_cap_udp = generated.network_cap_udp;
+pub const network_cap_retained_terminal = generated.network_cap_retained_terminal;
+pub const network_cap_datagram_truncate = generated.network_cap_datagram_truncate;
+pub const net_service_op_tcp_connect_retained_result = generated.net_service_op_tcp_connect_retained_result;

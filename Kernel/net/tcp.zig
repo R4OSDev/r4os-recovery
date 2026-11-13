@@ -178,6 +178,10 @@ pub const OutstandingInfo = struct {
     retransmits: u8,
 };
 
+// The typed socket owner retains the actual slot until its explicit close.
+// A peer FIN/RST must not become an unrelated recycled socket or global error.
+pub const TerminalCause = enum { active, peer_closed, reset };
+
 const Connection = struct {
     used: bool = false,
     id: u32 = 0,
@@ -199,6 +203,8 @@ const Connection = struct {
     window_scale_received: bool = false,
     window_scale_active: bool = false,
     negotiation_counted: bool = false,
+    retained_terminal: bool = false,
+    terminal_cause: TerminalCause = .active,
     last_advertised_window: u16 = 0,
     delayed_ack_pending: bool = false,
     delayed_ack_immediate: bool = false,
@@ -365,6 +371,18 @@ pub fn selfTestConnect(remote_ip: [4]u8, remote_port: u16) i32 {
 }
 
 pub fn beginLiveConnect(remote_ip: [4]u8, remote_port: u16, initial_seq: u32) i32 {
+    return beginConnectMode(remote_ip, remote_port, initial_seq, false);
+}
+
+pub fn beginRetainedConnect(remote_ip: [4]u8, remote_port: u16, initial_seq: u32) i32 {
+    return beginConnectMode(remote_ip, remote_port, initial_seq, true);
+}
+
+fn beginConnectMode(remote_ip: [4]u8, remote_port: u16, initial_seq: u32, retained: bool) i32 {
+    if (next_id == 0 or next_id > 0x7fffffff) {
+        stats.last_error = "connection-id-exhausted";
+        return -1;
+    }
     const idx = allocConnection() orelse {
         stats.last_error = "no-conn";
         return -1;
@@ -379,6 +397,7 @@ pub fn beginLiveConnect(remote_ip: [4]u8, remote_port: u16, initial_seq: u32) i3
     c.remote_port = remote_port;
     c.remote_ip = remote_ip;
     c.seq = initial_seq;
+    c.retained_terminal = retained;
     c.window_scale_offered = true;
     next_id +%= 1;
     if (next_id == 0) next_id = 1;
@@ -461,8 +480,24 @@ pub fn abort(conn_id: u32, reason: []const u8) void {
     const c = byId(conn_id) orelse return;
     discardCatalog(c);
     c.state = .closed;
+    c.retained_terminal = false;
     c.used = false;
     stats.last_error = reason;
+}
+
+pub fn retainedTerminalCause(conn_id: u32) ?TerminalCause {
+    const c = byId(conn_id) orelse return null;
+    return if (c.retained_terminal) c.terminal_cause else null;
+}
+
+pub fn retainedConnected(conn_id: u32) bool {
+    const c = byId(conn_id) orelse return false;
+    return c.retained_terminal and c.negotiation_counted;
+}
+
+pub fn releaseTerminalRetention(conn_id: u32) void {
+    const c = byId(conn_id) orelse return;
+    c.retained_terminal = false;
 }
 
 pub fn markTimeout(reason: []const u8) void {
@@ -851,7 +886,7 @@ pub fn read(conn_id: u32, out: []u8) i32 {
         // finishDataConnection ruft closeTcpHandle).
     } else if (c.state == .closed) {
         discardCatalog(c);
-        c.used = false;
+        if (!c.retained_terminal) c.used = false;
         return -1;
     }
     return @intCast(len);
@@ -859,6 +894,7 @@ pub fn read(conn_id: u32, out: []u8) i32 {
 
 pub fn close(conn_id: u32) i32 {
     const c = byId(conn_id) orelse return -1;
+    c.retained_terminal = false;
     if (c.state == .closed) {
         discardCatalog(c);
         c.used = false;
@@ -1049,7 +1085,8 @@ pub fn applyRxView(view: SegmentView) ?SegmentView {
             }
             discardCatalog(c);
             c.state = .closed;
-            c.used = false;
+            c.terminal_cause = .reset;
+            if (!c.retained_terminal) c.used = false;
         }
         stats.last_error = "rst";
         return view;
@@ -1091,15 +1128,17 @@ pub fn applyRxView(view: SegmentView) ?SegmentView {
                 // Regressionen); Wiederaufnahme mit den Event-Umbauten.
                 c.ack +%= 1;
                 c.state = .closed;
+                c.terminal_cause = .peer_closed;
                 stats.last_error = "fin-rx";
             }
         } else if (c.state == .fin_wait and (view.flags & FLAG_ACK) != 0) {
             updateTxWindow(c, view);
             if ((view.flags & FLAG_FIN) != 0 and view.seq == c.ack) c.ack +%= 1;
             c.state = .closed;
+            c.terminal_cause = .peer_closed;
             if ((view.flags & FLAG_FIN) == 0) {
                 discardCatalog(c);
-                c.used = false;
+                if (!c.retained_terminal) c.used = false;
             }
             stats.last_error = "closed";
         }
@@ -1316,7 +1355,7 @@ fn reapClosedConnectionSlots() u32 {
     var count: u32 = 0;
     var i: usize = 0;
     while (i < connections.len) : (i += 1) {
-        if (!connections[i].used or connections[i].state != .closed) continue;
+        if (!connections[i].used or connections[i].state != .closed or connections[i].retained_terminal) continue;
         resetConnectionSlot(&connections[i]);
         count += 1;
     }
@@ -1451,6 +1490,8 @@ fn resetConnectionSlot(c: *Connection) void {
     c.window_scale_received = false;
     c.window_scale_active = false;
     c.negotiation_counted = false;
+    c.retained_terminal = false;
+    c.terminal_cause = .active;
     c.last_advertised_window = 0;
     c.delayed_ack_pending = false;
     c.delayed_ack_immediate = false;
@@ -1479,7 +1520,7 @@ pub fn reapTimeWait(now: u64) u32 {
     var i: usize = 0;
     while (i < connections.len) : (i += 1) {
         const c = &connections[i];
-        if (!c.used) continue;
+        if (!c.used or c.retained_terminal) continue;
         // 0.56.39: Seit read() den Slot nicht mehr im daten-liefernden
         // Aufruf freigibt (Drain-then-close), koennte ein vollstaendig
         // gelesener .closed-Slot leaken, wenn ein Konsument den finalen
@@ -1872,6 +1913,52 @@ pub fn performanceContractProbe() bool {
     if (delayedAckDue(identity.slot, 200) != null) return false;
 
     stats.self_tests +%= 1;
+    return retainedTerminalProbe();
+}
+
+fn retainedTerminalProbe() bool {
+    const remote: [4]u8 = .{ 198, 51, 100, 96 };
+    for ([_]bool{ false, true }) |peer_reset| {
+        const raw = beginRetainedConnect(remote, 65096, 0x8100);
+        if (raw <= 0) return false;
+        const id: u32 = @intCast(raw);
+        defer abort(id, "retained-probe");
+        const c = byId(id) orelse return false;
+        var view = SegmentView{
+            .source_ip = remote,
+            .dest_ip = .{ 192, 0, 2, 2 },
+            .source_port = c.remote_port,
+            .dest_port = c.local_port,
+            .seq = 0x9100,
+            .ack = c.seq +% 1,
+            .flags = FLAG_SYN | FLAG_ACK,
+            .window = MAX_ADVERTISED_WINDOW,
+            .payload = "",
+        };
+        _ = applyRxView(view) orelse return false;
+        if (!retainedConnected(id)) return false;
+        view.seq = c.ack;
+        view.ack = c.seq;
+        view.flags = FLAG_ACK | FLAG_PSH;
+        view.payload = "tail";
+        _ = applyRxView(view) orelse return false;
+        view.seq = c.ack;
+        view.flags = FLAG_ACK | (if (peer_reset) FLAG_RST else FLAG_FIN);
+        view.payload = "";
+        _ = applyRxView(view) orelse return false;
+        const cause: TerminalCause = if (peer_reset) .reset else .peer_closed;
+        if (!retainedConnected(id) or retainedTerminalCause(id) != cause) return false;
+        var output: [4]u8 = undefined;
+        if (read(id, &output) != 4 or !@import("std").mem.eql(u8, &output, "tail")) return false;
+        if (read(id, &output) != -1 or read(id, &output) != -1) return false;
+        // The ordinary allocation-pressure reaper and time-wait sweep must
+        // leave an acknowledged typed owner intact, even after draining.
+        _ = reapClosedConnectionSlots();
+        _ = reapTimeWait(0);
+        stats.last_error = "unrelated-probe-error";
+        if (retainedTerminalCause(id) != cause or connectionIdentity(id) == null) return false;
+        if (close(id) != 0 or connectionIdentity(id) != null or retainedTerminalCause(id) != null) return false;
+    }
     return true;
 }
 const tcp_runtime = @import("tcp_runtime.zig");

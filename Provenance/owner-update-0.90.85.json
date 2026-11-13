@@ -19,7 +19,7 @@
   "original_runtime39_unchanged": false,
   "versions": {
     "recovery": "0.1.70",
-    "recovery_kernel": "0.1.68",
+    "recovery_kernel": "0.1.69",
     "menu": "0.1.28",
     "snapshot_contract": "0.64.93",
     "snapshot_sdk": "0.64.210",
@@ -424,7 +424,7 @@
       "bytes": 8537,
       "source": "Protocols-NetDns",
       "source_path": "RecoveryTools/Embedded/Protocols-NetDns",
-      "source_tree_sha256": "d1281aadc8a0e44aa5143f14df8d3e6a6bae2d105771718ece9a23bd288fecec",
+      "source_tree_sha256": "8241b83f6eb5f0999d2dfcc6068e61b8f3accbc6ad0af49e714075678c089e27",
       "imports": [
         "R4DEV:Query2:2"
       ],
@@ -543,11 +543,11 @@
       "name": "DNSSVC",
       "version": "0.1.4",
       "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
-      "sha256": "f799c07ffe0486c458d254a463eb392d15da699b06f763fdeeed41874347f389",
-      "bytes": 57796,
+      "sha256": "4b9d0a0c7d7286f0314ad9e389e7f57c0e5c5c072cd3e2eab78fd230f9ef2787",
+      "bytes": 115668,
       "source": "Services-DnsService",
       "source_path": "RecoveryTools/Embedded/Services-DnsService",
-      "source_tree_sha256": "483234ab3450cdf8d9b7d6ad2270be2fcf6416f6ec2357821087c9fc61c9ad36",
+      "source_tree_sha256": "c19b48efbdb876a604dfef5d0781b68aa8b1392c7ff3391223ce5a1bb83325bc",
       "imports": [
         "R4SYS:Query2:2",
         "R4NET:Query2:2"
@@ -561,11 +561,11 @@
       "name": "TCPSVC",
       "version": "0.1.7",
       "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
-      "sha256": "7c3c63de01e8c4de6bb9aaa9d5e82e6968992e9e3cf0240df4965b9057800a1a",
-      "bytes": 173360,
+      "sha256": "12c0fd4bf95e03d29569e25a75b65109d70757d4fd663199e5c93f55b0180275",
+      "bytes": 275760,
       "source": "Services-TcpService",
       "source_path": "RecoveryTools/Embedded/Services-TcpService",
-      "source_tree_sha256": "2964101f2588c14b021291ac47d2c08f7a4af4033d4870c2fac8f9fc6a95a0bf",
+      "source_tree_sha256": "48f845bac7716659f89f5aa6367cb635509932282001a921c285577cae601ce3",
       "imports": [
         "R4SYS:Query2:2",
         "R4NET:Query2:2"
@@ -579,11 +579,11 @@
       "name": "UDPSVC",
       "version": "0.1.4",
       "path": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
-      "sha256": "d376fe22a7ab39b61196e8c6a7a7377e9fff36af7ab4f61a7e5b8ff166cd3566",
-      "bytes": 66380,
+      "sha256": "6af4794a1dbea7116936dbe1b2f22697b65c3876e1d83ada33ab5478192e5922",
+      "bytes": 86860,
       "source": "Services-UdpService",
       "source_path": "RecoveryTools/Embedded/Services-UdpService",
-      "source_tree_sha256": "21430753941de01fdcf3809f5de43f2bc1401901e6b9bb0d9e01c97df6c6cc22",
+      "source_tree_sha256": "8848254d6fa7d1f6cbb9efa9837ce5194c7c6ac791c9c8bd24e659d812bd5663",
       "imports": [
         "R4SYS:Query2:2",
         "R4NET:Query2:2"
@@ -830,7 +830,7 @@
     "source": "RecoveryTools/Menu",
     "entry": "R4XStart2:2",
     "platform_query": "Query2:2",
-    "qualification": "Source build/App2 admission pass; final native package/menu/installation cases pending after diagnostic-only controlled memory-refusal correction."
+    "qualification": "Actual bare build and canonical container check pass; native work pending."
   },
   "qualified_normal_context": {
     "kernel_version": "0.1.477",
@@ -843,18 +843,19 @@
   "original_source_archives_unchanged": true,
   "runtime39_source_rebuilt_generation2": true,
   "corresponding_sources": {
-    "commit": "dfc39f12c25ea362ca55dabbe504ff6ee7fea8c7",
+    "commit": "d0740fe257f8b172dd333cb9f6b86aa9e52bc80c",
     "files": 393,
     "archive": "Recovery-Embedded-0.90.85.zip",
-    "sha256": "30e69ccea35ec9b18950e528503b09b972f223cea4573b7f2b4148587566291b",
+    "sha256": "b9a84499e523d72fd3ecdaf5bfecfec424fbd7875932fb337d717f1a37a345a0",
     "controller_commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
     "controller_archive": "SDK-Controller-0.90.85.zip",
     "controller_sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
-    "all_archive_source_bytes_equal_actual_passed_build_inputs": true,
-    "canonical_r4std_source": "Legal/Sources/Libraries-0.90.85.zip",
-    "scope": "Current38 derivative source projects, Menu and builder scripts. Whole canonical Contract93/SDK210/Libraries58 archives remain separately supplied; controller SDK212 exact source also supplied. Original archives and licensing retained.",
-    "includes_observed_ssh_completion_fix": true,
-    "includes_shared_sparse_fixture_copy": true
+    "archive_method": "raw committed blob bytes; commit timestamp and Git file modes; all393 independently compared",
+    "all_curated_source_bytes_equal_current_checkout": true,
+    "all39_module_sources_unchanged": true,
+    "all_checkpoint_locked_bytes_match_raw_git_archive": true,
+    "checkpoint_locked_files": 4733,
+    "scope": "Source build checkpoint only. All39 admitted module sources/artifacts unchanged; Menu controlled memory-refusal witness and actual host fixture revisions included. Final native acceptance and public publication separate."
   },
   "ssh_completion_correction": {
     "reason": "Observed native truncated successful SSH exec during UEFI GPT repair; guest serial proves command completed.",
@@ -934,5 +935,115 @@
     "original": "Research/API-ABI/Migration/0.90.85/UefiGuardBootFailure/Proof.json",
     "status": "Single120s pre-kernel timeout not reproduced in unchanged live replay or complete28-frame UI rerun. Root cause unproven; existing runner now captures early QMP state on failure.",
     "full_replay": "Research/API-ABI/Migration/0.90.85/UIUefiGuard68Replay/Proof.json"
+  },
+  "network_family_port": {
+    "source_adoption": {
+      "stage": "Source adoption only, runtime admission/native qualification pending. Kernel IPv4 backend capability/retained terminal/truncated datagram support must be implemented before these providers can work.",
+      "sources": [
+        {
+          "id": "Services-DnsService-NetworkFamily-0.90.85",
+          "commit": "3ece8fd60c2744703cdc7768fc8fef4e96def7b1",
+          "remote": "https://github.com/R4OSDev/r4os-service-dnsservice.git",
+          "archive": "Legal/Sources/Services-DnsService-NetworkFamily-0.90.85.zip",
+          "archiveSha256": "b4bb8e40d8d1d08b5637ff505e407606c05c8227c644052981776368933b823d",
+          "scope": "Current canonical App2 service source adopted into existing Recovery derivative; explicit Recovery R4SYS/R4NET imports retain IPv4 service capability. Optional R4DEV group is absent, so no IPv6 protocol transport is introduced."
+        },
+        {
+          "id": "Services-TcpService-NetworkFamily-0.90.85",
+          "commit": "05efdb2e9f05338e1bea22a0104f1f57d9a047ea",
+          "remote": "https://github.com/R4OSDev/r4os-service-tcpservice.git",
+          "archive": "Legal/Sources/Services-TcpService-NetworkFamily-0.90.85.zip",
+          "archiveSha256": "417df5eebc5a87f25e97b0f73ea8ac6a40f0010c5f057b2b116e952fe42bc347",
+          "scope": "Current canonical App2 service source adopted into existing Recovery derivative; explicit Recovery R4SYS/R4NET imports retain IPv4 service capability. Optional R4DEV group is absent, so no IPv6 protocol transport is introduced."
+        },
+        {
+          "id": "Services-UdpService-NetworkFamily-0.90.85",
+          "commit": "baa499c6b7a148039e6dbdd0a8bd2cd9a2a2f44e",
+          "remote": "https://github.com/R4OSDev/r4os-service-udpservice.git",
+          "archive": "Legal/Sources/Services-UdpService-NetworkFamily-0.90.85.zip",
+          "archiveSha256": "f5142ee8acc5bc858ca85a953449e9894680a984a7902792160ab594bcadf1e3",
+          "scope": "Current canonical App2 service source adopted into existing Recovery derivative; explicit Recovery R4SYS/R4NET imports retain IPv4 service capability. Optional R4DEV group is absent, so no IPv6 protocol transport is introduced."
+        },
+        {
+          "id": "Protocols-NetDns-Codec-0.90.85",
+          "commit": "c5ec17132daac540536244722569ec5e025201c5",
+          "remote": "https://github.com/R4OSDev/r4os-protocol-netdns.git",
+          "archive": "Legal/Sources/Protocols-NetDns-Codec-0.90.85.zip",
+          "archiveSha256": "4e656e817fd210cd893c2d5b8080050f3216675696fa10e0138b6d2d7347a60d",
+          "scope": "Canonical pure shared address codec/test source; runtime NETDNS entry/packet implementation remains the existing Recovery derivative."
+        }
+      ],
+      "changes": [
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/src/main.zig",
+          "before": "0152ec19faebecb567e52e938571f21794348c918ade82b2f83663d9fab51439",
+          "after": "715327c16378fb7b1d90824e6358591d84421ee50458685e0f012a4b4bac8abd",
+          "canonical_source": true,
+          "source_owner": "Services/DnsService",
+          "source_commit": "3ece8fd60c2744703cdc7768fc8fef4e96def7b1"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-TcpService/src/main.zig",
+          "before": "dd8cd2d614558a4f964367a6679deaa560bdae2789d5a16236e4b1ad7539db81",
+          "after": "74f8742fcbf11be2f3a2439c54018bba67348670b62a2d988387224b5ab7623e",
+          "canonical_source": true,
+          "source_owner": "Services/TcpService",
+          "source_commit": "05efdb2e9f05338e1bea22a0104f1f57d9a047ea"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-UdpService/src/main.zig",
+          "before": "808d142a6cd8dab4a84b705dc729a72aa6f6a1d1fc0177bf172d7822b5afd5b3",
+          "after": "56fa2d08c70e2b4dfbe30f6d1ac3957bb6942032730ff9528c5a76b6b889cafd",
+          "canonical_source": true,
+          "source_owner": "Services/UdpService",
+          "source_commit": "baa499c6b7a148039e6dbdd0a8bd2cd9a2a2f44e"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Protocols-NetDns/src/address_codec.zig",
+          "before": null,
+          "after": "b674fb4deb219c1bf54da7d1373907c91cead4d29ebd120c3f2845c6b5ac5e9b",
+          "canonical_source": true,
+          "source_owner": "Protocols/NetDns",
+          "source_commit": "c5ec17132daac540536244722569ec5e025201c5"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Protocols-NetDns/src/address_codec_tests.zig",
+          "before": null,
+          "after": "4d95f0436d7e2af0f9c2276b53a3e949d5c2d6c12f37833299ee99af5a365e96",
+          "canonical_source": true,
+          "source_owner": "Protocols/NetDns",
+          "source_commit": "c5ec17132daac540536244722569ec5e025201c5"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/module.R4MF",
+          "before": "a5b91016568a6bd797ea57ca049c69a2144bde2762410b349b988b39756851b4",
+          "after": "51a1a579670485815cde8fd9cc62e2b6116cd10a51f5dc15e97aca2e4a36334a",
+          "reason": "Shared canonical codec binding."
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/build.zig",
+          "before": "1726367b6fa34a4a467945ccefa2b6288d6f2a009a6d3364d181013733a4854f",
+          "after": "fff1ff0db9c502b98f4ca998a1c4e9672e8d638442e4429d2c75c694835e0f28",
+          "reason": "Existing SDK explicit shared codec source root."
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/src/resolvers.zig",
+          "before": null,
+          "after": "9b83436d057d50966394dd836eb0a97fdf0c8b2dc889d7743589ab45a13166fd",
+          "canonical_source": true,
+          "source_owner": "Services/DnsService",
+          "source_commit": "3ece8fd60c2744703cdc7768fc8fef4e96def7b1"
+        }
+      ],
+      "normal_repositories_unchanged": true,
+      "canonical_snapshots_unchanged": true,
+      "public_binary_release": false
+    },
+    "kernel_version": "0.1.69",
+    "kernel_owner": "Recovery",
+    "kernel_reference_commit": "d35c52d69ce6d9cf247f17c8d70905d7e65fd344",
+    "scope": "IPv4 private backend Info and retained TCP client slot/cause, original-length UDP datagrams. Existing legacy service wire remains for actual low-level SSH/FTP consumers; App2 resolver/download uses real typed family RPC, no silent old-provider fallback.",
+    "capability_limits": "IPv4 client TCP and UDP. No typed retained listener, IPv6 transport or dual-stack capability advertised.",
+    "native_status": "Pending: exact source builds and host retained FIN/RST lifetime regression passed; native download/deployment qualification follows."
   }
 }

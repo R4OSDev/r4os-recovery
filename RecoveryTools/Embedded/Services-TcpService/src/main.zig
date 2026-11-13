@@ -1,4 +1,7 @@
 const r4os = @import("r4os");
+const std = @import("std");
+const network = r4os.network_family.common;
+const transport = r4os.network_transport;
 
 const service_name = "TCPSVC";
 const selftest_arg = "/SELFTEST";
@@ -20,6 +23,15 @@ const deferred_write_timeout_ms: u64 = 50;
 const owner_mismatch_result: i32 = -4;
 
 const FrontHandle = struct {
+    v6_provider: u64 = 0,
+    v6_socket: u64 = 0,
+    v6_generation: u64 = 0,
+    typed_listener: bool = false,
+    typed_v4_listener: bool = false,
+    typed_retiring: bool = false,
+    typed_generation: u64 = 0,
+    typed_owner: r4os.abi.ProgramProcessHandle = .{},
+    typed_endpoint: r4os.abi.NetworkEndpoint = .{},
     used: bool = false,
     handle: u32 = 0,
     backend_handle: u32 = 0,
@@ -58,6 +70,8 @@ const PendingFinish = enum(u8) {
 };
 
 const PendingOperation = struct {
+    typed: bool = false,
+    network_request: r4os.abi.NetworkSocketRequest = .{},
     used: bool = false,
     kind: PendingKind = .none,
     request_id: u32 = 0,
@@ -78,6 +92,11 @@ const PendingOperation = struct {
 };
 
 const ServiceState = struct {
+    provider: u64 = 0,
+    next_typed_generation: u64 = 1,
+    typed_count: u32 = 0,
+    typed_sweep_tick: u64 = 0,
+    transport_tick: u64 = 0,
     requests: u64 = 0,
     status_requests: u64 = 0,
     action_requests: u64 = 0,
@@ -105,7 +124,7 @@ const ServiceState = struct {
     max_request_ticks: u64 = 0,
     long_requests: u64 = 0,
     request_ticks_total: u64 = 0,
-    next_handle: u32 = 1,
+    next_typed_only_handle: u32 = std.math.maxInt(u32),
     next_generation: u32 = 1,
     handles: [front_handles_max]FrontHandle = .{FrontHandle{}} ** front_handles_max,
     listeners: [listeners_max]Listener = .{Listener{}} ** listeners_max,
@@ -196,11 +215,13 @@ const ServiceState = struct {
 const App = struct {
     sys: r4os.r4sys.Context,
     net: r4os.r4net.Context,
+    dev: ?r4os.r4dev.Context = null,
 
     fn init(r4_app: *r4os.App2) ?App {
         return .{
             .sys = r4_app.system(),
             .net = r4_app.networkLowLevel() orelse return null,
+            .dev = r4_app.devicesLowLevel(),
         };
     }
 };
@@ -233,20 +254,53 @@ var selftest_result_response: [@sizeOf(r4os.abi.NetServiceTcpResult)]u8 = .{0xA5
 
 pub fn r4_app_main(r4_app: *r4os.App2) i32 {
     var app = App.init(r4_app) orelse return r4os.abi.err_no_group;
-    if (hasArg(app.sys.argsRaw(), selftest_arg)) return runSelfTest(&app);
-    if (hasArg(app.sys.argsRaw(), ping_arg)) return runPing(&app);
-    if (hasArg(app.sys.argsRaw(), status_arg)) return runStatusClient(&app);
+    if (hasArg(app.sys.argsRaw(), selftest_arg) catch return r4os.abi.service_api_result_invalid) return runSelfTest(&app);
+    if (hasArg(app.sys.argsRaw(), ping_arg) catch return r4os.abi.service_api_result_invalid) return runPing(&app);
+    if (hasArg(app.sys.argsRaw(), status_arg) catch return r4os.abi.service_api_result_invalid) return runStatusClient(&app);
     return runService(&app);
 }
 
+fn configureDispatcherScheduling(app: *const App) i32 {
+    // TCP dispatch is on the finite-deadline path of several independent
+    // clients. Use the existing bounded completion class without changing
+    // CPU admission, caller deadlines or the scheduler's fairness budget.
+    var dispatcher: r4os.abi.ProgramJoinHandle = .{};
+    const current_result = app.sys.threadCurrentHandle(&dispatcher);
+    if (current_result != r4os.abi.thread_ok) return current_result;
+    const request = r4os.abi.ThreadPlacementRequest{
+        .flags = r4os.abi.thread_placement_flag_default_cpus,
+        .work_class = r4os.abi.thread_placement_class_preferred,
+    };
+    const set_result = app.sys.threadPlacementSet(&dispatcher, &request, &.{});
+    if (set_result != r4os.abi.thread_ok) return set_result;
+    // The current thread adopts placement only after its context is saved.
+    app.sys.taskYield();
+    var applied: r4os.abi.ThreadPlacementInfo = .{};
+    const get_result = app.sys.threadPlacementGet(&dispatcher, &applied, &.{});
+    if (get_result != r4os.abi.thread_ok) return get_result;
+    if (applied.work_class != r4os.abi.thread_placement_class_preferred or
+        applied.request_revision != applied.applied_revision or
+        (applied.flags & r4os.abi.thread_placement_flag_pending) != 0)
+        return r4os.abi.thread_error_busy;
+    return r4os.abi.thread_ok;
+}
+
 fn runService(app: *const App) i32 {
+    const scheduling_result = configureDispatcherScheduling(app);
+    if (scheduling_result != r4os.abi.thread_ok) return scheduling_result;
     if (!app.sys.hasFn("service_call")) return r4os.abi.service_api_result_invalid;
 
     var info: r4os.abi.ServiceInfo = .{};
     var handle: u32 = 0;
-    var waited: u32 = 0;
+    const actual = app.sys.base.generation2 orelse return r4os.abi.err_no_group;
+    const clock = r4os.inventory_reader.PlatformClock.fromContext2(actual) catch return r4os.abi.err_no_fn;
+    var registration_budget = r4os.rpc_budget.Budget.fromTicks(clock.read, service_register_wait_ticks) catch |err| return r4os.rpc_budget.code(err);
     var last_register_rc: i32 = 0;
-    while (waited < service_register_wait_ticks and handle == 0) : (waited += 1) {
+    while (handle == 0 and !app.sys.programShouldClose()) {
+        _ = registration_budget.remainingTicks() catch |err| {
+            if (err == error.TimedOut) break;
+            return r4os.rpc_budget.code(err);
+        };
         const rc = app.sys.serviceEndpointRegister(service_name, 0, &info);
         last_register_rc = rc;
         if (rc == r4os.abi.service_api_result_ok and info.handle != 0) {
@@ -265,17 +319,18 @@ fn runService(app: *const App) i32 {
         return r4os.abi.service_api_result_no_endpoint;
     }
 
-    var state = ServiceState{};
+    var state = ServiceState{ .provider = network.provider(app.sys) catch 0 };
     setLastError(&state, "ready");
     var service_loop = r4os.ServiceLoop.init(app.sys, handle, .{});
     while (true) {
+        sweepNetworkOwners(app, &state);
         const pending_rc = processPending(app, handle, &state);
         if (pending_rc < 0) {
             cleanupService(app, handle, &state, "pending");
             _ = app.sys.serviceEndpointUnregister(handle);
             return pending_rc;
         }
-        const deadline = if (pendingCount(&state) != 0) app.sys.ticks() +| 1 else null;
+        const deadline: ?u64 = if (pendingCount(&state) != 0) app.sys.ticks() +| 1 else networkSweepDeadline(app, &state);
         switch (service_loop.wait(deadline)) {
             .requests => |pending| {
                 const rc = service_loop.drain(pending, handleLoopRequest, .{ app, handle, &state });
@@ -318,6 +373,7 @@ fn handleRequest(app: *const App, handle: u32, state: *ServiceState) i32 {
     state.requests +%= 1;
     const payload_len: usize = @intCast(got);
     const request = service_payload_buffer[0..payload_len];
+    if (header.op >= r4os.abi.network_op_info and header.op <= r4os.abi.network_op_release) return replyNetwork(app, handle, header.request_id, state, header.client_id, header.op, request);
     return switch (header.op) {
         r4os.abi.net_service_op_status => replyTextStatus(app, handle, header.request_id, state, header.client_id),
         r4os.abi.net_service_op_tcp_status_result => replyStatusResult(app, handle, header.request_id, state, header.client_id),
@@ -489,8 +545,9 @@ fn shouldDeferWrite(result: *const r4os.abi.NetServiceTcpResult, request: []cons
 }
 
 fn startDeferredRead(app: *const App, state: *ServiceState, request_id: u32, owner_id: u32, request: []const u8, requested_deadline: ?u64, initial: *r4os.abi.NetServiceTcpResult) bool {
+    if (requested_deadline == r4os.service_deadline.tcp_poll_tick) return false;
     const front_handle = readLe32(request, 0);
-    const lookup = resolveFrontHandle(state, front_handle, owner_id);
+    const lookup = resolveLegacyFrontHandle(state, front_handle, owner_id);
     if (!lookup.ok) return false;
     const now = app.sys.ticks();
     const deadline = deferredDeadline(app, requested_deadline, deferred_read_timeout_ms);
@@ -544,13 +601,14 @@ fn startDeferredRead(app: *const App, state: *ServiceState, request_id: u32, own
 }
 
 fn startDeferredWrite(app: *const App, state: *ServiceState, request_id: u32, owner_id: u32, request: []const u8, requested_deadline: ?u64, initial: *r4os.abi.NetServiceTcpResult) bool {
+    if (requested_deadline == r4os.service_deadline.tcp_poll_tick) return false;
     const front_handle = readLe32(request, 0);
     const payload = request[4..];
     if (payload.len == 0 or payload.len > pending_data_max) {
         markDeferredWouldBlock(initial, front_handle, "pending-too-large");
         return false;
     }
-    const lookup = resolveFrontHandle(state, front_handle, owner_id);
+    const lookup = resolveLegacyFrontHandle(state, front_handle, owner_id);
     if (!lookup.ok) return false;
     const now = app.sys.ticks();
     const deadline = deferredDeadline(app, requested_deadline, deferred_write_timeout_ms);
@@ -613,6 +671,7 @@ fn shouldDeferAccept(op: u16, result: *const r4os.abi.NetServiceTcpResult, reque
 }
 
 fn startDeferredAccept(app: *const App, state: *ServiceState, request_id: u32, owner_id: u32, op: u16, request: []const u8, requested_deadline: ?u64, initial: *r4os.abi.NetServiceTcpResult) bool {
+    if (requested_deadline == r4os.service_deadline.tcp_poll_tick) return false;
     const deadline = requested_deadline orelse return false;
     const port = readLe16(request, 0);
     const now = app.sys.ticks();
@@ -666,6 +725,7 @@ fn processPending(app: *const App, endpoint_handle: u32, state: *ServiceState) i
     while (i < state.pending.len) : (i += 1) {
         if (!state.pending[i].used) continue;
         const rc = switch (state.pending[i].kind) {
+            .connect => processPendingNetworkConnect(app, endpoint_handle, state, i),
             .read => processPendingRead(app, endpoint_handle, state, i),
             .write => processPendingWrite(app, endpoint_handle, state, i),
             .accept => processPendingAccept(app, endpoint_handle, state, i),
@@ -678,6 +738,9 @@ fn processPending(app: *const App, endpoint_handle: u32, state: *ServiceState) i
 
 fn processPendingAccept(app: *const App, endpoint_handle: u32, state: *ServiceState, index: usize) i32 {
     const pending = &state.pending[index];
+    if (pendingExpired(app, pending)) {
+        return completePendingLocal(app, endpoint_handle, state, index, 0, r4os.abi.net_service_status_timeout, r4os.abi.net_service_socket_lifecycle_timeout, r4os.abi.net_service_tcp_flag_timeout, "operation-deadline", .timeout);
+    }
     var request: [2]u8 = .{0} ** 2;
     writeLe16(request[0..], 0, pending.port);
     var reply = performAccept(app, state, pending.owner_id, pending.op, request[0..], pending.data[0..]);
@@ -701,6 +764,9 @@ fn processPendingAccept(app: *const App, endpoint_handle: u32, state: *ServiceSt
 
 fn processPendingRead(app: *const App, endpoint_handle: u32, state: *ServiceState, index: usize) i32 {
     const pending = &state.pending[index];
+    if (pendingExpired(app, pending)) {
+        return completePendingLocal(app, endpoint_handle, state, index, 0, r4os.abi.net_service_status_timeout, r4os.abi.net_service_socket_lifecycle_timeout, r4os.abi.net_service_tcp_flag_timeout, "operation-deadline", .timeout);
+    }
     const lookup = resolveFrontHandle(state, pending.front_handle, pending.owner_id);
     if (!lookup.ok or lookup.entry.generation != pending.generation or lookup.entry.backend_handle != pending.backend_handle) {
         return completePendingLocal(app, endpoint_handle, state, index, r4os.abi.tcp_result_no_connection, r4os.abi.net_service_status_cancelled, r4os.abi.net_service_socket_lifecycle_bad_handle, 0, "pending-stale", .cancelled);
@@ -744,6 +810,9 @@ fn processPendingRead(app: *const App, endpoint_handle: u32, state: *ServiceStat
 
 fn processPendingWrite(app: *const App, endpoint_handle: u32, state: *ServiceState, index: usize) i32 {
     const pending = &state.pending[index];
+    if (pendingExpired(app, pending)) {
+        return completePendingLocal(app, endpoint_handle, state, index, 0, r4os.abi.net_service_status_timeout, r4os.abi.net_service_socket_lifecycle_timeout, r4os.abi.net_service_tcp_flag_timeout, "operation-deadline", .timeout);
+    }
     const lookup = resolveFrontHandle(state, pending.front_handle, pending.owner_id);
     if (!lookup.ok or lookup.entry.generation != pending.generation or lookup.entry.backend_handle != pending.backend_handle) {
         return completePendingLocal(app, endpoint_handle, state, index, r4os.abi.tcp_result_no_connection, r4os.abi.net_service_status_cancelled, r4os.abi.net_service_socket_lifecycle_bad_handle, 0, "pending-stale", .cancelled);
@@ -998,8 +1067,26 @@ fn setLastDeferred(state: *ServiceState, kind: PendingKind, handle: u32, reason:
     copyFixed(state.last_deferred_reason[0..], reason);
 }
 
+// The deadline controls admission, not rollback of an effect already started.
+// Zero is the explicit TCPSVC nonblocking sentinel; legacy missing suffixes
+// retain their existing policy. Poll must never create a deferred operation.
+fn deadlineAdmission(app: *const App, op: u16, deadline_tick: ?u64) ?TcpReply {
+    const deadline = deadline_tick orelse return null;
+    if (deadline == r4os.service_deadline.tcp_poll_tick) {
+        if (op != r4os.abi.net_service_op_tcp_connect_result) return null;
+        var out = r4os.abi.NetServiceTcpResult{ .action = actionForOp(op) };
+        markDeferredWouldBlock(&out, 0, "connect-poll");
+        return .{ .result = out };
+    }
+    if (deadline == r4os.service_deadline.forever_tick or app.sys.ticks() < deadline) return null;
+    var out = r4os.abi.NetServiceTcpResult{ .action = actionForOp(op) };
+    markDeferredTimeout(&out, 0, "operation-deadline");
+    return .{ .result = out };
+}
+
 fn performOperation(app: *const App, state: *ServiceState, owner_id: u32, op: u16, request: []const u8, deadline_tick: ?u64, data_out: []u8) TcpReply {
     state.action_requests +%= 1;
+    if (deadlineAdmission(app, op, deadline_tick)) |reply| return reply;
     switch (op) {
         r4os.abi.net_service_op_tcp_connect_result => {
             state.connect_requests +%= 1;
@@ -1065,7 +1152,7 @@ fn performWriteOperation(app: *const App, state: *ServiceState, owner_id: u32, o
     if (request.len < 4) return localError(app, state, op, 0, r4os.abi.net_service_result_bad_request, "bad-request");
     if (request.len > r4os.abi.net_service_tcp_message_payload_max) return localError(app, state, op, 0, r4os.abi.net_service_result_bad_request, "too-large");
     const front_handle = readLe32(request, 0);
-    const lookup = resolveFrontHandle(state, front_handle, owner_id);
+    const lookup = resolveLegacyFrontHandle(state, front_handle, owner_id);
     if (!lookup.ok) return localError(app, state, op, front_handle, lookup.result, lookup.last_error);
     const requested_len = request.len - 4;
     if (requested_len > r4os.abi.net_service_tcp_write_max) return localError(app, state, op, front_handle, r4os.abi.net_service_result_bad_request, "too-large");
@@ -1098,7 +1185,7 @@ fn performWriteOperation(app: *const App, state: *ServiceState, owner_id: u32, o
 fn performHandleOperation(app: *const App, state: *ServiceState, owner_id: u32, op: u16, request: []const u8, data_out: []u8, release_on_success: bool) TcpReply {
     if (request.len < 4) return localError(app, state, op, 0, r4os.abi.net_service_result_bad_request, "bad-request");
     const front_handle = readLe32(request, 0);
-    var lookup = resolveFrontHandle(state, front_handle, owner_id);
+    var lookup = resolveLegacyFrontHandle(state, front_handle, owner_id);
     if (!lookup.ok and release_on_success and lookup.result == owner_mismatch_result) {
         lookup = resolveFrontHandleForRelease(state, front_handle);
     }
@@ -1123,7 +1210,7 @@ fn performHandleOperation(app: *const App, state: *ServiceState, owner_id: u32, 
 fn performCloseOperation(app: *const App, state: *ServiceState, owner_id: u32, op: u16, request: []const u8, data_out: []u8) TcpReply {
     if (request.len < 4) return localError(app, state, op, 0, r4os.abi.net_service_result_bad_request, "bad-request");
     const front_handle = readLe32(request, 0);
-    var lookup = resolveFrontHandle(state, front_handle, owner_id);
+    var lookup = resolveLegacyFrontHandle(state, front_handle, owner_id);
     if (!lookup.ok and lookup.result == owner_mismatch_result) {
         lookup = resolveFrontHandleForRelease(state, front_handle);
     }
@@ -1171,14 +1258,14 @@ fn performListen(app: *const App, state: *ServiceState, owner_id: u32, op: u16, 
     const port = readLe16(request, 0);
     state.last_port = port;
     if (port == 0) return localError(app, state, op, 0, r4os.abi.net_service_result_bad_request, "bad-port");
-    if (listenerForPort(state, port)) |idx| {
+    const registered = listenerForPort(state, port);
+    if (registered) |idx| {
         if (!ownerMatches(state.listeners[idx].owner_id, owner_id)) return ownerMismatch(state, op, 0, port);
-        var out = localOkListener(app, state, op, port, "already-listening");
-        noteResult(state, &out.result);
-        return out;
     }
+    // Ownership can outlive the backend listener after a link change.
+    // Kernel listen is idempotent while that listener still exists.
     var reply = backendResult(app, op, request, data_out) orelse return backendError(app, state, op, "backend");
-    if (reply.result.result == 0 and (reply.result.flags & r4os.abi.net_service_tcp_flag_listener) != 0) {
+    if (registered == null and reply.result.result == 0 and (reply.result.flags & r4os.abi.net_service_tcp_flag_listener) != 0) {
         if (!rememberListener(state, owner_id, port)) {
             _ = backendResult(app, r4os.abi.net_service_op_tcp_close_listen_result, request, data_out);
             return localError(app, state, op, 0, -2, "listener-full");
@@ -1784,12 +1871,22 @@ fn writeOperationText(w: *Writer, result: *const r4os.abi.NetServiceTcpResult, d
 fn allocateFrontHandle(state: *ServiceState, owner_id: u32, backend_handle: u32, conn_id: u32) ?u32 {
     var i: usize = 0;
     while (i < state.handles.len) : (i += 1) {
-        if (state.handles[i].used and state.handles[i].backend_handle == backend_handle and ownerMatches(state.handles[i].owner_id, owner_id)) return state.handles[i].handle;
+        if (backend_handle != 0 and state.handles[i].used and state.handles[i].backend_handle == backend_handle and ownerMatches(state.handles[i].owner_id, owner_id)) return state.handles[i].handle;
     }
     i = 0;
     while (i < state.handles.len) : (i += 1) {
         if (state.handles[i].used) continue;
-        const handle = nextFrontHandle(state);
+        // The kernel TCP handle is monotonic until exhaustion, including
+        // across TCPSVC restarts. A fresh provider must not recycle a
+        // service handle that an older remote worker can still present.
+        // Legacy callers also return handles through a positive i32.
+        const handle = if (backend_handle != 0) blk: {
+            if (backend_handle > std.math.maxInt(i32)) return null;
+            for (state.handles) |entry| {
+                if (entry.used and entry.handle == backend_handle) return null;
+            }
+            break :blk backend_handle;
+        } else nextTypedOnlyHandle(state) orelse return null;
         const generation = nextHandleGeneration(state);
         state.handles[i] = .{
             .used = true,
@@ -1804,10 +1901,10 @@ fn allocateFrontHandle(state: *ServiceState, owner_id: u32, backend_handle: u32,
     return null;
 }
 
-fn nextFrontHandle(state: *ServiceState) u32 {
-    const handle = state.next_handle;
-    state.next_handle +%= 1;
-    if (state.next_handle == 0) state.next_handle = 1;
+fn nextTypedOnlyHandle(state: *ServiceState) ?u32 {
+    const handle = state.next_typed_only_handle;
+    if (handle <= std.math.maxInt(i32)) return null;
+    state.next_typed_only_handle -= 1;
     return handle;
 }
 
@@ -1833,17 +1930,27 @@ fn resolveFrontHandle(state: *ServiceState, handle: u32, owner_id: u32) FrontLoo
 }
 
 fn resolveFrontHandleForRelease(state: *ServiceState, handle: u32) FrontLookup {
+    if (handle > std.math.maxInt(i32)) return .{ .result = r4os.abi.tcp_result_no_connection, .last_error = "no-connection" };
     var i: usize = 0;
     while (i < state.handles.len) : (i += 1) {
         const entry = state.handles[i];
-        if (!entry.used or entry.handle != handle) continue;
+        if (!entry.used or entry.handle != handle or entry.typed_generation != 0) continue;
         return .{ .ok = true, .index = i, .entry = entry, .result = 0, .last_error = "" };
     }
     return .{ .result = r4os.abi.tcp_result_no_connection, .last_error = "no-connection" };
 }
 
+fn resolveLegacyFrontHandle(state: *ServiceState, handle: u32, owner_id: u32) FrontLookup {
+    if (handle > std.math.maxInt(i32)) return .{ .result = r4os.abi.tcp_result_no_connection, .last_error = "no-connection" };
+    const lookup = resolveFrontHandle(state, handle, owner_id);
+    if (lookup.ok and lookup.entry.typed_generation != 0)
+        return .{ .result = r4os.abi.tcp_result_no_connection, .last_error = "no-connection" };
+    return lookup;
+}
+
 fn releaseFrontHandleAt(state: *ServiceState, index: usize) void {
     if (index >= state.handles.len) return;
+    if (state.handles[index].typed_generation != 0) state.typed_count -= 1;
     state.handles[index] = .{};
 }
 
@@ -1887,6 +1994,10 @@ fn cleanupService(app: *const App, endpoint_handle: u32, state: *ServiceState, r
     var i: usize = 0;
     while (i < state.handles.len) : (i += 1) {
         if (!state.handles[i].used) continue;
+        if (state.handles[i].v6_provider != 0 or state.handles[i].typed_listener) {
+            if (retireNetworkSocket(app, state, i)) releaseFrontHandleAt(state, i);
+            continue;
+        }
         writeLe32(request4[0..], 0, state.handles[i].backend_handle);
         _ = backendResult(app, r4os.abi.net_service_op_tcp_abort_result, request4[0..], backend_result_data[0..]);
         state.handles[i] = .{};
@@ -1915,6 +2026,10 @@ fn cancelAllPending(app: *const App, endpoint_handle: u32, state: *ServiceState,
     var i: usize = 0;
     while (i < state.pending.len) : (i += 1) {
         if (!state.pending[i].used) continue;
+        if (state.pending[i].typed) {
+            _ = failNetworkConnect(app, endpoint_handle, state, i, r4os.abi.network_error_backend);
+            continue;
+        }
         _ = completePendingLocal(app, endpoint_handle, state, i, r4os.abi.tcp_result_no_connection, r4os.abi.net_service_status_cancelled, r4os.abi.net_service_socket_lifecycle_local_abort, 0, reason, .cancelled);
     }
 }
@@ -2047,7 +2162,7 @@ fn actionForOp(op: u16) u16 {
         r4os.abi.net_service_op_tcp_write_result => r4os.abi.net_service_tcp_action_write,
         r4os.abi.net_service_op_tcp_read_result => r4os.abi.net_service_tcp_action_read,
         r4os.abi.net_service_op_tcp_close_result => r4os.abi.net_service_tcp_action_close,
-        r4os.abi.net_service_op_tcp_listen_result => r4os.abi.net_service_tcp_action_listen,
+        r4os.abi.net_service_op_tcp_listen_result, r4os.abi.net_service_op_tcp_listen_retained_result => r4os.abi.net_service_tcp_action_listen,
         r4os.abi.net_service_op_tcp_accept_read_result => r4os.abi.net_service_tcp_action_accept_read,
         r4os.abi.net_service_op_tcp_close_listen_result => r4os.abi.net_service_tcp_action_close_listen,
         r4os.abi.net_service_op_tcp_poll_result => r4os.abi.net_service_tcp_action_poll,
@@ -2293,7 +2408,17 @@ fn runSelfTest(app: *const App) i32 {
     const after_status = app.sys.serviceCall(handle, r4os.abi.net_service_op_tcp_status_result, "", &header, selftest_status_response[0..], app.sys.ticksFromMilliseconds(service_timeout_ms));
     if (after_status != @as(i32, @intCast(@sizeOf(r4os.abi.NetServiceTcpStatus))) or header.status != r4os.abi.service_api_result_ok) return fail(app, "after-status");
     copyStruct(&status, selftest_status_response[0..]);
-    if (status.active_listeners != 0 or status.handle_count != 0) return fail(app, "restart-cleanup");
+    if (status.magic != r4os.abi.net_service_tcp_status_magic or
+        status.version != r4os.abi.net_service_tcp_status_version or
+        status.owned_handles != 0) return fail(app, "restart-cleanup");
+
+    // Other services may already have re-registered their listeners. Probe
+    // the port held by this self-test before the restart.
+    const stale_listener = app.sys.serviceCall(handle, r4os.abi.net_service_op_tcp_accept_poll_result, listen_request[0..], &header, selftest_result_response[0..], app.sys.ticksFromMilliseconds(service_timeout_ms));
+    if (stale_listener != @as(i32, @intCast(@sizeOf(r4os.abi.NetServiceTcpResult))) or header.status != r4os.abi.service_api_result_ok) return fail(app, "restart-listener-probe");
+    copyStruct(&result, selftest_result_response[0..]);
+    if (result.result != r4os.abi.tcp_result_bad_state or result.conn_id != 0 or
+        result.flags & r4os.abi.net_service_tcp_flag_handle_valid != 0) return fail(app, "restart-listener-retained");
 
     var abort_request: [4]u8 = .{0} ** 4;
     writeLe32(abort_request[0..], 0, 0xCAFE1709);
@@ -2466,6 +2591,9 @@ fn localContractSelfTest(app: *const App) bool {
 }
 
 fn ensureRunningAndOpen(app: *const App, out_handle: *u32) bool {
+    const actual = app.sys.base.generation2 orelse return false;
+    const clock = r4os.inventory_reader.PlatformClock.fromContext2(actual) catch return false;
+    var open_budget = r4os.rpc_budget.Budget.fromTicks(clock.read, 160) catch return false;
     var info: r4os.abi.ServiceInfo = .{};
     const status = app.sys.serviceStatus(service_name, &info);
     if (status != r4os.abi.service_api_result_ok) return false;
@@ -2473,8 +2601,8 @@ fn ensureRunningAndOpen(app: *const App, out_handle: *u32) bool {
         const start = app.sys.serviceStart(service_name, &info);
         if (start != r4os.abi.service_api_result_ok) return false;
     }
-    var tick: u32 = 0;
-    while (tick < 160) : (tick += 1) {
+    while (!app.sys.programShouldClose()) {
+        _ = open_budget.remainingTicks() catch return false;
         const open_rc = app.sys.serviceOpen(service_name, &info);
         if (open_rc == r4os.abi.service_api_result_ok and info.handle != 0) {
             out_handle.* = info.handle;
@@ -2491,13 +2619,12 @@ fn fail(app: *const App, label: []const u8) i32 {
     return 1;
 }
 
-fn hasArg(args: [*:0]const u8, wanted: []const u8) bool {
-    var offset: usize = 0;
-    while (offset < 256 and args[offset] != 0) {
-        while (offset < 256 and (args[offset] == ' ' or args[offset] == '\t')) : (offset += 1) {}
-        const start = offset;
-        while (offset < 256 and args[offset] != 0 and args[offset] != ' ' and args[offset] != '\t') : (offset += 1) {}
-        if (equalsIgnoreCase(args[start..offset], wanted)) return true;
+fn hasArg(args: [*:0]const u8, wanted: []const u8) r4os.arguments.Error!bool {
+    const raw = std.mem.span(args);
+    var failure: r4os.arguments.Failure = .{};
+    var cursor = try r4os.arguments.ArgCursor.init(raw, .{ .quotes = @intFromEnum(r4os.arguments.Quotes.none), .max_bytes = 256 }, &failure);
+    while (try cursor.next()) |token| {
+        if (std.ascii.eqlIgnoreCase(try token.bytes(raw), wanted)) return true;
     }
     return false;
 }
@@ -2622,3 +2749,462 @@ const Writer = struct {
         return self.out[0..self.pos];
     }
 };
+
+fn replyNetwork(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, owner: u32, op: u16, payload: []const u8) i32 {
+    return networkRequest(app, endpoint, request_id, state, owner, op, payload) catch |err|
+        finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, network.code(err), ""));
+}
+fn networkRequest(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, owner: u32, op: u16, payload: []const u8) network.Error!i32 {
+    const a = r4os.abi;
+    if (state.provider == 0) return error.Backend;
+    if (op == a.network_op_info) {
+        if (payload.len != 0) return error.Invalid;
+        var info: a.NetworkProviderInfo = .{ .provider = state.provider };
+        if (network.backendInfo(app.net, a.ipc_channel_net_tcp)) |backend| {
+            const required = a.network_cap_ipv4 | a.network_cap_tcp | a.network_cap_retained_terminal;
+            if (backend.capabilities & required == required and backend.max_send != 0 and backend.max_recv != 0) {
+                info.capabilities = required | (backend.capabilities & a.network_cap_listen);
+                info.max_send = backend.max_send;
+                info.max_recv = backend.max_recv;
+            }
+        }
+        if (app.dev) |dev| {
+            if (transport.providerInfo(dev, "net.tcp")) |backend| {
+                const required = a.network_cap_ipv6 | a.network_cap_tcp | a.network_cap_listen | a.network_cap_retained_terminal;
+                if (backend.capabilities & required == required and backend.max_send != 0 and backend.max_recv != 0) {
+                    info.capabilities |= required;
+                    if (info.capabilities & a.network_cap_ipv4 != 0) info.capabilities |= a.network_cap_dual_stack;
+                    info.max_send = @max(info.max_send, backend.max_send);
+                    info.max_recv = @max(info.max_recv, backend.max_recv);
+                    info.interface_id = backend.interface_id;
+                }
+            } else |_| {}
+        }
+        return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&info)));
+    }
+    if (op != a.network_op_connect and op != a.network_op_read and op != a.network_op_write and op != a.network_op_close and op != a.network_op_listen and op != a.network_op_accept) return error.UnsupportedPolicy;
+    if (payload.len < @sizeOf(a.NetworkSocketRequest)) return error.Invalid;
+    const req = try network.record(a.NetworkSocketRequest, payload[0..@sizeOf(a.NetworkSocketRequest)]);
+    if (req.provider != state.provider) return error.ProviderChanged;
+    const process = try network.owner(app.sys, owner);
+    const data = payload[@sizeOf(a.NetworkSocketRequest)..];
+    if (data.len != (if (op == a.network_op_write) req.bytes else @as(u32, 0))) return error.Invalid;
+    try network.checkAttempt(app.sys, req.deadline);
+    if (op == a.network_op_listen or op == a.network_op_connect and req.endpoint.address.family == 6) return networkCreate(app, endpoint, request_id, state, process, op, req);
+    try network.policy(req.flags);
+    if (op == a.network_op_connect) {
+        const ip = try network.ipv4(req.endpoint, false);
+        if (std.mem.allEqual(u8, &ip, 0) or req.socket != 0 or req.generation != 0 or req.bytes != 0) return error.Invalid;
+        const backend = network.backendInfo(app.net, a.ipc_channel_net_tcp) orelse return error.Backend;
+        const required = a.network_cap_ipv4 | a.network_cap_tcp | a.network_cap_retained_terminal;
+        if (backend.capabilities & required != required or backend.max_send == 0 or backend.max_recv == 0) return error.Backend;
+        if (state.next_typed_generation == 0) return error.Capacity;
+        var free_front = false;
+        for (state.handles) |entry| {
+            if (!entry.used) {
+                free_front = true;
+                break;
+            }
+        }
+        if (!free_front) return error.Capacity;
+        const limit = try network.tickDeadline(app.sys, req.deadline);
+        var bytes: [6]u8 = undefined;
+        @memcpy(bytes[0..4], &ip);
+        writeLe16(&bytes, 4, req.endpoint.port);
+        const reply = backendResultWithDeadline(app, a.net_service_op_tcp_connect_retained_result, &bytes, limit, backend_result_data[0..]) orelse return error.Backend;
+        if (reply.result.result != 0 or reply.result.handle == 0 or reply.result.conn_id == 0) {
+            return if (reply.result.lifecycle_cause == a.net_service_socket_lifecycle_timeout) error.Timeout else error.Backend;
+        }
+        const front = allocateFrontHandle(state, owner, reply.result.handle, reply.result.conn_id) orelse {
+            closeBackendHandle(app, reply.result.handle);
+            return error.Capacity;
+        };
+        const lookup = resolveFrontHandle(state, front, owner);
+        const generation = state.next_typed_generation;
+        state.next_typed_generation = std.math.add(u64, generation, 1) catch 0;
+        state.handles[lookup.index].typed_generation = generation;
+        state.handles[lookup.index].typed_owner = process;
+        state.typed_count += 1;
+        state.handles[lookup.index].typed_endpoint = req.endpoint;
+        const out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = front, .generation = generation, .endpoint = req.endpoint, .state = a.network_state_ready };
+        if (!network.ownerAlive(app.sys, process)) {
+            if (closeTypedBackend(app, reply.result.handle)) releaseFrontHandleAt(state, lookup.index);
+            return error.BadSocket;
+        }
+        const rc = app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out));
+        if (rc != 0 and closeTypedBackend(app, reply.result.handle)) releaseFrontHandleAt(state, lookup.index);
+        return finishReply(state, rc);
+    }
+    if (req.socket == 0 or req.socket > std.math.maxInt(u32) or req.generation == 0 or !std.mem.allEqual(u8, std.mem.asBytes(&req.endpoint), 0)) return error.Invalid;
+    var index: ?usize = null;
+    for (&state.handles, 0..) |entry, i| {
+        if (entry.used and (!entry.typed_retiring or op == a.network_op_close) and entry.handle == req.socket and entry.typed_generation == req.generation and entry.owner_id == owner and entry.typed_owner.generation == process.generation) {
+            index = i;
+            break;
+        }
+    }
+    const slot = index orelse return error.BadSocket;
+    if (op == a.network_op_accept) return networkAccept(app, endpoint, request_id, state, slot, req);
+    if (state.handles[slot].v6_provider != 0 or state.handles[slot].typed_listener) return networkTransfer(app, endpoint, request_id, state, slot, op, req, data);
+    const entry = state.handles[slot];
+    var out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = req.socket, .generation = req.generation, .endpoint = entry.typed_endpoint, .state = a.network_state_ready };
+    var input: [4096]u8 = undefined;
+    writeLe32(&input, 0, entry.backend_handle);
+    var body: []const u8 = "";
+    if (op == a.network_op_close) {
+        if (req.bytes != 0) return error.Invalid;
+        const reply = backendResult(app, a.net_service_op_tcp_close_result, input[0..4], backend_result_data[0..]) orelse return error.Backend;
+        if (reply.result.result < 0) return error.BadSocket;
+        releaseFrontHandleAt(state, slot);
+        out.state = a.network_state_local_closed;
+    } else if (req.bytes != 0) {
+        const reading = op == a.network_op_read;
+        if (req.bytes > (if (reading) @as(u32, 4008) else @min(a.net_service_tcp_write_max, 3968))) return error.Capacity;
+        var count: usize = 4;
+        if (reading) {
+            // The new reply has a smaller header than the private IPv4
+            // NIPC reply. Accept the public capacity and return one bounded
+            // backend prefix; the caller retains the remaining stream.
+            writeLe16(&input, 4, @intCast(@min(req.bytes, a.net_service_tcp_read_max)));
+            count = 6;
+        } else {
+            @memcpy(input[4..][0..data.len], data);
+            count += data.len;
+        }
+        const reply = backendResult(app, if (reading) a.net_service_op_tcp_read_result else a.net_service_op_tcp_write_result, input[0..count], backend_result_data[0..]) orelse return error.Backend;
+        if (reply.result.conn_id != 0 and reply.result.conn_id != entry.conn_id) return error.BadSocket;
+        if (reply.result.result < 0) {
+            if (!reading and reply.result.lifecycle_cause == a.net_service_socket_lifecycle_peer_gone) {
+                out.state = a.network_state_local_closed;
+                return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out)));
+            }
+            return if (reply.result.lifecycle_cause == a.net_service_socket_lifecycle_reset) error.Reset else if (reply.result.lifecycle_cause == a.net_service_socket_lifecycle_bad_handle) error.BadSocket else error.Backend;
+        }
+        if (reply.result.bytes > req.bytes) return error.Backend;
+        out.bytes = reply.result.bytes;
+        out.original_bytes = out.bytes;
+        if (out.bytes == 0) {
+            out.state = switch (reply.result.lifecycle_cause) {
+                a.net_service_socket_lifecycle_peer_gone => if (reading) a.network_state_eof else a.network_state_local_closed,
+                a.net_service_socket_lifecycle_reset => a.network_state_reset,
+                a.net_service_socket_lifecycle_would_block => a.network_state_would_block,
+                else => return error.Backend,
+            };
+        }
+        if (reading) {
+            if (reply.data.len != out.bytes) return error.Backend;
+            body = reply.data;
+        }
+    }
+    var response: [4096]u8 = undefined;
+    @memcpy(response[0..@sizeOf(a.NetworkSocketResult)], std.mem.asBytes(&out));
+    @memcpy(response[@sizeOf(a.NetworkSocketResult)..][0..body.len], body);
+    return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, response[0 .. @sizeOf(a.NetworkSocketResult) + body.len]));
+}
+
+// Poll only while new typed resources exist. Existing old-only service idle
+// waits remain unbounded. No process registry borrow spans backend work.
+fn sweepNetworkOwners(app: *const App, state: *ServiceState) void {
+    tickNetworkTransport(app, state);
+    if (state.typed_count == 0 or app.sys.ticks() < state.typed_sweep_tick) return;
+    state.typed_sweep_tick = app.sys.ticks() +| app.sys.ticksFromMilliseconds(1000);
+    for (&state.handles, 0..) |entry, i| {
+        if (!entry.used or entry.typed_generation == 0 or !entry.typed_retiring and !network.ownerGone(app.sys, entry.typed_owner)) continue;
+        if (entry.v6_provider != 0 or entry.typed_listener) {
+            if (retireNetworkSocket(app, state, i)) releaseFrontHandleAt(state, i);
+            continue;
+        }
+        var request: [4]u8 = undefined;
+        writeLe32(&request, 0, entry.backend_handle);
+        const reply = backendResult(app, r4os.abi.net_service_op_tcp_abort_result, &request, backend_result_data[0..]) orelse continue;
+        // Uncertain transport failure retains this bounded front entry until
+        // a later actual owner acknowledgement; it is no retirement proof.
+        if (reply.result.result == 0) releaseFrontHandleAt(state, i);
+    }
+}
+
+fn closeTypedBackend(app: *const App, backend_handle: u32) bool {
+    var request: [4]u8 = undefined;
+    writeLe32(&request, 0, backend_handle);
+    const reply = backendResult(app, r4os.abi.net_service_op_tcp_abort_result, &request, backend_result_data[0..]) orelse return false;
+    return reply.result.result == 0;
+}
+
+fn networkSweepDeadline(app: *const App, state: *const ServiceState) ?u64 {
+    if (state.typed_count == 0) return null;
+    // A missing logical frequency must not turn owner cleanup into a busy
+    // poll loop. Without it, retain resources and check on ordinary requests.
+    if (app.sys.ticksFromMilliseconds(1000) == 0) return null;
+    for (state.handles) |entry| if (entry.used and entry.v6_provider != 0) return @min(state.typed_sweep_tick, state.transport_tick);
+    return state.typed_sweep_tick;
+}
+
+fn markNetworkHandle(state: *ServiceState, slot: usize, owner: r4os.abi.ProgramProcessHandle, endpoint: r4os.abi.NetworkEndpoint) network.Error!void {
+    if (state.next_typed_generation == 0) return error.Capacity;
+    state.handles[slot].typed_generation = state.next_typed_generation;
+    state.next_typed_generation = std.math.add(u64, state.next_typed_generation, 1) catch 0;
+    state.handles[slot].typed_owner = owner;
+    state.handles[slot].typed_endpoint = endpoint;
+    state.typed_count += 1;
+}
+fn networkHasSpace(state: *const ServiceState) bool {
+    if (state.next_typed_generation == 0) return false;
+    for (state.handles) |entry| if (!entry.used) return true;
+    return false;
+}
+fn networkCreate(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, owner: r4os.abi.ProgramProcessHandle, op: u16, req: r4os.abi.NetworkSocketRequest) network.Error!i32 {
+    const a = r4os.abi;
+    const listening = op == a.network_op_listen;
+    const v6 = req.endpoint.address.family == 6;
+    if (req.socket != 0 or req.generation != 0 or req.bytes != 0 or !network.endpointValid(req.endpoint)) return error.Invalid;
+    if (req.endpoint.address.family != 4 and !v6) return error.UnsupportedFamily;
+    if (req.flags != 0 and !(v6 and listening and req.flags == a.network_policy_dual_stack and transport.zero(req.endpoint.address) and req.endpoint.address.scope_id == 0)) return error.UnsupportedPolicy;
+    if (!listening and req.deadline.kind == 0) return error.WouldBlock;
+    if (listening) {
+        // A reaped client can leave its listener until the periodic sweep.
+        // Reclaim an exact abandoned owner before the same-port admission.
+        for (&state.handles, 0..) |entry, index| {
+            if (!entry.used or !entry.typed_listener or entry.typed_endpoint.port != req.endpoint.port or
+                !network.ownerGone(app.sys, entry.typed_owner)) continue;
+            if (retireNetworkSocket(app, state, index)) releaseFrontHandleAt(state, index);
+        }
+        try network.checkAttempt(app.sys, req.deadline);
+    }
+    if (!networkHasSpace(state)) return error.Capacity;
+    if (!listening and (pendingCount(state) >= pendingActiveLimit() or pendingCountForOwner(state, owner.instance_id) >= pending_per_owner_max)) return error.Capacity;
+    const pending_slot: ?usize = if (!listening) allocatePendingSlot(state) orelse return error.Capacity else null;
+    const handle = allocateFrontHandle(state, owner.instance_id, 0, 0) orelse return error.Capacity;
+    const lookup = resolveFrontHandle(state, handle, owner.instance_id);
+    const entry = &state.handles[lookup.index];
+    try markNetworkHandle(state, lookup.index, owner, req.endpoint);
+    entry.typed_listener = listening;
+    if (v6) {
+        const dev = app.dev orelse {
+            releaseFrontHandleAt(state, lookup.index);
+            return error.UnsupportedFamily;
+        };
+        const info = transport.providerInfo(dev, "net.tcp") catch |err| {
+            releaseFrontHandleAt(state, lookup.index);
+            return err;
+        };
+        if (info.capabilities & a.network_cap_ipv6 == 0) {
+            releaseFrontHandleAt(state, lookup.index);
+            return error.UnsupportedFamily;
+        }
+        var response: [4096]u8 = undefined;
+        var request = req;
+        request.flags = 0;
+        const reply = transport.broker(app.sys, dev, "net.tcp", info.provider, owner, op, request, "", &response) catch |err| {
+            releaseFrontHandleAt(state, lookup.index);
+            return err;
+        };
+        entry.v6_provider = info.provider;
+        entry.v6_socket = reply.result.socket;
+        entry.v6_generation = reply.result.generation;
+        entry.typed_endpoint = reply.result.endpoint;
+        if (entry.v6_socket == 0 or entry.v6_generation == 0) {
+            entry.typed_retiring = true;
+            return error.Backend;
+        }
+        if (!listening and reply.result.state != a.network_state_ready) {
+            if (reply.result.state != a.network_state_would_block) {
+                entry.typed_retiring = true;
+                return if (reply.result.state == a.network_state_timeout) error.Timeout else error.Reset;
+            }
+            state.pending[pending_slot.?] = .{ .used = true, .typed = true, .kind = .connect, .request_id = request_id, .owner_id = owner.instance_id, .front_handle = handle, .generation = entry.generation, .network_request = req, .start_ticks = app.sys.ticks() };
+            return 0;
+        }
+    } else {
+        const ip = network.ipv4(req.endpoint, false) catch |err| {
+            releaseFrontHandleAt(state, lookup.index);
+            return err;
+        };
+        if (!std.mem.allEqual(u8, &ip, 0)) {
+            releaseFrontHandleAt(state, lookup.index);
+            return error.UnsupportedScope;
+        }
+    }
+    if (listening and (!v6 or req.flags == a.network_policy_dual_stack)) {
+        const port = entry.typed_endpoint.port;
+        if (port == 0 or listenerForPort(state, port) != null) {
+            if (retireNetworkSocket(app, state, lookup.index)) releaseFrontHandleAt(state, lookup.index);
+            return error.Capacity;
+        }
+        var bytes: [2]u8 = undefined;
+        writeLe16(&bytes, 0, port);
+        const reply = performListen(app, state, owner.instance_id, a.net_service_op_tcp_listen_retained_result, &bytes, backend_result_data[0..]);
+        if (reply.result.result != 0) {
+            if (retireNetworkSocket(app, state, lookup.index)) releaseFrontHandleAt(state, lookup.index);
+            return error.Capacity;
+        }
+        entry.typed_v4_listener = true;
+    }
+    const out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = handle, .generation = entry.typed_generation, .endpoint = entry.typed_endpoint, .state = a.network_state_ready };
+    const rc = app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out));
+    if (rc != 0 and retireNetworkSocket(app, state, lookup.index)) releaseFrontHandleAt(state, lookup.index);
+    return finishReply(state, rc);
+}
+
+fn failNetworkConnect(app: *const App, endpoint: u32, state: *ServiceState, index: usize, code: i32) i32 {
+    const pending = state.pending[index];
+    const lookup = resolveFrontHandle(state, pending.front_handle, pending.owner_id);
+    if (lookup.ok and lookup.entry.generation == pending.generation) {
+        state.handles[lookup.index].typed_retiring = true;
+        if (retireNetworkSocket(app, state, lookup.index)) releaseFrontHandleAt(state, lookup.index);
+    }
+    state.pending[index] = .{};
+    return finishReply(state, app.sys.serviceEndpointReply(endpoint, pending.request_id, code, ""));
+}
+fn processPendingNetworkConnect(app: *const App, endpoint: u32, state: *ServiceState, index: usize) i32 {
+    const a = r4os.abi;
+    const pending = &state.pending[index];
+    if (!pending.typed) return failNetworkConnect(app, endpoint, state, index, a.network_error_invalid);
+    const lookup = resolveFrontHandle(state, pending.front_handle, pending.owner_id);
+    if (!lookup.ok or lookup.entry.generation != pending.generation or lookup.entry.typed_retiring) return failNetworkConnect(app, endpoint, state, index, a.network_error_bad_socket);
+    const entry = &state.handles[lookup.index];
+    network.checkAttempt(app.sys, pending.network_request.deadline) catch |err| return failNetworkConnect(app, endpoint, state, index, network.code(err));
+    if (network.ownerGone(app.sys, entry.typed_owner)) return failNetworkConnect(app, endpoint, state, index, a.network_error_bad_socket);
+    const dev = app.dev orelse return failNetworkConnect(app, endpoint, state, index, a.network_error_unsupported_family);
+    var req = pending.network_request;
+    req.socket = entry.v6_socket;
+    req.generation = entry.v6_generation;
+    var response: [4096]u8 = undefined;
+    const reply = transport.broker(app.sys, dev, "net.tcp", entry.v6_provider, entry.typed_owner, a.network_op_connect, req, "", &response) catch |err| {
+        if (err == error.WouldBlock) return 0;
+        return failNetworkConnect(app, endpoint, state, index, network.code(err));
+    };
+    if (reply.result.state == a.network_state_would_block) return 0;
+    if (reply.result.state != a.network_state_ready) return failNetworkConnect(app, endpoint, state, index, if (reply.result.state == a.network_state_timeout) a.network_error_timeout else a.network_error_reset);
+    var out = reply.result;
+    out.provider = state.provider;
+    out.socket = entry.handle;
+    out.generation = entry.typed_generation;
+    const rc = app.sys.serviceEndpointReply(endpoint, pending.request_id, 0, std.mem.asBytes(&out));
+    if (rc != 0 and retireNetworkSocket(app, state, lookup.index)) releaseFrontHandleAt(state, lookup.index);
+    state.pending[index] = .{};
+    return finishReply(state, rc);
+}
+
+fn tickNetworkTransport(app: *const App, state: *ServiceState) void {
+    if (app.sys.ticks() < state.transport_tick) return;
+    var active = false;
+    for (state.handles) |entry| if (entry.used and entry.v6_provider != 0) {
+        active = true;
+        break;
+    };
+    if (!active) return;
+    const ticks = app.sys.ticksFromMilliseconds(50);
+    if (ticks == 0) return;
+    state.transport_tick = app.sys.ticks() +| ticks;
+    const dev = app.dev orelse return;
+    const info = transport.providerInfo(dev, "net.tcp") catch return;
+    const actual = app.sys.base.generation2 orelse return;
+    const id = std.math.cast(u32, actual.raw.instance_id) orelse return;
+    const owner = network.owner(app.sys, id) catch return;
+    var response: [4096]u8 = undefined;
+    _ = transport.broker(app.sys, dev, "net.tcp", info.provider, owner, r4os.abi.network_transport_op_tick, .{}, "", &response) catch return;
+}
+
+fn retireNetworkSocket(app: *const App, state: *ServiceState, slot: usize) bool {
+    const a = r4os.abi;
+    const entry = &state.handles[slot];
+    entry.typed_retiring = true;
+    if (entry.v6_socket != 0) {
+        const dev = app.dev orelse return false;
+        var response: [4096]u8 = undefined;
+        const req: a.NetworkSocketRequest = .{ .socket = entry.v6_socket, .generation = entry.v6_generation };
+        if (transport.broker(app.sys, dev, "net.tcp", entry.v6_provider, entry.typed_owner, a.network_op_close, req, "", &response)) |_| {
+            entry.v6_socket = 0;
+        } else |err| {
+            if (err == error.BadSocket or err == error.ProviderChanged) entry.v6_socket = 0 else return false;
+        }
+    }
+    if (entry.typed_v4_listener) {
+        var bytes: [2]u8 = undefined;
+        writeLe16(&bytes, 0, entry.typed_endpoint.port);
+        const reply = performCloseListen(app, state, entry.owner_id, a.net_service_op_tcp_close_listen_result, &bytes, backend_result_data[0..]);
+        if (reply.result.result != 0) return false;
+        entry.typed_v4_listener = false;
+    }
+    if (entry.backend_handle != 0) {
+        if (!closeTypedBackend(app, entry.backend_handle)) return false;
+        entry.backend_handle = 0;
+    }
+    return true;
+}
+
+fn networkTransfer(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, slot: usize, op: u16, req: r4os.abi.NetworkSocketRequest, data: []const u8) network.Error!i32 {
+    const a = r4os.abi;
+    const entry = &state.handles[slot];
+    if (op == a.network_op_close) {
+        if (req.bytes != 0) return error.Invalid;
+        const out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = entry.handle, .generation = entry.typed_generation, .endpoint = entry.typed_endpoint, .state = a.network_state_local_closed };
+        if (!retireNetworkSocket(app, state, slot)) return error.WouldBlock;
+        releaseFrontHandleAt(state, slot);
+        return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out)));
+    }
+    if (entry.typed_listener or op != a.network_op_read and op != a.network_op_write) return error.BadSocket;
+    const dev = app.dev orelse return error.UnsupportedFamily;
+    var backend = req;
+    backend.socket = entry.v6_socket;
+    backend.generation = entry.v6_generation;
+    var response: [4096]u8 = undefined;
+    const reply = try transport.broker(app.sys, dev, "net.tcp", entry.v6_provider, entry.typed_owner, op, backend, data, &response);
+    var out = reply.result;
+    out.provider = state.provider;
+    out.socket = entry.handle;
+    out.generation = entry.typed_generation;
+    @memcpy(response[0..@sizeOf(a.NetworkSocketResult)], std.mem.asBytes(&out));
+    return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, response[0 .. @sizeOf(a.NetworkSocketResult) + reply.data.len]));
+}
+
+fn networkAccept(app: *const App, endpoint: u32, request_id: u32, state: *ServiceState, slot: usize, req: r4os.abi.NetworkSocketRequest) network.Error!i32 {
+    const a = r4os.abi;
+    const listener = state.handles[slot];
+    if (!listener.typed_listener or req.bytes != 0) return error.BadSocket;
+    if (!networkHasSpace(state)) return error.Capacity;
+    var out: a.NetworkSocketResult = .{ .provider = state.provider, .socket = listener.handle, .generation = listener.typed_generation, .endpoint = listener.typed_endpoint, .state = a.network_state_would_block };
+    if (listener.v6_provider != 0) {
+        const dev = app.dev orelse return error.UnsupportedFamily;
+        var backend = req;
+        backend.socket = listener.v6_socket;
+        backend.generation = listener.v6_generation;
+        var response: [4096]u8 = undefined;
+        if (transport.broker(app.sys, dev, "net.tcp", listener.v6_provider, listener.typed_owner, a.network_op_accept, backend, "", &response)) |reply| {
+            const handle = allocateFrontHandle(state, listener.owner_id, 0, 0) orelse return error.Capacity;
+            const lookup = resolveFrontHandle(state, handle, listener.owner_id);
+            try markNetworkHandle(state, lookup.index, listener.typed_owner, reply.result.endpoint);
+            const child = &state.handles[lookup.index];
+            child.v6_provider = listener.v6_provider;
+            child.v6_socket = reply.result.socket;
+            child.v6_generation = reply.result.generation;
+            out = reply.result;
+            out.provider = state.provider;
+            out.socket = handle;
+            out.generation = child.typed_generation;
+            const rc = app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out));
+            if (rc != 0 and retireNetworkSocket(app, state, lookup.index)) releaseFrontHandleAt(state, lookup.index);
+            return finishReply(state, rc);
+        } else |err| if (err != error.WouldBlock) return err;
+    }
+    if (listener.typed_v4_listener) {
+        var bytes: [2]u8 = undefined;
+        writeLe16(&bytes, 0, listener.typed_endpoint.port);
+        const reply = performAccept(app, state, listener.owner_id, a.net_service_op_tcp_accept_poll_result, &bytes, backend_result_data[0..]);
+        if (reply.result.result != 0) return error.Backend;
+        if (reply.result.handle != 0 and reply.result.flags & a.net_service_tcp_flag_handle_valid != 0) {
+            const lookup = resolveFrontHandle(state, reply.result.handle, listener.owner_id);
+            if (!lookup.ok) return error.Backend;
+            const peer = network.v4Endpoint(reply.result.remote_ip, reply.result.remote_port);
+            try markNetworkHandle(state, lookup.index, listener.typed_owner, peer);
+            out.socket = reply.result.handle;
+            out.generation = state.handles[lookup.index].typed_generation;
+            out.endpoint = peer;
+            out.state = a.network_state_ready;
+            const rc = app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out));
+            if (rc != 0 and closeTypedBackend(app, lookup.entry.backend_handle)) releaseFrontHandleAt(state, lookup.index);
+            return finishReply(state, rc);
+        }
+    }
+    return finishReply(state, app.sys.serviceEndpointReply(endpoint, request_id, 0, std.mem.asBytes(&out)));
+}

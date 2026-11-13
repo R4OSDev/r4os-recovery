@@ -3177,18 +3177,29 @@ pub fn udpRecvFrom(handle: u32, out_info: *UdpRecvInfo, out_payload: []u8) i32 {
         buffer_small_events += 1;
         return -2;
     }
-    out_info.* = .{
+    out_info.* = (udpReceiveDatagram(handle, out_payload) catch return -1) orelse return 0;
+    return @intCast(packet_len);
+}
+
+// Unlike the legacy read, consume a whole datagram even for a short/empty
+// buffer and return its original length. Null alone means would-block.
+pub fn udpReceiveDatagram(handle: u32, out_payload: []u8) error{BadHandle}!?UdpRecvInfo {
+    const index = udpSocketIndexByHandle(handle) orelse return error.BadHandle;
+    if (udp_sockets[index].count == 0) return null;
+    const queued = &udp_sockets[index].queue[udp_sockets[index].head];
+    const copied = @min(out_payload.len, @as(usize, queued.len));
+    const info = UdpRecvInfo{
         .source_ip = queued.source_ip,
         .dest_ip = queued.dest_ip,
         .source_port = queued.source_port,
         .dest_port = queued.dest_port,
         .length = queued.len,
     };
-    if (packet_len > 0) @memcpy(out_payload[0..packet_len], queued.payload[0..packet_len]);
+    if (copied > 0) @memcpy(out_payload[0..copied], queued.payload[0..copied]);
     udp_sockets[index].head = (udp_sockets[index].head + 1) % UDP_SOCKET_QUEUE_SIZE;
     udp_sockets[index].count -= 1;
     udp_stats.last_error = "recv-ok";
-    return @intCast(packet_len);
+    return info;
 }
 
 pub fn udpRecvFromWait(handle: u32, out_info: *UdpRecvInfo, out_payload: []u8, timeout_ticks: u64) i32 {
@@ -4593,9 +4604,24 @@ fn limitUdpReceiveBuffer() bool {
     var out: [2]u8 = .{0} ** 2;
     const got = udpRecvFrom(handle, &info, out[0..]);
     const after = backpressureStatus();
-    return got == -2 and
+    if (!(got == -2 and
         after.resource_buffer_small == before.resource_buffer_small + 1 and
-        memEql(udp_stats.last_error, "recv-small");
+        memEql(udp_stats.last_error, "recv-small"))) return false;
+    // The legacy small-buffer error leaves the packet queued. The typed
+    // datagram operation consumes exactly one prefix and exposes full length.
+    const truncated = (udpReceiveDatagram(handle, &out) catch return false) orelse return false;
+    if (truncated.length != payload.len or !memEql(&out, payload[0..out.len])) return false;
+    if ((udpReceiveDatagram(handle, &out) catch return false) != null) return false;
+    dispatchUdpSocketDatagram(.{
+        .source_ip = .{ 203, 0, 113, 12 },
+        .dest_ip = net_config.localIp(),
+        .source_port = 50000,
+        .dest_port = 65091,
+        .length = udp.HEADER_SIZE,
+        .payload = "",
+    });
+    const empty = (udpReceiveDatagram(handle, out[0..0]) catch return false) orelse return false;
+    return empty.length == 0 and (udpReceiveDatagram(handle, &out) catch return false) == null;
 }
 
 fn limitUdpSocketPayload() bool {
@@ -6652,6 +6678,18 @@ pub fn tcpConnect(remote_ip: [4]u8, port: u16) i32 {
 }
 
 pub fn tcpConnectUntil(remote_ip: [4]u8, port: u16, request_deadline_tick: ?u64) i32 {
+    return tcpConnectMode(remote_ip, port, request_deadline_tick, false);
+}
+
+pub fn tcpConnectRetainedUntil(remote_ip: [4]u8, port: u16, request_deadline_tick: ?u64) i32 {
+    return tcpConnectMode(remote_ip, port, request_deadline_tick, true);
+}
+
+pub fn tcpRetainedTerminalCause(conn_id: u32) ?tcp.TerminalCause {
+    return tcp.retainedTerminalCause(conn_id);
+}
+
+fn tcpConnectMode(remote_ip: [4]u8, port: u16, request_deadline_tick: ?u64, retained: bool) i32 {
     if (adapter_count == 0) {
         tcp.setError("no-adapter");
         return r4p_contract.TCP_RESULT_NO_CONNECTION;
@@ -6662,7 +6700,8 @@ pub fn tcpConnectUntil(remote_ip: [4]u8, port: u16, request_deadline_tick: ?u64)
             return r4p_contract.TCP_RESULT_BAD_STATE;
         }
     }
-    const conn = tcp.beginLiveConnect(remote_ip, port, nextTcpSeq(remote_ip, port));
+    const initial_seq = nextTcpSeq(remote_ip, port);
+    const conn = if (retained) tcp.beginRetainedConnect(remote_ip, port, initial_seq) else tcp.beginLiveConnect(remote_ip, port, initial_seq);
     if (conn <= 0) return conn;
     const conn_id: u32 = @intCast(conn);
     const syn = sendTcpForConnection(conn_id, tcp.FLAG_SYN, "") orelse {
@@ -6680,13 +6719,15 @@ pub fn tcpConnectUntil(remote_ip: [4]u8, port: u16, request_deadline_tick: ?u64)
         const attempt_deadline = now +| rtoBackoff(conn_id, retransmits);
         const wait_deadline = if (request_deadline_tick) |deadline| @min(deadline, attempt_deadline) else attempt_deadline;
         if (waitForTcpEstablishedUntil(conn_id, wait_deadline)) break;
+        if (retained and tcp.retainedConnected(conn_id)) break;
+        if (tcp.closed(conn_id)) break;
         if (request_deadline_tick) |deadline| if (time_core.monotonicTicks() >= deadline) break;
         if (retransmits >= TCP_MAX_RETRANSMITS) break;
         const retry = retransmitTcpConnection(conn_id, .syn, "syn-retry");
         if (retry != .ok) break;
         retransmits += 1;
     }
-    if (!tcp.established(conn_id)) {
+    if (!tcp.established(conn_id) and !(retained and tcp.retainedConnected(conn_id))) {
         tcp.markTimeout("connect-timeout");
         abortTcpConnection(conn_id, "connect-timeout");
         return r4p_contract.TCP_RESULT_BAD_STATE;
@@ -6959,6 +7000,7 @@ pub fn tcpClose(conn_id: u32) i32 {
         abortTcpConnection(conn_id, "close-state");
         return r4p_contract.TCP_RESULT_BAD_STATE;
     }
+    tcp.releaseTerminalRetention(conn_id);
     _ = drivePendingTcpClose(conn_id);
     return r4p_contract.TCP_RESULT_OK;
 }

@@ -171,6 +171,7 @@ const TcpServiceHandle = struct {
     handle: u32 = 0,
     conn_id: u32 = 0,
     owner_id: u16 = 0,
+    retained: bool = false,
 };
 
 const TcpStaleHandle = struct {
@@ -783,6 +784,13 @@ fn handle(channel_id: u32, request: []const u8, response: []u8) i32 {
     const request_payload = request[HEADER_SIZE .. HEADER_SIZE + payload_len];
     if (service != channel_id) return writeError(response, channel_id, op, request_id, RESULT_BAD_SERVICE);
 
+    if ((channel_id == ipc.CHANNEL_NET_TCP or channel_id == ipc.CHANNEL_NET_UDP) and op == r4x_api.network_op_info) {
+        return networkBackendInfo(response, channel_id, op, request_id, request_payload);
+    }
+    if (channel_id == ipc.CHANNEL_NET_UDP and op == r4x_api.network_op_recv) {
+        return truncatedDatagramReply(response, channel_id, op, request_id, request_payload);
+    }
+
     var response_payload: [ipc.MAX_MESSAGE_SIZE - HEADER_SIZE]u8 = undefined;
     var w = Writer{ .out = response_payload[0..] };
     if (op == OP_SERVICE_RESTART) {
@@ -860,6 +868,72 @@ fn handle(channel_id: u32, request: []const u8, response: []u8) i32 {
 // lief dadurch beim ersten SSH-Accept in den Guard seines 64-KB-Stacks.
 // Getrennte, nicht inlinebare Frames halten nur den tatsaechlich ausgefuehrten
 // Protokollzweig gleichzeitig aktiv und bewahren die Handler-Reentranz.
+fn networkBackendInfo(response: []u8, channel_id: u32, op: u16, request_id: u32, payload: []const u8) i32 {
+    if (payload.len != 0) return writeError(response, channel_id, op, request_id, RESULT_BAD_REQUEST);
+    var info = r4x_api.NetworkProviderInfo{};
+    if (channel_id == ipc.CHANNEL_NET_TCP) {
+        // Legacy listeners remain available to SSH/FTP. Typed retained
+        // listeners are not implemented by this IPv4 recovery owner.
+        info.capabilities = r4x_api.network_cap_ipv4 | r4x_api.network_cap_tcp | r4x_api.network_cap_retained_terminal;
+        info.max_send = @min(TCP_WRITE_PAYLOAD_MAX, 3968);
+        info.max_recv = @min(TCP_RESULT_DATA_MAX, 4008);
+    } else {
+        var status: net.UdpStatus = .{};
+        net.udpStatus(&status);
+        info.capabilities = r4x_api.network_cap_ipv4 | r4x_api.network_cap_udp | r4x_api.network_cap_datagram_truncate;
+        info.max_send = @intCast(@min(@min(UDP_SEND_PAYLOAD_MAX, status.payload_max), 3968));
+        info.max_recv = @min(UDP_RESULT_DATA_MAX - 4, 4008);
+    }
+    return writeResponse(response, channel_id, op, request_id, RESULT_OK, @import("std").mem.asBytes(&info));
+}
+
+// Private NIPC reply: unchanged result record, original LE u32 datagram
+// length, then the copied prefix. A zero-byte datagram is a real packet.
+noinline fn truncatedDatagramReply(response: []u8, channel_id: u32, op: u16, request_id: u32, payload: []const u8) i32 {
+    var out = UdpServiceResult{ .action = UDP_ACTION_RECV };
+    var body: [TCP_MESSAGE_PAYLOAD_MAX]u8 = undefined;
+    const base = @sizeOf(UdpServiceResult);
+    var original: u32 = 0;
+    var copied: usize = 0;
+    if (payload.len != 6) {
+        _ = udpBadRequestResult(&out);
+    } else {
+        out.handle = readU32(payload, 0);
+        const capacity = @min(@as(usize, readU16(payload, 4)), UDP_RESULT_DATA_MAX - 4);
+        out.requested_bytes = @intCast(capacity);
+        const packet = net.udpReceiveDatagram(out.handle, body[base + 4 ..][0..capacity]) catch {
+            out.result = -1;
+            setUdpLifecycle(&out, SOCKET_LIFECYCLE_BAD_HANDLE_PUBLIC);
+            return writeTruncatedDatagramResult(response, channel_id, op, request_id, &out, &body, 0, 0);
+        };
+        out.flags |= UDP_FLAG_OK | UDP_FLAG_HANDLE_VALID;
+        if (packet) |info| {
+            original = info.length;
+            copied = @min(capacity, @as(usize, info.length));
+            out.bytes = @intCast(copied);
+            out.source_ip = info.source_ip;
+            out.dest_ip = info.dest_ip;
+            out.source_port = info.source_port;
+            out.dest_port = info.dest_port;
+            out.flags |= UDP_FLAG_DATA | UDP_FLAG_REMOTE_VALID;
+            setUdpLifecycle(&out, SOCKET_LIFECYCLE_ACTIVE_PUBLIC);
+        } else {
+            setUdpServiceStatus(&out, .would_block);
+            setUdpLifecycle(&out, SOCKET_LIFECYCLE_WOULD_BLOCK_PUBLIC);
+        }
+    }
+    return writeTruncatedDatagramResult(response, channel_id, op, request_id, &out, &body, original, copied);
+}
+
+fn writeTruncatedDatagramResult(response: []u8, channel_id: u32, op: u16, request_id: u32, out: *UdpServiceResult, body: []u8, original: u32, copied: usize) i32 {
+    fillUdpResultStatus(out);
+    setUdpOperationStatus(out);
+    const base = @sizeOf(UdpServiceResult);
+    @memcpy(body[0..base], @import("std").mem.asBytes(out));
+    writeU32(body, base, original);
+    return writeResponse(response, channel_id, op, request_id, RESULT_OK, body[0 .. base + 4 + copied]);
+}
+
 noinline fn handleTcpResultOperation(
     response: []u8,
     channel_id: u32,
@@ -1802,7 +1876,7 @@ fn isTcpOperation(op: u16) bool {
 }
 
 fn isTcpResultOperation(op: u16) bool {
-    return op == OP_TCP_CONNECT_RESULT or
+    return op == r4x_api.net_service_op_tcp_connect_retained_result or op == OP_TCP_CONNECT_RESULT or
         op == OP_TCP_WRITE_RESULT or
         op == OP_TCP_READ_RESULT or
         op == OP_TCP_CLOSE_RESULT or
@@ -1822,10 +1896,11 @@ const TcpResultPayload = struct {
 };
 
 fn makeTcpResult(op: u16, payload: []const u8, data_out: []u8, client_id: u16) TcpResultPayload {
-    const request = if (op == OP_TCP_CONNECT_RESULT) splitServiceDeadline(payload) else ServiceDeadlineRequest{ .payload = payload };
+    const retained = op == r4x_api.net_service_op_tcp_connect_retained_result;
+    const request = if (op == OP_TCP_CONNECT_RESULT or retained) splitServiceDeadline(payload) else ServiceDeadlineRequest{ .payload = payload };
     var out = TcpServiceResult{ .action = tcpResultAction(op), .read_max = @intCast(TCP_RESULT_DATA_MAX), .owner_id = client_id };
     const data = switch (op) {
-        OP_TCP_CONNECT_RESULT => tcpConnectResult(&out, request.payload, request.deadline_tick, client_id),
+        OP_TCP_CONNECT_RESULT, r4x_api.net_service_op_tcp_connect_retained_result => tcpConnectResult(&out, request.payload, request.deadline_tick, client_id, retained),
         OP_TCP_WRITE_RESULT => tcpWriteResult(&out, request.payload, client_id),
         OP_TCP_READ_RESULT => tcpReadResult(&out, request.payload, data_out, client_id),
         OP_TCP_CLOSE_RESULT => tcpCloseResult(&out, request.payload, client_id),
@@ -1846,7 +1921,7 @@ fn makeTcpResult(op: u16, payload: []const u8, data_out: []u8, client_id: u16) T
 
 fn tcpResultAction(op: u16) u16 {
     return switch (op) {
-        OP_TCP_CONNECT_RESULT => TCP_ACTION_CONNECT,
+        OP_TCP_CONNECT_RESULT, r4x_api.net_service_op_tcp_connect_retained_result => TCP_ACTION_CONNECT,
         OP_TCP_WRITE_RESULT => TCP_ACTION_WRITE,
         OP_TCP_READ_RESULT => TCP_ACTION_READ,
         OP_TCP_CLOSE_RESULT => TCP_ACTION_CLOSE,
@@ -1862,13 +1937,13 @@ fn tcpResultAction(op: u16) u16 {
     };
 }
 
-fn tcpConnectResult(out: *TcpServiceResult, payload: []const u8, deadline_tick: ?u64, client_id: u16) []const u8 {
+fn tcpConnectResult(out: *TcpServiceResult, payload: []const u8, deadline_tick: ?u64, client_id: u16, retained: bool) []const u8 {
     if (payload.len < 6) return tcpBadRequestResult(out);
     out.remote_ip = .{ payload[0], payload[1], payload[2], payload[3] };
     out.port = readU16(payload, 4);
     out.remote_port = out.port;
     out.flags |= TCP_FLAG_REMOTE_VALID;
-    const conn = net.tcpConnectUntil(out.remote_ip, out.port, deadline_tick);
+    const conn = if (retained) net.tcpConnectRetainedUntil(out.remote_ip, out.port, deadline_tick) else net.tcpConnectUntil(out.remote_ip, out.port, deadline_tick);
     if (conn <= 0) {
         out.result = conn;
         setTcpLifecycle(out, tcpLifecycleCauseFromError(fixedText(net.tcpStats().last_error)));
@@ -1876,7 +1951,7 @@ fn tcpConnectResult(out: *TcpServiceResult, payload: []const u8, deadline_tick: 
     }
     out.conn_id = @intCast(conn);
     out.flags |= TCP_FLAG_CONN_VALID;
-    const svc_handle = allocateTcpHandle(out.conn_id, client_id) orelse {
+    const svc_handle = allocateTcpHandleMode(out.conn_id, client_id, retained) orelse {
         _ = net.tcpClose(out.conn_id);
         out.result = -2;
         copyBounded(out.last_error[0..], "handle-full");
@@ -1904,6 +1979,13 @@ fn tcpWriteResult(out: *TcpServiceResult, payload: []const u8, client_id: u16) [
     out.flags |= TCP_FLAG_HANDLE_VALID | TCP_FLAG_CONN_VALID;
     const data = payload[4..];
     out.requested_bytes = @intCast(data.len);
+    if (net.tcpRetainedTerminalCause(conn_id)) |cause| {
+        if (cause != .active) {
+            out.result = -1;
+            setTcpLifecycle(out, if (cause == .reset) SOCKET_LIFECYCLE_RESET_PUBLIC else SOCKET_LIFECYCLE_PEER_GONE_PUBLIC);
+            return "";
+        }
+    }
     // tcpWrite owns MSS segmentation and the bounded retransmit catalog.
     // One IPC request therefore remains one measurable service write while
     // partial progress is still reported exactly to the paced SDK loops.
@@ -1947,6 +2029,18 @@ fn tcpReadResult(out: *TcpServiceResult, payload: []const u8, data_out: []u8, cl
     out.requested_bytes = @intCast(max_len);
     const got = net.tcpReadAvailable(conn_id, data_out[0..max_len]);
     out.result = got;
+    // Drain payload before reporting FIN/RST, retaining this exact owner
+    // slot and cause across subsequent reads and unrelated network errors.
+    if (got <= 0) {
+        if (net.tcpRetainedTerminalCause(conn_id)) |cause| {
+            if (cause != .active) {
+                out.result = if (cause == .reset) -1 else 0;
+                if (cause != .reset) out.flags |= TCP_FLAG_OK;
+                setTcpLifecycle(out, if (cause == .reset) SOCKET_LIFECYCLE_RESET_PUBLIC else SOCKET_LIFECYCLE_PEER_GONE_PUBLIC);
+                return "";
+            }
+        }
+    }
     if (got >= 0) {
         out.result = 0;
         out.bytes = @intCast(got);
@@ -2733,22 +2827,26 @@ const TcpHandleLookup = struct {
 };
 
 fn allocateTcpHandle(conn_id: u32, owner_id: u16) ?u32 {
+    return allocateTcpHandleMode(conn_id, owner_id, false);
+}
+
+fn allocateTcpHandleMode(conn_id: u32, owner_id: u16, retained: bool) ?u32 {
     reapTcpStaleHandles();
     if (handleForConnection(conn_id, owner_id)) |existing| return existing;
     var i: usize = 0;
     while (i < tcp_handles.len) : (i += 1) {
         if (tcp_handles[i].used) continue;
-        const svc_handle = nextTcpHandle();
-        tcp_handles[i] = .{ .used = true, .handle = svc_handle, .conn_id = conn_id, .owner_id = owner_id };
+        const svc_handle = nextTcpHandle() orelse return null;
+        tcp_handles[i] = .{ .used = true, .handle = svc_handle, .conn_id = conn_id, .owner_id = owner_id, .retained = retained };
         return svc_handle;
     }
     return null;
 }
 
-fn nextTcpHandle() u32 {
+fn nextTcpHandle() ?u32 {
+    if (tcp_next_handle == 0) return null;
     const svc_handle = tcp_next_handle;
     tcp_next_handle +%= 1;
-    if (tcp_next_handle == 0) tcp_next_handle = 1;
     return svc_handle;
 }
 
@@ -2756,7 +2854,7 @@ fn resolveTcpHandle(svc_handle: u32, owner_id: u16) TcpHandleLookup {
     var i: usize = 0;
     while (i < tcp_handles.len) : (i += 1) {
         if (!tcp_handles[i].used or tcp_handles[i].handle != svc_handle) continue;
-        if (!tcpConnectionUsableForHandle(tcp_handles[i].conn_id)) {
+        if (!tcp_handles[i].retained and !tcpConnectionUsableForHandle(tcp_handles[i].conn_id)) {
             const cause = tcpLifecycleCauseForConnection(tcp_handles[i].conn_id);
             reapTcpHandleAt(i, cause);
             return .{ .result = -5, .last_error = "dead-handle", .lifecycle_cause = cause };
@@ -2914,7 +3012,7 @@ fn tcpHandleOwnerMatches(handle_owner: u16, request_owner: u16) bool {
 fn reapTcpStaleHandles() void {
     var i: usize = 0;
     while (i < tcp_handles.len) : (i += 1) {
-        if (!tcp_handles[i].used) continue;
+        if (!tcp_handles[i].used or tcp_handles[i].retained) continue;
         if (tcpConnectionUsableForHandle(tcp_handles[i].conn_id)) continue;
         reapTcpHandleAt(i, tcpLifecycleCauseForConnection(tcp_handles[i].conn_id));
     }
@@ -3042,6 +3140,13 @@ fn recordSocketLifecycle(counters: *SocketLifecycleCounters, cause: u32) void {
 }
 
 fn tcpLifecycleCauseForConnection(conn_id: u32) u32 {
+    if (net.tcpRetainedTerminalCause(conn_id)) |cause| {
+        return switch (cause) {
+            .active => SOCKET_LIFECYCLE_ACTIVE_PUBLIC,
+            .peer_closed => SOCKET_LIFECYCLE_PEER_GONE_PUBLIC,
+            .reset => SOCKET_LIFECYCLE_RESET_PUBLIC,
+        };
+    }
     var summary: net.TcpSummary = .{};
     net.tcpSummary(&summary);
     var index: u32 = 0;
