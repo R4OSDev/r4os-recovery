@@ -725,5 +725,19 @@
   },
   "metadata_overlay": [
     ".gitattributes"
+  ],
+  "owners": [
+    {
+      "owner": "Contract",
+      "sourceCommit": "8fb41b466fb64a6df866c564feb4d598c66411b2",
+      "archive": "Legal/Sources/Contract-0.90.88.zip",
+      "sha256": "1fd7ca2690c08183bd2f217f6df064333254d908103cec959cabdb740d2a6b1a",
+      "target": "Platform/Contract",
+      "snapshotMetadataOverlay": [
+        ".gitattributes"
+      ],
+      "canonicalCodeByteIdentical": true,
+      "canonicalFiles": 90
+    }
   ]
 }
