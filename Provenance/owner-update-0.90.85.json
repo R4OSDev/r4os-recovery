@@ -843,17 +843,17 @@
   "original_source_archives_unchanged": true,
   "runtime39_source_rebuilt_generation2": true,
   "corresponding_sources": {
-    "commit": "3cef41c302711d696fa293654f82220cb3d01570",
+    "commit": "2fedd0e781a22ccf82c5bbd4e87893be1a8cd410",
     "files": 684,
     "archive": "Recovery-Embedded-0.90.85.zip",
-    "sha256": "e844b5767e980db2e3823723027559e3ad6efae901b27747d08dfe0465125fa7",
+    "sha256": "34fd33aa32c0df99799cf90716e208ca40a219d027ce7d3de7917567926b029c",
     "controller_commit": "56c20b5d3364e8e5fff2bce61d80a6d5011a29ec",
     "controller_archive": "SDK-Controller-0.90.85.zip",
     "controller_sha256": "48192ef1422bb6fc73dfe69818d5533ecb6fd2136faab0552d46fffa2aca8b1e",
     "all_curated_source_bytes_equal_current_checkout": true,
     "all_checkpoint_locked_bytes_match_raw_git_archive": true,
     "checkpoint_locked_files": 4740,
-    "archive_method": "Raw committed blobs, Git modes and commit time; every raw source independently compared. Includes complete ownKernel69 and all38 derivatives, Menu, builders; native pending."
+    "archive_method": "Raw committed blobs, Git modes and commit time; every raw source independently compared. Includes complete ownKernel69 and all38 derivatives, Menu, builders; joined original download8 passed, other native qualification separate."
   },
   "ssh_completion_correction": {
     "reason": "Observed native truncated successful SSH exec during UEFI GPT repair; guest serial proves command completed.",

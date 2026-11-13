@@ -3,7 +3,7 @@
 RecoveryTools/Embedded contains38 Recovery-owned derivatives. They preserve
 original notices/licenses, including GPL-2.0-only RTL8168 firmware material.
 Recovery-Embedded-0.90.85.zip supplies their actual current build inputs,
-Menu28, source plan and builder scripts, from Recovery commit 3cef41c302711d696fa293654f82220cb3d01570.
+Menu28, source plan and builder scripts, from Recovery commit 2fedd0e781a22ccf82c5bbd4e87893be1a8cd410.
 The independent R4STD0.2.9 source is in Libraries-0.90.85.zip (Libraries58).
 Contract-0.90.84.zip (Contract93) and SDK-0.90.84.zip (SDK210) supply the exact
 canonical compiled platform sources. SDK-Controller-0.90.85.zip supplies the
