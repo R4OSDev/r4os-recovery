@@ -358,6 +358,14 @@ The successfully updated normal system must boot and respond to Terminal.
 
 ## Qualified requirements and integration
 
+The package producer's preliminary capacity check uses the existing 5-GB
+fresh-install RECOVERY geometry, matching the pinned SDK installation policy
+and current Distribution profiles. The old 512-MB producer limit was stale.
+Both complete slots, this package's ZIP/PART pair and metadata reserve must
+fit. Distribution also checks the actual FAT allocation and the real release
+ZIP/PART pair. Updates preserve existing geometry; legacy smaller targets
+must independently pass their real free-space checks before any write.
+
 The prepared Recovery/Kernel 0.1.23 and RECOVERY.R4X 0.1.14 retain the
 64-MB runtime. ZIP image import uses a 160-KB decoder window and nonzero
 64-KB blocks, then releases the image after resolving and verifying SYSTEM.

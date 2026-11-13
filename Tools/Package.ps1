@@ -49,12 +49,17 @@ function New-RecoveryPackage {
     Write-RecoveryJson (Join-Path $stage 'manifest.json') $manifest
     if(Test-Path -LiteralPath $Destination){Remove-Item -LiteralPath $Destination -Force}
     [IO.Compression.ZipFile]::CreateFromDirectory($stage,$Destination,[IO.Compression.CompressionLevel]::Optimal,$false)
-    # Independent producer floor: two slots and its own ZIP/PART must fit.
+    # Independent producer floor for the existing fresh-install geometry:
+    # Platform/SDK/r4os/storage_tools/installation.zig reserves 5 GB, matching
+    # all current Distribution profiles. Legacy 512 MB targets retain their
+    # own geometry and must pass the actual FAT capacity checks below them.
+    # Two slots and this package's ZIP/PART must fit; the normal producer
+    # additionally checks the real release ZIP pair and actual FAT overhead.
     # The normal R4OS producer checks the additional real release ZIP pair
     # against the actual installed FAT allocation, before publication.
     [long]$slotBytes=0
     foreach($file in Get-ChildItem -LiteralPath $stage -File -Recurse){$slotBytes+=[long]([Math]::Ceiling($file.Length/4096.0)*4096)}
     [long]$archiveBytes=[Math]::Ceiling(([IO.FileInfo]$Destination).Length/4096.0)*4096
-    if(2*$slotBytes+2*$archiveBytes+3MB -gt 512MB){throw 'Recovery package exceeds the shared 512 MB partition budget for two slots and its ZIP/PART workspace.'}
+    if(2*$slotBytes+2*$archiveBytes+3MB -gt 5GB){throw 'Recovery package exceeds the shared 5 GB fresh-install partition budget for two slots and its ZIP/PART workspace.'}
     return [ordered]@{path=$Destination;version=$version;bytes=([IO.FileInfo]$Destination).Length;sha256=(Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash.ToLowerInvariant();manifest=$manifest}
 }
