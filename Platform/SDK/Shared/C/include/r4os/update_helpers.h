@@ -12,6 +12,7 @@
 #ifndef R4SDKUPDATE_HELPERS_H
 #define R4SDKUPDATE_HELPERS_H
 #include "r4os/abi.h"
+#include "r4os/generation2.h"
 #define R4SDKUPDATE_PRESENT 1u
 #define R4SDKUPDATE_NATIVE_ERROR 2u
 #define R4SDKUPDATE_DEFAULT 4u

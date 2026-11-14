@@ -278,7 +278,6 @@ pub fn Implementation(comptime ff: type) type {
             if (adapter == 0) return error.Unsupported;
             const caller = native.application.snapshot() orelse return error.Unsupported;
             const base = caller.base();
-            if (caller.* == .legacy and (caller.legacy.bundle.draw orelse return error.Unsupported).abi_version < a.gfx_virtual_layout_api_version) return error.Unsupported;
             inline for (.{ "gfx_queue_backend_info", "gfx_queue_backend_properties", "gfx_queue_open", "gfx_queue_close", "gfx_queue_submit_native", "gfx_fence_query", "gfx_fence_wait", "gfx_fence_cancel", "gfx_fence_release", "gfx_buffer_create", "gfx_buffer_describe", "gfx_buffer_release", "gfx_buffer_map_persistent", "gfx_buffer_unmap", "gfx_native_start", "gfx_native_wait", "gfx_native_receive", "gfx_native_close", "gfx_virtual_start", "gfx_virtual_query", "gfx_virtual_close", "gfx_virtual_wait" }) |field|
                 if (!base.hasDrawFn(field)) return error.Unsupported;
             return gpu.Device.queryProvider(base, adapter, if (codec == c.codec_jpeg) .jpeg else .decode, provider);

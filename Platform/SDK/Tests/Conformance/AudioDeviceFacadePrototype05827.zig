@@ -31,10 +31,10 @@ test "audio catalog facade negotiates the complete optional slot and forwards fu
     try t.expectEqual(a.err_no_fn, facade.audioOutputCatalog(&rows, &receipt));
 }
 
-var sys_table: r4os.abi.R4XStartR4Sys = .{};
-var audio_table: r4os.abi.R4XStartR4Audio = .{};
-var dev_table: r4os.abi.R4XStartR4Dev = .{};
-var context: r4os.abi.R4XStartContext = .{};
+var sys_table: r4os.platform2.abi.R4XStartR4Sys2 = .{};
+var audio_table: r4os.platform2.abi.R4XStartR4Audio2 = .{};
+var dev_table: r4os.platform2.abi.R4XStartR4Dev2 = .{};
+var context: r4os.platform2.abi.R4XStartContext2 = .{};
 var timeout_next = false;
 var stream_open = false;
 var open_connections: u32 = 0;
@@ -73,17 +73,17 @@ test "CPU lifecycle facades negotiate both optional slots and forward full epoch
     var report: a.ProgramKernelCpuLifecycleCheck = .{ .new_epoch = 72 };
     dev_table.cpu_lifecycle = @intFromPtr(&fakeCpuLifecycle);
     dev_table.kernel_cpu_lifecycle_check = @intFromPtr(&fakeCpuLifecycleCheck);
-    for ([_]u32{ 552, 553, 559 }) |size| {
+    for ([_]u32{ 528, 529, 535 }) |size| {
         dev_table.size = size;
         try t.expectEqual(a.err_no_fn, facade.cpuLifecycle(2, 63, 0x1234_5678_85ab_cdef, &info));
         try t.expectEqual(@as(u64, 71), info.epoch);
     }
-    dev_table.size = 560;
+    dev_table.size = 536;
     try t.expectEqual(@as(i32, -63), facade.cpuLifecycle(2, 63, 0x1234_5678_85ab_cdef, &info));
     try t.expectEqual(@as(u64, 0x1234_5678_85ab_cdf0), info.epoch);
     try t.expectEqual(a.err_no_fn, facade.kernelCpuLifecycleCheck(&report));
     try t.expectEqual(@as(u64, 72), report.new_epoch);
-    dev_table.size = 568;
+    dev_table.size = 544;
     try t.expectEqual(@as(i32, 1), facade.kernelCpuLifecycleCheck(&report));
     dev_table.cpu_lifecycle = 0;
     dev_table.kernel_cpu_lifecycle_check = 0;
@@ -124,36 +124,36 @@ test "CPU catalogue optional boundaries preserve old clients and forward full ep
     dev_table.cpu_feature = @intFromPtr(&fakeCpuFeature);
     dev_table.cpu_register_read = @intFromPtr(&fakeCpuRegister);
     dev_table.kernel_cpu_register_check = @intFromPtr(&fakeCpuRegisterCheck);
-    for (568..576) |size| {
+    for (544..552) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuCapabilities(63, &cap));
         try t.expectEqual(@as(u64, 71), cap.epoch);
     }
-    dev_table.size = 576;
+    dev_table.size = 552;
     try t.expectEqual(@as(i32, 0), facade.cpuCapabilities(63, &cap));
     try t.expectEqual(epoch, cap.epoch);
-    for (576..584) |size| {
+    for (552..560) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuFeature(63, epoch, 37, &feature));
         try t.expectEqual(@as(u64, 72), feature.epoch);
     }
-    dev_table.size = 584;
+    dev_table.size = 560;
     try t.expectEqual(@as(i32, 0), facade.cpuFeature(63, epoch, 37, &feature));
     try t.expectEqual(epoch, feature.epoch);
-    for (584..592) |size| {
+    for (560..568) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuRegisterRead(63, epoch, 7, &reg));
         try t.expectEqual(@as(u64, 73), reg.value);
     }
-    dev_table.size = 592;
+    dev_table.size = 568;
     try t.expectEqual(@as(i32, 0), facade.cpuRegisterRead(63, epoch, 7, &reg));
     try t.expectEqual(epoch, reg.value);
-    for (592..600) |size| {
+    for (568..576) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.kernelCpuRegisterCheck(63, epoch, &report));
         try t.expectEqual(@as(u64, 74), report.epoch);
     }
-    dev_table.size = 600;
+    dev_table.size = 576;
     try t.expectEqual(@as(i32, 0), facade.kernelCpuRegisterCheck(63, epoch, &report));
     try t.expectEqual(epoch, report.epoch);
     dev_table.cpu_capabilities = 0;
@@ -179,20 +179,20 @@ test "passive CPU power and explicit capture preserve old table boundaries and f
     var value: a.CpuPowerInfo = .{ .provider_generation = 71 };
     dev_table.cpu_power_info = @intFromPtr(&fakeCpuPower);
     dev_table.cpu_power_capture = @intFromPtr(&fakeCpuPower);
-    for (600..608) |size| {
+    for (576..584) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuPowerInfo(63, epoch, &value));
         try t.expectEqual(@as(u64, 71), value.provider_generation);
     }
-    dev_table.size = 608;
+    dev_table.size = 584;
     try t.expectEqual(@as(i32, -77), facade.cpuPowerInfo(63, epoch, &value));
     try t.expectEqual(epoch, value.provider_generation);
-    for (608..616) |size| {
+    for (584..592) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuPowerCapture(63, epoch, &value));
         try t.expectEqual(epoch, value.provider_generation);
     }
-    dev_table.size = 616;
+    dev_table.size = 592;
     try t.expectEqual(@as(i32, -77), facade.cpuPowerCapture(63, epoch, &value));
     dev_table.cpu_power_info = 0;
     dev_table.cpu_power_capture = 0;
@@ -213,12 +213,12 @@ test "explicit CPU performance facade negotiates appended624 boundary without ch
     const request: a.CpuPerformanceRequest = .{ .cpu_index = 63, .epoch = 0x1234_5678_85ab_cdef };
     var value: a.CpuPerformanceInfo = .{ .lease = 71 };
     dev_table.cpu_performance = @intFromPtr(&fakeCpuPerformance);
-    for (616..624) |size| {
+    for (592..600) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuPerformance(&request, &value));
         try t.expectEqual(@as(u64, 71), value.lease);
     }
-    dev_table.size = 624;
+    dev_table.size = 600;
     try t.expectEqual(@as(i32, -96), facade.cpuPerformance(&request, &value));
     try t.expectEqual(0x1234_5678_85ab_cdef, value.lease);
     dev_table.cpu_performance = 0;
@@ -245,20 +245,20 @@ test "typed CPPC/catalogue facades preserve624/632 legacy boundaries and full ep
     var rank: a.CpuPerformanceHintInfo = .{ .sequence = 72 };
     dev_table.cpu_cppc = @intFromPtr(&fakeCppc);
     dev_table.cpu_performance_hint = @intFromPtr(&fakeRank);
-    for (624..632) |size| {
+    for (600..608) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuCppc(&request, &out));
         try t.expectEqual(@as(u64, 71), out.lease);
     }
-    dev_table.size = 632;
+    dev_table.size = 608;
     try t.expectEqual(@as(i32, -97), facade.cpuCppc(&request, &out));
     try t.expectEqual(request.epoch, out.lease);
-    for (624..640) |size| {
+    for (600..616) |size| {
         dev_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, facade.cpuPerformanceHint(63, request.epoch, &rank));
         try t.expectEqual(@as(u64, 72), rank.sequence);
     }
-    dev_table.size = 640;
+    dev_table.size = 616;
     try t.expectEqual(@as(i32, -98), facade.cpuPerformanceHint(63, request.epoch, &rank));
     try t.expectEqual(request.epoch, rank.sequence);
     dev_table.cpu_cppc = 0;
@@ -310,7 +310,7 @@ test "stack fault view preserves output for old tables, end and invalid headers"
     out.version = 0;
     try std.testing.expectEqual(@as(i32, -1), performance.stackFault(0, &out));
     try std.testing.expectEqual(@as(u32, 71), out.task_id);
-    dev_table.size = @offsetOf(r4os.abi.R4XStartR4Dev, "stack_fault");
+    dev_table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Dev2, "stack_fault");
     try std.testing.expectEqual(r4os.abi.err_no_fn, performance.stackFault(0, &out));
     try std.testing.expectEqual(@as(u32, 71), out.task_id);
 }
@@ -327,7 +327,7 @@ test "instrumentation views distinguish missing slots, end of list and disabled 
     try std.testing.expectEqual(@as(u64, 9), performance.stack(12).?.created);
     try std.testing.expect(performance.lock(11) == null);
     try std.testing.expect(performance.stack(13) == null);
-    dev_table.size = @offsetOf(r4os.abi.R4XStartR4Dev, "performance_instrumentation");
+    dev_table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Dev2, "performance_instrumentation");
     try std.testing.expect(performance.instrumentation() == null);
     try std.testing.expect(performance.lock(0) == null);
     try std.testing.expect(performance.stack(0) == null);
@@ -453,7 +453,7 @@ pub export fn sdk_platform_oracle_mode(mode: u32) callconv(.c) void {
 pub export fn sdk_platform_oracle_connections() callconv(.c) u32 {
     return open_connections;
 }
-pub export fn sdk_platform_oracle_tables(sys: *r4os.abi.R4XStartR4Sys, audio: *r4os.abi.R4XStartR4Audio, dev: *r4os.abi.R4XStartR4Dev) callconv(.c) void {
+pub export fn sdk_platform_oracle_tables(sys: *r4os.platform2.abi.R4XStartR4Sys2, audio: *r4os.platform2.abi.R4XStartR4Audio2, dev: *r4os.platform2.abi.R4XStartR4Dev2) callconv(.c) void {
     _ = initFacades();
     sys.* = sys_table;
     audio.* = audio_table;
@@ -758,7 +758,7 @@ test "advanced synth operations and R4DEV views stay explicit" {
     try std.testing.expectEqual(@as(u64, 7), display_state.device_generation);
     try std.testing.expectEqual(r4os.abi.display_policy_software_once, display_state.policy);
     const full_size = dev_table.size;
-    dev_table.size = @offsetOf(r4os.abi.R4XStartR4Dev, "display_state");
+    dev_table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Dev2, "display_state");
     try std.testing.expectEqual(@as(?r4os.abi.DisplayStateInfo, null), facades.devices.display());
     dev_table.size = full_size;
     try std.testing.expectEqual(@as(u32, 2), inventory.summary().?.total);
@@ -786,7 +786,7 @@ test "advanced synth operations and R4DEV views stay explicit" {
     try std.testing.expectEqual(@as(u32, 0), current_storage.version);
     try std.testing.expectEqual(@as(u32, @sizeOf(r4os.abi.ProgramInstanceStorageSummary) - 1), current_storage.size);
     try std.testing.expectEqual(@as(u8, 0xB6), std.mem.asBytes(&current_storage)[8]);
-    dev_table.size = 288;
+    dev_table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Dev2, "program_instance_storage_summary_v2");
     // Missing current capacity never selects an inactive diagnostic slot.
     try std.testing.expectEqual(@as(?r4os.abi.ProgramInstanceStorageSummary, null), performance.programInstanceStorage());
     var storage_test: r4os.abi.ProgramInstanceStorageSelfTestResult = .{};

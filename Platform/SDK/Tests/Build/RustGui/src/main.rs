@@ -1,7 +1,7 @@
 #![no_std]
 use core::{mem::MaybeUninit, pin::pin};
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     gui::{Rect, Role, Session, SessionStorage, raw as c},
     path::FilePath,
     resources::{Resources, Timeout},
@@ -51,11 +51,11 @@ fn wait_mode(window: &mut Session<'_, '_>, fullscreen: bool) -> Result<(), i32> 
     }
     Err(43)
 }
-fn exercise(app: &App<'_>) -> Result<(), i32> {
+fn exercise(app: &App2<'_>) -> Result<(), i32> {
     let mut storage = pin!(SessionStorage::new());
     let mut timers = [MaybeUninit::uninit(); 1];
     let mut window =
-        Session::open(storage.as_mut(), app, Role::Window, &mut timers).map_err(|_| 10)?;
+        Session::open2(storage.as_mut(), app, Role::Window, &mut timers).map_err(|_| 10)?;
     window.set_title(c"SDK56 Rust/C GUI").map_err(|_| 11)?;
     window.set_minimum_size(240, 160).map_err(|_| 12)?;
     let before = window.window_info().map_err(|_| 13)?.ok_or(14)?;
@@ -134,7 +134,7 @@ fn exercise(app: &App<'_>) -> Result<(), i32> {
     if !command {
         return Err(53);
     }
-    let owner = Resources::new(app).map_err(|_| 54)?;
+    let owner = Resources::new2(app).map_err(|_| 54)?;
     let mut process = owner
         .open_process(app.instance_id() as u32)
         .map_err(|_| 55)?;
@@ -150,10 +150,10 @@ fn exercise(app: &App<'_>) -> Result<(), i32> {
     }
     Err(58)
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let result = exercise(app);
     let code = result.err().unwrap_or(0);
-    let Ok(system) = System::new(app) else {
+    let Ok(system) = System::new2(app) else {
         return 90;
     };
     let Ok(path) = FilePath::parse(b"C:\\TEMP\\GUI56.TXT") else {
@@ -178,4 +178,4 @@ fn main(app: &mut App<'_>) -> i32 {
     }
     code
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

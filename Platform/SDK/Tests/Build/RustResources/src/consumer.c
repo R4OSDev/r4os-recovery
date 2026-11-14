@@ -1,7 +1,9 @@
 #include <r4os/r4os.h>
 #include <r4os/facades.h>
-int sdk54_c_resources(const R4XStartContext *context,const uint8_t *module_path) {
-    R4App app;if(R4SdkAppFacade(context,&app))return 1;
+#include <r4os/app2.h>
+int sdk54_c_resources(const R4XStartContext2 *context,const uint8_t *module_path) {
+    R4App2 actual;if(R4OS2ContextInit(context,&actual.context)||R4SdkApp2InitRaw(context,&actual.memory))return 1;
+    R4App app;if(r4_app2_facade(&actual,&app))return 1;
     R4Resources resources=r4_app_resources(&app);R4CpuCapacity capacity={0};
     if(r4_resources_cpu_capacity(&resources,&capacity)||capacity.available_cpus!=4)return 2;
     uint64_t notification=0,old=0,now=0;

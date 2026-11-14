@@ -32,7 +32,7 @@ pub struct BoundDetail {
 }
 pub struct Services<'a> {
     app: c::R4App,
-    context: *const abi::R4XStartContext,
+    context: *const abi::generation2::R4XStartContext2,
     context2: *const c::R4OS2Context,
     _loan: PhantomData<&'a ()>,
     _local: PhantomData<*mut ()>,
@@ -42,13 +42,7 @@ fn exact(rc: i32) -> Result<()> {
 }
 impl<'a> Services<'a> {
     pub fn new(app: &'a App<'_>) -> Result<Self> {
-        Ok(Self {
-            app: crate::facade_app(app)?,
-            context: app.start_context(),
-            context2: core::ptr::null(),
-            _loan: PhantomData,
-            _local: PhantomData,
-        })
+        Self::new2(app)
     }
     pub fn new2(app: &'a crate::app2::App<'_>) -> Result<Self> {
         let mut raw = unsafe { core::mem::zeroed() };

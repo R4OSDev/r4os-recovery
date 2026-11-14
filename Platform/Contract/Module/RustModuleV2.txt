@@ -1,7 +1,9 @@
 ﻿R4OS Rust module project profile v2
 ==================================
 
-Current decision0.86.51/SDK0.64.70: Cargo owns full TOML/dependency/feature
+Current platform selection: generation2 with Query2:2 and R4XStart2:2.
+The completed provider cutover is documented in Docs/API/ConsumerMigration.txt.
+The Cargo/profile-v2 rules introduced in0.86.51/SDK0.64.70 remain: Cargo owns full TOML/dependency/feature
 resolution; the SDK binds exact offline local inputs and optional C companions.
 The original profile was introduced in0.86.33-.36/SDK0.64.60.
 r4os-contract0.1.0 is the generated ABI crate; r4os-sdk0.1.0 is the separate
@@ -21,14 +23,14 @@ replacing SDK system identities. Necessary project locks are derived from
 or checked against that SDK selection. The profile ownership contract is
 documented in Docs/SDK/Profiles.txt; builders migrate in R4OS0.89.26-.34.
 
-Profile ID: r4os-rust-r4x-v2. Minimum delivered combinations are Windows-
+Profile ID: r4os-rust-generation2. Minimum delivered combinations are Windows-
 and Linux-hosted KIND=R4X, LANGUAGE=Rust, ENTRY_MODE=app and APP_CLASS equal
 to console, gui or service. This is a support contract; actual host execution
 and cross-host reproducibility require their own evidence. Initial Windows
 preparation must not be reported as a Windows runtime result.
 
 SDK0.64.84 additionally qualifies the canonical subsystem role on normal GUI
-R4Xs. SDK0.64.85 qualifies the separate r4os-rust-r4l-v1 host provider profile
+R4Xs. SDK0.64.85 qualifies the separate r4os-rust-r4l-generation2 host provider profile
 described below. Rust lowlevel, R4D and R4P remain separately gated. Recognized
 language syntax is not an executable build capability. Native R4BUILD/R4CC
 remain separate from host Rust: VALIDATE/PLAN may understand an admitted
@@ -107,7 +109,8 @@ its canonical module consumer. The kernel's code-model=kernel/static build
 is not a module profile. The exact module relocation/code model is accepted
 only after the existing ELF/R4M0 packager and real loader qualify it.
 
-R4M0:1, R4XStart:1 and existing startup metadata remain unchanged. Normal
+R4M0:1 remains the container format. Executables use R4XStart2:2 and
+R4XStartContext2; generated startup metadata describes that exact contract. Normal
 app startup may reuse SDK-owned internal Zig/C entry parts, but the declared
 application and its entry body must actually compile from Rust. No new R4L
 runtime or kernel loader feature is implied by adding a source language.
@@ -174,7 +177,7 @@ changes follow the existing one-final-STANDARD/DevCenter rule.
 
 Standalone R4L provider profile (SDK0.64.85)
 ------------------------------------------
-r4os-rust-r4l-v1 reuses the module code-generation/CPU/relocation policy,
+r4os-rust-r4l-generation2 reuses the module code-generation/CPU/relocation policy,
 locked local Cargo graph and matched SDK/Contract/runtime tools. KIND=R4L
 has no APP_CLASS or ENTRY_MODE and no R4XStart/startup-info dummy. SOURCE
 is the real Rust staticlib root. The existing local contract, immutable
@@ -183,10 +186,11 @@ matched host r4l-contract-gen before compilation. IMPLEMENTATION_ZIG is
 required only for Zig; Rust requires its generated BINDING_RUST.
 
 The additive explicit R4L plan is separate from unchanged R4X plan bytes.
-It carries ordinary declared Query/API exports and project-local contract
+It carries ordinary declared Query2/API exports and project-local contract
 paths. The generic builder links r4l_entry and packages KIND=r4l with the
-normal R4M0 format. Query remains standalone descriptor revision1, never a
-kernel bridge. SDK provider helpers construct the common header/Query and
+normal R4M0 format. Query2 is the exact 24-byte technical descriptor at
+revision2. Independent functional API revisions and 32-byte table headers
+remain unchanged. SDK provider helpers construct the common header/Query2 and
 entry; all library-specific tables and implementation bodies stay local.
 
 Every caller/session owns its allocation and callback state until real

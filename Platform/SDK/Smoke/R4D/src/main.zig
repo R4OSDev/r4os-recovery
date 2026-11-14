@@ -4,16 +4,16 @@ var smoke_writes: u64 = 0;
 var smoke_stops: u64 = 0;
 var smoke_shutdowns: u64 = 0;
 var smoke_last_result: i32 = 0;
-var smoke_backend: r4os.abi.AudioBackend = .{};
+var smoke_backend: r4os.abi.AudioBackend2 = .{};
 
 comptime {
-    asm (r4os.r4dev.driverEntriesAsm("sdk_smoke_init", "sdk_smoke_shutdown"));
+    asm (r4os.technical2.driverEntriesAsm("sdk_smoke_init", "sdk_smoke_shutdown"));
 }
 
-export fn sdk_smoke_init(api: *const r4os.r4dev.DriverApi) callconv(.c) i32 {
-    var ctx = r4os.r4dev.DriverContext.init(api);
+export fn sdk_smoke_init(api: *const r4os.technical2.abi.DriverApi2) callconv(.c) i32 {
+    var ctx = r4os.r4dev.DriverContext2.init(api);
     ctx.logInfo("SDK R4D smoke init");
-    if (!ctx.apiCompatible()) {
+    if (!ctx.requires(.{ "log_info", "log_error", "timer_frequency", "tick_count", "wait_ticks", "register_audio_output_backend", "unregister_audio_backend" })) {
         ctx.logError("SDK R4D smoke api mismatch");
         return -1;
     }
@@ -80,7 +80,7 @@ fn smokeShutdownBackend(context: ?*anyopaque) callconv(.c) i32 {
     return 0;
 }
 
-fn smokeStatus(context: ?*anyopaque, out: *r4os.abi.AudioBackendStatus) callconv(.c) i32 {
+fn smokeStatus(context: ?*anyopaque, out: *r4os.abi.AudioBackendStatus2) callconv(.c) i32 {
     _ = context;
     out.* = .{
         .active = 0,

@@ -29,7 +29,7 @@ static int32_t capture_release_probe(const R4RemoteFrameLease *lease) {
 static int32_t capture_reset_probe(void) { return 0; }
 static int32_t capture_stats_probe(R4RemoteFrameCaptureStats *out) { out->snapshot_copy_bytes=UINT64_C(0x300000007); return 0; }
 static void capture_facade_probe(void) {
-    R4XStartR4Desk table = {.size=496,.remote_frame_snapshot_acquire=(uintptr_t)capture_acquire_probe,
+    R4XStartR4Desk2 table = {.magic=R4OS2_R4DESK_MAGIC,.abi_version=R4OS2_R4DESK_VERSION,.size=496,.remote_frame_snapshot_acquire=(uintptr_t)capture_acquire_probe,
         .remote_frame_snapshot_release=(uintptr_t)capture_release_probe,.remote_frame_source_reset=(uintptr_t)capture_reset_probe,
         .remote_frame_capture_stats=(uintptr_t)capture_stats_probe};
     R4Desk desk={.table=&table}; R4RemoteFrameInfo info={.revision=17}; R4RemoteFrameLease lease={.id=19};
@@ -66,7 +66,7 @@ static int32_t cursor_complete_probe(const R4GfxDriverCursorCompletion *in) {
     assert(in->sequence == UINT64_C(0x200000079) && in->display_generation == UINT64_C(0x100000079)); return -4;
 }
 static void cursor_facade_probe(void) {
-    R4XStartR4Draw table = {.size=sizeof(table),.display_cursor_info=(uintptr_t)cursor_info_probe,
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table),.display_cursor_info=(uintptr_t)cursor_info_probe,
         .display_cursor_submit=(uintptr_t)cursor_submit_probe,.display_cursor_status=(uintptr_t)cursor_status_probe};
     R4Draw draw = {.table=&table};
     R4DisplayCursorInfo info = {0}; R4DisplayCursorStatus status = {.completed=79};
@@ -318,12 +318,12 @@ static int32_t grid_read_probe(const R4GfxFence *fence, R4GfxRenderGridList *out
     output->grids[0] = (R4GfxSampleGrid){.enabled = 1, .scale = 180, .rotation = 3}; return 1;
 }
 static void grid_facade_probe(void) {
-    R4XStartR4Desk desk_table = {.size = offsetof(R4XStartR4Desk, mouse_motion), .mouse_motion = (uintptr_t)motion_probe};
+    R4XStartR4Desk2 desk_table = {.magic=R4OS2_R4DESK_MAGIC,.abi_version=R4OS2_R4DESK_VERSION,.size = offsetof(R4XStartR4Desk2, mouse_motion), .mouse_motion = (uintptr_t)motion_probe};
     const R4Desk desk = {&desk_table}; R4MouseMotion motion = {.motion_x = 79};
     assert(r4desk_mouse_motion(&desk, &motion) == R4OS_ERR_NO_FN && motion.motion_x == 79);
     desk_table.size += 8;
     assert(r4desk_mouse_motion(&desk, &motion) == 1 && motion.motion_x == UINT32_C(0xfffffff1));
-    R4XStartR4Draw table = {.size = offsetof(R4XStartR4Draw, gfx_queue_submit_render_grid_list), .gfx_queue_submit_render_grid_list = (uintptr_t)grid_submit_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size = offsetof(R4XStartR4Draw2, gfx_queue_submit_render_grid_list), .gfx_queue_submit_render_grid_list = (uintptr_t)grid_submit_probe};
     const R4Draw draw = {&table};
     const R4GfxQueueHandle queue = {.timeline = UINT64_C(0x200000017)};
     const R4GfxSubmission request = {.operation = R4OS_GFX_QUEUE_OPERATION_RENDER_GRID_LIST};
@@ -353,7 +353,7 @@ static int32_t color_read_probe(const R4GfxFence *fence, R4GfxRenderColorList *o
     output->program.words[63] = UINT32_C(0x87654321); return 1;
 }
 static void color_facade_probe(void) {
-    R4XStartR4Draw table = {.size = 760, .gfx_queue_submit_render_color_list = (uintptr_t)color_submit_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size = 760, .gfx_queue_submit_render_color_list = (uintptr_t)color_submit_probe};
     const R4Draw draw = {&table};
     const R4GfxQueueHandle queue = {.timeline = UINT64_C(0x200000017)};
     const R4GfxSubmission request = {.operation = R4OS_GFX_QUEUE_OPERATION_RENDER_COLOR_LIST};
@@ -399,7 +399,7 @@ static int32_t refresh_driver_read_probe(const R4GfxOutputTarget *target, R4GfxR
 }
 static int32_t refresh_publish_probe(const R4GfxOutputRefresh *input) { return input->status.sequence == UINT64_C(0x200000079) ? 1 : -3; }
 static void refresh_facade_probe(void) {
-    R4XStartR4Draw table = {.size = 791, .gfx_output_refresh = (uintptr_t)refresh_read_probe, .gfx_refresh_request = (uintptr_t)refresh_intent_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size = 791, .gfx_output_refresh = (uintptr_t)refresh_read_probe, .gfx_refresh_request = (uintptr_t)refresh_intent_probe};
     R4Draw draw = {.table = &table};
     R4GfxRefreshRequest request = {.version = 1, .size = sizeof(request), .target = {.display_generation = UINT64_C(0x400000079)}};
     R4GfxOutputRefresh read = {.status = {.sequence = 79}};
@@ -425,7 +425,7 @@ static void refresh_facade_probe(void) {
     assert(memcmp(&read, &old_read, sizeof(read)) == 0 && memcmp(&intent, &old_intent, sizeof(intent)) == 0);
 }
 static void mode_color_facade_probe(void) {
-    R4XStartR4Draw table = {.size = 768, .gfx_atomic_test_color = (uintptr_t)mode_color_test_probe, .gfx_atomic_submit_color = (uintptr_t)mode_color_submit_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size = 768, .gfx_atomic_test_color = (uintptr_t)mode_color_test_probe, .gfx_atomic_submit_color = (uintptr_t)mode_color_submit_probe};
     const R4Draw draw = {&table};
     const R4GfxModeColorRequest request = {.version = 1, .size = sizeof(request), .image = {.id = 23, .generation = UINT64_C(0x200000017)}, .signal = {.metadata = {.max_cll = 1000}}};
     R4GfxAtomicResult tested = {.commit_sequence = 79}; R4GfxModeStatus submitted = {.ticket = 79};
@@ -461,7 +461,7 @@ static int32_t power_driver_read_probe(const R4GfxOutputId *identity, R4GfxPower
 }
 static int32_t power_publish_probe(const R4GfxOutputPower *input) { return input->sequence == UINT64_C(0x200000079) ? 1 : -3; }
 static void power_facade_probe(void) {
-    R4XStartR4Draw table = {.gfx_output_power=(uintptr_t)power_read_probe, .gfx_power_request=(uintptr_t)power_intent_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table),.gfx_output_power=(uintptr_t)power_read_probe, .gfx_power_request=(uintptr_t)power_intent_probe};
     R4Draw draw = {.table=&table};
     R4GfxPowerRequest request = {.version=1, .size=sizeof(request), .identity={.connection_generation=UINT64_C(0x400000079)}};
     R4GfxOutputPower read = {.sequence=79}; R4GfxPowerRequest intent = {.sequence=79};
@@ -501,7 +501,7 @@ static int32_t brightness_driver_read_probe(const R4GfxOutputId *identity, R4Gfx
 }
 static int32_t brightness_publish_probe(const R4GfxOutputBrightness *input) { return input->sequence == UINT64_C(0x200000079) ? 1 : -3; }
 static void brightness_facade_probe(void) {
-    R4XStartR4Draw table = {.gfx_output_brightness=(uintptr_t)brightness_read_probe, .gfx_brightness_request=(uintptr_t)brightness_intent_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table),.gfx_output_brightness=(uintptr_t)brightness_read_probe, .gfx_brightness_request=(uintptr_t)brightness_intent_probe};
     R4Draw draw = {.table=&table};
     R4GfxBrightnessRequest request = {.version=1, .size=sizeof(request), .identity={.connection_generation=UINT64_C(0x400000079)}};
     R4GfxOutputBrightness read = {.sequence=79}; R4GfxBrightnessRequest intent = {.sequence=79};
@@ -551,7 +551,7 @@ static int32_t queue_owner_probe(const R4GfxBackendBinding *binding, uint64_t ti
     return binding->adapter_id == 17 ? 1 : binding->adapter_id == 18 ? 0 : -3;
 }
 static void properties_facade_probe(void) {
-    R4XStartR4Draw raw = {.gfx_queue_submit_native = (uintptr_t)native_submit_probe};
+    R4XStartR4Draw2 raw = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(raw),.gfx_queue_submit_native = (uintptr_t)native_submit_probe};
     R4Draw raw_draw = {&raw};
     R4GfxQueueHandle queue = {.timeline=UINT64_C(0x100000003)};
     R4GfxSubmission submission = {.operation=R4OS_GFX_QUEUE_OPERATION_NATIVE};
@@ -576,7 +576,7 @@ static void properties_facade_probe(void) {
     native_driver.size=144; fence.slot=8;
     assert(r4driver_queue_native_info(&native_driver,&fence,&job)==-3 && memcmp(&job,&saved_job,sizeof(job))==0);
     fence.slot=7; assert(r4driver_queue_native_info(&native_driver,&fence,&job)==1 && job.command_bytes==2051);
-    R4XStartR4Draw table = {.gfx_queue_backend_properties = (uintptr_t)properties_read_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table),.gfx_queue_backend_properties = (uintptr_t)properties_read_probe};
     R4Draw draw = {&table};
     R4GfxBackendBinding binding = {.adapter_id=17, .device_generation=UINT64_C(0x100000017)};
     R4GfxBackendProperties properties = {0}; properties.data[255]=0xa5;
@@ -616,7 +616,7 @@ static void backend_profile_probe(void) {
     refresh_facade_probe();
     color_facade_probe();
     grid_facade_probe();
-    R4XStartR4Draw table = {.size = 640, .gfx_queue_backend_info = (uintptr_t)backend_info_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size = 640, .gfx_queue_backend_info = (uintptr_t)backend_info_probe};
     R4Draw draw = {&table}; R4GfxBackendInfo info = {0};
     assert(r4draw_gfx_queue_backend_info(&draw, 16, &info) == R4OS_ERR_NO_FN && info.binding.device_generation == 0);
     table.size = 648; assert(r4draw_gfx_queue_backend_info(&draw, 16, &info) == 1);
@@ -640,8 +640,8 @@ static void backend_profile_probe(void) {
 }
 static void gfx_facade_probe(void) {
     owned_facade_probe();
-    R4XStartR4Draw table = {0};
-    table.size = offsetof(R4XStartR4Draw, gfx_buffer_map);
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table),};
+    table.size = offsetof(R4XStartR4Draw2, gfx_buffer_map);
     table.gfx_buffer_map = (uintptr_t)gfx_map_probe;
     const R4Draw draw = { &table };
     R4GfxBufferHandle ref = { .id = 7, .generation = 99 };
@@ -666,7 +666,7 @@ static void gfx_facade_probe(void) {
     R4GfxFence fence = {.slot = 7, .timeline = 23, .point = UINT64_C(0x100000007), .reset_generation = UINT64_C(0x200000001)};
     R4GfxFenceStatus result = {.deadline_ns = 123};
     table.gfx_fence_wait = (uintptr_t)gfx_wait_probe;
-    table.size = offsetof(R4XStartR4Draw, gfx_fence_wait);
+    table.size = offsetof(R4XStartR4Draw2, gfx_fence_wait);
     assert(r4draw_gfx_fence_wait(&draw, &fence, UINT64_C(0x300000003), 1, &result) == R4OS_ERR_NO_FN);
     assert(result.deadline_ns == 123);
     table.size += sizeof(uintptr_t);
@@ -719,7 +719,7 @@ static void gfx_facade_probe(void) {
     R4GfxOutputId port = {.connection_generation=UINT64_C(0x40000000d)};
     R4GfxOutputColorState color_state = {.formats=7};
     R4GfxOutputColorState color_before = color_state;
-    R4XStartR4Draw color_table = {.size=752,.gfx_output_color=(uintptr_t)output_color_probe};
+    R4XStartR4Draw2 color_table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=752,.gfx_output_color=(uintptr_t)output_color_probe};
     R4Draw color_draw = {.table=&color_table};
     assert(r4draw_gfx_output_color(&color_draw,&port,&color_state)==R4OS_ERR_NO_FN && memcmp(&color_before,&color_state,sizeof(color_state))==0);
     color_table.size=sizeof(color_table);
@@ -977,13 +977,13 @@ static int32_t fake_frame_read(const R4ProgramProcessHandle *handle, uint64_t ex
     return R4OS_GUI_FRAME_RESULT_OK;
 }
 
-static R4App make_app(R4XStartR4Sys *sys, R4XStartR4Desk *desk, R4XStartR4Draw *draw, int drawing_available) {
-    *sys = (R4XStartR4Sys){0};
+static R4App make_app(R4XStartR4Sys2 *sys, R4XStartR4Desk2 *desk, R4XStartR4Draw2 *draw, int drawing_available) {
+    *sys = (R4XStartR4Sys2){.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(R4XStartR4Sys2),};
     sys->size = sizeof(*sys);
     sys->ticks = (uintptr_t)&fake_ticks;
     sys->time_state = (uintptr_t)&fake_time_state;
     sys->program_should_close = (uintptr_t)&fake_should_close;
-    *desk = (R4XStartR4Desk){0};
+    *desk = (R4XStartR4Desk2){.magic=R4OS2_R4DESK_MAGIC,.abi_version=R4OS2_R4DESK_VERSION,.size=sizeof(R4XStartR4Desk2),};
     desk->size = sizeof(*desk);
     desk->program_window_id = (uintptr_t)&fake_window_id;
     desk->gui_window_info = (uintptr_t)&fake_window_info;
@@ -993,8 +993,8 @@ static R4App make_app(R4XStartR4Sys *sys, R4XStartR4Desk *desk, R4XStartR4Draw *
     desk->clipboard_revision = (uintptr_t)&fake_clipboard_revision;
     desk->desktop_activity_wait = (uintptr_t)&fake_activity_wait;
     desk->gui_activity_wait = (uintptr_t)&fake_gui_activity_wait;
-    *draw = (R4XStartR4Draw){0};
-    draw->size = R4XSTART_R4DRAW_SIZE;
+    *draw = (R4XStartR4Draw2){.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(R4XStartR4Draw2),};
+    draw->size = sizeof(R4XStartR4Draw2);
     draw->gui_clear = (uintptr_t)&fake_clear;
     draw->gui_rect = (uintptr_t)&fake_rect;
     draw->gui_draw_text = (uintptr_t)&fake_text;
@@ -1024,12 +1024,12 @@ static int32_t budget_probe(const R4GfxDeviceBudgetRequest *input, R4GfxDeviceBu
     return budget_probe_rc;
 }
 static void budget_facade_probe(void) {
-    _Static_assert(sizeof(R4GfxDeviceBudgetRequest)==32 && sizeof(R4GfxDeviceBudgetState)==64 && offsetof(R4XStartR4Draw,gfx_memory_budget)==800, "memory budget ABI");
+    _Static_assert(sizeof(R4GfxDeviceBudgetRequest)==32 && sizeof(R4GfxDeviceBudgetState)==64 && offsetof(R4XStartR4Draw2,gfx_memory_budget)==800, "memory budget ABI");
     R4GfxDeviceBudgetRequest input = {.version=1,.size=32,.adapter_id=3,.memory_generation=UINT64_C(0x200000007)};
     R4GfxDeviceBudgetState output = {.charged_bytes=79};
     const R4GfxDeviceBudgetState unchanged = output;
     R4GfxDriverMemoryApi memory = {.version=1,.size=192,.memory_budget=(uintptr_t)budget_probe};
-    R4XStartR4Draw table = {.size=808,.gfx_memory_budget=(uintptr_t)budget_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=808,.gfx_memory_budget=(uintptr_t)budget_probe};
     R4Draw draw = {.table=&table};
     for(unsigned n=184;n<192;++n){memory.size=n;assert(r4driver_memory_budget(&memory,&input,&output)==R4OS_ERR_NO_FN);assert(memcmp(&unchanged,&output,sizeof(output))==0);}
     for(unsigned n=800;n<808;++n){table.size=n;assert(r4draw_gfx_memory_budget(&draw,&input,&output)==R4OS_ERR_NO_FN);assert(memcmp(&unchanged,&output,sizeof(output))==0);}
@@ -1051,7 +1051,7 @@ static int32_t telemetry_driver_probe(const R4GfxTelemetryState *input, R4GfxTel
     return budget_probe_rc;
 }
 static void telemetry_facade_probe(void) {
-    R4XStartR4Draw table = {.size=sizeof(table), .gfx_telemetry=(uintptr_t)telemetry_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table), .gfx_telemetry=(uintptr_t)telemetry_probe};
     R4Draw draw = {.table=&table};
     R4GfxDriverMemoryApi driver = {.version=1, .size=sizeof(driver), .telemetry_exchange=(uintptr_t)telemetry_driver_probe};
     R4GfxTelemetryRequest request = {.version=1, .size=sizeof(request), .adapter_id=3, .memory_generation=UINT64_C(0x200000007), .metric_mask=0x201};
@@ -1070,7 +1070,7 @@ static void stats_facade_probe(void) {
     telemetry_facade_probe();
     budget_facade_probe();
     _Static_assert(sizeof(R4GfxBufferStats) == 136 && offsetof(R4GfxBufferStats, system_bytes) == 56, "statistics prefix");
-    R4XStartR4Draw table = {.size=sizeof(table), .gfx_buffer_stats=(uintptr_t)stats_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size=sizeof(table), .gfx_buffer_stats=(uintptr_t)stats_probe};
     R4Draw draw = {.table=&table};
     R4GfxBufferStats stats = {.device_bytes=79};
     R4GfxDriverMemoryApi memory = {.version=1, .size=sizeof(memory), .buffer_stats=(uintptr_t)stats_probe};
@@ -1104,7 +1104,7 @@ static int32_t virtual_complete_probe(const R4GfxBufferHandle *provider, const R
     assert(provider->generation == UINT64_C(0x400000035) && input->operation == 1 && input->token.opaque2 == UINT64_C(0x800000035)); return 1;
 }
 static void virtual_facade_probe(void) {
-    R4XStartR4Draw table = {.size = sizeof(table), .gfx_virtual_start = (uintptr_t)virtual_start_probe, .gfx_virtual_wait = (uintptr_t)virtual_wait_probe, .gfx_virtual_close = (uintptr_t)virtual_close_probe};
+    R4XStartR4Draw2 table = {.magic=R4OS2_R4DRAW_MAGIC,.abi_version=R4OS2_R4DRAW_VERSION,.size = sizeof(table), .gfx_virtual_start = (uintptr_t)virtual_start_probe, .gfx_virtual_wait = (uintptr_t)virtual_wait_probe, .gfx_virtual_close = (uintptr_t)virtual_close_probe};
     R4Draw draw = {.table = &table};
     R4GfxBufferHandle handle = {.generation = UINT64_C(0x400000035)};
     R4GfxVirtualRequest input = {.memory_generation = UINT64_C(0x100000035), .byte_offset = UINT64_C(0x200000035)};
@@ -1133,11 +1133,11 @@ static uint8_t current_byte_read(void) { ++current_byte_reads; return 'A'; }
 static uint32_t current_codepoint_read(void) { ++current_codepoint_reads; return 0x1F642u; }
 static void test_current_codepoint_contract(void) {
     current_byte_reads = current_codepoint_reads = 0u;
-    R4XStartR4Desk table = {0}; table.size = sizeof(table); table.read_key = (uintptr_t)&current_byte_read;
+    R4XStartR4Desk2 table = {.magic=R4OS2_R4DESK_MAGIC,.abi_version=R4OS2_R4DESK_VERSION,.size=sizeof(table),}; table.size = sizeof(table); table.read_key = (uintptr_t)&current_byte_read;
     R4Desk desk = {&table};
     assert(r4desk_read_key_codepoint(&desk) == 0u && current_byte_reads == 0u);
     table.read_key_codepoint = (uintptr_t)&current_codepoint_read;
-    table.size = offsetof(R4XStartR4Desk, read_key_codepoint);
+    table.size = offsetof(R4XStartR4Desk2, read_key_codepoint);
     assert(r4desk_read_key_codepoint(&desk) == 0u && current_codepoint_reads == 0u);
     table.size = sizeof(table);
     assert(r4desk_read_key_codepoint(&desk) == 0x1F642u && current_codepoint_reads == 1u && current_byte_reads == 0u);
@@ -1150,21 +1150,24 @@ int main(void) {
     stats_facade_probe();
     cursor_facade_probe();
     gfx_facade_probe();
-    R4XStartR4Sys sys;
-    R4XStartR4Desk desk;
-    R4XStartR4Draw draw;
+    R4XStartR4Sys2 sys;
+    R4XStartR4Desk2 desk;
+    R4XStartR4Draw2 draw;
     R4App app = make_app(&sys, &desk, &draw, 1);
-    draw.magic = R4XSTART_R4DRAW_MAGIC;
+    draw.magic = R4OS2_R4DRAW_MAGIC;
     draw.abi_version = 10;
-    draw.size = offsetof(R4XStartR4Draw, gfx_queue_open);
-    const R4XStartImport draw_import = {.group_id = R4L_GROUP_R4DRAW, .flags = R4XSTART_IMPORT_FLAG_GROUP_INTERFACE, .table = (uintptr_t)&draw};
-    const R4XStartContext old_start = {.magic = R4XSTART_MAGIC, .abi_major = R4XSTART_ABI_MAJOR, .size = sizeof(R4XStartContext), .flags = R4XSTART_FLAG_IMPORTS_VALID, .imports = (uintptr_t)&draw_import, .import_count = 1};
+    draw.size = offsetof(R4XStartR4Draw2, gfx_queue_open);
+    const R4XStartImport draw_import[] = {
+        {.group_id=R4L_GROUP_R4SYS,.min_version=2,.resolved_version=2,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.module_name=(uintptr_t)"R4SYS",.symbol_name=(uintptr_t)"Query2",.table=(uintptr_t)&sys},
+        {.group_id=R4L_GROUP_R4DRAW,.min_version=2,.resolved_version=2,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.module_name=(uintptr_t)"R4DRAW",.symbol_name=(uintptr_t)"Query2",.table=(uintptr_t)&draw},
+    };
+    const R4XStartContext2 old_start = {.magic=R4OS2_START_MAGIC,.abi_major=2u,.size=sizeof(R4XStartContext2),.flags=R4XSTART_FLAG_IMPORTS_VALID,.imports=(uintptr_t)draw_import,.import_count=2};
     R4Draw old_draw;
     assert(r4draw_init(&old_start, &old_draw) == R4OS_OK);
     R4GfxQueueConfig old_config = {0};
     R4GfxQueueHandle untouched = {.timeline = 77};
     assert(r4draw_gfx_queue_open(&old_draw, &old_config, &untouched) == R4OS_ERR_NO_FN && untouched.timeline == 77);
-    draw.size = R4XSTART_R4DRAW_SIZE;
+    draw.size = sizeof(R4XStartR4Draw2);
     R4Timer timers[1] = {{0}};
     R4Window window;
     assert(r4_window_open(&app, timers, 1u, &window));
@@ -1245,7 +1248,7 @@ int main(void) {
     assert(r4_window_wait_message(&window, r4_timeout_poll()).state == R4_MESSAGE_NEXT_TIMED_OUT);
     timers[0]=(R4Timer){.id={17},.deadline_tick=0,.interval_ticks=1,.active=1};now_ticks=UINT64_MAX;
     assert(r4_event_loop_poll(&window.events,&message) && message.kind==R4_MESSAGE_TIMER && timers[0].deadline_tick==UINT64_MAX);
-    uint32_t full_sys_size=sys.size;sys.size=offsetof(R4XStartR4Sys,time_state);
+    uint32_t full_sys_size=sys.size;sys.size=offsetof(R4XStartR4Sys2,time_state);
     assert(r4_gui_monotonic_hz(&app)==0);sys.size=full_sys_size;
 
     R4App missing_draw = make_app(&sys, &desk, &draw, 0);

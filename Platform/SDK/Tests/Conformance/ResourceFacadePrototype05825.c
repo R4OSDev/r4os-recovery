@@ -103,10 +103,10 @@ static int platform_checks(void) {
     if(r4driver_resource_platform(&resource,&platform) != 0 || r4driver_platform_rsdp(&platform) != UINT64_C(0x100000080035)) return 3;
     uint64_t view=0;
     if(r4driver_platform_view(&platform,UINT64_C(0x100000080035),65536,&view) != 0 || view != UINT64_C(0xffff800000080035) || r4driver_platform_input(&platform,3,2) != 0) return 4;
-    R4XStartR4Sys table = {.size=1248,.platform_input_snapshot=(uintptr_t)&platform_snapshot_probe};
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=1240,.platform_input_snapshot=(uintptr_t)&platform_snapshot_probe};
     R4Sys sys={.table=&table}; R4PlatformInputSnapshot snapshot;
     if(r4sys_platform_input_snapshot(&sys,&snapshot) != R4OS_ERR_NO_FN) return 5;
-    table.size=1256;
+    table.size=1248;
     if(r4sys_platform_input_snapshot(&sys,&snapshot) != 1 || snapshot.brightness_up != UINT64_C(0x200000080035)) return 6;
     table.platform_input_snapshot=0;
     if(r4sys_platform_input_snapshot(&sys,&snapshot) != R4OS_ERR_NO_FN || r4sys_platform_input_snapshot(&sys,0) != R4OS_ERROR_INVALID) return 7;
@@ -416,8 +416,8 @@ static int32_t fake_io_close(uint32_t id) { if (!io_active || id != 71u) return 
 static R4Timeout poll_timeout(void) { R4Timeout value = {0}; value.kind = R4OS_TIMEOUT_KIND_POLL; return value; }
 static R4Timeout forever_timeout(void) { R4Timeout value = {0}; value.kind = R4OS_TIMEOUT_KIND_FOREVER; return value; }
 
-static void init_app(R4App *app, R4XStartR4Sys *table, R4XStartR4Desk *desk) {
-    *table = (R4XStartR4Sys){0}; table->magic = R4XSTART_R4SYS_MAGIC; table->abi_version = R4XSTART_R4SYS_VERSION; table->size = R4XSTART_R4SYS_SIZE;
+static void init_app(R4App *app, R4XStartR4Sys2 *table, R4XStartR4Desk2 *desk) {
+    *table = (R4XStartR4Sys2){.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(R4XStartR4Sys2),}; table->magic = R4OS2_R4SYS_MAGIC; table->abi_version = R4OS2_R4SYS_VERSION; table->size = sizeof(R4XStartR4Sys2);
     table->ticks = (uintptr_t)&fake_ticks; table->time_state = (uintptr_t)&fake_time_state; table->task_yield = (uintptr_t)&fake_yield;
     table->program_spawn = (uintptr_t)&fake_program_spawn; table->program_instance = (uintptr_t)&fake_program_instance; table->program_request_close = (uintptr_t)&fake_program_close; table->program_kill = (uintptr_t)&fake_program_kill; table->program_reap_instance = (uintptr_t)&fake_program_reap;
     table->program_spawn_handle = (uintptr_t)&fake_program_spawn_handle; table->program_open_handle = (uintptr_t)&fake_program_open_handle; table->program_handle_status = (uintptr_t)&fake_program_handle_status; table->program_handle_request_close = (uintptr_t)&fake_program_handle_close; table->program_handle_kill = (uintptr_t)&fake_program_handle_kill; table->program_handle_wait = (uintptr_t)&fake_program_handle_wait; table->program_handle_reap = (uintptr_t)&fake_program_handle_reap; table->program_completion_read = (uintptr_t)&fake_program_completion_read;
@@ -425,7 +425,7 @@ static void init_app(R4App *app, R4XStartR4Sys *table, R4XStartR4Desk *desk) {
     table->thread_create_handle = (uintptr_t)&fake_thread_create_handle; table->thread_handle_join = (uintptr_t)&fake_thread_handle_join; table->thread_handle_status = (uintptr_t)&fake_thread_handle_status;
     table->vm_reserve = (uintptr_t)&fake_vm_reserve; table->vm_commit = (uintptr_t)&fake_vm_commit; table->vm_decommit = (uintptr_t)&fake_vm_decommit; table->vm_release = (uintptr_t)&fake_vm_release; table->vm_query = (uintptr_t)&fake_vm_query;
     table->io_file_read = (uintptr_t)&fake_io_read; table->io_file_write = (uintptr_t)&fake_io_write; table->io_file_stream_write = (uintptr_t)&fake_io_stream_write; table->io_service_call = (uintptr_t)&fake_io_service; table->io_status = (uintptr_t)&fake_io_status; table->io_wait = (uintptr_t)&fake_io_wait; table->io_close = (uintptr_t)&fake_io_close;
-    *desk = (R4XStartR4Desk){0}; desk->magic = R4XSTART_R4DESK_MAGIC; desk->abi_version = R4XSTART_R4DESK_VERSION; desk->size = R4XSTART_R4DESK_SIZE;
+    *desk = (R4XStartR4Desk2){.magic=R4OS2_R4DESK_MAGIC,.abi_version=R4OS2_R4DESK_VERSION,.size=sizeof(R4XStartR4Desk2),}; desk->magic = R4OS2_R4DESK_MAGIC; desk->abi_version = R4OS2_R4DESK_VERSION; desk->size = sizeof(R4XStartR4Desk2);
     desk->program_spawn_with_console_host_handle = (uintptr_t)&fake_program_spawn_with_console_host_handle;
     *app = (R4App){0}; app->system.table = table; app->desktop.table = desk;
 }
@@ -436,16 +436,16 @@ static int32_t current_identity_probe(R4ProgramJoinHandle *out) {
     return R4OS_THREAD_OK;
 }
 static int current_identity_checks(void) {
-    R4XStartR4Sys table = {0};
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(table),};
     R4Sys sys = { .table = &table };
     R4ProgramJoinHandle output = { .thread_generation = 79 };
     table.thread_current_handle = (uintptr_t)&current_identity_probe;
-    const uint32_t short_sizes[] = {1224, 1231};
+    const uint32_t short_sizes[] = {1216, 1223};
     for (unsigned i = 0; i < 2; ++i) {
         table.size = short_sizes[i];
         if (r4sys_thread_current_handle(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.thread_generation != 79) return 1;
     }
-    table.size = 1232; table.thread_current_handle = 0;
+    table.size = 1224; table.thread_current_handle = 0;
     if (r4sys_thread_current_handle(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.thread_generation != 79) return 2;
     table.thread_current_handle = (uintptr_t)&current_identity_probe;
     if (r4sys_thread_current_handle(&sys, 0) != R4OS_THREAD_ERROR_INVALID) return 3;
@@ -459,16 +459,16 @@ static int32_t cpu_capacity_probe(R4CpuCapacity *output) {
     return R4OS_THREAD_OK;
 }
 static int cpu_capacity_checks(void) {
-    R4XStartR4Sys table = {0};
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(table),};
     R4Sys sys = { .table = &table };
     R4CpuCapacity output = { .available_cpus = 79 };
     table.cpu_capacity = (uintptr_t)&cpu_capacity_probe;
-    const uint32_t short_sizes[] = {1232, 1239};
+    const uint32_t short_sizes[] = {1224, 1231};
     for (unsigned i = 0; i < 2; ++i) {
         table.size = short_sizes[i];
         if (r4sys_cpu_capacity(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.available_cpus != 79) return 1;
     }
-    table.size = 1240; table.cpu_capacity = 0;
+    table.size = 1232; table.cpu_capacity = 0;
     if (r4sys_cpu_capacity(&sys, &output) != R4OS_THREAD_ERROR_UNSUPPORTED || output.available_cpus != 79) return 2;
     table.cpu_capacity = (uintptr_t)&cpu_capacity_probe;
     if (r4sys_cpu_capacity(&sys, 0) != R4OS_THREAD_ERROR_INVALID) return 3;
@@ -488,18 +488,18 @@ static int32_t placement_set_probe(const R4ProgramJoinHandle *handle, const R4Th
     ++placement_calls; return 41;
 }
 static int placement_checks(void) {
-    R4XStartR4Sys table = {0}; R4Sys sys = {.table = &table};
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(table),}; R4Sys sys = {.table = &table};
     R4ProgramJoinHandle handle = {.thread_generation = UINT64_C(0x10000007939)};
     R4ThreadPlacementInfo info = {.version = 1, .size = 64};
     R4ThreadPlacementRequest request = {.version = 1, .size = 32, .work_class = R4OS_THREAD_PLACEMENT_CLASS_BATCH};
     uint64_t words[3] = {79,79,79}; placement_calls = 0;
     table.thread_placement_get = (uintptr_t)&placement_get_probe;
     table.thread_placement_set = (uintptr_t)&placement_set_probe;
-    table.size = 1271;
+    table.size = 1263;
     if (r4sys_thread_placement_get(&sys,&handle,&info,words,3) != R4OS_THREAD_ERROR_UNSUPPORTED) return 1;
-    table.size = 1279;
+    table.size = 1271;
     if (r4sys_thread_placement_set(&sys,&handle,&request,words,2) != R4OS_THREAD_ERROR_UNSUPPORTED) return 2;
-    table.size = 1280; table.thread_placement_get = 0; table.thread_placement_set = 0;
+    table.size = 1272; table.thread_placement_get = 0; table.thread_placement_set = 0;
     if (r4sys_thread_placement_get(&sys,&handle,&info,words,3) != R4OS_THREAD_ERROR_UNSUPPORTED || r4sys_thread_placement_set(&sys,&handle,&request,words,2) != R4OS_THREAD_ERROR_UNSUPPORTED || placement_calls || words[0] != 79) return 3;
     table.thread_placement_get = (uintptr_t)&placement_get_probe; table.thread_placement_set = (uintptr_t)&placement_set_probe;
     if (r4sys_thread_placement_get(&sys,&handle,&info,0,0) != 37 || info.cpu_word_count != 2) return 4;
@@ -512,15 +512,15 @@ static int32_t program_exit_probe(int32_t code, uint32_t reason) {
     return code == -73 && reason == R4OS_PROGRAM_EXIT_REASON_FAILED ? R4OS_THREAD_ERROR_BUSY : R4OS_THREAD_ERROR_INVALID;
 }
 static int program_exit_checks(void) {
-    R4XStartR4Sys table = {0};
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(table),};
     R4Sys sys = { .table = &table };
     table.program_exit = (uintptr_t)&program_exit_probe;
-    const uint32_t short_sizes[] = {1240, 1247};
+    const uint32_t short_sizes[] = {1232, 1239};
     for (unsigned i = 0; i < 2; ++i) {
         table.size = short_sizes[i];
         if (r4sys_program_exit(&sys, -73, R4OS_PROGRAM_EXIT_REASON_FAILED) != R4OS_THREAD_ERROR_UNSUPPORTED) return 1;
     }
-    table.size = 1248; table.program_exit = 0;
+    table.size = 1240; table.program_exit = 0;
     if (r4sys_program_exit(&sys, -73, R4OS_PROGRAM_EXIT_REASON_FAILED) != R4OS_THREAD_ERROR_UNSUPPORTED) return 2;
     table.program_exit = (uintptr_t)&program_exit_probe;
     if (r4sys_program_exit(&sys, -73, R4OS_PROGRAM_EXIT_REASON_FAILED) != R4OS_THREAD_ERROR_BUSY) return 3;
@@ -533,7 +533,7 @@ static int32_t compute_create_probe(R4ThreadEntryFn entry, uint64_t arg, uint64_
 }
 
 static int app_resource_checks(void) {
-    R4App app; R4XStartR4Sys table; R4XStartR4Desk desk; init_app(&app, &table, &desk); R4Resources resources = r4_app_resources(&app);
+    R4App app; R4XStartR4Sys2 table; R4XStartR4Desk2 desk; init_app(&app, &table, &desk); R4Resources resources = r4_app_resources(&app);
     R4ProgramJoinHandle refused = {0};
     if (r4sys_compute_worker_create(&app.system, unused_thread, 85u, 262144u, &refused) != R4OS_THREAD_ERROR_UNSUPPORTED || refused.thread_id != 0u) return 88;
     table.thread_create_handle = (uintptr_t)&compute_create_probe;
@@ -623,15 +623,15 @@ int main(void) {
     if (power_checks() != 0) return 89;
     if (control_checks() != 0) return 90;
     if (cppc_checks() != 0) return 91;
-    R4App app; R4XStartR4Sys table; R4XStartR4Desk desk; init_app(&app, &table, &desk);
+    R4App app; R4XStartR4Sys2 table; R4XStartR4Desk2 desk; init_app(&app, &table, &desk);
     R4PerformanceView performance = r4_devices_performance(r4_app_devices(&app));
     R4ProgramRegistrySummaryV2 registry_v2 = {0}; R4ProgramRegistrySelfTestResultV2 registry_test_v2 = {0};
     if (r4_program_registry_summary_v2(&performance, &registry_v2) != R4OS_ERR_NO_FN || r4_program_registry_self_test_v2(&performance, &registry_test_v2) != R4OS_ERR_NO_FN) return 32;
-    R4XStartR4Dev current_dev={.size=sizeof(current_dev),.program_registry_summary_v2=(uintptr_t)registry_summary_v2_peer,.program_registry_self_test_v2=(uintptr_t)registry_test_v2_peer};
+    R4XStartR4Dev2 current_dev={.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(current_dev),.program_registry_summary_v2=(uintptr_t)registry_summary_v2_peer,.program_registry_self_test_v2=(uintptr_t)registry_test_v2_peer};
     app.devices.table=&current_dev;
     registry_v2.version=2;registry_v2.size=sizeof(registry_v2);
     registry_test_v2.version=2;registry_test_v2.size=sizeof(registry_test_v2);
-    current_dev.size=offsetof(R4XStartR4Dev,program_registry_summary_v2);
+    current_dev.size=offsetof(R4XStartR4Dev2,program_registry_summary_v2);
     if(r4_program_registry_summary_v2(&performance,&registry_v2)!=R4OS_ERR_NO_FN || registry_v2_calls) return 92;
     current_dev.size=sizeof(current_dev);
     if(r4_program_registry_summary_v2(&performance,&registry_v2)!=1 || registry_v2.live_slots!=7) return 93;

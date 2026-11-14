@@ -85,13 +85,7 @@ impl<'a> Resources<'a> {
         self.raw()
     }
     pub fn new(app: &'a App<'_>) -> Result<Self> {
-        let mut raw = unsafe { core::mem::zeroed() };
-        exact(unsafe { c::R4SdkAppFacade(app.start_context(), &mut raw) })?;
-        Ok(Self {
-            app: raw,
-            _loan: PhantomData,
-            _local: PhantomData,
-        })
+        Self::new2(app)
     }
     pub fn new2(app: &'a crate::app2::App<'_>) -> Result<Self> {
         let mut raw = unsafe { core::mem::zeroed() };

@@ -37,3 +37,8 @@ pub const callbackTypes = .{
     @FieldType(persistence.Backend, "write_atomic_fn"),
     @typeInfo(@FieldType(persistence.Configuration, "validate_rtc")).optional.child,
 };
+
+pub fn canonicalTypeName(comptime T: type) ?[]const u8 {
+    if (T == @import("platform2.zig").abi.R4XStartContext2) return "R4XStartContext2";
+    return null;
+}

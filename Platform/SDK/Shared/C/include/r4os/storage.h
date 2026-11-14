@@ -100,7 +100,6 @@ static inline int32_t r4_storage_use_end(R4Storage *s, uint64_t *use) {
 }
 static inline int32_t r4_storage_transfer_use_begin(R4Storage *s, const uint8_t *path, uint64_t *use) {
     if (!path || !use) return R4OS_STORAGE_ERROR_INVALID;
-    if (!R4_STORAGE_HAS(s, storage_use_begin) && !R4_STORAGE_HAS(s, storage_claim_begin)) { *use = 0; return R4OS_STORAGE_RESULT_OK; }
     return r4_storage_use_begin(s, path, use);
 }
 #undef R4_STORAGE_CALL

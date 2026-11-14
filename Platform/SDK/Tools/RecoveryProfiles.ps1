@@ -5,7 +5,11 @@ function Get-R4SdkRecoveryContext {
     $sdk=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
     $root=[IO.Path]::GetFullPath($RecoveryRoot)
     if(!$DevelopmentProfile){$DevelopmentProfile=$env:R4OS_SDK_DEVELOPMENT_PROFILE}
-    $roots=@{'recovery-sdk'=(Join-Path $root 'Platform/SDK');'recovery-contract'=(Join-Path $root 'Platform/Contract');'recovery-libraries'=(Join-Path $root 'Legal/Sources/Libraries.zip')}
+    $configuration=Read-R4SdkProfiles $sdk
+    $librarySource=$configuration.Components.repositories['recovery-libraries']
+    if(!$librarySource.ContainsKey('source_subdir')){throw 'RecoverySdkLibraryTreeRequired'}
+    $libraryRoot=Join-Path $root $librarySource.source_subdir
+    $roots=@{'recovery-sdk'=(Join-Path $root 'Platform/SDK');'recovery-contract'=(Join-Path $root 'Platform/Contract');'recovery-libraries'=$libraryRoot}
     $options=@{SdkRoot=$sdk;Profile='r4os-recovery-zig-v1';Roots=$roots}
     if($DevelopmentProfile){$options.DevelopmentProfile=$DevelopmentProfile}
     $resolved=Resolve-R4SdkComponents @options
@@ -32,47 +36,25 @@ function New-R4SdkRecoveryOverlay($Context) {
         [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target))|Out-Null
         [IO.File]::Copy((Join-Path $base $relative),$target,$true)
     }
-    $profile=$Context.data.Build.codegen.'recovery-module'
-    $lines=[Collections.Generic.List[string]]::new()
-    $lines.Add('// Generated solely from selected SDK Profiles/Build.json. Do not edit.')
-    $lines.Add('const std = @import("std");')
-    foreach($key in @('optimize_size','optimize_speed','host_optimize','contract_generator_optimize')){
-        $value=[string]$profile[$key]
-        if($value -cnotin @('Debug','ReleaseSmall','ReleaseFast','ReleaseSafe')){throw 'RecoverySdkOptimizationInvalid'}
-        $lines.Add('pub const '+$key+': std.builtin.OptimizeMode = .'+$value+';')
+    if(!(Test-Path -LiteralPath (Join-Path $output 'r4os/build_profile.zig'))) { throw 'RecoverySdkCurrentJsonProfileRequired' }
+    # Current SDK sources interpret one Build.json instead of embedding
+    # compiler switches in build.zig. Project the selected Recovery policy
+    # into this generated overlay; never patch the pinned owner snapshot.
+    $projected=($Context.data.Build|ConvertTo-Json -Depth 100)|ConvertFrom-Json -AsHashtable -Depth 100
+    $recovery=$Context.data.Build.codegen.'recovery-module'
+    $module=$projected.codegen.module
+    foreach($key in @('single_threaded','strip','pic','red_zone','sanitize_c','stack_check','stack_protector','link_emit_relocs')) {
+        $module[$key]=$recovery[$key]
     }
-    foreach($key in @('single_threaded','strip','pic','red_zone','stack_check','stack_protector','link_emit_relocs')){
-        if($profile[$key] -isnot [bool]){throw 'RecoverySdkBooleanInvalid'}
-        $lines.Add('pub const '+$key+' = '+$profile[$key].ToString().ToLowerInvariant()+';')
-    }
-    if($profile.sanitize_c -cne 'off'){throw 'RecoverySdkSanitizerUnsupported'}
-    $lines.Add('pub const sanitize_c: std.zig.SanitizeC = .off;')
-    $features=@(foreach($feature in $profile.cpu_features_add){
-        if($feature -cnotmatch '^[a-z0-9_]+$'){throw 'RecoverySdkFeatureInvalid'}
-        '.'+$feature
-    })
-    $lines.Add('pub const cpu_features_add = std.Target.x86.featureSet(&.{'+($features -join ',')+'});')
-    $flags=@(foreach($flag in $profile.c_flags){ConvertTo-Json -InputObject ([string]$flag) -Compress})
-    $lines.Add('pub const c_flags: []const []const u8 = &.{'+($flags -join ',')+'};')
-    $policy=Join-Path $output 'r4os/recovery_policy.zig'
-    [IO.File]::WriteAllText($policy,($lines -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
-    $path=Join-Path $output 'r4os/build.zig';$text=[IO.File]::ReadAllText($path)
-    $text='const recovery_policy = @import("recovery_policy.zig");'+"`n"+$text
-    $cpuPattern='(?s)\.cpu_features_add = std\.Target\.x86\.featureSet\(&\.\{.*?\}\)'
-    if([regex]::Matches($text,$cpuPattern).Count -ne 2){throw 'RecoverySdkCompatibilityCpuShapeChanged'}
-    $text=[regex]::Replace($text,$cpuPattern,'.cpu_features_add = recovery_policy.cpu_features_add')
-    $flagsPattern='(?s)const base_c_flags: \[\]const \[\]const u8 = &\.\{.*?\n    \};'
-    if([regex]::Matches($text,$flagsPattern).Count -ne 2){throw 'RecoverySdkCompatibilityFlagsShapeChanged'}
-    $text=[regex]::Replace($text,$flagsPattern,'const base_c_flags = recovery_policy.c_flags;')
-    foreach($pair in @(@('ReleaseSmall','optimize_size'),@('ReleaseFast','optimize_speed'),@('ReleaseSafe','contract_generator_optimize'))){$text=$text.Replace(('.'+$pair[0]),('recovery_policy.'+$pair[1]))}
-    $text=$text.Replace('b.standardOptimizeOption(.{})','recovery_policy.host_optimize')
-    foreach($key in @('single_threaded','strip','pic','red_zone','stack_check','stack_protector')){
-        $text=[regex]::Replace($text,('\.'+$key+' = (true|false),'),('.'+$key+' = recovery_policy.'+$key+','))
-    }
-    $text=$text.Replace('.sanitize_c = .off,','.sanitize_c = recovery_policy.sanitize_c,')
-    $text=$text.Replace('exe.link_emit_relocs = true;','exe.link_emit_relocs = recovery_policy.link_emit_relocs;')
-    [IO.File]::WriteAllText($path,$text,[Text.UTF8Encoding]::new($false))
-    $record=@{schema=1;technical=$Context.resolved.technical;sdk_version=$Context.data.sdk_version;profile=$Context.resolved.profile;hashes=$Context.data.hashes;frozen_sources=$Context.resolved.sources;overlay=@{sdk_build_sha256=(Get-R4SdkFileDigest $path);policy_sha256=(Get-R4SdkFileDigest $policy)}}
+    $module.optimization.size=$recovery.optimize_size
+    $module.optimization.speed=$recovery.optimize_speed
+    $module.c_flags=@($recovery.c_flags)
+    $projected.codegen.host.optimize=$recovery.host_optimize
+    $projected.codegen.host.packager_optimize=$recovery.contract_generator_optimize
+    $policy=Join-Path $output 'Profiles/Build.json'
+    [IO.File]::WriteAllText($policy,($projected|ConvertTo-Json -Depth 100)+"`n",[Text.UTF8Encoding]::new($false))
+    & (Join-Path $PSScriptRoot 'Sync-ProfilePolicy.ps1') -SdkRoot $output
+    $record=@{schema=1;technical=$Context.resolved.technical;sdk_version=$Context.data.sdk_version;profile=$Context.resolved.profile;hashes=$Context.data.hashes;frozen_sources=$Context.resolved.sources;overlay=@{kind='current-sdk-json';sdk_build_sha256=(Get-R4SdkFileDigest (Join-Path $output 'r4os/build.zig'));policy_sha256=(Get-R4SdkFileDigest $policy);source_policy='codegen.recovery-module'}}
     $recordPath=Join-Path $Context.root 'Artifacts/SDKProfile/profile.json'
     [IO.File]::WriteAllText($recordPath,($record|ConvertTo-Json -Depth 100)+"`n",[Text.UTF8Encoding]::new($false))
     return $output

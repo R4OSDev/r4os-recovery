@@ -1,5 +1,6 @@
 /* Original replay/archive cores; reusable in native and private R4X tests. */
 #include <r4os/facades.h>
+#include "GuestContext2.h"
 #define B(s) (const uint8_t *)(s),sizeof(s)-1
 #define CHECK(v) do{if(!(v))return __LINE__;}while(0)
 static int ok(R4SdkUpdateSlot v){return !v.status&&!(v.flags&2);}
@@ -67,12 +68,12 @@ static R4SdkUpdateSlot invoke(void *user,uint32_t kind,const R4SdkUpdateSlot *a,
     return (R4SdkUpdateSlot){.status=-65};
 }
 static int table(R4SdkUpdateCallbackTable *out,Model *m,uint64_t mask){return ok(R4SdkUpdateCallbackTable_from_fields(out,(R4SdkUpdateSlot){.ptr=m,.flags=1},mask,(R4SdkUpdateSlot){.ptr=(void *)(uintptr_t)&invoke,.flags=1}));}
-int sdk_update_journal_case(const R4XStartContext *start,R4SdkUpdateRecoveryTransactionJournal *first,R4SdkUpdateRecoveryTransactionJournal *second,const uint8_t *input,uintptr_t length,uint8_t *durable,uintptr_t capacity){
+int sdk_update_journal_case(const R4XStartContext2 *start,R4SdkUpdateRecoveryTransactionJournal *first,R4SdkUpdateRecoveryTransactionJournal *second,const uint8_t *input,uintptr_t length,uint8_t *durable,uintptr_t capacity){
     Model m={.durable=durable,.capacity=capacity,.fail_persist=2,.old_sum=(uint32_t)R4SdkUpdateRecovery_checksum(0,B("old")).bits,.new_sum=(uint32_t)R4SdkUpdateRecovery_checksum(0,B("new")).bits};
-    R4Sys sys;R4App app;
+    R4Sys sys;R4App2 actual;R4App app;
     CHECK(R4SdkUpdateRecovery_parseJournalInto(0,input,length,0,first).bits==1);
     if(start){
-        CHECK(r4sys_init(start,&sys)==0&&R4SdkAppFacade(start,&app)==0);m.sys=&sys;m.files=r4_app_files(&app);m.real=1;
+        CHECK(sdk_guest_app2(start,&actual,&app)==0);sys=app.system;m.sys=&sys;m.files=r4_app_files(&app);m.real=1;
         CHECK(absent(&m,"C:\\TEMP\\SDK64.R4X")&&absent(&m,"C:\\TEMP\\S715609D.R4U")&&absent(&m,"C:\\TEMP\\B715609D.R4U"));
         CHECK(write(&m,"C:\\TEMP\\SDK64.R4X",B("bad"))&&write(&m,"C:\\TEMP\\S715609D.R4U",B("new")));
         CHECK(r4sys_file_update_atomic_checked(m.sys,"C:\\TEMP\\SDK64.R4X","C:\\TEMP\\S715609D.R4U","C:\\TEMP\\B715609D.R4U",3,m.new_sum,3,m.old_sum,R4SYS_FILE_UPDATE_ATOMIC_CHECKED_FORWARD|R4SYS_FILE_UPDATE_ATOMIC_CHECKED_TARGET_EXISTED|R4SYS_FILE_UPDATE_ATOMIC_CHECKED_OLD_KNOWN)==R4SYS_FILE_UPDATE_ATOMIC_CHECKED_ERROR_CONFLICT);
@@ -98,7 +99,7 @@ int sdk_update_archive_case(void){
     uint8_t target[128];
     R4SdkUpdateSlot observed=R4SdkUpdateNative_r4u_manifest_canonicalInventoryTarget(0,target,sizeof(target),B("d:\\Apps\\Gr\xc3\xbc\xc3\x9f" "e\\APP.R4X"));
     CHECK(!observed.status&&(observed.flags&1)&&observed.length==sizeof("D:/Apps/Gr\xc3\xbc\xc3\x9f" "e/APP.R4X")-1&&eq(observed.ptr,"D:/Apps/Gr\xc3\xbc\xc3\x9f" "e/APP.R4X",observed.length));
-    R4XStartR4Sys scope_table={.size=offsetof(R4XStartR4Sys,system_update_target_supported),.system_update_target_supported=(uintptr_t)&scope_probe};
+    R4XStartR4Sys2 scope_table={.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=offsetof(R4XStartR4Sys2,system_update_target_supported),.system_update_target_supported=(uintptr_t)&scope_probe};
     R4Sys scope={.table=&scope_table};scope_calls=0;
     CHECK(r4sys_system_update_target_supported(&scope,"D:\\APP.R4X")==R4OS_ERR_NO_FN&&scope_calls==0);
     scope_table.size=sizeof(scope_table);

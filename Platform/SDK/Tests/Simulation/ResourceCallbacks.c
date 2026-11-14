@@ -6,6 +6,13 @@
 #include <string.h>
 
 static int mode;
+static int32_t resource_clock(R4MonotonicClockInfo *out) {
+    *out=(R4MonotonicClockInfo){.version=1,.size=sizeof(*out),
+        .flags=R4OS_MONOTONIC_CLOCK_FLAG_VALID,.source=1,.generation=1,
+        .frequency_hz=R4OS_MONOTONIC_CLOCK_FREQUENCY_HZ,.resolution_ns=1,
+        .instant_ns=now_ticks*UINT64_C(1000000),.event_requested_hz=1000,.event_effective_hz=1000};
+    return 1;
+}
 static uint64_t sequence, local_value, io_length;
 static int notification_live;
 static uint8_t *destination;
@@ -98,9 +105,10 @@ static int32_t inventory_programs(R4ProgramInventoryCursor *cursor,R4ProgramInst
 }
 static int32_t inventory_tasks(R4ProgramInventoryCursor *c,R4ProgramTaskSnapshot *o,uint32_t n,R4ProgramInventoryPageInfo *p){(void)c;assert(n);*o=(R4ProgramTaskSnapshot){0};*p=(R4ProgramInventoryPageInfo){.returned=1};return 0;}
 static int32_t inventory_threads(R4ProgramInventoryCursor *c,R4ProgramThreadSnapshot *o,uint32_t n,R4ProgramInventoryPageInfo *p){(void)c;assert(n);*o=(R4ProgramThreadSnapshot){0};*p=(R4ProgramInventoryPageInfo){.returned=1};return 0;}
-void sdk_resource_table(R4XStartR4Sys *table,R4XStartR4Desk *desk){
-    R4XStartR4Sys current=*table;R4XStartR4Desk current_desk=*desk;
+void sdk_resource_table(R4XStartR4Sys2 *table,R4XStartR4Desk2 *desk){
+    R4XStartR4Sys2 current=*table;R4XStartR4Desk2 current_desk=*desk;
     R4App app;init_app(&app,table,desk);
+    table->monotonic_clock=(uintptr_t)&resource_clock;
     table->magic=current.magic;table->abi_version=current.abi_version;table->size=current.size;
     desk->magic=current_desk.magic;desk->abi_version=current_desk.abi_version;desk->size=current_desk.size;
     mode=0;vm_wrong_owner=0;local_value=0;
@@ -121,12 +129,12 @@ void sdk_resource_table(R4XStartR4Sys *table,R4XStartR4Desk *desk){
     table->program_inventory_tasks=(uintptr_t)&inventory_tasks;table->program_inventory_threads=(uintptr_t)&inventory_threads;
 }
 int sdk_resource_prefix_case(void){
-    R4App app;R4XStartR4Sys table;R4XStartR4Desk desk;init_app(&app,&table,&desk);R4Resources resources=r4_app_resources(&app);
+    R4App app;R4XStartR4Sys2 table;R4XStartR4Desk2 desk;init_app(&app,&table,&desk);R4Resources resources=r4_app_resources(&app);
     R4Process process={0};const uint8_t text[]="C:\\TEST.R4X";R4PathZ path={text,sizeof(text)-1};
-    table.size=offsetof(R4XStartR4Sys,program_spawn_handle)+7;
+    table.size=offsetof(R4XStartR4Sys2,program_spawn_handle)+7;
     if(r4_resources_spawn(&resources,path,"",1,&process)!=R4OS_ERR_NO_FN||process.raw)return 1;
     table.size=sizeof(table);if(r4_resources_spawn(&resources,path,"",1,&process))return 2;
-    uint32_t full=table.size;table.size=offsetof(R4XStartR4Sys,program_handle_status)+7;R4ProgramInstanceInfo info;
+    uint32_t full=table.size;table.size=offsetof(R4XStartR4Sys2,program_handle_status)+7;R4ProgramInstanceInfo info;
     if(r4_process_status(&process,&info)!=R4OS_ERR_NO_FN)return 3;
     table.size=full;if(r4_process_kill(&process)||r4_process_wait(&process,forever_timeout()).kind!=R4_RESOURCE_WAIT_EXITED)return 4;
     /* Independent optional functions: file read/close must work without the

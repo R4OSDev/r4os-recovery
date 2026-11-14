@@ -3,9 +3,10 @@ param(
     [Parameter(Mandatory)][string]$Zig,
     [Parameter(Mandatory)][string]$RustLauncher,
     [Parameter(Mandatory)][string]$WorkRoot,
-    [switch]$Generation2
+    [switch]$Generation2=$true
 )
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
+if(!$Generation2){throw 'The retired heap startup path is unavailable; use the current default.'}
 $sdk=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $ContractRoot=[IO.Path]::GetFullPath($ContractRoot);$Zig=[IO.Path]::GetFullPath($Zig)
 $RustLauncher=[IO.Path]::GetFullPath($RustLauncher);$WorkRoot=[IO.Path]::GetFullPath($WorkRoot)

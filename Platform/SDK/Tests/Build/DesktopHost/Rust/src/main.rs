@@ -2,19 +2,19 @@
 extern crate alloc;
 use alloc::vec;
 use core::pin::pin;
-use r4os_sdk::{App,abi,bounded_text,gui::{Role,Session,SessionStorage,raw as c},path::FilePath,resources::Timeout,storage::System};
+use r4os_sdk::{App2,abi,bounded_text,gui::{Role,Session,SessionStorage,raw as c},path::FilePath,resources::Timeout,storage::System};
 use r4os_r4img::{ApiV1Client,PngV1Client,RasterV1Client,R4ImgInfo};
 use r4os_r4std::{SettingsV1Client,TimeV1Client,ConfigV1Client};
 use r4os_r4gfx::{DeviceV1Client,ColorV1Client};
 const BMP:&[u8]=include_bytes!("../../Shared/two-pixels.bmp");
 fn checked(value:c::R4SdkGuiSlot)->bool{value.status==0 && value.flags & 2==0 && value.bits as i32>=0}
-fn report(app:&App<'_>,bytes:&[u8])->bool{
- let Ok(sys)=System::new(app) else{return false};let Ok(path)=FilePath::parse(b"C:\\TEMP\\DH71R.TXT") else{return false};sys.files().write(&path,bytes).is_ok()
+fn report(app:&App2<'_>,bytes:&[u8])->bool{
+ let Ok(sys)=System::new2(app) else{return false};let Ok(path)=FilePath::parse(b"C:\\TEMP\\DH71R.TXT") else{return false};sys.files().write(&path,bytes).is_ok()
 }
-fn exercise(app:&App<'_>,host:&mut Session<'_, '_>)->Result<(),i32>{
- let _settings=SettingsV1Client::init(app).map_err(|_|10)?;let _time=TimeV1Client::init(app).map_err(|_|10)?;let _config=ConfigV1Client::init(app).map_err(|_|10)?;
- let images=ApiV1Client::init(app).map_err(|_|10)?;let _png=PngV1Client::init(app).map_err(|_|10)?;let _raster=RasterV1Client::init(app).map_err(|_|10)?;
- let _devices=DeviceV1Client::init(app).map_err(|_|10)?;let _colors=ColorV1Client::init(app).map_err(|_|10)?;
+fn exercise(app:&App2<'_>,host:&mut Session<'_, '_>)->Result<(),i32>{
+ let _settings=SettingsV1Client::init2(app).map_err(|_|10)?;let _time=TimeV1Client::init2(app).map_err(|_|10)?;let _config=ConfigV1Client::init2(app).map_err(|_|10)?;
+ let images=ApiV1Client::init2(app).map_err(|_|10)?;let _png=PngV1Client::init2(app).map_err(|_|10)?;let _raster=RasterV1Client::init2(app).map_err(|_|10)?;
+ let _devices=DeviceV1Client::init2(app).map_err(|_|10)?;let _colors=ColorV1Client::init2(app).map_err(|_|10)?;
  let mut allocation=vec![0u8;24576];for(i,v)in allocation.iter_mut().enumerate(){*v=(i as u8).wrapping_mul(17).wrapping_add(3);}
  if allocation.iter().enumerate().any(|(i,v)|*v!=(i as u8).wrapping_mul(17).wrapping_add(3)){return Err(13);}drop(allocation);
  let mut label=[0u8;64];let utf8="SDK71 Rust A\u{301} 🙂".as_bytes();if !bounded_text::valid(utf8) || !bounded_text::assign_z(&mut label,utf8){return Err(15);}
@@ -35,15 +35,15 @@ fn exercise(app:&App<'_>,host:&mut Session<'_, '_>)->Result<(),i32>{
  }
  Err(26)
 }
-fn probe(app:&App<'_>)->Result<(),i32>{
+fn probe(app:&App2<'_>)->Result<(),i32>{
  let mut storage=pin!(SessionStorage::new());let mut timers=[];
- let mut host=Session::open(storage.as_mut(),app,Role::DesktopHost,&mut timers).map_err(|_|1)?;
+ let mut host=Session::open2(storage.as_mut(),app,Role::DesktopHost,&mut timers).map_err(|_|1)?;
  let claim=host.claim_host(Timeout::AfterNanos(2_000_000_000)).map_err(|_|2)?;
  if claim.desktop_owner.instance_id as u64!=app.instance_id() || claim.desktop_epoch==0{return Err(3);}
  let result=exercise(app,&mut host);drop(host);result
 }
-fn main(app:&mut App<'_>)->i32{
+fn main(app:&mut App2<'_>)->i32{
  let code=probe(app).err().unwrap_or(0);let mut result=*b"R71 result=000 close=done\r\n";result[11]=b'0'+(code/100) as u8;result[12]=b'0'+((code/10)%10) as u8;result[13]=b'0'+(code%10) as u8;
  if !report(app,&result){return 99;}code
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

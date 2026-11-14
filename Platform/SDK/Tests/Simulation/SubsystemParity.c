@@ -1,5 +1,6 @@
 /* Shared synthetic work, independent host calls. No ROM or emulator code. */
 #include <r4os/facades.h>
+#include "GuestContext2.h"
 static void bytes_fill(void *p,int value,uintptr_t count){volatile uint8_t *bytes=p;for(uintptr_t i=0;i<count;i++)bytes[i]=(uint8_t)value;}
 static int bytes_compare(const void *a,const void *b,uintptr_t count){const uint8_t *left=a,*right=b;for(uintptr_t i=0;i<count;i++)if(left[i]!=right[i])return (int)left[i]-(int)right[i];return 0;}
 #define S R4SdkSubsystemSlot
@@ -92,8 +93,8 @@ int sdk65_c_video(uint64_t *out) {
     return 0;
 }
 uint64_t sdk65_fixture_pixels_hash(const void *p) {const Model *m=p;uint64_t sum=0;for(uint32_t i=0;i<256;i++)sum=sum*33+m->pixels[i];return sum;}
-int sdk65_guest_media_save(const R4XStartContext *start) {
-    R4SdkSubsystemContext context;NEED(R4SdkSubsystem_open(0,&context,start).bits==1,101);
+int sdk65_guest_media_save(const R4XStartContext2 *start) {
+    R4SdkSubsystemContext context;NEED(R4SdkSubsystem_open2(0,&context,start).bits==1,101);
     R4SdkSubsystemNative_app_storage_Files files;NEED(OK(R4SdkSubsystem_platformFiles(0,&context,&files)),102);
     R4SdkSubsystemCallbackTable hooks;NEED(OK(R4SdkSubsystemCallbackTable_create(&hooks)),103);
     R4SdkDataNative_Value31 directories[2];
@@ -136,7 +137,7 @@ int sdk65_guest_media_save(const R4XStartContext *start) {
     NEED(OK(R4SdkSubsystemAsyncStore_removeTestFiles(0,&async,&digest)),144);
     /* Actual window output through the original current copy/stream backend.
        Shared ownership/backpressure is separately covered by original owners. */
-    R4Desk desk;R4Sys sys;NEED(r4desk_init(start,&desk)==0 && r4sys_init(start,&sys)==0,124);
+    R4App2 actual;R4App app;NEED(sdk_guest_app2(start,&actual,&app)==0,124);R4Desk desk=app.desktop;R4Sys sys=app.system;
     R4GuiWindowInfo info={0};int ready=0;
     for(unsigned i=0;i<100;i++){if(r4desk_gui_window_info(&desk,&info)>=0 && info.client_w>0 && info.client_h>0 && info.window_id>=0){ready=1;break;}r4sys_sleep_ticks(&sys,1);}
     NEED(ready,125);r4desk_gui_set_title(&desk,"SDK65 synthetic subsystem");
@@ -185,8 +186,8 @@ int sdk65_c_audio(uint64_t *out) {
     NEED(m.opens==1 && m.writes==1 && m.closes==1,17);
     out[0]=m.model.steps;out[1]=m.model.guest_ns;out[2]=m.opens;out[3]=m.writes;out[4]=m.closes;return 0;
 }
-int sdk65_guest_source(const R4XStartContext *start) {
-    R4Sys sys;NEED(r4sys_init(start,&sys)==0,151);R4Files files={.system=&sys};R4FilePath path;
+int sdk65_guest_source(const R4XStartContext2 *start) {
+    R4App2 actual;R4App app;NEED(sdk_guest_app2(start,&actual,&app)==0,151);R4Sys sys=app.system;R4Files files={.system=&sys};R4FilePath path;
     const char name[]="C:\\TEMP\\SYNTH65.S65";NEED(r4_file_path((const uint8_t*)name,sizeof(name)-1,&path)==R4_PATH_OK,152);
     uint8_t source[4];R4Transfer transfer=r4_files_read(&files,&path,source,sizeof(source));
     NEED(transfer.state==R4_TRANSFER_BYTES && transfer.bytes==4 && !bytes_compare(source,"S65!",4),153);return 0;
@@ -202,8 +203,8 @@ static S verify_installed_host(void *p,uint32_t kind,const S *args,uint32_t coun
     result.bits=info.state==R4_FILE_INFO_MISSING?R4SdkSubsystemCatalogHostState_missing:info.state==R4_FILE_INFO_VALUE&&!info.value.is_dir?R4SdkSubsystemCatalogHostState_present:R4SdkSubsystemCatalogHostState_failed;
     if(result.bits==R4SdkSubsystemCatalogHostState_present)model->verified++;return result;
 }
-int sdk65_guest_catalogue(const R4XStartContext *start,const char *expected_id) {
-    R4Sys sys;NEED(r4sys_init(start,&sys)==0,161);ActualCatalog model={.files={.system=&sys}};
+int sdk65_guest_catalogue(const R4XStartContext2 *start,const char *expected_id) {
+    R4App2 actual;R4App app;NEED(sdk_guest_app2(start,&actual,&app)==0,161);R4Sys sys=app.system;ActualCatalog model={.files={.system=&sys}};
     R4FilePath path;const char name[]="C:\\R4OS\\CONFIG\\MODULES.JSON";NEED(r4_file_path((const uint8_t*)name,sizeof(name)-1,&path)==R4_PATH_OK,162);
     static uint8_t bytes[256*1024];static R4SdkUpdateInventoryInventory inventory;static R4SdkSubsystemCatalogCatalog catalog;
     R4Transfer read=r4_files_read(&model.files,&path,bytes,sizeof(bytes));NEED(read.state==R4_TRANSFER_BYTES && read.bytes<sizeof(bytes),163);
@@ -225,8 +226,8 @@ int sdk65_guest_catalogue(const R4XStartContext *start,const char *expected_id) 
 
 static void report_text(char *out,unsigned *used,const char *value){while(*value)out[(*used)++]=*value++;}
 static void report_number(char *out,unsigned *used,uint64_t value){char digits[32];unsigned i=sizeof(digits);do{digits[--i]=(char)('0'+value%10);value/=10;}while(value);for(;i<sizeof(digits);i++)out[(*used)++]=digits[i];}
-int sdk65_guest_report(const R4XStartContext *start,char language,int code){
-    R4Sys sys;if(r4sys_init(start,&sys)!=0)return 198;R4Files files={.system=&sys};
+int sdk65_guest_report(const R4XStartContext2 *start,char language,int code){
+    R4App2 actual;R4App app;if(sdk_guest_app2(start,&actual,&app)!=0)return 198;R4Sys sys=app.system;R4Files files={.system=&sys};
     char path_text[]="C:\\TEMP\\S65C.OUT";path_text[11]=language;
     R4FilePath path;if(r4_file_path((const uint8_t*)path_text,sizeof(path_text)-1,&path)!=R4_PATH_OK)return 197;
     char out[512];unsigned used=0;report_text(out,&used,"CODE=");report_number(out,&used,(uint32_t)code);report_text(out,&used,"\nWORK=");

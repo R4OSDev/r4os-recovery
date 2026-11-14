@@ -2,6 +2,4 @@
 #include "../Bindings/C/{ProjectNameLower}.h"
 int64_t {ProjectNameLower}_add_impl(int64_t left,int64_t right){return (int64_t)((uint64_t)left+(uint64_t)right);}
 {ProjectName}ApiV1 {ProjectNameLower}_api_v1 __attribute__((aligned(8),section(".data.r4l_exports")))={{ProjectName}_API_V1_HEADER_INITIALIZER,{ProjectNameLower}_add_impl};
-R4L_PROVIDER_QUERY({ProjectNameLower}_query);
-
-R4LQuery2 {ProjectNameLower}_query2 __attribute__((aligned(8),section(".data.r4l_exports")))={R4OS2_QUERY_MAGIC,2,sizeof(R4LQuery2),0,0};
+R4L_PROVIDER_QUERY({ProjectNameLower}_query2);

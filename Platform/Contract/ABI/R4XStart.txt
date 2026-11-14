@@ -4,8 +4,10 @@
 Rolle
 -----
 
-Diese Datei beschreibt den waehrend der Migration erhaltenen
-Generation1-Einstieg R4XStart mit R4XStartContext. Generation2 verwendet
+Diese Datei beschreibt den aktiven Generation2-Startvertrag. Historische
+Generation1-Records sind nur Vergleichs- und Ablehnungsdaten; seit dem
+Cutover0.90.89 stellt kein normaler oder Recovery-Kernel ihren Einstieg bereit.
+Generation2 verwendet
 R4XStart2:2, den wirklichen120-Byte-R4XStartContext2 und Query2:2 fuer
 eingebaute Plattformgruppen. Normativ sind ABI/R4M0.txt, API/Generation2.json
 und die daraus erzeugten Bindings unter Generated/Generation2/. Fachliche

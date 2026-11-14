@@ -1,6 +1,10 @@
 #![cfg(test)]
 use core::{mem::MaybeUninit, pin::pin};
 
+unsafe extern "C" fn fixture_keep_open(_: *const abi::generation2::R4XStartContext2) -> u32 {
+    0
+}
+
 #[test]
 fn typed_image_clipboard_native_layout_and_generated_calls_without_provider() {
     unsafe extern "C" {
@@ -53,14 +57,14 @@ unsafe extern "C" {
     fn sdk_gui_c_case() -> i32;
     fn sdk_gui_control_clipboard_case() -> i32;
     fn sdk_gui_native_tables(
-        sys: *mut abi::R4XStartR4Sys,
-        desk: *mut abi::R4XStartR4Desk,
-        draw: *mut abi::R4XStartR4Draw,
+        sys: *mut abi::generation2::R4XStartR4Sys2,
+        desk: *mut abi::generation2::R4XStartR4Desk2,
+        draw: *mut abi::generation2::R4XStartR4Draw2,
     );
     fn sdk_gui_host_tables(
-        sys: *mut abi::R4XStartR4Sys,
-        desk: *mut abi::R4XStartR4Desk,
-        draw: *mut abi::R4XStartR4Draw,
+        sys: *mut abi::generation2::R4XStartR4Sys2,
+        desk: *mut abi::generation2::R4XStartR4Desk2,
+        draw: *mut abi::generation2::R4XStartR4Draw2,
     );
     fn sdk_gui_oracle_pixels(out: *mut u32, count: usize) -> i32;
     fn sdk_gui_oracle_fail_append(at: u32);
@@ -151,9 +155,9 @@ fn modern_controls_use_the_same_native_frames_from_zig_c_and_rust() {
 }
 fn with_app(host: bool, body: impl FnOnce(&App<'_>)) {
     let (mut sys, mut desk, mut draw) = (
-        abi::R4XStartR4Sys::default(),
-        abi::R4XStartR4Desk::default(),
-        abi::R4XStartR4Draw::default(),
+        abi::generation2::R4XStartR4Sys2::default(),
+        abi::generation2::R4XStartR4Desk2::default(),
+        abi::generation2::R4XStartR4Draw2::default(),
     );
     unsafe {
         if host {
@@ -190,34 +194,35 @@ fn with_app(host: bool, body: impl FnOnce(&App<'_>)) {
     ];
     let imports = records.map(|(id, name, table, _, _, _)| abi::R4XStartImport {
         group_id: id,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         flags: abi::r4xstart_import_flag_group_interface,
         module_name: name.as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         table,
     });
-    let specs = records.map(|(id, name, _, magic, version, size)| ImportSpec {
-        module_name: name.to_bytes(),
-        symbol_name: b"Query",
-        minimum: 1,
-        optional: false,
+    let specs = records.map(|(id, name, _, _magic, _version, _size)| ImportSpec {
+        module_name: name.as_ptr().cast(),
+        symbol_name: c"Query2".as_ptr().cast(),
+        minimum: 2,
+        optional: 0,
         group_id: id,
-        magic,
-        version,
-        size,
+
+        reserved: 0,
     });
-    let context = abi::R4XStartContext {
+    let context = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::gui.0,
         instance_id: 42,
-        flags: abi::r4xstart_flag_imports_valid,
+        flags: abi::r4xstart_flag_imports_valid | abi::r4xstart_flag_close_supported,
+        should_close: fixture_keep_open as *const () as u64,
         imports: imports.as_ptr() as u64,
         import_count: 3,
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::gui,
-        required_groups: records.iter().fold(0, |m, r| m | (1 << r.0)),
+        profile: 1,
+        app_class: abi::R4XStartAppClass::gui.0,
+        required_groups: 14,
         imports: &specs,
     };
     let app = unsafe { App::from_raw(&context, &expected, c"GuiParity") }.unwrap();

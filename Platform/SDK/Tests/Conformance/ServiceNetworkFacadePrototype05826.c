@@ -106,14 +106,14 @@ static R4Timeout poll_timeout(void) { R4Timeout value = {0}; value.kind = R4OS_T
 static R4Timeout forever_timeout(void) { R4Timeout value = {0}; value.kind = R4OS_TIMEOUT_KIND_FOREVER; return value; }
 
 static uint64_t network_fixture_ticks(void) { return 100u; }
-static void init_app(R4App *app, R4XStartR4Sys *sys, R4XStartR4Net *net) {
-    *sys = (R4XStartR4Sys){.magic=R4XSTART_R4SYS_MAGIC,.abi_version=R4XSTART_R4SYS_VERSION,.size=sizeof(*sys)}; sys->ticks=(uintptr_t)&network_fixture_ticks; sys->monotonic_clock=(uintptr_t)&fake_monotonic; sys->time_state=(uintptr_t)&fake_calendar; sys->service_open = (uintptr_t)&fake_open; sys->service_close = (uintptr_t)&fake_close; sys->service_call = (uintptr_t)&fake_call; sys->service_endpoint_register = (uintptr_t)&fake_register; sys->service_endpoint_unregister = (uintptr_t)&fake_unregister; sys->service_endpoint_wait = (uintptr_t)&fake_wait; sys->service_endpoint_recv = (uintptr_t)&fake_recv; sys->service_endpoint_reply = (uintptr_t)&fake_reply;
-    *net = (R4XStartR4Net){.magic=R4XSTART_R4NET_MAGIC,.abi_version=R4XSTART_R4NET_VERSION,.size=sizeof(*net)}; net->tcp_connect = (uintptr_t)&fake_tcp_marker;
+static void init_app(R4App *app, R4XStartR4Sys2 *sys, R4XStartR4Net2 *net) {
+    *sys = (R4XStartR4Sys2){.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(*sys)}; sys->ticks=(uintptr_t)&network_fixture_ticks; sys->monotonic_clock=(uintptr_t)&fake_monotonic; sys->time_state=(uintptr_t)&fake_calendar; sys->service_open = (uintptr_t)&fake_open; sys->service_close = (uintptr_t)&fake_close; sys->service_call = (uintptr_t)&fake_call; sys->service_endpoint_register = (uintptr_t)&fake_register; sys->service_endpoint_unregister = (uintptr_t)&fake_unregister; sys->service_endpoint_wait = (uintptr_t)&fake_wait; sys->service_endpoint_recv = (uintptr_t)&fake_recv; sys->service_endpoint_reply = (uintptr_t)&fake_reply;
+    *net = (R4XStartR4Net2){.magic=R4OS2_R4NET_MAGIC,.abi_version=R4OS2_R4NET_VERSION,.size=sizeof(*net)}; net->tcp_connect = (uintptr_t)&fake_tcp_marker;
     *app = (R4App){0}; app->system.table = sys; app->network.table = net;
 }
 
 static int power_checks(void){
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);reply_mode=MODE_OK;power_mode=0;open_handles=0;power_calls=0;
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);reply_mode=MODE_OK;power_mode=0;open_handles=0;power_calls=0;
     R4PowerProfiles client={0};R4PowerProfileInfo out={.revision=71};R4Timeout timeout=poll_timeout();
     if(r4_power_profiles_open(&app,&client,timeout)!=0||client.info.service_generation!=power_generation||open_handles)return 1;
     uint32_t calls=power_calls;if(r4_power_profiles_select(&client,99,0,&out,timeout)!=R4OS_SERVICE_API_RESULT_INVALID||calls!=power_calls||out.revision!=71)return 2;
@@ -129,14 +129,14 @@ static int power_checks(void){
 }
 static int32_t fake_power_transition(uint32_t action,uint64_t budget){return action==R4OS_POWER_TRANSITION_ACTION_POWEROFF&&budget==UINT64_C(0x12345678abcd4321)?R4OS_POWER_TRANSITION_ERROR_RETAINED:-99;}
 static int system_power_checks(void){
-    R4App app;R4XStartR4Sys table;R4XStartR4Net net;init_app(&app,&table,&net);table.system_power_transition=(uintptr_t)&fake_power_transition;
-    for(uint32_t size=1280;size<1288;size++){table.size=size;if(r4sys_system_power_transition(&app.system,R4OS_POWER_TRANSITION_ACTION_POWEROFF,UINT64_C(0x12345678abcd4321))!=R4OS_ERR_NO_FN)return 1;}
-    table.size=1288;if(r4sys_system_power_transition(&app.system,R4OS_POWER_TRANSITION_ACTION_POWEROFF,UINT64_C(0x12345678abcd4321))!=R4OS_POWER_TRANSITION_ERROR_RETAINED)return 2;
+    R4App app;R4XStartR4Sys2 table;R4XStartR4Net2 net;init_app(&app,&table,&net);table.system_power_transition=(uintptr_t)&fake_power_transition;
+    for(uint32_t size=1272;size<1280;size++){table.size=size;if(r4sys_system_power_transition(&app.system,R4OS_POWER_TRANSITION_ACTION_POWEROFF,UINT64_C(0x12345678abcd4321))!=R4OS_ERR_NO_FN)return 1;}
+    table.size=1280;if(r4sys_system_power_transition(&app.system,R4OS_POWER_TRANSITION_ACTION_POWEROFF,UINT64_C(0x12345678abcd4321))!=R4OS_POWER_TRANSITION_ERROR_RETAINED)return 2;
     if(r4sys_system_power_transition(&app.system,3,0)!=R4OS_POWER_TRANSITION_ERROR_INVALID)return 3;
     table.system_power_transition=0;if(r4sys_system_power_transition(&app.system,R4OS_POWER_TRANSITION_ACTION_POWEROFF,0)!=R4OS_ERR_NO_FN)return 4;return 0;
 }
 static int calendar_free_timeouts(void) {
-    R4App app; R4XStartR4Sys sys; R4XStartR4Net net; init_app(&app,&sys,&net);
+    R4App app; R4XStartR4Sys2 sys; R4XStartR4Net2 net; init_app(&app,&sys,&net);
     reply_mode=MODE_OK; clock_mode=0; clock_rate=1000; calendar_calls=0;
     R4Services services=r4_app_services(&app); R4ServiceConnection connection;
     uint32_t value=123, response=0;
@@ -166,7 +166,7 @@ static int calendar_free_timeouts(void) {
 
 static int service_network_checks(void) {
     if(calendar_free_timeouts()!=0)return 20;
-    R4App app; R4XStartR4Sys sys; R4XStartR4Net net; init_app(&app, &sys, &net); reply_mode = MODE_OK;
+    R4App app; R4XStartR4Sys2 sys; R4XStartR4Net2 net; init_app(&app, &sys, &net); reply_mode = MODE_OK;
     R4Services services = r4_app_services(&app); R4ServiceConnection connection; uint32_t request = 123u, response = 0u;
     if (!r4_services_available(&services) || r4_services_open(&services, "EXAMPLE", &connection) != 0) return 1;
     if (r4_service_connection_call_struct(&connection, 7u, &request, sizeof(request), &response, sizeof(response), forever_timeout()).kind != R4_SERVICE_CALL_RESPONSE || response != request) return 2;

@@ -1,7 +1,8 @@
 param(
  [Parameter(Mandatory)][string]$SdkRoot,[Parameter(Mandatory)][string]$ContractRoot,[Parameter(Mandatory)][string]$ToolsRoot,
  [Parameter(Mandatory)][string]$ZigRoot,[Parameter(Mandatory)][string]$InstallRoot,[Parameter(Mandatory)][string]$CacheRoot,
- [Parameter(Mandatory)][string]$NativeCacheRoot,[Parameter(Mandatory)][string]$WorkRoot,[switch]$Technical,[switch]$KeepProjects
+ [Parameter(Mandatory)][string]$NativeCacheRoot,[Parameter(Mandatory)][string]$WorkRoot,[switch]$Technical,[switch]$KeepProjects,
+ [string]$LibrariesRoot='',[string]$DevelopmentProfile=''
 )
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 foreach($key in @('SdkRoot','ContractRoot','ToolsRoot','ZigRoot','InstallRoot','CacheRoot','NativeCacheRoot','WorkRoot')){Set-Variable $key ([IO.Path]::GetFullPath((Get-Variable $key -ValueOnly)))}
@@ -31,6 +32,8 @@ try{
   $create=@((Join-Path $SdkRoot 'Tools/New-Project.ps1'),'-TemplateId',$template.id,'-Directory',$directory,'-ProjectName',$name,'-InstallRoot',$InstallRoot,'-CacheRoot',$CacheRoot)+$common
   Run ($name+'-create.log') $create
   $build=@((Join-Path $directory 'Build.ps1'),'-ZigRoot',$ZigRoot,'-InstallRoot',$InstallRoot,'-CacheRoot',$(if($template.language -ceq 'Rust'){$CacheRoot}else{$NativeCacheRoot}),'-OutputRoot',$output)+$common
+  if($LibrariesRoot){$build+=@('-LibrariesRoot',[IO.Path]::GetFullPath($LibrariesRoot))}
+  if($DevelopmentProfile){$build+=@('-DevelopmentProfile',[IO.Path]::GetFullPath($DevelopmentProfile))}
   Run ($name+'-build.log') $build
   $receipt=Get-Content -Raw -LiteralPath (Join-Path $output 'build.json')|ConvertFrom-Json -AsHashtable
   if($receipt.status -cne 'success'){throw 'Template did not produce a current success receipt.'}

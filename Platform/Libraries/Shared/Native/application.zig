@@ -16,16 +16,13 @@ fn initialize(value: *State) void {
 /// Retains only a process-owned startup snapshot and immutable platform tables.
 /// The app's import table follows its ordinary program lifetime. No caller
 /// Bundle, stack context or GUI object survives this call.
-pub fn bind(raw: *const r.abi.R4XStartContext) bool {
-    return bindAddress(@intFromPtr(raw));
-}
+pub const bind = bind2;
 pub fn bind2(raw: *const r.platform2.abi.R4XStartContext2) bool {
     return bindAddress(@intFromPtr(raw));
 }
 pub fn bindAddress(address: u64) bool {
     const candidate = caller.Input.init(address) catch return false;
     const correct_system = switch (candidate) {
-        .legacy => |view| view.sys != null and view.sys == threads.system.legacy(),
         .generation2 => |view| view.system() == threads.system.generation2(),
     };
     if (!correct_system or candidate.instance() != threads.thrd_current().instance_id) return false;
@@ -39,11 +36,4 @@ pub fn bindAddress(address: u64) bool {
 pub fn snapshot() ?*const caller.Snapshot {
     const value = (local.lookup(State, &key) catch return null) orelse return null;
     return if (value.phase.load(.acquire) == 2) &value.caller else null;
-}
-pub fn bundle() ?*const r.program.Bundle {
-    const saved = snapshot() orelse return null;
-    return switch (saved.*) {
-        .legacy => &saved.legacy.bundle,
-        .generation2 => null,
-    };
 }

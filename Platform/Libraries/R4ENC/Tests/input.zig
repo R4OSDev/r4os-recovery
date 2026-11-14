@@ -62,8 +62,8 @@ pub fn run() !void {
     terminal = false;
     retained = false;
     failed = false;
-    var raw: a.R4XStartContext = std.mem.zeroes(a.R4XStartContext);
-    var table: a.R4XStartR4Draw = .{};
+    var raw: @import("r4os").platform2.abi.R4XStartContext2 = std.mem.zeroes(@import("r4os").platform2.abi.R4XStartContext2);
+    var table: @import("r4os").platform2.abi.R4XStartR4Draw2 = .{};
     table.gfx_buffer_import = @intFromPtr(&importBo);
     table.gfx_buffer_describe = @intFromPtr(&describe);
     table.gfx_buffer_map = @intFromPtr(&map);

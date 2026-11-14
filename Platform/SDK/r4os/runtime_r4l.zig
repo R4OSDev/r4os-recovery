@@ -45,7 +45,7 @@ pub const BindingError = error{
     InvalidExpectation,
 };
 
-/// Names belong to the shared import payload in either start generation.
+/// Names belong to the shared import payload and independent library APIs.
 pub fn importNameEquals(raw: u64, expected: []const u8) bool {
     if (raw == 0 or expected.len == 0 or expected.len >= 32) return false;
     const value: [*]const u8 = @ptrFromInt(raw);
@@ -67,7 +67,7 @@ pub fn query2(context: *const @import("platform2.zig").Context, module: []const 
     if (item.group_id != 0 or item.min_version != 2 or item.resolved_version != 2 or item.table == 0) return error.InvalidImport;
     if (item.table % @alignOf(next.R4LQuery2) != 0) return error.MisalignedTable;
     const descriptor: *const next.R4LQuery2 = @ptrFromInt(item.table);
-    if (descriptor.magic != next.query_magic or descriptor.abi_version != 2 or descriptor.size < @sizeOf(next.R4LQuery2) or descriptor.group != 0 or descriptor.reserved != 0) return error.InvalidQuery;
+    if (descriptor.magic != next.query_magic or descriptor.abi_version != 2 or descriptor.size != @sizeOf(next.R4LQuery2) or descriptor.group != 0 or descriptor.reserved != 0) return error.InvalidQuery;
     return descriptor;
 }
 
@@ -172,4 +172,25 @@ test "generic interface validation and safe slot access" {
     });
     try @import("std").testing.expectEqual(@as(?usize, 0x1234), slotAddress(header, 32));
     try @import("std").testing.expect(slotAddress(header, 40) == null);
+
+    // The technical descriptor is fixed-layout. In particular the retired
+    // 32-byte Query record must not be admitted as an extended Query2.
+    const next = @import("platform2.zig");
+    const testing = @import("std").testing;
+    const system: next.abi.R4XStartR4Sys2 = .{};
+    var descriptor: next.abi.R4LQuery2 = .{};
+    const imports = [_]abi.R4XStartImport{
+        .{ .group_id = 1, .min_version = 2, .resolved_version = 2, .table = @intFromPtr(&system) },
+        .{ .min_version = 2, .resolved_version = 2, .module_name = @intFromPtr("LIBRARY"), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&descriptor) },
+    };
+    const raw: next.abi.R4XStartContext2 = .{ .imports = @intFromPtr(&imports), .import_count = imports.len };
+    const context = try next.Context.init(&raw);
+    for ([_]u32{ 0, 16, 23, 25, 32, 40 }) |size| {
+        descriptor.size = size;
+        try testing.expectError(error.InvalidQuery, query2(&context, "LIBRARY"));
+    }
+    descriptor.size = 24;
+    try testing.expectEqual(&descriptor, try query2(&context, "LIBRARY"));
+    descriptor.reserved = 1;
+    try testing.expectError(error.InvalidQuery, query2(&context, "LIBRARY"));
 }

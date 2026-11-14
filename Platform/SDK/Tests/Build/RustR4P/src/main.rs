@@ -36,7 +36,7 @@ static STATE: Shared = Shared(UnsafeCell::new(State {
 unsafe fn context() -> &'static Protocol<'static> {
     unsafe { &*ptr::addr_of!((*STATE.0.get()).context).cast::<Protocol<'static>>() }
 }
-unsafe extern "C" fn init(api: *const abi::ProtocolApi) -> i32 {
+unsafe extern "C" fn init(api: *const abi::ProtocolApi2) -> i32 {
     let protocol = match unsafe { Protocol::from_raw(api) } {
         Ok(x) => x,
         Err(n) => return n,

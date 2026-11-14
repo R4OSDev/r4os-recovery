@@ -1,6 +1,6 @@
 #![no_std]
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     network::{Ipv4Address, Network, SocketAddress, SocketState},
     path::FilePath,
     resources::Timeout,
@@ -9,11 +9,11 @@ use r4os_sdk::{
     time,
 };
 unsafe extern "C" {
-    fn sdk55_c_network(context: *const abi::R4XStartContext) -> i32;
+    fn sdk55_c_network(context: *const abi::generation2::R4XStartContext2) -> i32;
 }
-fn exercise(app: &App<'_>, services: &Services<'_>) -> i32 {
+fn exercise(app: &App2<'_>, services: &Services<'_>) -> i32 {
     let mut response = [0; 64];
-    let clock = time::Clock::new(app);
+    let clock = time::Clock::new2(app);
     let Ok(state) = clock.state() else {
         return 10;
     };
@@ -97,7 +97,7 @@ fn exercise(app: &App<'_>, services: &Services<'_>) -> i32 {
     if status.kind != 0 || removed.kind != 0 || removed.raw_code != abi::tray_result_ok {
         return 34;
     }
-    let Ok(network) = Network::new(app) else {
+    let Ok(network) = Network::new2(app) else {
         return 20;
     };
     let timeout = Timeout::AfterNanos(2_000_000_000);
@@ -177,7 +177,7 @@ fn exercise(app: &App<'_>, services: &Services<'_>) -> i32 {
     if udp.close(timeout).state != SocketState::Closed {
         return 27;
     }
-    let Ok(serial) = Serial::new(app) else {
+    let Ok(serial) = Serial::new2(app) else {
         return 28;
     };
     for i in 0..serial.count() {
@@ -197,11 +197,11 @@ fn exercise(app: &App<'_>, services: &Services<'_>) -> i32 {
     );
     0
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let Ok(path) = FilePath::parse(app.args()) else {
         return 1;
     };
-    let Ok(services) = Services::new(app) else {
+    let Ok(services) = Services::new2(app) else {
         return 2;
     };
     let install = services.install(
@@ -231,4 +231,4 @@ fn main(app: &mut App<'_>) -> i32 {
     app.write("[SDK55] exact service stop/remove PASS\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

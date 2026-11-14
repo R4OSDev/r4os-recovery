@@ -15,7 +15,7 @@ or benchmark runs automatically.
 
 ## Runtime interfaces
 
-`module.R4MF` is authoritative. Module 0.1.18 exports four independent tables:
+`module.R4MF` is authoritative. The provider exports four independent tables:
 
 | Import | Behavior |
 | --- | --- |

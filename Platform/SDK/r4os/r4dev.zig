@@ -5,16 +5,16 @@ const protocol = @import("protocol.zig");
 const std = @import("std");
 
 pub const name = "R4DEV";
-pub const import_query = "R4DEV:Query:1";
+pub const import_query = "R4DEV:Query2:2";
 pub const group = abi.R4LGroup.r4dev;
-pub const abi_version = abi.r4l_abi_version;
+pub const abi_version = @import("r4os_contract2").query_version;
 pub const contract = "Repositories/Contract/API/Groups.txt";
 pub const provider_repository = "Repositories/Kernel";
 pub const c_header = "Repositories/SDK/Shared/C/include/r4os/r4dev.h";
 pub const query_contract = "Repositories/Contract/ABI/R4LQuery.txt";
-pub const DriverApi = abi.DriverApi;
+pub const DriverApi = DriverApi2;
 pub const DriverApi2 = @import("technical2.zig").abi.DriverApi2;
-pub const ProtocolApi = abi.ProtocolApi;
+pub const ProtocolApi = ProtocolApi2;
 pub const ProtocolApi2 = @import("technical2.zig").abi.ProtocolApi2;
 pub const DriverContext = driver.Context;
 pub const DriverContext2 = @import("driver2.zig").Context;
@@ -26,9 +26,6 @@ pub const DriverHeapContext = @import("driver_heap.zig").Context;
 pub const DriverThreadContext = @import("driver_threads.zig").Context;
 pub const DriverSemaphoreContext = @import("driver_semaphores.zig").Context;
 pub const SharedDmaBuffer = driver.SharedDmaBuffer;
-pub const AudioOutputBackend = driver.AudioOutputBackend;
-pub const AudioOutputIdleBackend = driver.AudioOutputIdleBackend;
-pub const AudioOutputPlaybackBackend = driver.AudioOutputPlaybackBackend;
 pub const ProtocolContext = protocol.Context;
 pub const ProtocolContext2 = @import("protocol2.zig").Context;
 pub const r4d_shutdown_entry_offset = driver.r4d_shutdown_entry_offset;
@@ -51,6 +48,7 @@ pub fn protocolEntriesAsm(
 
 pub const Context = struct {
     pub fn serial(self: *const Context) ?@import("serial.zig").Context {
+        if (self.base.generation2) |view| return @import("serial.zig").Context.init(view.devices() orelse return null);
         const bundle = self.base.bundle orelse return null;
         return @import("serial.zig").Context.init(bundle.dev orelse return null);
     }
@@ -413,9 +411,9 @@ pub fn formatKernelVersion(value: abi.KernelVersion, buffer: []u8) ?[]const u8 {
 
 test "r4dev exposes project and ABI metadata" {
     try std.testing.expectEqualStrings("R4DEV", name);
-    try std.testing.expectEqualStrings("R4DEV:Query:1", import_query);
+    try std.testing.expectEqualStrings("R4DEV:Query2:2", import_query);
     try std.testing.expectEqual(@as(u32, 6), @intFromEnum(group));
-    try std.testing.expectEqual(abi.r4l_abi_version, abi_version);
+    try std.testing.expectEqual(@as(u32, 2), abi_version);
     try std.testing.expectEqualStrings("Repositories/Kernel", provider_repository);
     try std.testing.expectEqualStrings("Repositories/SDK/Shared/C/include/r4os/r4dev.h", c_header);
 }

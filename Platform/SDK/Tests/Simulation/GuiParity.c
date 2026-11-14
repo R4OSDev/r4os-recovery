@@ -91,7 +91,7 @@ int sdk_budget_c_case(void) {
     assert(R4SdkDriverPollStep(&spin,0,0)==R4_POLL_STOP);
     return 0;
 }
-extern void sdk_gui_oracle_tables(R4XStartR4Sys *,R4XStartR4Desk *,R4XStartR4Draw *);
+extern void sdk_gui_oracle_tables(R4XStartR4Sys2 *,R4XStartR4Desk2 *,R4XStartR4Draw2 *);
 extern int32_t sdk_gui_oracle_pixels(uint32_t *,uintptr_t);
 extern void sdk_gui_oracle_fail_append(uint32_t);
 extern uint32_t sdk_gui_oracle_cancelled(void);
@@ -121,7 +121,7 @@ static int32_t shared_release(const R4GuiSharedRasterLease *lease){
     if(++shared_releases==1)return -3;
     shared_live=0;return 0;
 }
-void sdk_gui_native_tables(R4XStartR4Sys *sys,R4XStartR4Desk *desk,R4XStartR4Draw *draw){
+void sdk_gui_native_tables(R4XStartR4Sys2 *sys,R4XStartR4Desk2 *desk,R4XStartR4Draw2 *draw){
     sdk_gui_oracle_tables(sys,desk,draw);shared_live=shared_releases=0;
     replacement_begin=draw->gui_frame_begin;replacement_calls=0;
     draw->gui_frame_begin_replace=(uintptr_t)replacement_probe;
@@ -151,7 +151,7 @@ static int32_t host_call(uint32_t handle,uint16_t op,const uint8_t *data,uint32_
     if(host_mode==3)out->desktop_epoch--;
     header->status=0;return sizeof(*out);
 }
-void sdk_gui_host_tables(R4XStartR4Sys *sys,R4XStartR4Desk *desk,R4XStartR4Draw *draw){
+void sdk_gui_host_tables(R4XStartR4Sys2 *sys,R4XStartR4Desk2 *desk,R4XStartR4Draw2 *draw){
     sdk_gui_oracle_tables(sys,desk,draw);
     sys->program_open_handle=(uintptr_t)host_handle;sys->service_open=(uintptr_t)host_open;sys->service_close=(uintptr_t)host_close;sys->service_call=(uintptr_t)host_call;
     desk->program_window_id=(uintptr_t)host_window_id;
@@ -161,17 +161,17 @@ void sdk_gui_host_mode(uint32_t mode){host_mode=mode;}
 uint32_t sdk_gui_host_count(uint32_t kind){return kind==0?host_opens:kind==1?host_closes:kind==2?host_calls:host_window_queries;}
 static void checked(R4SdkGuiSlot value){assert(value.status==0 && !(value.flags&R4SDK_GUI_NATIVE_ERROR));}
 static void status(R4SdkGuiSlot value){checked(value);assert((int32_t)value.bits>=0);}
-static R4XStartContext start_for(R4XStartR4Sys *sys,R4XStartR4Desk *desk,R4XStartR4Draw *draw,R4XStartImport imports[3]){
-    imports[0]=(R4XStartImport){.group_id=R4L_GROUP_R4SYS,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)sys};
-    imports[1]=(R4XStartImport){.group_id=R4L_GROUP_R4DESK,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)desk};
-    imports[2]=(R4XStartImport){.group_id=R4L_GROUP_R4DRAW,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)draw};
-    return (R4XStartContext){.magic=R4XSTART_MAGIC,.abi_major=R4XSTART_ABI_MAJOR,.size=sizeof(R4XStartContext),.app_class=R4XSTART_APP_CLASS_GUI,.instance_id=42,.flags=R4XSTART_FLAG_IMPORTS_VALID,.imports=(uintptr_t)imports,.import_count=3};
+static R4XStartContext2 start_for(R4XStartR4Sys2 *sys,R4XStartR4Desk2 *desk,R4XStartR4Draw2 *draw,R4XStartImport imports[3]){
+    imports[0]=(R4XStartImport){.min_version=2,.resolved_version=2,.group_id=R4L_GROUP_R4SYS,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)sys};
+    imports[1]=(R4XStartImport){.min_version=2,.resolved_version=2,.group_id=R4L_GROUP_R4DESK,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)desk};
+    imports[2]=(R4XStartImport){.min_version=2,.resolved_version=2,.group_id=R4L_GROUP_R4DRAW,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)draw};
+    return (R4XStartContext2){.magic=R4OS2_START_MAGIC,.abi_major=2u,.size=sizeof(R4XStartContext2),.app_class=R4XSTART_APP_CLASS_GUI,.instance_id=42,.flags=R4XSTART_FLAG_IMPORTS_VALID,.imports=(uintptr_t)imports,.import_count=3};
 }
 uint64_t sdk_gui_modern_c_case(void){
-    R4XStartR4Sys sys;R4XStartR4Desk desk;R4XStartR4Draw draw;R4XStartImport imports[3];
-    sdk_gui_native_tables(&sys,&desk,&draw);R4XStartContext start=start_for(&sys,&desk,&draw,imports);
+    R4XStartR4Sys2 sys;R4XStartR4Desk2 desk;R4XStartR4Draw2 draw;R4XStartImport imports[3];
+    sdk_gui_native_tables(&sys,&desk,&draw);R4XStartContext2 start=start_for(&sys,&desk,&draw,imports);
     R4SdkGuiSession s;R4SdkGuiTimer timer;
-    assert(R4SdkGuiSessionOpen(&s,&start,0,&timer,1)==0);
+    assert(R4SdkGuiSessionOpen2(&s,&start,0,&timer,1)==0);
     R4SdkGuiStyle style;checked(R4SdkGuiStyle_light(0,&style));
     R4SdkGuiFontMetrics metrics;checked(R4SdkGuiFontMetrics_create(&metrics));
     R4SdkGuiCanvas legacy;
@@ -207,10 +207,10 @@ uint64_t sdk_gui_modern_c_case(void){
 }
 int32_t sdk_gui_c_case(void){
     assert(sdk_gui_legacy_c_case()==0);
-    R4XStartR4Sys sys;R4XStartR4Desk desk;R4XStartR4Draw draw;R4XStartImport imports[3];
-    sdk_gui_native_tables(&sys,&desk,&draw);R4XStartContext start=start_for(&sys,&desk,&draw,imports);
+    R4XStartR4Sys2 sys;R4XStartR4Desk2 desk;R4XStartR4Draw2 draw;R4XStartImport imports[3];
+    sdk_gui_native_tables(&sys,&desk,&draw);R4XStartContext2 start=start_for(&sys,&desk,&draw,imports);
     R4SdkGuiSession s;R4SdkGuiTimer timer;
-    assert(R4SdkGuiSessionOpen(&s,&start,0,&timer,1)==0);
+    assert(R4SdkGuiSessionOpen2(&s,&start,0,&timer,1)==0);
     assert(R4SdkGuiDrawContext_fontRevision(0,R4SdkGuiSessionDraw(&s)).status==R4OS_ERR_NO_FN);
     R4GuiGlyphBitmap bitmap={0};assert(R4SdkGuiDrawContext_fontGlyphBitmap(0,R4SdkGuiSessionDraw(&s),0,'A',&bitmap).status==R4OS_ERR_NO_FN && legacy_rows==0);
     R4GuiHostInputRequest input_request={.window=pointer_identity(),.operation=R4OS_GUI_HOST_INPUT_OPERATION_POST,
@@ -271,7 +271,7 @@ int32_t sdk_gui_c_case(void){
     desk.size=desk_bytes;desk.gui_window_appearance=0;
     R4SdkGuiSessionClose(&s);
     draw.font_revision=(uintptr_t)revision_probe;draw.gui_frame_begin=0;
-    assert(R4SdkGuiSessionOpen(&s,&start,0,&timer,1)==0);
+    assert(R4SdkGuiSessionOpen2(&s,&start,0,&timer,1)==0);
     R4SdkGuiSlot revision=R4SdkGuiDrawContext_fontRevision(0,R4SdkGuiSessionDraw(&s));checked(revision);assert(revision.bits==0);
     font_revision_value=37;revision=R4SdkGuiDrawContext_fontRevision(0,R4SdkGuiSessionDraw(&s));checked(revision);assert(revision.bits==37);
     assert(R4SdkGuiSessionBegin(&s,commands,8,resources,64)==R4OS_ERR_NO_FN);
@@ -315,7 +315,7 @@ int32_t sdk_gui_c_case(void){
     assert(R4SdkGuiInvoke(R4SdkGui_ABI_FINGERPRINT^1u,0,0,0,0).status<0);
     assert(R4SdkGuiConstruct(R4SdkGui_ABI_FINGERPRINT,R4SdkGuiSession_TYPE,0,0,&s).status<0);
     sdk_gui_host_tables(&sys,&desk,&draw);start=start_for(&sys,&desk,&draw,imports);
-    assert(R4SdkGuiSessionOpen(&s,&start,1,0,0)==0 && host_window_queries==0);
+    assert(R4SdkGuiSessionOpen2(&s,&start,1,0,0)==0 && host_window_queries==0);
     R4Timeout timeout={.kind=R4OS_TIMEOUT_KIND_FINITE,.nanoseconds=250000000};R4TrayDesktopExchange exchange;
     assert(R4SdkGuiSessionHostClaim(&s,&exchange,&timeout)==0 && host_calls==1 && exchange.desktop_epoch==UINT64_C(0x100000007));
     sdk_gui_host_mode(2);assert(R4SdkGuiSessionHostExchange(&s,R4OS_TRAY_SERVICE_OP_DESKTOP_SYNC,&exchange,&exchange,&timeout)==-9);

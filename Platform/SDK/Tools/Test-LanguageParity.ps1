@@ -40,7 +40,7 @@ function Expand-References($References) {
                 # canonical owner files. Keep persistent Generated/ boundaries.
                 $relative = [IO.Path]::GetRelativePath($path, $file.FullName).Replace('\', '/')
                 if (@($relative.Split('/') | Where-Object { $_ -cin @('.git', '.zig-cache', 'zig-out', 'zig-pkg', 'target') }).Count -ne 0) { continue }
-                if ($file.Extension -cin @('.zig', '.rs', '.c', '.h', '.json', '.ps1', '.toml')) {
+                if ($file.Extension -cin @('.zig', '.rs', '.c', '.h', '.json', '.ps1', '.toml', '.template', '.ini', '.sh', '.bat')) {
                     $reference.TrimEnd('/') + '/' + $relative
                 }
             }

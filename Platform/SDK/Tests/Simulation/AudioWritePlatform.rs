@@ -40,38 +40,37 @@ unsafe extern "C" fn fixed_clock(out: *mut abi::MonotonicClockInfo) -> i32 {
 #[test]
 fn total_writer_borrows_the_actual_original_platform_stream() {
     let (mut sys, mut audio, mut dev) = (
-        abi::R4XStartR4Sys::default(),
-        abi::R4XStartR4Audio::default(),
-        abi::R4XStartR4Dev::default(),
+        abi::generation2::R4XStartR4Sys2::default(),
+        abi::generation2::R4XStartR4Audio2::default(),
+        abi::generation2::R4XStartR4Dev2::default(),
     );
     unsafe { sdk_platform_oracle_tables(&mut sys, &mut audio, &mut dev) };
     unsafe {
-        ORIGINAL_CALL = Some(core::mem::transmute::<usize, abi::R4SysFns::service_call>(
+        ORIGINAL_CALL = Some(core::mem::transmute::<u64, abi::R4SysFns::service_call>(
             sys.service_call,
         ))
     };
-    sys.service_call = complete_envelope as *const () as usize;
-    sys.monotonic_clock = fixed_clock as *const () as usize;
+    sys.service_call = complete_envelope as *const () as u64;
+    sys.monotonic_clock = fixed_clock as *const () as u64;
     let import = abi::R4XStartImport {
         group_id: 1,
         module_name: c"R4SYS".as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         flags: abi::r4xstart_import_flag_group_interface,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         table: &sys as *const _ as u64,
     };
     let spec = ImportSpec {
-        module_name: b"R4SYS",
-        symbol_name: b"Query",
+        module_name: c"R4SYS".as_ptr().cast(),
+        symbol_name: c"Query2".as_ptr().cast(),
         group_id: abi::R4LGroup::r4sys.0,
-        minimum: 1,
-        optional: false,
-        magic: sys.magic,
-        version: sys.abi_version,
-        size: sys.size,
+        minimum: 2,
+        optional: 0,
+
+        reserved: 0,
     };
-    let context = abi::R4XStartContext {
+    let context = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
         flags: abi::r4xstart_flag_imports_valid,
@@ -80,7 +79,8 @@ fn total_writer_borrows_the_actual_original_platform_stream() {
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
         required_groups: 2,
         imports: core::slice::from_ref(&spec),
     };

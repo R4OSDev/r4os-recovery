@@ -1,7 +1,7 @@
 ﻿R4OS normal Rust R4X development
 ================================
 
-SDK package0.64.70 supplies r4os-rust-r4x-v2. The Rust helper crate is
+The current SDK selects r4os-rust-generation2 for normal R4X. The Rust helper crate is
 r4os-sdk0.1.0; r4os-contract0.1.0 remains a separate generated ABI crate.
 Neither crate version is the SDK/Contract package or installed module version.
 The platform contract and project rules live in Contract/Module/RustModuleV2.txt.
@@ -66,20 +66,20 @@ CPU/PIC/stack-probe options and actual compiler source/header dependencies are
 recorded. C objects link into the same R4M0 artifact; no Cargo build.rs or new
 runtime module. Native C compiler flags precede required SDK codegen options.
 
-Use #![no_std], a function fn main(app: &mut r4os_sdk::App<'_>) -> i32 and
-r4os_sdk::app!(main). The macro's R4XStart derives class/import order/name from
+Use #![no_std], a function fn main(app: &mut r4os_sdk::App2<'_>) -> i32 and
+r4os_sdk::app2!(main). The macro's R4XStart2 derives class/import order/name from
 generated startup-info.rs input from the common ModuleCatalog manifest parser.
 There is no Rust-specific import grammar or hard-coded import capacity.
 It validates the exact ordered declarations, including absent optional named
 providers, required groups, pointer alignment and the current Contract table
 defaults (version and complete size). An unresolved optional import remains a
-record with table/resolved_version/flags zero. Query revision1 is distinct from
-the actual platform table version. No app-window operation runs at admission.
+record with table/resolved_version/flags zero. Query2 revision2 identifies the technical platform; each group keeps its
+independent table version, size and capabilities. Domain R4L revisions remain separate. No app-window operation runs at admission.
 All six checked immutable API views, start_context and named import lookup are
-instance-bound; App is neither Send nor Sync. A raw constructor caller must
+instance-bound; App2 is neither Send nor Sync. A raw constructor caller must
 pin the full context/imports/tables until that entry ends. Thread callbacks
 keep the kernel's existing exact instance ownership; they must not reuse a
-finished root App. Local R4L resolvers still validate their own table headers.
+finished root App2. Local R4L resolvers still validate their own table headers.
 Callback signatures come from the generated Contract. No copied layouts or new R4L runtime. Direct float/vector C ABI remains
 outside this profile. Rust module/include inputs come from rustc
 dep-info; the receipt distinguishes those from declared manifest/Cargo/resources.
@@ -129,7 +129,7 @@ their existing lifecycle. No loader, platform ABI or normal kernel change.
 
 Helpers
 -------
-App provides console write, arguments, bounded sleep and close state. GUI uses
+App2 provides console write, arguments, bounded sleep and close state. GUI uses
 the regular host-created R4DESK window and R4DRAW clear/text/present operations;
 no private framebuffer. Poll/wait checks optional table slots; idle waits leave
 the scheduler ready list. SDK0.64.75 adds the shared gui module below.
@@ -150,7 +150,7 @@ matrix or extra normal STANDARD follows from host/fixture-only work.
 Shared GUI owners (since SDK0.64.75)
 ------------------------------
 gui::Session uses pinned SessionStorage and caller-owned TimerStorage; no
-allocator is required. Session::open(Role::Window) uses the regular host-bound
+allocator is required. Session::open2(Role::Window) uses the regular host-bound
 app window. Role::DesktopHost admits an independent host without querying an
 app window. claim_host performs one exact WINSVC exchange, without startup
 retries or output reset. Raw window-info success alone does not prove a hosted
@@ -164,7 +164,7 @@ Inside a function returning storage::Result<()>:
 
   let mut storage = core::pin::pin!(gui::SessionStorage::new());
   let mut timers = [core::mem::MaybeUninit::uninit(); 1];
-  let mut ui = gui::Session::open(storage.as_mut(), app, gui::Role::Window, &mut timers)?;
+  let mut ui = gui::Session::open2(storage.as_mut(), app, gui::Role::Window, &mut timers)?;
   let mut commands = [abi::GuiFrameCommand::default(); 32];
   let mut resources = [0u8; 2048];
   let mut paint = ui.begin(&mut commands, &mut resources)?;
@@ -212,7 +212,7 @@ an owned Buffer with initialized bytes and fallible resize; new bytes on growth
 are zeroed before safe slice access. Its drop returns ownership to
 the common allocator. Zero-length buffers require no VM region. Invalid
 alignment/overflow fail before VM work, and failed growth preserves the old
-buffer. Heap and Buffer do not grant Send/Sync to App; normal global allocations
+buffer. Heap and Buffer do not grant Send/Sync to App2; normal global allocations
 can be used by threads of the same exact kernel instance/generation.
 
 The same r4os/vm_allocator.zig pool is compiled by the SDK publisher into
@@ -254,13 +254,13 @@ the provider module version and interface revision remain distinct facts.
 Select the path dependency and explicitly admit its Libraries root in the
 module builder. No provider rewrite or global Zig installation is required.
 
-For example, r4os_r4std::TextV1Client::init(app) validates the declared import,
-ID/major/revision/size/flags and every required slot. The client borrows App
+For example, r4os_r4std::TextV1Client::init2(app) validates the declared import,
+ID/major/revision/size/flags and every required slot. The client borrows App2
 and cannot cross that loan or move to another thread. Its unsafe operation
 methods preserve raw status values and the library's ownership/lifetime/
 blocking/threading/reentrancy rules, documented from the same local contract.
 ::optional(app) explicitly permits absence; incompatible loaded tables fail.
-The SDK r4l::query helper reads standalone Query metadata, separate from a
+The SDK r4l::query2 helper reads standalone Query metadata, separate from a
 named table or platform API. Rust raw records/tables assert all local sizes,
 alignments and field/slot offsets during compilation. Higher library helper
 facades remain their own parity waves; these are complete contract consumers.
@@ -276,7 +276,7 @@ and generator instructions. Other library groups retain their own waves.
 
 Storage/paths/registry/console (SDK0.64.72)
 -----------------------------------------
-storage::System borrows the current App. Files, stream readers/writers,
+storage::System borrows the current App2. Files, stream readers/writers,
 directory iteration/pages and registry values/snapshots/batches retain their
 provider, path and caller-buffer loans. physical_storage exposes the existing
 generation-bound inventories, claims and use leases, with explicit completion.
@@ -316,7 +316,7 @@ without an allocator, while retaining failed process exit and terminal trap.
 
 Instance resources (SDK0.64.73)
 ------------------------------
-resources::Resources borrows App and stays local (no Send/Sync). Its process,
+resources::Resources borrows App2 and stays local (no Send/Sync). Its process,
 thread, VM, notification and I/O modules reuse the existing C owner. Owned and
 borrowed process handles retain exact generations; wait-ready/output/reap are
 distinct. Native raw-ID APIs stay independent and are never a handle fallback.
@@ -354,9 +354,9 @@ these support decisions. Further Rust roles are deliberately separate work:
 
 R4L provider (qualified since SDK0.64.85): a real Rust staticlib root uses
 its project-local generated contract/table types, baseline and ordinary
-Query/API exports. Build-RustModule.ps1 selects r4os-rust-r4l-v1 and requires
+Query2/domain-API exports. Build-RustModule.ps1 selects r4os-rust-r4l-generation2 and requires
 the matching host r4l-contract-gen in the toolset. r4l::provider_header and
-r4l_provider! supply the common descriptor/entry, without R4XStart or an
+r4l_provider2! supply the common descriptor/entry, without R4XStart2 or an
 unused IMPLEMENTATION_ZIG. Exclude a nested generated Bindings/Rust workspace
 from the root Cargo workspace. The SDK R4X-global alloc feature is rejected;
 explicit caller allocators, session resources and callbacks remain resident
@@ -364,14 +364,15 @@ until actual close/quiescence. No Rust mutable reference spans callbacks.
 Three actual consumers of two genuine provider languages pass in KVM4.
 
 R4D (qualified since SDK0.64.86): genuine Rust/C roots use the ordinary
-DriverInit/DriverShutdown entries and original R4DEV admission. Driver resources
+DriverInit2/DriverShutdown entries and original R4DEV admission. Driver resources
 close explicitly; local KVM4 validates DMA/IRQ/work/task/heap and independent
 RAM backends through init, hot removal, public IO and actual warm-reset shutdown.
 Physical device readiness and Windows execution remain separate qualification.
 
-R4P (SDK0.64.87): ordinary Rust/C roots use four exact five-byte entry
-jumps and the original R4DEV/ProtocolApi1/120 contract. Role/category/dependencies
-and the ProtocolRole alias come from module.R4MF. protocol_entry! checks Init,
+R4P: ordinary Rust/C roots use ProtocolInit2 and the common lifecycle
+entries with canonical abi::generation2::ProtocolApi2. The selected
+r4os-rust-r4p-generation2 profile admits its exact table/header and optional slots. Role/category/dependencies
+and the ProtocolRole alias come from module.R4MF. protocol_entry2! checks Init,
 Shutdown, Query and Dispatch signatures; protocol::Protocol borrows the exact
 current PPI context. The loader serializes real callbacks and keeps code
 resident; it does not automatically invoke the bound Shutdown entry. Providers
@@ -399,9 +400,9 @@ shared Decision, not in an IDE-maintained matrix. Lowlevel support and physical 
 
 Graphics owners (SDK0.64.76)
 ---------------------------
-Use graphics::Graphics::open(Pin<&mut GraphicsStorage>, &app) without a GUI
+Use graphics::Graphics::open2(Pin<&mut GraphicsStorage>, &app) without a GUI
 Session or host claim. The context is local and not Send/Sync. Keep its pinned
-storage and App alive through every borrowed buffer/output/queue context.
+storage and App2 alive through every borrowed buffer/output/queue context.
 Buffers exposes descriptors, imports, mapping receipts, budgets and explicit
 release/unmap. Queues preserves complete fence status, including Pending,
 Retained, device-active and resources-held; positive transport is no terminal
@@ -428,9 +429,9 @@ Rust floating-point/SIMD ABI. General R4GFX helpers remain their library wave.
 
 Platform Audio/Device/Power owners (SDK0.64.77)
 ---------------------------------------------
-platform::Platform::open(Pin<&mut PlatformStorage>, &app) admits the current
+platform::Platform::open2(Pin<&mut PlatformStorage>, &app) admits the current
 R4SYS and supplied optional R4AUDIO/R4DEV tables. It requires no GUI/graphics
-imports. Keep the exact pinned storage and App alive through its borrowed
+imports. Keep the exact pinned storage and App2 alive through its borrowed
 Audio, Stream, Devices and Power views. Native private data stays MaybeUninit.
 The historical C transport name gui_bridge.h also hosts these SDK-local calls;
 R4SdkGfxDeviceContext is the general R4DEV context, without a graphics role.
@@ -466,9 +467,9 @@ performance qualification. General R4X/module roles remain later parity waves.
 Driver providers (SDK0.64.86)
 ---------------------------
 R4D Rust roots use the ordinary Build-RustModule launcher with module.R4MF,
-Cargo.toml/lock and the matched host tools. No R4XStart/startup-info or Zig
-root is required. driver_entry!(init,shutdown) checks the original C ABI;
-init receives *const abi::DriverApi, shutdown takes no arguments. The
+Cargo.toml/lock and the matched host tools. No R4XStart2/startup-info or Zig
+root is required. driver_entry2!(init,shutdown) checks the original C ABI;
+init receives *const abi::generation2::DriverApi2, shutdown takes no arguments. The
 unsafe Driver::from_raw borrow requires the current original resident table
 and actual module admission. Driver/DMA/IRQ/Work/Task/Heap tokens are local,
 explicitly closed and retain exact handles on refusal; Drop never proves
@@ -478,12 +479,12 @@ Use the driver heap explicitly; the R4X-global alloc feature is refused.
 
 Explicit lowlevel R4X (SDK0.64.88)
 ---------------------------------
-ENTRY_MODE=lowlevel uses profile r4os-rust-r4x-lowlevel-v1 for console/gui/service.
-Use unsafe extern "C" fn raw(*const abi::R4XStartContext)->i32 and
-lowlevel_entry!(raw). The exact loader context reaches your handler; no normal
-App-main adapter runs. The common manifest-owned StartupInfo is checked at
-admission and may be borrowed again with unsafe lowlevel_context!(raw).
-lowlevel::initialize_runtime(&view) explicitly binds SDK entropy and optional
+ENTRY_MODE=lowlevel uses profile r4os-rust-generation2 for console/gui/service.
+Use unsafe extern "C" fn raw(*const abi::generation2::R4XStartContext2)->i32 and
+lowlevel_entry2!(raw). The exact loader context reaches your handler; no normal
+App2-main adapter runs. The common manifest-owned StartupInfo is checked at
+admission and may be borrowed again with unsafe lowlevel_context2!(raw).
+lowlevel::initialize_runtime2(&view) explicitly binds SDK entropy and optional
 SDK global allocation when those helpers are wanted. Raw entry itself does
 not initialize them, create a window or register a service endpoint. Per-class
 launch rules and caller/resource/task lifetimes remain with their real owners.

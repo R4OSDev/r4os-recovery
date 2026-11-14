@@ -101,17 +101,17 @@ fn fakeStorageBegin(_: *const r4os.abi.StorageTarget, out: *u64) callconv(.c) i3
 
 test "physical storage checks append-only availability and consuming close outcomes" {
     var table = makeSys(true);
-    table.size = r4os.abi.r4xstart_r4sys_size;
+    table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Sys2, "storage_claim_begin");
     var imports: [1]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     const app = try makeApp(&table, &imports, &context);
     const sys = app.system();
     const storage = r4os.storage.Context{ .sys = &sys };
     var use: u64 = 123;
     try std.testing.expect(!storage.available());
-    try std.testing.expectEqual(@as(i32, 0), storage.transferUseBegin("E:\\FILE", &use));
+    try std.testing.expectEqual(r4os.abi.storage_error_unsupported, storage.transferUseBegin("E:\\FILE", &use));
     try std.testing.expectEqual(@as(u64, 0), use);
-    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
+    table.size = @sizeOf(r4os.platform2.abi.R4XStartR4Sys2);
     table.storage_claim_begin = @intFromPtr(&fakeStorageBegin);
     try std.testing.expectEqual(r4os.abi.storage_error_unsupported, storage.transferUseBegin("E:\\FILE", &use));
     const target = r4os.storage.Context.wholeDevice(.{});
@@ -296,8 +296,41 @@ fn fakeDirectoryBatch(_: ?[*:0]const u8, cursor: *r4os.abi.DirectoryBatchCursor,
     return @intCast(count);
 }
 
-fn makeSys(full: bool) r4os.abi.R4XStartR4Sys {
-    var table: r4os.abi.R4XStartR4Sys = .{};
+fn metadataFromFixture(info: r4os.abi.FileInfo) r4os.abi.FileMetadata2 {
+    return .{
+        .flags = (if (info.exists != 0) r4os.abi.file_metadata2_flag_exists else @as(u32, 0)) |
+            (if (info.is_dir != 0) r4os.abi.file_metadata2_flag_directory else @as(u32, 0)) |
+            r4os.abi.file_metadata2_flag_byte_size_valid,
+        .byte_size = info.size,
+        .drive_letter = 'C',
+    };
+}
+
+fn fakeMetadata(path: [*:0]const u8, out: *r4os.abi.FileMetadata2) callconv(.c) i32 {
+    var info: r4os.abi.FileInfo = .{};
+    const result = fakeFileInfo(path, &info);
+    out.* = metadataFromFixture(info);
+    return result;
+}
+
+fn metadataBatchFixture(comptime source: anytype, path: ?[*:0]const u8, cursor: *r4os.abi.DirectoryMetadataCursor2, out: ?[*]r4os.abi.DirectoryMetadataEntry2, capacity: u32) i32 {
+    var entries: [4]r4os.abi.DirectoryBatchEntry = @splat(.{});
+    std.debug.assert(capacity <= entries.len);
+    const result = source(path, &cursor.scan, if (capacity == 0) null else &entries, capacity);
+    if (result > 0) {
+        for (entries[0..@intCast(result)], 0..) |entry, index| {
+            out.?[index] = .{ .path = entry.path, .info = metadataFromFixture(entry.info) };
+        }
+    }
+    return result;
+}
+
+fn fakeDirectoryMetadataBatch(path: ?[*:0]const u8, cursor: *r4os.abi.DirectoryMetadataCursor2, out: ?[*]r4os.abi.DirectoryMetadataEntry2, capacity: u32) callconv(.c) i32 {
+    return metadataBatchFixture(fakeDirectoryBatch, path, cursor, out, capacity);
+}
+
+fn makeSys(full: bool) r4os.platform2.abi.R4XStartR4Sys2 {
+    var table: r4os.platform2.abi.R4XStartR4Sys2 = .{};
     table.write = @intFromPtr(&fakeWrite);
     table.putc = @intFromPtr(&fakePutc);
     if (!full) return table;
@@ -312,6 +345,8 @@ fn makeSys(full: bool) r4os.abi.R4XStartR4Sys {
     table.dir_delete = @intFromPtr(&fakeDelete);
     table.dir_entry = @intFromPtr(&fakeDirEntry);
     table.directory_batch = @intFromPtr(&fakeDirectoryBatch);
+    table.file_metadata2 = @intFromPtr(&fakeMetadata);
+    table.directory_metadata_batch2 = @intFromPtr(&fakeDirectoryMetadataBatch);
     table.file_stream_begin = @intFromPtr(&fakeStreamBegin);
     table.file_stream_write = @intFromPtr(&fakeStreamWrite);
     table.file_stream_finish = @intFromPtr(&fakeStreamFinish);
@@ -321,12 +356,18 @@ fn makeSys(full: bool) r4os.abi.R4XStartR4Sys {
     return table;
 }
 
-fn makeApp(table: *r4os.abi.R4XStartR4Sys, imports: *[1]r4os.abi.R4XStartImport, context: *r4os.abi.R4XStartContext) !r4os.App {
+fn fixtureShouldClose(_: *const r4os.platform2.abi.R4XStartContext2) callconv(.c) u32 {
+    return 0;
+}
+
+fn makeApp(table: *r4os.platform2.abi.R4XStartR4Sys2, imports: *[1]r4os.abi.R4XStartImport, context: *r4os.platform2.abi.R4XStartContext2) !r4os.App {
     imports.* = .{
-        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4sys), .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(table) },
+        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4sys), .resolved_version = 2, .min_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(table) },
     };
     context.* = .{
-        .flags = r4os.abi.r4xstart_flag_imports_valid,
+        .app_class = 1,
+        .flags = r4os.abi.r4xstart_flag_imports_valid | r4os.abi.r4xstart_flag_close_supported,
+        .should_close = @intFromPtr(&fixtureShouldClose),
         .imports = @intFromPtr(imports),
         .import_count = imports.len,
     };
@@ -339,11 +380,11 @@ fn makeApp(table: *r4os.abi.R4XStartR4Sys, imports: *[1]r4os.abi.R4XStartImport,
 test "files directory streams and registry use caller owned state" {
     var table = makeSys(true);
     var imports: [1]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&table, &imports, &context);
     var files = app.files() orelse return error.FilesMissing;
     var file_path = try r4os.FilePath.parse("C:/TEMP/FILE.TXT");
-    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
+    table.size = @sizeOf(r4os.platform2.abi.R4XStartR4Sys2);
     table.file_name_limits = @intFromPtr(&fakeNameLimits);
     name_limits_result = 0;
     const limits = files.nameLimits(file_path.asZ()).value;
@@ -436,7 +477,7 @@ test "files directory streams and registry use caller owned state" {
 test "missing capability and long paths fail before hidden fallback" {
     var table = makeSys(false);
     var imports: [1]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&table, &imports, &context);
     try std.testing.expect(app.files() == null);
     try std.testing.expect(app.registry() == null);
@@ -465,15 +506,19 @@ fn fakeBoundBatch(_: ?[*:0]const u8, cursor: *r4os.abi.DirectoryBatchCursor, out
     return 2;
 }
 
+fn fakeBoundMetadataBatch(path: ?[*:0]const u8, cursor: *r4os.abi.DirectoryMetadataCursor2, out: ?[*]r4os.abi.DirectoryMetadataEntry2, capacity: u32) callconv(.c) i32 {
+    return metadataBatchFixture(fakeBoundBatch, path, cursor, out, capacity);
+}
+
 fn snapshotLess(_: void, a: u32, b: u32) bool {
     return a < b;
 }
 test "directory continuation carries metadata preserves restart and bounds complete snapshots" {
     var table = makeSys(true);
-    table.size = @sizeOf(r4os.abi.R4XStartR4Sys);
-    table.directory_batch = @intFromPtr(&fakeBoundBatch);
+    table.size = @sizeOf(r4os.platform2.abi.R4XStartR4Sys2);
+    table.directory_metadata_batch2 = @intFromPtr(&fakeBoundMetadataBatch);
     var imports: [1]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     const app = try makeApp(&table, &imports, &context);
     const files = r4os.Files{ .sys = app.system() };
     var it = files.iterate(.{ .ptr = "C:\\", .len = 3 });
@@ -490,14 +535,18 @@ test "directory continuation carries metadata preserves restart and bounds compl
     resume_stale = true;
     try std.testing.expectEqual(@as(i32, -10), it.next(&path).failure);
     resume_stale = false;
+    // A stale generation discards the entire private batch. Restart from a
+    // fresh current cursor before exposing either row again.
+    it = files.iterate(.{ .ptr = "C:\\", .len = 3 });
+    try std.testing.expectEqualStrings("C:\\ONE.TXT", it.next(&path).entry.path);
     try std.testing.expectEqualStrings("C:\\TWO.TXT", it.next(&path).entry.path);
     try std.testing.expect(it.next(&path) == .end);
     const calls = resume_calls;
     try std.testing.expect(it.next(&path) == .end);
     try std.testing.expectEqual(calls, resume_calls);
-    // Current live-index deletion traversal discards the private batch.
+    // Current metadata traversal requires a fresh cursor after mutation.
     it.revisitAfterRemoval();
-    try std.testing.expect(it.next(&path) == .entry);
+    try std.testing.expectEqual(r4os.abi.file_metadata2_error_restart, it.next(&path).failure);
     try std.testing.expectEqual(calls, resume_calls);
     const allocator = std.testing.allocator;
     var snapshot = r4os.directory_page.Snapshot(u32, 257 * 4){};

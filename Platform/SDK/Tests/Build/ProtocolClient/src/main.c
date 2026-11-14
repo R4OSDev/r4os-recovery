@@ -1,14 +1,15 @@
 #include <r4os/r4os.h>
+#include <r4os/app2.h>
 typedef struct Request{uint64_t epoch,value,ticket;} Request;
 static R4App *app;
 static const char *roles[2]={"misc.sdk68.c","misc.sdk68.rust"};
 static int32_t call(uint32_t which,uint32_t op,Request *input,Request *output){
  R4ProtocolBuffer in={.data=input,.len=input?sizeof(*input):0,.capacity=input?sizeof(*input):0};
  R4ProtocolBuffer out={.data=output,.capacity=output?sizeof(*output):0};
- R4DevProtocolDispatchFn f=(R4DevProtocolDispatchFn)(uintptr_t)app->devices.table->protocol_dispatch;
+ R4DevProtocolDispatchFn f=(R4DevProtocolDispatchFn)(uintptr_t)R4DEV_SLOT(&app->devices,protocol_dispatch);
  return f((const uint8_t *)roles[which],r4os_cstr_len(roles[which]),op,&in,&out);
 }
-int32_t r4_app_main(R4App *context){
+static int32_t run(R4App *context){
  app=context;Request info[2],work[2],answer={0};
  /* Rust first requires the actual loader to activate its C dependency. */
  if(call(1,0,0,&info[1]) || call(0,0,0,&info[0]))return -1;
@@ -44,3 +45,5 @@ int32_t r4_app_main(R4App *context){
  }
  r4sys_write_cstr(&app->system,"PASS Protocol68 true C/Rust R4P dependency/dispatch/cancel; stale epoch/ticket output unchanged; close Busy backing retained, finish then exact shutdown, other role isolated\n");return 0;
 }
+
+int32_t r4_app_main(R4App2 *actual){R4App facade;int32_t rc=r4_app2_facade(actual,&facade);return rc<0?rc:run(&facade);}

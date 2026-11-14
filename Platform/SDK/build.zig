@@ -356,20 +356,6 @@ pub fn build(b: *std.Build) void {
         .zig_module_roots = &.{ b.path("Tests/Build/R4MFMapping/Bindings/external.zig"), b.path("Tests/Build/R4MFMapping/Bindings/shared.zig") },
     });
     _ = sdk_profile.addR4MF(b.path("Tests/Build/SubsystemManifest/module.R4MF"));
-    _ = sdk_profile.addR4D(.{
-        .name = "SDKSMOKE",
-        .driver_name = "SDKSMOKE",
-        .driver_type = "misc",
-        .root_source_file = b.path("Smoke/R4D/src/main.zig"),
-    });
-    _ = sdk_profile.addR4P(.{
-        .name = "SDKSMOKE",
-        .protocol_name = "SDKSMOKE",
-        .role = "misc.sdk_smoke",
-        .category = "misc",
-        .root_source_file = b.path("Smoke/R4P/src/main.zig"),
-    });
-
     const host_r4os = sdk_profile.createR4osModule(b.graph.host, .Debug);
     const data_target = b.resolveTargetQuery(.{ .cpu_arch = .x86_64, .os_tag = b.graph.host.result.os.tag, .abi = b.graph.host.result.abi, .cpu_model = .baseline });
     const data_cases = b.createModule(.{ .root_source_file = b.path("test_owners.zig"), .target = data_target, .optimize = sdk_profiles.defaults.host_optimize });

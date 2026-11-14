@@ -8,7 +8,7 @@ const tray_smoke_timeout: r4os.app_tray.Timeout = .{
     .nanoseconds = 10 * r4os.abi.nanoseconds_per_second,
 };
 
-pub fn r4_app_main(app: *r4os.App) i32 {
+pub fn r4_app_main(app: *r4os.App2) i32 {
     if (app.profile != .console or !app.hasGroup(.r4sys) or app.desktop() != null) return 71;
     if (std.mem.eql(u8, std.mem.trim(u8, app.args(), " \t"), "/TRAYSMOKE")) return traySmoke(app);
     const files = app.files() orelse return 72;
@@ -66,7 +66,7 @@ pub fn r4_app_main(app: *r4os.App) i32 {
     return 0;
 }
 
-fn traySmoke(app: *r4os.App) i32 {
+fn traySmoke(app: *r4os.App2) i32 {
     var tray_client = switch (app.tray()) {
         .tray => |value| value,
         .failure => return 81,

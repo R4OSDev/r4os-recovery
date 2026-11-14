@@ -5,10 +5,10 @@ static int different(const void *left,const void *right,uintptr_t length){
     return 0;
 }
 static int ok(R4SdkDataSlot s){return !s.status && !(s.flags&R4SDKDATA_NATIVE_ERROR);}
-int32_t sdk_data_guest(const R4XStartContext *start,const uint8_t *archive,uintptr_t length,uint8_t *decoded,uintptr_t capacity,const uint8_t *plain){
+int32_t sdk_data_guest(const R4XStartContext2 *start,const uint8_t *archive,uintptr_t length,uint8_t *decoded,uintptr_t capacity,const uint8_t *plain){
     R4SdkDataContext context;R4SdkDataJsonDocument json;uint8_t depth[8];
     const uint8_t text[]="{\"n\":18446744073709551615,\"too\":18446744073709551616}";
-    R4SdkDataSlot s=R4SdkData_open(0,&context,start);
+    R4SdkDataSlot s=R4SdkData_open2(0,&context,start);
     if(!ok(s) || s.bits!=1)return 1;
     if(!ok(R4SdkData_json(0,&json,&context,text,sizeof(text)-1,depth,sizeof(depth))))return 2;
     s=R4SdkDataJsonDocument_readU64(0,&json,(const uint8_t *)"n",1);

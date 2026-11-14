@@ -65,12 +65,31 @@ static int32_t name_limits(const uint8_t *path,R4FileNameLimits *out){
         .name_rules=7,.atomic_rules=7};
     return 0;
 }
-void sdk_storage_table(R4XStartR4Sys *out){
-    R4XStartR4Sys current=*out;
+static R4FileMetadata2 fixture_metadata(R4FileInfo old) {
+    return (R4FileMetadata2){.version=1,.size=sizeof(R4FileMetadata2),
+        .flags=(old.exists?R4OS_FILE_METADATA2_FLAG_EXISTS:0)|
+            (old.is_dir?R4OS_FILE_METADATA2_FLAG_DIRECTORY:0)|R4OS_FILE_METADATA2_FLAG_BYTE_SIZE_VALID,
+        .byte_size=old.size,.drive_letter='C',.attributes=old.attr};
+}
+static int32_t fixture_metadata_info(const uint8_t *path,R4FileMetadata2 *out) {
+    R4FileInfo old={0};int32_t result=info(path,&old);*out=fixture_metadata(old);return result;
+}
+static int32_t fixture_metadata_batch(const uint8_t *path,R4DirectoryMetadataCursor2 *cursor,R4DirectoryMetadataEntry2 *rows,uint32_t capacity) {
+    R4DirectoryBatchEntry old[4]={0};assert(capacity<=4);
+    int32_t result=fake_directory_batch_default(path,&cursor->scan,capacity?old:0,capacity);
+    if(result>0)for(int32_t i=0;i<result;i++){
+        rows[i]=(R4DirectoryMetadataEntry2){.info=fixture_metadata(old[i].info)};
+        memcpy(rows[i].path,old[i].path,sizeof(rows[i].path));
+    }
+    return result;
+}
+void sdk_storage_table(R4XStartR4Sys2 *out){
+    R4XStartR4Sys2 current=*out;
     *out=make_table(1);out->magic=current.magic;out->abi_version=current.abi_version;out->size=current.size;
     out->write=(uintptr_t)&console_write;out->putc=(uintptr_t)&console_put;
     out->file_name_limits=(uintptr_t)&name_limits;
     out->ticks=(uintptr_t)&ticks;out->file_info=(uintptr_t)&info;out->path_names_equal_collated=(uintptr_t)&collated;
+    out->file_metadata2=(uintptr_t)&fixture_metadata_info;out->directory_metadata_batch2=(uintptr_t)&fixture_metadata_batch;
     out->file_stream_begin=(uintptr_t)&begin;out->file_stream_write=(uintptr_t)&chunk;out->file_stream_finish=(uintptr_t)&finish;out->file_stream_abort=(uintptr_t)&abort_stream;
     out->file_replace_atomic=(uintptr_t)&replace;out->file_delete=(uintptr_t)&remove_file;
     out->registry_snapshot_begin=(uintptr_t)&snapshot_begin;out->registry_snapshot_page=(uintptr_t)&snapshot_page;out->registry_batch_mutate=(uintptr_t)&batch;

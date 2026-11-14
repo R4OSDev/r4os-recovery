@@ -26,7 +26,7 @@ static inline uintptr_t r4_resource_desk_callback(const R4App *app, size_t offse
     if (!r4_resource_desk_has(app, offset1)) return 0;
     return *(const uintptr_t *)((const uint8_t *)app->desktop.table + offset1);
 }
-#define R4_RESOURCE_DESK_SLOT(app, field) r4_resource_desk_callback((app), offsetof(R4XStartR4Desk, field), offsetof(R4XStartR4Desk2, field))
+#define R4_RESOURCE_DESK_SLOT(app, field) r4_resource_desk_callback((app), offsetof(R4XStartR4Desk2, field), offsetof(R4XStartR4Desk2, field))
 #define R4_RESOURCE_DESK_HAS(app, field) (R4_RESOURCE_DESK_SLOT((app), field) != 0)
 
 
@@ -163,7 +163,7 @@ static inline void r4_resource_yield(R4App *app) {
     }
     if (app->system.generation2) { (void)R4OS2ContextYield(app->system.generation2); return; }
     if (app->context != 0 && app->context->yield != 0) {
-        ((R4XStartYieldFn)(uintptr_t)app->context->yield)(app->context);
+        ((R4XStartYieldFn2)(uintptr_t)app->context->yield)(app->context);
     }
 }
 

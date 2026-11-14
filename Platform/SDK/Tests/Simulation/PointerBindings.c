@@ -39,7 +39,7 @@ static int32_t host_input_probe(const R4GuiHostInputRequest *request,R4GuiPointe
     (void)out;++input_calls;return R4OS_GUI_HOST_INPUT_ERROR_BUSY;
 }
 static void sdk_gui_pointer_binding_case(void) {
-    R4XStartR4Desk desk={.magic=R4XSTART_R4DESK_MAGIC,.abi_version=R4XSTART_R4DESK_VERSION,.size=sizeof desk,
+    R4XStartR4Desk2 desk={.magic=R4OS2_R4DESK_MAGIC,.abi_version=R4OS2_R4DESK_VERSION,.size=sizeof desk,
         .gui_pointer_capture_info=(uintptr_t)pointer_info,.gui_pointer_capture_acquire=(uintptr_t)pointer_acquire,
         .gui_pointer_capture_release=(uintptr_t)pointer_release};
     R4App app={.desktop={.table=&desk}};R4Window window={.app=&app,.id=4,.events={.app=&app}};

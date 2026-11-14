@@ -5,9 +5,9 @@ const time_contract = @import("time_contract.zig");
 const update_paths = @import("system_update_paths.zig");
 
 pub const name = "R4SYS";
-pub const import_query = "R4SYS:Query:1";
+pub const import_query = "R4SYS:Query2:2";
 pub const group = abi.R4LGroup.r4sys;
-pub const abi_version = abi.r4l_abi_version;
+pub const abi_version = @import("r4os_contract2").query_version;
 pub const contract = "Repositories/Contract/API/Groups.txt";
 pub const provider_repository = "Repositories/Kernel";
 pub const c_header = "Repositories/SDK/Shared/C/include/r4os/r4sys.h";
@@ -623,18 +623,6 @@ fn pathChar(ch: u8) u8 {
     if (ch == '/') return '\\';
     if (ch >= 'a' and ch <= 'z') return ch - ('a' - 'A');
     return ch;
-}
-
-// Liefert das SDK-Bundle mit den aus dem R4XStart-Kontext aufgeloesten
-// R4L-Gruppentabellen. Consumer reichen es unveraendert an die jeweiligen
-// Gruppen-Context.init-Funktionen weiter.
-pub fn bundleFromR4XStart(raw: *const abi.R4XStartContext) ?*const program.Bundle {
-    return program.bundleFromR4XStart(raw);
-}
-
-pub fn contextFromR4XStart(raw: *const abi.R4XStartContext) ?Context {
-    const bundle = program.bundleFromR4XStart(raw) orelse return null;
-    return Context.init(bundle);
 }
 
 // Fehler- und Typkonstanten der R4M0-Ressourcen-Lese-API (0.61.13).
@@ -1659,9 +1647,9 @@ pub const Context = struct {
 
 test "r4sys exposes project and ABI metadata" {
     try std.testing.expectEqualStrings("R4SYS", name);
-    try std.testing.expectEqualStrings("R4SYS:Query:1", import_query);
+    try std.testing.expectEqualStrings("R4SYS:Query2:2", import_query);
     try std.testing.expectEqual(@as(u32, 1), @intFromEnum(group));
-    try std.testing.expectEqual(abi.r4l_abi_version, abi_version);
+    try std.testing.expectEqual(@as(u32, 2), abi_version);
     try std.testing.expectEqualStrings("Repositories/Kernel", provider_repository);
     try std.testing.expectEqualStrings("Repositories/SDK/Shared/C/include/r4os/r4sys.h", c_header);
 }

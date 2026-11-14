@@ -61,7 +61,7 @@ typedef struct R4EndpointReceiveResult {
     R4ServiceMessageHeader header;
 } R4EndpointReceiveResult;
 
-#define R4_SERVICES_HAS(table, field) ((table) != 0 && (table)->size >= offsetof(R4XStartR4Sys, field) + sizeof(uintptr_t) && (table)->field != 0)
+#define R4_SERVICES_HAS(table, field) ((table) != 0 && (table)->size >= offsetof(R4XStartR4Sys2, field) + sizeof(uintptr_t) && (table)->field != 0)
 
 static inline R4Services r4_app_services(R4App *app) { R4Services value = {app}; return value; }
 

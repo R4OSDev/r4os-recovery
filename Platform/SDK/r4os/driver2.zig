@@ -279,6 +279,10 @@ pub const Context = struct {
         return self.required("register_storage_backend")(name, backend);
     }
 
+    pub fn unregisterStorageBackend(self: *const Context, name: [*:0]const u8) i32 {
+        return self.required("unregister_storage_backend")(name);
+    }
+
     pub fn storageBackendRecoveryBegin(self: *const Context, name: [*:0]const u8) i32 {
         return self.required("storage_backend_recovery_begin")(name);
     }

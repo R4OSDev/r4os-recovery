@@ -81,7 +81,7 @@ pub const PngColor = abi.R4ImgPngColor;
 pub const RasterColor = abi.R4ImgRasterColor;
 pub const RasterContext = struct {
     client: abi.RasterV1Client,
-    pub fn init(raw: *const r4os.abi.R4XStartContext) ?RasterContext {
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) ?RasterContext {
         return .{ .client = abi.RasterV1Client.init(raw) catch return null };
     }
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) ?RasterContext {
@@ -194,7 +194,7 @@ fn svgOptionsToAbi(options: SvgRenderOptions) abi.R4ImgSvgOptions {
 pub const Context = struct {
     client: abi.ApiV1Client,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) ?Context {
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) ?Context {
         return .{ .client = abi.ApiV1Client.init(raw) catch return null };
     }
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) ?Context {
@@ -305,7 +305,7 @@ test "facade keeps public metadata and ABI layouts stable" {
 
 pub const PngContext = struct {
     client: abi.PngV1Client,
-    pub fn init(raw: *const r4os.abi.R4XStartContext) ?PngContext {
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) ?PngContext {
         return .{ .client = abi.PngV1Client.init(raw) catch return null };
     }
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) ?PngContext {

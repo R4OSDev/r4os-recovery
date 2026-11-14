@@ -7,10 +7,11 @@ const rgba_png = @embedFile("Decoder/Fixtures/rgba.png");
 const baseline_jpeg = @embedFile("Decoder/Fixtures/baseline.jpg");
 const basic_svg = @embedFile("Decoder/Fixtures/basic.svg");
 const module_name: [:0]const u8 = "R4IMG";
+const test_system: r4os.platform2.abi.R4XStartR4Sys2 = .{};
 const api_name: [:0]const u8 = "API_V1";
 const png_name: [:0]const u8 = "PNG_V1";
 
-fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.abi.R4XStartContext {
+fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.platform2.abi.R4XStartContext2 {
     return .{
         .flags = r4os.abi.r4xstart_flag_imports_valid,
         .imports = @intFromPtr(imports.ptr),
@@ -18,8 +19,8 @@ fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.abi.R4XStartContex
     };
 }
 
-fn makeApi() !struct { raw: r4os.abi.R4XStartContext, imports: [2]r4os.abi.R4XStartImport } {
-    var imports = [2]r4os.abi.R4XStartImport{ .{
+fn makeApi() !struct { raw: r4os.platform2.abi.R4XStartContext2, imports: [4]r4os.abi.R4XStartImport } {
+    var imports = [4]r4os.abi.R4XStartImport{ .{
         .group_id = 0,
         .min_version = 1,
         .resolved_version = 1,
@@ -27,7 +28,7 @@ fn makeApi() !struct { raw: r4os.abi.R4XStartContext, imports: [2]r4os.abi.R4XSt
         .module_name = @intFromPtr(module_name.ptr),
         .symbol_name = @intFromPtr(api_name.ptr),
         .table = @intFromPtr(&project.r4img_api_v1),
-    }, .{ .group_id = 0, .min_version = 1, .resolved_version = 1, .flags = 0, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr(png_name.ptr), .table = @intFromPtr(&project.r4img_png_v1) } };
+    }, .{ .group_id = 0, .min_version = 1, .resolved_version = 1, .flags = 0, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr(png_name.ptr), .table = @intFromPtr(&project.r4img_png_v1) }, .{ .min_version = 2, .resolved_version = 2, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&project.r4img_query2) }, .{ .group_id = 1, .min_version = 2, .resolved_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .module_name = @intFromPtr("R4SYS"), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&test_system) } };
     return .{ .raw = makeContext(&imports), .imports = imports };
 }
 

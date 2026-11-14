@@ -48,8 +48,8 @@ pub const EglV1 = extern struct {
 pub const EglV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !EglV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, egl_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !EglV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !EglV1Client {

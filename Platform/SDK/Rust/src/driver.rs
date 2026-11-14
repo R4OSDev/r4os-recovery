@@ -20,8 +20,8 @@ pub(crate) fn code(s: c::R4SdkDriverSlot) -> Result<i32> {
 }
 /// Borrow of the exact loader-owned current DriverApi. Not Send/Sync.
 pub struct Driver<'a> {
-    raw: c::R4SdkDriverContext,
-    _api: PhantomData<&'a abi::DriverApi>,
+    raw: c::R4SdkDriver2Context,
+    _api: PhantomData<&'a abi::DriverApi2>,
     _local: PhantomData<*mut ()>,
 }
 impl<'a> Driver<'a> {
@@ -30,19 +30,21 @@ impl<'a> Driver<'a> {
     /// under this exact driver's admitted init/shutdown/callback context.
     /// Its full current readable range stays valid for 'a. Copying a table
     /// or storing this view does not grant another task owner admission.
-    pub unsafe fn from_raw(api: *const abi::DriverApi) -> Result<Self> {
+    pub unsafe fn from_raw(api: *const abi::DriverApi2) -> Result<Self> {
         if api.is_null() || !(api as usize).is_multiple_of(8) {
             return Err(-1);
         }
         let (magic, version, size) = unsafe { ((*api).magic, (*api).version, (*api).size) };
-        if magic != abi::driver_magic
-            || version < abi::driver_api_version
-            || (size as usize) < core::mem::size_of::<abi::DriverApi>()
+        if magic != abi::driver_api2_magic
+            || version < abi::driver_api2_version
+            || (size as usize)
+                < core::mem::offset_of!(abi::DriverApi2, register_audio_capture_backend)
+            || unsafe { (*api).reserved } != 0
         {
             return Err(-1);
         }
         let mut out = MaybeUninit::uninit();
-        code(unsafe { c::R4SdkDriverContext_init(0, api, out.as_mut_ptr()) })?;
+        code(unsafe { c::R4SdkDriver2Context_init(0, api, out.as_mut_ptr()) })?;
         Ok(Self {
             raw: unsafe { out.assume_init() },
             _api: PhantomData,
@@ -51,17 +53,18 @@ impl<'a> Driver<'a> {
     }
     pub fn log(&self, text: &CStr) {
         unsafe {
-            c::R4SdkDriverContext_logInfo(0, &self.raw, text.as_ptr().cast());
+            c::R4SdkDriver2Context_logInfo(0, &self.raw, text.as_ptr().cast());
         }
     }
     pub fn ticks(&self) -> u64 {
-        unsafe { c::R4SdkDriverContext_tickCount(0, &self.raw) }.bits
+        unsafe { c::R4SdkDriver2Context_tickCount(0, &self.raw) }.bits
     }
     pub fn clock_sample(
         &self,
     ) -> core::result::Result<crate::time::checked::ClockSample, crate::time::checked::Error> {
         let mut info = abi::MonotonicClockInfo::default();
-        let result = code(unsafe { c::R4SdkDriverContext_monotonicClock(0, &self.raw, &mut info) });
+        let result =
+            code(unsafe { c::R4SdkDriver2Context_monotonicClock(0, &self.raw, &mut info) });
         if !matches!(result, Ok(n) if n > 0) {
             return Err(crate::time::checked::Error::ClockUnavailable);
         }
@@ -69,17 +72,17 @@ impl<'a> Driver<'a> {
     }
     pub fn wait_ticks(&self, ticks: u64) {
         unsafe {
-            c::R4SdkDriverContext_waitTicks(0, &self.raw, ticks);
+            c::R4SdkDriver2Context_waitTicks(0, &self.raw, ticks);
         }
     }
     pub fn pci_device(&self, index: u32) -> Result<abi::PciDeviceInfo> {
         let mut info = abi::PciDeviceInfo::default();
-        code(unsafe { c::R4SdkDriverContext_pciDeviceAt(0, &self.raw, index, &mut info) })?;
+        code(unsafe { c::R4SdkDriver2Context_pciDeviceAt(0, &self.raw, index, &mut info) })?;
         Ok(info)
     }
     pub fn threads(&self) -> Result<Threads<'_>> {
         let mut out = MaybeUninit::uninit();
-        let slot = unsafe { c::R4SdkDriverContext_threads(0, &self.raw, out.as_mut_ptr()) };
+        let slot = unsafe { c::R4SdkDriver2Context_threads(0, &self.raw, out.as_mut_ptr()) };
         code(slot)?;
         if slot.flags & 1 == 0 {
             return Err(-1);
@@ -92,7 +95,7 @@ impl<'a> Driver<'a> {
     }
     pub fn heap(&self) -> Result<Heap<'_>> {
         let mut out = MaybeUninit::uninit();
-        let slot = unsafe { c::R4SdkDriverContext_heap(0, &self.raw, out.as_mut_ptr()) };
+        let slot = unsafe { c::R4SdkDriver2Context_heap(0, &self.raw, out.as_mut_ptr()) };
         code(slot)?;
         if slot.flags & 1 == 0 {
             return Err(-1);
@@ -106,7 +109,7 @@ impl<'a> Driver<'a> {
     /// # Safety
     /// Preserve this exact loader context's lifetime/admission and every
     /// native resource contract. The pointer is not a transferable capability.
-    pub unsafe fn native(&self) -> *const c::R4SdkDriverContext {
+    pub unsafe fn native(&self) -> *const c::R4SdkDriver2Context {
         &self.raw
     }
     /// # Safety
@@ -121,7 +124,7 @@ impl<'a> Driver<'a> {
     ) -> Result<Work<'_>> {
         let mut handle = 0;
         code(unsafe {
-            c::R4SdkDriverContext_workSubmit(
+            c::R4SdkDriver2Context_workSubmit(
                 0,
                 &self.raw,
                 handler as usize as u64,
@@ -144,7 +147,7 @@ impl<'a> Driver<'a> {
     pub unsafe fn pin(&self, bytes: *mut u8, length: usize) -> Result<Dma<'_>> {
         let mut pin = abi::DmaPinnedBuffer::default();
         code(unsafe {
-            c::R4SdkDriverContext_pinDmaBuffer(0, &self.raw, bytes, length as u64, &mut pin)
+            c::R4SdkDriver2Context_pinDmaBuffer(0, &self.raw, bytes, length as u64, &mut pin)
         })?;
         Ok(Dma {
             driver: self,
@@ -163,7 +166,7 @@ impl<'a> Driver<'a> {
         flags: u32,
     ) -> Result<Irq<'_>> {
         code(unsafe {
-            c::R4SdkDriverContext_irqRegister(
+            c::R4SdkDriver2Context_irqRegister(
                 0,
                 &self.raw,
                 line,
@@ -191,19 +194,19 @@ impl Work<'_> {
         self.handle
     }
     pub fn cancel(&self) -> Result<i32> {
-        code(unsafe { c::R4SdkDriverContext_workCancel(0, &self.driver.raw, self.handle) })
+        code(unsafe { c::R4SdkDriver2Context_workCancel(0, &self.driver.raw, self.handle) })
     }
     pub fn status(&self) -> Result<abi::DriverCompletionStatus> {
         let mut out = abi::DriverCompletionStatus::default();
         code(unsafe {
-            c::R4SdkDriverContext_completionStatus(0, &self.driver.raw, self.handle, &mut out)
+            c::R4SdkDriver2Context_completionStatus(0, &self.driver.raw, self.handle, &mut out)
         })?;
         Ok(out)
     }
     pub fn wait(&self, ticks: u64) -> Result<i32> {
         let mut out = 0;
         code(unsafe {
-            c::R4SdkDriverContext_completionWait(0, &self.driver.raw, self.handle, ticks, &mut out)
+            c::R4SdkDriver2Context_completionWait(0, &self.driver.raw, self.handle, ticks, &mut out)
         })?;
         Ok(out)
     }
@@ -217,7 +220,9 @@ impl Work<'_> {
         {
             return Err(abi::driver_work_owner_busy);
         }
-        code(unsafe { c::R4SdkDriverContext_completionRelease(0, &self.driver.raw, self.handle) })?;
+        code(unsafe {
+            c::R4SdkDriver2Context_completionRelease(0, &self.driver.raw, self.handle)
+        })?;
         self.handle = 0;
         Ok(())
     }
@@ -244,7 +249,7 @@ impl Dma<'_> {
             return Err(-1);
         }
         code(unsafe {
-            c::R4SdkDriverContext_mapDmaPinned(
+            c::R4SdkDriver2Context_mapDmaPinned(
                 0,
                 &self.driver.raw,
                 &self.pin,
@@ -262,12 +267,12 @@ impl Dma<'_> {
     pub unsafe fn close(&mut self) -> Result<()> {
         if self.mapping.handle != 0 {
             code(unsafe {
-                c::R4SdkDriverContext_unmapDma(0, &self.driver.raw, &mut self.mapping)
+                c::R4SdkDriver2Context_unmapDma(0, &self.driver.raw, &mut self.mapping)
             })?;
         }
         if self.pin.handle != 0 {
             code(unsafe {
-                c::R4SdkDriverContext_unpinDmaBuffer(0, &self.driver.raw, &mut self.pin)
+                c::R4SdkDriver2Context_unpinDmaBuffer(0, &self.driver.raw, &mut self.pin)
             })?;
         }
         Ok(())
@@ -288,7 +293,7 @@ impl Irq<'_> {
     pub unsafe fn close(&mut self) -> Result<()> {
         if self.active {
             code(unsafe {
-                c::R4SdkDriverContext_irqUnregister(
+                c::R4SdkDriver2Context_irqUnregister(
                     0,
                     &self.driver.raw,
                     self.line,
@@ -422,17 +427,17 @@ impl Allocation<'_> {
         Ok(())
     }
 }
-/// Emit the unchanged two-jump R4D entry. Functions use the ordinary C ABI:
-/// init(*const DriverApi)->i32 and shutdown()->i32. Bodies own all state.
+/// Emit the generation2 two-jump R4D entry. Functions use the ordinary C ABI:
+/// init(*const DriverApi2)->i32 and shutdown()->i32. Bodies own all state.
 #[macro_export]
 macro_rules! driver_entry {
     ($init:path,$shutdown:path)=>{
         core::arch::global_asm!(
             ".pushsection .text.r4d_entries,\"ax\",@progbits",
-            ".global r4d_init_entry", "r4d_init_entry:", ".byte 0xe9", ".long {init} - . - 4",
-            ".global r4d_shutdown_entry", "r4d_shutdown_entry:", ".byte 0xe9", ".long {shutdown} - . - 4", ".popsection",
+            ".global DriverInit2", "DriverInit2:", ".byte 0xe9", ".long {init} - . - 4",
+            ".global DriverShutdown", "DriverShutdown:", ".byte 0xe9", ".long {shutdown} - . - 4", ".popsection",
             init=sym $init,shutdown=sym $shutdown);
-        const _: unsafe extern "C" fn(*const $crate::abi::DriverApi)->i32=$init;
+        const _: unsafe extern "C" fn(*const $crate::abi::DriverApi2)->i32=$init;
         const _: unsafe extern "C" fn()->i32=$shutdown;
     };
 }

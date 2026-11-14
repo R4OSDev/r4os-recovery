@@ -13,7 +13,7 @@ function Read-R4BuildSettings([string]$Root) {
 
 function Get-R4SdkBuildContext {
     param([string]$SdkRoot,[string]$ContractRoot,[string]$LibrariesRoot,[string]$InstallRoot,
-          [string]$ZigRoot='', [string]$Profile='r4os-zig-module-v1', [string]$DevelopmentProfile='')
+          [string]$ZigRoot='', [string]$Profile='r4os-zig-generation2', [string]$DevelopmentProfile='')
     if(!$DevelopmentProfile){$DevelopmentProfile=$env:R4OS_SDK_DEVELOPMENT_PROFILE}
     $data=Read-R4SdkProfiles $SdkRoot
     $roots=@{contract=$ContractRoot;libraries=$LibrariesRoot}

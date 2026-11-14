@@ -5,7 +5,7 @@
 /* SDK-local module bootstrap, once after validated app entry and before
  * workers/callbacks. Copies the same optional resident entropy functions as
  * Zig startup; absence remains unavailable. Not a platform ABI extension. */
-int32_t R4SdkBindProgramEntropy(const R4XStartContext *);
+int32_t R4SdkBindProgramEntropy(const R4XStartContext2 *);
 
 /* SDK-owned generated manifest facts, not another platform ABI table. */
 typedef struct R4StartupImport {
@@ -28,8 +28,8 @@ typedef struct R4StartupInfo {
 
 /* Loader-owned context/imports/common group headers stay resident throughout
  * this exact entry. Named R4L table semantics remain with its local resolver. */
-static inline int32_t r4xstart_validate_declared(const R4XStartContext *ctx, const R4StartupInfo *info) {
-    if (ctx == 0 || info == 0 || ((uintptr_t)ctx % _Alignof(R4XStartContext)) != 0 ||
+static inline int32_t r4xstart_validate_declared(const R4XStartContext2 *ctx, const R4StartupInfo *info) {
+    if (ctx == 0 || info == 0 || ((uintptr_t)ctx % _Alignof(R4XStartContext2)) != 0 ||
         !r4xstart_context_valid(ctx) || ctx->abi_minor < R4XSTART_ABI_MINOR ||
         ctx->app_class != info->app_class || (ctx->flags & R4XSTART_FLAG_IMPORTS_VALID) == 0) return -12;
     if (ctx->import_count != info->import_count ||
@@ -63,6 +63,8 @@ static inline int32_t r4xstart_validate_declared(const R4XStartContext *ctx, con
         if (header[0] != expected->magic || header[1] < expected->version || header[2] < expected->size) return -15;
         groups |= 1u << expected->group_id;
     }
+    R4OS2Context validated;
+    if (R4OS2ContextInit(ctx, &validated) != R4OS2_CONTEXT_OK) return -14;
     return (groups & info->required_groups) == info->required_groups ? R4OS_OK : -15;
 }
 #endif

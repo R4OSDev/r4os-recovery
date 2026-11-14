@@ -24,10 +24,16 @@ unsafe impl GlobalAlloc for Tracking {
 }
 #[global_allocator]
 static ALLOCATOR: Tracking = Tracking;
+unsafe extern "C" fn fixture_keep_open(_: *const abi::generation2::R4XStartContext2) -> u32 {
+    0
+}
 unsafe extern "C" {
     fn sdk_resource_c_app_case() -> i32;
     fn sdk_resource_prefix_case() -> i32;
-    fn sdk_resource_table(sys: *mut abi::R4XStartR4Sys, desk: *mut abi::R4XStartR4Desk);
+    fn sdk_resource_table(
+        sys: *mut abi::generation2::R4XStartR4Sys2,
+        desk: *mut abi::generation2::R4XStartR4Desk2,
+    );
     fn sdk_resource_mode(mode: i32);
     fn sdk_resource_slots() -> u32;
     fn sdk_resource_last_kind() -> u32;
@@ -40,60 +46,60 @@ unsafe extern "C" fn entry(value: u64) -> i32 {
 fn current_lifecycle_partial_progress_and_retained_native_buffers() {
     assert_eq!(unsafe { sdk_resource_c_app_case() }, 0);
     assert_eq!(unsafe { sdk_resource_prefix_case() }, 0);
-    let mut sys = abi::R4XStartR4Sys::default();
-    let mut desk = abi::R4XStartR4Desk::default();
+    let mut sys = abi::generation2::R4XStartR4Sys2::default();
+    let mut desk = abi::generation2::R4XStartR4Desk2::default();
     unsafe { sdk_resource_table(&mut sys, &mut desk) };
     let imports = [
         abi::R4XStartImport {
             group_id: abi::R4LGroup::r4sys.0,
-            min_version: 1,
-            resolved_version: 1,
+            min_version: 2,
+            resolved_version: 2,
             flags: abi::r4xstart_import_flag_group_interface,
             module_name: c"R4SYS".as_ptr() as u64,
-            symbol_name: c"Query".as_ptr() as u64,
+            symbol_name: c"Query2".as_ptr() as u64,
             table: core::ptr::from_ref(&sys) as u64,
         },
         abi::R4XStartImport {
             group_id: abi::R4LGroup::r4desk.0,
-            min_version: 1,
-            resolved_version: 1,
+            min_version: 2,
+            resolved_version: 2,
             flags: abi::r4xstart_import_flag_group_interface,
             module_name: c"R4DESK".as_ptr() as u64,
-            symbol_name: c"Query".as_ptr() as u64,
+            symbol_name: c"Query2".as_ptr() as u64,
             table: core::ptr::from_ref(&desk) as u64,
         },
     ];
-    let ctx = abi::R4XStartContext {
+    let ctx = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
-        flags: abi::r4xstart_flag_imports_valid,
+        flags: abi::r4xstart_flag_imports_valid | abi::r4xstart_flag_close_supported,
+        should_close: fixture_keep_open as *const () as u64,
         imports: imports.as_ptr() as u64,
         import_count: 2,
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
         required_groups: 2,
         imports: &[
             ImportSpec {
-                module_name: b"R4SYS",
-                symbol_name: b"Query",
-                minimum: 1,
-                optional: false,
+                module_name: c"R4SYS".as_ptr().cast(),
+                symbol_name: c"Query2".as_ptr().cast(),
+                minimum: 2,
+                optional: 0,
                 group_id: abi::R4LGroup::r4sys.0,
-                magic: sys.magic,
-                version: sys.abi_version,
-                size: sys.size,
+
+                reserved: 0,
             },
             ImportSpec {
-                module_name: b"R4DESK",
-                symbol_name: b"Query",
-                minimum: 1,
-                optional: false,
+                module_name: c"R4DESK".as_ptr().cast(),
+                symbol_name: c"Query2".as_ptr().cast(),
+                minimum: 2,
+                optional: 0,
                 group_id: abi::R4LGroup::r4desk.0,
-                magic: desk.magic,
-                version: desk.abi_version,
-                size: desk.size,
+
+                reserved: 0,
             },
         ],
     };

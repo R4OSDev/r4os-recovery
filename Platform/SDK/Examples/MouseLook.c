@@ -1,3 +1,4 @@
+#include <r4os/app2.h>
 /* Public C window API. Capture success accepts PENDING: only an ACTIVE
  * notification starts mouse-look. Keep the exact identity/token; MouseCapture
  * in gui.zig is merely local widget bookkeeping.
@@ -45,7 +46,7 @@ static void stale(R4Window *window,int owner) {
     check(window->app,rc==R4OS_GUI_POINTER_ERROR_STALE&&untouched(&out,sizeof out),"stale request preserves output");
     line(window->app,owner?"stale-owner=":"stale-window=",rc);
 }
-int32_t r4_app_main(R4App *app) {
+static int32_t run(R4App *app) {
     R4Window window;
     if(!r4_window_open(app,0,0,&window))return 1;
     if(r4_window_set_title(&window,"C native MouseLook")<0)return 1;
@@ -159,3 +160,5 @@ done:
     field(app," dx=",yaw);field(app," dy=",pitch);field(app," held=",held);text(app,"\n");
     return failures?1:0;
 }
+
+int32_t r4_app_main(R4App2 *actual){R4App facade;int32_t rc=r4_app2_facade(actual,&facade);return rc<0?rc:run(&facade);}

@@ -31,7 +31,7 @@ typedef struct R4Status {
 typedef R4Status R4Failure;
 
 typedef struct R4App {
-    const R4XStartContext *context;
+    const R4XStartContext2 *context;
     R4Sys system;
     R4Desk desktop;
     R4Draw drawing;
@@ -132,7 +132,7 @@ static inline int r4_status_succeeded(R4Status status) {
     return status.raw_code >= 0;
 }
 
-static inline const void *r4_app_group_table(const R4XStartContext *context, uint32_t group_id, uint32_t magic, uint32_t version, uint32_t size) {
+static inline const void *r4_app_group_table(const R4XStartContext2 *context, uint32_t group_id, uint32_t magic, uint32_t version, uint32_t size) {
     const R4XStartImport *item = r4xstart_find_import(context, group_id);
     if (item == 0 || item->table == 0 || (item->flags & R4XSTART_IMPORT_FLAG_GROUP_INTERFACE) == 0) return 0;
     const uint32_t *header = (const uint32_t *)(uintptr_t)item->table;
@@ -140,7 +140,7 @@ static inline const void *r4_app_group_table(const R4XStartContext *context, uin
     return (const void *)(uintptr_t)item->table;
 }
 
-static inline R4Status r4_app_init(const R4XStartContext *context, R4AppProfile profile, R4App *out_app) {
+static inline R4Status r4_app_init(const R4XStartContext2 *context, R4AppProfile profile, R4App *out_app) {
     if (out_app == 0 || context == 0) return r4_status_failure(R4_ERROR_DOMAIN_CONTRACT, R4OS_ERROR_INVALID);
     *out_app = (R4App){0};
     out_app->profile = profile;
@@ -148,13 +148,16 @@ static inline R4Status r4_app_init(const R4XStartContext *context, R4AppProfile 
     if (profile != R4_APP_PROFILE_CONSOLE && profile != R4_APP_PROFILE_DESKTOP && profile != R4_APP_PROFILE_SERVICE) {
         return r4_status_failure(R4_ERROR_DOMAIN_CONTRACT, R4OS_ERROR_INVALID);
     }
+    if ((profile == R4_APP_PROFILE_SERVICE && context->app_class != R4XSTART_APP_CLASS_SERVICE) ||
+        (profile != R4_APP_PROFILE_SERVICE && context->app_class != R4XSTART_APP_CLASS_CONSOLE && context->app_class != R4XSTART_APP_CLASS_GUI))
+        return r4_status_failure(R4_ERROR_DOMAIN_CONTRACT, R4OS_ERROR_INVALID);
     out_app->system.ctx = context;
-    out_app->system.table = (const R4XStartR4Sys *)r4_app_group_table(context, R4L_GROUP_R4SYS, R4XSTART_R4SYS_MAGIC, R4XSTART_R4SYS_VERSION, R4XSTART_R4SYS_SIZE);
-    out_app->desktop.table = (const R4XStartR4Desk *)r4_app_group_table(context, R4L_GROUP_R4DESK, R4XSTART_R4DESK_MAGIC, R4XSTART_R4DESK_VERSION, R4XSTART_R4DESK_SIZE);
-    out_app->drawing.table = (const R4XStartR4Draw *)r4_app_group_table(context, R4L_GROUP_R4DRAW, R4XSTART_R4DRAW_MAGIC, R4XSTART_R4DRAW_VERSION, R4XSTART_R4DRAW_SIZE);
-    out_app->network.table = (const R4XStartR4Net *)r4_app_group_table(context, R4L_GROUP_R4NET, R4XSTART_R4NET_MAGIC, R4XSTART_R4NET_VERSION, R4XSTART_R4NET_SIZE);
-    out_app->audio.table = (const R4XStartR4Audio *)r4_app_group_table(context, R4L_GROUP_R4AUDIO, R4XSTART_R4AUDIO_MAGIC, R4XSTART_R4AUDIO_VERSION, R4XSTART_R4AUDIO_SIZE);
-    out_app->devices.table = (const R4XStartR4Dev *)r4_app_group_table(context, R4L_GROUP_R4DEV, R4XSTART_R4DEV_MAGIC, R4XSTART_R4DEV_VERSION, R4XSTART_R4DEV_SIZE);
+    out_app->system.table = (const R4XStartR4Sys2 *)r4_app_group_table(context, R4L_GROUP_R4SYS, R4OS2_R4SYS_MAGIC, R4OS2_R4SYS_VERSION, sizeof(R4XStartR4Sys2));
+    out_app->desktop.table = (const R4XStartR4Desk2 *)r4_app_group_table(context, R4L_GROUP_R4DESK, R4OS2_R4DESK_MAGIC, R4OS2_R4DESK_VERSION, sizeof(R4XStartR4Desk2));
+    out_app->drawing.table = (const R4XStartR4Draw2 *)r4_app_group_table(context, R4L_GROUP_R4DRAW, R4OS2_R4DRAW_MAGIC, R4OS2_R4DRAW_VERSION, sizeof(R4XStartR4Draw2));
+    out_app->network.table = (const R4XStartR4Net2 *)r4_app_group_table(context, R4L_GROUP_R4NET, R4OS2_R4NET_MAGIC, R4OS2_R4NET_VERSION, sizeof(R4XStartR4Net2));
+    out_app->audio.table = (const R4XStartR4Audio2 *)r4_app_group_table(context, R4L_GROUP_R4AUDIO, R4OS2_R4AUDIO_MAGIC, R4OS2_R4AUDIO_VERSION, sizeof(R4XStartR4Audio2));
+    out_app->devices.table = (const R4XStartR4Dev2 *)r4_app_group_table(context, R4L_GROUP_R4DEV, R4OS2_R4DEV_MAGIC, R4OS2_R4DEV_VERSION, sizeof(R4XStartR4Dev2));
     if (out_app->system.table != 0) out_app->group_mask |= 1u << R4L_GROUP_R4SYS;
     if (out_app->desktop.table != 0) out_app->group_mask |= 1u << R4L_GROUP_R4DESK;
     if (out_app->drawing.table != 0) out_app->group_mask |= 1u << R4L_GROUP_R4DRAW;
@@ -171,7 +174,7 @@ static inline R4Status r4_app_init(const R4XStartContext *context, R4AppProfile 
     return r4_status_ok();
 }
 
-static inline R4Status r4_app_init_declared(const R4XStartContext *context, const R4StartupInfo *info, R4App *out_app) {
+static inline R4Status r4_app_init_declared(const R4XStartContext2 *context, const R4StartupInfo *info, R4App *out_app) {
     if (out_app == 0) return r4_status_failure(R4_ERROR_DOMAIN_CONTRACT, R4OS_ERROR_INVALID);
     *out_app = (R4App){0};
     const int32_t raw = r4xstart_validate_declared(context, info);

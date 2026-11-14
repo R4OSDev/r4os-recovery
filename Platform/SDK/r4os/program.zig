@@ -3,7 +3,6 @@ const std = @import("std");
 const vm_allocator = @import("vm_allocator.zig");
 const platform2 = @import("platform2.zig");
 const allocator_source = @import("allocator_source.zig");
-const r4xstart = @import("r4xstart.zig");
 const service_deadline = @import("service_deadline.zig");
 const time_contract = @import("time_contract.zig");
 
@@ -12,70 +11,22 @@ pub const ServiceStopPolicy = enum(u8) {
     kill_after_grace = abi.service_stop_policy_kill_after_grace,
 };
 
-// Bundle buendelt die pro Programm ueber R4XStart-Imports aufgeloesten
-// R4L-Gruppentabellen. Es ist die einzige Laufzeitquelle der SDK-Contexts;
-// reserved_runtime im rohen Startkontext bleibt ABI-reserviert und ist 0.
+/// Caller-owned immutable generation2 table loans. No global start binding.
 pub const Bundle = struct {
-    raw: *const abi.R4XStartContext,
-    sys: ?*const abi.R4XStartR4Sys = null,
-    desk: ?*const abi.R4XStartR4Desk = null,
-    draw: ?*const abi.R4XStartR4Draw = null,
-    net: ?*const abi.R4XStartR4Net = null,
-    audio: ?*const abi.R4XStartR4Audio = null,
-    dev: ?*const abi.R4XStartR4Dev = null,
+    raw: *const platform2.abi.R4XStartContext2,
+    sys: ?*const platform2.abi.R4XStartR4Sys2 = null,
+    desk: ?*const platform2.abi.R4XStartR4Desk2 = null,
+    draw: ?*const platform2.abi.R4XStartR4Draw2 = null,
+    net: ?*const platform2.abi.R4XStartR4Net2 = null,
+    audio: ?*const platform2.abi.R4XStartR4Audio2 = null,
+    dev: ?*const platform2.abi.R4XStartR4Dev2 = null,
 };
 
-// Pro R4X-Instanz eigene BSS-Kopie (jedes Programm traegt sein SDK).
-var bundle_storage: Bundle = undefined;
-var bundle_initialized: bool = false;
+const empty_sys_table: platform2.abi.R4XStartR4Sys2 = .{};
 
-// 0.56.41 (B2): Fallback fuer Kontexte ohne R4SYS-Tabelle.
-const empty_sys_table: abi.R4XStartR4Sys = .{};
-
-fn resolveGroupTable(comptime T: type, xs: r4xstart.Context, group: abi.R4LGroup, magic: u32, version: u32, size: u32) ?*const T {
-    const item = xs.findImport(group) orelse return null;
-    if ((item.flags & abi.r4xstart_import_flag_group_interface) == 0) return null;
-    if (item.table == 0) return null;
-    const table: *const T = @ptrFromInt(item.table);
-    if (table.magic != magic) return null;
-    if (table.abi_version < version or table.size < size) return null;
-    return table;
-}
-
-pub fn bundleFromR4XStart(raw: *const abi.R4XStartContext) ?*const Bundle {
-    if (bundle_initialized) return if (bundle_storage.raw == raw) &bundle_storage else null;
-    const candidate = bundleValueFromR4XStart(raw) orelse return null;
-    bundle_storage = candidate;
-    bundle_initialized = true;
-    return &bundle_storage;
-}
-
-// High-Level-App-Pfad: Der Aufrufer besitzt den Bundlewert. Damit koennen
-// mehrere App-Objekte ohne globale Initialisierung oder geteilte Mutation
-// aus unabhaengigen R4XStart-Kontexten aufgebaut werden.
-pub fn bundleValueFromR4XStart(raw: *const abi.R4XStartContext) ?Bundle {
-    if (raw.magic != abi.r4xstart_magic) return null;
-    if (raw.abi_major != abi.r4xstart_abi_major) return null;
-    if (raw.size < abi.r4xstart_context_size) return null;
-    // Der Vertrag sind die R4L-Gruppentabellen; mindestens R4SYS muss
-    // aufloesen. reserved_runtime wird nicht ausgewertet.
-    const xs = r4xstart.Context.init(raw);
-    const candidate = Bundle{
-        .raw = raw,
-        // R4SYS tail functions are append-only and optional. Accept the
-        // stable table header; tableFn checks the exact size of each slot.
-        .sys = resolveGroupTable(abi.R4XStartR4Sys, xs, .r4sys, abi.r4xstart_r4sys_magic, 1, @offsetOf(abi.R4XStartR4Sys, "write") + @sizeOf(usize)),
-        .desk = resolveGroupTable(abi.R4XStartR4Desk, xs, .r4desk, abi.r4xstart_r4desk_magic, 1, @offsetOf(abi.R4XStartR4Desk, "read_key") + @sizeOf(usize)),
-        .draw = resolveGroupTable(abi.R4XStartR4Draw, xs, .r4draw, abi.r4xstart_r4draw_magic, 1, @offsetOf(abi.R4XStartR4Draw, "clear") + @sizeOf(usize)),
-        // Optional groups/capabilities retain exact per-operation slot checks.
-        // A missing current callback is unavailable, never a different protocol.
-        .net = resolveGroupTable(abi.R4XStartR4Net, xs, .r4net, abi.r4xstart_r4net_magic, 1, @offsetOf(abi.R4XStartR4Net, "tcp_connect") + @sizeOf(usize)),
-        .audio = resolveGroupTable(abi.R4XStartR4Audio, xs, .r4audio, abi.r4xstart_r4audio_magic, abi.r4xstart_r4audio_version, abi.r4xstart_r4audio_size),
-        // Diagnostic capabilities are admitted per exact current slot.
-        .dev = resolveGroupTable(abi.R4XStartR4Dev, xs, .r4dev, abi.r4xstart_r4dev_magic, 1, @offsetOf(abi.R4XStartR4Dev, "memory_summary") + @sizeOf(usize)),
-    };
-    if (candidate.sys == null) return null;
-    return candidate;
+pub fn bundleValueFromR4XStart(raw: *const platform2.abi.R4XStartContext2) ?Bundle {
+    const view = platform2.Context.init(raw) catch return null;
+    return .{ .raw = raw, .sys = view.system(), .desk = view.desktop(), .draw = view.drawing(), .net = view.network(), .audio = view.audio(), .dev = view.devices() };
 }
 
 const dns_r4x_service_name = "DNSSVC";
@@ -279,8 +230,8 @@ test "optional FPU observation respects old table tails and typed forwarding" {
         }
     };
     Provider.calls = 0;
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Dev = .{ .size = @offsetOf(abi.R4XStartR4Dev, "fpu_observation"), .fpu_observation = @intFromPtr(&Provider.call) };
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{ .size = @offsetOf(@import("r4os_contract2").R4XStartR4Dev2, "fpu_observation"), .fpu_observation = @intFromPtr(&Provider.call) };
     var bundle: Bundle = .{ .raw = &raw, .dev = &table };
     const context = Context.initBundle(&bundle);
     const request: abi.FpuObservationRequest = .{ .operation = abi.fpu_observation_end, .task_generation = 23, .token = 17 };
@@ -289,7 +240,7 @@ test "optional FPU observation respects old table tails and typed forwarding" {
     try std.testing.expectEqual(abi.err_no_fn, context.fpuObservation(&request, &info));
     try std.testing.expectEqualSlices(u8, std.mem.asBytes(&sentinel), std.mem.asBytes(&info));
     try std.testing.expectEqual(@as(u32, 0), Provider.calls);
-    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.size = @sizeOf(@import("r4os_contract2").R4XStartR4Dev2);
     table.fpu_observation = 0;
     try std.testing.expectEqual(abi.err_no_fn, context.fpuObservation(&request, &info));
     try std.testing.expectEqual(@as(u32, 0), Provider.calls);
@@ -302,8 +253,8 @@ test "optional FPU observation respects old table tails and typed forwarding" {
 
 pub fn entryAsm(comptime target: []const u8) []const u8 {
     return ".section .text.r4x_entry,\"ax\"\n" ++
-        ".global r4x_entry\n" ++
-        "r4x_entry:\n" ++
+        ".global R4XStart2\n" ++
+        "R4XStart2:\n" ++
         "    jmp " ++ target ++ "\n";
 }
 
@@ -327,11 +278,14 @@ pub const Context = struct {
     };
 
     fn isTombstone(comptime Table: type, comptime field: []const u8) bool {
-        return Table == abi.R4XStartR4Sys and std.mem.eql(u8, field, "reserved_shell_run");
+        return !@hasField(Table, field);
     }
 
     fn tableFieldState(comptime Table: type, table: ?*const Table, comptime field: []const u8) TableFieldState {
+        if (comptime !@hasField(Table, field)) return .tombstone;
         const t = table orelse return .no_group;
+        const expected: Table = .{};
+        if (t.magic != expected.magic or t.abi_version < 1 or t.size < 16) return .no_group;
         const end = @offsetOf(Table, field) + @sizeOf(usize);
         if (t.size < end) return .beyond_size;
         if (isTombstone(Table, field)) return .tombstone;
@@ -343,6 +297,7 @@ pub const Context = struct {
     // Tabellen-Funktionszeiger oder null, wenn Tabelle/Feld fehlt.
     // Anfuege-Sicherheit und Tombstones werden an einer Stelle bewertet.
     fn tableFn(comptime Fns: type, comptime Table: type, table: ?*const Table, comptime field: []const u8) ?@field(Fns, field) {
+        if (comptime !@hasField(Table, field)) return null;
         if (tableFieldState(Table, table, field) != .available) return null;
         return @ptrFromInt(@field(table.?.*, field));
     }
@@ -377,37 +332,37 @@ pub const Context = struct {
     fn sysFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4SysFns, field) {
         if (self.generation2 != null) return self.nextFn(abi.R4SysFns, platform2.abi.R4XStartR4Sys2, 1, field);
         const b = self.bundle orelse return null;
-        return tableFn(abi.R4SysFns, abi.R4XStartR4Sys, b.sys, field);
+        return tableFn(abi.R4SysFns, @import("r4os_contract2").R4XStartR4Sys2, b.sys, field);
     }
 
     fn deskFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4DeskFns, field) {
         if (self.generation2 != null) return self.nextFn(abi.R4DeskFns, platform2.abi.R4XStartR4Desk2, 2, field);
         const b = self.bundle orelse return null;
-        return tableFn(abi.R4DeskFns, abi.R4XStartR4Desk, b.desk, field);
+        return tableFn(abi.R4DeskFns, @import("r4os_contract2").R4XStartR4Desk2, b.desk, field);
     }
 
     fn drawFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4DrawFns, field) {
         if (self.generation2 != null) return self.nextFn(abi.R4DrawFns, platform2.abi.R4XStartR4Draw2, 3, field);
         const b = self.bundle orelse return null;
-        return tableFn(abi.R4DrawFns, abi.R4XStartR4Draw, b.draw, field);
+        return tableFn(abi.R4DrawFns, @import("r4os_contract2").R4XStartR4Draw2, b.draw, field);
     }
 
     fn netFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4NetFns, field) {
         if (self.generation2 != null) return self.nextFn(abi.R4NetFns, platform2.abi.R4XStartR4Net2, 4, field);
         const b = self.bundle orelse return null;
-        return tableFn(abi.R4NetFns, abi.R4XStartR4Net, b.net, field);
+        return tableFn(abi.R4NetFns, @import("r4os_contract2").R4XStartR4Net2, b.net, field);
     }
 
     fn audioFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4AudioFns, field) {
         if (self.generation2 != null) return self.nextFn(abi.R4AudioFns, platform2.abi.R4XStartR4Audio2, 5, field);
         const b = self.bundle orelse return null;
-        return tableFn(abi.R4AudioFns, abi.R4XStartR4Audio, b.audio, field);
+        return tableFn(abi.R4AudioFns, @import("r4os_contract2").R4XStartR4Audio2, b.audio, field);
     }
 
     fn devFn(self: *const Context, comptime field: []const u8) ?@field(abi.R4DevFns, field) {
         if (self.generation2 != null) return self.nextFn(abi.R4DevFns, platform2.abi.R4XStartR4Dev2, 6, field);
         const b = self.bundle orelse return null;
-        return tableFn(abi.R4DevFns, abi.R4XStartR4Dev, b.dev, field);
+        return tableFn(abi.R4DevFns, @import("r4os_contract2").R4XStartR4Dev2, b.dev, field);
     }
 
     // 0.57.2: ehrliche Vertragspruefung - ersetzt die frueheren
@@ -5445,9 +5400,9 @@ test "net socket drain keeps stack request alive until busy async close complete
     test_net_socket_service_close_calls = 0;
     test_net_socket_drain_valid = true;
 
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Sys = .{};
-    table.size = @intCast(@sizeOf(abi.R4XStartR4Sys));
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
+    table.size = @intCast(@sizeOf(@import("r4os_contract2").R4XStartR4Sys2));
     table.io_wait = @intFromPtr(&testNetSocketIoWait);
     table.io_close = @intFromPtr(&testNetSocketIoClose);
     table.service_close = @intFromPtr(&testNetSocketServiceClose);
@@ -5519,8 +5474,8 @@ fn testPmuResult(cpu: u32, epoch: u64, generation: u64, out: *abi.CpuPmuResult) 
     return 0;
 }
 test "PMU three optional tails preserve all old prefixes, callback transport and failed outputs" {
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Dev = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     var bundle: Bundle = .{ .raw = &raw, .dev = &table };
     const ctx = Context.initBundle(&bundle);
     const sentinel: u64 = 0x8534_1234_9876_abcd;
@@ -5533,16 +5488,16 @@ test "PMU three optional tails preserve all old prefixes, callback transport and
     table.cpu_pmu_result = @intFromPtr(&testPmuResult);
     test_pmu_calls = 0;
     test_pmu_callbacks = 0;
-    for (680..704) |size| {
+    for (656..680) |size| {
         table.size = @intCast(size);
-        if (size < 688) try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuInfo(2, &info.value));
-        if (size < 696) try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuMeasure(2, 7, 1, 4096, testPmuWork, 0x8534, &result.value));
+        if (size < 664) try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuInfo(2, &info.value));
+        if (size < 672) try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuMeasure(2, 7, 1, 4096, testPmuWork, 0x8534, &result.value));
         try std.testing.expectEqual(abi.err_no_fn, ctx.cpuPmuResult(2, 7, 11, &result.value));
         try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before_info), std.mem.asBytes(&info));
         try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before_result), std.mem.asBytes(&result));
     }
     try std.testing.expectEqual(@as(u32, 0), test_pmu_calls);
-    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.size = @sizeOf(@import("r4os_contract2").R4XStartR4Dev2);
     table.cpu_pmu_info = 0;
     table.cpu_pmu_measure = 0;
     table.cpu_pmu_result = 0;
@@ -5575,20 +5530,20 @@ test "PMU three optional tails preserve all old prefixes, callback transport and
     try std.testing.expectEqual(sentinel, result.tail);
 }
 test "early microcode optional slot refuses every old/truncated prefix without modifying output or tail" {
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Dev = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     var bundle: Bundle = .{ .raw = &raw, .dev = &table };
     const ctx = Context.initBundle(&bundle);
     const sentinel: u64 = 0x8533_1234_9876_abcd;
     var guarded: extern struct { value: abi.CpuMicrocodeInfo = .{ .epoch = sentinel }, tail: u64 = sentinel } = .{};
     const before = guarded;
     table.cpu_microcode_info = @intFromPtr(&testMicrocodeInfo);
-    for (672..680) |size| {
+    for (648..656) |size| {
         table.size = @intCast(size);
         try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMicrocodeInfo(2, &guarded.value));
         try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before), std.mem.asBytes(&guarded));
     }
-    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.size = @sizeOf(@import("r4os_contract2").R4XStartR4Dev2);
     table.cpu_microcode_info = 0;
     try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMicrocodeInfo(2, &guarded.value));
     try std.testing.expectEqualSlices(u8, std.mem.asBytes(&before), std.mem.asBytes(&guarded));
@@ -5616,8 +5571,8 @@ fn testMachineBank(cpu: u32, epoch: u64, sequence: u64, index: u32, out: *abi.Cp
     return 0;
 }
 test "MCA optional prefixes and exact snapshot identity preserve all refused outputs and tails" {
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Dev = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     var bundle: Bundle = .{ .raw = &raw, .dev = &table };
     const ctx = Context.initBundle(&bundle);
     const sentinel: u64 = 0x8532_1234_9876_abcd;
@@ -5625,17 +5580,17 @@ test "MCA optional prefixes and exact snapshot identity preserve all refused out
     var bank: extern struct { value: abi.CpuMachineBank = .{ .status = sentinel }, tail: u64 = sentinel } = .{};
     table.cpu_machine_info = @intFromPtr(&testMachineInfo);
     table.cpu_machine_bank = @intFromPtr(&testMachineBank);
-    for (656..664) |size| {
+    for (632..640) |size| {
         table.size = @intCast(size);
         try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineInfo(2, &info.value));
         try std.testing.expectEqual(sentinel, info.value.epoch);
     }
-    for (664..672) |size| {
+    for (640..648) |size| {
         table.size = @intCast(size);
         try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineBank(2, 0x8532, 12, 0, &bank.value));
         try std.testing.expectEqual(sentinel, bank.value.status);
     }
-    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.size = @sizeOf(@import("r4os_contract2").R4XStartR4Dev2);
     table.cpu_machine_info = 0;
     try std.testing.expectEqual(abi.err_no_fn, ctx.cpuMachineInfo(2, &info.value));
     table.cpu_machine_info = @intFromPtr(&testMachineInfo);
@@ -5662,17 +5617,17 @@ fn testIdleInfo(cpu: u32, out: *abi.CpuIdleInfo) callconv(.c) i32 {
     return 0;
 }
 test "passive idle optional slot preserves failed output and hardware metrics remain unavailable" {
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Dev = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     var bundle: Bundle = .{ .raw = &raw, .dev = &table };
     const ctx = Context.initBundle(&bundle);
     const sentinel: u64 = 0x8531_9876_1234_5678;
     var v: extern struct { info: abi.CpuIdleInfo, tail: u64 } = .{ .info = .{ .epoch = sentinel }, .tail = sentinel };
-    table.size = 648;
+    table.size = 624;
     table.cpu_idle_info = @intFromPtr(&testIdleInfo);
     try std.testing.expectEqual(abi.err_no_fn, ctx.cpuIdleInfo(2, &v.info));
     try std.testing.expectEqual(sentinel, v.info.epoch);
-    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.size = @sizeOf(@import("r4os_contract2").R4XStartR4Dev2);
     table.cpu_idle_info = 0;
     try std.testing.expectEqual(abi.err_no_fn, ctx.cpuIdleInfo(2, &v.info));
     table.cpu_idle_info = @intFromPtr(&testIdleInfo);
@@ -5689,17 +5644,17 @@ fn testFirmwarePerformance(request: *const abi.CpuPerformanceRequest, out: *abi.
     return 0;
 }
 test "firmware transport negotiates its own optional slot and preserves an uncertain whole-domain receipt" {
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Dev = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     var bundle: Bundle = .{ .raw = &raw, .dev = &table };
     const ctx = Context.initBundle(&bundle);
     const request: abi.CpuPerformanceRequest = .{ .cpu_index = 2, .epoch = 19 };
     var out: abi.CpuFirmwareInfo = .{ .lease = 99 };
-    table.size = 640;
+    table.size = 616;
     table.cpu_firmware_performance = @intFromPtr(&testFirmwarePerformance);
     try std.testing.expectEqual(abi.err_no_fn, ctx.cpuFirmwarePerformance(&request, &out));
     try std.testing.expectEqual(@as(u64, 99), out.lease);
-    table.size = @sizeOf(abi.R4XStartR4Dev);
+    table.size = @sizeOf(@import("r4os_contract2").R4XStartR4Dev2);
     table.cpu_firmware_performance = 0;
     try std.testing.expectEqual(abi.err_no_fn, ctx.cpuFirmwarePerformance(&request, &out));
     try std.testing.expectEqual(@as(u64, 99), out.lease);
@@ -5711,9 +5666,9 @@ test "firmware transport negotiates its own optional slot and preserves an uncer
     try std.testing.expectEqual(@as(u64, 19), out.epoch);
 }
 test "program context accepts present fields in a shorter append-only table" {
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Sys = .{};
-    table.size = @intCast(@offsetOf(abi.R4XStartR4Sys, "write") + @sizeOf(usize));
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
+    table.size = @intCast(@offsetOf(@import("r4os_contract2").R4XStartR4Sys2, "write") + @sizeOf(usize));
     table.write = @intFromPtr(&testTableWrite);
     table.putc = @intFromPtr(&testTableWrite);
     var bundle: Bundle = .{ .raw = &raw, .sys = &table };
@@ -5721,8 +5676,8 @@ test "program context accepts present fields in a shorter append-only table" {
 
     try std.testing.expect(ctx.hasSysFn("write"));
     try std.testing.expect(!ctx.hasSysFn("putc"));
-    try std.testing.expectEqual(Context.TableFieldState.available, Context.tableFieldState(abi.R4XStartR4Sys, bundle.sys, "write"));
-    try std.testing.expectEqual(Context.TableFieldState.beyond_size, Context.tableFieldState(abi.R4XStartR4Sys, bundle.sys, "putc"));
+    try std.testing.expectEqual(Context.TableFieldState.available, Context.tableFieldState(@import("r4os_contract2").R4XStartR4Sys2, bundle.sys, "write"));
+    try std.testing.expectEqual(Context.TableFieldState.beyond_size, Context.tableFieldState(@import("r4os_contract2").R4XStartR4Sys2, bundle.sys, "putc"));
     test_table_write_calls = 0;
     test_table_write_length = 0;
     ctx.write("one-batched-write");
@@ -5731,21 +5686,20 @@ test "program context accepts present fields in a shorter append-only table" {
 }
 
 test "program context distinguishes missing group null pointer and tombstone" {
-    var raw: abi.R4XStartContext = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
     var missing_bundle: Bundle = .{ .raw = &raw };
     const missing = Context.initBundle(&missing_bundle);
     try std.testing.expectEqual(abi.err_no_group, missing.guiClear(0));
-    try std.testing.expectEqual(Context.TableFieldState.no_group, Context.tableFieldState(abi.R4XStartR4Draw, null, "gui_clear"));
+    try std.testing.expectEqual(Context.TableFieldState.no_group, Context.tableFieldState(@import("r4os_contract2").R4XStartR4Draw2, null, "gui_clear"));
 
-    var draw: abi.R4XStartR4Draw = .{};
+    var draw: @import("r4os_contract2").R4XStartR4Draw2 = .{};
     var null_bundle: Bundle = .{ .raw = &raw, .draw = &draw };
     const null_field = Context.initBundle(&null_bundle);
     try std.testing.expectEqual(abi.err_no_fn, null_field.guiClear(0));
-    try std.testing.expectEqual(Context.TableFieldState.null_pointer, Context.tableFieldState(abi.R4XStartR4Draw, null_bundle.draw, "gui_clear"));
+    try std.testing.expectEqual(Context.TableFieldState.null_pointer, Context.tableFieldState(@import("r4os_contract2").R4XStartR4Draw2, null_bundle.draw, "gui_clear"));
 
-    var sys: abi.R4XStartR4Sys = .{};
-    sys.reserved_shell_run = 1;
-    try std.testing.expectEqual(Context.TableFieldState.tombstone, Context.tableFieldState(abi.R4XStartR4Sys, &sys, "reserved_shell_run"));
+    var sys: @import("r4os_contract2").R4XStartR4Sys2 = .{};
+    try std.testing.expectEqual(Context.TableFieldState.tombstone, Context.tableFieldState(@import("r4os_contract2").R4XStartR4Sys2, &sys, "reserved_shell_run"));
 }
 
 var test_net_service_direct_calls: u32 = 0;
@@ -5783,9 +5737,9 @@ test "network service request prefers the generation-bound tail function" {
     test_net_service_raw_send_calls = 0;
     test_net_service_raw_recv_calls = 0;
 
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Net = .{};
-    table.size = @intCast(@sizeOf(abi.R4XStartR4Net));
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Net2 = .{};
+    table.size = @intCast(@sizeOf(@import("r4os_contract2").R4XStartR4Net2));
     table.net_service_request = @intFromPtr(&testNetServiceDirect);
     table.ipc_send = @intFromPtr(&testNetServiceRawSend);
     table.ipc_recv = @intFromPtr(&testNetServiceRawRecv);
@@ -5806,9 +5760,9 @@ test "network service request refuses a missing current slot without raw IPC or 
     test_net_service_raw_send_calls = 0;
     test_net_service_raw_recv_calls = 0;
 
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Net = .{};
-    table.size = @intCast(@offsetOf(abi.R4XStartR4Net, "net_service_request"));
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Net2 = .{};
+    table.size = @intCast(@offsetOf(@import("r4os_contract2").R4XStartR4Net2, "net_service_request"));
     table.ipc_send = @intFromPtr(&testNetServiceRawSend);
     table.ipc_recv = @intFromPtr(&testNetServiceRawRecv);
     var bundle: Bundle = .{ .raw = &raw, .net = &table };
@@ -5847,10 +5801,10 @@ fn currentStorageV2(out: *abi.ProgramInstanceStorageSummary) callconv(.c) i32 {
     return 1;
 }
 test "current SDK capabilities never synthesize fonts input or a storage prefix" {
-    var raw: abi.R4XStartContext = .{};
-    var draw: abi.R4XStartR4Draw = .{ .font_info = @intFromPtr(&currentFontInfo), .font_measure = @intFromPtr(&currentFontMeasure) };
-    var desk: abi.R4XStartR4Desk = .{ .read_key = @intFromPtr(&currentByteKey) };
-    var dev: abi.R4XStartR4Dev = .{ .reserved_program_instance_storage_summary_v1 = 1 };
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var draw: @import("r4os_contract2").R4XStartR4Draw2 = .{ .font_info = @intFromPtr(&currentFontInfo), .font_measure = @intFromPtr(&currentFontMeasure) };
+    var desk: @import("r4os_contract2").R4XStartR4Desk2 = .{ .read_key = @intFromPtr(&currentByteKey) };
+    var dev: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     const bundle: Bundle = .{ .raw = &raw, .draw = &draw, .desk = &desk, .dev = &dev };
     const ctx = Context.initBundle(&bundle);
     // Metadata queries depend on their own current callback, not a GUI setter.
@@ -5860,11 +5814,11 @@ test "current SDK capabilities never synthesize fonts input or a storage prefix"
     var metrics: abi.GuiTextMetrics = .{};
     try std.testing.expectEqual(@as(i32, 0), ctx.fontMeasure(14, "text", &metrics));
     try std.testing.expectEqual(@as(u32, 37), metrics.width);
-    draw.size = @offsetOf(abi.R4XStartR4Draw, "font_info");
+    draw.size = @offsetOf(@import("r4os_contract2").R4XStartR4Draw2, "font_info");
     info.id = 123;
     try std.testing.expectEqual(abi.err_no_fn, ctx.fontInfo(0, &info));
     try std.testing.expectEqual(@as(u32, 123), info.id);
-    draw.size = @sizeOf(abi.R4XStartR4Draw);
+    draw.size = @sizeOf(@import("r4os_contract2").R4XStartR4Draw2);
     try std.testing.expectEqual(@as(u32, 0), ctx.fontRevision());
     draw.font_revision = @intFromPtr(&currentFontZero);
     try std.testing.expectEqual(@as(u32, 0), ctx.fontRevision());

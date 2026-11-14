@@ -1,10 +1,10 @@
 #![no_std]
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     services::{Receive, Services, Wake},
 };
-fn main(app: &mut App<'_>) -> i32 {
-    let Ok(services) = Services::new(app) else {
+fn main(app: &mut App2<'_>) -> i32 {
+    let Ok(services) = Services::new2(app) else {
         return 1;
     };
     let Ok(mut endpoint) = services.register(c"NET55SVC", 0) else {
@@ -48,4 +48,4 @@ fn main(app: &mut App<'_>) -> i32 {
     app.write("[SDK55] service loop stopped\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

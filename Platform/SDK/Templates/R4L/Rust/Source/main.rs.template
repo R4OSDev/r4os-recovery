@@ -4,11 +4,4 @@ pub extern "C" fn {ProjectNameLower}_add_impl(left:i64,right:i64)->i64{left.wrap
 #[unsafe(no_mangle)]
 #[unsafe(link_section=".data.r4l_exports")]
 pub static {ProjectNameLower}_api_v1:provider_abi::ApiV1=provider_abi::ApiV1{header:r4os_sdk::r4l::provider_header(provider_abi::api_v1_expectation),r#add:Some({ProjectNameLower}_add_impl)};
-r4os_sdk::r4l_provider!({ProjectNameLower}_query);
-
-#[unsafe(no_mangle)]
-#[unsafe(link_section=".data.r4l_exports")]
-pub static {ProjectNameLower}_query2:r4os_sdk::abi::generation2::R4LQuery2=r4os_sdk::abi::generation2::R4LQuery2{
- magic:r4os_sdk::abi::generation2::QUERY_MAGIC,abi_version:2,
- size:core::mem::size_of::<r4os_sdk::abi::generation2::R4LQuery2>()as u32,group:0,reserved:0,
-};
+r4os_sdk::r4l_provider!({ProjectNameLower}_query2);

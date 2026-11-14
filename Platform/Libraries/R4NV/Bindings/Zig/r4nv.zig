@@ -389,8 +389,8 @@ pub const RenderV1 = extern struct {
 pub const BackendV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !BackendV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, backend_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !BackendV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !BackendV1Client {
@@ -439,8 +439,8 @@ pub const BackendV1Client = struct {
 pub const ShaderV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !ShaderV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, shader_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !ShaderV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !ShaderV1Client {
@@ -483,8 +483,8 @@ pub const ShaderV1Client = struct {
 pub const RenderV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !RenderV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, render_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !RenderV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !RenderV1Client {

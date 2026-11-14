@@ -1,28 +1,13 @@
 #ifndef R4OS_PROTOCOL_H
 #define R4OS_PROTOCOL_H
 #include "r4os/abi.h"
+#include "r4os/technical2.h"
 /* Ordinary R4P entry, independent of R4XStart or a Zig owner root. */
-#define R4P_ENTRIES(INIT,SHUTDOWN,QUERY,DISPATCH) \
- _Static_assert(_Generic(&(INIT),int32_t (*)(const R4ProtocolApi *):1,default:0),"ProtocolInit signature"); \
- _Static_assert(_Generic(&(SHUTDOWN),int32_t (*)(void):1,default:0),"ProtocolShutdown signature"); \
- _Static_assert(_Generic(&(QUERY),int32_t (*)(R4ProtocolStatus *):1,default:0),"ProtocolQuery signature"); \
- _Static_assert(_Generic(&(DISPATCH),int32_t (*)(uint32_t,const R4ProtocolBuffer *,R4ProtocolBuffer *):1,default:0),"ProtocolDispatch signature"); \
- static int32_t (*const r4p_init_root)(const R4ProtocolApi *) __attribute__((used))=(INIT); \
- static int32_t (*const r4p_shutdown_root)(void) __attribute__((used))=(SHUTDOWN); \
- static int32_t (*const r4p_query_root)(R4ProtocolStatus *) __attribute__((used))=(QUERY); \
- static int32_t (*const r4p_dispatch_root)(uint32_t,const R4ProtocolBuffer *,R4ProtocolBuffer *) __attribute__((used))=(DISPATCH); \
- __asm__(".pushsection .text.r4p_entries,\"ax\",@progbits\n" \
- ".global r4p_init_entry\nr4p_init_entry:\n.byte 0xe9\n.long " #INIT " - . - 4\n" \
- ".global r4p_shutdown_entry\nr4p_shutdown_entry:\n.byte 0xe9\n.long " #SHUTDOWN " - . - 4\n" \
- ".global r4p_query_entry\nr4p_query_entry:\n.byte 0xe9\n.long " #QUERY " - . - 4\n" \
- ".global r4p_dispatch_entry\nr4p_dispatch_entry:\n.byte 0xe9\n.long " #DISPATCH " - . - 4\n.popsection\n")
-typedef struct R4ProtocolContext {const R4ProtocolApi *api;} R4ProtocolContext;
+#define R4P_ENTRIES(INIT,SHUTDOWN,QUERY,DISPATCH) R4OS_PROTOCOL_ENTRY2(INIT,SHUTDOWN,QUERY,DISPATCH)
+typedef struct R4ProtocolContext {const R4ProtocolApi2 *api;} R4ProtocolContext;
 /* The original immutable loader table and actual PPI execution scope must
  * stay valid throughout every call. A cached table grants no other identity. */
-static inline int32_t r4protocol_init(R4ProtocolContext *out,const R4ProtocolApi *api){
- if(!out || !api || api->magic!=R4OS_PROTOCOL_MAGIC || api->version!=R4OS_PROTOCOL_API_VERSION || api->size<sizeof(*api))return -1;
- out->api=api;return 0;
-}
+static inline int32_t r4protocol_init(const R4ProtocolApi2 *api,R4ProtocolContext *out){R4OS2Protocol view;if(!out || R4OS2ProtocolInit(api,&view)!=0)return -1;out->api=api;return 0;}
 static inline void r4protocol_log_info(const R4ProtocolContext *c,const uint8_t *text){c->api->log_info(text);}
 static inline void r4protocol_log_warn(const R4ProtocolContext *c,const uint8_t *text){c->api->log_warn(text);}
 static inline void r4protocol_log_error(const R4ProtocolContext *c,const uint8_t *text){c->api->log_error(text);}

@@ -1,4 +1,4 @@
-R4OS SDK templates (SDK0.64.89)
+﻿R4OS SDK templates (SDK0.64.89)
 ===============================
 
 The two native C definitions in this directory remain R4CODE/R4BUILD inputs:
@@ -38,7 +38,7 @@ passed ProjectPin should invoke the current driver with selected component
 roots; their external metadata remains under its owner's control.
 
 GUI runs through Desktop, services through SERVMAN. A raw entry gets the real
-R4XStartContext and initializes optional runtime helpers explicitly. Drivers
+R4XStartContext2 and initializes optional runtime helpers explicitly. Drivers
 and protocols use genuine R4D/R4P entries and their original owner lifetimes.
 Subsystem templates are host/launch/window shells, with the shared runtime
 API available to the developer's decoder. A template or host build does not

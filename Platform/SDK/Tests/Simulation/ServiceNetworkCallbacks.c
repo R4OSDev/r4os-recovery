@@ -31,7 +31,7 @@ uint64_t sdk_service_last_wait(void){return last_wait;}
 uint32_t sdk_service_open_handles(void){return open_handles;}
 static uint64_t ticks(void){return clock_tick;}
 static int32_t service2_clock(R4MonotonicClockInfo *out){
- *out=(R4MonotonicClockInfo){.version=1,.size=sizeof(*out),.flags=R4OS_MONOTONIC_CLOCK_FLAG_VALID,.source=1,.generation=43,.frequency_hz=R4OS_MONOTONIC_CLOCK_FREQUENCY_HZ,.resolution_ns=1,.instant_ns=(clock_tick+100000)*1000000,.event_requested_hz=1000,.event_effective_hz=1007};return 1;
+ *out=(R4MonotonicClockInfo){.version=1,.size=sizeof(*out),.flags=R4OS_MONOTONIC_CLOCK_FLAG_VALID,.source=1,.generation=43,.frequency_hz=R4OS_MONOTONIC_CLOCK_FREQUENCY_HZ,.resolution_ns=1,.instant_ns=(clock_tick+100000)*1000000,.event_requested_hz=clock_rate,.event_effective_hz=clock_rate+7};return 1;
 }
 uint32_t sdk_service2_should_close(const R4XStartContext2 *raw){(void)raw;return stopping;}
 void sdk_service2_yield(const R4XStartContext2 *raw){(void)raw;++yielded;}
@@ -97,7 +97,7 @@ static int32_t managed_stop_bound(const uint8_t *name,const R4ProgramProcessHand
     *out=managed_info();if(managed_terminal)return 0;++managed_closes;return R4OS_SERVICE_API_RESULT_TIMEOUT;
 }
 int sdk_service_bound_c_case(void){
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);clock_rate=1000;sdk_service_bound_reset();
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);clock_rate=1000;sdk_service_bound_reset();
     sys.service_bound_detail=(uintptr_t)&managed_bound_detail;sys.service_stop_bound=(uintptr_t)&managed_stop_bound;
     R4Services services=r4_app_services(&app);R4ServiceDetail detail;R4ProgramProcessHandle process;R4ServiceInfo info;
     if(r4_services_bound_detail(&services,"MANAGED",&detail,&process)||process.generation!=UINT64_C(0x1122334455667788)||detail.info.instance_id!=41)return 1;
@@ -108,24 +108,25 @@ int sdk_service_bound_c_case(void){
     sdk_service_bound_ack();
     if(r4_services_bound_detail(&services,"MANAGED",&detail,&process)||detail.info.instance_id||detail.info.exit_code!=-23||process.generation!=UINT64_C(0x1122334455667789))return 5;
     if(r4_services_stop_bound(&services,"MANAGED",&process,poll_timeout(),&info)||info.instance_id)return 6;
-    sys.size=offsetof(R4XStartR4Sys,service_bound_detail);
+    sys.size=offsetof(R4XStartR4Sys2,service_bound_detail);
     if(r4_services_bound_detail(&services,"MANAGED",&detail,&process)!=R4OS_ERR_NO_FN||process.instance_id||process.generation)return 7;
-    sys.size=offsetof(R4XStartR4Sys,service_stop_bound);
+    sys.size=offsetof(R4XStartR4Sys2,service_stop_bound);
     if(r4_services_stop_bound(&services,"MANAGED",&process,poll_timeout(),&info)!=R4OS_ERR_NO_FN||managed_closes!=1)return 8;
     sdk_service_bound_reset();return 0;
 }
-void sdk_service_tables(R4XStartR4Sys *sys,R4XStartR4Net *net,R4XStartR4Desk *desk,R4XStartR4Dev *dev){
+void sdk_service_tables(R4XStartR4Sys2 *sys,R4XStartR4Net2 *net,R4XStartR4Desk2 *desk,R4XStartR4Dev2 *dev){
     /* The caller supplies canonical current record defaults. C's public
      * R4XSTART_*_VERSION constants describe minimum query prefixes. */
     uint32_t sys_version=sys->abi_version,net_version=net->abi_version,desk_version=desk->abi_version,dev_version=dev->abi_version;
     R4App ignored;init_app(&ignored,sys,net);reply_mode=MODE_OK;open_handles=0;endpoint_registered=0;queued=yielded=stopping=reply_cancelled=io_live=serial_live=serial_closing=0;
     sys->abi_version=sys_version;net->abi_version=net_version;
     sys->ticks=(uintptr_t)&ticks;sys->time_state=(uintptr_t)&time_state;sys->program_should_close=(uintptr_t)&should_close;sys->task_yield=(uintptr_t)&task_yield;
+    sys->monotonic_clock=(uintptr_t)&service2_clock;
     sys->service_endpoint_wait=(uintptr_t)&endpoint_wait;sys->service_endpoint_poll=(uintptr_t)&endpoint_poll;sys->service_endpoint_recv=(uintptr_t)&endpoint_recv;sys->service_endpoint_reply=(uintptr_t)&endpoint_reply;
     sys->io_service_call=(uintptr_t)&io_begin;sys->io_status=(uintptr_t)&io_status;sys->io_wait=(uintptr_t)&io_wait;sys->io_close=(uintptr_t)&io_close;
     sdk_service_bound_reset();sys->service_bound_detail=(uintptr_t)&managed_bound_detail;sys->service_stop_bound=(uintptr_t)&managed_stop_bound;
-    *desk=(R4XStartR4Desk){.magic=R4XSTART_R4DESK_MAGIC,.abi_version=desk_version,.size=sizeof(*desk)};
-    *dev=(R4XStartR4Dev){.magic=R4XSTART_R4DEV_MAGIC,.abi_version=dev_version,.size=sizeof(*dev),.serial_count=(uintptr_t)&port_count,.serial_port_at=(uintptr_t)&port_at,.serial_open=(uintptr_t)&port_open,.serial_configure=(uintptr_t)&port_configure,.serial_read=(uintptr_t)&port_read,.serial_write=(uintptr_t)&port_write,.serial_drain=(uintptr_t)&port_drain,.serial_status=(uintptr_t)&port_status,.serial_cancel=(uintptr_t)&port_cancel,.serial_close=(uintptr_t)&port_close};
+    *desk=(R4XStartR4Desk2){.magic=R4OS2_R4DESK_MAGIC,.abi_version=desk_version,.size=sizeof(*desk)};
+    *dev=(R4XStartR4Dev2){.magic=R4OS2_R4DEV_MAGIC,.abi_version=dev_version,.size=sizeof(*dev),.serial_count=(uintptr_t)&port_count,.serial_port_at=(uintptr_t)&port_at,.serial_open=(uintptr_t)&port_open,.serial_configure=(uintptr_t)&port_configure,.serial_read=(uintptr_t)&port_read,.serial_write=(uintptr_t)&port_write,.serial_drain=(uintptr_t)&port_drain,.serial_status=(uintptr_t)&port_status,.serial_cancel=(uintptr_t)&port_cancel,.serial_close=(uintptr_t)&port_close};
 }
 int sdk_service_extra_c_case(void){
     R4NetServiceTcpResult tcp={.flags=R4OS_NET_SERVICE_STATUS_WOULD_BLOCK<<R4OS_NET_SERVICE_STATUS_SHIFT};
@@ -133,21 +134,23 @@ int sdk_service_extra_c_case(void){
     R4NetServiceUdpResult udp={.flags=R4OS_NET_SERVICE_STATUS_TIMEOUT<<R4OS_NET_SERVICE_STATUS_SHIFT};
     if(r4_net_classify_udp(&udp,3).kind!=R4_NET_RESULT_TIMED_OUT)return 2;
     uint64_t n=99;if(r4_remaining_ticks((R4Deadline){5},(R4MonotonicInstant){5},0,&n)!=0||n!=0)return 3;
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);
-    R4Services services=r4_app_services(&app);sys.size=offsetof(R4XStartR4Sys,service_open);R4ServiceConnection connection;
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);
+    R4Services services=r4_app_services(&app);sys.size=offsetof(R4XStartR4Sys2,service_open);R4ServiceConnection connection;
     if(r4_services_available(&services)||r4_services_open(&services,"EXAMPLE",&connection)!=R4OS_ERR_NO_FN)return 4;
-    R4XStartContext ctx={.instance_id=42};app.context=&ctx;sys.size=offsetof(R4XStartR4Sys,program_open_handle);sys.program_open_handle=(uintptr_t)&forbidden_open;
+    R4XStartContext2 ctx={.instance_id=42};app.context=&ctx;sys.size=offsetof(R4XStartR4Sys2,program_open_handle);sys.program_open_handle=(uintptr_t)&forbidden_open;
     R4Tray tray;forbidden_calls=0;if(r4_app_tray(&app,&tray)!=R4OS_ERR_NO_FN||forbidden_calls)return 5;
     return 0;
 }
 
 /* Same typed bridge used by a real C consumer, with a valid current import. */
-int sdk_net_current_admission(const R4XStartContext *start) {
+int sdk_net_current_admission(const R4XStartContext2 *start) {
+    R4OS2Context view;
+    if (R4OS2ContextInit(start, &view) != 0) return 5;
     uint8_t response[R4OS_NET_SERVICE_HEADER_SIZE], before[sizeof(response)];
     memset(response, 0xB7, sizeof(response)); memcpy(before, response, sizeof(before));
-    if (R4SdkNet_netServiceRequest(start, 1, 2, 3, 0, 0, response, sizeof(response)) != R4OS_ERR_NO_FN) return 1;
+    if (R4SdkNet2_netServiceRequest(&view, 1, 2, 3, 0, 0, response, sizeof(response)) != R4OS_ERR_NO_FN) return 1;
     if (memcmp(response, before, sizeof(response))) return 2;
-    if (R4SdkNet_netServiceRequest(start, 1, 2, 3, 0, 0, response, sizeof(response)-1) != R4OS_NET_SERVICE_RESULT_BAD_REQUEST) return 3;
+    if (R4SdkNet2_netServiceRequest(&view, 1, 2, 3, 0, 0, response, sizeof(response)-1) != R4OS_NET_SERVICE_RESULT_BAD_REQUEST) return 3;
     return memcmp(response, before, sizeof(response)) ? 4 : 0;
 }
 
@@ -181,7 +184,7 @@ void sdk_tcp_deadline_reset(uint32_t mode,uint64_t discovery,uint64_t deadline,u
     tcp_deadline_now=100;tcp_discovery_ticks=discovery;tcp_expected_deadline=deadline;tcp_expected_wait=wait;
     tcp_deadline_calls=0;tcp_deadline_effects=0;tcp_deadline_missing_footer=0;tcp_deadline_mode=mode;reply_mode=MODE_OK;clock_rate=1000;clock_mode=0;
 }
-void sdk_tcp_deadline_tables(R4XStartR4Sys *sys,R4XStartR4Net *net){
+void sdk_tcp_deadline_tables(R4XStartR4Sys2 *sys,R4XStartR4Net2 *net){
     R4App app;init_app(&app,sys,net);sys->ticks=(uintptr_t)&tcp_deadline_ticks;
     sys->service_open=(uintptr_t)&tcp_deadline_open;sys->service_call=(uintptr_t)&tcp_deadline_call;
 }
@@ -189,7 +192,7 @@ uint32_t sdk_tcp_deadline_calls(void){return tcp_deadline_calls;}
 uint32_t sdk_tcp_deadline_effects(void){return tcp_deadline_effects;}
 uint32_t sdk_tcp_deadline_bad_footer(void){return tcp_deadline_missing_footer;}
 int sdk_service_tcp_deadline_case(void){
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);sdk_tcp_deadline_tables(&sys,&net);
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);sdk_tcp_deadline_tables(&sys,&net);
     R4Network network=r4_app_network(&app);
     R4TcpSocket socket={.network=network,.raw=501,.owned=1};
     uint8_t bytes[8]={0};R4Timeout finite=r4_timeout_finite((R4Duration){20000000});
@@ -246,7 +249,7 @@ static int32_t tcp80_call(uint32_t handle,uint16_t op,const uint8_t *request,uin
     assert(capacity>=sizeof(reply));memcpy(out,&reply,sizeof(reply));return (int32_t)(sizeof(reply)+(tcp80_mode==0?reply.bytes:0));
 }
 int sdk_service_tcp_readiness_case(void){
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);sys.service_call=(uintptr_t)&tcp80_call;
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);sys.service_call=(uintptr_t)&tcp80_call;
     R4TcpSocket socket={.network=r4_app_network(&app),.raw=501,.owned=1};tcp80_offset=tcp80_calls=tcp80_mode=tcp80_close_unknown=tcp80_close_pending=0;
     R4NetResult result=r4_tcp_socket_poll(&socket,r4_timeout_forever());
     if(!r4_tcp_socket_valid(&socket)||result.kind!=R4_NET_RESULT_PEER_CLOSED||result.bytes!=0)return 181;
@@ -297,7 +300,7 @@ int sdk_service_tcp_readiness_case(void){
 }
 
 int sdk_service_tcp_close_receipt_case(void){
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);sys.service_call=(uintptr_t)&tcp80_call;
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);sys.service_call=(uintptr_t)&tcp80_call;
     R4TcpSocket socket={.network=r4_app_network(&app),.raw=501,.owned=1};
     tcp80_offset=tcp80_calls=tcp80_mode=tcp80_close_unknown=0;tcp80_close_pending=1;
     R4TcpCloseReceipt receipt=r4_tcp_socket_close_receipt(&socket,r4_timeout_forever());
@@ -333,10 +336,10 @@ static int32_t link_call(uint32_t handle,uint16_t op,const uint8_t*bytes,uint32_
  if(op==R4OS_DESKTOP_LINK_OP_RELEASE){r.phase=R4OS_DESKTOP_LINK_PHASE_CLEANED;r.cleanup_tick=99;}
  *header=(R4ServiceMessageHeader){.magic=R4OS_SERVICE_API_MAGIC,.version=R4OS_SERVICE_API_VERSION,.op=op};memcpy(out,&r,sizeof(r));return sizeof(r);
 }
-void sdk_link_tables(R4XStartR4Sys*sys){sys->service_open=(uintptr_t)&link_open;sys->service_close=(uintptr_t)&link_close;sys->service_call=(uintptr_t)&link_call;link_activations=link_statuses=0;}
+void sdk_link_tables(R4XStartR4Sys2*sys){sys->service_open=(uintptr_t)&link_open;sys->service_close=(uintptr_t)&link_close;sys->service_call=(uintptr_t)&link_call;link_activations=link_statuses=0;}
 uint32_t sdk_link_activations(void){return link_activations;}
 int sdk_link_c_case(void){
- R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);sdk_link_tables(&sys);
+ R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);sdk_link_tables(&sys);
  R4DesktopLinkReply r;R4DesktopLinkRequest q;uint64_t intent[3]={1,2,3};const uint8_t path[]="C:\\TEMP\\SELF.LNK",bytes[]="R4S_FORMAT=1\nSCHEMA=R4LNK\nTARGET=C:\\TEMP\\SELF.R4X\n";
  if(r4_desktop_link_scope(&app,&r)||!r4_desktop_link_supported(&r))return 1;
  if(r4_desktop_link_binding(&r.request.token,(R4ProgramProcessHandle){.instance_id=42,.generation=123},intent,999,path,sizeof(path)-1,bytes,sizeof(bytes)-1,&q))return 2;
@@ -364,9 +367,9 @@ static int32_t inventory_control(const R4ServiceControlRequest *request){
     if(request->registration_id!=300||request->start_generation!=91||request->process.instance_id!=77||request->process.generation!=8)return R4OS_SERVICE_API_RESULT_BUSY;
     ++inv_starts;return 0;
 }
-void sdk_inventory_tables(R4XStartR4Sys *sys){sys->service_inventory_page=(uintptr_t)&inventory_page;sys->service_control_bound=(uintptr_t)&inventory_control;}
+void sdk_inventory_tables(R4XStartR4Sys2 *sys){sys->service_inventory_page=(uintptr_t)&inventory_page;sys->service_control_bound=(uintptr_t)&inventory_control;}
 int sdk_inventory_c_case(void){
-    R4App app;R4XStartR4Sys sys;R4XStartR4Net net;init_app(&app,&sys,&net);sys.abi_version=35;
+    R4App app;R4XStartR4Sys2 sys;R4XStartR4Net2 net;init_app(&app,&sys,&net);sys.abi_version=35;
     sdk_inventory_tables(&sys);sdk_inventory_reset(0);R4Services services=r4_app_services(&app);
     if(!r4_services_inventory_available(&services))return 1;
     R4ServiceInventoryCursor cursor={0};R4ServiceInventoryRow row={0};uint64_t count=0;
@@ -375,13 +378,13 @@ int sdk_inventory_c_case(void){
     R4ServiceControlRequest request=r4_service_control_request(&row,R4OS_SERVICE_CONTROL_START);
     if(r4_services_control_bound(&services,&request)!=0)return 4;
     --request.process.generation;if(r4_services_control_bound(&services,&request)!=R4OS_SERVICE_API_RESULT_BUSY||inv_starts!=1)return 5;
-    sys.size=offsetof(R4XStartR4Sys,service_inventory_page);
+    sys.size=offsetof(R4XStartR4Sys2,service_inventory_page);
     if(r4_services_inventory_available(&services)||r4_services_inventory_page(&services,&cursor,&row,1)!=R4OS_ERR_NO_FN)return 6;
     return 0;
 }
 
 void sdk_service2_tables(R4XStartR4Sys2 *sys,R4XStartR4Net2 *net){
- R4XStartR4Sys old={0};R4XStartR4Net old_net={0};R4XStartR4Desk desk={0};R4XStartR4Dev dev={0};
+ R4XStartR4Sys2 old={0};R4XStartR4Net2 old_net={0};R4XStartR4Desk2 desk={0};R4XStartR4Dev2 dev={0};
  sdk_service_tables(&old,&old_net,&desk,&dev);clock_tick=100;
  *sys=(R4XStartR4Sys2){.magic=R4OS2_R4SYS_MAGIC,.abi_version=2,.size=sizeof(*sys),.monotonic_clock=(uintptr_t)&service2_clock};
  sys->service_open=old.service_open;

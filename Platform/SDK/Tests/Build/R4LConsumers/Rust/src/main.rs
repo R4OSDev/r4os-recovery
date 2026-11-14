@@ -1,20 +1,20 @@
 #![no_std]
 use l66r_abi::{ApiV1_openFn, ApiV1Client, R4L66State};
 use r4os_sdk::{
-    App,
+    App2,
     r4l::{self, Interface},
 };
 unsafe extern "C" {
     fn sdk66_consume(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         module: *const core::ffi::c_char,
         tag: u64,
     ) -> i32;
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let before = app.heap().unwrap().stats().unwrap();
     // Real generated Rust client and generic same-interface cross-vendor client.
-    let client = match ApiV1Client::init(app) {
+    let client = match ApiV1Client::init2(app) {
         Ok(c) => c,
         Err(_) => return 1,
     };
@@ -22,10 +22,10 @@ fn main(app: &mut App<'_>) -> i32 {
     if unsafe { client.r#open(&mut state, 0, 11, 0, 0, 0) } != -1 {
         return 2;
     }
-    if r4l::query(app, "L66R").is_err() || r4l::query(app, "L66C").is_err() {
+    if r4l::query2(app, "L66R").is_err() || r4l::query2(app, "L66C").is_err() {
         return 3;
     }
-    let other = match Interface::new(app, "L66C", "API_V1", l66r_abi::api_v1_expectation) {
+    let other = match Interface::new2(app, "L66C", "API_V1", l66r_abi::api_v1_expectation) {
         Ok(i) => i,
         Err(_) => return 4,
     };
@@ -51,4 +51,4 @@ fn main(app: &mut App<'_>) -> i32 {
     app.write("PASS R4L66 Rust generated/generic clients and exact active heap release\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

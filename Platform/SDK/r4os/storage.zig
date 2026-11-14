@@ -98,12 +98,6 @@ pub const Context = struct {
     // Transfer services may retain that older behavior only when both slots
     // are absent. A partially available new contract always fails closed.
     pub fn transferUseBegin(self: Context, path: [*:0]const u8, out: *u64) i32 {
-        if (self.sys.base.generation2 == null and
-            !self.sys.hasFn("storage_use_begin") and !self.sys.hasFn("storage_claim_begin"))
-        {
-            out.* = 0;
-            return abi.storage_result_ok;
-        }
         return self.useBegin(path, out);
     }
 };

@@ -107,18 +107,18 @@ unsafe extern "C" fn precise(out: *mut a::MonotonicClockInfo) -> i32 {
         _ => 1,
     }
 }
-fn with(table: &a::R4XStartR4Sys, run: impl FnOnce(&App<'_>)) {
+fn with(table: &a::generation2::R4XStartR4Sys2, run: impl FnOnce(&App<'_>)) {
     let import = [a::R4XStartImport {
         group_id: 1,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         flags: a::r4xstart_import_flag_group_interface,
         module_name: c"R4SYS".as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         table: table as *const _ as u64,
         ..Default::default()
     }];
-    let raw = a::R4XStartContext {
+    let raw = a::generation2::R4XStartContext2 {
         app_class: a::R4XStartAppClass::console.0,
         instance_id: 86,
         flags: a::r4xstart_flag_imports_valid,
@@ -127,17 +127,17 @@ fn with(table: &a::R4XStartR4Sys, run: impl FnOnce(&App<'_>)) {
         ..Default::default()
     };
     let imports = [ImportSpec {
-        module_name: b"R4SYS",
-        symbol_name: b"Query",
-        minimum: 1,
-        optional: false,
+        module_name: c"R4SYS".as_ptr().cast(),
+        symbol_name: c"Query2".as_ptr().cast(),
+        minimum: 2,
+        optional: 0,
         group_id: 1,
-        magic: table.magic,
-        version: table.abi_version,
-        size: table.size,
+
+        reserved: 0,
     }];
     let expected = StartupInfo {
-        app_class: a::R4XStartAppClass::console,
+        profile: 0,
+        app_class: a::R4XStartAppClass::console.0,
         required_groups: 2,
         imports: &imports,
     };
@@ -146,10 +146,10 @@ fn with(table: &a::R4XStartR4Sys, run: impl FnOnce(&App<'_>)) {
 }
 #[test]
 fn sub_tick_nanoseconds_require_valid_admission_and_never_substitute_ticks() {
-    let mut table = a::R4XStartR4Sys {
-        time_state: state as *const () as usize,
-        monotonic_clock: precise as *const () as usize,
-        ticks: ticks as *const () as usize,
+    let mut table = a::generation2::R4XStartR4Sys2 {
+        time_state: state as *const () as u64,
+        monotonic_clock: precise as *const () as u64,
+        ticks: ticks as *const () as u64,
         ..Default::default()
     };
     with(&table, |app| {

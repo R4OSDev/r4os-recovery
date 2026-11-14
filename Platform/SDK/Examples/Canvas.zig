@@ -1,7 +1,7 @@
 //! A hosted, event-driven window using the ordinary transactional R4DRAW path.
 const r = @import("r4os");
 
-pub fn r4_app_main(app: *r.App) i32 {
+pub fn r4_app_main(app: *r.App2) i32 {
     var timers: [0]r.Timer = .{};
     var window = r.Window.init(app.system(), app.desktop() orelse return -1, app.drawing() orelse return -1, &timers) orelse return -1;
     _ = window.setTitle("Canvas example");

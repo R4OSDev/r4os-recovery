@@ -268,29 +268,38 @@ test "driver DMA range facade keeps the v33 prefix and negotiates each optional 
     try ownedWorkFacade();
     const a = r4os.abi;
     const t = std.testing;
-    try t.expectEqual(@as(usize, 632), @offsetOf(a.DriverApi, "dma_sync_range_for_device"));
-    try t.expectEqual(@as(usize, 640), @offsetOf(a.DriverApi, "dma_sync_range_for_cpu"));
-    try t.expectEqual(@as(usize, 648), @offsetOf(a.DriverApi, "driver_work_submit_owned"));
-    try t.expectEqual(@as(usize, 656), @offsetOf(a.DriverApi, "serial_query"));
-    try t.expectEqual(@as(usize, 664), @sizeOf(a.DriverApi));
-    var api: a.DriverApi = undefined;
-    api.magic = a.driver_magic;
+    try t.expectEqual(@as(usize, 616), @offsetOf(r4os.platform2.abi.DriverApi2, "dma_sync_range_for_device"));
+    try t.expectEqual(@as(usize, 624), @offsetOf(r4os.platform2.abi.DriverApi2, "dma_sync_range_for_cpu"));
+    try t.expectEqual(@as(usize, 632), @offsetOf(r4os.platform2.abi.DriverApi2, "driver_work_submit_owned"));
+    try t.expectEqual(@as(usize, 640), @offsetOf(r4os.platform2.abi.DriverApi2, "serial_query"));
+    try t.expectEqual(@as(usize, 664), @sizeOf(r4os.platform2.abi.DriverApi2));
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
     api.reserved = 0;
-    api.version = 33;
-    api.size = @sizeOf(a.DriverApi);
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.reserved = 0;
+    api.version = 1;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.version = 0;
     api.dma_sync_range_for_device = &dmaRangeDevice;
     api.dma_sync_range_for_cpu = &dmaRangeCpu;
     var ctx = r4os.r4dev.DriverContext.init(&api);
     const mapping = a.DmaMapping{ .handle = 0x700000000079 };
     try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForDevice(&mapping, 0xfffffff0, 7));
     try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForCpu(&mapping, 3, 0xffffffff));
-    api.version = 34;
-    api.size = 639;
-    try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForDevice(&mapping, 0xfffffff0, 7));
-    api.size = 640;
+    api.version = 1;
+    for ([_]u32{ 16, 544, 615, 655 }) |capacity| {
+        api.size = capacity;
+        try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForDevice(&mapping, 0xfffffff0, 7));
+        try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForCpu(&mapping, 3, 0xffffffff));
+    }
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.dma_sync_range_for_cpu = null;
     try t.expectEqual(@as(i32, -701), ctx.syncDmaRangeForDevice(&mapping, 0xfffffff0, 7));
     try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForCpu(&mapping, 3, 0xffffffff));
-    api.size = 648;
+    api.dma_sync_range_for_cpu = &dmaRangeCpu;
     try t.expectEqual(@as(i32, -702), ctx.syncDmaRangeForCpu(&mapping, 3, 0xffffffff));
     api.dma_sync_range_for_device = null;
     api.dma_sync_range_for_cpu = null;
@@ -298,12 +307,11 @@ test "driver DMA range facade keeps the v33 prefix and negotiates each optional 
     try t.expectEqual(a.err_no_fn, ctx.syncDmaRangeForCpu(&mapping, 3, 0xffffffff));
 }
 
-fn audioIdleRegister(_: [*:0]const u8, raw: *const anyopaque) callconv(.c) i32 {
-    const descriptor: *const r4os.r4dev.AudioOutputIdleBackend = @ptrCast(@alignCast(raw));
-    std.debug.assert(descriptor.base.base.version == r4os.abi.audio_backend_idle_version);
-    std.debug.assert(descriptor.base.base.size == 104);
-    std.debug.assert(@intFromPtr(descriptor.base.base.context) == 0x100000000082);
-    return descriptor.idle.?(descriptor.base.base.context);
+fn audioIdleRegister(_: [*:0]const u8, descriptor: *const r4os.abi.AudioBackend2) callconv(.c) i32 {
+    std.debug.assert(descriptor.magic == r4os.platform2.abi.audio_backend_magic);
+    std.debug.assert(descriptor.version == 3 and descriptor.size == 136);
+    std.debug.assert(@intFromPtr(descriptor.context) == 0x100000000082);
+    return descriptor.idle.?(descriptor.context);
 }
 
 fn audioIdleProbe(raw: ?*anyopaque) callconv(.c) i32 {
@@ -312,19 +320,20 @@ fn audioIdleProbe(raw: ?*anyopaque) callconv(.c) i32 {
 }
 
 fn audioIdleFacade() !void {
-    const a = r4os.abi;
-    try std.testing.expectEqual(@as(usize, 72), @sizeOf(a.AudioBackend));
-    try std.testing.expectEqual(@as(usize, 96), @sizeOf(r4os.r4dev.AudioOutputBackend));
-    try std.testing.expectEqual(@as(usize, 96), @offsetOf(r4os.r4dev.AudioOutputIdleBackend, "idle"));
-    try std.testing.expectEqual(@as(usize, 104), @sizeOf(r4os.r4dev.AudioOutputIdleBackend));
-    var api: a.DriverApi = undefined;
+    try std.testing.expectEqual(@as(usize, 104), @offsetOf(r4os.abi.AudioBackend2, "idle"));
+    try std.testing.expectEqual(@as(usize, 136), @sizeOf(r4os.abi.AudioBackend2));
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.reserved = 0;
     api.register_audio_output_backend = audioIdleRegister;
     const ctx = r4os.r4dev.DriverContext.init(&api);
-    const descriptor: r4os.r4dev.AudioOutputIdleBackend = .{
-        .base = .{ .base = .{ .version = a.audio_backend_idle_version, .size = 104, .context = @ptrFromInt(0x100000000082) }, .outputs = undefined },
+    const descriptor: r4os.abi.AudioBackend2 = .{
+        .context = @ptrFromInt(0x100000000082),
         .idle = audioIdleProbe,
     };
-    try std.testing.expectEqual(@as(i32, -744), ctx.registerAudioOutputIdle("probe", &descriptor));
+    try std.testing.expectEqual(@as(i32, -744), ctx.registerAudioOutputBackend("probe", &descriptor));
 }
 
 fn ownedHandler(raw: usize) callconv(.c) i32 {
@@ -338,16 +347,21 @@ fn ownedSubmit(handler: r4os.abi.DriverWorkHandler, raw: usize, out: *u32) callc
 fn ownedWorkFacade() !void {
     const a = r4os.abi;
     const t = std.testing;
-    var api: a.DriverApi = undefined;
-    api.magic = a.driver_magic;
-    api.version = 35;
-    api.size = @sizeOf(a.DriverApi);
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.reserved = 0;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.version = 0;
     api.driver_work_submit_owned = &ownedSubmit;
     const ctx = r4os.r4dev.DriverContext.init(&api);
     var handle: u32 = 99;
     try t.expectEqual(a.err_no_fn, ctx.workSubmitOwned(ownedHandler, 79, &handle));
     try t.expectEqual(@as(u32, 0), handle);
-    api.version = a.driver_api_owned_work_version;
+    api.version = 1;
     api.size = 655;
     try t.expectEqual(a.err_no_fn, ctx.workSubmitOwned(ownedHandler, 79, &handle));
     api.size = 656;
@@ -424,11 +438,16 @@ fn bootDisplayFacade() !void {
     try t.expectEqual(@as(u64, 0x10000000007a), state.generation);
     table.table.prepare_held = 0;
     try t.expectEqual(a.err_no_fn, table.prepareHeld(&candidate, state.generation, &state));
-    var api: a.DriverApi = undefined;
-    api.magic = a.driver_magic;
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
     api.reserved = 0;
-    api.version = 28;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.reserved = 0;
+    api.version = 1;
     api.size = 592;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.gfx_display_query = bootLegacyQuery;
     const context = r4os.r4dev.DriverContext.init(&api);
     const old = context.graphicsDisplay() orelse return error.LegacyDisplayRejected;
@@ -536,18 +555,23 @@ fn driverThreadLegacyQuery(output: *r4os.abi.DriverThreadApi) callconv(.c) i32 {
 }
 test "driver threads preserve v31 prefix, full identities, optional callbacks and provider errors" {
     const a = r4os.abi;
-    try std.testing.expectEqual(@as(usize, 616), @offsetOf(a.DriverApi, "thread_query"));
-    try std.testing.expectEqual(@as(usize, 624), @offsetOf(a.DriverApi, "thread_query") + @sizeOf(u64));
-    var api: a.DriverApi = undefined;
-    api.version = 31;
+    try std.testing.expectEqual(@as(usize, 600), @offsetOf(r4os.platform2.abi.DriverApi2, "thread_query"));
+    try std.testing.expectEqual(@as(usize, 608), @offsetOf(r4os.platform2.abi.DriverApi2, "thread_query") + @sizeOf(u64));
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.reserved = 0;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.version = 1;
     api.size = 616;
     const driver = r4os.r4dev.DriverContext.init(&api);
     try std.testing.expect(driver.threads() == null);
-    api.version = 32;
+    api.version = 1;
     try std.testing.expect(driver.threads() == null);
     api.size = 624;
     api.thread_query = null;
     try std.testing.expect(driver.threads() == null);
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.thread_query = driverThreadQuery;
     var service = driver.threads() orelse return error.NoThreads;
     var request: a.DriverThreadRequest = .{};
@@ -603,6 +627,7 @@ test "driver threads preserve v31 prefix, full identities, optional callbacks an
     try std.testing.expectEqual(a.err_no_fn, service.start(driverThreadHandler, 0, 0, &handle));
     try std.testing.expectEqual(@as(u64, 0), handle);
     try std.testing.expectEqual(@as(u64, 0), service.current());
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.thread_query = driverThreadLegacyQuery;
     const legacy = driver.threads() orelse return error.LegacyThreadsRejected;
     try std.testing.expectEqual(driver_thread_handle, legacy.current());
@@ -648,18 +673,23 @@ fn semaphoreQuery(output: *r4os.abi.DriverSemaphoreApi) callconv(.c) i32 {
 }
 test "driver semaphores preserve v32 prefix, full counters and deadlines, and failed operation ownership" {
     const a = r4os.abi;
-    try std.testing.expectEqual(@as(usize, 624), @offsetOf(a.DriverApi, "semaphore_query"));
-    try std.testing.expectEqual(@as(usize, 632), @offsetOf(a.DriverApi, "semaphore_query") + @sizeOf(u64));
-    var api: a.DriverApi = undefined;
-    api.version = 32;
+    try std.testing.expectEqual(@as(usize, 608), @offsetOf(r4os.platform2.abi.DriverApi2, "semaphore_query"));
+    try std.testing.expectEqual(@as(usize, 616), @offsetOf(r4os.platform2.abi.DriverApi2, "semaphore_query") + @sizeOf(u64));
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.reserved = 0;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.version = 1;
     api.size = 624;
     const driver = r4os.r4dev.DriverContext.init(&api);
     try std.testing.expect(driver.semaphores() == null);
-    api.version = 33;
+    api.version = 1;
     try std.testing.expect(driver.semaphores() == null);
     api.size = 632;
     api.semaphore_query = null;
     try std.testing.expect(driver.semaphores() == null);
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.semaphore_query = semaphoreQuery;
     var sem = driver.semaphores() orelse return error.NoSemaphores;
     var handle: u64 = 79;
@@ -695,20 +725,25 @@ fn driverClockProbe(out: *r4os.abi.MonotonicClockInfo) callconv(.c) i32 {
 }
 test "driver monotonic clock preserves the old table prefix and nanosecond payload" {
     const a = r4os.abi;
-    try std.testing.expectEqual(@as(usize, 608), @offsetOf(a.DriverApi, "monotonic_clock"));
-    try std.testing.expectEqual(@as(usize, 616), @offsetOf(a.DriverApi, "monotonic_clock") + @sizeOf(u64));
-    var api: a.DriverApi = undefined;
-    api.version = 30;
-    api.size = @offsetOf(a.DriverApi, "monotonic_clock");
+    try std.testing.expectEqual(@as(usize, 592), @offsetOf(r4os.platform2.abi.DriverApi2, "monotonic_clock"));
+    try std.testing.expectEqual(@as(usize, 600), @offsetOf(r4os.platform2.abi.DriverApi2, "monotonic_clock") + @sizeOf(u64));
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.reserved = 0;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.version = 1;
+    api.size = @offsetOf(r4os.platform2.abi.DriverApi2, "monotonic_clock");
     const driver = r4os.r4dev.DriverContext.init(&api);
     var clock: a.MonotonicClockInfo = .{ .instant_ns = 77 };
     try std.testing.expectEqual(a.err_no_fn, driver.monotonicClock(&clock));
-    try std.testing.expectEqual(@as(u64, 0), clock.instant_ns);
-    api.version = 31;
+    try std.testing.expectEqual(@as(u64, 77), clock.instant_ns);
+    api.version = 1;
     try std.testing.expectEqual(a.err_no_fn, driver.monotonicClock(&clock));
     api.size += 8;
     api.monotonic_clock = null;
     try std.testing.expectEqual(a.err_no_fn, driver.monotonicClock(&clock));
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.monotonic_clock = driverClockProbe;
     try std.testing.expectEqual(@as(i32, 1), driver.monotonicClock(&clock));
     try std.testing.expectEqual(@as(u64, 0x10000000003), clock.instant_ns);
@@ -730,19 +765,24 @@ fn driverHeapQueryProbe(out: *r4os.abi.DriverHeapApi) callconv(.c) i32 {
 }
 test "driver CPU heap facade preserves v29 prefix, optional functions and full 64-bit identities" {
     const a = r4os.abi;
-    try std.testing.expectEqual(@as(usize, 600), @offsetOf(a.DriverApi, "heap_query"));
-    try std.testing.expectEqual(@as(usize, 608), @offsetOf(a.DriverApi, "heap_query") + @sizeOf(u64));
-    var api: a.DriverApi = undefined;
-    api.magic = a.driver_magic;
-    api.version = 29;
-    api.size = @offsetOf(a.DriverApi, "heap_query");
+    try std.testing.expectEqual(@as(usize, 584), @offsetOf(r4os.platform2.abi.DriverApi2, "heap_query"));
+    try std.testing.expectEqual(@as(usize, 592), @offsetOf(r4os.platform2.abi.DriverApi2, "heap_query") + @sizeOf(u64));
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.reserved = 0;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.size = @offsetOf(r4os.platform2.abi.DriverApi2, "heap_query");
     const driver = r4os.r4dev.DriverContext.init(&api);
-    try std.testing.expect(driver.apiCompatible() and driver.heap() == null);
-    api.version = 30;
+    try std.testing.expect(!driver.apiCompatible() and driver.heap() == null);
+    api.version = 1;
     try std.testing.expect(driver.heap() == null);
     api.size += 8;
     api.heap_query = null;
     try std.testing.expect(driver.heap() == null);
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.heap_query = driverHeapQueryProbe;
     var heap = driver.heap().?;
     var allocation: a.DriverHeapAllocation = .{};
@@ -775,17 +815,22 @@ fn driverResourceAcpiStatProbe(signature: u32, index: u32, output: *r4os.abi.Dri
 }
 test "driver resource facade preserves old prefix, optional slots and 64-bit ranges" {
     const a = r4os.abi;
-    var api: a.DriverApi = undefined;
-    api.magic = a.driver_magic;
-    api.version = 28;
-    api.size = @offsetOf(a.DriverApi, "resource_query");
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.reserved = 0;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.version = 1;
+    api.size = @offsetOf(r4os.platform2.abi.DriverApi2, "resource_query");
     const driver = r4os.r4dev.DriverContext.init(&api);
     try std.testing.expect(driver.resources() == null);
-    api.version = 29;
+    api.version = 1;
     try std.testing.expect(driver.resources() == null);
     api.size += 8;
     api.resource_query = null;
     try std.testing.expect(driver.resources() == null);
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.resource_query = driverResourceQueryProbe;
     var driver_resources = driver.resources().?;
     var byte: [1]u8 = .{0};
@@ -828,9 +873,9 @@ var vm_slots: u32 = 0;
 var io_active = false;
 var io_complete = false;
 var io_slots: u32 = 0;
-var fake_table: r4os.abi.R4XStartR4Sys = .{};
-var fake_desk_table: r4os.abi.R4XStartR4Desk = .{};
-var fake_context: r4os.abi.R4XStartContext = .{};
+var fake_table: r4os.platform2.abi.R4XStartR4Sys2 = .{};
+var fake_desk_table: r4os.platform2.abi.R4XStartR4Desk2 = .{};
+var fake_context: r4os.platform2.abi.R4XStartContext2 = .{};
 
 fn fakeTicks() callconv(.c) u64 {
     return now_ticks;
@@ -1153,13 +1198,13 @@ test "R4DEV current registry V2 is explicit and unavailable without its group" {
     const performance = r4os.PerformanceView{ .raw = dev };
     try std.testing.expect(performance.programRegistryV2() == null);
     try std.testing.expectEqual(r4os.abi.err_no_group, performance.programRegistrySelfTestV2(&self_test_v2));
-    var table: r4os.abi.R4XStartR4Dev = .{ .program_registry_summary_v2 = @intFromPtr(&registrySummaryV2Peer), .program_registry_self_test_v2 = @intFromPtr(&registryTestV2Peer) };
+    var table: r4os.platform2.abi.R4XStartR4Dev2 = .{ .program_registry_summary_v2 = @intFromPtr(&registrySummaryV2Peer), .program_registry_self_test_v2 = @intFromPtr(&registryTestV2Peer) };
     bundle.dev = &table;
     registry_v2_calls = 0;
-    table.size = @offsetOf(r4os.abi.R4XStartR4Dev, "program_registry_summary_v2");
+    table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Dev2, "program_registry_summary_v2");
     try std.testing.expectEqual(r4os.abi.err_no_fn, dev.programRegistrySummaryV2(&summary_v2));
     try std.testing.expectEqual(@as(u32, 0), registry_v2_calls);
-    table.size = @sizeOf(r4os.abi.R4XStartR4Dev);
+    table.size = @sizeOf(r4os.platform2.abi.R4XStartR4Dev2);
     try std.testing.expectEqual(@as(i32, 1), dev.programRegistrySummaryV2(&summary_v2));
     try std.testing.expectEqual(@as(u32, 7), summary_v2.live_slots);
     try std.testing.expectEqual(@as(i32, 1), performance.programRegistrySelfTestV2(&self_test_v2));
@@ -1186,12 +1231,12 @@ fn currentIdentityFacade(sys: *const r4os.r4sys.Context) !void {
     const t = std.testing;
     var output: a.ProgramJoinHandle = .{ .thread_generation = 79 };
     fake_table.thread_current_handle = @intFromPtr(&fakeCurrentIdentity);
-    for ([_]u32{ 1224, 1231 }) |size| {
+    for ([_]u32{ 1216, 1223 }) |size| {
         fake_table.size = size;
         try t.expectEqual(a.err_no_fn, sys.threadCurrentHandle(&output));
         try t.expectEqual(@as(u64, 79), output.thread_generation);
     }
-    fake_table.size = 1232;
+    fake_table.size = 1224;
     fake_table.thread_current_handle = 0;
     try t.expectEqual(a.err_no_fn, sys.threadCurrentHandle(&output));
     try t.expectEqual(@as(u64, 79), output.thread_generation);
@@ -1213,12 +1258,12 @@ fn cpuCapacityFacade(sys: *const r4os.r4sys.Context) !void {
     const t = std.testing;
     var output: a.CpuCapacity = .{ .available_cpus = 79 };
     fake_table.cpu_capacity = @intFromPtr(&fakeCpuCapacity);
-    for ([_]u32{ 1232, 1239 }) |size| {
+    for ([_]u32{ 1224, 1231 }) |size| {
         fake_table.size = size;
         try t.expectEqual(a.err_no_fn, sys.cpuCapacity(&output));
         try t.expectEqual(@as(u32, 79), output.available_cpus);
     }
-    fake_table.size = 1240;
+    fake_table.size = 1232;
     fake_table.cpu_capacity = 0;
     try t.expectEqual(a.err_no_fn, sys.cpuCapacity(&output));
     try t.expectEqual(@as(u32, 79), output.available_cpus);
@@ -1256,15 +1301,15 @@ fn placementFacade(sys: *const r4os.r4sys.Context) !void {
     placement_calls = 0;
     fake_table.thread_placement_get = @intFromPtr(&fakePlacementGet);
     fake_table.thread_placement_set = @intFromPtr(&fakePlacementSet);
-    for ([_]u32{ 1264, 1271 }) |size| {
+    for ([_]u32{ 1256, 1263 }) |size| {
         fake_table.size = size;
         try t.expectEqual(a.err_no_fn, sys.threadPlacementGet(&handle, &info, &words));
     }
-    for ([_]u32{ 1272, 1279 }) |size| {
+    for ([_]u32{ 1264, 1271 }) |size| {
         fake_table.size = size;
         try t.expectEqual(a.err_no_fn, sys.threadPlacementSet(&handle, &request, words[0..2]));
     }
-    fake_table.size = 1280;
+    fake_table.size = 1272;
     fake_table.thread_placement_get = 0;
     fake_table.thread_placement_set = 0;
     try t.expectEqual(a.err_no_fn, sys.threadPlacementGet(&handle, &info, &words));
@@ -1288,11 +1333,11 @@ fn fakeProgramExit(code: i32, reason: u32) callconv(.c) i32 {
 fn programExitFacade(sys: *const r4os.r4sys.Context) !void {
     const a = r4os.abi;
     fake_table.program_exit = @intFromPtr(&fakeProgramExit);
-    for ([_]u32{ 1240, 1247 }) |size| {
+    for ([_]u32{ 1232, 1239 }) |size| {
         fake_table.size = size;
         try std.testing.expectEqual(a.err_no_fn, sys.programExit(-73, a.program_exit_reason_failed));
     }
-    fake_table.size = 1248;
+    fake_table.size = 1240;
     fake_table.program_exit = 0;
     try std.testing.expectEqual(a.err_no_fn, sys.programExit(-73, a.program_exit_reason_failed));
     fake_table.program_exit = @intFromPtr(&fakeProgramExit);
@@ -1551,13 +1596,13 @@ fn platformFacade() !void {
     try t.expectEqual(@as(u64, 0x100000080035), platform.rsdp());
     try t.expectEqual(@as(u64, 0xffff800000080035), @intFromPtr(platform.physicalView(0x100000080035, 65536).?));
     try t.expectEqual(@as(i32, 0), platform.input(3, 2));
-    var sys: a.R4XStartR4Sys = .{ .size = 1248, .platform_input_snapshot = @intFromPtr(&platformSnapshotProbe) };
-    const raw: r4os.abi.R4XStartContext = .{};
+    var sys: r4os.platform2.abi.R4XStartR4Sys2 = .{ .size = @offsetOf(r4os.platform2.abi.R4XStartR4Sys2, "platform_input_snapshot"), .platform_input_snapshot = @intFromPtr(&platformSnapshotProbe) };
+    const raw: r4os.platform2.abi.R4XStartContext2 = .{};
     const bundle: r4os.program.Bundle = .{ .raw = &raw, .sys = &sys };
     const ctx = r4os.program.Context.initBundle(&bundle);
     var snapshot: a.PlatformInputSnapshot = .{};
     try t.expectEqual(a.err_no_fn, ctx.platformInputSnapshot(&snapshot));
-    sys.size = 1256;
+    sys.size = @offsetOf(r4os.platform2.abi.R4XStartR4Sys2, "platform_input_snapshot") + 8;
     try t.expectEqual(@as(i32, 1), ctx.platformInputSnapshot(&snapshot));
     try t.expectEqual(@as(u64, 0x200000080035), snapshot.brightness_up);
     sys.platform_input_snapshot = 0;
@@ -1576,8 +1621,8 @@ fn lifecyclePrograms(cursor: *r4os.abi.ProgramInventoryCursor, out: [*]r4os.abi.
 }
 test "process thread VM and I/O resources preserve separate metadata-only lifecycle admission" {
     const a = r4os.abi;
-    var table: a.R4XStartR4Sys = .{ .program_lifecycle_begin = @intFromPtr(&lifecycleBegin), .program_lifecycle_programs = @intFromPtr(&lifecyclePrograms) };
-    const raw: a.R4XStartContext = .{};
+    var table: r4os.platform2.abi.R4XStartR4Sys2 = .{ .program_lifecycle_begin = @intFromPtr(&lifecycleBegin), .program_lifecycle_programs = @intFromPtr(&lifecyclePrograms) };
+    const raw: r4os.platform2.abi.R4XStartContext2 = .{};
     const bundle: r4os.program.Bundle = .{ .raw = &raw, .sys = &table };
     const context = r4os.r4sys.Context.init(&bundle);
     var cursor: a.ProgramInventoryCursor = .{};

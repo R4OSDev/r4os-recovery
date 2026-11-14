@@ -2,9 +2,9 @@ const abi = @import("r4os_contract").abi;
 const program = @import("program.zig");
 
 pub const name = "R4DESK";
-pub const import_query = "R4DESK:Query:1";
+pub const import_query = "R4DESK:Query2:2";
 pub const group = abi.R4LGroup.r4desk;
-pub const abi_version = abi.r4l_abi_version;
+pub const abi_version = @import("r4os_contract2").query_version;
 pub const contract = "Repositories/Contract/API/Groups.txt";
 pub const provider_repository = "Repositories/Kernel";
 pub const c_header = "Repositories/SDK/Shared/C/include/r4os/r4desk.h";
@@ -330,13 +330,13 @@ pub const Context = struct {
 test "r4desk exposes project and remote ABI metadata" {
     const std = @import("std");
     try std.testing.expectEqualStrings("R4DESK", name);
-    try std.testing.expectEqualStrings("R4DESK:Query:1", import_query);
+    try std.testing.expectEqualStrings("R4DESK:Query2:2", import_query);
     try std.testing.expectEqual(@as(u32, 2), @intFromEnum(group));
-    try std.testing.expectEqual(abi.r4l_abi_version, abi_version);
-    const header: abi.R4XStartR4Desk = .{};
+    try std.testing.expectEqual(@as(u32, 2), abi_version);
+    const header: @import("r4os_contract2").R4XStartR4Desk2 = .{};
     try std.testing.expect(header.abi_version >= abi.r4xstart_r4desk_version);
     try std.testing.expectEqual(abi.r4xstart_r4desk_magic, header.magic);
-    try std.testing.expectEqual(@as(u32, @sizeOf(abi.R4XStartR4Desk)), header.size);
+    try std.testing.expectEqual(@as(u32, @sizeOf(@import("r4os_contract2").R4XStartR4Desk2)), header.size);
     try std.testing.expectEqual(abi.remote_frame_version, (abi.RemoteFrameInfo{}).version);
     try std.testing.expectEqual(abi.remote_input_version, (abi.RemoteInputEvent{}).version);
     try std.testing.expectEqualStrings("Repositories/Kernel", provider_repository);

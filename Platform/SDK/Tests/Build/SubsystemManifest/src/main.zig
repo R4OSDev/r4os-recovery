@@ -36,7 +36,7 @@ const Demo = struct {
     last_animation_tick: u64 = 0,
 };
 
-pub fn r4_app_main(app: *r4os.App) i32 {
+pub fn r4_app_main(app: *r4os.App2) i32 {
     if (app.profile != .desktop) return 66;
     const desk = app.desktop() orelse return 67;
     const draw = app.drawing() orelse return 68;

@@ -17,13 +17,13 @@ $ids=[string[]]@($data.profiles.Keys)
 foreach($id in $ids){
     $profile=$data.profiles[$id]
     $explicit=$profile.ContainsKey('platform')
-    $platform=if($explicit){$profile.platform}else{'platform1'}
+    $platform=if($explicit){$profile.platform}else{'platform2'}
     $kind=if($profile.ContainsKey('kind')){[string]$profile.kind}else{''}
     foreach($value in @($id,$profile.language,$profile.role)){
         if($value -cnotmatch '^[A-Za-z0-9_+.-]+$'){throw 'SdkProfileProjectionStringInvalid'}
     }
     $generation=$data.platforms[$platform].generation
-    if($generation -notin @(1,2)){throw 'SdkProfileProjectionGenerationInvalid'}
+    if($generation -ne 2){throw 'SdkProfileProjectionGenerationInvalid'}
     if($kind -and $kind -cnotin @('R4X','R4D','R4P','R4L')){throw 'SdkProfileProjectionKindInvalid'}
     $lines.Add('    .{ .id = "'+$id+'", .language = "'+$profile.language+'", .role = "'+$profile.role+'", .kind = "'+$kind+'", .generation = '+$generation+', .explicit_platform = '+$explicit.ToString().ToLowerInvariant()+' },')
 }

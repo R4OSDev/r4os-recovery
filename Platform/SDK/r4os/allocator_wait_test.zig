@@ -73,7 +73,7 @@ fn close(handle: u64) callconv(.c) i32 {
 fn sleep(_: u64) callconv(.c) void {
     std.Thread.yield() catch {};
 }
-pub fn install(api: *abi.R4XStartR4Sys) void {
+pub fn install(api: *@import("r4os_contract2").R4XStartR4Sys2) void {
     entries = .{Entry{}} ** entries.len;
     waits.store(0, .release);
     parked.store(0, .release);
@@ -123,7 +123,7 @@ pub fn awaitPark(previous: u32) void {
 pub fn expectClosed() !void {
     for (entries) |entry| try std.testing.expectEqual(@as(u64, 0), entry.handle);
 }
-pub fn checkRevisionContract(api: *abi.R4XStartR4Sys) !void {
+pub fn checkRevisionContract(api: *@import("r4os_contract2").R4XStartR4Sys2) !void {
     const Channel = @import("allocator_wait.zig").Channel;
     var channel: Channel = .{};
     const ticket = channel.enroll(api) orelse return error.MissingNotification;
@@ -139,7 +139,7 @@ pub fn checkRevisionContract(api: *abi.R4XStartR4Sys) !void {
     channel.prune(api);
     try std.testing.expectEqual(@as(u64, 0), channel.handle);
     const saved = api.size;
-    api.size = @offsetOf(abi.R4XStartR4Sys, "notification_close");
+    api.size = @offsetOf(@import("r4os_contract2").R4XStartR4Sys2, "notification_close");
     try std.testing.expect(channel.enroll(api) == null);
     api.size = saved;
     const saved_close = api.notification_close;

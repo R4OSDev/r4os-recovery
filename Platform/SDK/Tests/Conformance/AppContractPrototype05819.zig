@@ -3,15 +3,15 @@ const r4os = @import("r4os");
 
 const contract = r4os.app_contract;
 
-pub fn consolePrototype(context: *const r4os.abi.R4XStartContext) r4os.Outcome(r4os.App) {
+pub fn consolePrototype(context: *const r4os.platform2.abi.R4XStartContext2) r4os.Outcome(r4os.App) {
     return r4os.App.init(context, .console);
 }
 
-pub fn desktopPrototype(context: *const r4os.abi.R4XStartContext) r4os.Outcome(r4os.App) {
+pub fn desktopPrototype(context: *const r4os.platform2.abi.R4XStartContext2) r4os.Outcome(r4os.App) {
     return r4os.App.init(context, .desktop);
 }
 
-pub fn servicePrototype(context: *const r4os.abi.R4XStartContext) r4os.Outcome(r4os.App) {
+pub fn servicePrototype(context: *const r4os.platform2.abi.R4XStartContext2) r4os.Outcome(r4os.App) {
     return r4os.App.init(context, .service);
 }
 
@@ -22,13 +22,16 @@ test "console desktop and service prototypes compile" {
 }
 
 test "missing group and function preserve their raw contract codes" {
-    var invalid_context: r4os.abi.R4XStartContext = std.mem.zeroes(r4os.abi.R4XStartContext);
+    var invalid_context: r4os.platform2.abi.R4XStartContext2 = std.mem.zeroes(r4os.platform2.abi.R4XStartContext2);
     const missing_group = r4os.App.init(&invalid_context, .console);
     switch (missing_group) {
         .value => return error.ExpectedMissingGroup,
         .failure => |failure| {
             try std.testing.expectEqual(contract.ErrorDomain.contract, failure.domain);
-            try std.testing.expectEqual(r4os.abi.err_no_group, failure.raw_code);
+            // G2 validates its actual context before looking up required groups.
+            try std.testing.expectEqual(@as(i32, -12), failure.raw_code);
+            const missing = r4os.Failure.fromRaw(.contract, r4os.abi.err_no_group);
+            try std.testing.expectEqual(r4os.abi.err_no_group, missing.raw_code);
         },
     }
 

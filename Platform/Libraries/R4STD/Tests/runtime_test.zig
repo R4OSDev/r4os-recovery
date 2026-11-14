@@ -4,6 +4,7 @@ const r4std = @import("r4std");
 const r4os = @import("r4os");
 
 const module_name: [:0]const u8 = "R4STD";
+const test_system: r4os.platform2.abi.R4XStartR4Sys2 = .{};
 const export_names = [_][:0]const u8{ "TEXT_V1", "SETTINGS_V1", "DATE_V1", "TIME_V1", "CONFIG_V1" };
 
 test "CONFIG_V1 uses actual generation2 caller and refuses invalid admission before IO" {
@@ -47,7 +48,7 @@ test "CONFIG_V1 uses actual generation2 caller and refuses invalid admission bef
     try std.testing.expectEqual(@as(u32, 1), Backend.calls);
 }
 
-fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.abi.R4XStartContext {
+fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.platform2.abi.R4XStartContext2 {
     return .{
         .flags = r4os.abi.r4xstart_flag_imports_valid,
         .imports = @intFromPtr(imports.ptr),
@@ -55,7 +56,7 @@ fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.abi.R4XStartContex
     };
 }
 
-fn makeImports() [5]r4os.abi.R4XStartImport {
+fn makeImports() [7]r4os.abi.R4XStartImport {
     const tables = [_]usize{
         @intFromPtr(&project.r4std_text_v1),
         @intFromPtr(&project.r4std_settings_v1),
@@ -63,8 +64,8 @@ fn makeImports() [5]r4os.abi.R4XStartImport {
         @intFromPtr(&project.r4std_time_v1),
         @intFromPtr(&project.r4std_config_v1),
     };
-    var imports: [5]r4os.abi.R4XStartImport = undefined;
-    for (&imports, export_names, tables) |*item, export_name, table| {
+    var imports: [7]r4os.abi.R4XStartImport = undefined;
+    for (imports[0..5], export_names, tables) |*item, export_name, table| {
         item.* = .{
             .group_id = 0,
             .min_version = 1,
@@ -75,6 +76,8 @@ fn makeImports() [5]r4os.abi.R4XStartImport {
             .table = table,
         };
     }
+    imports[5] = .{ .min_version = 2, .resolved_version = 2, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&project.r4std_query2) };
+    imports[6] = .{ .group_id = 1, .min_version = 2, .resolved_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .module_name = @intFromPtr("R4SYS"), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&test_system) };
     return imports;
 }
 
@@ -143,11 +146,11 @@ test "writeback state remains caller-owned across table calls" {
     try std.testing.expect(!state.isDirty());
 }
 
-fn codecContext() [6]r4os.abi.R4XStartImport {
-    var imports: [6]r4os.abi.R4XStartImport = undefined;
+fn codecContext() [8]r4os.abi.R4XStartImport {
+    var imports: [8]r4os.abi.R4XStartImport = undefined;
     const old = makeImports();
-    @memcpy(imports[0..5], &old);
-    imports[5] = .{ .group_id = 0, .min_version = 1, .resolved_version = 1, .flags = 0, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr(@as([:0]const u8, "CODEC_V1").ptr), .table = @intFromPtr(&project.r4std_codec_v1) };
+    @memcpy(imports[0..7], &old);
+    imports[7] = .{ .group_id = 0, .min_version = 1, .resolved_version = 1, .flags = 0, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr(@as([:0]const u8, "CODEC_V1").ptr), .table = @intFromPtr(&project.r4std_codec_v1) };
     return imports;
 }
 
@@ -323,7 +326,8 @@ test "strict bulk conversion preflights errors and preserves arbitrary document 
 extern fn r4std_codec_c_transport(api: *const r4std.abi.CodecV1) callconv(.c) c_int;
 test "all six codec function signatures cross C and Zig with real provider state" {
     try std.testing.expectEqual(@as(c_int, 0), r4std_codec_c_transport(@ptrCast(&project.r4std_codec_v1)));
-    // The five legacy imports remain sufficient and never pretend the new API exists.
+    // The five independent original interfaces plus technical Query2 remain
+    // sufficient without falsely advertising the optional codec interface.
     r4std.resetForTesting();
     defer r4std.resetForTesting();
     var imports = makeImports();

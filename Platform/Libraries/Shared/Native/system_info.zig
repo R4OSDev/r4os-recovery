@@ -2,27 +2,22 @@
 const std = @import("std");
 const a = @import("r4os").abi;
 const a2 = @import("r4os").platform2.abi;
-var legacy_query: std.atomic.Value(usize) = .init(0);
 var generation2_query: std.atomic.Value(usize) = .init(0);
 
 // Keep only an immutable boot-lifetime table, never a caller's Bundle.
-pub fn bind(devices: *const a.R4XStartR4Dev) bool {
-    return bindActual(devices);
-}
+pub const bind = bind2;
 pub fn bind2(devices: *const a2.R4XStartR4Dev2) bool {
     return bindActual(devices);
 }
 fn bindActual(devices: anytype) bool {
     if (!@import("system.zig").reaches(devices, "memory_pressure_snapshot")) return false;
     const address = devices.memory_pressure_snapshot;
-    const slot = if (@TypeOf(devices) == *const a2.R4XStartR4Dev2) &generation2_query else &legacy_query;
-    const old = slot.cmpxchgStrong(0, address, .acq_rel, .acquire);
+    const old = generation2_query.cmpxchgStrong(0, address, .acq_rel, .acquire);
     return old == null or old.? == address;
 }
 
 pub fn snapshot() ?a.ProgramMemoryPressureSnapshot {
-    const current = generation2_query.load(.acquire);
-    const address = if (current != 0) current else legacy_query.load(.acquire);
+    const address = generation2_query.load(.acquire);
     if (address == 0) return null;
     const query: a.R4DevFns.memory_pressure_snapshot = @ptrFromInt(address);
     var value: a.ProgramMemoryPressureSnapshot = .{};

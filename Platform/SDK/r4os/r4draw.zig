@@ -2,9 +2,9 @@ const abi = @import("r4os_contract").abi;
 const program = @import("program.zig");
 
 pub const name = "R4DRAW";
-pub const import_query = "R4DRAW:Query:1";
+pub const import_query = "R4DRAW:Query2:2";
 pub const group = abi.R4LGroup.r4draw;
-pub const abi_version = abi.r4l_abi_version;
+pub const abi_version = @import("r4os_contract2").query_version;
 pub const contract = "Repositories/Contract/API/Groups.txt";
 pub const provider_repository = "Repositories/Kernel";
 pub const c_header = "Repositories/SDK/Shared/C/include/r4os/r4draw.h";
@@ -12,11 +12,21 @@ pub const query_contract = "Repositories/Contract/ABI/R4LQuery.txt";
 
 pub const Context = struct {
     base: program.Context,
-    pub fn gfxOutputPower(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputPower) i32 { return self.base.gfxOutputPower(identity, output); }
-    pub fn gfxPowerRequest(self: *const Context, input: *const abi.GfxPowerRequest, output: *abi.GfxPowerRequest) i32 { return self.base.gfxPowerRequest(input, output); }
-    pub fn gfxOutputBrightness(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputBrightness) i32 { return self.base.gfxOutputBrightness(identity, output); }
-    pub fn gfxBrightnessRequest(self: *const Context, input: *const abi.GfxBrightnessRequest, output: *abi.GfxBrightnessRequest) i32 { return self.base.gfxBrightnessRequest(input, output); }
-    pub fn outputs(self: *const Context) @import("gfx_outputs.zig").Context { return .{ .base = self.base }; }
+    pub fn gfxOutputPower(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputPower) i32 {
+        return self.base.gfxOutputPower(identity, output);
+    }
+    pub fn gfxPowerRequest(self: *const Context, input: *const abi.GfxPowerRequest, output: *abi.GfxPowerRequest) i32 {
+        return self.base.gfxPowerRequest(input, output);
+    }
+    pub fn gfxOutputBrightness(self: *const Context, identity: *const abi.GfxOutputId, output: *abi.GfxOutputBrightness) i32 {
+        return self.base.gfxOutputBrightness(identity, output);
+    }
+    pub fn gfxBrightnessRequest(self: *const Context, input: *const abi.GfxBrightnessRequest, output: *abi.GfxBrightnessRequest) i32 {
+        return self.base.gfxBrightnessRequest(input, output);
+    }
+    pub fn outputs(self: *const Context) @import("gfx_outputs.zig").Context {
+        return .{ .base = self.base };
+    }
     pub fn gfxOutputRefresh(self: *const Context, target: *const abi.GfxOutputTarget, output: *abi.GfxOutputRefresh) i32 {
         return self.base.gfxOutputRefresh(target, output);
     }
@@ -37,20 +47,38 @@ pub const Context = struct {
         return self.base.hasDrawFn(field);
     }
 
-    pub fn gfxVirtualStart(self: *const Context, input: *const abi.GfxVirtualRequest, output: *abi.GfxVirtualStatus) i32 { return self.base.gfxVirtualStart(input, output); }
-    pub fn gfxVirtualQuery(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxVirtualStatus) i32 { return self.base.gfxVirtualQuery(request, output); }
-    pub fn gfxVirtualClose(self: *const Context, request: *const abi.GfxBufferHandle, mode: u32) i32 { return self.base.gfxVirtualClose(request, mode); }
-    pub fn gfxVirtualWait(self: *const Context, request: *const abi.GfxBufferHandle, until: u32, timeout_ticks: u64, output: *abi.GfxVirtualStatus) i32 { return self.base.gfxVirtualWait(request, until, timeout_ticks, output); }
+    pub fn gfxVirtualStart(self: *const Context, input: *const abi.GfxVirtualRequest, output: *abi.GfxVirtualStatus) i32 {
+        return self.base.gfxVirtualStart(input, output);
+    }
+    pub fn gfxVirtualQuery(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxVirtualStatus) i32 {
+        return self.base.gfxVirtualQuery(request, output);
+    }
+    pub fn gfxVirtualClose(self: *const Context, request: *const abi.GfxBufferHandle, mode: u32) i32 {
+        return self.base.gfxVirtualClose(request, mode);
+    }
+    pub fn gfxVirtualWait(self: *const Context, request: *const abi.GfxBufferHandle, until: u32, timeout_ticks: u64, output: *abi.GfxVirtualStatus) i32 {
+        return self.base.gfxVirtualWait(request, until, timeout_ticks, output);
+    }
 
-    pub fn gfxNativeStart(self: *const Context, input: *const abi.GfxNativeAllocation, output: *abi.GfxNativeStatus) i32 { return self.base.gfxNativeStart(input, output); }
+    pub fn gfxNativeStart(self: *const Context, input: *const abi.GfxNativeAllocation, output: *abi.GfxNativeStatus) i32 {
+        return self.base.gfxNativeStart(input, output);
+    }
 
-    pub fn gfxNativeQuery(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxNativeStatus) i32 { return self.base.gfxNativeQuery(request, output); }
+    pub fn gfxNativeQuery(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxNativeStatus) i32 {
+        return self.base.gfxNativeQuery(request, output);
+    }
 
-    pub fn gfxNativeReceive(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxBufferReference) i32 { return self.base.gfxNativeReceive(request, output); }
+    pub fn gfxNativeReceive(self: *const Context, request: *const abi.GfxBufferHandle, output: *abi.GfxBufferReference) i32 {
+        return self.base.gfxNativeReceive(request, output);
+    }
 
-    pub fn gfxNativeClose(self: *const Context, request: *const abi.GfxBufferHandle) i32 { return self.base.gfxNativeClose(request); }
+    pub fn gfxNativeClose(self: *const Context, request: *const abi.GfxBufferHandle) i32 {
+        return self.base.gfxNativeClose(request);
+    }
 
-    pub fn gfxNativeWait(self: *const Context, request: *const abi.GfxBufferHandle, timeout_ticks: u64, output: *abi.GfxNativeStatus) i32 { return self.base.gfxNativeWait(request, timeout_ticks, output); }
+    pub fn gfxNativeWait(self: *const Context, request: *const abi.GfxBufferHandle, timeout_ticks: u64, output: *abi.GfxNativeStatus) i32 {
+        return self.base.gfxNativeWait(request, timeout_ticks, output);
+    }
 
     pub fn gfxBufferCreate(self: *const Context, descriptor: *const abi.GfxBufferDescriptor, output: *abi.GfxBufferReference) i32 {
         return self.base.gfxBufferCreate(descriptor, output);
@@ -99,12 +127,24 @@ pub const Context = struct {
         return .{ .base = self.base };
     }
 
-    pub fn gfxOutputRevision(self: *const Context, output: *abi.GfxDisplayRevision) i32 { return self.base.gfxOutputRevision(output); }
-    pub fn gfxOutputInfo(self: *const Context, index: u32, output: *abi.GfxOutputInfo) i32 { return self.base.gfxOutputInfo(index, output); }
-    pub fn gfxOutputMode(self: *const Context, identity: *const abi.GfxOutputId, index: u32, output: *abi.GfxOutputMode) i32 { return self.base.gfxOutputMode(identity, index, output); }
-    pub fn gfxOutputEdid(self: *const Context, identity: *const abi.GfxOutputId, index: u32, output: *abi.GfxEdidBlock) i32 { return self.base.gfxOutputEdid(identity, index, output); }
-    pub fn gfxAtomicTest(self: *const Context, state: *const abi.GfxAtomicState, output: *abi.GfxAtomicResult) i32 { return self.base.gfxAtomicTest(state, output); }
-    pub fn gfxAtomicCommit(self: *const Context, state: *const abi.GfxAtomicState, output: *abi.GfxAtomicResult) i32 { return self.base.gfxAtomicCommit(state, output); }
+    pub fn gfxOutputRevision(self: *const Context, output: *abi.GfxDisplayRevision) i32 {
+        return self.base.gfxOutputRevision(output);
+    }
+    pub fn gfxOutputInfo(self: *const Context, index: u32, output: *abi.GfxOutputInfo) i32 {
+        return self.base.gfxOutputInfo(index, output);
+    }
+    pub fn gfxOutputMode(self: *const Context, identity: *const abi.GfxOutputId, index: u32, output: *abi.GfxOutputMode) i32 {
+        return self.base.gfxOutputMode(identity, index, output);
+    }
+    pub fn gfxOutputEdid(self: *const Context, identity: *const abi.GfxOutputId, index: u32, output: *abi.GfxEdidBlock) i32 {
+        return self.base.gfxOutputEdid(identity, index, output);
+    }
+    pub fn gfxAtomicTest(self: *const Context, state: *const abi.GfxAtomicState, output: *abi.GfxAtomicResult) i32 {
+        return self.base.gfxAtomicTest(state, output);
+    }
+    pub fn gfxAtomicCommit(self: *const Context, state: *const abi.GfxAtomicState, output: *abi.GfxAtomicResult) i32 {
+        return self.base.gfxAtomicCommit(state, output);
+    }
 
     pub fn gfxQueueOpen(self: *const Context, config: *const abi.GfxQueueConfig, output: *abi.GfxQueueHandle) i32 {
         return self.base.gfxQueueOpen(config, output);
@@ -222,7 +262,9 @@ pub const Context = struct {
     pub fn displayPresentationStats(self: *const Context, head_id: u32, out: *abi.DisplayPresentationStats) i32 {
         return self.base.displayPresentationStats(head_id, out);
     }
-    pub fn supportsDisplayPresentationInfo(self: *const Context) bool { return self.hasFn("display_presentation_info"); }
+    pub fn supportsDisplayPresentationInfo(self: *const Context) bool {
+        return self.hasFn("display_presentation_info");
+    }
     pub fn displayPresentationInfo(self: *const Context, head_id: u32, out: *abi.DisplayPresentationInfo) i32 {
         return self.base.displayPresentationInfo(head_id, out);
     }
@@ -406,15 +448,15 @@ pub const Context = struct {
 test "r4draw exposes project and present ABI metadata" {
     const std = @import("std");
     try std.testing.expectEqualStrings("R4DRAW", name);
-    try std.testing.expectEqualStrings("R4DRAW:Query:1", import_query);
+    try std.testing.expectEqualStrings("R4DRAW:Query2:2", import_query);
     try std.testing.expectEqual(@as(u32, 3), @intFromEnum(group));
-    try std.testing.expectEqual(abi.r4l_abi_version, abi_version);
-    const header: abi.R4XStartR4Draw = .{};
+    try std.testing.expectEqual(@as(u32, 2), abi_version);
+    const header: @import("r4os_contract2").R4XStartR4Draw2 = .{};
     // The fixed historical revision is the append-only admission minimum;
     // resolveGroupTable accepts newer initialized tables.
     try std.testing.expect(header.abi_version >= abi.r4xstart_r4draw_version);
     try std.testing.expectEqual(abi.r4xstart_r4draw_magic, header.magic);
-    try std.testing.expectEqual(@as(u32, @sizeOf(abi.R4XStartR4Draw)), header.size);
+    try std.testing.expectEqual(@as(u32, @sizeOf(@import("r4os_contract2").R4XStartR4Draw2)), header.size);
     try std.testing.expectEqual(abi.remote_frame_format_xrgb32, (abi.RemoteFrameInfo{}).format);
     try std.testing.expectEqualStrings("Repositories/Kernel", provider_repository);
     try std.testing.expectEqualStrings("Repositories/SDK/Shared/C/include/r4os/r4draw.h", c_header);

@@ -43,21 +43,7 @@ pub struct Graphics<'s, 'a> {
 }
 impl<'s, 'a> Graphics<'s, 'a> {
     pub fn open(storage: Pin<&'s mut GraphicsStorage>, app: &'a App<'_>) -> Result<Self> {
-        // Capture before native self-pointers exist; never reconstruct a Rust
-        // exclusive reference to the admitted context afterward.
-        let native = unsafe { storage.get_unchecked_mut() }.value.as_mut_ptr();
-        let rc = unsafe { c::R4SdkGfxOpen(native, app.start_context()) };
-        if rc != 0 {
-            return Err(Error::Raw(rc));
-        }
-        Ok(Self {
-            draw: NonNull::new(unsafe { c::R4SdkGfxDraw(native) }).ok_or(Error::InvalidProvider)?,
-            dev: NonNull::new(unsafe { c::R4SdkGfxDevice(native) })
-                .ok_or(Error::InvalidProvider)?,
-            _storage: PhantomData,
-            _app: PhantomData,
-            _local: PhantomData,
-        })
+        Self::open2(storage, app)
     }
     pub fn buffers(&self) -> Buffers<'_> {
         Buffers::new(self.draw)

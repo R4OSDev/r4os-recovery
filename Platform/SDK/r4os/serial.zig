@@ -7,8 +7,8 @@ pub const OpenResult = struct { code: i32, handle: u64 = 0 };
 pub const IoResult = struct { code: i32, info: Transfer = .{} };
 /// Raw COM data and exact partial progress; timeouts use system logical ticks.
 pub const Context = struct {
-    table: *const abi.R4XStartR4Dev,
-    pub fn init(table: *const abi.R4XStartR4Dev) ?Context {
+    table: *const @import("r4os_contract2").R4XStartR4Dev2,
+    pub fn init(table: *const @import("r4os_contract2").R4XStartR4Dev2) ?Context {
         const self = Context{ .table = table };
         inline for (.{ "serial_count", "serial_port_at", "serial_open", "serial_configure", "serial_read", "serial_write", "serial_drain", "serial_status", "serial_cancel", "serial_close" }) |field| {
             if (self.function(field) == null) return null;
@@ -16,7 +16,7 @@ pub const Context = struct {
         return self;
     }
     fn function(self: *const Context, comptime field: []const u8) ?@field(abi.R4DevFns, field) {
-        if (self.table.magic != abi.r4xstart_r4dev_magic or self.table.abi_version < 21 or self.table.size < @offsetOf(abi.R4XStartR4Dev, field) + 8 or @field(self.table, field) == 0) return null;
+        if (self.table.magic != (@import("r4os_contract2").R4XStartR4Dev2{}).magic or self.table.abi_version < 1 or self.table.size < @offsetOf(@import("r4os_contract2").R4XStartR4Dev2, field) + 8 or @field(self.table, field) == 0) return null;
         return @ptrFromInt(@field(self.table, field));
     }
     pub fn count(self: *const Context) u32 {

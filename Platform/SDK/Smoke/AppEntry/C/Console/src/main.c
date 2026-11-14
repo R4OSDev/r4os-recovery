@@ -1,3 +1,4 @@
+#include <r4os/app2.h>
 #include <r4os/r4os.h>
 #include "companion.h"
 
@@ -47,7 +48,7 @@ static int32_t heap_case(R4App *app) {
     return 0;
 }
 
-int32_t r4_app_main(R4App *app) {
+static int32_t smoke_case(R4App *app) {
     if (r4_c_companion(7u) != 24u) return 114;
     if (app->profile != R4_APP_PROFILE_CONSOLE || !r4_app_has_group(app, R4L_GROUP_R4SYS) || r4_app_has_group(app, R4L_GROUP_R4DESK)) return 81;
     R4Files files = r4_app_files(app);
@@ -97,4 +98,10 @@ int32_t r4_app_main(R4App *app) {
     int32_t heap_result=heap_case(app);
     if(heap_result!=0) return heap_result;
     return r4sys_write_line(&app->system, "APPCCON app entry: OK");
+}
+
+int32_t r4_app_main(R4App2 *app) {
+    R4App facade;
+    const int32_t rc = r4_app2_facade(app, &facade);
+    return rc < 0 ? rc : smoke_case(&facade);
 }

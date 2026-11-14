@@ -1,7 +1,7 @@
 //! Instance-bound views of the SDK's shared pooled VM heap. The same core
 //! serves Zig, C and Rust; the kernel still owns VM and task retirement.
+use crate::App;
 use crate::app2::{App as App2, Memory};
-use crate::{App, abi};
 use core::{
     alloc::Layout,
     ffi::{CStr, c_void},
@@ -10,32 +10,7 @@ use core::{
 };
 
 unsafe extern "C" {
-    fn R4SdkHeapBind(api: *const abi::R4XStartR4Sys, instance: u64) -> i32;
-    fn R4SdkHeapAlloc(
-        api: *const abi::R4XStartR4Sys,
-        instance: u64,
-        size: usize,
-        alignment: usize,
-    ) -> *mut c_void;
-    fn R4SdkHeapRealloc(
-        api: *const abi::R4XStartR4Sys,
-        instance: u64,
-        pointer: *mut c_void,
-        size: usize,
-        alignment: usize,
-    ) -> *mut c_void;
-    fn R4SdkHeapFree(api: *const abi::R4XStartR4Sys, instance: u64, pointer: *mut c_void) -> i32;
-    fn R4SdkHeapStats(
-        api: *const abi::R4XStartR4Sys,
-        instance: u64,
-        values: *mut u64,
-        capacity: u32,
-    ) -> i32;
     fn R4SdkHeapStatName(index: u32) -> *const core::ffi::c_char;
-    fn R4SdkHeapFinish(api: *const abi::R4XStartR4Sys, instance: u64) -> i32;
-}
-
-unsafe extern "C" {
     fn R4SdkHeapBind2(api: *const Memory, instance: u64) -> i32;
     fn R4SdkHeapAlloc2(
         api: *const Memory,
@@ -61,13 +36,11 @@ unsafe extern "C" {
 // implementation, with one owner binding and the original region/ACK state.
 #[derive(Clone, Copy)]
 enum Api<'a> {
-    Legacy(&'a abi::R4XStartR4Sys),
     Mapped(&'a Memory),
 }
 unsafe fn heap_bind(api: Api<'_>, instance: u64) -> i32 {
     unsafe {
         match api {
-            Api::Legacy(table) => R4SdkHeapBind(table, instance),
             Api::Mapped(memory) => R4SdkHeapBind2(memory, instance),
         }
     }
@@ -75,7 +48,6 @@ unsafe fn heap_bind(api: Api<'_>, instance: u64) -> i32 {
 unsafe fn heap_alloc(api: Api<'_>, instance: u64, size: usize, alignment: usize) -> *mut c_void {
     unsafe {
         match api {
-            Api::Legacy(table) => R4SdkHeapAlloc(table, instance, size, alignment),
             Api::Mapped(memory) => R4SdkHeapAlloc2(memory, instance, size, alignment),
         }
     }
@@ -89,7 +61,6 @@ unsafe fn heap_realloc(
 ) -> *mut c_void {
     unsafe {
         match api {
-            Api::Legacy(table) => R4SdkHeapRealloc(table, instance, pointer, size, alignment),
             Api::Mapped(memory) => R4SdkHeapRealloc2(memory, instance, pointer, size, alignment),
         }
     }
@@ -97,7 +68,6 @@ unsafe fn heap_realloc(
 unsafe fn heap_free(api: Api<'_>, instance: u64, pointer: *mut c_void) -> i32 {
     unsafe {
         match api {
-            Api::Legacy(table) => R4SdkHeapFree(table, instance, pointer),
             Api::Mapped(memory) => R4SdkHeapFree2(memory, instance, pointer),
         }
     }
@@ -105,7 +75,6 @@ unsafe fn heap_free(api: Api<'_>, instance: u64, pointer: *mut c_void) -> i32 {
 unsafe fn heap_stats(api: Api<'_>, instance: u64, values: *mut u64, capacity: u32) -> i32 {
     unsafe {
         match api {
-            Api::Legacy(table) => R4SdkHeapStats(table, instance, values, capacity),
             Api::Mapped(memory) => R4SdkHeapStats2(memory, instance, values, capacity),
         }
     }
@@ -113,7 +82,6 @@ unsafe fn heap_stats(api: Api<'_>, instance: u64, values: *mut u64, capacity: u3
 unsafe fn heap_finish(api: Api<'_>, instance: u64) -> i32 {
     unsafe {
         match api {
-            Api::Legacy(table) => R4SdkHeapFinish(table, instance),
             Api::Mapped(memory) => R4SdkHeapFinish2(memory, instance),
         }
     }
@@ -133,17 +101,7 @@ pub struct Heap<'a> {
 }
 impl<'a> Heap<'a> {
     pub(crate) fn new(app: &'a App<'_>) -> Result<Self, Error> {
-        let api = Api::Legacy(app.system_api().ok_or(Error::Runtime(-1))?);
-        let instance = app.instance_id();
-        let rc = unsafe { heap_bind(api, instance) };
-        if rc != 0 {
-            return Err(Error::Runtime(rc));
-        }
-        Ok(Self {
-            api,
-            instance,
-            _local: PhantomData,
-        })
+        Self::new2(app)
     }
     pub(crate) fn new2(app: &'a App2<'_>) -> Result<Self, Error> {
         let api = Api::Mapped(&app.memory);
@@ -316,18 +274,6 @@ mod global {
         api: AtomicPtr::new(core::ptr::null_mut()),
         instance: AtomicU64::new(0),
     };
-    pub(crate) fn install(app: &App<'_>) -> Result<(), Error> {
-        let heap = Heap::new(app)?;
-        ALLOCATOR.instance.store(heap.instance, Ordering::Relaxed);
-        ALLOCATOR.api.store(
-            match heap.api {
-                Api::Legacy(api) => core::ptr::from_ref(api).cast_mut().cast(),
-                Api::Mapped(_) => unreachable!(),
-            },
-            Ordering::Release,
-        );
-        Ok(())
-    }
     pub(crate) fn install2(app: &App2<'_>) -> Result<(), Error> {
         let heap = Heap::new2(app)?;
         let resident = unsafe { R4SdkHeapMemory2(&app.memory, heap.instance) };
@@ -343,11 +289,8 @@ mod global {
     }
     unsafe fn decode<'a>(pointer: *mut c_void) -> Api<'a> {
         let address = pointer as usize;
-        if address & 1 == 0 {
-            Api::Legacy(unsafe { &*pointer.cast::<abi::R4XStartR4Sys>() })
-        } else {
-            Api::Mapped(unsafe { &*((address & !1) as *const Memory) })
-        }
+        debug_assert_eq!(address & 1, 1);
+        Api::Mapped(unsafe { &*((address & !1) as *const Memory) })
     }
     unsafe impl GlobalAlloc for InstanceAllocator {
         unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
@@ -396,4 +339,4 @@ mod global {
     }
 }
 #[cfg(all(feature = "alloc", target_os = "none"))]
-pub(crate) use global::{install, install2};
+pub(crate) use global::install2;

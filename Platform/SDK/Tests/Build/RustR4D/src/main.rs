@@ -4,13 +4,13 @@ use r4os_sdk::{
     abi,
     driver::{Driver, raw as c},
 };
-static API: AtomicPtr<abi::DriverApi> = AtomicPtr::new(core::ptr::null_mut());
+static API: AtomicPtr<abi::DriverApi2> = AtomicPtr::new(core::ptr::null_mut());
 static HITS: AtomicU32 = AtomicU32::new(0);
 #[repr(C, align(4096))]
 struct Buffer([u8; 4096]);
 static mut BUFFER: Buffer = Buffer([0; 4096]);
 unsafe extern "C" {
-    fn sdk67_backends_init(api: *const abi::DriverApi, rust: u32) -> i32;
+    fn sdk67_backends_init(api: *const abi::DriverApi2, rust: u32) -> i32;
     fn sdk67_backends_shutdown() -> i32;
 }
 unsafe extern "C" fn irq(line: u8, cookie: usize) -> u32 {
@@ -33,7 +33,7 @@ fn raw_result(s: c::R4SdkDriverSlot) -> Result<i32, i32> {
         if n < 0 { Err(n) } else { Ok(n) }
     }
 }
-unsafe fn run(api: *const abi::DriverApi) -> Result<(), i32> {
+unsafe fn run(api: *const abi::DriverApi2) -> Result<(), i32> {
     let driver = unsafe { Driver::from_raw(api) }?;
     API.store(api.cast_mut(), Ordering::Release);
     let heap = driver.heap()?;
@@ -46,7 +46,7 @@ unsafe fn run(api: *const abi::DriverApi) -> Result<(), i32> {
     }
     let mut pci = abi::PciDeviceInfo::default();
     raw_result(unsafe {
-        c::R4SdkDriverContext_pciFindByClass(0, driver.native(), 2, 0, 0, &mut pci)
+        c::R4SdkDriver2Context_pciFindByClass(0, driver.native(), 2, 0, 0, &mut pci)
     })?;
     if pci.vendor_id == 0xffff {
         return Err(-21);
@@ -64,13 +64,13 @@ unsafe fn run(api: *const abi::DriverApi) -> Result<(), i32> {
     dma.map(&constraints, abi::dma_direction_bidirectional)?;
     let stale = *dma.mapping().ok_or(-22)?;
     raw_result(unsafe {
-        c::R4SdkDriverContext_syncDmaForDevice(0, driver.native(), dma.mapping().ok_or(-23)?)
+        c::R4SdkDriver2Context_syncDmaForDevice(0, driver.native(), dma.mapping().ok_or(-23)?)
     })?;
     raw_result(unsafe {
-        c::R4SdkDriverContext_syncDmaForCpu(0, driver.native(), dma.mapping().ok_or(-24)?)
+        c::R4SdkDriver2Context_syncDmaForCpu(0, driver.native(), dma.mapping().ok_or(-24)?)
     })?;
     unsafe { dma.close() }?;
-    if raw_result(unsafe { c::R4SdkDriverContext_syncDmaForCpu(0, driver.native(), &stale) })
+    if raw_result(unsafe { c::R4SdkDriver2Context_syncDmaForCpu(0, driver.native(), &stale) })
         .is_ok()
     {
         return Err(-25);
@@ -89,7 +89,7 @@ unsafe fn run(api: *const abi::DriverApi) -> Result<(), i32> {
     ticket.release()?;
     let mut status = abi::DriverCompletionStatus::default();
     if raw_result(unsafe {
-        c::R4SdkDriverContext_completionStatus(0, driver.native(), stale_ticket, &mut status)
+        c::R4SdkDriver2Context_completionStatus(0, driver.native(), stale_ticket, &mut status)
     })
     .is_ok()
     {
@@ -114,7 +114,7 @@ unsafe fn run(api: *const abi::DriverApi) -> Result<(), i32> {
     );
     Ok(())
 }
-unsafe extern "C" fn init(api: *const abi::DriverApi) -> i32 {
+unsafe extern "C" fn init(api: *const abi::DriverApi2) -> i32 {
     match unsafe { run(api) } {
         Ok(()) => 0,
         Err(n) => n,

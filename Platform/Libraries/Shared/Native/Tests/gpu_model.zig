@@ -63,8 +63,7 @@ pub fn index(h: *const a.GfxBufferHandle, limit: usize) ?usize {
     return h.id - 1;
 }
 pub fn clock() ?a.MonotonicClockInfo {
-    return .{ .instant_ns = 1_000_000, .frequency_hz = 1_000_000_000,
-        .event_frequency_numerator = 100, .event_frequency_denominator = 1, .flags = a.monotonic_clock_flag_valid };
+    return .{ .instant_ns = 1_000_000, .frequency_hz = 1_000_000_000, .event_frequency_numerator = 100, .event_frequency_denominator = 1, .flags = a.monotonic_clock_flag_valid };
 }
 fn binding() a.GfxBackendBinding {
     return .{ .adapter_id = 9, .device_generation = 23, .reset_generation = 7, .milestone = a.gfx_queue_milestone_device_execution };
@@ -72,21 +71,13 @@ fn binding() a.GfxBackendBinding {
 fn backend(which: u32, output: *a.GfxBackendInfo) callconv(.c) i32 {
     if (which != 0) return 0;
     if (model.provider == .amd) {
-        const protocol: amd.R4AmdDriverProfile = .{ .version = 1, .size = @sizeOf(amd.R4AmdDriverProfile),
-            .vendor_id = amd.vendor_id, .device_id = 0x15d8, .gc_version = if (model.raven2) amd.gc_9_2_2 else amd.gc_9_1_0,
-            .sdma_version = if (model.raven2) amd.sdma_4_1_1 else amd.sdma_4_1_0, .command_abi = amd.command_abi, .reserved = 0 };
-        output.* = .{ .binding = binding(), .memory_generation = 31, .operations = 1 << a.gfx_queue_operation_native,
-            .profile = .{ .interface_id_lo = amd.backend_v1_header.interface_id_lo, .interface_id_hi = amd.backend_v1_header.interface_id_hi,
-                .revision = 1, .data_bytes = @sizeOf(amd.R4AmdDriverProfile) } };
+        const protocol: amd.R4AmdDriverProfile = .{ .version = 1, .size = @sizeOf(amd.R4AmdDriverProfile), .vendor_id = amd.vendor_id, .device_id = 0x15d8, .gc_version = if (model.raven2) amd.gc_9_2_2 else amd.gc_9_1_0, .sdma_version = if (model.raven2) amd.sdma_4_1_1 else amd.sdma_4_1_0, .command_abi = amd.command_abi, .reserved = 0 };
+        output.* = .{ .binding = binding(), .memory_generation = 31, .operations = 1 << a.gfx_queue_operation_native, .profile = .{ .interface_id_lo = amd.backend_v1_header.interface_id_lo, .interface_id_hi = amd.backend_v1_header.interface_id_hi, .revision = 1, .data_bytes = @sizeOf(amd.R4AmdDriverProfile) } };
         @memcpy(output.profile.data[0..@sizeOf(amd.R4AmdDriverProfile)], std.mem.asBytes(&protocol));
         return 1;
     }
-    const protocol: nv.R4NvDriverProfile = .{ .version = 1, .size = @sizeOf(nv.R4NvDriverProfile),
-        .vendor_id = 0x10de, .copy_class = 0xc6b5, .rm_release = nv.rm_release, .command_abi = nv.command_abi,
-        .reserved0 = 0, .reserved1 = 0 };
-    output.* = .{ .binding = binding(), .memory_generation = 31, .operations = 1 << a.gfx_queue_operation_native,
-        .profile = .{ .interface_id_lo = nv.backend_v1_header.interface_id_lo, .interface_id_hi = nv.backend_v1_header.interface_id_hi,
-            .revision = 1, .data_bytes = @sizeOf(nv.R4NvDriverProfile) } };
+    const protocol: nv.R4NvDriverProfile = .{ .version = 1, .size = @sizeOf(nv.R4NvDriverProfile), .vendor_id = 0x10de, .copy_class = 0xc6b5, .rm_release = nv.rm_release, .command_abi = nv.command_abi, .reserved0 = 0, .reserved1 = 0 };
+    output.* = .{ .binding = binding(), .memory_generation = 31, .operations = 1 << a.gfx_queue_operation_native, .profile = .{ .interface_id_lo = nv.backend_v1_header.interface_id_lo, .interface_id_hi = nv.backend_v1_header.interface_id_hi, .revision = 1, .data_bytes = @sizeOf(nv.R4NvDriverProfile) } };
     @memcpy(output.profile.data[0..@sizeOf(nv.R4NvDriverProfile)], std.mem.asBytes(&protocol));
     return 1;
 }
@@ -95,18 +86,15 @@ fn properties(input: *const a.GfxBackendBinding, output: *a.GfxBackendProperties
     if (model.provider == .amd) {
         var value = std.mem.zeroes(amd.R4AmdDeviceFactsV3);
         const facts = &value.facts;
-        facts.version = 1; facts.size = @sizeOf(amd.R4AmdDeviceFacts);
-        facts.architecture = .{ .version = 1, .size = @sizeOf(amd.R4AmdArchitecture), .vendor_id = amd.vendor_id,
-            .device_id = 0x15d8, .gc_version = if (model.raven2) amd.gc_9_2_2 else amd.gc_9_1_0,
-            .sdma_version = if (model.raven2 and !model.wrong_amd_profile) amd.sdma_4_1_1 else amd.sdma_4_1_0,
-            .gb_addr_config = if (model.raven2) 0x26013041 else 0x24000042,
-            .chip_revision = if (model.raven2) 0x82 else 0x42, .bind_alignment = 4096, .memory_generation = 31,
-            .flags = 0, .reserved = 0, .max_image_bytes = 64 * 1024 * 1024 };
+        facts.version = 1;
+        facts.size = @sizeOf(amd.R4AmdDeviceFacts);
+        facts.architecture = .{ .version = 1, .size = @sizeOf(amd.R4AmdArchitecture), .vendor_id = amd.vendor_id, .device_id = 0x15d8, .gc_version = if (model.raven2) amd.gc_9_2_2 else amd.gc_9_1_0, .sdma_version = if (model.raven2 and !model.wrong_amd_profile) amd.sdma_4_1_1 else amd.sdma_4_1_0, .gb_addr_config = if (model.raven2) 0x26013041 else 0x24000042, .chip_revision = if (model.raven2) 0x82 else 0x42, .bind_alignment = 4096, .memory_generation = 31, .flags = 0, .reserved = 0, .max_image_bytes = 64 * 1024 * 1024 };
         facts.flags = 1 | @as(u32, if (model.coherent) 2 else 0) | @as(u32, if (model.media_ready) 4 else 0) | @as(u32, if (model.jpeg_ready) 8 else 0);
-        facts.va_start = amd.native_va_start; facts.va_end = amd.native_va_end;
-        value.native_binding_capacity = 32; value.max_backing_bytes = 1024 * 1024 * 1024;
-        output.* = .{ .interface_id_lo = amd.image_v1_header.interface_id_lo, .interface_id_hi = amd.image_v1_header.interface_id_hi,
-            .revision = 3, .data_bytes = @sizeOf(amd.R4AmdDeviceFactsV3) };
+        facts.va_start = amd.native_va_start;
+        facts.va_end = amd.native_va_end;
+        value.native_binding_capacity = 32;
+        value.max_backing_bytes = 1024 * 1024 * 1024;
+        output.* = .{ .interface_id_lo = amd.image_v1_header.interface_id_lo, .interface_id_hi = amd.image_v1_header.interface_id_hi, .revision = 3, .data_bytes = @sizeOf(amd.R4AmdDeviceFactsV3) };
         @memcpy(output.data[0..@sizeOf(amd.R4AmdDeviceFactsV3)], std.mem.asBytes(&value));
         return 1;
     }
@@ -126,8 +114,7 @@ fn properties(input: *const a.GfxBackendBinding, output: *a.GfxBackendProperties
         arch.shader_model = if (model.class_chip == 0x174) 86 else 89;
     }
     // Deliberately no GR topology/template: it is not NVDEC admission.
-    output.* = .{ .interface_id_lo = nv.backend_v1_header.interface_id_lo, .interface_id_hi = nv.backend_v1_header.interface_id_hi,
-        .revision = nv.architecture_version, .data_bytes = @sizeOf(nv.R4NvArchitecture) };
+    output.* = .{ .interface_id_lo = nv.backend_v1_header.interface_id_lo, .interface_id_hi = nv.backend_v1_header.interface_id_hi, .revision = nv.architecture_version, .data_bytes = @sizeOf(nv.R4NvArchitecture) };
     @memcpy(output.data[0..@sizeOf(nv.R4NvArchitecture)], std.mem.asBytes(&arch));
     return 1;
 }
@@ -149,7 +136,10 @@ fn describe(input: *const a.GfxBufferHandle, output: *a.GfxBufferDescriptor) cal
 }
 fn release(input: *const a.GfxBufferHandle) callconv(.c) i32 {
     const bo = &model.bos[index(input, model.bos.len) orelse return -3];
-    if (bo.live and bo.references > 1) { bo.references -= 1; return 1; }
+    if (bo.live and bo.references > 1) {
+        bo.references -= 1;
+        return 1;
+    }
     std.debug.assert(bo.live and !bo.mapped);
     for (&model.vas) |*va| std.debug.assert(!va.live or !std.meta.eql(va.request.reference, input.*));
     if (bo.data) |data| t.allocator.free(data);
@@ -195,12 +185,9 @@ fn nativeReceive(input: *const a.GfxBufferHandle, output: *a.GfxBufferReference)
     std.debug.assert(model.pending_live and input.id == 101);
     const request = model.pending;
     model.pending_live = false;
-    var descriptor: a.GfxBufferDescriptor = .{ .location = a.gfx_buffer_location_device_local,
-        .adapter_id = 9, .driver_owner = 2, .device_generation = 31, .alignment = 65536,
-        .byte_length = request.byte_length, .usage = request.usage };
+    var descriptor: a.GfxBufferDescriptor = .{ .location = a.gfx_buffer_location_device_local, .adapter_id = 9, .driver_owner = 2, .device_generation = 31, .alignment = 65536, .byte_length = request.byte_length, .usage = request.usage };
     if (request.kind == 1) {
-        const amd_layout = if (model.provider == .amd) media.Surface.plan(request.width, request.height,
-            if (request.format == a.gfx_buffer_format_p010) 10 else 8) catch return -2 else null;
+        const amd_layout = if (model.provider == .amd) media.Surface.plan(request.width, request.height, if (request.format == a.gfx_buffer_format_p010) 10 else 8) catch return -2 else null;
         const pitch: u64 = if (amd_layout) |layout| layout.pitch else std.mem.alignForward(u64, request.width, 64);
         const luma = pitch * std.mem.alignForward(u64, request.height, 16);
         const offset = std.mem.alignForward(u64, luma, 65536);
@@ -225,8 +212,7 @@ fn virtualStart(input: *const a.GfxVirtualRequest, output: *a.GfxVirtualStatus) 
     for (&model.vas, 0..) |*va, i| if (!va.live) {
         const address = if (input.kind == 1) model.next_va else model.vas[index(&input.parent, model.vas.len).?].status.address;
         if (input.kind == 1) model.next_va += input.byte_length;
-        va.* = .{ .live = true, .request = input.*, .status = .{ .resource = handle(i), .parent = input.parent,
-            .kind = input.kind, .address = address, .byte_length = input.byte_length, .deadline_ns = input.deadline_ns, .flags = 1, .result = 1 } };
+        va.* = .{ .live = true, .request = input.*, .status = .{ .resource = handle(i), .parent = input.parent, .kind = input.kind, .address = address, .byte_length = input.byte_length, .deadline_ns = input.deadline_ns, .flags = 1, .result = 1 } };
         output.* = va.status;
         return 1;
     };
@@ -257,7 +243,9 @@ fn virtualClose(input: *const a.GfxBufferHandle, mode: u32) callconv(.c) i32 {
         va.status.flags = 5;
     } else {
         std.debug.assert(va.status.flags == 7);
-        for (&model.vas) |*child| if (child.live and std.meta.eql(child.request.parent, input.*)) { child.* = .{}; };
+        for (&model.vas) |*child| if (child.live and std.meta.eql(child.request.parent, input.*)) {
+            child.* = .{};
+        };
         va.* = .{};
     }
     return 1;
@@ -271,9 +259,7 @@ fn queueOpen(input: *const a.GfxQueueConfig, output: *a.GfxQueueHandle) callconv
     return 1;
 }
 fn fenceStatus() a.GfxFenceStatus {
-    return .{ .fence = model.fence, .phase = if (model.queue_released) 2 else 1,
-        .result = if (model.queue_released) 1 else 0, .flags = if (model.queue_released) 0 else 3,
-        .milestone = 1, .deadline_ns = model.deadline_ns, .completed_ns = if (model.queue_released) 2_000_000 else 0 };
+    return .{ .fence = model.fence, .phase = if (model.queue_released) 2 else 1, .result = if (model.queue_released) 1 else 0, .flags = if (model.queue_released) 0 else 3, .milestone = 1, .deadline_ns = model.deadline_ns, .completed_ns = if (model.queue_released) 2_000_000 else 0 };
 }
 fn submit(input: *const a.GfxQueueHandle, common: *const a.GfxSubmission, native: *const a.GfxNativeSubmission, output: *a.GfxFenceStatus) callconv(.c) i32 {
     std.debug.assert(input.timeline >= 91 and input.timeline < model.next_timeline and common.operation == a.gfx_queue_operation_native and
@@ -287,13 +273,15 @@ fn submit(input: *const a.GfxQueueHandle, common: *const a.GfxSubmission, native
             native.interface_id_hi == amd.backend_v1_header.interface_id_hi and native.resource_count <= 32 and
             header.engine == @as(u32, if (model.engine == .jpeg) 4 else if (model.engine == .decode) 2 else 3) and header.ib_count == 1 and
             ib.binding_index == 0 and ib.dwords > 0 and ib.dwords % 16 == 0 and ib.dwords <= 2048);
-        push_address = ib.address; push_bytes = ib.dwords * 4;
+        push_address = ib.address;
+        push_bytes = ib.dwords * 4;
     } else {
         const header: *const nv.R4NvNativeSubmitHeader = @ptrFromInt(native.commands);
         const push: *const nv.R4NvNativePush = @ptrFromInt(native.commands + 32);
         const engine_matches = if (model.mixed_engines) header.engine_mask == 1 or header.engine_mask == 16 else header.engine_mask == model.engine.mask();
         std.debug.assert(engine_matches and header.push_count == 1);
-        push_address = push.address; push_bytes = push.byte_length;
+        push_address = push.address;
+        push_bytes = push.byte_length;
     }
     std.debug.assert(model.push_bytes == 0 or push_bytes == model.push_bytes);
     const loans: [*]const a.GfxNativeResource = @ptrFromInt(native.resources);
@@ -361,15 +349,19 @@ pub fn virtualBytes(address: u64) []u8 {
     @trap();
 }
 
-pub fn install(table: *a.R4XStartR4Draw) void {
+pub fn install(table: *@import("r4os").platform2.abi.R4XStartR4Draw2) void {
     inline for (.{
-        .{ "gfx_queue_backend_info", &backend }, .{ "gfx_queue_backend_properties", &properties },
-        .{ "gfx_buffer_create", &create }, .{ "gfx_buffer_describe", &describe }, .{ "gfx_buffer_release", &release },
-        .{ "gfx_buffer_import", &importBo },
-        .{ "gfx_buffer_map_persistent", &map }, .{ "gfx_buffer_unmap", &unmap },
-        .{ "gfx_native_start", &nativeStart }, .{ "gfx_native_wait", &nativeWait }, .{ "gfx_native_receive", &nativeReceive }, .{ "gfx_native_close", &nativeClose },
-        .{ "gfx_virtual_start", &virtualStart }, .{ "gfx_virtual_wait", &virtualWait }, .{ "gfx_virtual_query", &virtualQuery }, .{ "gfx_virtual_close", &virtualClose },
-        .{ "gfx_queue_open", &queueOpen }, .{ "gfx_queue_close", &queueClose }, .{ "gfx_queue_submit_native", &submit },
-        .{ "gfx_fence_wait", &fenceWait }, .{ "gfx_fence_query", &fenceQuery }, .{ "gfx_fence_cancel", &fenceCancel }, .{ "gfx_fence_release", &fenceRelease },
+        .{ "gfx_queue_backend_info", &backend },   .{ "gfx_queue_backend_properties", &properties },
+        .{ "gfx_buffer_create", &create },         .{ "gfx_buffer_describe", &describe },
+        .{ "gfx_buffer_release", &release },       .{ "gfx_buffer_import", &importBo },
+        .{ "gfx_buffer_map_persistent", &map },    .{ "gfx_buffer_unmap", &unmap },
+        .{ "gfx_native_start", &nativeStart },     .{ "gfx_native_wait", &nativeWait },
+        .{ "gfx_native_receive", &nativeReceive }, .{ "gfx_native_close", &nativeClose },
+        .{ "gfx_virtual_start", &virtualStart },   .{ "gfx_virtual_wait", &virtualWait },
+        .{ "gfx_virtual_query", &virtualQuery },   .{ "gfx_virtual_close", &virtualClose },
+        .{ "gfx_queue_open", &queueOpen },         .{ "gfx_queue_close", &queueClose },
+        .{ "gfx_queue_submit_native", &submit },   .{ "gfx_fence_wait", &fenceWait },
+        .{ "gfx_fence_query", &fenceQuery },       .{ "gfx_fence_cancel", &fenceCancel },
+        .{ "gfx_fence_release", &fenceRelease },
     }) |field| @field(table.*, field[0]) = @intFromPtr(field[1]);
 }

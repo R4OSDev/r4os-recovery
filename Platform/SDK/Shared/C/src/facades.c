@@ -57,7 +57,7 @@ int32_t R4SdkRegistryPath(const uint8_t *input, uintptr_t length,
     return R4_PATH_OK;
 }
 
-int32_t R4SdkAppFacade(const R4XStartContext *context, R4App *out) {
+int32_t R4SdkAppFacade(const R4XStartContext2 *context, R4App *out) {
     if (!context) return R4OS_ERROR_INVALID;
     R4AppProfile profile;
     switch (context->app_class) {

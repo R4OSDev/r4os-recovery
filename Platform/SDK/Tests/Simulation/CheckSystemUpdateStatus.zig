@@ -189,7 +189,7 @@ fn batchJournal(slot: usize, generation: u64) !void {
     try expect(batch.parseJournalInto(files[slot].bytes[0..files[slot].len], @intCast(slot - 2), &parsed));
 }
 fn observe(want_resume: bool) engine.Result {
-    const api: r4os.abi.R4XStartR4Sys = .{
+    const api: r4os.platform2.abi.R4XStartR4Sys2 = .{
         .write = @intFromPtr(&write),
         .putc = @intFromPtr(&putc),
         .sleep_ticks = @intFromPtr(&sleep),

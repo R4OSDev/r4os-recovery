@@ -1079,10 +1079,6 @@ static inline int32_t r4amd_info_v1_from_import(const R4XStartImport *item, R4Am
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4amd_info_v1_init(const R4XStartContext *ctx, R4AmdInfoV1Client *out_client) {
-    return r4amd_info_v1_from_import(r4xstart_find_import_named(ctx, "R4AMD", "INFO_V1"), out_client);
-}
-
 static inline int32_t r4amd_info_v1_init2(const R4XStartContext2 *raw, R4AmdInfoV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -1102,15 +1098,6 @@ static inline int32_t r4amd_info_v1_init2_optional(const R4XStartContext2 *raw, 
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4AMD", "INFO_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4amd_info_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4amd_info_v1_init_optional(const R4XStartContext *ctx, R4AmdInfoV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4AMD", "INFO_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4amd_info_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4amd_get_info(R4AmdInfoV1Client *client, R4AmdInfo * output, uint32_t output_bytes) {
@@ -1162,10 +1149,6 @@ static inline int32_t r4amd_backend_v1_from_import(const R4XStartImport *item, R
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4amd_backend_v1_init(const R4XStartContext *ctx, R4AmdBackendV1Client *out_client) {
-    return r4amd_backend_v1_from_import(r4xstart_find_import_named(ctx, "R4AMD", "BACKEND_V1"), out_client);
-}
-
 static inline int32_t r4amd_backend_v1_init2(const R4XStartContext2 *raw, R4AmdBackendV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -1185,15 +1168,6 @@ static inline int32_t r4amd_backend_v1_init2_optional(const R4XStartContext2 *ra
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4AMD", "BACKEND_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4amd_backend_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4amd_backend_v1_init_optional(const R4XStartContext *ctx, R4AmdBackendV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4AMD", "BACKEND_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4amd_backend_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4amd_negotiate(R4AmdBackendV1Client *client, const R4AmdDeviceProfile * profile, R4AmdFeatures * output) {
@@ -1265,10 +1239,6 @@ static inline int32_t r4amd_image_v1_from_import(const R4XStartImport *item, R4A
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4amd_image_v1_init(const R4XStartContext *ctx, R4AmdImageV1Client *out_client) {
-    return r4amd_image_v1_from_import(r4xstart_find_import_named(ctx, "R4AMD", "IMAGE_V1"), out_client);
-}
-
 static inline int32_t r4amd_image_v1_init2(const R4XStartContext2 *raw, R4AmdImageV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -1288,15 +1258,6 @@ static inline int32_t r4amd_image_v1_init2_optional(const R4XStartContext2 *raw,
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4AMD", "IMAGE_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4amd_image_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4amd_image_v1_init_optional(const R4XStartContext *ctx, R4AmdImageV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4AMD", "IMAGE_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4amd_image_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4amd_image_calculate(R4AmdImageV1Client *client, const R4AmdImageRequest * request, uint8_t * workspace, uint32_t workspace_bytes, R4AmdImageLayout * output, R4AmdMip * mips, uint32_t mip_capacity) {
@@ -1360,10 +1321,6 @@ static inline int32_t r4amd_render_v1_from_import(const R4XStartImport *item, R4
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4amd_render_v1_init(const R4XStartContext *ctx, R4AmdRenderV1Client *out_client) {
-    return r4amd_render_v1_from_import(r4xstart_find_import_named(ctx, "R4AMD", "RENDER_V1"), out_client);
-}
-
 static inline int32_t r4amd_render_v1_init2(const R4XStartContext2 *raw, R4AmdRenderV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -1383,15 +1340,6 @@ static inline int32_t r4amd_render_v1_init2_optional(const R4XStartContext2 *raw
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4AMD", "RENDER_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4amd_render_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4amd_render_v1_init_optional(const R4XStartContext *ctx, R4AmdRenderV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4AMD", "RENDER_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4amd_render_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4amd_shader(R4AmdRenderV1Client *client, uint32_t profile, uint8_t * code, uint32_t capacity, R4AmdShader * output) {

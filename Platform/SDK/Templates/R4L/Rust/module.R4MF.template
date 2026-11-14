@@ -8,7 +8,6 @@ SOURCE=Source/main.rs
 TARGET={Target}
 IMAGE_SCOPE={ImageScope}
 EXPORT=API_V1:{ProjectNameLower}_api_v1:1
-EXPORT=Query:{ProjectNameLower}_query:1
 EXPORT=Query2:{ProjectNameLower}_query2:2
 CONTRACT=Contract/LibraryContract.json
 CONTRACT_BASELINE=Contract/LibraryContract.baseline.json

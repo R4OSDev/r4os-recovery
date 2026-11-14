@@ -3,7 +3,7 @@ extern crate alloc;
 use alloc::{boxed::Box, vec};
 use core::mem::MaybeUninit;
 use r4os_sdk::{
-    App,
+    App2,
     update::{Error, Fat32Plan, Inventory, Journal, MemoryBlock, Result, raw as c},
 };
 pub const JOURNAL: &[u8] = include_bytes!("../Fixtures/Update/JournalV5.txt");
@@ -20,7 +20,7 @@ macro_rules! ensure {
 }
 unsafe extern "C" {
     fn sdk_update_journal_case(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         first: *mut c::R4SdkUpdateRecoveryTransactionJournal,
         second: *mut c::R4SdkUpdateRecoveryTransactionJournal,
         input: *const u8,
@@ -38,7 +38,7 @@ unsafe extern "C" {
         capacity: usize,
     ) -> i32;
 }
-pub fn c_replay(app: Option<&App<'_>>) -> Result<()> {
+pub fn c_replay(app: Option<&App2<'_>>) -> Result<()> {
     let mut first = Box::<c::R4SdkUpdateRecoveryTransactionJournal>::new_uninit();
     let mut second = Box::<c::R4SdkUpdateRecoveryTransactionJournal>::new_uninit();
     let mut durable = vec![0; 8192];
@@ -138,9 +138,9 @@ pub fn memory_format() -> Result<()> {
     Ok(())
 }
 #[cfg(target_os = "none")]
-pub fn catalogue(app: &App<'_>) -> Result<()> {
+pub fn catalogue(app: &App2<'_>) -> Result<()> {
     let mut data_storage = core::pin::pin!(r4os_sdk::data::DataStorage::new());
-    let data = r4os_sdk::data::Data::open(data_storage.as_mut(), app)?;
+    let data = r4os_sdk::data::Data::open2(data_storage.as_mut(), app)?;
     let mut storage = Box::<c::R4SdkUpdateCatalogCatalogRelease>::new_uninit();
     let mut workspace = Box::<c::R4SdkUpdateCatalogCatalogRelease>::new_uninit();
     let mut depth = [0; 128];

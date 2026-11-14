@@ -210,7 +210,7 @@ pub const Manifest = struct {
     resources: []const ResourceEntry = &.{},
     /// Optional build-owned platform selection; existing field offsets stay fixed.
     sdk_profile: ?[]const u8 = null,
-    platform_generation: u8 = 1,
+    platform_generation: u8 = 2,
 };
 
 pub const Plan = struct {
@@ -220,9 +220,9 @@ pub const Plan = struct {
     app_profile: []const u8,
     app_class: []const u8,
     optimization: []const u8,
-    export_contract: []const u8 = "R4XStart:R4XStart:1",
+    export_contract: []const u8 = "R4XStart2:R4XStart2:2",
     module_contract: []const u8 = "R4M0:1",
-    r4x_start_abi: []const u8 = "R4XStart:1",
+    r4x_start_abi: []const u8 = "R4XStart2:2",
     imports: []const []const u8,
     metadata: []const []const u8,
 };
@@ -400,13 +400,12 @@ fn parseV2(allocator: std.mem.Allocator, path: []const u8, text: []const u8) !Ma
     if (parsed_kind == .r4l and platformApiGroupId(parsed_name) != null) return error.ReservedPlatformApiName;
     const parsed_module_version = try parseModuleVersion(module_version orelse return error.MissingModuleVersion);
     const parsed_language = try parseLanguage(language orelse return error.MissingLanguage);
-    const generation = try platformGeneration(allocator, parsed_kind, parsed_language, sdk_profile);
-    if (generation == 2 and parsed_kind != .r4d and parsed_kind != .r4p and parsed_kind != .r4x) return error.Generation2RequiresExecutableModule;
     if (parsed_language == .rust) {
         const admission = capabilities.rust(parsed_kind.text(), entry_mode orelse "", module_role, .host);
         if (admission.failure) |err| return err;
         if (zig_modules.items.len != 0 or native_archives.items.len != 0) return error.RustForbidsForeignBuildFields;
     }
+    const generation = try platformGeneration(parsed_kind, parsed_language, entry_mode orelse "", sdk_profile);
     if (sources.items.len == 0) return error.MissingSource;
     // One Zig root, followed by optional C companions in R4L/R4D. They are
     // linked into the same owning artifact; no extra runtime module or source
@@ -487,7 +486,7 @@ fn parseV2(allocator: std.mem.Allocator, path: []const u8, text: []const u8) !Ma
         try validateProfileImports(parsed_class.?, imports.items);
     } else {
         if (entry_mode != null) return error.NonR4XEntryModeForbidden;
-        if (generation == 2) {
+        if (generation == 2 and parsed_kind != .r4l) {
             if (imports.items.len != 1 or !std.mem.eql(u8, imports.items[0], "R4DEV:Query2:2")) return error.InvalidImport;
         }
         if (app_class != null) return error.NonR4XAppClassForbidden;
@@ -495,6 +494,7 @@ fn parseV2(allocator: std.mem.Allocator, path: []const u8, text: []const u8) !Ma
         // R4D and R4L share the R4X compiled-library mechanism. This adds no
         // runtime import or application entry point to their containers.
         if (parsed_kind != .r4d and parsed_kind != .r4l and zig_modules.items.len != 0) return error.NonR4XZigModuleForbidden;
+        if (parsed_kind == .r4l and generation == 2) for (imports.items) |entry| try validateR4XImportGeneration(entry, generation);
         if (parsed_kind == .r4l) for (zig_modules.items) |module| {
             if (std.mem.startsWith(u8, module, "r4l_contract:")) return error.ReservedZigModuleName;
         };
@@ -535,7 +535,7 @@ fn parseV2(allocator: std.mem.Allocator, path: []const u8, text: []const u8) !Ma
     }
 
     if (parsed_kind == .r4l and !is_generated_fixture) {
-        try validateRuntimeR4LExports(exports.items);
+        try validateRuntimeR4LExports(exports.items, generation);
         const contract_path = contract orelse return error.MissingR4LContract;
         const baseline_path = contract_baseline orelse return error.MissingR4LContractBaseline;
         if (parsed_language == .zig and implementation_zig == null) return error.MissingR4LImplementationZig;
@@ -636,13 +636,13 @@ fn validateExports(exports: []const ExportEntry) !void {
     }
 }
 
-fn validateRuntimeR4LExports(exports: []const ExportEntry) !void {
+fn validateRuntimeR4LExports(exports: []const ExportEntry, generation: u8) !void {
+    if (generation != 2) return error.UnsupportedSdkPlatform;
     var has_query = false;
     var interface_count: usize = 0;
     for (exports) |entry| {
         if (std.ascii.eqlIgnoreCase(entry.name, "Query")) {
-            if (entry.revision != 1) return error.InvalidR4LQueryExport;
-            has_query = true;
+            return error.InvalidR4LQueryExport;
         } else if (std.ascii.eqlIgnoreCase(entry.name, "Query2")) {
             if (entry.revision != 2) return error.InvalidR4LQueryExport;
             has_query = true;
@@ -1049,13 +1049,21 @@ pub fn importIsOptional(value: []const u8) bool {
     return (std.fmt.parseUnsigned(u32, text, 10) catch return false) == 1;
 }
 
-fn platformGeneration(a: std.mem.Allocator, kind: Kind, language: Language, selection: ?[]const u8) !u8 {
-    _ = a;
-    const id = selection orelse return 1;
+fn selectedSdkProfile(kind: Kind, language: Language, entry: []const u8, explicit: ?[]const u8) ![]const u8 {
+    if (explicit) |id| return id;
+    for (@import("generated/profile_policy.zig").module_defaults) |selection| {
+        if (std.mem.eql(u8, selection.language, language.text()) and
+            std.mem.eql(u8, selection.kind, kind.text()) and
+            (selection.entry.len == 0 or std.mem.eql(u8, selection.entry, entry))) return selection.profile;
+    }
+    return error.UnknownSdkProfile;
+}
+fn platformGeneration(kind: Kind, language: Language, entry: []const u8, selection: ?[]const u8) !u8 {
+    const id = try selectedSdkProfile(kind, language, entry, selection);
     for (@import("generated/profile_policy.zig").profiles) |profile| {
         if (!std.mem.eql(u8, profile.id, id)) continue;
         if (!std.mem.eql(u8, profile.language, language.text()) or !std.mem.eql(u8, profile.role, "module") or (profile.kind.len != 0 and !std.mem.eql(u8, profile.kind, kind.text()))) return error.SdkProfileRoleMismatch;
-        if (!profile.explicit_platform) return error.ExplicitPlatformProfileRequired;
+        if (selection != null and !profile.explicit_platform) return error.ExplicitPlatformProfileRequired;
         if (profile.generation != 2) return error.UnsupportedSdkPlatform;
         return profile.generation;
     }
@@ -1063,9 +1071,10 @@ fn platformGeneration(a: std.mem.Allocator, kind: Kind, language: Language, sele
 }
 
 fn validateR4XImport(value: []const u8) !void {
-    return validateR4XImportGeneration(value, 1);
+    return validateR4XImportGeneration(value, 2);
 }
 fn validateR4XImportGeneration(value: []const u8, generation: u8) !void {
+    if (generation != 2) return error.UnsupportedSdkPlatform;
     var parts = std.mem.splitScalar(u8, value, ':');
     const group = parts.next() orelse return error.InvalidImport;
     const symbol = parts.next() orelse return error.InvalidImport;
@@ -1074,11 +1083,11 @@ fn validateR4XImportGeneration(value: []const u8, generation: u8) !void {
     if (parts.next() != null) return error.InvalidImport;
 
     // Nur die sechs kernelimplementierten Plattformgruppen besitzen den
-    // festen Query:1-Vertrag. Alle anderen R4Ls werden direkt ueber ihren
+    // festen Query2:2-Vertrag. Alle anderen R4Ls werden direkt ueber ihren
     // Modul- und Exportnamen importiert; dafuer ist keine zentrale
     // R4LGroup-Konstante erforderlich.
-    const query = if (generation == 2) "Query2" else "Query";
-    const revision = if (generation == 2) "2" else "1";
+    const query = "Query2";
+    const revision = "2";
     if ((isPlatformGroup(group) or std.mem.eql(u8, symbol, "Query") or std.mem.eql(u8, symbol, "Query2")) and (!std.mem.eql(u8, symbol, query) or !std.mem.eql(u8, major, revision))) {
         return error.InvalidImport;
     }
@@ -1173,6 +1182,7 @@ pub fn moduleVersionMeta(allocator: std.mem.Allocator, manifest: Manifest) ![]co
 /// Diese Funktion wird sowohl vom semantischen Plan als auch vom wirklichen
 /// Packagerpfad benutzt, damit der Container keine zweite Rollenwahrheit hat.
 pub fn r4xManifestMetadata(allocator: std.mem.Allocator, manifest: Manifest) ![]const []const u8 {
+    if (manifest.platform_generation != 2) return error.UnsupportedSdkPlatform;
     if (manifest.version != manifest_version or manifest.kind != .r4x) return error.CurrentManifestRequired;
     if (manifest.module_role == null) return manifest.metadata;
 
@@ -1196,25 +1206,17 @@ pub fn r4xManifestMetadata(allocator: std.mem.Allocator, manifest: Manifest) ![]
 /// The SDK admission profile differs from the historical native build-profile
 /// display name. Defaults are generated only from Profiles/Build.json.
 pub fn sdkBuildProfile(manifest: Manifest) ![]const u8 {
-    if (manifest.sdk_profile) |profile| return profile;
-    const language = manifest.language orelse return error.MissingLanguage;
-    const entry = if (manifest.entry_mode) |mode| mode.text() else "";
-    for (@import("generated/profile_policy.zig").module_defaults) |selection| {
-        if (std.mem.eql(u8, selection.language, language.text()) and
-            std.mem.eql(u8, selection.kind, manifest.kind.text()) and
-            (selection.entry.len == 0 or std.mem.eql(u8, selection.entry, entry))) return selection.profile;
-    }
-    return error.UnknownSdkProfile;
+    return selectedSdkProfile(manifest.kind, manifest.language orelse return error.MissingLanguage, if (manifest.entry_mode) |mode| mode.text() else "", manifest.sdk_profile);
 }
 
 /// Canonical role exports for tooling and container generation. Runtime R4Ls
 /// preserve their own explicitly declared interface revisions.
 pub fn moduleExports(allocator: std.mem.Allocator, manifest: Manifest) ![]const []const u8 {
-    const next = manifest.platform_generation == 2;
+    if (manifest.platform_generation != 2) return error.UnsupportedSdkPlatform;
     return switch (manifest.kind) {
-        .r4x => if (next) &.{"R4XStart2:@R4XStart2:2"} else &.{"R4XStart:@R4XStart:1"},
-        .r4d => if (next) &.{ "DriverInit2:@DriverInit2:2", "DriverShutdown:@DriverShutdown:1" } else &.{ "DriverInit:@r4d_init_entry:1", "DriverShutdown:@r4d_shutdown_entry:1" },
-        .r4p => if (next) &.{ "ProtocolInit2:@ProtocolInit2:2", "ProtocolShutdown:@ProtocolShutdown:1", "ProtocolQuery:@ProtocolQuery:1", "ProtocolDispatch:@ProtocolDispatch:1", "ProtocolRole:@ProtocolInit2:1" } else &.{ "ProtocolInit:@r4p_init_entry:1", "ProtocolShutdown:@r4p_shutdown_entry:1", "ProtocolQuery:@r4p_query_entry:1", "ProtocolDispatch:@r4p_dispatch_entry:1", "ProtocolRole:@r4p_init_entry:1" },
+        .r4x => &.{"R4XStart2:@R4XStart2:2"},
+        .r4d => &.{ "DriverInit2:@DriverInit2:2", "DriverShutdown:@DriverShutdown:1" },
+        .r4p => &.{ "ProtocolInit2:@ProtocolInit2:2", "ProtocolShutdown:@ProtocolShutdown:1", "ProtocolQuery:@ProtocolQuery:1", "ProtocolDispatch:@ProtocolDispatch:1", "ProtocolRole:@ProtocolInit2:1" },
         .r4l => block: {
             var exports: std.ArrayList([]const u8) = .empty;
             for (manifest.exports) |value| try exports.append(allocator, try std.fmt.allocPrint(allocator, "{s}:@{s}:{d}", .{ value.name, value.symbol, value.revision }));
@@ -1224,28 +1226,18 @@ pub fn moduleExports(allocator: std.mem.Allocator, manifest: Manifest) ![]const 
 }
 
 pub fn derivePlan(allocator: std.mem.Allocator, manifest: Manifest) !Plan {
+    if (manifest.platform_generation != 2) return error.UnsupportedSdkPlatform;
     if (manifest.version != manifest_version or manifest.kind != .r4x) return error.CurrentManifestRequired;
-    const language = manifest.language orelse return error.MissingLanguage;
+    _ = manifest.language orelse return error.MissingLanguage;
     const app_class = manifest.app_class orelse return error.MissingAppClass;
     const profile = profileMeta(app_class) orelse return error.ProfileSourceDrift;
     const source_project = pathProject(manifest.path) orelse ".";
     const artifact = try std.fmt.allocPrint(allocator, "Code/zig-out/{s}.R4X", .{manifest.name});
-    const profile_suffix = switch (app_class) {
-        .console => "Console",
-        .gui => "Desktop",
-        .service => "Service",
-    };
-    const entry_mode = manifest.entry_mode orelse return error.MissingEntryMode;
-    const build_profile = try std.fmt.allocPrint(allocator, "R4X_{s}_{s}_{s}", .{ language.text(), if (entry_mode == .app) "App" else "LowLevel", profile_suffix });
-
     var metadata: std.ArrayList([]const u8) = .empty;
     try metadata.append(allocator, try std.fmt.allocPrint(allocator, "r4x.name={s}", .{manifest.name}));
     try metadata.append(allocator, try std.fmt.allocPrint(allocator, "r4x.class={s}", .{app_class.text()}));
     try metadata.append(allocator, try moduleVersionMeta(allocator, manifest));
-    try metadata.appendSlice(allocator, if (manifest.platform_generation == 2)
-        &.{ "feature=program-module", "r4x.start=r4xstart2", "r4x.entry=R4XStart2", "r4x.start_abi=2", "r4x.context=R4XStartContext2" }
-    else
-        &.{ "feature=program-module", "r4x.start=r4xstart", "r4x.entry=R4XStart", "r4x.start_abi=1", "r4x.context=R4XStartContext" });
+    try metadata.appendSlice(allocator, &.{ "feature=program-module", "r4x.start=r4xstart2", "r4x.entry=R4XStart2", "r4x.start_abi=2", "r4x.context=R4XStartContext2" });
     var has_memory_profile = false;
     for (manifest.metadata) |entry| {
         if (std.mem.startsWith(u8, entry, "memory.profile=")) has_memory_profile = true;
@@ -1263,9 +1255,9 @@ pub fn derivePlan(allocator: std.mem.Allocator, manifest: Manifest) !Plan {
     return .{
         .source_project = source_project,
         .artifact = artifact,
-        .build_profile = manifest.sdk_profile orelse build_profile,
-        .export_contract = if (manifest.platform_generation == 2) "R4XStart2:R4XStart2:2" else "R4XStart:R4XStart:1",
-        .r4x_start_abi = if (manifest.platform_generation == 2) "R4XStart2:2" else "R4XStart:1",
+        .build_profile = try sdkBuildProfile(manifest),
+        .export_contract = "R4XStart2:R4XStart2:2",
+        .r4x_start_abi = "R4XStart2:2",
         .app_profile = profile.name,
         .app_class = app_class.text(),
         .optimization = manifest.optimization.?.text(),
@@ -1275,44 +1267,8 @@ pub fn derivePlan(allocator: std.mem.Allocator, manifest: Manifest) !Plan {
 }
 
 pub fn buildProfileName(language: Language, entry_mode: EntryMode, app_class: AppClass) []const u8 {
-    return switch (language) {
-        .rust => switch (entry_mode) {
-            .app => switch (app_class) {
-                .console => "R4X_Rust_App_Console",
-                .gui => "R4X_Rust_App_Desktop",
-                .service => "R4X_Rust_App_Service",
-            },
-            .lowlevel => switch (app_class) {
-                .console => "R4X_Rust_LowLevel_Console",
-                .gui => "R4X_Rust_LowLevel_Desktop",
-                .service => "R4X_Rust_LowLevel_Service",
-            },
-        },
-        .zig => switch (entry_mode) {
-            .app => switch (app_class) {
-                .console => "R4X_Zig_App_Console",
-                .gui => "R4X_Zig_App_Desktop",
-                .service => "R4X_Zig_App_Service",
-            },
-            .lowlevel => switch (app_class) {
-                .console => "R4X_Zig_LowLevel_Console",
-                .gui => "R4X_Zig_LowLevel_Desktop",
-                .service => "R4X_Zig_LowLevel_Service",
-            },
-        },
-        .c => switch (entry_mode) {
-            .app => switch (app_class) {
-                .console => "R4X_C_App_Console",
-                .gui => "R4X_C_App_Desktop",
-                .service => "R4X_C_App_Service",
-            },
-            .lowlevel => switch (app_class) {
-                .console => "R4X_C_LowLevel_Console",
-                .gui => "R4X_C_LowLevel_Desktop",
-                .service => "R4X_C_LowLevel_Service",
-            },
-        },
-    };
+    _ = app_class;
+    return selectedSdkProfile(.r4x, language, entry_mode.text(), null) catch unreachable;
 }
 
 pub fn appProfileName(app_class: AppClass) []const u8 {
@@ -1327,11 +1283,13 @@ pub fn appProfileName(app_class: AppClass) []const u8 {
 /// catalog and inside-R4OS tools. Artifact locations are deliberately absent:
 /// the host aggregate and R4BUILD install into different build directories.
 pub fn renderContractPlan(manifest: Manifest, out: []u8) RenderResult {
+    if (manifest.platform_generation != 2) return .{ .bytes = out[0..0], .ok = false };
     if (manifest.version != manifest_version or manifest.kind != .r4x) return .{ .bytes = out[0..0], .ok = false };
     const language = manifest.language orelse return .{ .bytes = out[0..0], .ok = false };
     const entry_mode = manifest.entry_mode orelse return .{ .bytes = out[0..0], .ok = false };
     const app_class = manifest.app_class orelse return .{ .bytes = out[0..0], .ok = false };
     const image_scope = manifest.image_scope orelse return .{ .bytes = out[0..0], .ok = false };
+    const build_profile = sdkBuildProfile(manifest) catch return .{ .bytes = out[0..0], .ok = false };
 
     var len: usize = 0;
     if (!appendPlanLine(out, &len, "R4MF_PLAN", "1") or
@@ -1361,7 +1319,7 @@ pub fn renderContractPlan(manifest: Manifest, out: []u8) RenderResult {
     if (!appendPlanLine(out, &len, "TARGET", manifest.target) or
         !appendPlanLine(out, &len, "IMAGE_SCOPE", image_scope.text()) or
         !appendPlanLine(out, &len, "OPTIMIZE", manifest.optimization.?.text()) or
-        !appendPlanLine(out, &len, "BUILD_PROFILE", manifest.sdk_profile orelse buildProfileName(language, entry_mode, app_class)) or
+        !appendPlanLine(out, &len, "BUILD_PROFILE", build_profile) or
         !appendPlanLine(out, &len, "APP_PROFILE", appProfileName(app_class)))
     {
         return .{ .bytes = out[0..0], .ok = false };
@@ -1426,17 +1384,17 @@ test "V2 derives profile build and fixed start contract from the SDK profile sou
         \\TARGET=/R4OS/SOFTWARE/DESKTOP/HELLO.R4X
         \\IMAGE_SCOPE=full
         \\OPTIMIZE=speed
-        \\IMPORT=R4SYS:Query:1
-        \\IMPORT=R4DESK:Query:1
-        \\IMPORT=R4DRAW:Query:1
+        \\IMPORT=R4SYS:Query2:2
+        \\IMPORT=R4DESK:Query2:2
+        \\IMPORT=R4DRAW:Query2:2
         \\META=desktop.launch=hosted
     ;
     const manifest = try parse(allocator, "Code/System/Software/Hello/module.R4MF", text);
     const plan = try derivePlan(allocator, manifest);
     try std.testing.expectEqualStrings("desktop", plan.app_profile);
-    try std.testing.expectEqualStrings("R4X_Zig_App_Desktop", plan.build_profile);
+    try std.testing.expectEqualStrings("r4os-zig-generation2", plan.build_profile);
     try std.testing.expectEqualStrings("speed", plan.optimization);
-    try std.testing.expectEqualStrings("R4XStart:R4XStart:1", plan.export_contract);
+    try std.testing.expectEqualStrings("R4XStart2:R4XStart2:2", plan.export_contract);
     try std.testing.expectEqual(@as(usize, 3), plan.imports.len);
 }
 
@@ -1455,7 +1413,7 @@ test "contract plan is deterministic and environment neutral" {
         \\APP_CLASS=console
         \\TARGET=/R4OS/SOFTWARE/TERMINAL/CPLAN.R4X
         \\IMAGE_SCOPE=none
-        \\IMPORT=R4SYS:Query:1
+        \\IMPORT=R4SYS:Query2:2
     ;
     const value = try parse(allocator, "CPLAN/module.R4MF", text);
     var first: [1024]u8 = undefined;
@@ -1464,7 +1422,7 @@ test "contract plan is deterministic and environment neutral" {
     const b = renderContractPlan(value, second[0..]);
     try std.testing.expect(a.ok and b.ok);
     try std.testing.expectEqualStrings(a.bytes, b.bytes);
-    try std.testing.expect(std.mem.indexOf(u8, a.bytes, "BUILD_PROFILE=R4X_C_App_Console\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, a.bytes, "BUILD_PROFILE=r4os-c-generation2\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, a.bytes, "OPTIMIZE=size\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, a.bytes, "artifact") == null);
 }
@@ -1491,9 +1449,9 @@ test "subsystem role normalizes identity and guest format contract into plan met
         \\GUEST_FEATURE=basic.qbasic-source:Probe.Text-Token-V1.7072696E74
         \\TARGET=/R4OS/SUBSYSTEMS/basic.qbasic/QBASIC.R4X
         \\IMAGE_SCOPE=test
-        \\IMPORT=R4SYS:Query:1
-        \\IMPORT=R4DESK:Query:1
-        \\IMPORT=R4DRAW:Query:1
+        \\IMPORT=R4SYS:Query2:2
+        \\IMPORT=R4DESK:Query2:2
+        \\IMPORT=R4DRAW:Query2:2
     ;
     const value = try parse(allocator, "QBASIC/module.R4MF", text);
     try std.testing.expectEqual(ModuleRole.subsystem, value.module_role.?);
@@ -1536,9 +1494,9 @@ test "subsystem role rejects incomplete forbidden and colliding contract fields"
         \\GUEST_FORMAT=basic.source
         \\TARGET=/R4OS/SUBSYSTEMS/basic/SubBad.R4X
         \\IMAGE_SCOPE=none
-        \\IMPORT=R4SYS:Query:1
-        \\IMPORT=R4DESK:Query:1
-        \\IMPORT=R4DRAW:Query:1
+        \\IMPORT=R4SYS:Query2:2
+        \\IMPORT=R4DESK:Query2:2
+        \\IMPORT=R4DRAW:Query2:2
     ;
     try std.testing.expectError(error.MissingSubsystemId, parse(allocator, "SubBad/module.R4MF", base));
 
@@ -1554,7 +1512,7 @@ test "subsystem role rejects incomplete forbidden and colliding contract fields"
         \\SUBSYSTEM_ID=basic
         \\TARGET=/R4OS/SOFTWARE/TERMINAL/NORMAL.R4X
         \\IMAGE_SCOPE=none
-        \\IMPORT=R4SYS:Query:1
+        \\IMPORT=R4SYS:Query2:2
     ;
     try std.testing.expectError(error.SubsystemFieldsWithoutRole, parse(allocator, "Normal/module.R4MF", fields_without_role));
 
@@ -1562,6 +1520,7 @@ test "subsystem role rejects incomplete forbidden and colliding contract fields"
         \\R4OS_MODULE_MANIFEST=2
         \\KIND=R4D
         \\NAME=ROLEBAD
+        \\IMPORT=R4DEV:Query2:2
         \\VERSION=0.66.0
         \\LANGUAGE=Zig
         \\SOURCE=src/main.zig
@@ -1617,15 +1576,15 @@ test "C V2 accepts multiple ordered sources without inventing imports" {
         \\APP_CLASS=console
         \\TARGET=/R4OS/SOFTWARE/TERMINAL/CHELLO.R4X
         \\IMAGE_SCOPE=none
-        \\IMPORT=R4SYS:Query:1
-        \\IMPORT=R4NET:Query:1
+        \\IMPORT=R4SYS:Query2:2
+        \\IMPORT=R4NET:Query2:2
     ;
     const value = try parse(allocator, "Code/System/Software/CHello/module.R4MF", text);
     const plan = try derivePlan(allocator, value);
-    try std.testing.expectEqualStrings("R4X_C_App_Console", plan.build_profile);
+    try std.testing.expectEqualStrings("r4os-c-generation2", plan.build_profile);
     try std.testing.expectEqual(@as(usize, 2), value.sources.len);
-    try std.testing.expectEqualStrings("R4SYS:Query:1", plan.imports[0]);
-    try std.testing.expectEqualStrings("R4NET:Query:1", plan.imports[1]);
+    try std.testing.expectEqualStrings("R4SYS:Query2:2", plan.imports[0]);
+    try std.testing.expectEqualStrings("R4NET:Query2:2", plan.imports[1]);
 }
 
 test "runtime R4L accepts one Zig root followed by library-owned C sources" {
@@ -1648,7 +1607,7 @@ test "runtime R4L accepts one Zig root followed by library-owned C sources" {
         \\IMAGE_SCOPE=test
         \\OPTIMIZE=speed
         \\EXPORT=API_V1:mixedlib_api_v1:1
-        \\EXPORT=Query:mixedlib_query:1
+        \\EXPORT=Query2:mixedlib_query:2
         \\CONTRACT=Contract/LibraryContract.json
         \\CONTRACT_BASELINE=Contract/LibraryContract.baseline.json
         \\IMPLEMENTATION_ZIG=Contract/Generated/implementation_abi.zig
@@ -1714,7 +1673,7 @@ test "R4D accepts ordered C companions without changing driver identity or entry
         \\C_FLAG=-mno-sse
         \\TARGET=/R4OS/DRIVERS/MIXEDDRIVER.R4D
         \\IMAGE_SCOPE=none
-        \\IMPORT=R4DEV:Query:1
+        \\IMPORT=R4DEV:Query2:2
         \\META=r4d.name=MIXEDDRIVER
         \\META=r4d.type=display
     ;
@@ -1729,7 +1688,7 @@ test "R4D accepts ordered C companions without changing driver identity or entry
     try std.testing.expectEqualStrings("src/native.c", value.sources[1]);
     try std.testing.expectEqualStrings("src/helpers.c", value.sources[2]);
     try std.testing.expect(value.entry_mode == null and value.app_class == null);
-    try std.testing.expectEqualStrings("R4DEV:Query:1", value.imports[0]);
+    try std.testing.expectEqualStrings("R4DEV:Query2:2", value.imports[0]);
     try std.testing.expectEqualStrings("ThirdParty/include", value.c_includes[0]);
     try std.testing.expectEqualStrings("64", value.c_defines[0].value);
     try std.testing.expectEqualStrings("-mno-sse", value.c_flags[0]);
@@ -1792,7 +1751,7 @@ test "R4X accepts named Runtime-R4L imports without a profile group bit" {
         \\APP_CLASS=console
         \\TARGET=/R4OS/SOFTWARE/NAMEDR4L.R4X
         \\IMAGE_SCOPE=test
-        \\IMPORT=R4SYS:Query:1
+        \\IMPORT=R4SYS:Query2:2
         \\IMPORT=ACME-CODEC:API_V1:2
     ;
     const value = try parse(allocator, "Named/module.R4MF", text);
@@ -1806,10 +1765,10 @@ test "R4X accepts named Runtime-R4L imports without a profile group bit" {
         const invalid = try std.mem.replaceOwned(u8, allocator, text, "ACME-CODEC:API_V1:2", bad);
         try std.testing.expectError(error.InvalidImport, parse(allocator, "Named/module.R4MF", invalid));
     }
-    const optional_platform = try std.mem.replaceOwned(u8, allocator, text, "R4SYS:Query:1", "R4SYS:Query:1:1");
+    const optional_platform = try std.mem.replaceOwned(u8, allocator, text, "R4SYS:Query2:2", "R4SYS:Query2:2:1");
     try std.testing.expectError(error.InvalidImport, parse(allocator, "Named/module.R4MF", optional_platform));
 
-    const invalid_platform = std.mem.replaceOwned(u8, allocator, text, "R4SYS:Query:1", "R4SYS:API_V1:1") catch unreachable;
+    const invalid_platform = std.mem.replaceOwned(u8, allocator, text, "R4SYS:Query2:2", "R4SYS:API_V1:1") catch unreachable;
     defer allocator.free(invalid_platform);
     try std.testing.expectError(error.InvalidImport, parse(allocator, "Named/module.R4MF", invalid_platform));
 }
@@ -1831,13 +1790,13 @@ test "V2 keeps package grouping out of the build plan and validates Zig modules"
         \\IMAGE_SCOPE=none
         \\PACKAGE=TOOLS
         \\ZIG_MODULE=compiler_core:../../Shared/compiler_core.zig
-        \\IMPORT=R4SYS:Query:1
+        \\IMPORT=R4SYS:Query2:2
     ;
     const value = try parse(allocator, "Code/System/Software/Tools/Modules/App/module.R4MF", text);
     const plan = try derivePlan(allocator, value);
     try std.testing.expectEqualStrings("TOOLS", value.package.?);
     try std.testing.expectEqualStrings("compiler_core:../../Shared/compiler_core.zig", value.zig_modules[0]);
-    try std.testing.expectEqualStrings("R4X_Zig_LowLevel_Console", plan.build_profile);
+    try std.testing.expectEqualStrings("r4os-zig-generation2", plan.build_profile);
 
     const duplicate = text ++ "\nZIG_MODULE=compiler_core:../../Shared/other.zig\n";
     try std.testing.expectError(error.DuplicateZigModuleName, parse(allocator, "App/module.R4MF", duplicate));
@@ -1850,6 +1809,7 @@ test "V2 keeps package grouping out of the build plan and validates Zig modules"
         \\R4OS_MODULE_MANIFEST=2
         \\KIND=R4D
         \\NAME=DISPLAYTEST
+        \\IMPORT=R4DEV:Query2:2
         \\VERSION=0.1.0
         \\LANGUAGE=Zig
         \\SOURCE=src/main.zig
@@ -1879,7 +1839,7 @@ test "V2 rejects duplicate fields path escape invalid target scope and missing p
         \\APP_CLASS=console
         \\TARGET=/R4OS/SOFTWARE/HELLO.R4X
         \\IMAGE_SCOPE=full
-        \\IMPORT=R4SYS:Query:1
+        \\IMPORT=R4SYS:Query2:2
     ;
     const duplicate = base ++ "\nNAME=SECOND\n";
     try std.testing.expectError(error.DuplicateField, parse(allocator, "Hello/module.R4MF", duplicate));
@@ -1929,7 +1889,7 @@ test "V1 is rejected and non-R4X uses the current common schema" {
         \\SOURCE=src/main.zig
         \\TARGET=/R4OS/DRIVERS/EXAMPLE.R4D
         \\IMAGE_SCOPE=slim
-        \\IMPORT=R4DEV:Query:1
+        \\IMPORT=R4DEV:Query2:2
         \\META=r4d.type=example
     ;
     const current = try parse(allocator, "Code/System/Driver/Example/module.R4MF", driver);
@@ -1965,7 +1925,7 @@ test "image scope is mandatory for every kind and supersedes image.shipped" {
         \\LANGUAGE=Zig
         \\SOURCE=src/main.zig
         \\TARGET=/R4OS/DRIVERS/EXAMPLE.R4D
-        \\IMPORT=R4DEV:Query:1
+        \\IMPORT=R4DEV:Query2:2
     ;
     const pfad = "Code/System/Driver/Example/module.R4MF";
 
@@ -2000,7 +1960,7 @@ test "resources parse in order, validate names and paths, and reject R4L" {
         \\APP_CLASS=console
         \\TARGET=/R4OS/SOFTWARE/RSRC.R4X
         \\IMAGE_SCOPE=none
-        \\IMPORT=R4SYS:Query:1
+        \\IMPORT=R4SYS:Query2:2
     ;
     const pfad = "Code/System/Software/Rsrc/module.R4MF";
 
@@ -2072,7 +2032,7 @@ test "runtime R4L owns symbolic exports contract and language bindings" {
         \\TARGET=/R4OS/LIBS/VENDORLIB.R4L
         \\IMAGE_SCOPE=none
         \\EXPORT=API_V1:acme_api_v1:2
-        \\EXPORT=Query:acme_query:1
+        \\EXPORT=Query2:acme_query:2
         \\CONTRACT=Contract/LibraryContract.json
         \\CONTRACT_BASELINE=Contract/LibraryContract.baseline.json
         \\IMPLEMENTATION_ZIG=Contract/Generated/implementation_abi.zig
@@ -2093,6 +2053,10 @@ test "runtime R4L owns symbolic exports contract and language bindings" {
     try std.testing.expectEqual(Language.rust, (try parse(allocator, "Vendor/Rust/module.R4MF", rust_complete)).language.?);
     try std.testing.expectError(error.MissingR4LImplementationZig, parse(allocator, "Vendor/Zig/module.R4MF", no_zig_implementation));
     const parsed = try parse(allocator, "Vendor/Library/module.R4MF", base);
+    const old_query_only = try std.mem.replaceOwned(u8, allocator, base, "EXPORT=Query2:acme_query:2", "EXPORT=Query:acme_query:1");
+    try std.testing.expectError(error.InvalidR4LQueryExport, parse(allocator, "Vendor/Library/module.R4MF", old_query_only));
+    const old_import = base ++ "\nIMPORT=R4SYS:Query:1\n";
+    try std.testing.expectError(error.InvalidImport, parse(allocator, "Vendor/Library/module.R4MF", old_import));
     try std.testing.expectEqual(Kind.r4l, parsed.kind);
     try std.testing.expectEqual(@as(usize, 2), parsed.exports.len);
     try std.testing.expectEqualStrings("API_V1", parsed.exports[0].name);
@@ -2112,10 +2076,10 @@ test "runtime R4L owns symbolic exports contract and language bindings" {
     const escaped = std.mem.replaceOwned(u8, allocator, base, "Contract/LibraryContract.json", "../Contract.json") catch unreachable;
     try std.testing.expectError(error.R4LContractPathEscape, parse(allocator, "Vendor/Library/module.R4MF", escaped));
 
-    const missing_query = std.mem.replaceOwned(u8, allocator, base, "EXPORT=Query:acme_query:1", "") catch unreachable;
+    const missing_query = std.mem.replaceOwned(u8, allocator, base, "EXPORT=Query2:acme_query:2", "") catch unreachable;
     try std.testing.expectError(error.MissingR4LQueryExport, parse(allocator, "Vendor/Library/module.R4MF", missing_query));
 
-    const bad_query = std.mem.replaceOwned(u8, allocator, base, "EXPORT=Query:acme_query:1", "EXPORT=Query:acme_query:2") catch unreachable;
+    const bad_query = std.mem.replaceOwned(u8, allocator, base, "EXPORT=Query2:acme_query:2", "EXPORT=Query2:acme_query:3") catch unreachable;
     try std.testing.expectError(error.InvalidR4LQueryExport, parse(allocator, "Vendor/Library/module.R4MF", bad_query));
 
     const raw_fixture =
@@ -2141,7 +2105,8 @@ test "runtime R4L owns symbolic exports contract and language bindings" {
     try std.testing.expectEqual(@as(?u32, null), platformApiGroupId("R4STD"));
 
     const non_library_kind = std.mem.replaceOwned(u8, allocator, base, "KIND=R4L", "KIND=R4D") catch unreachable;
-    const non_library = std.mem.replaceOwned(u8, allocator, non_library_kind, "/R4OS/LIBS/VENDORLIB.R4L", "/R4OS/DRIVERS/VENDORLIB.R4D") catch unreachable;
+    const non_library_without_import = std.mem.replaceOwned(u8, allocator, non_library_kind, "/R4OS/LIBS/VENDORLIB.R4L", "/R4OS/DRIVERS/VENDORLIB.R4D") catch unreachable;
+    const non_library = try std.fmt.allocPrint(allocator, "{s}\nIMPORT=R4DEV:Query2:2\n", .{non_library_without_import});
     try std.testing.expectError(error.NonR4LContractFieldForbidden, parse(allocator, "Vendor/Library/module.R4MF", non_library));
 }
 
@@ -2157,7 +2122,7 @@ test "module version is mandatory and has exactly one spelling" {
         \\SOURCE=src/main.zig
         \\TARGET=/R4OS/DRIVERS/EXAMPLE.R4D
         \\IMAGE_SCOPE=slim
-        \\IMPORT=R4DEV:Query:1
+        \\IMPORT=R4DEV:Query2:2
     ;
     const pfad = "Code/System/Driver/Example/module.R4MF";
 
@@ -2194,9 +2159,9 @@ test "Rust R4X classes share admission and preserve semantic plan v1" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const base = "R4OS_MODULE_MANIFEST=2\nKIND=R4X\nNAME=RUSTTEST\nVERSION=0.1.0\nLANGUAGE=Rust\nSOURCE=src/main.rs\nENTRY_MODE=app\nTARGET=/SOFTWARE/RUSTTEST.R4X\nIMAGE_SCOPE=none\nIMPORT=R4SYS:Query:1\n";
+    const base = "R4OS_MODULE_MANIFEST=2\nKIND=R4X\nNAME=RUSTTEST\nVERSION=0.1.0\nLANGUAGE=Rust\nSOURCE=src/main.rs\nENTRY_MODE=app\nTARGET=/SOFTWARE/RUSTTEST.R4X\nIMAGE_SCOPE=none\nIMPORT=R4SYS:Query2:2\n";
     inline for (.{ "console", "gui", "service" }) |class| {
-        const extra = if (comptime std.mem.eql(u8, class, "gui")) "IMPORT=R4DESK:Query:1\nIMPORT=R4DRAW:Query:1\n" else "";
+        const extra = if (comptime std.mem.eql(u8, class, "gui")) "IMPORT=R4DESK:Query2:2\nIMPORT=R4DRAW:Query2:2\n" else "";
         const text = try std.fmt.allocPrint(a, "{s}APP_CLASS={s}\n{s}", .{ base, class, extra });
         const manifest = try parse(a, "Rust/module.R4MF", text);
         try std.testing.expectEqual(Language.rust, manifest.language.?);
@@ -2216,7 +2181,8 @@ test "Rust R4X classes share admission and preserve semantic plan v1" {
         const raw = try parse(a, "Rust/module.R4MF", low);
         try std.testing.expectEqual(EntryMode.lowlevel, raw.entry_mode.?);
         const raw_plan = try derivePlan(a, raw);
-        try std.testing.expect(std.mem.indexOf(u8, raw_plan.build_profile, "_LowLevel_") != null);
+        try std.testing.expectEqualStrings("r4os-rust-generation2", raw_plan.build_profile);
+        try std.testing.expectEqualStrings("R4XStart2:R4XStart2:2", raw_plan.export_contract);
         try std.testing.expect(!capabilities.query(.{ .language = "Rust", .kind = "R4X", .entry_mode = "lowlevel", .execution = .native_r4os }).supported);
     }
     _ = rust_project;

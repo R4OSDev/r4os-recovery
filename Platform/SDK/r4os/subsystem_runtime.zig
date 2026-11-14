@@ -2764,11 +2764,11 @@ const RunWaitProbe = struct {
     }
     fn run(self: *RunWaitProbe, runtime: *Runtime, use_wait: bool) i32 {
         const program = @import("program.zig");
-        var table: abi.R4XStartR4Sys = .{};
+        var table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
         table.ticks = @intFromPtr(&ticks);
         table.sleep_ticks = @intFromPtr(&sleep);
         table.task_yield = @intFromPtr(&yield);
-        const raw: abi.R4XStartContext = .{};
+        const raw: @import("r4os_contract2").R4XStartContext2 = .{};
         const bundle: program.Bundle = .{ .raw = &raw, .sys = &table };
         const sys = r4sys.Context.init(&bundle);
         active = self;

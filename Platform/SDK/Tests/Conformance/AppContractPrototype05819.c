@@ -1,14 +1,14 @@
 #include <r4os/r4os.h>
 
-static R4Status console_prototype(const R4XStartContext *context, R4App *app) {
+static R4Status console_prototype(const R4XStartContext2 *context, R4App *app) {
     return r4_app_init(context, R4_APP_PROFILE_CONSOLE, app);
 }
 
-static R4Status desktop_prototype(const R4XStartContext *context, R4App *app) {
+static R4Status desktop_prototype(const R4XStartContext2 *context, R4App *app) {
     return r4_app_init(context, R4_APP_PROFILE_DESKTOP, app);
 }
 
-static R4Status service_prototype(const R4XStartContext *context, R4App *app) {
+static R4Status service_prototype(const R4XStartContext2 *context, R4App *app) {
     return r4_app_init(context, R4_APP_PROFILE_SERVICE, app);
 }
 

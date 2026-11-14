@@ -463,8 +463,8 @@ test "packet limits keep the complete header and PCM in both audio writers" {
             return @sizeOf(@TypeOf(result));
         }
     };
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Sys = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
     table.service_open = @intFromPtr(&Capture.open);
     table.service_close = @intFromPtr(&Capture.close);
     table.service_call = @intFromPtr(&Capture.call);

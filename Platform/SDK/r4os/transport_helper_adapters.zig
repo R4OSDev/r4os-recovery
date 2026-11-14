@@ -8,12 +8,7 @@ const jobs = @import("app_web_jobs.zig");
 const runtime_jobs = @import("web_runtime_jobs.zig");
 const cb = @import("web_callback_bridge.zig");
 pub const Error = error{MissingCallback};
-pub const Context = struct { bundle: program.Bundle, transport: web.WebTransport };
-pub fn open(output: *Context, raw: *const a.R4XStartContext) bool {
-    output.bundle = program.bundleValueFromR4XStart(raw) orelse return false;
-    output.transport = .{ .network = .{ .sys = .init(&output.bundle), .net = .init(&output.bundle) }, .dev = .init(&output.bundle) };
-    return true;
-}
+pub const Context = struct { transport: web.WebTransport, context2: ?@import("platform2.zig").Context = null, memory2: @import("allocator_source.zig").Memory = undefined };
 pub fn transport(self: *Context) *web.WebTransport {
     return &self.transport;
 }
@@ -79,4 +74,18 @@ pub fn postStreamClose(stream: *web.PostStream, timeout: web.Timeout) bool {
 }
 pub fn postStreamCanRelease(stream: *const web.PostStream) bool {
     return stream.canRelease();
+}
+
+/// Initialize at the final pinned address. Every derived helper borrows this
+/// exact generation2 context and memory input until its real close/quiescence.
+pub fn open2(output: *Context, raw: *const @import("platform2.zig").abi.R4XStartContext2) bool {
+    const context = @import("platform2.zig").Context.init(raw) catch return false;
+    output.context2 = context;
+    output.memory2 = @import("allocator_source.zig").Memory.fromContext2(&output.context2.?);
+    const base: program.Context = .{ .generation2 = &output.context2.?, .memory2 = &output.memory2 };
+    output.transport = .{
+        .network = .{ .sys = @import("r4sys.zig").Context.fromProgram(base), .net = @import("r4net.zig").Context.fromProgram(base) },
+        .dev = @import("r4dev.zig").Context.fromProgram(base),
+    };
+    return true;
 }

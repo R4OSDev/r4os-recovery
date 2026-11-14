@@ -69,10 +69,6 @@ fn requiredSystem(sys: anytype) bool {
 pub fn bindAddress(address: u64) bool {
     const input = native.caller.Input.init(address) catch return false;
     switch (input) {
-        .legacy => |view| {
-            const sys = view.sys orelse return false;
-            if (sys.abi_version < 23 or !requiredSystem(sys) or !native.threads.bind(sys)) return false;
-        },
         .generation2 => |view| {
             const sys = view.system() orelse return false;
             if (!requiredSystem(sys) or !native.threads.bind2(sys)) return false;

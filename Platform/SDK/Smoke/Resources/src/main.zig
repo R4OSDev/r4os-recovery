@@ -7,7 +7,7 @@
 //! deterministische, eingecheckte Fixtures und duerfen sich nicht aendern.
 const r4os = @import("r4os");
 
-pub fn r4_app_main(app: *r4os.App) i32 {
+pub fn r4_app_main(app: *r4os.App2) i32 {
     if (app.profile != .console or !app.hasGroup(.r4sys)) return 71;
     const sys = app.system();
     sys.println("RSRCFIX result: OK");

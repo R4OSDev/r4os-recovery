@@ -11,6 +11,9 @@ fn starts(name: []const u8, prefix: []const u8) bool {
     return std.mem.startsWith(u8, name, prefix);
 }
 fn typeCandidate(name: []const u8) bool {
+    inline for (.{ "R4XStartContext", "R4XStartR4Sys", "R4XStartR4Desk", "R4XStartR4Draw", "R4XStartR4Net", "R4XStartR4Audio", "R4XStartR4Dev", "R4DriverApi", "R4ProtocolApi", "R4LQuery", "R4KernelBridgeMap", "R4AudioBackend", "R4AudioBackendStatus" }) |retired| {
+        if (std.mem.eql(u8, name, retired)) return false;
+    }
     if (!starts(name, "R4")) return false;
     for (name) |ch| if (std.ascii.isLower(ch)) return true;
     return false;
@@ -145,7 +148,9 @@ pub fn main(init: std.process.Init) !void {
     if (std.mem.eql(u8, args[1], "write")) {
         try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = args[2], .data = out.written() });
     } else {
-        const actual = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], init.arena.allocator(), .limited(4 * 1024 * 1024));
+        // readFileAlloc rejects a file that reaches its exclusive limit.
+        // Admit the exact rendered length; mem.eql still rejects any drift.
+        const actual = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], init.arena.allocator(), .limited(out.written().len + 1));
         if (!std.mem.eql(u8, actual, out.written())) return error.CFacadeProjectionDrift;
     }
 }

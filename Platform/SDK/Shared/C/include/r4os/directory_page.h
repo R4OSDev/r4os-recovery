@@ -22,9 +22,25 @@ static inline int r4_dialog_page_add(R4DialogPage *page,uint32_t kind,const R4Fi
 static inline int r4_dialog_page_load(R4DialogPage *page,R4DialogRow *scratch,uint32_t scratch_capacity,R4Files files,const R4FilePath *directory,uint32_t number,const uint8_t *extension,uintptr_t extension_len) {
     if(!page||!page->rows||!directory||!scratch||scratch_capacity<page->capacity||page->capacity<4u||(!extension&&extension_len))return 0;
     R4DialogPage next={0};next.rows=scratch;next.capacity=page->capacity;next.directory=*directory;next.number=number;
-    R4DirectoryIterator it=r4_files_iterate(files,directory);it.index=1u;
-    R4DirectoryNext parent=r4_directory_next(&it);
-    if(parent.state!=R4_DIRECTORY_ENTRY||!r4_dialog_page_add(&next,R4_DIALOG_DIRECTORY,&parent.path,(const uint8_t *)"[DIR] ..",8u))return 0;
+    if(!files.system||!r4sys_available(files.system)||directory->length>R4OS_FILE_PATH_MAX_BYTES)return 0;
+    R4FilePath parent;
+    if(directory->absolute&&directory->length>=3u){
+        parent=*directory;uintptr_t length=parent.length;
+        while(length>3u&&(parent.bytes[length-1u]=='/'||parent.bytes[length-1u]=='\\'))--length;
+        while(length>3u&&parent.bytes[length-1u]!='/'&&parent.bytes[length-1u]!='\\')--length;
+        if(length>3u)--length;
+        parent.length=(uint16_t)length;parent.bytes[length]=0;
+    }else{
+        uint8_t bytes[R4OS_FILE_PATH_MAX_BYTES+1u]={0};
+        uintptr_t slot=R4SYS_SLOT(files.system,dir_entry);
+        if(!slot||((R4SysDirEntryFn)slot)(directory->bytes,1u,bytes,sizeof(bytes))<0)return 0;
+        uintptr_t length=0;while(length<sizeof(bytes)&&bytes[length])++length;
+        if(length==sizeof(bytes)||r4_file_path(bytes,length,&parent)!=R4_PATH_OK)return 0;
+    }
+    if(!r4_dialog_page_add(&next,R4_DIALOG_DIRECTORY,&parent,(const uint8_t *)"[DIR] ..",8u))return 0;
+    /* Metadata batches contain actual children. Never consume the first one
+     * as the parent row or reinterpret their cursor as an old entry index. */
+    R4DirectoryIterator it=r4_files_iterate(files,directory);
     if(number&&!r4_dialog_page_add(&next,R4_DIALOG_PREVIOUS,0,(const uint8_t *)"<< Previous page",16u))return 0;
     uint64_t page_size=page->capacity-3u,first=(uint64_t)number*page_size,seen=0;
     for(;;){

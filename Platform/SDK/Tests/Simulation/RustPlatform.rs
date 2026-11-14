@@ -1,8 +1,8 @@
 #![cfg(test)]
-#[path = "PreciseClock.rs"]
-mod precise_clock;
 #[path = "AudioWritePlatform.rs"]
 mod audio_write25;
+#[path = "PreciseClock.rs"]
+mod precise_clock;
 #[path = "RustGraphics.rs"]
 mod visual_regression;
 use core::{mem::MaybeUninit, pin::pin};
@@ -17,9 +17,9 @@ unsafe extern "C" {
     fn sdk_budget_c_case() -> i32;
     fn sdk_audio_c_case() -> i32;
     fn sdk_platform_oracle_tables(
-        sys: *mut abi::R4XStartR4Sys,
-        audio: *mut abi::R4XStartR4Audio,
-        dev: *mut abi::R4XStartR4Dev,
+        sys: *mut abi::generation2::R4XStartR4Sys2,
+        audio: *mut abi::generation2::R4XStartR4Audio2,
+        dev: *mut abi::generation2::R4XStartR4Dev2,
     );
     fn sdk_platform_oracle_mode(mode: u32);
     fn sdk_platform_oracle_connections() -> u32;
@@ -34,9 +34,9 @@ fn checked_budget_c_peer_uses_the_same_native_owner() {
 fn original_platform_owners_preserve_frames_progress_and_explicit_close() {
     assert_eq!(unsafe { sdk_audio_c_case() }, 0);
     let (mut sys, mut audio, mut dev) = (
-        abi::R4XStartR4Sys::default(),
-        abi::R4XStartR4Audio::default(),
-        abi::R4XStartR4Dev::default(),
+        abi::generation2::R4XStartR4Sys2::default(),
+        abi::generation2::R4XStartR4Audio2::default(),
+        abi::generation2::R4XStartR4Dev2::default(),
     );
     unsafe { sdk_platform_oracle_tables(&mut sys, &mut audio, &mut dev) };
     let records = [
@@ -68,23 +68,22 @@ fn original_platform_owners_preserve_frames_progress_and_explicit_close() {
     let imports = records.map(|(group, name, table, _, _, _)| abi::R4XStartImport {
         group_id: group.0,
         module_name: name.as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         flags: abi::r4xstart_import_flag_group_interface,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         table,
     });
-    let specs = records.map(|(group, name, _, magic, version, size)| ImportSpec {
-        module_name: name.to_bytes(),
-        symbol_name: b"Query",
+    let specs = records.map(|(group, name, _, _magic, _version, _size)| ImportSpec {
+        module_name: name.as_ptr().cast(),
+        symbol_name: c"Query2".as_ptr().cast(),
         group_id: group.0,
-        minimum: 1,
-        optional: false,
-        magic,
-        version,
-        size,
+        minimum: 2,
+        optional: 0,
+
+        reserved: 0,
     });
-    let context = abi::R4XStartContext {
+    let context = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
         flags: abi::r4xstart_flag_imports_valid,
@@ -93,8 +92,9 @@ fn original_platform_owners_preserve_frames_progress_and_explicit_close() {
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
-        required_groups: records.iter().fold(0, |m, r| m | (1 << r.0.0)),
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
+        required_groups: 2,
         imports: &specs,
     };
     let app = unsafe { App::from_raw(&context, &expected, c"PlatformParity") }.unwrap();
@@ -309,24 +309,25 @@ fn original_platform_owners_preserve_frames_progress_and_explicit_close() {
     let mut native = MaybeUninit::uninit();
     assert_eq!(
         unsafe {
-            c::R4SdkPlatformOpenNative(
+            c::R4SdkPlatformOpenNative2(
                 c::R4SdkGui_ABI_FINGERPRINT ^ 1,
                 native.as_mut_ptr(),
-                &context,
+                core::ptr::from_ref(app.context()).cast(),
             )
         },
         abi::io_error_invalid
     );
     let no_audio_imports = [imports[0], imports[2]];
     let no_audio_specs = [specs[0], specs[2]];
-    let no_audio_context = abi::R4XStartContext {
+    let no_audio_context = abi::generation2::R4XStartContext2 {
         imports: no_audio_imports.as_ptr() as u64,
         import_count: 2,
         ..context
     };
     let no_audio_expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
-        required_groups: (1 << abi::R4LGroup::r4sys.0) | (1 << abi::R4LGroup::r4dev.0),
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
+        required_groups: 2,
         imports: &no_audio_specs,
     };
     let app_without_audio =
@@ -441,6 +442,7 @@ fn generation2_c_and_rust_admit_identical_prefixes_and_reject_mixed_records() {
     check(&raw, &sys, &rows, Some(Error::DuplicateGroup), 0);
     raw.import_count = 1;
     rows[0] = import;
+    // Intentional historical magic: a retired G1 table must be rejected.
     sys.magic = (r4os_sdk::abi::R4XStartR4Sys::default()).magic;
     check(&raw, &sys, &rows, Some(Error::InvalidTable), 0);
     sys.magic = a::R4SYS_MAGIC;

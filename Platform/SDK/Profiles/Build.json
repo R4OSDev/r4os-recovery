@@ -1,75 +1,183 @@
 {
   "schema": 1,
   "platforms": {
-    "platform1": { "generation": 1, "contract_module": "r4os_contract", "sdk_module": "r4os", "query_symbol": "Query", "query_version": 1, "entry_symbol": "R4XStart", "entry_version": 1 },
-    "platform2": { "generation": 2, "contract_module": "r4os_contract2", "sdk_module": "r4os_platform2", "query_symbol": "Query2", "query_version": 2, "entry_symbol": "R4XStart2", "entry_version": 2 }
+    "platform2": {
+      "generation": 2,
+      "contract_module": "r4os_contract2",
+      "sdk_module": "r4os_platform2",
+      "query_symbol": "Query2",
+      "query_version": 2,
+      "entry_symbol": "R4XStart2",
+      "entry_version": 2
+    }
   },
   "module_defaults": [
-    {"language": "Zig", "kind": "R4X", "entry": "", "profile": "r4os-zig-module-v1"},
-    {"language": "Zig", "kind": "R4L", "entry": "", "profile": "r4os-zig-module-v1"},
-    {"language": "Zig", "kind": "R4D", "entry": "", "profile": "r4os-zig-module-v1"},
-    {"language": "Zig", "kind": "R4P", "entry": "", "profile": "r4os-zig-module-v1"},
-    {"language": "C", "kind": "R4X", "entry": "", "profile": "r4os-c-module-v1"},
-    {"language": "C", "kind": "R4L", "entry": "", "profile": "r4os-c-module-v1"},
-    {"language": "C", "kind": "R4D", "entry": "", "profile": "r4os-c-module-v1"},
-    {"language": "C", "kind": "R4P", "entry": "", "profile": "r4os-c-module-v1"},
-    {"language": "Rust", "kind": "R4X", "entry": "app", "profile_role": "app"},
-    {"language": "Rust", "kind": "R4X", "entry": "lowlevel", "profile_role": "lowlevel"},
-    {"language": "Rust", "kind": "R4L", "entry": "", "profile_role": "library"},
-    {"language": "Rust", "kind": "R4D", "entry": "", "profile_role": "driver"},
-    {"language": "Rust", "kind": "R4P", "entry": "", "profile_role": "protocol"}
+    {
+      "language": "Zig",
+      "kind": "R4X",
+      "entry": "",
+      "profile": "r4os-zig-generation2"
+    },
+    {
+      "language": "Zig",
+      "kind": "R4L",
+      "entry": "",
+      "profile": "r4os-zig-r4l-generation2"
+    },
+    {
+      "language": "Zig",
+      "kind": "R4D",
+      "entry": "",
+      "profile": "r4os-zig-r4d-generation2"
+    },
+    {
+      "language": "Zig",
+      "kind": "R4P",
+      "entry": "",
+      "profile": "r4os-zig-r4p-generation2"
+    },
+    {
+      "language": "C",
+      "kind": "R4X",
+      "entry": "",
+      "profile": "r4os-c-generation2"
+    },
+    {
+      "language": "C",
+      "kind": "R4L",
+      "entry": "",
+      "profile": "r4os-c-r4l-generation2"
+    },
+    {
+      "language": "C",
+      "kind": "R4D",
+      "entry": "",
+      "profile": "r4os-c-r4d-generation2"
+    },
+    {
+      "language": "C",
+      "kind": "R4P",
+      "entry": "",
+      "profile": "r4os-c-r4p-generation2"
+    },
+    {
+      "language": "Rust",
+      "kind": "R4X",
+      "entry": "app",
+      "profile_role": "app"
+    },
+    {
+      "language": "Rust",
+      "kind": "R4X",
+      "entry": "lowlevel",
+      "profile_role": "lowlevel"
+    },
+    {
+      "language": "Rust",
+      "kind": "R4L",
+      "entry": "",
+      "profile_role": "library"
+    },
+    {
+      "language": "Rust",
+      "kind": "R4D",
+      "entry": "",
+      "profile_role": "driver"
+    },
+    {
+      "language": "Rust",
+      "kind": "R4P",
+      "entry": "",
+      "profile_role": "protocol"
+    }
   ],
   "profiles": {
     "r4os-zig-generation2": {
-      "language": "Zig", "role": "module", "codegen": "module", "toolset": "core", "components": "system", "cpu": "r4os-avx2-v1", "kind": "R4X", "platform": "platform2"
-    },
-    "r4os-c-generation2": {
-      "language": "C", "role": "module", "codegen": "module", "toolset": "core", "components": "system", "cpu": "r4os-avx2-v1", "kind": "R4X", "platform": "platform2"
-    },
-    "r4os-rust-generation2": {
-      "language": "Rust", "role": "module", "codegen": "rust-module", "toolset": "core", "components": "system", "kind": "R4X", "platform": "platform2"
-    },
-    "r4os-zig-r4d-generation2": {
-      "language": "Zig", "role": "module", "codegen": "module", "toolset": "core", "components": "system", "cpu": "r4os-avx2-v1", "kind": "R4D", "platform": "platform2"
-    },
-    "r4os-c-r4d-generation2": {
-      "language": "C", "role": "module", "codegen": "module", "toolset": "core", "components": "system", "cpu": "r4os-avx2-v1", "kind": "R4D", "platform": "platform2"
-    },
-    "r4os-rust-r4d-generation2": {
-      "language": "Rust", "role": "module", "codegen": "rust-module", "toolset": "core", "components": "system", "kind": "R4D", "platform": "platform2"
-    },
-    "r4os-zig-r4p-generation2": {
-      "language": "Zig", "role": "module", "codegen": "module", "toolset": "core", "components": "system", "cpu": "r4os-avx2-v1", "kind": "R4P", "platform": "platform2"
-    },
-    "r4os-c-r4p-generation2": {
-      "language": "C", "role": "module", "codegen": "module", "toolset": "core", "components": "system", "cpu": "r4os-avx2-v1", "kind": "R4P", "platform": "platform2"
-    },
-    "r4os-rust-r4p-generation2": {
-      "language": "Rust", "role": "module", "codegen": "rust-module", "toolset": "core", "components": "system", "kind": "R4P", "platform": "platform2"
-    },
-    "r4os-zig-module-v1": {
       "language": "Zig",
       "role": "module",
       "codegen": "module",
       "toolset": "core",
       "components": "system",
-      "cpu": "r4os-avx2-v1"
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4X",
+      "platform": "platform2"
     },
-    "r4os-c-module-v1": {
+    "r4os-c-generation2": {
       "language": "C",
       "role": "module",
       "codegen": "module",
       "toolset": "core",
       "components": "system",
-      "cpu": "r4os-avx2-v1"
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4X",
+      "platform": "platform2"
     },
-    "r4os-rust-r4x-v2": {
+    "r4os-rust-generation2": {
       "language": "Rust",
       "role": "module",
       "codegen": "rust-module",
       "toolset": "core",
       "components": "system",
-      "kind": "R4X"
+      "kind": "R4X",
+      "platform": "platform2"
+    },
+    "r4os-zig-r4d-generation2": {
+      "language": "Zig",
+      "role": "module",
+      "codegen": "module",
+      "toolset": "core",
+      "components": "system",
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4D",
+      "platform": "platform2"
+    },
+    "r4os-c-r4d-generation2": {
+      "language": "C",
+      "role": "module",
+      "codegen": "module",
+      "toolset": "core",
+      "components": "system",
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4D",
+      "platform": "platform2"
+    },
+    "r4os-rust-r4d-generation2": {
+      "language": "Rust",
+      "role": "module",
+      "codegen": "rust-module",
+      "toolset": "core",
+      "components": "system",
+      "kind": "R4D",
+      "platform": "platform2"
+    },
+    "r4os-zig-r4p-generation2": {
+      "language": "Zig",
+      "role": "module",
+      "codegen": "module",
+      "toolset": "core",
+      "components": "system",
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4P",
+      "platform": "platform2"
+    },
+    "r4os-c-r4p-generation2": {
+      "language": "C",
+      "role": "module",
+      "codegen": "module",
+      "toolset": "core",
+      "components": "system",
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4P",
+      "platform": "platform2"
+    },
+    "r4os-rust-r4p-generation2": {
+      "language": "Rust",
+      "role": "module",
+      "codegen": "rust-module",
+      "toolset": "core",
+      "components": "system",
+      "kind": "R4P",
+      "platform": "platform2"
     },
     "r4os-kernel-rust-v1": {
       "language": "Rust",
@@ -83,7 +191,8 @@
       "role": "recovery",
       "codegen": "recovery",
       "toolset": "recovery",
-      "components": "recovery"
+      "components": "recovery",
+      "platform": "platform2"
     },
     "r4os-native-graphics-v1": {
       "language": "C++",
@@ -99,37 +208,34 @@
       "toolset": "core",
       "components": "system"
     },
-    "r4os-rust-r4x-lowlevel-v1": {
-      "language": "Rust",
+    "r4os-zig-r4l-generation2": {
+      "language": "Zig",
       "role": "module",
-      "codegen": "rust-module",
+      "codegen": "module",
       "toolset": "core",
       "components": "system",
-      "kind": "R4X"
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4L",
+      "platform": "platform2"
     },
-    "r4os-rust-r4l-v1": {
-      "language": "Rust",
+    "r4os-c-r4l-generation2": {
+      "language": "C",
       "role": "module",
-      "codegen": "rust-module",
+      "codegen": "module",
       "toolset": "core",
       "components": "system",
-      "kind": "R4L"
+      "cpu": "r4os-avx2-v1",
+      "kind": "R4L",
+      "platform": "platform2"
     },
-    "r4os-rust-r4d-v1": {
+    "r4os-rust-r4l-generation2": {
       "language": "Rust",
       "role": "module",
       "codegen": "rust-module",
       "toolset": "core",
       "components": "system",
-      "kind": "R4D"
-    },
-    "r4os-rust-r4p-v1": {
-      "language": "Rust",
-      "role": "module",
-      "codegen": "rust-module",
-      "toolset": "core",
-      "components": "system",
-      "kind": "R4P"
+      "kind": "R4L",
+      "platform": "platform2"
     }
   },
   "cpu_baselines": {
@@ -419,7 +525,7 @@
     },
     "rust-module": {
       "schema": 2,
-      "id": "r4os-rust-r4x-v2",
+      "id": "r4os-rust-generation2",
       "target": "x86_64-unknown-none",
       "backend_features": {
         "selection": "target-defaults",
@@ -507,11 +613,11 @@
         "--strip-debug"
       ],
       "profile_ids": {
-        "app": "r4os-rust-r4x-v2",
-        "lowlevel": "r4os-rust-r4x-lowlevel-v1",
-        "library": "r4os-rust-r4l-v1",
-        "driver": "r4os-rust-r4d-v1",
-        "protocol": "r4os-rust-r4p-v1"
+        "app": "r4os-rust-generation2",
+        "lowlevel": "r4os-rust-generation2",
+        "library": "r4os-rust-r4l-generation2",
+        "driver": "r4os-rust-r4d-generation2",
+        "protocol": "r4os-rust-r4p-generation2"
       },
       "edition": "2024"
     },
@@ -4333,9 +4439,6 @@
   "native_c_profiles": {
     "R4X_C2": "[BuildProfile]\nName=R4X_C2\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart2\nPackage=R4M0\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart2_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query2:2\nR4DESK=R4DESK:Query2:2\n\n[Exports]\nEntry=R4XStart2:.text:0:2\n\n[Metadata]\nr4x.start=r4xstart2\nr4x.entry=R4XStart2\nr4x.start_abi=2\nr4x.context=R4XStartContext2\n",
     "R4X_C2_Console": "[BuildProfile]\nName=R4X_C2_Console\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart2\nPackage=R4M0\nAppClass=console\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart2_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query2:2\nR4DESK=R4DESK:Query2:2\n\n[Exports]\nEntry=R4XStart2:.text:0:2\n\n[Metadata]\nr4x.start=r4xstart2\nr4x.entry=R4XStart2\nr4x.start_abi=2\nr4x.context=R4XStartContext2\n",
-    "R4X_C2_Desktop_OK": "[BuildProfile]\nName=R4X_C2_Desktop_OK\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart2\nPackage=R4M0\nAppClass=gui\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart2_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query2:2\nR4DESK=R4DESK:Query2:2\nR4DRAW=R4DRAW:Query2:2\n\n[Exports]\nEntry=R4XStart2:.text:0:2\n\n[Metadata]\nr4x.start=r4xstart2\nr4x.entry=R4XStart2\nr4x.start_abi=2\nr4x.context=R4XStartContext2\nr4x.class=gui\n",
-    "R4X_C": "[BuildProfile]\nName=R4X_C\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart\nPackage=R4M0\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query:1\n\n[Exports]\nEntry=R4XStart:.text:0:1\n\n[Metadata]\nr4x.start=r4xstart\nr4x.entry=R4XStart\nr4x.start_abi=1\nr4x.context=R4XStartContext\n",
-    "R4X_C_Console": "[BuildProfile]\nName=R4X_C_Console\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart\nPackage=R4M0\nAppClass=console\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query:1\n\n[Exports]\nEntry=R4XStart:.text:0:1\n\n[Metadata]\nr4x.start=r4xstart\nr4x.entry=R4XStart\nr4x.start_abi=1\nr4x.context=R4XStartContext\n",
-    "R4X_C_Desktop_OK": "[BuildProfile]\nName=R4X_C_Desktop_OK\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart\nPackage=R4M0\nAppClass=gui\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query:1\nR4DESK=R4DESK:Query:1\nR4DRAW=R4DRAW:Query:1\n\n[Exports]\nEntry=R4XStart:.text:0:1\n\n[Metadata]\nr4x.start=r4xstart\nr4x.entry=R4XStart\nr4x.start_abi=1\nr4x.context=R4XStartContext\nr4x.class=gui\n"
+    "R4X_C2_Desktop_OK": "[BuildProfile]\nName=R4X_C2_Desktop_OK\nModuleKind=R4X\nLanguage=C\nStartContract=R4XStart2\nPackage=R4M0\nAppClass=gui\nOutputExtension=.R4X\n\n[Inputs]\nHeaders=Include/C\nStartup=Startup/C/r4xstart2_startup.c\nLinker=Linker/r4os_module.ld\nContract=Contract\n\n[Imports]\nR4SYS=R4SYS:Query2:2\nR4DESK=R4DESK:Query2:2\nR4DRAW=R4DRAW:Query2:2\n\n[Exports]\nEntry=R4XStart2:.text:0:2\n\n[Metadata]\nr4x.start=r4xstart2\nr4x.entry=R4XStart2\nr4x.start_abi=2\nr4x.context=R4XStartContext2\nr4x.class=gui\n"
   }
 }

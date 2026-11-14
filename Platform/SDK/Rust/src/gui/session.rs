@@ -52,30 +52,7 @@ impl<'app, 'storage> Session<'app, 'storage> {
         role: Role,
         timers: &'storage mut [TimerStorage],
     ) -> Result<Self> {
-        // Only native code writes opaque storage, including its uninitialized
-        // padding. We never form a reference to the native record.
-        let native = unsafe { storage.get_unchecked_mut() }.native.as_mut_ptr();
-        let timer_count = timers.len();
-        let timers = timers.as_mut_ptr();
-        exact(unsafe {
-            c::R4SdkGuiSessionOpen(
-                native,
-                app.start_context(),
-                match role {
-                    Role::Window => 0,
-                    Role::DesktopHost => 1,
-                },
-                timers.cast(),
-                timer_count as _,
-            )
-        })?;
-        Ok(Self {
-            native: NonNull::new(native).ok_or(Error::InvalidProvider)?,
-            _storage: PhantomData,
-            _timers: PhantomData,
-            _app: PhantomData,
-            _local: PhantomData,
-        })
+        Self::open2(storage, app, role, timers)
     }
     fn pointer(&mut self) -> *mut c::R4SdkGuiSession {
         // Native contexts retain interior pointers into this allocation.

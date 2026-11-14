@@ -67,7 +67,7 @@ const AudioModel = struct {
         return @sizeOf(@TypeOf(result));
     }
     fn check() !void {
-        var table: a.R4XStartR4Sys = .{};
+        var table: r4os.platform2.abi.R4XStartR4Sys2 = .{};
         table.service_open = @intFromPtr(&open); table.service_close = @intFromPtr(&close);
         table.service_call = @intFromPtr(&call); table.monotonic_clock = @intFromPtr(&clock);
         const bundle: r4os.program.Bundle = .{ .raw = undefined, .sys = &table };
@@ -140,7 +140,7 @@ const transform: g.R4GfxColorTransform = .{ .version = 1, .size = @sizeOf(g.R4Gf
     .source_rect = .{ .x = 0, .y = 0, .width = 4, .height = 4 }, .target_rect = .{ .x = 0, .y = 0, .width = 4, .height = 4 },
     .sampler = 0, .operation = g.render_operation_blit, .opacity = 65535, .flags = 0, .pixel_budget = 16 };
 const Model = struct {
-    var table: a.R4XStartR4Draw = undefined;
+    var table: r4os.platform2.abi.R4XStartR4Draw2 = undefined;
     var bundle: r4os.program.Bundle = undefined;
     var video_table: v.VideoV1 = undefined;
     var graphics_table: g.DeviceV1 = undefined;

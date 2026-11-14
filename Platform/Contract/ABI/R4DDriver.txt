@@ -4,6 +4,15 @@
 Scope
 -----
 
+The active technical records are DriverApi2 and ProtocolApi2, entered through
+DriverInit2:2 and ProtocolInit2:2. Their canonical layouts, minimum prefixes
+and callback types are defined by API/Generation2.json and its baseline.
+Audio providers use the136-byte AudioBackend2. The completed0.90.89 cutover
+removed the old kernel entry providers. Numbered DriverApi/AudioBackend
+expansion notes below are historical; they do not admit those retired outer
+records. DMA, callback, work and retirement ownership rules and independent
+functional subrecord versions continue to apply.
+
 Audio detail duration retirement (Contract0.64.61 / R4OS0.88.59)
 -------------------------------------------------------------
 AudioBackendStatus remains fixed128 bytes. Its last/max/total_write_ticks

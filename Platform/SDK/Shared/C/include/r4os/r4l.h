@@ -64,29 +64,34 @@ _Static_assert(offsetof(R4LInterfaceHeader, interface_id_hi) == 24u, "R4LInterfa
 
 /* Provider ABI stays the same as the generated consumer tables. The caller
  * owns every allocator, session and callback through exact close/quiescence. */
-#define R4L_PROVIDER_QUERY(symbol_) \
+/* Independent library interfaces keep their own ABI and caller ownership.
+ * Query2 only admits their generation2 loader transport. */
+#define R4L_PROVIDER_QUERY2(symbol_) \
     void r4l_entry(void) {} \
-    R4LQuery symbol_ __attribute__((aligned(8),section(".data.r4l_exports"))) = \
-        {R4L_ABI_MAGIC,R4L_ABI_VERSION,sizeof(R4LQuery),0,0,0}
+    R4LQuery2 symbol_ __attribute__((aligned(8),section(".data.r4l_exports"))) = \
+        {R4OS2_QUERY_MAGIC,2,sizeof(R4LQuery2),0,0}
 
-static inline int r4xstart_context_valid(const R4XStartContext *ctx) {
+/* The ordinary producer spelling always publishes the current descriptor. */
+#define R4L_PROVIDER_QUERY(symbol_) R4L_PROVIDER_QUERY2(symbol_)
+
+static inline int r4xstart_context_valid(const R4XStartContext2 *ctx) {
     return ctx != 0 &&
-        ctx->magic == R4XSTART_MAGIC &&
-        ctx->abi_major == R4XSTART_ABI_MAJOR &&
-        ctx->size >= R4XSTART_CONTEXT_SIZE;
+        ctx->magic == R4OS2_START_MAGIC &&
+        ctx->abi_major == 2u &&
+        ctx->size >= sizeof(R4XStartContext2);
 }
 
-static inline const uint8_t *r4xstart_args(const R4XStartContext *ctx) {
+static inline const uint8_t *r4xstart_args(const R4XStartContext2 *ctx) {
     if (ctx == 0 || ctx->args == 0 || ctx->args_len == 0) return 0;
     return (const uint8_t *)(uintptr_t)ctx->args;
 }
 
-static inline uint32_t r4xstart_import_count(const R4XStartContext *ctx) {
+static inline uint32_t r4xstart_import_count(const R4XStartContext2 *ctx) {
     if (ctx == 0 || (ctx->flags & R4XSTART_FLAG_IMPORTS_VALID) == 0) return 0;
     return ctx->import_count;
 }
 
-static inline const R4XStartImport *r4xstart_import_at(const R4XStartContext *ctx, uint32_t index) {
+static inline const R4XStartImport *r4xstart_import_at(const R4XStartContext2 *ctx, uint32_t index) {
     if (ctx == 0 || ctx->imports == 0 || index >= r4xstart_import_count(ctx)) return 0;
     const R4XStartImport *imports = (const R4XStartImport *)(uintptr_t)ctx->imports;
     return &imports[index];
@@ -110,7 +115,7 @@ static inline int r4xstart_import_name_equal(uint64_t raw, const char *expected)
     return index < 32u && expected[index] == 0 && value[index] == 0;
 }
 
-static inline const R4XStartImport *r4xstart_find_import_named(const R4XStartContext *ctx, const char *module_name, const char *symbol_name) {
+static inline const R4XStartImport *r4xstart_find_import_named(const R4XStartContext2 *ctx, const char *module_name, const char *symbol_name) {
     uint32_t count = r4xstart_import_count(ctx);
     for (uint32_t i = 0; i < count; i += 1) {
         const R4XStartImport *item = r4xstart_import_at(ctx, i);
@@ -140,7 +145,7 @@ static inline int32_t r4l_query2(const R4OS2Context *ctx, const char *module_nam
     if (!item || item->group_id || item->min_version != 2 || item->resolved_version != 2 || !item->table) return R4L_BINDING_INVALID_IMPORT;
     if (item->table % _Alignof(R4LQuery2)) return R4L_BINDING_MISALIGNED_TABLE;
     const R4LQuery2 *value = (const R4LQuery2 *)(uintptr_t)item->table;
-    if (value->magic != R4OS2_QUERY_MAGIC || value->abi_version != 2 || value->size < sizeof(*value) || value->group || value->reserved) return R4L_BINDING_INVALID_QUERY;
+    if (value->magic != R4OS2_QUERY_MAGIC || value->abi_version != 2 || value->size != sizeof(*value) || value->group || value->reserved) return R4L_BINDING_INVALID_QUERY;
     *out_query = value;
     return R4L_BINDING_OK;
 }
@@ -169,20 +174,6 @@ static inline int32_t r4l_validate_import(const R4XStartImport *item, const R4LI
     if (header->abi_minor < expected->min_revision) return R4L_BINDING_REVISION_TOO_OLD;
     if (header->size < expected->required_size) return R4L_BINDING_TABLE_TOO_SMALL;
     *out_header = header;
-    return R4L_BINDING_OK;
-}
-
-/* Query is current standalone-library metadata, distinct from a named API. */
-static inline int32_t r4l_query_metadata(const R4XStartContext *ctx, const char *module, const R4LQuery **out_query) {
-    if (!out_query) return R4L_BINDING_INVALID_EXPECTATION;
-    *out_query = 0;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx,module,"Query");
-    if (!item || item->group_id != 0 || item->table == 0 || item->min_version == 0 || item->resolved_version < item->min_version) return R4L_BINDING_INVALID_IMPORT;
-    if (item->table % _Alignof(R4LQuery)) return R4L_BINDING_MISALIGNED_TABLE;
-    const R4LQuery *query = (const R4LQuery *)(uintptr_t)item->table;
-    if (item->resolved_version != 1 || query->magic != R4L_ABI_MAGIC || query->abi_version != R4L_ABI_VERSION ||
-        query->size < sizeof(R4LQuery) || query->group != 0 || query->kernel_bridge != 0 || query->reserved != 0) return R4L_BINDING_INVALID_QUERY;
-    *out_query = query;
     return R4L_BINDING_OK;
 }
 

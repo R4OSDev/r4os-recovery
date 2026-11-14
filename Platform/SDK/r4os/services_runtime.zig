@@ -29,7 +29,7 @@ fn loopInit(owner_sys: sys.Context, endpoint: u32, stop_ms: u64, drain_limit: u3
     store(out, value);
     return 0;
 }
-pub export fn R4SdkServiceLoopInit(context: *const abi.R4XStartContext, endpoint: u32, stop_ms: u64, drain_limit: u32, out: *Loop) callconv(.c) i32 {
+pub export fn R4SdkServiceLoopInit(context: *const @import("r4os_contract2").R4XStartContext2, endpoint: u32, stop_ms: u64, drain_limit: u32, out: *Loop) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     return loopInit(sys.Context.init(&bundle), endpoint, stop_ms, drain_limit, out);
 }
@@ -48,7 +48,7 @@ fn loopWait(owner_sys: sys.Context, state: *Loop, has_deadline: u32, tick: u64) 
         .failure => |raw| .{ .kind = 4, .value = raw },
     };
 }
-pub export fn R4SdkServiceLoopWait(context: *const abi.R4XStartContext, state: *Loop, has_deadline: u32, tick: u64) callconv(.c) Step {
+pub export fn R4SdkServiceLoopWait(context: *const @import("r4os_contract2").R4XStartContext2, state: *Loop, has_deadline: u32, tick: u64) callconv(.c) Step {
     const bundle = bridge.bundle(context) orelse return .{ .kind = 4, .value = abi.err_no_group };
     return loopWait(sys.Context.init(&bundle), state, has_deadline, tick);
 }
@@ -62,7 +62,7 @@ fn loopBatch(owner_sys: sys.Context, state: *Loop, announced: u32, out: *Batch) 
     out.* = .{ .announced = batch.announced, .processed = batch.processed, .done = @intFromBool(batch.done) };
     return 0;
 }
-pub export fn R4SdkServiceLoopBatch(context: *const abi.R4XStartContext, state: *Loop, announced: u32, out: *Batch) callconv(.c) i32 {
+pub export fn R4SdkServiceLoopBatch(context: *const @import("r4os_contract2").R4XStartContext2, state: *Loop, announced: u32, out: *Batch) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     return loopBatch(sys.Context.init(&bundle), state, announced, out);
 }
@@ -82,7 +82,7 @@ fn batchNext(owner_sys: sys.Context, state: *Loop, batch: *Batch) Step {
         .failure => |raw| .{ .kind = 3, .value = raw },
     };
 }
-pub export fn R4SdkServiceBatchNext(context: *const abi.R4XStartContext, state: *Loop, batch: *Batch) callconv(.c) Step {
+pub export fn R4SdkServiceBatchNext(context: *const @import("r4os_contract2").R4XStartContext2, state: *Loop, batch: *Batch) callconv(.c) Step {
     const bundle = bridge.bundle(context) orelse return .{ .kind = 3, .value = abi.err_no_group };
     return batchNext(sys.Context.init(&bundle), state, batch);
 }
@@ -99,7 +99,7 @@ fn loopDrain(owner_sys: sys.Context, state: *Loop, announced: u32, handler: Hand
     store(state, owner);
     return result;
 }
-pub export fn R4SdkServiceLoopDrain(context: *const abi.R4XStartContext, state: *Loop, announced: u32, handler: Handler, data: ?*anyopaque) callconv(.c) i32 {
+pub export fn R4SdkServiceLoopDrain(context: *const @import("r4os_contract2").R4XStartContext2, state: *Loop, announced: u32, handler: Handler, data: ?*anyopaque) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     return loopDrain(sys.Context.init(&bundle), state, announced, handler, data);
 }
@@ -114,14 +114,14 @@ fn loopReport(owner_sys: sys.Context, state: *const Loop, name: [*]const u8, len
     };
     return @intCast(result.len);
 }
-pub export fn R4SdkServiceLoopReport(context: *const abi.R4XStartContext, state: *const Loop, name: [*]const u8, len: u32, out: [*]u8, capacity: u32) callconv(.c) i32 {
+pub export fn R4SdkServiceLoopReport(context: *const @import("r4os_contract2").R4XStartContext2, state: *const Loop, name: [*]const u8, len: u32, out: [*]u8, capacity: u32) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     return loopReport(sys.Context.init(&bundle), state, name, len, out, capacity);
 }
 pub export fn R4SdkServiceLoopReport2(context: *const @import("platform2.zig").Context, state: *const Loop, name: [*]const u8, len: u32, out: [*]u8, capacity: u32) callconv(.c) i32 {
     return loopReport(system2(context), state, name, len, out, capacity);
 }
-pub export fn R4SdkServiceDetails(context: *const abi.R4XStartContext, out: [*]abi.ServiceDetail, capacity: u32) callconv(.c) i32 {
+pub export fn R4SdkServiceDetails(context: *const @import("r4os_contract2").R4XStartContext2, out: [*]abi.ServiceDetail, capacity: u32) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     const owner = sys.Context.init(&bundle);
     return details(&owner, out[0..capacity]);
@@ -132,7 +132,7 @@ fn details(owner: *const sys.Context, rows: []abi.ServiceDetail) i32 {
         .failure => |raw| raw,
     };
 }
-pub export fn R4SdkServiceControl(context: *const abi.R4XStartContext, operation: u32, name: [*:0]const u8, path: ?[*:0]const u8, args: ?[*:0]const u8, mode: u32, description: ?[*:0]const u8, timeout_ticks: u64, out: *abi.ServiceInfo) callconv(.c) i32 {
+pub export fn R4SdkServiceControl(context: *const @import("r4os_contract2").R4XStartContext2, operation: u32, name: [*:0]const u8, path: ?[*:0]const u8, args: ?[*:0]const u8, mode: u32, description: ?[*:0]const u8, timeout_ticks: u64, out: *abi.ServiceInfo) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     const owner = sys.Context.init(&bundle);
     return control(&owner, operation, name, path, args, mode, description, timeout_ticks, out);
@@ -149,11 +149,11 @@ fn control(owner: *const sys.Context, operation: u32, name: [*:0]const u8, path:
         else => abi.service_api_result_invalid,
     };
 }
-pub export fn R4SdkServiceInfo(context: *const abi.R4XStartContext, index: u32, out: *abi.ServiceInfo) callconv(.c) i32 {
+pub export fn R4SdkServiceInfo(context: *const @import("r4os_contract2").R4XStartContext2, index: u32, out: *abi.ServiceInfo) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     return sys.Context.init(&bundle).serviceInfo(index, out);
 }
-pub export fn R4SdkServiceDetail(context: *const abi.R4XStartContext, name: [*:0]const u8, out: *abi.ServiceDetail) callconv(.c) i32 {
+pub export fn R4SdkServiceDetail(context: *const @import("r4os_contract2").R4XStartContext2, name: [*:0]const u8, out: *abi.ServiceDetail) callconv(.c) i32 {
     const bundle = bridge.bundle(context) orelse return abi.err_no_group;
     return sys.Context.init(&bundle).serviceDetailByName(name, out);
 }

@@ -1,5 +1,6 @@
 /* Reusable C caller for both genuine provider languages; private caller heaps. */
 #include <r4os/r4os.h>
+#include <r4os/app2.h>
 #include "../Build/CR4L/Bindings/C/l66c.h"
 typedef struct Caller66 {
  R4Heap heap;R4L66State *state;R4L66ApiV1CloseFn close;
@@ -10,12 +11,13 @@ static uint64_t allocate66(uint64_t owner,uint64_t bytes){Caller66 *c=(Caller66*
 static int32_t release66(uint64_t owner,uint64_t address){Caller66 *c=(Caller66*)(uintptr_t)owner;c->attempts++;if(c->fail_release){c->fail_release=0;return -44;}int rc=r4_heap_free(&c->heap,(void*)(uintptr_t)address);if(!rc)c->release_count++;return rc;}
 static int32_t notify66(uint64_t owner,uint64_t generation,uint64_t value){Caller66 *c=(Caller66*)(uintptr_t)owner;if(generation!=c->generation||!value||c->close(c->state,generation)!=-2)return -77;c->notify_count++;return 0;}
 #define REQUIRE66(x) do{if(!(x))return __LINE__;}while(0)
-int sdk66_consume(const R4XStartContext *start,const char *module,uint64_t tag){
- const R4LQuery *query=0;REQUIRE66(r4l_query_metadata(start,module,&query)==0&&query&&query->kernel_bridge==0);
+int sdk66_consume(const R4XStartContext2 *raw,const char *module,uint64_t tag){
+ R4App2 start;REQUIRE66(R4OS2ContextInit(raw,&start.context)==0);REQUIRE66(R4SdkApp2InitRaw(raw,&start.memory)==0);
+ const R4LQuery2 *query=0;REQUIRE66(r4l_query2(&start.context,module,&query)==0&&query&&query->group==0&&query->reserved==0);
  R4LInterfaceExpectation expected={0x4c363631,0x53444b36,1,1,56,0,0};const R4LInterfaceHeader *header=0;
- REQUIRE66(r4l_validate_import(r4xstart_find_import_named(start,module,"API_V1"),&expected,&header)==0);
+ REQUIRE66(r4l_validate_import(r4xstart2_find_import_named(&start.context,module,"API_V1"),&expected,&header)==0);
  const R4L66ApiV1 *api=(const R4L66ApiV1*)header;REQUIRE66(api->open&&api->work&&api->close);
- R4Sys sys;REQUIRE66(r4sys_init(start,&sys)==0);R4Heap heap;REQUIRE66(r4_heap_init(&sys,&heap)==0);
+ R4Sys sys;REQUIRE66(r4_app2_system(&start,&sys)==0);R4Heap heap;REQUIRE66(r4_heap_init(&sys,&heap)==0);
  R4HeapStats before,after;REQUIRE66(r4_heap_stats(&heap,&before)==0);
  R4L66State a={0},b={0};Caller66 ca={.heap=heap,.state=&a,.close=api->close,.generation=11,.fail_allocate=1},cb={.heap=heap,.state=&b,.close=api->close,.generation=22};
  REQUIRE66(api->open(&a,(uint64_t)(uintptr_t)&ca,11,(uint64_t)(uintptr_t)allocate66,(uint64_t)(uintptr_t)release66,(uint64_t)(uintptr_t)notify66)==-4&&!a.active&&!a.in_callback);

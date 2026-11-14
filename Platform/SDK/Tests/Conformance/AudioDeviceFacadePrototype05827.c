@@ -21,20 +21,20 @@ static int32_t fake_cpu_lifecycle_check(R4ProgramKernelCpuLifecycleCheck *out) {
     return 1;
 }
 static int cpu_lifecycle_facade_probe(void) {
-    R4XStartR4Dev table = {0};
+    R4XStartR4Dev2 table = {.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(table),};
     R4Dev dev = { &table };
     R4CpuLifecycleInfo info = {0}; info.epoch = 71u;
     R4ProgramKernelCpuLifecycleCheck check = {0}; check.new_epoch = 72u;
     table.cpu_lifecycle = (uintptr_t)&fake_cpu_lifecycle;
     table.kernel_cpu_lifecycle_check = (uintptr_t)&fake_cpu_lifecycle_check;
-    for (uint32_t size = 552u; size < 560u; ++size) {
+    for (uint32_t size = 528u; size < 536u; ++size) {
         table.size = size;
         if (r4dev_cpu_lifecycle(&dev, 2u, 63u, UINT64_C(0x1234567885abcdef), &info) != R4OS_ERR_NO_FN || info.epoch != 71u) return 1;
     }
-    table.size = 560u;
+    table.size = 536u;
     if (r4dev_cpu_lifecycle(&dev, 2u, 63u, UINT64_C(0x1234567885abcdef), &info) != -63 || info.epoch != UINT64_C(0x1234567885abcdf0)) return 2;
     if (r4dev_kernel_cpu_lifecycle_check(&dev, &check) != R4OS_ERR_NO_FN || check.new_epoch != 72u) return 3;
-    table.size = 568u;
+    table.size = 544u;
     if (r4dev_kernel_cpu_lifecycle_check(&dev, &check) != 1 || check.new_epoch != UINT64_C(0x1234567885abcdf0)) return 4;
     table.cpu_lifecycle = 0u; table.kernel_cpu_lifecycle_check = 0u;
     if (r4dev_cpu_lifecycle(&dev, 2u, 63u, UINT64_C(0x1234567885abcdef), &info) != R4OS_ERR_NO_FN || r4dev_kernel_cpu_lifecycle_check(&dev, &check) != R4OS_ERR_NO_FN) return 5;
@@ -55,7 +55,7 @@ static int32_t fake_cpu_register_check(uint32_t cpu, uint64_t epoch, R4ProgramKe
     if (cpu != 63u || epoch != CPU_CATALOG_EPOCH) return -99; out->epoch = epoch; return 0;
 }
 static int cpu_catalogue_facade_probe(void) {
-    R4XStartR4Dev table = {0}; R4Dev dev = { &table };
+    R4XStartR4Dev2 table = {.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(table),}; R4Dev dev = { &table };
     R4CpuCapabilitiesInfo cap = {0}; cap.epoch = 71;
     R4CpuFeatureInfo feature = {0}; feature.epoch = 72;
     R4CpuRegisterInfo reg = {0}; reg.value = 73;
@@ -64,18 +64,18 @@ static int cpu_catalogue_facade_probe(void) {
     table.cpu_feature = (uintptr_t)&fake_cpu_feature;
     table.cpu_register_read = (uintptr_t)&fake_cpu_register;
     table.kernel_cpu_register_check = (uintptr_t)&fake_cpu_register_check;
-    for (uint32_t size = 568; size < 576; ++size) { table.size = size;
+    for (uint32_t size = 544; size < 552; ++size) { table.size = size;
         if (r4dev_cpu_capabilities(&dev, 63, &cap) != R4OS_ERR_NO_FN || cap.epoch != 71) return 1; }
-    table.size = 576; if (r4dev_cpu_capabilities(&dev, 63, &cap) != 0 || cap.epoch != CPU_CATALOG_EPOCH) return 2;
-    for (uint32_t size = 576; size < 584; ++size) { table.size = size;
+    table.size = 552; if (r4dev_cpu_capabilities(&dev, 63, &cap) != 0 || cap.epoch != CPU_CATALOG_EPOCH) return 2;
+    for (uint32_t size = 552; size < 560; ++size) { table.size = size;
         if (r4dev_cpu_feature(&dev, 63, CPU_CATALOG_EPOCH, 37, &feature) != R4OS_ERR_NO_FN || feature.epoch != 72) return 3; }
-    table.size = 584; if (r4dev_cpu_feature(&dev, 63, CPU_CATALOG_EPOCH, 37, &feature) != 0 || feature.epoch != CPU_CATALOG_EPOCH) return 4;
-    for (uint32_t size = 584; size < 592; ++size) { table.size = size;
+    table.size = 560; if (r4dev_cpu_feature(&dev, 63, CPU_CATALOG_EPOCH, 37, &feature) != 0 || feature.epoch != CPU_CATALOG_EPOCH) return 4;
+    for (uint32_t size = 560; size < 568; ++size) { table.size = size;
         if (r4dev_cpu_register_read(&dev, 63, CPU_CATALOG_EPOCH, 7, &reg) != R4OS_ERR_NO_FN || reg.value != 73) return 5; }
-    table.size = 592; if (r4dev_cpu_register_read(&dev, 63, CPU_CATALOG_EPOCH, 7, &reg) != 0 || reg.value != CPU_CATALOG_EPOCH) return 6;
-    for (uint32_t size = 592; size < 600; ++size) { table.size = size;
+    table.size = 568; if (r4dev_cpu_register_read(&dev, 63, CPU_CATALOG_EPOCH, 7, &reg) != 0 || reg.value != CPU_CATALOG_EPOCH) return 6;
+    for (uint32_t size = 568; size < 576; ++size) { table.size = size;
         if (r4dev_kernel_cpu_register_check(&dev, 63, CPU_CATALOG_EPOCH, &report) != R4OS_ERR_NO_FN || report.epoch != 74) return 7; }
-    table.size = 600; if (r4dev_kernel_cpu_register_check(&dev, 63, CPU_CATALOG_EPOCH, &report) != 0 || report.epoch != CPU_CATALOG_EPOCH) return 8;
+    table.size = 576; if (r4dev_kernel_cpu_register_check(&dev, 63, CPU_CATALOG_EPOCH, &report) != 0 || report.epoch != CPU_CATALOG_EPOCH) return 8;
     table.cpu_capabilities = table.cpu_feature = table.cpu_register_read = table.kernel_cpu_register_check = 0;
     if (r4dev_cpu_capabilities(&dev, 63, &cap) != R4OS_ERR_NO_FN || r4dev_cpu_feature(&dev, 63, CPU_CATALOG_EPOCH, 37, &feature) != R4OS_ERR_NO_FN ||
         r4dev_cpu_register_read(&dev, 63, CPU_CATALOG_EPOCH, 7, &reg) != R4OS_ERR_NO_FN || r4dev_kernel_cpu_register_check(&dev, 63, CPU_CATALOG_EPOCH, &report) != R4OS_ERR_NO_FN) return 9;
@@ -87,15 +87,15 @@ static int32_t fake_cpu_power(uint32_t cpu, uint64_t epoch, R4CpuPowerInfo *out)
     out->provider_generation=epoch; return -77;
 }
 static int cpu_power_facade_probe(void) {
-    R4XStartR4Dev table={0}; R4Dev dev={&table}; R4CpuPowerInfo value={.provider_generation=71};
+    R4XStartR4Dev2 table={.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(table),}; R4Dev dev={&table}; R4CpuPowerInfo value={.provider_generation=71};
     table.cpu_power_info=(uintptr_t)&fake_cpu_power; table.cpu_power_capture=(uintptr_t)&fake_cpu_power;
-    for(uint32_t size=600;size<608;size++){ table.size=size;
+    for(uint32_t size=576;size<584;size++){ table.size=size;
         if(r4dev_cpu_power_info(&dev,63,CPU_CATALOG_EPOCH,&value)!=R4OS_ERR_NO_FN || value.provider_generation!=71) return 1; }
-    table.size=608;
+    table.size=584;
     if(r4dev_cpu_power_info(&dev,63,CPU_CATALOG_EPOCH,&value)!=-77 || value.provider_generation!=CPU_CATALOG_EPOCH) return 2;
-    for(uint32_t size=608;size<616;size++){ table.size=size;
+    for(uint32_t size=584;size<592;size++){ table.size=size;
         if(r4dev_cpu_power_capture(&dev,63,CPU_CATALOG_EPOCH,&value)!=R4OS_ERR_NO_FN || value.provider_generation!=CPU_CATALOG_EPOCH) return 3; }
-    table.size=616;
+    table.size=592;
     if(r4dev_cpu_power_capture(&dev,63,CPU_CATALOG_EPOCH,&value)!=-77) return 4;
     table.cpu_power_info=0; table.cpu_power_capture=0;
     if(r4dev_cpu_power_info(&dev,63,CPU_CATALOG_EPOCH,&value)!=R4OS_ERR_NO_FN ||
@@ -108,21 +108,21 @@ static int32_t fake_cpu_performance(const R4CpuPerformanceRequest *request,R4Cpu
     if(request->cpu_index!=63||request->epoch!=CPU_CATALOG_EPOCH)return -99;out->lease=request->epoch;return -96;
 }
 static int cpu_performance_facade_probe(void){
-    R4XStartR4Dev table={.cpu_performance=(uintptr_t)&fake_cpu_performance};R4Dev dev={&table};R4CpuPerformanceRequest request={.cpu_index=63,.epoch=CPU_CATALOG_EPOCH};R4CpuPerformanceInfo out={.lease=71};
-    for(uint32_t size=616;size<624;size++){table.size=size;if(r4dev_cpu_performance(&dev,&request,&out)!=R4OS_ERR_NO_FN||out.lease!=71)return 1;}
-    table.size=624;if(r4dev_cpu_performance(&dev,&request,&out)!=-96||out.lease!=CPU_CATALOG_EPOCH)return 2;
+    R4XStartR4Dev2 table={.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(table),.cpu_performance=(uintptr_t)&fake_cpu_performance};R4Dev dev={&table};R4CpuPerformanceRequest request={.cpu_index=63,.epoch=CPU_CATALOG_EPOCH};R4CpuPerformanceInfo out={.lease=71};
+    for(uint32_t size=592;size<600;size++){table.size=size;if(r4dev_cpu_performance(&dev,&request,&out)!=R4OS_ERR_NO_FN||out.lease!=71)return 1;}
+    table.size=600;if(r4dev_cpu_performance(&dev,&request,&out)!=-96||out.lease!=CPU_CATALOG_EPOCH)return 2;
     table.cpu_performance=0;if(r4dev_cpu_performance(&dev,&request,&out)!=R4OS_ERR_NO_FN||out.lease!=CPU_CATALOG_EPOCH)return 3;return 0;
 }
 
 static int32_t fake_cppc(const R4CpuPerformanceRequest *in,R4CpuCppcInfo *out){if(in->cpu_index!=63)return -99;out->lease=in->epoch;return -97;}
 static int32_t fake_rank(uint32_t cpu,uint64_t epoch,R4CpuPerformanceHintInfo *out){if(cpu!=63)return -99;out->sequence=epoch;return -98;}
 static int cppc_facade_probe(void){
-    R4XStartR4Dev table={.cpu_cppc=(uintptr_t)&fake_cppc,.cpu_performance_hint=(uintptr_t)&fake_rank};R4Dev dev={&table};
+    R4XStartR4Dev2 table={.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(table),.cpu_cppc=(uintptr_t)&fake_cppc,.cpu_performance_hint=(uintptr_t)&fake_rank};R4Dev dev={&table};
     R4CpuPerformanceRequest in={.cpu_index=63,.epoch=CPU_CATALOG_EPOCH};R4CpuCppcInfo out={.lease=71};R4CpuPerformanceHintInfo rank={.sequence=72};
-    for(uint32_t size=624;size<632;size++){table.size=size;if(r4dev_cpu_cppc(&dev,&in,&out)!=R4OS_ERR_NO_FN||out.lease!=71)return 1;}
-    table.size=632;if(r4dev_cpu_cppc(&dev,&in,&out)!=-97||out.lease!=CPU_CATALOG_EPOCH)return 2;
-    for(uint32_t size=624;size<640;size++){table.size=size;if(r4dev_cpu_performance_hint(&dev,63,in.epoch,&rank)!=R4OS_ERR_NO_FN||rank.sequence!=72)return 3;}
-    table.size=640;if(r4dev_cpu_performance_hint(&dev,63,in.epoch,&rank)!=-98||rank.sequence!=in.epoch)return 4;
+    for(uint32_t size=600;size<608;size++){table.size=size;if(r4dev_cpu_cppc(&dev,&in,&out)!=R4OS_ERR_NO_FN||out.lease!=71)return 1;}
+    table.size=608;if(r4dev_cpu_cppc(&dev,&in,&out)!=-97||out.lease!=CPU_CATALOG_EPOCH)return 2;
+    for(uint32_t size=600;size<616;size++){table.size=size;if(r4dev_cpu_performance_hint(&dev,63,in.epoch,&rank)!=R4OS_ERR_NO_FN||rank.sequence!=72)return 3;}
+    table.size=616;if(r4dev_cpu_performance_hint(&dev,63,in.epoch,&rank)!=-98||rank.sequence!=in.epoch)return 4;
     table.cpu_cppc=0;table.cpu_performance_hint=0;if(r4dev_cpu_cppc(&dev,&in,&out)!=R4OS_ERR_NO_FN||r4dev_cpu_performance_hint(&dev,63,in.epoch,&rank)!=R4OS_ERR_NO_FN||out.lease!=in.epoch||rank.sequence!=in.epoch)return 5;
     return 0;
 }
@@ -283,10 +283,10 @@ static int32_t fake_stack_fault(uint32_t index, R4ProgramStackFaultInfo *out) {
     return 1;
 }
 
-static void init_app(R4App *app, R4XStartR4Sys *sys, R4XStartR4Audio *audio, R4XStartR4Dev *dev) {
-    *sys = (R4XStartR4Sys){0}; sys->size=sizeof(*sys); sys->service_open = (uintptr_t)&fake_service_open; sys->service_close = (uintptr_t)&fake_service_close; sys->service_call = (uintptr_t)&fake_service_call;
-    *audio = (R4XStartR4Audio){0}; audio->size=sizeof(*audio); audio->audio_open_stream = (uintptr_t)&fake_audio_open; audio->sid_acquire = (uintptr_t)&fake_sid_acquire; audio->sid_write_register = (uintptr_t)&fake_sid_write; audio->sid_release = (uintptr_t)&fake_sid_release; audio->midi_open_synth = (uintptr_t)&fake_midi_open; audio->midi_send = (uintptr_t)&fake_midi_send; audio->midi_close = (uintptr_t)&fake_midi_close; audio->opl3_write_register = (uintptr_t)&fake_opl_write; audio->opl3_reset = (uintptr_t)&fake_opl_simple; audio->opl3_render_block = (uintptr_t)&fake_opl_simple; audio->opl3_stop = (uintptr_t)&fake_opl_simple;
-    *dev = (R4XStartR4Dev){0}; dev->size = R4XSTART_R4DEV_SIZE; dev->device_inventory_summary = (uintptr_t)&fake_inventory_summary; dev->device_inventory_record = (uintptr_t)&fake_inventory_record; dev->memory_summary = (uintptr_t)&fake_memory_summary; dev->memory_block_count = (uintptr_t)&fake_memory_count; dev->memory_block = (uintptr_t)&fake_memory_block; dev->memory_pressure_snapshot = (uintptr_t)&fake_pressure; dev->performance_summary = (uintptr_t)&fake_performance; dev->performance_task = (uintptr_t)&fake_task; dev->performance_storage = (uintptr_t)&fake_storage; dev->performance_boot_phase = (uintptr_t)&fake_boot; dev->hardware_summary = (uintptr_t)&fake_hardware; dev->program_instance_storage_summary_v2 = (uintptr_t)&fake_program_instance_storage_v2; dev->program_instance_storage_self_test = (uintptr_t)&fake_program_instance_storage_self_test; dev->execution_inventory_summary = (uintptr_t)&fake_execution_inventory;
+static void init_app(R4App *app, R4XStartR4Sys2 *sys, R4XStartR4Audio2 *audio, R4XStartR4Dev2 *dev) {
+    *sys = (R4XStartR4Sys2){.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(R4XStartR4Sys2),}; sys->size=sizeof(*sys); sys->service_open = (uintptr_t)&fake_service_open; sys->service_close = (uintptr_t)&fake_service_close; sys->service_call = (uintptr_t)&fake_service_call;
+    *audio = (R4XStartR4Audio2){.magic=R4OS2_R4AUDIO_MAGIC,.abi_version=R4OS2_R4AUDIO_VERSION,.size=sizeof(R4XStartR4Audio2),}; audio->size=sizeof(*audio); audio->audio_open_stream = (uintptr_t)&fake_audio_open; audio->sid_acquire = (uintptr_t)&fake_sid_acquire; audio->sid_write_register = (uintptr_t)&fake_sid_write; audio->sid_release = (uintptr_t)&fake_sid_release; audio->midi_open_synth = (uintptr_t)&fake_midi_open; audio->midi_send = (uintptr_t)&fake_midi_send; audio->midi_close = (uintptr_t)&fake_midi_close; audio->opl3_write_register = (uintptr_t)&fake_opl_write; audio->opl3_reset = (uintptr_t)&fake_opl_simple; audio->opl3_render_block = (uintptr_t)&fake_opl_simple; audio->opl3_stop = (uintptr_t)&fake_opl_simple;
+    *dev = (R4XStartR4Dev2){.magic=R4OS2_R4DEV_MAGIC,.abi_version=R4OS2_R4DEV_VERSION,.size=sizeof(R4XStartR4Dev2),}; dev->size = sizeof(R4XStartR4Dev2); dev->device_inventory_summary = (uintptr_t)&fake_inventory_summary; dev->device_inventory_record = (uintptr_t)&fake_inventory_record; dev->memory_summary = (uintptr_t)&fake_memory_summary; dev->memory_block_count = (uintptr_t)&fake_memory_count; dev->memory_block = (uintptr_t)&fake_memory_block; dev->memory_pressure_snapshot = (uintptr_t)&fake_pressure; dev->performance_summary = (uintptr_t)&fake_performance; dev->performance_task = (uintptr_t)&fake_task; dev->performance_storage = (uintptr_t)&fake_storage; dev->performance_boot_phase = (uintptr_t)&fake_boot; dev->hardware_summary = (uintptr_t)&fake_hardware; dev->program_instance_storage_summary_v2 = (uintptr_t)&fake_program_instance_storage_v2; dev->program_instance_storage_self_test = (uintptr_t)&fake_program_instance_storage_self_test; dev->execution_inventory_summary = (uintptr_t)&fake_execution_inventory;
     *app = (R4App){0}; app->system.table = sys; app->audio.table = audio; app->devices.table = dev;
     dev->display_state = (uintptr_t)&fake_display_state;
     /* The generated SIZE constant is the supported minimum prefix. This mock
@@ -303,7 +303,7 @@ static int32_t fake_output_catalog(R4AudioOutputInfo *rows, uint32_t capacity, R
     return 1;
 }
 static int output_catalog_facade_probe(void) {
-    R4XStartR4Audio table = {0}; R4Audio audio = { &table };
+    R4XStartR4Audio2 table = {.magic=R4OS2_R4AUDIO_MAGIC,.abi_version=R4OS2_R4AUDIO_VERSION,.size=sizeof(table),}; R4Audio audio = { &table };
     R4AudioOutputInfo rows[257] = {0};
     R4AudioOutputCatalog receipt = {0}; receipt.registry_generation = 71u;
     table.audio_output_catalog = (uintptr_t)&fake_output_catalog;
@@ -325,7 +325,7 @@ int main(void) {
     if (cpu_power_facade_probe() != 0) return 65;
     if (cpu_performance_facade_probe() != 0) return 66;
     if (cppc_facade_probe() != 0) return 67;
-    R4App app; R4XStartR4Sys sys; R4XStartR4Audio raw_audio; R4XStartR4Dev raw_dev;
+    R4App app; R4XStartR4Sys2 sys; R4XStartR4Audio2 raw_audio; R4XStartR4Dev2 raw_dev;
     init_app(&app, &sys, &raw_audio, &raw_dev); stream_open = 0; open_connections = 0u;
     R4AudioFacade audio = r4_app_audio(&app); R4AudioStream stream;
     /* Service-only audio deliberately has no direct R4AUDIO import. */
@@ -357,7 +357,7 @@ int main(void) {
     R4Devices devices = r4_app_devices(&app); if (!r4_devices_available(&devices)) return 9;
     R4DisplayStateInfo display_state;
     if (r4_devices_display(&devices, &display_state) != 1 || display_state.device_generation != 7u || display_state.policy != R4OS_DISPLAY_POLICY_SOFTWARE_ONCE) return 30;
-    raw_dev.size = offsetof(R4XStartR4Dev, display_state);
+    raw_dev.size = offsetof(R4XStartR4Dev2, display_state);
     if (r4_devices_display(&devices, &display_state) != R4OS_ERR_NO_FN) return 31;
     raw_dev.size = sizeof(raw_dev);
     R4DeviceInventoryView inventory = r4_devices_inventory(devices); R4DeviceInventorySummary inv; R4HardwareSummary hardware;
@@ -376,7 +376,7 @@ int main(void) {
     if (r4_performance_lock(&performance, 10u, &lock) != 1 || lock.acquisitions != 17u) return 34;
     if (r4_performance_stack(&performance, 12u, &stack) != 1 || stack.created != 9u) return 35;
     if (r4_performance_lock(&performance, 11u, &lock) != 0 || r4_performance_stack(&performance, 13u, &stack) != 0) return 36;
-    raw_dev.size = offsetof(R4XStartR4Dev, performance_instrumentation);
+    raw_dev.size = offsetof(R4XStartR4Dev2, performance_instrumentation);
     if (r4_performance_instrumentation(&performance, &instrumentation) != R4OS_ERR_NO_FN ||
         r4_performance_lock(&performance, 0u, &lock) != R4OS_ERR_NO_FN ||
         r4_performance_stack(&performance, 0u, &stack) != R4OS_ERR_NO_FN) return 37;
@@ -388,7 +388,7 @@ int main(void) {
     if (r4_performance_stack_fault(&performance, 4u, &fault) != 0 || fault.task_id != 71u) return 40;
     fault.version = 0u;
     if (r4_performance_stack_fault(&performance, 0u, &fault) != -1 || fault.task_id != 71u) return 41;
-    raw_dev.size = offsetof(R4XStartR4Dev, stack_fault);
+    raw_dev.size = offsetof(R4XStartR4Dev2, stack_fault);
     if (r4_performance_stack_fault(&performance, 0u, &fault) != R4OS_ERR_NO_FN || fault.task_id != 71u) return 42;
     raw_dev.size = sizeof(raw_dev);
     if (r4_performance_summary(&performance, &perf) <= 0 || perf.audio_stream_writes != 9u) return 12;
@@ -402,7 +402,7 @@ int main(void) {
     if (r4dev_program_instance_storage_summary_v2(&app.devices, &instance_storage) <= 0 || instance_storage.version != 2u || instance_storage.size != sizeof(instance_storage)) return 18;
     memset(&instance_storage, 0xB6, sizeof(instance_storage)); instance_storage.version = 0u; instance_storage.size = sizeof(instance_storage) - 1u;
     if (r4dev_program_instance_storage_summary_v2(&app.devices, &instance_storage) != -1 || instance_storage.version != 0u || instance_storage.size != sizeof(instance_storage) - 1u || ((uint8_t *)&instance_storage)[8] != 0xB6u) return 19;
-    raw_dev.size = 288u;
+    raw_dev.size = offsetof(R4XStartR4Dev2,program_instance_storage_summary_v2);
     if (r4_program_instance_storage_summary(&performance, &instance_storage) != R4OS_ERR_NO_FN) return 20;
     if (instance_storage.version != 0u || instance_storage.size != sizeof(instance_storage) - 1u || ((uint8_t *)&instance_storage)[8] != 0xB6u) return 43;
     return 0;

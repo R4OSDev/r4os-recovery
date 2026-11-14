@@ -11,7 +11,7 @@ if(Test-Path -LiteralPath $WorkRoot){throw 'Use a new empty test directory.'}
 [IO.Directory]::CreateDirectory($WorkRoot)|Out-Null
 $success=$false;$previous=$env:CARGO_ENCODED_RUSTFLAGS
 try{
-    & $Zig test -OReleaseSafe --dep protocol --dep r4os_contract ('-Mroot='+ (Join-Path $sdk 'Tests/Simulation/ProtocolOwners.zig')) --dep r4os_contract ('-Mprotocol='+ (Join-Path $sdk 'r4os/protocol.zig')) ('-Mr4os_contract='+ (Join-Path $ContractRoot 'Generated/SDK/Zig/package.zig')) ('-femit-bin='+ (Join-Path $WorkRoot 'original-owner'))
+    & $Zig test -OReleaseSafe --dep protocol --dep r4os_contract ('-Mroot='+ (Join-Path $sdk 'Tests/Simulation/ProtocolOwners.zig')) --dep r4os_contract --dep r4os_contract2 ('-Mprotocol='+ (Join-Path $sdk 'r4os/protocol2.zig')) ('-Mr4os_contract='+ (Join-Path $ContractRoot 'Generated/SDK/Zig/package.zig')) --dep r4os_base_abi=r4os_contract ('-Mr4os_contract2='+ (Join-Path $ContractRoot 'Generated/Generation2/Zig/abi.zig')) ('-femit-bin='+ (Join-Path $WorkRoot 'original-owner'))
     if($LASTEXITCODE -ne 0){throw 'Original Zig protocol owner case failed.'}
     $object=Join-Path $WorkRoot 'protocol-c.o'
     & $Zig cc -O1 -UNDEBUG -Werror -fPIC -ffunction-sections -fdata-sections -I (Join-Path $sdk 'Shared/C/include') -I (Join-Path $ContractRoot 'Generated/SDK/C/include') -I (Join-Path $ContractRoot 'Generated/Generation2/C/include') -c (Join-Path $sdk 'Tests/Simulation/ProtocolParity.c') -o $object

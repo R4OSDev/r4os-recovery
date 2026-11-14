@@ -207,8 +207,8 @@ const BoundServiceStopPolicy = struct {
         return -99;
     }
     fn run(timeout: r4os.time_contract.Timeout, policy: r4os.program.ServiceStopPolicy, omit_query: bool, omit_bound_stop: bool) struct { code: i32, status: abi.ServiceInfo } {
-        var raw: abi.R4XStartContext = .{};
-        var table: abi.R4XStartR4Sys = .{};
+        var raw: r4os.platform2.abi.R4XStartContext2 = .{};
+        var table: r4os.platform2.abi.R4XStartR4Sys2 = .{};
         table.ticks = @intFromPtr(&tick);
         table.monotonic_clock = @intFromPtr(&clock);
         table.service_bound_detail = if (omit_query) 0 else @intFromPtr(&detail);
@@ -338,9 +338,9 @@ test "service stop policy graceful and Forever preserve the original stop path" 
     try std.testing.expectEqual(@as(u32, 0), f.typed_kills);
 }
 
-var sys_table: r4os.abi.R4XStartR4Sys = .{};
-var net_table: r4os.abi.R4XStartR4Net = .{};
-var context: r4os.abi.R4XStartContext = .{};
+var sys_table: r4os.platform2.abi.R4XStartR4Sys2 = .{};
+var net_table: r4os.platform2.abi.R4XStartR4Net2 = .{};
+var context: r4os.platform2.abi.R4XStartContext2 = .{};
 var reply_mode: ReplyMode = .ok;
 var endpoint_ready = false;
 var open_handles: u32 = 0;
@@ -853,11 +853,11 @@ test "explicit blocking system transition negotiates1280/1288 and forwards full 
     const t = std.testing;
     const sys = initFacades().services.sys;
     sys_table.system_power_transition = @intFromPtr(&fakePowerTransition);
-    for (1280..1288) |size| {
+    for (1272..1280) |size| {
         sys_table.size = @intCast(size);
         try t.expectEqual(a.err_no_fn, sys.systemPowerTransition(a.power_transition_action_poweroff, 0x1234_5678_abcd_4321));
     }
-    sys_table.size = 1288;
+    sys_table.size = 1280;
     try t.expectEqual(a.power_transition_error_retained, sys.systemPowerTransition(a.power_transition_action_poweroff, 0x1234_5678_abcd_4321));
     try t.expectEqual(a.power_transition_error_invalid, sys.systemPowerTransition(3, 0));
     sys_table.system_power_transition = 0;
@@ -936,7 +936,7 @@ test "service inventory rejects endless restart, missing END, repeated identity,
     var tiny: [1]u8 = undefined;
     var allocator = std.heap.FixedBufferAllocator.init(&tiny);
     try std.testing.expectEqual(f.abi.service_api_result_memory, r4os.app_services.readInventory(&facades.services.sys, allocator.allocator()).failure);
-    sys_table.size = @offsetOf(f.abi.R4XStartR4Sys, "service_inventory_page");
+    sys_table.size = @offsetOf(r4os.platform2.abi.R4XStartR4Sys2, "service_inventory_page");
     try std.testing.expect(!r4os.app_services.inventoryAvailable(&facades.services.sys));
     try std.testing.expectEqual(f.abi.err_no_fn, r4os.app_services.readInventory(&facades.services.sys, std.testing.allocator).failure);
 }

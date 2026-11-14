@@ -89,7 +89,7 @@ pub const Raster = struct {
 pub const Context = struct {
     client: abi.ApiV1Client,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) ?Context {
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) ?Context {
         return .{ .client = abi.ApiV1Client.init(raw) catch return null };
     }
 

@@ -14,8 +14,8 @@ fn read(output: [*]abi.ConsoleInputEvent, capacity: u32) callconv(.c) i32 {
     return 1;
 }
 test "new event wrappers preserve kind generation complete-prefix counts and caller tails" {
-    const raw: abi.R4XStartContext = .{};
-    const table: abi.R4XStartR4Desk = .{ .console_push_events = @intFromPtr(&push), .console_read_events = @intFromPtr(&read) };
+    const raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    const table: @import("r4os_contract2").R4XStartR4Desk2 = .{ .console_push_events = @intFromPtr(&push), .console_read_events = @intFromPtr(&read) };
     const bundle: program.Bundle = .{ .raw = &raw, .desk = &table };
     const ctx = program.Context.initBundle(&bundle);
     const handle: abi.ProgramProcessHandle = .{ .instance_id = 37, .generation = 0xfedcba9876543210 };
@@ -32,12 +32,12 @@ test "old R4DESK table at inaccessible page refuses absent event tail without to
     const region = try std.posix.mmap(null, page * 2, .{ .READ = true, .WRITE = true }, .{ .TYPE = .PRIVATE, .ANONYMOUS = true }, -1, 0);
     defer std.posix.munmap(region);
     try std.testing.expectEqual(@as(usize, 0), std.os.linux.mprotect(region.ptr + page, page, .{}));
-    const old: *abi.R4XStartR4Desk = @ptrCast(@alignCast(region.ptr + page - 536));
+    const old: *@import("r4os_contract2").R4XStartR4Desk2 = @ptrCast(@alignCast(region.ptr + page - 536));
     @memset(region[page - 536 .. page], 0);
     old.magic = abi.r4xstart_r4desk_magic;
     old.abi_version = 15;
     old.size = 536;
-    const raw: abi.R4XStartContext = .{};
+    const raw: @import("r4os_contract2").R4XStartContext2 = .{};
     const bundle: program.Bundle = .{ .raw = &raw, .desk = old };
     const ctx = program.Context.initBundle(&bundle);
     var output = [_]abi.ConsoleInputEvent{events.text(0x401).?};
@@ -45,7 +45,9 @@ test "old R4DESK table at inaccessible page refuses absent event tail without to
     try std.testing.expectEqual(abi.err_no_fn, ctx.consolePushEvents(.{}, &output));
     try std.testing.expectEqual(@as(u32, 0x401), output[0].value);
 }
-test { _ = events; }
+test {
+    _ = events;
+}
 
 fn textInfo(handle: *const abi.ProgramProcessHandle, out: *abi.ConsoleTextInfo) callconv(.c) i32 {
     if (handle.instance_id != 39 or handle.generation != 0xfedcba9876543210) return -1;
@@ -56,8 +58,8 @@ fn setEncoding(handle: *const abi.ProgramProcessHandle, encoding: u32) callconv(
     return if (handle.instance_id == 39 and handle.generation == 0xfedcba9876543210 and encoding == 437) 0 else -2;
 }
 test "console text wrappers retain exact generation encoding fixed metadata and caller tail" {
-    const raw: abi.R4XStartContext = .{};
-    const table: abi.R4XStartR4Desk = .{ .console_text_info = @intFromPtr(&textInfo), .console_set_encoding = @intFromPtr(&setEncoding) };
+    const raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    const table: @import("r4os_contract2").R4XStartR4Desk2 = .{ .console_text_info = @intFromPtr(&textInfo), .console_set_encoding = @intFromPtr(&setEncoding) };
     const bundle: program.Bundle = .{ .raw = &raw, .desk = &table };
     const ctx = program.Context.initBundle(&bundle);
     const handle: abi.ProgramProcessHandle = .{ .instance_id = 39, .generation = 0xfedcba9876543210 };
@@ -75,12 +77,12 @@ test "R4DESK16 ending at inaccessible page refuses both console text slots" {
     const region = try std.posix.mmap(null, page * 2, .{ .READ = true, .WRITE = true }, .{ .TYPE = .PRIVATE, .ANONYMOUS = true }, -1, 0);
     defer std.posix.munmap(region);
     try std.testing.expectEqual(@as(usize, 0), std.os.linux.mprotect(region.ptr + page, page, .{}));
-    const old: *abi.R4XStartR4Desk = @ptrCast(@alignCast(region.ptr + page - 552));
+    const old: *@import("r4os_contract2").R4XStartR4Desk2 = @ptrCast(@alignCast(region.ptr + page - 552));
     @memset(region[page - 552 .. page], 0);
     old.magic = abi.r4xstart_r4desk_magic;
     old.abi_version = 16;
     old.size = 552;
-    const raw: abi.R4XStartContext = .{};
+    const raw: @import("r4os_contract2").R4XStartContext2 = .{};
     const bundle: program.Bundle = .{ .raw = &raw, .desk = old };
     const ctx = program.Context.initBundle(&bundle);
     var output: abi.ConsoleTextInfo = .{ .decode_errors = 0x12345678 };

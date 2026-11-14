@@ -1,10 +1,10 @@
 #![no_std]
 extern crate alloc;
 use core::fmt::Write;
-use r4os_sdk::App;
+use r4os_sdk::App2;
 #[path = "../../../Simulation/WebCases.rs"]
 mod cases;
-struct Output<'a, 'b>(&'a App<'b>);
+struct Output<'a, 'b>(&'a App2<'b>);
 impl Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         if self.0.write(s) < 0 {
@@ -14,7 +14,7 @@ impl Write for Output<'_, '_> {
         }
     }
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let before = app.heap().unwrap().stats().unwrap();
     let hash = match cases::c_and_layout() {
         Ok(h) => h,
@@ -51,4 +51,4 @@ fn main(app: &mut App<'_>) -> i32 {
     );
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

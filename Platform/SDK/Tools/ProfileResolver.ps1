@@ -8,7 +8,7 @@ function Resolve-R4SdkComponents {
     $data=Read-R4SdkProfiles $SdkRoot
     Assert-R4ProfileReference $data.Build.profiles $Profile 'profile'
     $selected=$data.Build.profiles[$Profile]
-    $platformId=if($selected.Contains('platform')){$selected.platform}else{'platform1'}
+    $platformId=if($selected.Contains('platform')){$selected.platform}else{'platform2'}
     $set=$data.Components.sets[$selected.components]
     $required=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     [void]$required.Add($set.contract)

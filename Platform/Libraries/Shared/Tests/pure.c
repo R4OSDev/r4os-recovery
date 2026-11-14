@@ -49,7 +49,7 @@ int32_t r4libraries59_pure(void) {
     if(value.flags!=R4LIBRARIES_PRESENT || R4StdGraphemeRange_get_end(&range).bits!=4)return 8;
     value=R4StdGraphemeIterator_next(0,&it,&range);
     if(value.flags || value.status)return 9;
-    R4XStartContext invalid_start={0};
+    R4Lib_abi_R4XStartContext2 invalid_start={0};
     R4LibraryColorClient color;
     R4Lib_R4VIDEO_Bindings_Zig_r4video_VideoV1Client video;
     value=R4Library_colorClient(0,&invalid_start,&color);

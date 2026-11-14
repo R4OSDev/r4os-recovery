@@ -1,14 +1,14 @@
 #![no_std]
 use core::pin::pin;
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     gui::{Role, Session, SessionStorage, raw as c},
     path::FilePath,
     resources::{Resources, Timeout},
     storage::{Error, System},
 };
-fn exercise(app: &App<'_>) -> i32 {
-    let Ok(resources) = Resources::new(app) else {
+fn exercise(app: &App2<'_>) -> i32 {
+    let Ok(resources) = Resources::new2(app) else {
         return 10;
     };
     let Ok(mut process) = resources.open_process(app.instance_id() as u32) else {
@@ -26,7 +26,7 @@ fn exercise(app: &App<'_>) -> i32 {
     }
     let mut storage = pin!(SessionStorage::new());
     let mut timers = [];
-    let Ok(mut host) = Session::open(storage.as_mut(), app, Role::DesktopHost, &mut timers) else {
+    let Ok(mut host) = Session::open2(storage.as_mut(), app, Role::DesktopHost, &mut timers) else {
         return 2;
     };
     if !matches!(host.window_info(), Ok(None)) {
@@ -68,9 +68,9 @@ fn exercise(app: &App<'_>) -> i32 {
     app.write("[SDK56] independent Rust/C host admission without app window; live WINSVC owner preserved PASS\n");
     0
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let code = exercise(app);
-    let Ok(system) = System::new(app) else {
+    let Ok(system) = System::new2(app) else {
         return 90;
     };
     let Ok(path) = FilePath::parse(b"C:\\TEMP\\G56HOST.TXT") else {
@@ -84,4 +84,4 @@ fn main(app: &mut App<'_>) -> i32 {
     }
     code
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

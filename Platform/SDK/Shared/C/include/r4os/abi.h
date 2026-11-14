@@ -13,9 +13,9 @@ extern "C" {
 #define R4OS_ERROR_NOT_FOUND (-2)
 #define R4OS_POINTER_SIZE 8u
 
-#define R4X_START_METADATA_R4XSTART "r4x.start=r4xstart"
-#define R4X_ENTRY_METADATA_R4XSTART "r4x.entry=R4XStart"
-#define R4X_CONTEXT_METADATA_R4XSTART "r4x.context=R4XStartContext"
+#define R4X_START_METADATA_R4XSTART "r4x.start=r4xstart2"
+#define R4X_ENTRY_METADATA_R4XSTART "r4x.entry=R4XStart2"
+#define R4X_CONTEXT_METADATA_R4XSTART "r4x.context=R4XStartContext2"
 
 #define R4OS_USED __attribute__((used))
 #define R4OS_SECTION(name) __attribute__((section(name)))

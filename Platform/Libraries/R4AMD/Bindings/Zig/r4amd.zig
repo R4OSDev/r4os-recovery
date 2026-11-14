@@ -676,8 +676,8 @@ pub const RenderV1 = extern struct {
 pub const InfoV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !InfoV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, info_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !InfoV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !InfoV1Client {
@@ -708,8 +708,8 @@ pub const InfoV1Client = struct {
 pub const BackendV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !BackendV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, backend_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !BackendV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !BackendV1Client {
@@ -764,8 +764,8 @@ pub const BackendV1Client = struct {
 pub const ImageV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !ImageV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, image_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !ImageV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !ImageV1Client {
@@ -820,8 +820,8 @@ pub const ImageV1Client = struct {
 pub const RenderV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !RenderV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, render_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !RenderV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !RenderV1Client {

@@ -35,7 +35,9 @@ fn inspect(words: []const u8) void {
     expected.planes |= @as(u32, 1) << @intCast(plane);
     var mapped: usize = 0;
     var sources: usize = 0;
-    for (&fixture.model.bos) |*bo| if (bo.mapped) { mapped += 1; };
+    for (&fixture.model.bos) |*bo| if (bo.mapped) {
+        mapped += 1;
+    };
     for (&prep.sources) |*source| if (source.ready) {
         sources += 1;
         std.debug.assert(source.borrowed and source.charged == 0 and source.mapping.lease.id == 0);
@@ -53,24 +55,23 @@ fn inspect(words: []const u8) void {
 }
 pub fn frameFor(source: []const gpu.Resource, width: u32, height: u32, planar: bool) c.R4EncFrame {
     var frame = std.mem.zeroes(c.R4EncFrame);
-    frame.version = 1; frame.size = @sizeOf(c.R4EncFrame); frame.stream_generation = 1;
+    frame.version = 1;
+    frame.size = @sizeOf(c.R4EncFrame);
+    frame.stream_generation = 1;
     frame.format = if (planar) c.format_yuv420p else c.format_nv12;
     frame.plane_count = if (planar) 3 else 2;
     const planes = [_]*c.R4EncPlane{ &frame.plane0, &frame.plane1, &frame.plane2 };
     for (planes[0..frame.plane_count], 0..) |plane, p| {
         const bo = &source[if (planar) p else 0];
-        plane.* = .{ .buffer = @bitCast(bo.backing.buffer), .reference = @bitCast(bo.backing.reference),
-            .offset = if (planar) 0 else bo.descriptor.plane_offsets[p],
-            .pitch = if (planar) std.mem.alignForward(u64, if (p == 0) width else width / 2, 64) else bo.descriptor.plane_pitches[p],
-            .row_bytes = if (planar and p != 0) width / 2 else width, .rows = if (p == 0) height else height / 2, .reserved = 0 };
+        plane.* = .{ .buffer = @bitCast(bo.backing.buffer), .reference = @bitCast(bo.backing.reference), .offset = if (planar) 0 else bo.descriptor.plane_offsets[p], .pitch = if (planar) std.mem.alignForward(u64, if (p == 0) width else width / 2, 64) else bo.descriptor.plane_pitches[p], .row_bytes = if (planar and p != 0) width / 2 else width, .rows = if (p == 0) height else height / 2, .reserved = 0 };
     }
     return frame;
 }
 pub fn run() !void {
     var state: fixture.Model = .{};
     fixture.model = &state;
-    var raw: a.R4XStartContext = .{};
-    var table: a.R4XStartR4Draw = .{};
+    var raw: @import("r4os").platform2.abi.R4XStartContext2 = .{};
+    var table: @import("r4os").platform2.abi.R4XStartR4Draw2 = .{};
     fixture.install(&table);
     var bundle: r.program.Bundle = .{ .raw = &raw, .draw = &table };
     const base = r.program.Context.initBundle(&bundle);
@@ -80,8 +81,7 @@ pub fn run() !void {
     // Native NV12 retains its padded TIC extent64x48; I420 uses three linear
     // retained BOs. Larger Ada input also exercises bounded scissor slices.
     for (0..3) |case| {
-        state = .{ .graphics = true, .engine = .graphics, .class_chip = if (case == 2) 0x192 else 0x174,
-            .push_bytes = 0, .on_submit = &inspect };
+        state = .{ .graphics = true, .engine = .graphics, .class_chip = if (case == 2) 0x192 else 0x174, .push_bytes = 0, .on_submit = &inspect };
         const width: u32 = if (case == 2) 638 else 62;
         const height: u32 = if (case == 2) 382 else 46;
         const planar = case == 1;
@@ -96,8 +96,7 @@ pub fn run() !void {
         var owner: input.Input(c) = .{};
         try owner.admit(&memory, &budget, frameFor(&sources, width, height, planar), width, height);
         try prep.open(&session);
-        expected = .{ .preparer = &prep, .width = width, .height = height, .count = if (planar) 3 else 2,
-            .mapped = if (planar) 10 else 7 };
+        expected = .{ .preparer = &prep, .width = width, .height = height, .count = if (planar) 3 else 2, .mapped = if (planar) 10 else 7 };
         const held = budget.liveBytes();
         // Engine completion and the subsequent input-VA retirement are
         // distinct acknowledgements. A pending unmap must be awaited inside
@@ -127,7 +126,9 @@ pub fn run() !void {
             try t.expectError(error.Invalid, prep.prepare(&alias));
             try t.expectEqual(@as(u32, 4), expected.calls);
         }
-        try prep.close(); try prep.close(); try session.close();
+        try prep.close();
+        try prep.close();
+        try session.close();
         try alias.close(&memory);
         for (&sources) |*source| try source.close();
         try producer.close();
@@ -158,7 +159,12 @@ pub fn run() !void {
     try t.expectError(error.Busy, prep.close());
     try t.expectEqual(held, budget.liveBytes());
     state.retire_ready = true;
-    try prep.close(); try owner.close(&memory); try sources[0].close(); try producer.close(); try session.close();
-    try t.expectEqual(@as(usize, 0), budget.liveBytes()); try state.clean();
+    try prep.close();
+    try owner.close(&memory);
+    try sources[0].close();
+    try producer.close();
+    try session.close();
+    try t.expectEqual(@as(usize, 0), budget.liveBytes());
+    try state.clean();
     std.debug.print("NVENC input: retained NV12/I420, padded texture extent, bounded GR work, no pixel CPU maps, timeout retirement: OK\n", .{});
 }

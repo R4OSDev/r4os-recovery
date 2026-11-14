@@ -1,4 +1,5 @@
 #include <r4os/r4os.h>
+#include <r4os/app2.h>
 #include <r4os/gui_bridge.h>
 #include <r4std.h>
 #include <r4img.h>
@@ -11,14 +12,13 @@ static int report(R4App *app,const char *message,uint32_t len){
  if(r4_file_path((const uint8_t *)"C:\\TEMP\\DH71C.TXT",17,&path)!=R4_PATH_OK)return -1;
  return r4_files_write(&files,&path,(const uint8_t *)message,len).raw_code;
 }
-static int exercise(R4App *app,R4SdkGuiSession *host){
- const R4XStartContext *ctx=app->context;
+static int exercise(R4App *app,R4SdkGuiSession *host,const R4XStartContext2 *ctx){
  R4StdSettingsV1Client settings;R4StdTimeV1Client time;R4StdConfigV1Client config;
  R4ImgApiV1Client images;R4ImgPngV1Client png;R4ImgRasterV1Client raster;
  R4GfxDeviceV1Client devices;R4GfxColorV1Client colors;
- if(r4std_settings_v1_init(ctx,&settings) || r4std_time_v1_init(ctx,&time) || r4std_config_v1_init(ctx,&config) ||
- r4img_api_v1_init(ctx,&images) || r4img_png_v1_init(ctx,&png) || r4img_raster_v1_init(ctx,&raster) ||
- r4gfx_device_v1_init(ctx,&devices) || r4gfx_color_v1_init(ctx,&colors))return 10;
+ if(r4std_settings_v1_init2(ctx,&settings) || r4std_time_v1_init2(ctx,&time) || r4std_config_v1_init2(ctx,&config) ||
+ r4img_api_v1_init2(ctx,&images) || r4img_png_v1_init2(ctx,&png) || r4img_raster_v1_init2(ctx,&raster) ||
+ r4gfx_device_v1_init2(ctx,&devices) || r4gfx_color_v1_init2(ctx,&colors))return 10;
  R4Heap heap;if(r4_heap_init(&app->system,&heap))return 11;
  uint8_t *allocation=r4_heap_alloc(&heap,24576,64);if(!allocation || ((uintptr_t)allocation&63))return 12;
  for(uint32_t i=0;i<24576;i++)allocation[i]=(uint8_t)(i*17+3);
@@ -49,12 +49,13 @@ static int exercise(R4App *app,R4SdkGuiSession *host){
  }
  return 26;
 }
-int32_t r4_app_main(R4App *app){
- R4SdkGuiSession host;int rc=R4SdkGuiSessionOpen(&host,app->context,1,0,0);if(rc)return rc;
+int32_t r4_app_main(R4App2 *actual){
+ R4App facade;int32_t admitted=r4_app2_facade(actual,&facade);if(admitted<0)return admitted;R4App *app=&facade;
+ R4SdkGuiSession host;int rc=R4SdkGuiSessionOpen2(&host,actual->context.raw,1,0,0);if(rc)return rc;
  R4Timeout timeout={.kind=R4OS_TIMEOUT_KIND_FINITE,.nanoseconds=2000000000};R4TrayDesktopExchange claim={0};
  rc=R4SdkGuiSessionHostClaim(&host,&claim,&timeout);
- if(!rc && (claim.desktop_owner.instance_id!=app->context->instance_id || !claim.desktop_epoch))rc=2;
- if(!rc)rc=exercise(app,&host);
+ if(!rc && (claim.desktop_owner.instance_id!=actual->context.raw->instance_id || !claim.desktop_epoch))rc=2;
+ if(!rc)rc=exercise(app,&host,actual->context.raw);
  /* Close the exact endpoint before publishing success. WINSVC binds the live
   * process generation until root return; close is not a false unregister. */
  R4SdkGuiSessionClose(&host);

@@ -30,20 +30,13 @@ fn lifecycle() ?*const Lifecycle {
 
 // The table is kernel-owned and immutable for the boot generation. Keep no
 // caller Bundle, allocator, task pointer or other application storage here.
-pub fn bind(kernel: *const a.R4XStartR4Sys) bool {
-    _ = sync.Host.fromTable(kernel) orelse return false;
-    if (kernel.abi_version < 21 or kernel.size < @offsetOf(a.R4XStartR4Sys, "thread_current_handle") + 8 or
-        kernel.thread_current_handle == 0) return false;
-    inline for (.{ "thread_create_handle", "thread_handle_join", "thread_current", "thread_status", "thread_exit", "task_yield" }) |field|
-        if (@field(kernel.*, field) == 0) return false;
-    return system.bind(kernel);
-}
+pub const bind = bind2;
 pub fn bind2(kernel: *const r4os.platform2.abi.R4XStartR4Sys2) bool {
     _ = sync.Host.fromTable2(kernel) orelse return false;
     return system.bind2(kernel);
 }
-pub fn table() *const a.R4XStartR4Sys {
-    return system.legacy() orelse @trap();
+pub fn table() *const r4os.platform2.abi.R4XStartR4Sys2 {
+    return system.generation2() orelse @trap();
 }
 pub fn host() sync.Host {
     return sync.Host.bound() orelse @trap();

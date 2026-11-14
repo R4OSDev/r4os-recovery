@@ -4,16 +4,18 @@
 Rolle
 -----
 
-Query Version 1 ist die technische Identitaet fuer Platform-API-Importe und
+Query2 Revision2 ist die technische Identitaet fuer Platform-API-Importe und
 Runtime-R4Ls. Platform APIs werden so importiert:
 
-    <GRUPPE>:Query:1
+    <GRUPPE>:Query2:2
 
-Der Kernel stellt die sechs Platform-API-Querys als eingebaute Provider
-bereit. Dafuer existiert keine R4L-Datei. Eine benannte optionale Runtime-R4L
-verwendet group=0, kernel_bridge=0 und wird fachlich direkt ueber einen Export
-wie API_V1 importiert. Query bleibt in beiden Faellen technische
-Identitaetsmetadaten und ist keine Funktionstabelle.
+Der Kernel stellt die sechs Query2-Provider eingebaut bereit; sie besitzen
+keine R4L-Datei. Eine Runtime-R4L verwendet group=0 und exportiert ihren
+eigenen Query2-Deskriptor. Dieser hat exakt24 Byte, Revision2 und reserved=0.
+Ein alter32-Byte-Query-Deskriptor wird auch mit umbenanntem Export abgewiesen.
+Die alte kernel_bridge-Auswahl ist kein aktiver Anbieterpfad.
+Fachliche Exporte wie API_V1, ihre Revisionen und32-Byte-Interfaceheader
+bleiben davon unabhaengig. Query2 ist Identitaetsmetadatum, keine Funktionstabelle.
 
 R4OS-CONTRACT-GENERATED:BEGIN R4LQUERY
 Dieser Block wird aus ApiContract.json erzeugt und darf nicht von Hand geaendert werden.

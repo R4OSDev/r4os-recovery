@@ -1,10 +1,10 @@
 #![no_std]
 extern crate alloc;
 use alloc::{boxed::Box, string::String, vec::Vec};
-use core::sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering};
-use r4os_sdk::{App, abi};
+use core::sync::atomic::{AtomicBool, AtomicU64, AtomicU32, Ordering};
+use r4os_sdk::{App2, abi};
 
-static API: AtomicPtr<abi::R4XStartR4Sys> = AtomicPtr::new(core::ptr::null_mut());
+static SLEEP: AtomicU64 = AtomicU64::new(0);
 static READY: AtomicU32 = AtomicU32::new(0);
 static RELEASE: AtomicBool = AtomicBool::new(false);
 
@@ -24,8 +24,7 @@ unsafe extern "C" fn worker(seed: u64) -> i32 {
         return 21;
     }
     READY.fetch_add(1, Ordering::Release);
-    let api = unsafe { &*API.load(Ordering::Acquire) };
-    let sleep: abi::R4SysFns::sleep_ticks = unsafe { core::mem::transmute(api.sleep_ticks) };
+    let sleep: abi::generation2::R4SysFns2::sleep_ticks = unsafe { core::mem::transmute(SLEEP.load(Ordering::Acquire)) };
     while !RELEASE.load(Ordering::Acquire) {
         unsafe { sleep(1) };
     }
@@ -35,7 +34,7 @@ unsafe extern "C" fn worker(seed: u64) -> i32 {
     0
 }
 
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let Ok(heap) = app.heap() else {
         return 1;
     };
@@ -66,12 +65,11 @@ fn main(app: &mut App<'_>) -> i32 {
             return 7;
         }
     }
-    let api = app.system_api().unwrap();
-    API.store(core::ptr::from_ref(api).cast_mut(), Ordering::Release);
-    let create: abi::R4SysFns::thread_create_handle =
-        unsafe { core::mem::transmute(api.thread_create_handle) };
-    let join: abi::R4SysFns::thread_handle_join =
-        unsafe { core::mem::transmute(api.thread_handle_join) };
+    SLEEP.store(app.context().lookup(1, core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, sleep_ticks) as u32).unwrap() as u64, Ordering::Release);
+    let create: abi::generation2::R4SysFns2::thread_create_handle =
+        unsafe { core::mem::transmute(app.context().lookup(1, core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, thread_create_handle) as u32).unwrap()) };
+    let join: abi::generation2::R4SysFns2::thread_handle_join =
+        unsafe { core::mem::transmute(app.context().lookup(1, core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, thread_handle_join) as u32).unwrap()) };
     let mut handles = [abi::ProgramJoinHandle::default(); 4];
     for (i, handle) in handles.iter_mut().enumerate() {
         if unsafe {
@@ -117,4 +115,4 @@ fn main(app: &mut App<'_>) -> i32 {
     let _=app.write("[HEAPRUST] Box/Vec/String, resize/alignment, four joined workers and full heap release OK\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

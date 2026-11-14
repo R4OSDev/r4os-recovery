@@ -1,18 +1,18 @@
 #![no_std]
 extern crate alloc;
 use core::fmt::Write;
-use r4os_sdk::{App, subsystems::Launch};
+use r4os_sdk::{App2, subsystems::Launch};
 #[path = "../../../Simulation/SubsystemCases.rs"]
 mod cases;
 unsafe extern "C" {
     fn sdk65_guest_catalogue(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         id: *const core::ffi::c_char,
     ) -> i32;
-    fn sdk65_guest_media_save(start: *const r4os_sdk::abi::R4XStartContext) -> i32;
-    fn sdk65_guest_source(start: *const r4os_sdk::abi::R4XStartContext) -> i32;
+    fn sdk65_guest_media_save(start: *const r4os_sdk::abi::generation2::R4XStartContext2) -> i32;
+    fn sdk65_guest_source(start: *const r4os_sdk::abi::generation2::R4XStartContext2) -> i32;
 }
-struct Output<'a, 'b>(&'a App<'b>);
+struct Output<'a, 'b>(&'a App2<'b>);
 impl Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         if self.0.write(s) < 0 {
@@ -22,7 +22,7 @@ impl Write for Output<'_, '_> {
         }
     }
 }
-fn run(app: &mut App<'_>) -> i32 {
+fn run(app: &mut App2<'_>) -> i32 {
     let before = app.heap().unwrap().stats().unwrap();
     let launch = match Launch::parse(app.args()) {
         Ok(v) => v,
@@ -91,10 +91,10 @@ fn run(app: &mut App<'_>) -> i32 {
     app.write("PASS SDK65 Rust/C guest: launch, synthetic work, resize/damage, pause/reset/close, audio failure, real owned save/reopen/async join and window; exact active heap release\n");
     0
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     unsafe extern "C" {
         fn sdk65_guest_report(
-            start: *const r4os_sdk::abi::R4XStartContext,
+            start: *const r4os_sdk::abi::generation2::R4XStartContext2,
             language: core::ffi::c_char,
             code: i32,
         ) -> i32;
@@ -102,4 +102,4 @@ fn main(app: &mut App<'_>) -> i32 {
     let code = run(app);
     unsafe { sdk65_guest_report(app.start_context(), b'R' as core::ffi::c_char, code) }
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

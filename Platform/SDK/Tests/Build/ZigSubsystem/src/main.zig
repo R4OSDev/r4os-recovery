@@ -133,7 +133,7 @@ fn checkInstalled(sys: *r4os.r4sys.Context, source: []const u8) !void {
     try require(std.mem.eql(u8, selected.subsystem_id, "test.sdk65.zig") and std.mem.eql(u8, selected.host_path, "/R4OS/SUBSYSTEMS/test.sdk65.zig/SP65Z.R4X"));
     sys.println("SDK65 CATALOG source=MODULES.JSON verified=1 format=test.synthetic");
 }
-fn run(app: *r4os.App) !void {
+fn run(app: *r4os.App2) !void {
     var sys = app.system();
     const request = try r4os.subsystem_launch.parse(app.args());
     try require(std.mem.eql(u8, request.guest_path, "C:\\TEMP\\SYNTH65.S65"));
@@ -235,7 +235,7 @@ fn run(app: *r4os.App) !void {
     actual.video.deinit(video.Backend.fromDraw(&draw));
     sys.println("PASS SDK65 Zig guest: canonical launch, same work/video, audio failure, real owned save/reopen/async join and window");
 }
-pub fn r4_app_main(app: *r4os.App) i32 {
+pub fn r4_app_main(app: *r4os.App2) i32 {
     var code: i32 = 0;
     run(app) catch |err| {
         app.system().write("FAIL SDK65 Zig: ");

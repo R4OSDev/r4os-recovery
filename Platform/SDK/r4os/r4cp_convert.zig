@@ -22,10 +22,10 @@ pub const Result = struct {
 /// contract. The caller owns persistence and must never replace the source.
 pub fn render(project: legacy.Project, out: []u8) Result {
     if (project.module_kind != .r4x) return failed(out, .unsupported_module_kind);
-    const entry_mode: []const u8 = if (equalsIgnoreCase(project.build_profile, "R4X_C_Console") or
-        equalsIgnoreCase(project.build_profile, "R4X_C_Desktop_OK"))
+    const entry_mode: []const u8 = if ((equalsIgnoreCase(project.build_profile, "R4X_C_Console") or equalsIgnoreCase(project.build_profile, "R4X_C2_Console")) or
+        (equalsIgnoreCase(project.build_profile, "R4X_C_Desktop_OK") or equalsIgnoreCase(project.build_profile, "R4X_C2_Desktop_OK")))
         "app"
-    else if (equalsIgnoreCase(project.build_profile, "R4X_C") or equalsIgnoreCase(project.build_profile, "R4X_Zig"))
+    else if ((equalsIgnoreCase(project.build_profile, "R4X_C") or equalsIgnoreCase(project.build_profile, "R4X_C2")) or equalsIgnoreCase(project.build_profile, "R4X_Zig"))
         "lowlevel"
     else
         return failed(out, .unsupported_profile);
@@ -161,7 +161,14 @@ test "legacy C console converts deterministically to current R4MF v2" {
 
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const current = try r4mf.parse(arena.allocator(), "module.R4MF", a.bytes);
+    // Historical format conversion preserves the old imports/source. It
+    // must not silently pretend that App1/Start1 source has been migrated.
+    try std.testing.expectError(error.InvalidImport, r4mf.parse(arena.allocator(), "module.R4MF", a.bytes));
+    // Explicitly migrate this isolated manifest fixture for the original
+    // name/entry/version oracle. The converter itself never rewrites an
+    // unknown program's API or source, and cannot emit an admitted old app.
+    const migrated = try std.mem.replaceOwned(u8, arena.allocator(), a.bytes, "R4SYS:Query:1", "R4SYS:Query2:2");
+    const current = try r4mf.parse(arena.allocator(), "module.R4MF", migrated);
     try std.testing.expectEqualStrings("HELLOC", current.name);
     try std.testing.expectEqual(r4mf.EntryMode.app, current.entry_mode.?);
     // R4CP kannte keine Modulversion: konvertierte Projekte beginnen bei 0.1.0.

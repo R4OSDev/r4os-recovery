@@ -201,7 +201,7 @@ const vtable = AllocatorContext(.default).vtable;
 /// stable address until every allocation and concurrent caller has retired.
 /// The existing per-R4X default below remains independent of explicit heaps.
 pub const Heap = struct {
-    api: *const abi.R4XStartR4Sys,
+    api: *const @import("r4os_contract2").R4XStartR4Sys2,
     storage: State = .{},
 
     pub fn allocator(self: *Heap) std.mem.Allocator {
@@ -282,7 +282,7 @@ fn AllocatorContext(comptime explicit: enum { default, legacy, mapped }) type {
 pub fn stats() Stats {
     return stateStats(&state);
 }
-pub fn trim(api: *const abi.R4XStartR4Sys) void {
+pub fn trim(api: *const @import("r4os_contract2").R4XStartR4Sys2) void {
     stateTrim(&state, api);
 }
 
@@ -293,7 +293,7 @@ pub const Shutdown = enum { done, busy, pending };
 /// fails: that release may already have unmapped part of its exact region.
 /// Live allocations return busy; callers must allow their frees and retry.
 /// The normal Zig allocator and its trim policy do not call this path.
-pub fn shutdown(api: *const abi.R4XStartR4Sys) Shutdown {
+pub fn shutdown(api: *const @import("r4os_contract2").R4XStartR4Sys2) Shutdown {
     const result = shutdownState(&state, api);
     if (result != .done) return result;
     state.lock_wait.prune(api);
@@ -326,7 +326,7 @@ fn shutdownState(heap_state: *State, api: anytype) Shutdown {
 // 0.56.41 (B2): der Allokator laeuft ueber die R4SYS-Gruppentabelle
 // (vm_reserve/commit/decommit/release seit v5 enthalten); der
 // Parameter heisst weiter api, traegt aber den Tabellenzeiger.
-pub fn allocator(api: *const abi.R4XStartR4Sys) std.mem.Allocator {
+pub fn allocator(api: *const @import("r4os_contract2").R4XStartR4Sys2) std.mem.Allocator {
     return .{ .ptr = @constCast(api), .vtable = &vtable };
 }
 
@@ -1669,7 +1669,7 @@ var test_vm_second_storage: [16 * 1024 * 1024]u8 align(page_size) = undefined;
 var test_vm_multiple: bool = false;
 var test_vm_second_size: usize = 0;
 var test_vm_second_commit: usize = 0;
-var test_vm_table: abi.R4XStartR4Sys = .{};
+var test_vm_table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
 var test_vm_active: bool = false;
 var test_vm_reserved_size: usize = 0;
 var test_vm_committed: usize = 0;
@@ -2213,7 +2213,7 @@ const HandoffWorker = struct {
 
 test "VM allocator keeps free capacity live across exact VM handoffs and notification enrollment" {
     resetTestVm();
-    var unavailable: abi.R4XStartR4Sys = .{};
+    var unavailable: @import("r4os_contract2").R4XStartR4Sys2 = .{};
     try std.testing.expectError(error.OutOfMemory, allocator(&unavailable).alloc(u8, 128));
     try std.testing.expectEqual(@as(usize, 0), @atomicLoad(usize, &state.wait_api, .acquire));
     const recovered = try allocator(&test_vm_table).alloc(u8, 128);

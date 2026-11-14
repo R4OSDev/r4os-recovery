@@ -51,10 +51,9 @@ _Static_assert(offsetof(R4L66ApiV1, work) == 40u, "R4L66ApiV1.work offset mismat
 _Static_assert(offsetof(R4L66ApiV1, close) == 48u, "R4L66ApiV1.close offset mismatch");
 typedef struct R4L66ApiV1Client { const R4LInterfaceHeader *header; } R4L66ApiV1Client;
 
-static inline int32_t l66r_api_v1_init(const R4XStartContext *ctx, R4L66ApiV1Client *out_client) {
+static inline int32_t l66r_api_v1_from_import(const R4XStartImport *item, R4L66ApiV1Client *out_client) {
     if (out_client == 0) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "L66R", "API_V1");
     const R4LInterfaceExpectation expected = { 0x4c363631ull, 0x53444b36ull, 1u, 1u, 56u, 0u, 0u };
     const R4LInterfaceHeader *header = 0;
     int32_t status = r4l_validate_import(item, &expected, &header);
@@ -66,13 +65,25 @@ static inline int32_t l66r_api_v1_init(const R4XStartContext *ctx, R4L66ApiV1Cli
     return R4L_BINDING_OK;
 }
 
-static inline int32_t l66r_api_v1_init_optional(const R4XStartContext *ctx, R4L66ApiV1Client *out_client) {
+static inline int32_t l66r_api_v1_init2(const R4XStartContext2 *raw, R4L66ApiV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "L66R", "API_V1");
+    R4OS2Context ctx;
+    if (R4OS2ContextInit(raw, &ctx) != R4OS2_CONTEXT_OK) return R4L_BINDING_INVALID_IMPORT;
+    const R4LQuery2 *query = 0;
+    int32_t status = r4l_query2(&ctx, "L66R", &query);
+    if (status != R4L_BINDING_OK) return status;
+    return l66r_api_v1_from_import(r4xstart2_find_import_named(&ctx, "L66R", "API_V1"), out_client);
+}
+
+static inline int32_t l66r_api_v1_init2_optional(const R4XStartContext2 *raw, R4L66ApiV1Client *out_client) {
+    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
+    out_client->header = 0;
+    R4OS2Context ctx;
+    if (R4OS2ContextInit(raw, &ctx) != R4OS2_CONTEXT_OK) return R4L_BINDING_INVALID_IMPORT;
+    const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "L66R", "API_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return l66r_api_v1_init(ctx, out_client);
+    return l66r_api_v1_init2(raw, out_client);
 }
 
 static inline int32_t l66r_open(R4L66ApiV1Client *client, R4L66State * state, uint64_t owner, uint64_t generation, uint64_t allocate, uint64_t release, uint64_t notify) {

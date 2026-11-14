@@ -2,28 +2,28 @@
 #include <string.h>
 
 static R4XStartImport make_import(uint32_t group, const void *table) {
-    R4XStartImport item = {0}; item.group_id = group; item.flags = R4XSTART_IMPORT_FLAG_GROUP_INTERFACE; item.table = (uint64_t)(uintptr_t)table; return item;
+    R4XStartImport item = {0}; item.group_id = group; item.min_version = item.resolved_version = 2; item.flags = R4XSTART_IMPORT_FLAG_GROUP_INTERFACE; item.table = (uint64_t)(uintptr_t)table; return item;
 }
-static R4XStartContext make_context(R4XStartImport *imports, uint32_t count, const char *args) {
-    R4XStartContext ctx = {0};
-    ctx.magic = R4XSTART_MAGIC; ctx.abi_major = R4XSTART_ABI_MAJOR; ctx.abi_minor = R4XSTART_ABI_MINOR; ctx.size = R4XSTART_CONTEXT_SIZE;
-    ctx.flags = R4XSTART_FLAG_IMPORTS_VALID; ctx.imports = (uint64_t)(uintptr_t)imports; ctx.import_count = count;
+static R4XStartContext2 make_context(R4XStartImport *imports, uint32_t count, const char *args) {
+    R4XStartContext2 ctx = {0};
+    ctx.magic = R4OS2_START_MAGIC; ctx.abi_major = 2u; ctx.abi_minor = R4XSTART_ABI_MINOR; ctx.size = sizeof(R4XStartContext2);
+    ctx.app_class = R4XSTART_APP_CLASS_CONSOLE; ctx.flags = R4XSTART_FLAG_IMPORTS_VALID; ctx.imports = (uint64_t)(uintptr_t)imports; ctx.import_count = count;
     ctx.args = (uint64_t)(uintptr_t)args; ctx.args_len = args != 0 ? strlen(args) : 0u; return ctx;
 }
 
 static int declared_start(void) {
-    R4XStartR4Sys sys = {R4XSTART_R4SYS_MAGIC, R4XSTART_R4SYS_VERSION, R4XSTART_R4SYS_SIZE, 0};
-    R4XStartR4Desk desk = {R4XSTART_R4DESK_MAGIC, R4XSTART_R4DESK_VERSION, R4XSTART_R4DESK_SIZE, 0};
-    R4XStartR4Draw draw = {R4XSTART_R4DRAW_MAGIC, R4XSTART_R4DRAW_VERSION, R4XSTART_R4DRAW_SIZE, 0};
-    R4XStartR4Net net = {R4XSTART_R4NET_MAGIC, R4XSTART_R4NET_VERSION, R4XSTART_R4NET_SIZE, 0};
-    R4XStartR4Audio audio = {R4XSTART_R4AUDIO_MAGIC, R4XSTART_R4AUDIO_VERSION, R4XSTART_R4AUDIO_SIZE, 0};
-    R4XStartR4Dev dev = {R4XSTART_R4DEV_MAGIC, R4XSTART_R4DEV_VERSION, R4XSTART_R4DEV_SIZE, 0};
+    R4XStartR4Sys2 sys = {R4OS2_R4SYS_MAGIC, R4OS2_R4SYS_VERSION, sizeof(R4XStartR4Sys2), 0};
+    R4XStartR4Desk2 desk = {R4OS2_R4DESK_MAGIC, R4OS2_R4DESK_VERSION, sizeof(R4XStartR4Desk2), 0};
+    R4XStartR4Draw2 draw = {R4OS2_R4DRAW_MAGIC, R4OS2_R4DRAW_VERSION, sizeof(R4XStartR4Draw2), 0};
+    R4XStartR4Net2 net = {R4OS2_R4NET_MAGIC, R4OS2_R4NET_VERSION, sizeof(R4XStartR4Net2), 0};
+    R4XStartR4Audio2 audio = {R4OS2_R4AUDIO_MAGIC, R4OS2_R4AUDIO_VERSION, sizeof(R4XStartR4Audio2), 0};
+    R4XStartR4Dev2 dev = {R4OS2_R4DEV_MAGIC, R4OS2_R4DEV_VERSION, sizeof(R4XStartR4Dev2), 0};
     R4XStartImport entries[8] = {0};
     R4StartupImport declared[8] = {0};
 #define BIND(i, t, n, g) do { \
-    entries[i] = make_import(g, &t); entries[i].min_version = entries[i].resolved_version = 1; \
-    entries[i].module_name = (uintptr_t)n; entries[i].symbol_name = (uintptr_t)"Query"; \
-    declared[i] = (R4StartupImport){n,"Query",1,0,g,t.magic,t.abi_version,t.size}; \
+    entries[i] = make_import(g, &t); entries[i].min_version = entries[i].resolved_version = 2; \
+    entries[i].module_name = (uintptr_t)n; entries[i].symbol_name = (uintptr_t)"Query2"; \
+    declared[i] = (R4StartupImport){n,"Query2",2,0,g,t.magic,t.abi_version,t.size}; \
 } while (0)
     BIND(0, sys, "R4SYS", R4L_GROUP_R4SYS);
     BIND(1, desk, "R4DESK", R4L_GROUP_R4DESK);
@@ -38,7 +38,7 @@ static int declared_start(void) {
     }
     entries[6].table = 1; entries[6].resolved_version = 1;
     R4StartupInfo info = {R4_APP_PROFILE_DESKTOP, R4XSTART_APP_CLASS_GUI, R4_APP_PROFILE_DESKTOP_REQUIRED_GROUPS, 8, declared};
-    R4XStartContext ctx = make_context(entries, 8, "host"); ctx.app_class = R4XSTART_APP_CLASS_GUI; ctx.instance_id = 42;
+    R4XStartContext2 ctx = make_context(entries, 8, "host"); ctx.app_class = R4XSTART_APP_CLASS_GUI; ctx.instance_id = 42;
     R4App app;
     /* Valid host with no application window, but all six API views. */
     if (!r4_status_succeeded(r4_app_init_declared(&ctx, &info, &app))) return 101;
@@ -62,14 +62,14 @@ static int declared_start(void) {
 }
 
 int main(void) {
-    R4XStartR4Sys first_sys = {R4XSTART_R4SYS_MAGIC, R4XSTART_R4SYS_VERSION, R4XSTART_R4SYS_SIZE, 0};
-    R4XStartR4Sys second_sys = {R4XSTART_R4SYS_MAGIC, R4XSTART_R4SYS_VERSION, R4XSTART_R4SYS_SIZE, 0};
-    R4XStartR4Desk desk = {R4XSTART_R4DESK_MAGIC, R4XSTART_R4DESK_VERSION, R4XSTART_R4DESK_SIZE, 0};
-    R4XStartR4Draw draw = {R4XSTART_R4DRAW_MAGIC, R4XSTART_R4DRAW_VERSION, R4XSTART_R4DRAW_SIZE, 0};
+    R4XStartR4Sys2 first_sys = {R4OS2_R4SYS_MAGIC, R4OS2_R4SYS_VERSION, sizeof(R4XStartR4Sys2), 0};
+    R4XStartR4Sys2 second_sys = {R4OS2_R4SYS_MAGIC, R4OS2_R4SYS_VERSION, sizeof(R4XStartR4Sys2), 0};
+    R4XStartR4Desk2 desk = {R4OS2_R4DESK_MAGIC, R4OS2_R4DESK_VERSION, sizeof(R4XStartR4Desk2), 0};
+    R4XStartR4Draw2 draw = {R4OS2_R4DRAW_MAGIC, R4OS2_R4DRAW_VERSION, sizeof(R4XStartR4Draw2), 0};
     R4XStartImport console_imports[] = {make_import(R4L_GROUP_R4SYS, &first_sys)};
     R4XStartImport desktop_imports[] = {make_import(R4L_GROUP_R4SYS, &second_sys), make_import(R4L_GROUP_R4DESK, &desk), make_import(R4L_GROUP_R4DRAW, &draw)};
-    R4XStartContext console_ctx = make_context(console_imports, 1u, "console");
-    R4XStartContext desktop_ctx = make_context(desktop_imports, 3u, "desktop");
+    R4XStartContext2 console_ctx = make_context(console_imports, 1u, "console");
+    R4XStartContext2 desktop_ctx = make_context(desktop_imports, 3u, "desktop"); desktop_ctx.app_class = R4XSTART_APP_CLASS_GUI;
     R4App console, desktop;
     if (!r4_status_succeeded(r4_app_init(&console_ctx, R4_APP_PROFILE_CONSOLE, &console))) return 1;
     if (!r4_app_has_group(&console, R4L_GROUP_R4SYS) || r4_app_has_group(&console, R4L_GROUP_R4DESK)) return 2;

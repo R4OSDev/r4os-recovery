@@ -1,6 +1,7 @@
 #ifndef R4OS_POLL_BUDGET_H
 #define R4OS_POLL_BUDGET_H
 #include "abi.h"
+#include <r4os/generation2.h>
 
 /* SDK-local values, no kernel resources. Old timeout helpers retain their
  * saturating/sentinel contract. These new calls return explicit errors and
@@ -59,8 +60,8 @@ int32_t R4SdkDriverPollTimed(R4SdkClockSample, R4Timeout, uint64_t, uint32_t, R4
 uint32_t R4SdkDriverPollStep(R4SdkDriverPollBudget *, const R4SdkClockSample *now, uint32_t stop_requested);
 int32_t R4SdkDriverPollRemaining(R4SdkDriverPollBudget *, const R4SdkClockSample *now, R4SdkPollRemaining *);
 
-static inline int32_t r4_checked_driver_clock(const R4DriverApi *api, R4SdkClockSample *out) {
-    if (!api || api->version < 31u || api->size < offsetof(R4DriverApi,monotonic_clock)+sizeof(api->monotonic_clock) || !api->monotonic_clock) return R4_BUDGET_CLOCK_UNAVAILABLE;
+static inline int32_t r4_checked_driver_clock(const R4DriverApi2 *api, R4SdkClockSample *out) {
+    if (!api || api->magic != R4OS_DRIVER_API2_MAGIC || api->version < 1u || api->reserved != 0 || api->size < offsetof(R4DriverApi2,monotonic_clock)+sizeof(api->monotonic_clock) || !api->monotonic_clock) return R4_BUDGET_CLOCK_UNAVAILABLE;
     R4MonotonicClockInfo info = {0};
     if (api->monotonic_clock(&info) <= 0) return R4_BUDGET_CLOCK_UNAVAILABLE;
     return R4SdkClockSampleRead(&info,out);

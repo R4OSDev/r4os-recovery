@@ -12,19 +12,7 @@ pub struct Standard<'a> {
 }
 impl<'a> Standard<'a> {
     pub fn open(app: &'a App<'_>) -> Result<Self> {
-        let mut session = storage();
-        if scalar(unsafe {
-            c::R4Library_openSession(0, session.as_mut_ptr(), app.start_context())
-        })? == 0
-            || scalar(unsafe { c::R4Std_init(0, app.start_context()) })? == 0
-        {
-            return Err(Error::Unavailable);
-        }
-        Ok(Self {
-            session,
-            _app: PhantomData,
-            _local: PhantomData,
-        })
+        Self::open2(app)
     }
     pub fn utf8<'s, 'b>(&'s self, bytes: &'b [u8]) -> Result<Utf8<'s, 'b>> {
         let mut native = MaybeUninit::uninit();

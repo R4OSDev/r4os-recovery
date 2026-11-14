@@ -7,7 +7,7 @@ resource overflow or publication failure discards the entire frame and exits.
 No driver detection, direct framebuffer access or private NVIDIA route exists.
 
 Build it as an SDK R4X using `ENTRY_MODE=app`, `APP_CLASS=gui` and imports
-`R4SYS:Query:1`, `R4DESK:Query:1`, `R4DRAW:Query:1`. Copy this source into an
+`R4SYS:Query2:2`, `R4DESK:Query2:2`, `R4DRAW:Query2:2`. Copy this source into an
 application created from `Templates/R4X`; use its normal Build.bat/Build.sh.
 Launch from Desktop: a GUI window is a prerequisite. The same source uses
 software composition or the admitted native output chosen by Desktop.
@@ -33,7 +33,8 @@ FontSet selects existing renderable R4 Sans catalog entries; unavailable
 roles retain the builtin font. R4FONT remains the scalable-font owner.
 For the complete contract and migration see Docs/SDK/GuiControls.txt.
 
-`GuiEvents.c` is a complete C application using only `<r4os/app_gui.h>`.
+`GuiEvents.c` uses an actual App2 entry and a borrowed current C facade.
+The App2 owner stays live through the complete event/window scope.
 Use the same GUI imports and `ENTRY_MODE=app`, with `LANGUAGE=C` and
 `SOURCE=src/main.c` in an ordinary R4X project. Copy the example to that source
 path and build with the project's normal starter. It waits for messages,

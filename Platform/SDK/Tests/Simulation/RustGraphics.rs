@@ -8,19 +8,22 @@ use r4os_sdk::{
     App, ImportSpec, StartupInfo, abi,
     graphics::{Graphics, GraphicsStorage, raw as c},
 };
+unsafe extern "C" fn fixture_keep_open(_: *const abi::generation2::R4XStartContext2) -> u32 {
+    0
+}
 unsafe extern "C" {
     fn sdk_gfx_oracle_tables(
-        sys: *mut abi::R4XStartR4Sys,
-        desk: *mut abi::R4XStartR4Desk,
-        draw: *mut abi::R4XStartR4Draw,
+        sys: *mut abi::generation2::R4XStartR4Sys2,
+        desk: *mut abi::generation2::R4XStartR4Desk2,
+        draw: *mut abi::generation2::R4XStartR4Draw2,
     );
 }
 #[test]
 fn current_offscreen_graphics_reuses_original_descriptors_and_receipts() {
     let (mut sys, mut desk, mut draw) = (
-        abi::R4XStartR4Sys::default(),
-        abi::R4XStartR4Desk::default(),
-        abi::R4XStartR4Draw::default(),
+        abi::generation2::R4XStartR4Sys2::default(),
+        abi::generation2::R4XStartR4Desk2::default(),
+        abi::generation2::R4XStartR4Draw2::default(),
     );
     unsafe { sdk_gfx_oracle_tables(&mut sys, &mut desk, &mut draw) };
     // No R4DESK import or hosted window is needed for graphics.
@@ -45,33 +48,34 @@ fn current_offscreen_graphics_reuses_original_descriptors_and_receipts() {
     let imports = records.map(|(group, name, table, _, _, _)| abi::R4XStartImport {
         group_id: group.0,
         module_name: name.as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         flags: abi::r4xstart_import_flag_group_interface,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         table,
     });
-    let specs = records.map(|(group, name, _, magic, version, size)| ImportSpec {
-        module_name: name.to_bytes(),
-        symbol_name: b"Query",
-        minimum: 1,
-        optional: false,
+    let specs = records.map(|(group, name, _, _magic, _version, _size)| ImportSpec {
+        module_name: name.as_ptr().cast(),
+        symbol_name: c"Query2".as_ptr().cast(),
+        minimum: 2,
+        optional: 0,
         group_id: group.0,
-        magic,
-        version,
-        size,
+
+        reserved: 0,
     });
-    let start = abi::R4XStartContext {
+    let start = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
-        flags: abi::r4xstart_flag_imports_valid,
+        flags: abi::r4xstart_flag_imports_valid | abi::r4xstart_flag_close_supported,
+        should_close: fixture_keep_open as *const () as u64,
         imports: imports.as_ptr() as u64,
         import_count: 2,
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
-        required_groups: records.iter().fold(0, |m, r| m | (1 << r.0.0)),
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
+        required_groups: 2,
         imports: &specs,
     };
     let app = unsafe { App::from_raw(&start, &expected, c"GfxParity") }.unwrap();
@@ -177,7 +181,7 @@ fn current_offscreen_graphics_reuses_original_descriptors_and_receipts() {
     let mut output = MaybeUninit::uninit();
     assert_eq!(
         unsafe {
-            c::R4SdkGfxOpenNative(c::R4SdkGui_ABI_FINGERPRINT ^ 1, output.as_mut_ptr(), &start)
+            c::R4SdkGfxOpenNative2(c::R4SdkGui_ABI_FINGERPRINT ^ 1, output.as_mut_ptr(), &start)
         },
         abi::io_error_invalid
     );
@@ -211,7 +215,8 @@ fn current_offscreen_graphics_reuses_original_descriptors_and_receipts() {
     let start2 = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
-        flags: abi::r4xstart_flag_imports_valid,
+        flags: abi::r4xstart_flag_imports_valid | abi::r4xstart_flag_close_supported,
+        should_close: fixture_keep_open as *const () as u64,
         imports: imports2.as_ptr() as u64,
         import_count: imports2.len() as u32,
         ..Default::default()

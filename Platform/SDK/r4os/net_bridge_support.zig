@@ -32,15 +32,19 @@ pub fn slice(value: ?[]const u8) Slice {
     const bytes = value orelse return .{};
     return .{ .ptr = bytes.ptr, .length = bytes.len, .valid = 1 };
 }
-pub fn request(value: *Request) *program.NetSocketRequest { return @ptrCast(@alignCast(value)); }
-pub fn requestConst(value: *const Request) *const program.NetSocketRequest { return @ptrCast(@alignCast(value)); }
-pub fn bundle(context: *const abi.R4XStartContext) ?program.Bundle {
+pub fn request(value: *Request) *program.NetSocketRequest {
+    return @ptrCast(@alignCast(value));
+}
+pub fn requestConst(value: *const Request) *const program.NetSocketRequest {
+    return @ptrCast(@alignCast(value));
+}
+pub fn bundle(context: *const @import("r4os_contract2").R4XStartContext2) ?program.Bundle {
     const result = program.bundleValueFromR4XStart(context) orelse return null;
     const sys = result.sys orelse return null;
-    const current = abi.R4XStartR4Sys{};
+    const current = @import("r4os_contract2").R4XStartR4Sys2{};
     if (sys.abi_version < current.abi_version or sys.size < current.size) return null;
     if (result.net) |table| {
-        const expected = abi.R4XStartR4Net{};
+        const expected = @import("r4os_contract2").R4XStartR4Net2{};
         if (table.abi_version < expected.abi_version or table.size < expected.size) return null;
     }
     return result;

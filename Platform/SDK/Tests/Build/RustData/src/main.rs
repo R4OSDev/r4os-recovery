@@ -3,7 +3,7 @@ extern crate alloc;
 use alloc::vec;
 use core::{fmt::Write, mem::MaybeUninit, pin::pin};
 use r4os_sdk::{
-    App,
+    App2,
     data::{
         Arena, ArenaStorage, Data, DataStorage, Decoder, Encoding, Error, Icon, Raster,
         SearchParams, raw as c,
@@ -13,7 +13,7 @@ const ZIP: &[u8] = include_bytes!("../../../../../Protocols/R4Zip/Tests/Fixtures
 const PLAIN: &[u8] = include_bytes!("../../../../../Protocols/R4Zip/Tests/Fixtures/payload.bin");
 const MANIFEST: &[u8] = include_bytes!("../../../Fixtures/Data/manifest.r4mf.txt");
 const ICON: &[u8] = include_bytes!("../../../Fixtures/Icons/windows32.ico");
-struct Output<'a, 'b>(&'a App<'b>);
+struct Output<'a, 'b>(&'a App2<'b>);
 impl core::fmt::Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         if self.0.write(s) < 0 {
@@ -25,7 +25,7 @@ impl core::fmt::Write for Output<'_, '_> {
 }
 unsafe extern "C" {
     fn sdk_data_guest(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         zip: *const u8,
         length: usize,
         decoded: *mut u8,
@@ -98,10 +98,10 @@ fn stream(data: &Data<'_, '_>) -> Result<(), Error> {
     }
     Err(Error::Bounds)
 }
-fn exercise(app: &App<'_>) -> Result<(), (i32, Error)> {
+fn exercise(app: &App2<'_>) -> Result<(), (i32, Error)> {
     let bad = Error::InvalidNative;
     let mut storage = pin!(DataStorage::new());
-    let data = Data::open(storage.as_mut(), app).map_err(|e| (1, e))?;
+    let data = Data::open2(storage.as_mut(), app).map_err(|e| (1, e))?;
     let mut depth = [0; 16];
     let mut json = data
         .json(
@@ -217,7 +217,7 @@ fn exercise(app: &App<'_>) -> Result<(), (i32, Error)> {
     stream(&data).map_err(|e| (41, e))?;
     Ok(())
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let before = app.heap().unwrap().stats().unwrap();
     if let Err((step, error)) = exercise(app) {
         let _ = writeln!(
@@ -238,4 +238,4 @@ fn main(app: &mut App<'_>) -> i32 {
     app.write("PASS DATA61 Rust/C real JSON/ZIP protocols, u64 overflow, full/stream CRC bytes, shared SHA/codec/URL/raster/ICO/manifest and exact heap release\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

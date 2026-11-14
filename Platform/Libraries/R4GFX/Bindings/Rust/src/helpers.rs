@@ -20,29 +20,7 @@ impl<'a, 'h> ColorProfile<'a, 'h> {
         intent: u32,
         flags: u32,
     ) -> Result<Self> {
-        let mut colors = MaybeUninit::uninit();
-        crate::required(unsafe {
-            c::R4Library_colorClient(0, app.start_context(), colors.as_mut_ptr())
-        })?;
-        let allocator = heap.allocator()?;
-        let mut native = storage();
-        crate::required(unsafe {
-            c::R4GfxDisplayProfileOwner_open(
-                0,
-                allocator.as_ptr(),
-                colors.as_ptr(),
-                bytes.as_ptr(),
-                bytes.len() as u64,
-                intent,
-                flags,
-                native.as_mut_ptr(),
-            )
-        })?;
-        Ok(Self {
-            native,
-            _app: PhantomData,
-            _heap: heap,
-        })
+        Self::open2(app, heap, bytes, intent, flags)
     }
     pub fn open2(
         app: &'a r4os_sdk::app2::App<'_>,
@@ -53,7 +31,11 @@ impl<'a, 'h> ColorProfile<'a, 'h> {
     ) -> Result<Self> {
         let mut colors = MaybeUninit::uninit();
         crate::required(unsafe {
-            c::R4Library_colorClient2(0, core::ptr::from_ref(app.start_context()).cast(), colors.as_mut_ptr())
+            c::R4Library_colorClient2(
+                0,
+                core::ptr::from_ref(app.start_context()).cast(),
+                colors.as_mut_ptr(),
+            )
         })?;
         let allocator = heap.allocator()?;
         let mut native = storage();

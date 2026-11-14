@@ -18,8 +18,8 @@ typedef struct R4SysVmAllocation {
 } R4SysVmAllocation;
 
 typedef struct R4Sys {
-    const R4XStartContext *ctx;
-    const R4XStartR4Sys *table;
+    const R4XStartContext2 *ctx;
+    const R4XStartR4Sys2 *table;
     const R4OS2Context *generation2;
     const R4App2Memory *memory2;
 } R4Sys;
@@ -27,21 +27,21 @@ typedef struct R4Sys {
 /* Per-operation slot admission. A file operation does not require an unrelated
  * service transport, nor does a handle status query require thread creation. */
 static inline int r4sys_has_callback(const R4Sys *sys, size_t offset) {
-    return sys && sys->table && offset <= sys->table->size && sizeof(uintptr_t) <= sys->table->size - offset;
+    return sys && (sys->table && sys->table->magic == R4OS2_R4SYS_MAGIC && sys->table->abi_version >= 1 && sys->table->size >= 16) && offset <= sys->table->size && sizeof(uintptr_t) <= sys->table->size - offset;
 }
 static inline int r4sys_available(const R4Sys *sys) {
-    return sys && (sys->generation2 ? R4OS2ContextGroup(sys->generation2, 1) != NULL : sys->table != NULL);
+    return sys && (sys->generation2 ? R4OS2ContextGroup(sys->generation2, 1) != NULL : (sys->table && sys->table->magic == R4OS2_R4SYS_MAGIC && sys->table->abi_version >= 1 && sys->table->size >= 16));
 }
-static inline uintptr_t r4sys_callback(const R4Sys *sys, size_t offset1, uint32_t offset2) {
-    if (!sys) return 0;
+static inline uintptr_t r4sys_callback(const R4Sys *sys, size_t offset) {
+    if (!sys || offset > UINT32_MAX) return 0;
     if (sys->generation2) {
         uint64_t address;
-        return R4OS2ContextFunction(sys->generation2, 1, offset2, &address) == 0 ? (uintptr_t)address : 0;
+        return R4OS2ContextFunction(sys->generation2, 1, offset, &address) == 0 ? (uintptr_t)address : 0;
     }
-    if (!r4sys_has_callback(sys, offset1)) return 0;
-    return *(const uintptr_t *)((const uint8_t *)sys->table + offset1);
+    if (!r4sys_has_callback(sys, offset)) return 0;
+    return *(const uintptr_t *)((const uint8_t *)sys->table + offset);
 }
-#define R4SYS_SLOT(sys, field) r4sys_callback((sys), offsetof(R4XStartR4Sys, field), offsetof(R4XStartR4Sys2, field))
+#define R4SYS_SLOT(sys, field) r4sys_callback((sys), offsetof(R4XStartR4Sys2, field))
 #define R4SYS_HAS(sys, field) (R4SYS_SLOT((sys), field) != 0)
 
 /* The caller keeps this actual context view and its tables resident while
@@ -129,7 +129,9 @@ static inline int32_t r4sys_file_copy_buffered(R4Sys *sys, const char *source, c
     return ((R4SysFileCopyBufferedFn)(uintptr_t)R4SYS_SLOT(sys, file_copy_buffered))((const uint8_t *)source, (const uint8_t *)target, buffer, capacity, progress);
 }
 
-static inline const R4XStartImport *r4xstart_find_import(const R4XStartContext *ctx, uint32_t group_id) {
+static inline const R4XStartImport *r4xstart_find_import(const R4XStartContext2 *ctx, uint32_t group_id) {
+    R4OS2Context validated;
+    if (R4OS2ContextInit(ctx, &validated) != R4OS2_CONTEXT_OK) return NULL;
     uint32_t count = r4xstart_import_count(ctx);
     for (uint32_t i = 0; i < count; i += 1) {
         const R4XStartImport *item = r4xstart_import_at(ctx, i);
@@ -138,7 +140,7 @@ static inline const R4XStartImport *r4xstart_find_import(const R4XStartContext *
     return 0;
 }
 
-static inline int32_t r4sys_init(const R4XStartContext *ctx, R4Sys *out_sys) {
+static inline int32_t r4sys_init(const R4XStartContext2 *ctx, R4Sys *out_sys) {
     if (out_sys == 0) return R4OS_ERROR_INVALID;
     out_sys->ctx = 0;
     out_sys->table = 0;
@@ -147,10 +149,10 @@ static inline int32_t r4sys_init(const R4XStartContext *ctx, R4Sys *out_sys) {
     const R4XStartImport *item = r4xstart_find_import(ctx, R4L_GROUP_R4SYS);
     if (item == 0) return R4OS_ERROR_NOT_FOUND;
     if ((item->flags & R4XSTART_IMPORT_FLAG_GROUP_INTERFACE) == 0 || item->table == 0) return R4OS_ERROR_NOT_FOUND;
-    const R4XStartR4Sys *table = (const R4XStartR4Sys *)(uintptr_t)item->table;
-    if (table->magic != R4XSTART_R4SYS_MAGIC) return R4OS_ERROR_INVALID;
-    if (table->abi_version < R4XSTART_R4SYS_VERSION) return R4OS_ERROR_INVALID;
-    if (table->size < R4XSTART_R4SYS_SIZE) return R4OS_ERROR_INVALID;
+    const R4XStartR4Sys2 *table = (const R4XStartR4Sys2 *)(uintptr_t)item->table;
+    if (table->magic != R4OS2_R4SYS_MAGIC) return R4OS_ERROR_INVALID;
+    if (table->abi_version < R4OS2_R4SYS_VERSION) return R4OS_ERROR_INVALID;
+    if (table->size < sizeof(R4XStartR4Sys2)) return R4OS_ERROR_INVALID;
     if (table->write == 0 || table->putc == 0) return R4OS_ERROR_INVALID;
     out_sys->ctx = ctx;
     out_sys->table = table;
@@ -198,7 +200,7 @@ static inline void r4sys_sleep_ticks(R4Sys *sys, uint64_t ticks) {
     }
     if (sys->generation2) { (void)R4OS2ContextYield(sys->generation2); return; }
     if (sys->ctx != 0 && sys->ctx->yield != 0) {
-        R4XStartYieldFn yield_fn = (R4XStartYieldFn)(uintptr_t)sys->ctx->yield;
+        R4XStartYieldFn2 yield_fn = (R4XStartYieldFn2)(uintptr_t)sys->ctx->yield;
         yield_fn(sys->ctx);
     }
 }
@@ -210,7 +212,7 @@ static inline int r4sys_program_should_close(R4Sys *sys) {
         (sys->ctx->flags & R4XSTART_FLAG_CLOSE_SUPPORTED) != 0 &&
         sys->ctx->should_close != 0)
     {
-        R4XStartShouldCloseFn close_fn = (R4XStartShouldCloseFn)(uintptr_t)sys->ctx->should_close;
+        R4XStartShouldCloseFn2 close_fn = (R4XStartShouldCloseFn2)(uintptr_t)sys->ctx->should_close;
         return close_fn(sys->ctx) != 0;
     }
     if (R4SYS_SLOT(sys, program_should_close) != 0) {
@@ -807,7 +809,7 @@ static inline int32_t r4sys_vm_free(R4Sys *sys, void *ptr) {
     return r4sys_vm_release(sys, region_id);
 }
 
-int32_t r4_main(const R4XStartContext *ctx, R4Sys *sys);
+int32_t r4_main(const R4XStartContext2 *ctx, R4Sys *sys);
 
 #ifdef __cplusplus
 }

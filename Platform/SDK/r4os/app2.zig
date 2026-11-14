@@ -227,6 +227,10 @@ pub const App = struct {
         return if (result.available()) result else null;
     }
 
+    pub fn serial(self: *const App) ?@import("serial.zig").Context {
+        return @import("serial.zig").Context.init(self.context.devices() orelse return null);
+    }
+
     pub fn devicesLowLevel(self: *const App) ?r4dev.Context {
         if (!self.hasGroup(.r4dev)) return null;
         return r4dev.Context.fromProgram(self.lowLevel());

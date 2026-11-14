@@ -10,26 +10,26 @@ extern "C" {
 
 /* R4DEV is a built-in platform API provided by the kernel. It is resolved as
  * a group_interface import and has no R4L file. The table layout is declared
- * in <r4os/r4xstart.h> (R4XStartR4Dev). */
+ * in <r4os/r4xstart.h> (R4XStartR4Dev2). */
 
 typedef struct R4Dev {
-    const R4XStartR4Dev *table;
+    const R4XStartR4Dev2 *table;
     const R4OS2Context *generation2;
 } R4Dev;
 
 static inline int r4dev_available(const R4Dev *dev) {
-    return dev && (dev->generation2 ? R4OS2ContextGroup(dev->generation2, 6) != NULL : dev->table != NULL);
+    return dev && (dev->generation2 ? R4OS2ContextGroup(dev->generation2, 6) != NULL : (dev->table && dev->table->magic == R4OS2_R4DEV_MAGIC && dev->table->abi_version >= 1 && dev->table->size >= 16));
 }
-static inline uintptr_t r4dev_callback(const R4Dev *dev, size_t offset1, uint32_t offset2) {
-    if (!dev) return 0;
+static inline uintptr_t r4dev_callback(const R4Dev *dev, size_t offset) {
+    if (!dev || offset > UINT32_MAX) return 0;
     if (dev->generation2) {
         uint64_t address;
-        return R4OS2ContextFunction(dev->generation2, 6, offset2, &address) == 0 ? (uintptr_t)address : 0;
+        return R4OS2ContextFunction(dev->generation2, 6, offset, &address) == 0 ? (uintptr_t)address : 0;
     }
-    if (!dev->table || offset1 > dev->table->size || sizeof(uintptr_t) > dev->table->size - offset1) return 0;
-    return *(const uintptr_t *)((const uint8_t *)dev->table + offset1);
+    if (!(dev->table && dev->table->magic == R4OS2_R4DEV_MAGIC && dev->table->abi_version >= 1 && dev->table->size >= 16) || offset > dev->table->size || sizeof(uintptr_t) > dev->table->size - offset) return 0;
+    return *(const uintptr_t *)((const uint8_t *)dev->table + offset);
 }
-#define R4DEV_SLOT(dev, field) r4dev_callback((dev), offsetof(R4XStartR4Dev, field), offsetof(R4XStartR4Dev2, field))
+#define R4DEV_SLOT(dev, field) r4dev_callback((dev), offsetof(R4XStartR4Dev2, field))
 #define R4DEV_HAS(dev, field) (R4DEV_SLOT((dev), field) != 0)
 static inline int32_t r4dev_init2(const R4OS2Context *context, R4Dev *out) {
     if (!out || !context || !R4OS2ContextGroup(context, 6)) return R4OS_ERR_NO_GROUP;
@@ -245,17 +245,17 @@ static inline int32_t r4dev_display_state(const R4Dev *dev, R4DisplayStateInfo *
     return ((R4DevDisplayStateFn)(uintptr_t)R4DEV_SLOT(dev, display_state))(out);
 }
 
-static inline int32_t r4dev_init(const R4XStartContext *ctx, R4Dev *out) {
+static inline int32_t r4dev_init(const R4XStartContext2 *ctx, R4Dev *out) {
     if (out == 0) return R4OS_ERROR_INVALID;
     out->table = 0;
     out->generation2 = 0;
     const R4XStartImport *item = r4xstart_find_import(ctx, R4L_GROUP_R4DEV);
     if (item == 0 || item->table == 0) return R4OS_ERROR_NOT_FOUND;
     if ((item->flags & R4XSTART_IMPORT_FLAG_GROUP_INTERFACE) == 0) return R4OS_ERROR_NOT_FOUND;
-    const R4XStartR4Dev *table = (const R4XStartR4Dev *)(uintptr_t)item->table;
-    if (table->magic != R4XSTART_R4DEV_MAGIC) return R4OS_ERROR_INVALID;
-    if (table->abi_version < R4XSTART_R4DEV_VERSION) return R4OS_ERROR_INVALID;
-    if (table->size < offsetof(R4XStartR4Dev, performance_summary) + sizeof(uintptr_t)) return R4OS_ERROR_INVALID;
+    const R4XStartR4Dev2 *table = (const R4XStartR4Dev2 *)(uintptr_t)item->table;
+    if (table->magic != R4OS2_R4DEV_MAGIC) return R4OS_ERROR_INVALID;
+    if (table->abi_version < R4OS2_R4DEV_VERSION) return R4OS_ERROR_INVALID;
+    if (table->size < offsetof(R4XStartR4Dev2, performance_summary) + sizeof(uintptr_t)) return R4OS_ERROR_INVALID;
     if (table->performance_summary == 0) return R4OS_ERROR_INVALID;
     out->table = table;
     return R4OS_OK;

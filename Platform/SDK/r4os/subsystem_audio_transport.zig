@@ -360,8 +360,8 @@ fn wireOp(operation: Operation) u16 {
 // Explicitly modeled native tables exercise the actual request owner. No host
 // test here claims native endpoint scheduling, cancellation or hardware work.
 const Probe = struct {
-    var table: abi.R4XStartR4Sys = .{};
-    var raw: abi.R4XStartContext = .{};
+    var table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
     var bundle: @import("program.zig").Bundle = undefined;
     var next_id: u32 = 400;
     var state: u32 = abi.io_state_running;
@@ -565,7 +565,7 @@ test "terminal transport drain chains keep exact absolute budgets without insert
         try std.testing.expectEqualStrings(if (expired) "swscnswsc" else "swscnswscnswsc", Probe.event_log[0..Probe.event_count]);
         try std.testing.expectEqual(@as(usize, 0), Probe.sleeps);
         const expected_budgets = [_]u64{ 200, 180, 150 };
-        try std.testing.expectEqualSlices(u64, expected_budgets[0 .. if (expired) @as(usize, 2) else 3], Probe.budgets[0..Probe.budget_count]);
+        try std.testing.expectEqualSlices(u64, expected_budgets[0..if (expired) @as(usize, 2) else 3], Probe.budgets[0..Probe.budget_count]);
         try std.testing.expectEqual(@as(u16, if (expired) 2 else 3), receipt.requests);
         try std.testing.expectEqual(@as(i32, if (expired) abi.service_api_result_timeout else 960), receipt.result);
         try std.testing.expectEqual(@as(u64, if (expired) 0 else 240), owner.accepted_source_frames);

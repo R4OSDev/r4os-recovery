@@ -6,7 +6,7 @@ use r4os_sdk::{
 };
 unsafe extern "C" {
     fn sdk68_protocol_c_case() -> i32;
-    fn sdk68_protocol_oracle() -> *const abi::ProtocolApi;
+    fn sdk68_protocol_oracle() -> *const abi::ProtocolApi2;
     fn sdk68_protocol_allocations() -> u32;
     fn sdk68_protocol_releases() -> u32;
 }

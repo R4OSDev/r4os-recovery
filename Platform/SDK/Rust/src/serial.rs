@@ -36,17 +36,7 @@ impl<'a> Serial<'a> {
         })
     }
     pub fn new(app: &'a App<'_>) -> Result<Self> {
-        let snapshot = crate::facade_app(app)?;
-        let mut raw = unsafe { core::mem::zeroed() };
-        let rc = unsafe { c::r4serial_init(&snapshot.devices, &mut raw) };
-        if rc != 0 {
-            return Err(Error::Raw(rc));
-        }
-        Ok(Self {
-            raw,
-            _loan: PhantomData,
-            _local: PhantomData,
-        })
+        Self::new2(app)
     }
     pub fn count(&self) -> u32 {
         unsafe { c::r4serial_count(&self.raw) }

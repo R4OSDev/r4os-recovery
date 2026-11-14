@@ -167,8 +167,8 @@ pub const CompilerV1 = extern struct {
 pub const CompilerV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !CompilerV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, compiler_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !CompilerV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !CompilerV1Client {

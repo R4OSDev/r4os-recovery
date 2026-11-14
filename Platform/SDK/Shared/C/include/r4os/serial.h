@@ -1,19 +1,19 @@
 #ifndef R4OS_SERIAL_H
 #define R4OS_SERIAL_H
 #include "r4dev.h"
-typedef struct R4Serial { const R4XStartR4Dev *table; const R4OS2Context *generation2; } R4Serial;
-static inline uintptr_t r4serial_callback(const R4Serial *serial, size_t offset1, uint32_t offset2) {
+typedef struct R4Serial { const R4XStartR4Dev2 *table; const R4OS2Context *generation2; } R4Serial;
+static inline uintptr_t r4serial_callback(const R4Serial *serial, size_t offset) {
     if (!serial) return 0;
     const R4Dev dev = {.table = serial->table, .generation2 = serial->generation2};
-    return r4dev_callback(&dev, offset1, offset2);
+    return r4dev_callback(&dev, offset);
 }
-#define R4SERIAL_SLOT(s, field) r4serial_callback((s), offsetof(R4XStartR4Dev, field), offsetof(R4XStartR4Dev2, field))
+#define R4SERIAL_SLOT(s, field) r4serial_callback((s), offsetof(R4XStartR4Dev2, field))
 #define R4SERIAL_HAS(s, field) (R4SERIAL_SLOT((s), field) != 0)
 static inline int32_t r4serial_init(const R4Dev *dev, R4Serial *out) {
     if (!out) return R4OS_SERIAL_ERROR_INVALID;
     *out = (R4Serial){0};
     if (!r4dev_available(dev)) return R4OS_ERR_NO_FN;
-    if (!dev->generation2 && (dev->table->magic != R4XSTART_R4DEV_MAGIC || dev->table->abi_version < 21)) return R4OS_ERR_NO_FN;
+    if (!dev->generation2 && (dev->table->magic != R4OS2_R4DEV_MAGIC || dev->table->abi_version < 1)) return R4OS_ERR_NO_FN;
     if (!R4DEV_HAS(dev, serial_count) || !R4DEV_HAS(dev, serial_port_at) || !R4DEV_HAS(dev, serial_open) || !R4DEV_HAS(dev, serial_configure) || !R4DEV_HAS(dev, serial_read) || !R4DEV_HAS(dev, serial_write) || !R4DEV_HAS(dev, serial_drain) || !R4DEV_HAS(dev, serial_status) || !R4DEV_HAS(dev, serial_cancel) || !R4DEV_HAS(dev, serial_close)) return R4OS_ERR_NO_FN;
     *out = (R4Serial){.table = dev->table, .generation2 = dev->generation2};
     return 0;

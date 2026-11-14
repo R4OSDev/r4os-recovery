@@ -7,9 +7,12 @@ use r4os_sdk::{
 };
 #[path = "../Conformance/StorageCodecChecks.rs"]
 mod common;
+unsafe extern "C" fn fixture_keep_open(_: *const abi::generation2::R4XStartContext2) -> u32 {
+    0
+}
 unsafe extern "C" {
     fn sdk_storage_c_fixture() -> i32;
-    fn sdk_storage_table(out: *mut abi::R4XStartR4Sys);
+    fn sdk_storage_table(out: *mut abi::generation2::R4XStartR4Sys2);
     fn sdk_storage_mode(mode: i32);
     fn sdk_storage_directory_stale(mode: i32);
     fn sdk_storage_close_mode(mode: i32);
@@ -167,37 +170,38 @@ fn normal_generation2_keeps_wide_metadata_and_rejects_partial_directory_after_re
 fn existing_bytes_real_facades_and_explicit_failure_ownership() {
     assert_eq!(unsafe { sdk_storage_c_fixture() }, 0);
     common::codecs();
-    let mut api = abi::R4XStartR4Sys::default();
+    let mut api = abi::generation2::R4XStartR4Sys2::default();
     unsafe { sdk_storage_table(&mut api) };
     let import = abi::R4XStartImport {
         group_id: 1,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         flags: abi::r4xstart_import_flag_group_interface,
         module_name: c"R4SYS".as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         table: std::ptr::from_ref(&api) as u64,
     };
-    let ctx = abi::R4XStartContext {
+    let ctx = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
-        flags: abi::r4xstart_flag_imports_valid,
+        flags: abi::r4xstart_flag_imports_valid | abi::r4xstart_flag_close_supported,
+        should_close: fixture_keep_open as *const () as u64,
         imports: std::ptr::from_ref(&import) as u64,
         import_count: 1,
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
         required_groups: 2,
         imports: &[ImportSpec {
-            module_name: b"R4SYS",
-            symbol_name: b"Query",
-            minimum: 1,
-            optional: false,
+            module_name: c"R4SYS".as_ptr().cast(),
+            symbol_name: c"Query2".as_ptr().cast(),
+            minimum: 2,
+            optional: 0,
             group_id: 1,
-            magic: api.magic,
-            version: api.abi_version,
-            size: api.size,
+
+            reserved: 0,
         }],
     };
     let app = unsafe { App::from_raw(&ctx, &expected, c"STORAGE") }.unwrap();
@@ -283,6 +287,8 @@ fn existing_bytes_real_facades_and_explicit_failure_ownership() {
     unsafe { sdk_storage_directory_stale(1) };
     assert!(matches!(iterator.next_entry(), Err(Error::Raw(-10))));
     unsafe { sdk_storage_directory_stale(0) };
+    iterator = files.iterate(&directory);
+    assert!(!iterator.next_entry().unwrap().unwrap().is_directory);
     assert!(iterator.next_entry().unwrap().unwrap().is_directory);
     assert!(iterator.next_entry().unwrap().is_none());
     let mut cursor = abi::DirectoryBatchCursor::default();
@@ -421,6 +427,24 @@ fn existing_bytes_real_facades_and_explicit_failure_ownership() {
             .unwrap()
     );
     assert_eq!(page.rows().len(), 3);
+    let rows = page.rows();
+    assert_eq!(&rows[0].path.bytes[..rows[0].path.length as usize], b"C:\\");
+    assert_eq!(
+        &rows[1].path.bytes[..rows[1].path.length as usize],
+        b"C:\\ONE.TXT"
+    );
+    assert_eq!(rows[2].kind, 3); // Next page; capacity4 admits one child.
+    assert!(
+        page.load(&files, &mut scratch, &directory, 1, b".TXT")
+            .unwrap()
+    );
+    let rows = page.rows();
+    assert_eq!(rows.len(), 3);
+    assert_eq!(rows[1].kind, 2); // Previous page.
+    assert_eq!(
+        &rows[2].path.bytes[..rows[2].path.length as usize],
+        b"C:\\SUB"
+    );
     let mut snapshot = Snapshot::<u32>::new(257 * 4).unwrap();
     for n in (0..257).rev() {
         snapshot.append(n).unwrap()

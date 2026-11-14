@@ -1,6 +1,7 @@
 //! Original driver helpers shared by all implementation languages.
 const std = @import("std");
 pub const driver = @import("driver.zig");
+pub const driver2 = @import("driver2.zig");
 pub const serial = @import("driver_serial.zig");
 pub const memory = @import("driver_memory.zig");
 pub const entropy = @import("driver_entropy.zig");
@@ -13,7 +14,7 @@ pub const threads = @import("driver_threads.zig");
 pub const semaphores = @import("driver_semaphores.zig");
 pub const cpu_power = @import("driver_cpu_power.zig");
 pub const shared = @import("update_bridge_schema.zig");
-pub const modules = .{ driver, serial, memory, entropy, resources, queue, outputs, display, heap, threads, semaphores, cpu_power };
+pub const modules = .{ driver, driver2, serial, memory, entropy, resources, queue, outputs, display, heap, threads, semaphores, cpu_power };
 pub fn sharedType(comptime T: type) bool {
     if (T == std.mem.Allocator or T == std.heap.FixedBufferAllocator) return true;
     inline for (shared.types) |V| if (T == V) return true;
@@ -31,3 +32,13 @@ pub fn opaqueType(comptime T: type) bool {
     return false;
 }
 pub const callbackTypes = .{};
+
+// Technical generation2 types can be compiler-composed while retaining one
+// canonical public ABI identity. Do not emit another structural C copy.
+pub fn canonicalTypeName(comptime T: type) ?[]const u8 {
+    const abi = @import("r4os_contract").abi;
+    inline for (.{ "DriverApi2", "ProtocolApi2", "AudioBackend2", "AudioBackendStatus2", "AudioCaptureBackend2" }) |name| {
+        if (T == @field(abi,name)) return name;
+    }
+    return null;
+}

@@ -131,7 +131,7 @@ test "memory exact page edges touch neither inaccessible source nor destination 
         }
     };
 }
-test "legacy ProtocolApi prefix ends at a real inaccessible page and never reads an absent extension" {
+test "current ProtocolApi2 prefix ends at a real inaccessible page and never reads an absent extension" {
     if (builtin.os.tag != .linux) return error.SkipZigTest;
     const page = 4096;
     const region = try std.posix.mmap(null, page * 3, .{}, .{ .TYPE = .PRIVATE, .ANONYMOUS = true }, -1, 0);
@@ -139,7 +139,8 @@ test "legacy ProtocolApi prefix ends at a real inaccessible page and never reads
     try std.testing.expectEqual(@as(usize, 0), std.os.linux.mprotect(region.ptr + page, page, .{ .READ = true, .WRITE = true }));
     for ([_]usize{ 88, 96, 104 }) |size| {
         @memset(region[page * 2 - size .. page * 2], 0);
-        const api: *a.ProtocolApi = @ptrCast(@alignCast(region.ptr + page * 2 - size));
+        const api: *a.ProtocolApi2 = @ptrCast(@alignCast(region.ptr + page * 2 - size));
+        api.magic = @import("technical2.zig").abi.protocol_magic;
         api.version = 1;
         api.size = @intCast(size);
         try std.testing.expect(acceleration.protocolInfo(api) == null);
@@ -147,8 +148,8 @@ test "legacy ProtocolApi prefix ends at a real inaccessible page and never reads
     }
 }
 test "old or null R4DEV extension preserves caller output and callback" {
-    var raw: a.R4XStartContext = .{};
-    var table: a.R4XStartR4Dev = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Dev2 = .{};
     var bundle: program.Bundle = .{ .raw = &raw, .dev = &table };
     const ctx = program.Context.initBundle(&bundle);
     var info: a.CpuAccelerationInfo = .{ .epoch = 0xabcd };

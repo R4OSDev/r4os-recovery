@@ -103,7 +103,7 @@ inventory. Raising it when a module changes is a human decision; no gate
 enforces it.
 
 ENTRY_MODE=app selects the normal SDK-owned r4_app_main startup. The explicit
-lowlevel value selects a current R4XStart source that owns its entry assembly
+lowlevel value selects a current R4XStart2 source that owns its entry assembly
 and is restricted to the reasoned startup, loader and SIMD fixtures. PACKAGE
 only groups installation and documentation.
 It is present in the catalog but is not read by the SDK build driver.
@@ -218,7 +218,7 @@ complete guest file.
 2. Explicit imports and SDK profile source
 ------------------------------------------
 
-R4SYS:Query:1 is explicit in every V2 R4X import list. No parser, profile or
+R4SYS:Query2:2 is explicit in every V2 R4X import list. No parser, profile or
 builder may add it silently or filter it from the declared order. The profile
 requirements come from r4os/abi_generated.zig:r4_app_profiles, the same
 generated table consumed by App.init:
@@ -229,7 +229,7 @@ generated table consumed by App.init:
 
 The validator checks that every required platform group is declared. Other
 imports are ordinary named R4M0 dependencies and are never invented. The six
-kernelimplemented platform groups use Query:1. A named Runtime-R4L is imported
+kernelimplemented platform groups use Query2:2. A named Runtime-R4L is imported
 directly, for example ACMECODEC:API_V1:2; its module name needs no central
 group constant or profile bit. If the catalog knows that provider, image
 planning requires it in the selected image scope.
@@ -250,13 +250,13 @@ Derived facts for a standard R4X are:
   ARTIFACT       = zig-out/<NAME>.R4X for standalone repository builds
   BUILD_PROFILE  = R4X_<LANGUAGE>_<App|LowLevel>_<Console|Desktop|Service>
   OPTIMIZE       = size|speed
-  EXPORT         = R4XStart:R4XStart:1
-  CONTRACT       = R4M0:1 and R4XStart:1
+  EXPORT         = R4XStart2:R4XStart2:2
+  CONTRACT       = R4M0:1 and R4XStart2:2
   app.class      = APP_CLASS
 
 The fixed R4M0 metadata is r4x.name, r4x.class, feature=program-module,
-r4x.start=r4xstart, r4x.entry=R4XStart, r4x.start_abi=1,
-r4x.context=R4XStartContext and a class-derived memory.profile unless META
+r4x.start=r4xstart2, r4x.entry=R4XStart2, r4x.start_abi=2,
+r4x.context=R4XStartContext2 and a class-derived memory.profile unless META
 declares that profile explicitly.
 
 A subsystem R4X additionally carries, in declaration order:
@@ -282,9 +282,11 @@ required for Zig; BINDING_RUST is required for Rust. Their paths may not escape 
 declared extension. CONTRACT is the sole fachliche schema truth of that
 library, CONTRACT_BASELINE is its explicitly accepted comparison state, and
 the applicable projection/conformance paths name deterministic outputs. Every
-compiled R4L exports Query revision 1 plus at least one fachliches Interface.
+compiled R4L exports Query2 revision 2 plus at least one fachliches Interface.
+The technical descriptor is exactly 24 bytes; functional library interface
+names, revisions, payload layouts and their 32-byte headers stay independent.
 Every normal build runs R4LContractGen --check against exactly these paths and
-passes module name and all non-Query EXPORT declarations as expectations. The
+passes module name and all non-Query2 EXPORT declarations as expectations. The
 check rejects name, symbol or revision drift between manifest and local
 contract and never writes. Intentional materialization uses the generator
 separately; an accepted ABI change additionally requires its explicit

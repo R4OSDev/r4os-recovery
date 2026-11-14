@@ -59,7 +59,7 @@ pub const Memory = extern struct {
 pub const Source = struct {
     encoded: usize,
 
-    pub fn legacy(table: *const abi.R4XStartR4Sys) Source {
+    pub fn system2(table: *const @import("r4os_contract2").R4XStartR4Sys2) Source {
         return .{ .encoded = @intFromPtr(table) };
     }
     pub fn mapped(record: *const Memory) Source {
@@ -68,7 +68,7 @@ pub const Source = struct {
     pub fn from(raw: anytype) Source {
         const T = @TypeOf(raw);
         if (T == Source) return raw;
-        if (T == *const abi.R4XStartR4Sys or T == *abi.R4XStartR4Sys) return legacy(raw);
+        if (T == *const @import("r4os_contract2").R4XStartR4Sys2 or T == *@import("r4os_contract2").R4XStartR4Sys2) return system2(raw);
         if (T == *const Memory or T == *Memory) return mapped(raw);
         @compileError("allocator input must name its actual platform source");
     }
@@ -83,7 +83,7 @@ pub const Source = struct {
     pub fn fromOpaque(pointer: *anyopaque) Source {
         return .{ .encoded = @intFromPtr(pointer) };
     }
-    pub fn oldTable(self: Source) ?*const abi.R4XStartR4Sys {
+    pub fn table2(self: Source) ?*const @import("r4os_contract2").R4XStartR4Sys2 {
         if (self.encoded == 0 or self.encoded & 1 != 0) return null;
         return @ptrFromInt(self.encoded);
     }
@@ -92,13 +92,13 @@ pub const Source = struct {
         return @ptrFromInt(self.encoded & ~@as(usize, 1));
     }
     pub fn identity(self: Source) usize {
-        if (self.oldTable()) |table| return @intFromPtr(table);
+        if (self.table2()) |table| return @intFromPtr(table);
         return @intCast(self.memory().?.identity | 1);
     }
     pub fn function(self: Source, comptime field: []const u8) ?@field(abi.R4SysFns, field) {
-        const address: u64 = if (self.oldTable()) |table| blk: {
-            if (table.magic != abi.r4xstart_r4sys_magic or
-                table.size < @offsetOf(abi.R4XStartR4Sys, field) + 8) return null;
+        const address: u64 = if (self.table2()) |table| blk: {
+            if (table.magic != (abi2.R4XStartR4Sys2{}).magic or
+                table.size < @offsetOf(@import("r4os_contract2").R4XStartR4Sys2, field) + 8) return null;
             break :blk @field(table.*, field);
         } else blk: {
             const value = self.memory() orelse return null;
@@ -108,9 +108,9 @@ pub const Source = struct {
         return if (address == 0) null else @ptrFromInt(address);
     }
     pub fn supportsVm(self: Source) bool {
-        // Keep the previously qualified first-generation admission unchanged.
-        if (self.oldTable()) |table| {
-            if (table.magic != abi.r4xstart_r4sys_magic or table.size < abi.r4xstart_r4sys_size) return false;
+        // Direct table loans and copied callback records use the same current provider.
+        if (self.table2()) |table| {
+            if (table.magic != (abi2.R4XStartR4Sys2{}).magic or table.size < @sizeOf(abi2.R4XStartR4Sys2)) return false;
         }
         return self.function("vm_reserve") != null and self.function("vm_commit") != null and
             self.function("vm_decommit") != null and self.function("vm_release") != null;

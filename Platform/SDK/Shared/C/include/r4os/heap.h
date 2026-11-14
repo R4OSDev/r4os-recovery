@@ -5,7 +5,7 @@
 /* One pooled heap per R4X image/instance. Kernel VM/task ownership remains
  * authoritative. These helpers are not a shared R4L-global allocator. */
 typedef struct R4Heap {
-    const R4XStartR4Sys *api;
+    const R4XStartR4Sys2 *api;
     uint64_t instance;
     const R4App2Memory *memory2;
 } R4Heap;
@@ -14,13 +14,13 @@ typedef struct R4HeapStats {
     uint32_t count;
 } R4HeapStats;
 
-int32_t R4SdkHeapBind(const R4XStartR4Sys *, uint64_t);
-void *R4SdkHeapAlloc(const R4XStartR4Sys *, uint64_t, uintptr_t, uintptr_t);
-void *R4SdkHeapRealloc(const R4XStartR4Sys *, uint64_t, void *, uintptr_t, uintptr_t);
-int32_t R4SdkHeapFree(const R4XStartR4Sys *, uint64_t, void *);
-int32_t R4SdkHeapStats(const R4XStartR4Sys *, uint64_t, uint64_t *, uint32_t);
+int32_t R4SdkHeapBind(const R4XStartR4Sys2 *, uint64_t);
+void *R4SdkHeapAlloc(const R4XStartR4Sys2 *, uint64_t, uintptr_t, uintptr_t);
+void *R4SdkHeapRealloc(const R4XStartR4Sys2 *, uint64_t, void *, uintptr_t, uintptr_t);
+int32_t R4SdkHeapFree(const R4XStartR4Sys2 *, uint64_t, void *);
+int32_t R4SdkHeapStats(const R4XStartR4Sys2 *, uint64_t, uint64_t *, uint32_t);
 const char *R4SdkHeapStatName(uint32_t);
-int32_t R4SdkHeapFinish(const R4XStartR4Sys *, uint64_t);
+int32_t R4SdkHeapFinish(const R4XStartR4Sys2 *, uint64_t);
 
 static inline int32_t r4_heap_init(const R4Sys *sys, R4Heap *out) {
     if (!out) return -1;

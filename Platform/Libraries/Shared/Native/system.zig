@@ -5,7 +5,6 @@ const std = @import("std");
 const r = @import("r4os");
 const a = r.abi;
 const a2 = r.platform2.abi;
-var legacy_address: std.atomic.Value(usize) = .init(0);
 var generation2_address: std.atomic.Value(usize) = .init(0);
 
 pub fn reaches(table: anytype, comptime field: []const u8) bool {
@@ -20,63 +19,36 @@ fn complete(table: anytype) bool {
         if (!reaches(table, field)) return false;
     return true;
 }
-pub fn bind(table: *const a.R4XStartR4Sys) bool {
-    if (!complete(table)) return false;
-    const old = legacy_address.cmpxchgStrong(0, @intFromPtr(table), .release, .acquire);
-    return old == null or old.? == @intFromPtr(table);
-}
 pub fn bind2(table: *const a2.R4XStartR4Sys2) bool {
     if (!complete(table)) return false;
     const old = generation2_address.cmpxchgStrong(0, @intFromPtr(table), .release, .acquire);
     return old == null or old.? == @intFromPtr(table);
 }
-pub fn legacy() ?*const a.R4XStartR4Sys {
-    const address = legacy_address.load(.acquire);
-    return if (address == 0) null else @ptrFromInt(address);
-}
 pub fn generation2() ?*const a2.R4XStartR4Sys2 {
     const address = generation2_address.load(.acquire);
     return if (address == 0) null else @ptrFromInt(address);
 }
-// Both generations use the very same canonical callback type namespace. Each
-// resolves its own real table offsets; a SYS2 pointer is never a SYS1 table.
-// The explicit legacy admission remains only for the staged consumer cutover.
+// Resolve only actual current offsets. Callback payload revisions are independent.
+pub const bind = bind2;
 pub fn function(comptime field: []const u8) ?@field(a.R4SysFns, field) {
-    if (generation2()) |table| return if (reaches(table, field)) @ptrFromInt(@field(table.*, field)) else null;
-    const table = legacy() orelse return null;
+    const table = generation2() orelse return null;
     return if (reaches(table, field)) @ptrFromInt(@field(table.*, field)) else null;
 }
 pub fn required(comptime field: []const u8) @field(a.R4SysFns, field) {
     return function(field) orelse @trap();
 }
-pub const Heap = union(enum) {
-    legacy: r.vm_allocator.Heap,
-    generation2: r.vm_allocator.MappedHeap,
-
+pub const Heap = struct {
+    mapped: r.vm_allocator.MappedHeap = undefined,
     pub fn init(self: *Heap) void {
-        if (generation2()) |table| {
-            self.* = .{ .generation2 = undefined };
-            self.generation2.init(table);
-        } else {
-            self.* = .{ .legacy = .{ .api = legacy() orelse @trap() } };
-        }
+        self.mapped.init(generation2() orelse @trap());
     }
     pub fn allocator(self: *Heap) std.mem.Allocator {
-        return switch (self.*) {
-            .legacy => self.legacy.allocator(),
-            .generation2 => self.generation2.allocator(),
-        };
+        return self.mapped.allocator();
     }
     pub fn stats(self: *Heap) r.vm_allocator.Stats {
-        return switch (self.*) {
-            .legacy => self.legacy.stats(),
-            .generation2 => self.generation2.stats(),
-        };
+        return self.mapped.stats();
     }
     pub fn trim(self: *Heap) void {
-        switch (self.*) {
-            .legacy => self.legacy.trim(),
-            .generation2 => self.generation2.trim(),
-        }
+        self.mapped.trim();
     }
 };

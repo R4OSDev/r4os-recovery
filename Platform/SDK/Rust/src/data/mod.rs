@@ -1,7 +1,7 @@
 //! Original SDK data algorithms and protocol facades. No parser, codec or
 //! cryptographic implementation is duplicated in Rust. `raw` retains every
 //! typed native operation and its original pointer/allocator/job contracts.
-use crate::{App, c_facades as c};
+use crate::{App, App2, c_facades as c};
 use core::{
     marker::{PhantomData, PhantomPinned},
     mem::MaybeUninit,
@@ -130,14 +130,17 @@ impl Default for DataStorage {
 pub struct Data<'s, 'a> {
     native: *const c::R4SdkDataContext,
     _storage: PhantomData<Pin<&'s mut DataStorage>>,
-    _app: PhantomData<&'a App<'a>>,
+    _app: PhantomData<&'a ()>,
     _local: PhantomData<*mut ()>,
 }
 impl<'s, 'a> Data<'s, 'a> {
     pub fn open(storage: Pin<&'s mut DataStorage>, app: &'a App<'_>) -> Result<Self> {
+        Self::open2(storage, app)
+    }
+    pub fn open2(storage: Pin<&'s mut DataStorage>, app: &'a App2<'_>) -> Result<Self> {
         // Capture once before native subcontexts acquire self-pointers.
         let native = unsafe { storage.get_unchecked_mut() }.native.as_mut_ptr();
-        if scalar(unsafe { c::R4SdkData_open(0, native, app.start_context()) })? != 1 {
+        if scalar(unsafe { c::R4SdkData_open2(0, native, app.start_context()) })? != 1 {
             return Err(Error::Unavailable);
         }
         Ok(Self {

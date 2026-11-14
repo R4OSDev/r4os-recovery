@@ -170,7 +170,7 @@ pub const Cpu = struct {
 
 pub fn cpu(allocator: std.mem.Allocator) Cpu {
     const root = load(allocator);
-    const id = get(get(get(root, "profiles"), "r4os-zig-module-v1"), "cpu").string;
+    const id = get(get(get(root, "profiles"), "r4os-zig-generation2"), "cpu").string;
     return std.json.parseFromValueLeaky(Cpu, allocator, get(get(root, "cpu_baselines"), id), .{}) catch
         @panic("SdkProfileInvalidCpuBaseline");
 }

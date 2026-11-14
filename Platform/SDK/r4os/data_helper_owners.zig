@@ -39,3 +39,8 @@ pub fn opaqueType(comptime T: type) bool {
 test {
     inline for (modules) |M| std.testing.refAllDecls(M);
 }
+
+pub fn canonicalTypeName(comptime T: type) ?[]const u8 {
+    if (T == @import("platform2.zig").abi.R4XStartContext2) return "R4XStartContext2";
+    return null;
+}

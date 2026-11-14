@@ -574,12 +574,10 @@ pub export fn r4std_time_config_offset_impl(value: *const contract.R4StdTimeConf
 }
 
 const Caller = union(enum) {
-    legacy: r4os.program.Bundle,
     generation2: r4os.platform2.Context,
 
     fn system(self: *const Caller) r4os.r4sys.Context {
         return switch (self.*) {
-            .legacy => r4os.r4sys.Context.init(&self.legacy),
             .generation2 => r4os.r4sys.Context.fromProgram(.{ .generation2 = &self.generation2 }),
         };
     }
@@ -594,9 +592,7 @@ fn callerContext(address: u64) ?Caller {
         const raw: *const r4os.platform2.abi.R4XStartContext2 = @ptrFromInt(address);
         return .{ .generation2 = r4os.platform2.Context.init(raw) catch return null };
     }
-    if (magic.* != r4os.abi.r4xstart_magic) return null;
-    const raw: *const r4os.abi.R4XStartContext = @ptrFromInt(address);
-    return .{ .legacy = r4os.program.bundleValueFromR4XStart(raw) orelse return null };
+    return null;
 }
 
 fn pathZ(pointer: [*]const u8, raw_length: u64, storage: *[config.max_path_len + 1]u8) ?[*:0]const u8 {

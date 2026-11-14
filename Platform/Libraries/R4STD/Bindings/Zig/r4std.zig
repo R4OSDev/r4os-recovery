@@ -22,7 +22,7 @@ pub const file_handler = @import("file_handler.zig");
 pub const subsystem_runtime = @import("subsystem_runtime.zig");
 pub const shortcut = @import("shortcut.zig");
 
-pub fn init(raw: *const r4os.abi.R4XStartContext) bool {
+pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) bool {
     return runtime.init(raw);
 }
 

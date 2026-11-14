@@ -1,7 +1,7 @@
 param(
     [ValidateSet('Validate', 'Describe', 'Resolve', 'Develop')][string]$Action = 'Validate',
     [string]$SdkRoot = '',
-    [string]$Profile = 'r4os-zig-module-v1',
+    [string]$Profile = 'r4os-zig-generation2',
     [string]$ContractRoot='', [string]$LibrariesRoot='', [string]$RootsFile='',
     [string]$AdditionalLibrariesFile='', [string]$DevelopmentProfile='', [string]$Output=''
 )

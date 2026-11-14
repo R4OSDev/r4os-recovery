@@ -1,11 +1,11 @@
 #![no_std]
 use core::{fmt::Write, pin::pin};
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     platform::{Platform, PlatformStorage, Resampler, WriteCursor, WriteKind, raw as c},
     resources::Timeout,
 };
-struct Output<'a, 'b>(&'a App<'b>);
+struct Output<'a, 'b>(&'a App2<'b>);
 impl core::fmt::Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         if self.0.write(s) < 0 {
@@ -18,7 +18,7 @@ impl core::fmt::Write for Output<'_, '_> {
 unsafe extern "C" {
     fn sdk58_audio_c(audio: *mut c::R4SdkAudioAudio) -> i32;
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let result = exercise(app);
     if let Err(code) = result {
         let _ = writeln!(&mut Output(app), "FAIL PLATFORM58 step={}", code);
@@ -29,9 +29,9 @@ fn main(app: &mut App<'_>) -> i32 {
     );
     0
 }
-fn exercise(app: &App<'_>) -> Result<(), i32> {
+fn exercise(app: &App2<'_>) -> Result<(), i32> {
     let mut storage = pin!(PlatformStorage::new());
-    let platform = Platform::open(storage.as_mut(), app).map_err(|_| 10)?;
+    let platform = Platform::open2(storage.as_mut(), app).map_err(|_| 10)?;
     let inventory = platform.devices().inventory().map_err(|_| 11)?;
     if inventory.total != 0 {
         let _record = platform.devices().record(0).map_err(|_| 12)?;
@@ -114,4 +114,4 @@ fn exercise(app: &App<'_>) -> Result<(), i32> {
     let _version: Option<abi::KernelVersion> = platform.devices().kernel().map_err(|_| 51)?;
     Ok(())
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

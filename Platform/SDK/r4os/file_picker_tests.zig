@@ -99,10 +99,10 @@ fn done(session: *m.Session) !void {
     try std.testing.expectEqual(@as(u32, 0), session.phase);
 }
 test "file picker owner actual original DialogPage oracle bounded budgets" {
-    var table: a.R4XStartR4Sys = .{};
+    var table: @import("r4os_contract2").R4XStartR4Sys2 = .{};
     table.dir_entry = @intFromPtr(&oldParent);
     table.directory_batch = @intFromPtr(&oldBatch);
-    const raw: a.R4XStartContext = .{};
+    const raw: @import("r4os_contract2").R4XStartContext2 = .{};
     const bundle: program.Bundle = .{ .raw = &raw, .sys = &table };
     const files: storage.Files = .{ .sys = sys.Context.init(&bundle) };
     inline for (.{ 4, 6, 12 }) |capacity| {

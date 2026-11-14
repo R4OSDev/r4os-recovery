@@ -5,6 +5,20 @@ Dieses Repository enthaelt das hostneutrale Kern-SDK von R4OS: Zig- und
 C-Fassaden, Buildprofile, Templates, Smokeprojekte sowie die generischen
 Werkzeuge R4XBuilder, R4LContractGen und ModuleCatalog.
 
+Zentrale Zieldefaults ab0.64.213
+--------------------------------
+Alle zentralen Moduldefaults waehlen Generation2. Parser, semantischer
+Buildplan und tatsaechlicher Bau bestimmen dasselbe Profil; positive
+Zig-/C-/C++-/Rust-Smokes und Projektvorlagen erzeugen Query2 sowie den
+passenden Start2-, DriverInit2- oder ProtocolInit2-Einstieg. Runtime-R4Ls
+verwenden Query2-Metadaten und behalten ihre eigenen API-Revisionen.
+Historische Konverter aendern unbekannte alte Quellen nicht automatisch;
+deren alte Imports werden vom neuen Standard gezielt abgelehnt.
+SDK0.64.218 entfernt alte Modulprofile, Startimplementierungen und positive
+Adapter. Unversionierte App-/Kontexthilfen verwenden Generation2. Historische
+Drahtdefinitionen und ausdrueckliche Ablehnungsfaelle bleiben beim Contract;
+sie stellen keinen ausfuehrbaren alten Plattformpfad bereit.
+
 Subsystem-Speichermetadaten ab0.64.209
 ------------------------------------
 Die gemeinsame Cartridge-Speicherhilfe liest Groesse und Typ unter App2
@@ -12,7 +26,7 @@ direkt aus Metadata2. SHA256-SAV/RTC-/Stage-/Backupnamen und breite
 Backendknoten werden nicht in das alte FileInfo-Namensfeld projiziert.
 Unbekannte Dateigroesse bleibt ein Fehler. Formate, exklusive Schreiblease,
 atomare Wiederaufnahme und der bis zum Join gehaltene Worker bleiben
-erhalten; Generation1 verwendet weiterhin ihren bisherigen Anbieter.
+erhalten. Die alte positive SDK-Startvariante wurde in0.64.218 entfernt.
 Die bestehende Savepfadpruefung enthaelt den konkreten Namens-/Knotenfall.
 
 Startklasse normaler App2-Module ab0.64.200
@@ -1758,7 +1772,8 @@ Netzdienstverbraucher ab0.64.197 (Migration0.90.60)
 --------------------------------------------------
 network_common.provider und network_transport.broker beziehen ihre eigene
 Prozess-ID aus dem wirklichen Startkontext. App2 verwendet ausschliesslich
-R4XStartContext2; der kontrollierte alte Verbraucher behaelt sein Bundle.
+R4XStartContext2; ein direkt gebundenes Bundle enthaelt ebenfalls ausschliesslich
+gepruefte aktuelle Tabellen und ist kein alter Verbraucherpfad.
 Provider benoetigen eine passende ID, gueltige Generation und reserved0.
 network_family.Client.connectProvider verwendet bei App2 die wirklichen
 Query2-Servicefunktionen. Fehlende Funktionen oder Fehler wechseln weder

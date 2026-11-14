@@ -57,8 +57,8 @@ fn decode(ops: *const ff.struct_r4video_nvdec_ops, p: *const ff.struct_r4video_n
 pub fn run() !void {
     var state: Model = .{};
     fixture.model = &state;
-    var raw: a.R4XStartContext = .{};
-    var table: a.R4XStartR4Draw = .{};
+    var raw: @import("r4os").platform2.abi.R4XStartContext2 = .{};
+    var table: @import("r4os").platform2.abi.R4XStartR4Draw2 = .{};
     fixture.install(&table);
     var bundle: r.program.Bundle = .{ .raw = &raw, .draw = &table };
     const base = r.program.Context.initBundle(&bundle);
@@ -87,8 +87,7 @@ pub fn run() !void {
     try t.expectEqual(@as(usize, 4 * 65536), budget.liveBytes());
     try t.expectEqual(@as(u32, 0x601), state.vas[index(&image.range, state.vas.len).?].request.flags);
     @memset((try commands.mappedBytes())[0..216], 0x7a);
-    try ctx.submit(&commands, 216, &.{ .{ .resource = &image, .write = true }, .{ .resource = &scratch, .write = false },
-        .{ .resource = &scratch, .write = true } });
+    try ctx.submit(&commands, 216, &.{ .{ .resource = &image, .write = true }, .{ .resource = &scratch, .write = false }, .{ .resource = &scratch, .write = true } });
     try t.expectEqual(@as(usize, 3), state.loan_count);
     try t.expectEqual(@as(u32, 1), state.loans[2].access);
     try t.expectEqual(@as(u64, 0), ctx.fence.timeline);
@@ -197,8 +196,7 @@ fn decoderChecks(base: r.program.Context, device: gpu.Device) !void {
     var budget: Budget = .{ .limit = 32 * 1024 * 1024 };
     var decoder: Decoder = .{ .ctx = .{ .base = base, .device = device, .budget = &budget, .clock = clock } };
     const ops = decoder.ops();
-    const seq: ff.struct_r4video_nvdec_sequence = .{ .profile = 66, .level = 31, .width_mbs = 4, .height_mbs = 4,
-        .max_refs = 2, .log2_frame_num = 4, .poc_type = 0, .log2_poc_lsb = 4, .delta_poc_always_zero = 0, .direct_8x8 = 1 };
+    const seq: ff.struct_r4video_nvdec_sequence = .{ .profile = 66, .level = 31, .width_mbs = 4, .height_mbs = 4, .max_refs = 2, .log2_frame_num = 4, .poc_type = 0, .log2_poc_lsb = 4, .delta_poc_always_zero = 0, .direct_8x8 = 1 };
     var held: [5]?*anyopaque = @splat(null);
     var p = picture(seq, 0);
     held[0] = try decode(&ops, &p, 0);
@@ -313,7 +311,8 @@ fn amdChecks(base: r.program.Context) !void {
     try t.expectEqual(@as(u32, 2), (try rv.mediaCaps(2, 2, 10, 1)).format);
     state.wrong_amd_profile = true;
     try t.expectError(error.Unsupported, gpu.Device.queryFor(base, 9, .decode));
-    state.wrong_amd_profile = false; state.raven2 = false;
+    state.wrong_amd_profile = false;
+    state.raven2 = false;
 
     var budget: Budget = .{ .limit = 32 * 1024 * 1024 };
     var ctx: gpu.Context = .{ .base = base, .device = device, .budget = &budget, .clock = clock };
@@ -342,7 +341,7 @@ fn amdChecks(base: r.program.Context) !void {
     try t.expectEqual(first_resource, refs[0].resource);
     try t.expect(!refs[0].write);
     try t.expectError(error.Stale, pool.references(&.{first}, 2, &references));
-    try t.expectError(error.Invalid, pool.references(&.{first,first}, 1, &references));
+    try t.expectError(error.Invalid, pool.references(&.{ first, first }, 1, &references));
     try ctx.submit(&commands, 64, &.{ .{ .resource = try pool.resource(second), .write = true }, refs[0], refs[0] });
     try t.expectEqual(@as(usize, 3), state.loan_count); // duplicate DPB loans coalesce
     try pool.finish(second, true);

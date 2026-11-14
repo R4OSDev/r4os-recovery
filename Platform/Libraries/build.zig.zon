@@ -1,6 +1,6 @@
 .{
     .name = .r4os_libraries,
-    .version = "0.64.62",
+    .version = "0.64.64",
     .fingerprint = 0xb4b7d2df351f7e74,
     .minimum_zig_version = "0.16.0",
     .paths = .{

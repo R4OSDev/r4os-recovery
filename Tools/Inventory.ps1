@@ -106,21 +106,11 @@ function Test-RecoveryInventory([string]$Root) {
     $contract = Get-Content -Raw -LiteralPath (Join-Path $Root 'Platform/Contract/API/ApiContract.json') | ConvertFrom-Json -AsHashtable
     $platformImports=@($contract.groups.query_import)
     $generationPath=Join-Path $Root 'Platform/Contract/API/Generation2.json'
-    if(Test-Path -LiteralPath $generationPath -PathType Leaf) {
-        $generation=Get-Content -Raw -LiteralPath $generationPath|ConvertFrom-Json -AsHashtable
-        if($generation.generation -ne 2){throw 'Invalid canonical Recovery target generation.'}
-        if($generation.schema -eq 2){
-            if($contract.schema_version -ne 12 -or $contract.r4l_query.entry_symbol -cne 'Query2' -or $contract.r4l_query.entry_version -ne 2){throw 'Invalid independent Recovery platform contract.'}
-            # Only the explicitly locked providers are admitted below. During
-            # the controlled cutover the reverse view has no live slot list.
-            $legacyPath=Join-Path $Root 'Platform/Contract/API/LegacyProjection.json'
-            if(Test-Path -LiteralPath $legacyPath -PathType Leaf){
-                $legacy=Get-Content -Raw -LiteralPath $legacyPath|ConvertFrom-Json -AsHashtable
-                $platformImports+=@($legacy.groups|ForEach-Object {$_.name+':Query:1'})
-            }
-        }elseif($generation.schema -eq 1){
-            $platformImports+=@($contract.groups|ForEach-Object { $_.name+':'+$generation.query.symbol+':'+$generation.query.export_version })
-        }else{throw 'Invalid canonical Recovery target generation schema.'}
+    $generation=Get-Content -Raw -LiteralPath $generationPath|ConvertFrom-Json -AsHashtable
+    if($generation.generation -ne 2 -or $generation.schema -ne 2 -or
+       $contract.schema_version -ne 12 -or $contract.r4l_query.entry_symbol -cne 'Query2' -or
+       $contract.r4l_query.entry_version -ne 2){
+        throw 'Invalid current Recovery platform contract.'
     }
     foreach ($provider in $lock.platformProviders) {
         if ($provider -cnotin $platformImports) { throw "Provider absent from pinned Contract: $provider" }

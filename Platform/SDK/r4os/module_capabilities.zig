@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub const rust_profile = "r4os-rust-r4x-v2";
+pub const rust_profile = "r4os-rust-generation2";
 pub const rust_tools = "r4os-rust-tools-v1";
 pub const rust_build_plan_schema: u32 = 2;
 // Admission and availability are different facts. The host driver changes
@@ -9,7 +9,7 @@ pub const rust_host_builder = true;
 
 pub const Execution = enum { host, native_r4os };
 pub const Request = struct {
-    platform_generation: u8 = 1,
+    platform_generation: u8 = 2,
     language: []const u8,
     kind: []const u8,
     app_class: ?[]const u8 = null,
@@ -52,7 +52,7 @@ pub fn requireRustHost(kind: []const u8, entry: []const u8, role: ?[]const u8) !
 }
 
 pub fn query(request: Request) Decision {
-    if (request.platform_generation != 1 and request.platform_generation != 2) return .{ .supported = false, .code = "unknown-platform-generation", .reason = "Only declared platform generations have a build profile." };
+    if (request.platform_generation != 2) return .{ .supported = false, .code = "unknown-platform-generation", .reason = "Only declared platform generations have a build profile." };
     if (!std.mem.eql(u8, request.kind, "R4X") and !std.mem.eql(u8, request.kind, "R4L") and !std.mem.eql(u8, request.kind, "R4D") and !std.mem.eql(u8, request.kind, "R4P")) return .{ .supported = false, .code = "unknown-module-kind", .reason = "Unknown module kind has no build profile." };
     if (std.mem.eql(u8, request.language, "Rust")) return rust(request.kind, request.entry_mode orelse "", request.role, request.execution);
     if (!std.mem.eql(u8, request.language, "Zig") and !std.mem.eql(u8, request.language, "C")) return .{ .supported = false, .code = "unknown-language", .reason = "Only manifest-admitted languages have a build profile." };

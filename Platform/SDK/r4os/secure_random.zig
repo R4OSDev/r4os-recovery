@@ -70,11 +70,10 @@ var provider: Provider = .{};
 pub fn bindProgram(context: *const @import("program.zig").Context) void {
     provider = .{ .info = context.entropyInfoFunction(), .device = context.entropyFillFunction(), .hardware_info = context.cpuAccelerationInfoFunction(), .hardware = context.cpuAccelerationWorkFunction() };
 }
-pub fn bindProtocol(api: *const abi.ProtocolApi) void {
-    provider = .{ .hardware_info = cpu.protocolInfo(api), .hardware = cpu.protocolWork(api) };
-    if (api.size >= @offsetOf(abi.ProtocolApi, "entropy_source_info") + 8) provider.info = api.entropy_source_info;
-    if (api.size >= @offsetOf(abi.ProtocolApi, "entropy_fill") + 8) provider.device = api.entropy_fill;
+pub fn bindProtocol(api: *const abi.ProtocolApi2) void {
+    @import("protocol2.zig").Context.init(api).bindEntropy();
 }
+
 pub fn available() bool {
     return provider.available();
 }
@@ -222,7 +221,7 @@ test "rejected CPU window never executes optional host instructions and device r
     for (out) |byte| try std.testing.expectEqual(@as(u8, 0x53), byte);
 }
 
-test "old ProtocolApi ends at an inaccessible page before optional entropy slots" {
+test "truncated ProtocolApi2 ends at an inaccessible page before optional entropy slots" {
     if (@import("builtin").os.tag != .linux) return error.SkipZigTest;
     const page = 4096;
     const region = try std.posix.mmap(null, page * 3, .{}, .{ .TYPE = .PRIVATE, .ANONYMOUS = true }, -1, 0);
@@ -230,7 +229,8 @@ test "old ProtocolApi ends at an inaccessible page before optional entropy slots
     try std.testing.expectEqual(@as(usize, 0), std.os.linux.mprotect(region.ptr + page, page, .{ .READ = true, .WRITE = true }));
     for ([_]usize{ 88, 104, 112 }) |size| {
         @memset(region[page * 2 - size .. page * 2], 0);
-        const api: *abi.ProtocolApi = @ptrCast(@alignCast(region.ptr + page * 2 - size));
+        const api: *abi.ProtocolApi2 = @ptrCast(@alignCast(region.ptr + page * 2 - size));
+        api.magic = @import("technical2.zig").abi.protocol_magic;
         api.version = 1;
         api.size = @intCast(size);
         bindProtocol(api);

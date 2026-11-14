@@ -12,8 +12,8 @@ const registry_test = @import("registry_selftest.zig");
 const RegistryTestPaths = extern struct { hive: ?[*:0]const u8, tmp: ?[*:0]const u8, bak: ?[*:0]const u8, original: ?[*:0]const u8, stage: ?[*:0]const u8, displaced: ?[*:0]const u8 };
 
 const Sys = extern struct {
-    ctx: ?*const abi.R4XStartContext,
-    table: ?*const abi.R4XStartR4Sys,
+    ctx: ?*const @import("r4os_contract2").R4XStartContext2,
+    table: ?*const @import("r4os_contract2").R4XStartR4Sys2,
     generation2: ?*const @import("platform2.zig").Context,
     memory2: ?*const @import("allocator_source.zig").Memory,
 };
@@ -57,7 +57,7 @@ const Binding = struct {
             return .{ .next = context2, .memory = source.memory2 };
         }
         const table = source.table orelse return null;
-        if (table.magic != abi.r4xstart_r4sys_magic or table.abi_version < (abi.R4XStartR4Sys{}).abi_version or table.size < @sizeOf(abi.R4XStartR4Sys)) return null;
+        if (table.magic != abi.r4xstart_r4sys_magic or table.abi_version < (@import("r4os_contract2").R4XStartR4Sys2{}).abi_version or table.size < @sizeOf(@import("r4os_contract2").R4XStartR4Sys2)) return null;
         return .{ .first = .{ .raw = source.ctx orelse return null, .sys = table } };
     }
     // Call after this value has reached its stable local storage. No pointer

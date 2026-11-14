@@ -33,6 +33,20 @@ pub const Context = struct {
     pub fn logError(self: *const Context, text: [*:0]const u8) void {
         if (self.function("log_error")) |log| log(text);
     }
+    pub fn logWarn(self: *const Context, text: [*:0]const u8) void {
+        if (self.function("log_warn")) |log| log(text);
+    }
+    pub fn dependencyStatus(self: *const Context, role: [*:0]const u8) i32 {
+        const callback = self.function("dependency_status") orelse return abi.err_no_fn;
+        return callback(role);
+    }
+    pub fn alloc(self: *const Context, bytes: u32, alignment: u32) ?*anyopaque {
+        const callback = self.function("alloc") orelse return null;
+        return callback(bytes, alignment);
+    }
+    pub fn free(self: *const Context, memory: ?*anyopaque, bytes: u32) void {
+        if (self.function("free")) |callback| callback(memory, bytes);
+    }
     pub fn registerRole(self: *const Context, role: [*:0]const u8, category: abi.ProtocolCategory, flags: u32) i32 {
         const register = self.function("register_role") orelse return abi.err_no_fn;
         return register(role, @intFromEnum(category), flags);

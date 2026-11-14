@@ -16,6 +16,7 @@ pub fn Catalogue(comptime O: type, comptime A: type) type {
         }
         pub fn canonical(comptime T: type) bool {
             if (comptime @hasDecl(owners, "sharedType")) if (owners.sharedType(T)) return true;
+            if (comptime @hasDecl(owners, "canonicalTypeName")) if (owners.canonicalTypeName(T) != null) return true;
             const full = @typeName(T);
             const start = (std.mem.lastIndexOfScalar(u8, full, '.') orelse return false) + 1;
             return @hasDecl(abi, full[start..]) and @field(abi, full[start..]) == T;

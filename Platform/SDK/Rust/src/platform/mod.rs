@@ -45,17 +45,7 @@ pub struct Platform<'s, 'a> {
 }
 impl<'s, 'a> Platform<'s, 'a> {
     pub fn open(storage: Pin<&'s mut PlatformStorage>, app: &'a App<'_>) -> Result<Self> {
-        let native = unsafe { storage.get_unchecked_mut() }.native.as_mut_ptr();
-        let code = unsafe { c::R4SdkPlatformOpen(native, app.start_context()) };
-        if code != 0 {
-            return Err(Error::Raw(code));
-        }
-        Ok(Self {
-            native: NonNull::new(native).ok_or(Error::InvalidProvider)?,
-            _storage: PhantomData,
-            _app: PhantomData,
-            _local: PhantomData,
-        })
+        Self::open2(storage, app)
     }
     pub fn open2(
         storage: Pin<&'s mut PlatformStorage>,

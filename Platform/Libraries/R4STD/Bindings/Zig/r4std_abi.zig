@@ -406,8 +406,8 @@ pub const CodecV1 = extern struct {
 pub const TextV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !TextV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, text_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !TextV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !TextV1Client {
@@ -444,8 +444,8 @@ pub const TextV1Client = struct {
 pub const SettingsV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !SettingsV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, settings_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !SettingsV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !SettingsV1Client {
@@ -542,8 +542,8 @@ pub const SettingsV1Client = struct {
 pub const DateV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !DateV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, date_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !DateV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !DateV1Client {
@@ -640,8 +640,8 @@ pub const DateV1Client = struct {
 pub const TimeV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !TimeV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, time_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !TimeV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !TimeV1Client {
@@ -756,8 +756,8 @@ pub const TimeV1Client = struct {
 pub const ConfigV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !ConfigV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, config_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !ConfigV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !ConfigV1Client {
@@ -818,8 +818,8 @@ pub const ConfigV1Client = struct {
 pub const CodecV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !CodecV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, codec_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !CodecV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !CodecV1Client {

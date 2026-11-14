@@ -11,13 +11,7 @@ pub const platform = @import("platform.zig");
 pub const console = @import("console.zig");
 pub const window = @import("window.zig");
 
-pub fn bind(kernel: *const r4os.abi.R4XStartR4Sys) bool {
-    if (kernel.abi_version < 21 or kernel.size < @offsetOf(r4os.abi.R4XStartR4Sys, "thread_current_handle") + 8) return false;
-    inline for (.{ "vm_reserve", "vm_commit", "vm_release", "program_local_get", "program_local_publish", "sleep_ticks" }) |field|
-        if (@field(kernel.*, field) == 0) return false;
-    return threads.bind(kernel);
-}
-
+pub const bind = bind2;
 pub fn bind2(raw: *const r4os.platform2.abi.R4XStartContext2) bool {
     const context = r4os.platform2.Context.init(raw) catch return false;
     if (!threads.bind2(context.system() orelse return false) or !application.bind2(raw)) return false;

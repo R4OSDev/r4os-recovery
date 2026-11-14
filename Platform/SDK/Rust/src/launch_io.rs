@@ -51,7 +51,9 @@ pub fn launch(
     Ok(out)
 }
 fn console_poll(d: &byte_pipe::Deadline) -> Result<(), Error> {
-    if d.version != 1 || d.size as usize != mem::size_of::<byte_pipe::Deadline>() || d.reserved0 != 0
+    if d.version != 1
+        || d.size as usize != mem::size_of::<byte_pipe::Deadline>()
+        || d.reserved0 != 0
     {
         return Err(Error(a::byte_pipe_error_invalid));
     }

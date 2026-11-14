@@ -5,8 +5,9 @@ const r4std = @import("r4std");
 const module_name: [:0]const u8 = "R4STD";
 const export_names = [_][:0]const u8{ "TEXT_V1", "SETTINGS_V1", "DATE_V1", "TIME_V1", "CONFIG_V1" };
 
-var imports: [export_names.len]r4os.abi.R4XStartImport = undefined;
-var context: r4os.abi.R4XStartContext = undefined;
+const test_system: r4os.platform2.abi.R4XStartR4Sys2 = .{};
+var imports: [export_names.len + 2]r4os.abi.R4XStartImport = undefined;
+var context: r4os.platform2.abi.R4XStartContext2 = undefined;
 var ready = false;
 
 pub fn ensure() !void {
@@ -18,7 +19,7 @@ pub fn ensure() !void {
         @intFromPtr(&provider.r4std_time_v1),
         @intFromPtr(&provider.r4std_config_v1),
     };
-    for (&imports, export_names, tables) |*item, export_name, table| {
+    for (imports[0..export_names.len], export_names, tables) |*item, export_name, table| {
         item.* = .{
             .group_id = 0,
             .min_version = 1,
@@ -28,6 +29,8 @@ pub fn ensure() !void {
             .table = table,
         };
     }
+    imports[export_names.len] = .{ .min_version = 2, .resolved_version = 2, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&provider.r4std_query2) };
+    imports[export_names.len + 1] = .{ .group_id = 1, .min_version = 2, .resolved_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .module_name = @intFromPtr("R4SYS"), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&test_system) };
     context = .{
         .flags = r4os.abi.r4xstart_flag_imports_valid,
         .imports = @intFromPtr(&imports),

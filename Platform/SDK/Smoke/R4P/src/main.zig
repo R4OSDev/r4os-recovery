@@ -1,11 +1,12 @@
 const r4os = @import("r4os");
 
 comptime {
-    asm (r4os.r4dev.protocolEntriesAsm("sdk_smoke_r4p_init", "sdk_smoke_r4p_shutdown", "sdk_smoke_r4p_query", "sdk_smoke_r4p_dispatch"));
+    asm (r4os.technical2.protocolEntriesAsm("sdk_smoke_r4p_init", "sdk_smoke_r4p_shutdown", "sdk_smoke_r4p_query", "sdk_smoke_r4p_dispatch"));
 }
 
-export fn sdk_smoke_r4p_init(api: *const r4os.r4dev.ProtocolApi) callconv(.c) i32 {
-    var ctx = r4os.r4dev.ProtocolContext.init(api);
+export fn sdk_smoke_r4p_init(api: *const r4os.technical2.abi.ProtocolApi2) callconv(.c) i32 {
+    var ctx = r4os.r4dev.ProtocolContext2.init(api);
+    if (!ctx.requires(.{ "log_info", "register_role", "set_status" })) return -1;
     ctx.logInfo("SDKSMOKE.R4P init");
     _ = ctx.registerRole("misc.sdk_smoke", .misc, 0);
     _ = ctx.setStatus(.active, "SDK R4P smoke active");

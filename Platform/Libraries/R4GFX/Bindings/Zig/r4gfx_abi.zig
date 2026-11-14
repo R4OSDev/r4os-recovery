@@ -962,8 +962,8 @@ pub const ColorV1 = extern struct {
 pub const ApiV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !ApiV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, api_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !ApiV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !ApiV1Client {
@@ -1000,8 +1000,8 @@ pub const ApiV1Client = struct {
 pub const RenderV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !RenderV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, render_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !RenderV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !RenderV1Client {
@@ -1038,8 +1038,8 @@ pub const RenderV1Client = struct {
 pub const DeviceV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !DeviceV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, device_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !DeviceV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !DeviceV1Client {
@@ -1268,8 +1268,8 @@ pub const DeviceV1Client = struct {
 pub const ColorV1Client = struct {
     header: *const InterfaceHeader,
 
-    pub fn init(raw: *const r4os.abi.R4XStartContext) !ColorV1Client {
-        return fromImport(r4os.r4xstart.Context.init(raw).findImportNamed(module_name, color_v1_export_name) orelse return error.MissingImport);
+    pub fn init(raw: *const r4os.platform2.abi.R4XStartContext2) !ColorV1Client {
+        return init2(raw);
     }
 
     pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) !ColorV1Client {

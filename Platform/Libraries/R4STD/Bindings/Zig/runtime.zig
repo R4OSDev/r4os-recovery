@@ -16,18 +16,7 @@ pub const Runtime = struct {
 var storage: Runtime = undefined;
 var ready: bool = false;
 
-pub fn init(raw: *const r4os.abi.R4XStartContext) bool {
-    return install(.{
-        .raw_address = @intFromPtr(raw),
-        .generation = 1,
-        .text = abi.TextV1Client.init(raw) catch null,
-        .settings = abi.SettingsV1Client.init(raw) catch null,
-        .date = abi.DateV1Client.init(raw) catch null,
-        .time = abi.TimeV1Client.init(raw) catch null,
-        .config = abi.ConfigV1Client.init(raw) catch null,
-        .codec = abi.CodecV1Client.init(raw) catch null,
-    });
-}
+pub const init = init2;
 
 pub fn init2(raw: *const r4os.platform2.abi.R4XStartContext2) bool {
     return install(.{

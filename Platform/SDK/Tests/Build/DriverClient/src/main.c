@@ -1,6 +1,7 @@
 #include <r4os/r4os.h>
+#include <r4os/app2.h>
 static int equal(const uint8_t *bytes,const char *name,uint32_t cap){uint32_t i=0;for(;i<cap && name[i];i++)if(bytes[i]!=(uint8_t)name[i])return 0;return i<cap && !bytes[i] && !name[i];}
-int32_t r4_app_main(R4App *app){
+static int32_t run(R4App *app){
  R4Storage s={.system=&app->system};R4StorageInventory inventory;
  if(r4_storage_inventory(&s,&inventory))return -1;
  R4StorageDeviceInfo disks[2];uint32_t seen=0;
@@ -38,3 +39,5 @@ int32_t r4_app_main(R4App *app){
  r4sys_write_cstr(&app->system,"PASS Driver67 real storage IO C-B/R-B distinct patterns after hotremove A; exact claims ended\n");
  return 0;
 }
+
+int32_t r4_app_main(R4App2 *actual){R4App facade;int32_t rc=r4_app2_facade(actual,&facade);return rc<0?rc:run(&facade);}

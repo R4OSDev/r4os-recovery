@@ -60,17 +60,7 @@ pub struct System<'a> {
 }
 impl<'a> System<'a> {
     pub fn new(app: &'a App<'_>) -> Result<Self> {
-        let table = app.system_api().ok_or(Error::Unavailable)?;
-        Ok(Self {
-            raw: c::R4Sys {
-                ctx: app.start_context(),
-                table,
-                generation2: core::ptr::null(),
-                memory2: core::ptr::null(),
-            },
-            _loan: PhantomData,
-            _local: PhantomData,
-        })
+        Self::new2(app)
     }
     pub fn new2(app: &'a crate::app2::App<'_>) -> Result<Self> {
         let raw = c::R4Sys {

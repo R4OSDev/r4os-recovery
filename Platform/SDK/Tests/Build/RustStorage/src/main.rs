@@ -1,14 +1,14 @@
 #![no_std]
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     path::{AbsoluteFilePath, FilePath, RegistryPath},
     storage::{AtomicReplace, Presence, RegistryBatch, SaveResult, SnapshotKind, System},
 };
 #[path = "../../../Conformance/StorageCodecChecks.rs"]
 mod common;
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     common::codecs();
-    let system = System::new(app).unwrap();
+    let system = System::new2(app).unwrap();
     let files = system.files();
     let directory = FilePath::parse(b"C:\\TEMP\\SDKST53").unwrap();
     assert_eq!(
@@ -133,4 +133,4 @@ fn main(app: &mut App<'_>) -> i32 {
         .unwrap();
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

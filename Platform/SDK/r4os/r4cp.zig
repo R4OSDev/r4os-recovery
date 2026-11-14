@@ -91,7 +91,7 @@ pub const Project = struct {
 
     pub fn hasR4XStart(self: *const Project) bool {
         for (self.exports()) |item| {
-            if (startsWithIgnoreCase(trim(item.value), "R4XStart:")) return true;
+            if ((startsWithIgnoreCase(trim(item.value), "R4XStart:") or startsWithIgnoreCase(trim(item.value), "R4XStart2:"))) return true;
         }
         for (self.metadata()) |item| {
             if (equalsIgnoreCase(item.key, "r4x.entry") and equalsIgnoreCase(item.value, "R4XStart")) return true;
@@ -101,9 +101,9 @@ pub const Project = struct {
     }
 
     pub fn profileClass(self: *const Project) ?ProfileClass {
-        if (equalsIgnoreCase(self.build_profile, "R4X_C_Console")) return .internal;
-        if (equalsIgnoreCase(self.build_profile, "R4X_C_Desktop_OK")) return .internal;
-        if (equalsIgnoreCase(self.build_profile, "R4X_C")) return .external_compatible;
+        if ((equalsIgnoreCase(self.build_profile, "R4X_C_Console") or equalsIgnoreCase(self.build_profile, "R4X_C2_Console"))) return .internal;
+        if ((equalsIgnoreCase(self.build_profile, "R4X_C_Desktop_OK") or equalsIgnoreCase(self.build_profile, "R4X_C2_Desktop_OK"))) return .internal;
+        if ((equalsIgnoreCase(self.build_profile, "R4X_C") or equalsIgnoreCase(self.build_profile, "R4X_C2"))) return .external_compatible;
         if (equalsIgnoreCase(self.build_profile, "R4X_Zig")) return .external_compatible;
         return null;
     }
@@ -386,16 +386,16 @@ fn validateProject(project: Project) ParseError!void {
 
 fn validateProfile(project: Project) ParseError!void {
     if (project.profileClass() == null) return error.UnsupportedBuildProfile;
-    if (equalsIgnoreCase(project.build_profile, "R4X_C_Console")) {
+    if ((equalsIgnoreCase(project.build_profile, "R4X_C_Console") or equalsIgnoreCase(project.build_profile, "R4X_C2_Console"))) {
         if (project.module_kind != .r4x or project.language != .c or !equalsIgnoreCase(project.app_class, "console")) return error.IncompatibleBuildProfile;
         return;
     }
-    if (equalsIgnoreCase(project.build_profile, "R4X_C_Desktop_OK")) {
+    if ((equalsIgnoreCase(project.build_profile, "R4X_C_Desktop_OK") or equalsIgnoreCase(project.build_profile, "R4X_C2_Desktop_OK"))) {
         if (project.module_kind != .r4x or project.language != .c or !(equalsIgnoreCase(project.app_class, "gui") or equalsIgnoreCase(project.app_class, "desktop"))) return error.IncompatibleBuildProfile;
         if (!hasImport(project, "R4DESK") or !hasImport(project, "R4DRAW")) return error.IncompatibleBuildProfile;
         return;
     }
-    if (equalsIgnoreCase(project.build_profile, "R4X_C")) {
+    if ((equalsIgnoreCase(project.build_profile, "R4X_C") or equalsIgnoreCase(project.build_profile, "R4X_C2"))) {
         if (project.module_kind != .r4x or project.language != .c) return error.IncompatibleBuildProfile;
         return;
     }

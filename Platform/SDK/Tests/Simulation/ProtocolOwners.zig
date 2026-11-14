@@ -34,7 +34,7 @@ fn read(path: [*:0]const u8, out: [*]u8, len: u32) callconv(.c) i32 {
     return 4;
 }
 test "original Protocol Context forwards exact current API arguments" {
-    const api: a.ProtocolApi = .{ .magic = a.protocol_magic, .version = a.protocol_api_version, .size = @sizeOf(a.ProtocolApi), .reserved = 0, .log_info = log, .log_warn = log, .log_error = log, .register_role = role, .set_status = status, .dependency_status = dependency, .alloc = alloc, .free = free, .file_read = read };
+    const api: a.ProtocolApi2 = .{ .magic = a.protocol_api2_magic, .version = a.protocol_api2_version, .size = @sizeOf(a.ProtocolApi2), .reserved = 0, .log_info = log, .log_warn = log, .log_error = log, .register_role = role, .set_status = status, .dependency_status = dependency, .alloc = alloc, .free = free, .file_read = read };
     const c = p.Context.init(&api);
     c.logInfo("p");
     c.logWarn("p");

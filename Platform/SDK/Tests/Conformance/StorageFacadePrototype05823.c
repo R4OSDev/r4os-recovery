@@ -46,11 +46,11 @@ static int32_t fake_directory_batch(const uint8_t *path, R4DirectoryBatchCursor 
 }
 
 static void physical_storage_contract(void) {
-    R4XStartR4Sys table = {0}; table.size = R4XSTART_R4SYS_SIZE;
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(R4XStartR4Sys2)};
     R4Sys sys = {0}; sys.table = &table; R4Storage storage = {&sys};
     uint64_t use = 123;
     assert(!r4_storage_available(&storage));
-    assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == 0 && use == 0);
+    assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == R4OS_STORAGE_ERROR_UNSUPPORTED && use == 0);
     table.size = sizeof(table); table.storage_claim_begin = (uintptr_t)&fake_storage_begin;
     assert(r4_storage_transfer_use_begin(&storage, (const uint8_t *)"E:\\FILE", &use) == R4OS_STORAGE_ERROR_UNSUPPORTED);
     R4StorageTarget target = r4_storage_whole_device(0); uint8_t bytes[512] = {0};
@@ -200,8 +200,8 @@ static int32_t fake_registry_delete(const uint8_t *key, const uint8_t *name) {
     (void)key; return strcmp((const char *)name, "MISSING") == 0 ? R4OS_REGISTRY_API_RESULT_VALUE_NOT_FOUND : R4OS_REGISTRY_API_RESULT_OK;
 }
 
-static R4XStartR4Sys make_table(int full) {
-    R4XStartR4Sys table = {0};
+static R4XStartR4Sys2 make_table(int full) {
+    R4XStartR4Sys2 table = {.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(table),};
     table.write = (uint64_t)(uintptr_t)&fake_write;
     table.putc = (uint64_t)(uintptr_t)&fake_putc;
     if (!full) return table;
@@ -229,7 +229,7 @@ static R4XStartR4Sys make_table(int full) {
 
 int main(void) {
     physical_storage_contract();
-    R4XStartR4Sys table = make_table(1);
+    R4XStartR4Sys2 table = make_table(1);
     R4App app = {0};
     app.system.table = &table;
     R4Files files = r4_app_files(&app);
@@ -253,7 +253,7 @@ int main(void) {
     assert(r4_directory_next(&iterator).state == R4_DIRECTORY_END);
 
     table.directory_batch = (uintptr_t)&fake_directory_batch;
-    table.size = offsetof(R4XStartR4Sys, directory_batch);
+    table.size = offsetof(R4XStartR4Sys2, directory_batch);
     iterator = r4_files_iterate(files, &directory);
     assert(r4_directory_next(&iterator).raw_code == R4OS_ERR_NO_FN && resume_calls == 0);
     table.size = sizeof(table); iterator = r4_files_iterate(files, &directory);
@@ -299,7 +299,7 @@ int main(void) {
     assert(r4_registry_delete(&registry, &key, "COUNT").state == R4_OPERATION_OK);
     assert(r4_registry_delete(&registry, &key, "MISSING").state == R4_OPERATION_MISSING);
 
-    R4XStartR4Sys partial = make_table(0);
+    R4XStartR4Sys2 partial = make_table(0);
     app.system.table = &partial;
     files = r4_app_files(&app);
     registry = r4_app_registry(&app);

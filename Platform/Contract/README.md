@@ -11,10 +11,11 @@ The active platform contract is generation 2. `API/ApiContract.json` owns all
 records, typed callbacks and SDK selection. Current tables and technical
 records are emitted directly; they do not compact or copy an older ABI.
 
-The accepted baselines cover both canonical files. During the planned
-provider cutover, `API/LegacyProjection.json` contains only the four inert
-historical holes and reverse header metadata. The generator derives that
-temporary compatibility view from the active slots. Independent Runtime-R4L
+The accepted baselines cover both canonical files. The provider cutover completed in0.90.89 for normal and Recovery kernels.
+`API/LegacyProjection.json` contains only the four inert historical holes and
+reverse header metadata. Historical wire definitions remain for comparison
+and explicit refusal tests; no old technical provider is published. The SDK
+cleanup in0.90.90 and final system qualification remain separately tracked. Independent Runtime-R4L
 interfaces and shared payload revisions keep their own contracts.
 
 R4AUDIO v3 (Contract0.64.51, 0.87.53) appends stream progress, explicit

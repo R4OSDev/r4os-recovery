@@ -1,60 +1,12 @@
-const abi = @import("r4os_contract").abi;
-const r4xstart = @import("r4xstart.zig");
-
-pub const StartContext = abi.R4XStartContext;
-pub const Import = abi.R4XStartImport;
-pub const R4Sys = r4xstart.R4Sys;
-pub const R4Desk = r4xstart.R4Desk;
-pub const R4Draw = r4xstart.R4Draw;
-
-pub fn entryAsm(comptime target: []const u8) []const u8 {
-    return r4xstart.entryAsm(target);
-}
-
-pub fn init(raw: *const StartContext) Context {
+//! Current raw start aliases; no alternate admission or global binding.
+const start = @import("r4xstart.zig");
+pub const StartContext = @import("r4os_contract2").R4XStartContext2;
+pub const Import = @import("r4os_contract").abi.R4XStartImport;
+pub const Context = start.Context;
+pub const R4Sys = start.R4Sys;
+pub const R4Desk = start.R4Desk;
+pub const R4Draw = start.R4Draw;
+pub const entryAsm = start.entryAsm;
+pub fn init(raw: *const StartContext) @import("platform2.zig").Error!Context {
     return Context.init(raw);
 }
-
-pub const Context = struct {
-    start: r4xstart.Context,
-
-    pub fn init(raw: *const StartContext) Context {
-        return .{ .start = r4xstart.Context.init(raw) };
-    }
-
-    pub fn valid(self: *const Context) bool {
-        return self.start.valid();
-    }
-
-    pub fn args(self: *const Context) []const u8 {
-        return self.start.args();
-    }
-
-    pub fn importCount(self: *const Context) u32 {
-        return self.start.importCount();
-    }
-
-    pub fn importAt(self: *const Context, index: usize) ?*const Import {
-        return self.start.importAt(index);
-    }
-
-    pub fn findImport(self: *const Context, group: abi.R4LGroup) ?*const Import {
-        return self.start.findImport(group);
-    }
-
-    pub fn findImportNamed(self: *const Context, module_name: []const u8, symbol_name: []const u8) ?*const Import {
-        return self.start.findImportNamed(module_name, symbol_name);
-    }
-
-    pub fn r4sys(self: *const Context) ?R4Sys {
-        return self.start.r4sys();
-    }
-
-    pub fn r4desk(self: *const Context) ?R4Desk {
-        return self.start.r4desk();
-    }
-
-    pub fn r4draw(self: *const Context) ?R4Draw {
-        return self.start.r4draw();
-    }
-};

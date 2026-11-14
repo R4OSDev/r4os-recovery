@@ -33,11 +33,13 @@ unsafe impl GlobalAlloc for Tracking {
 #[global_allocator]
 static ALLOCATOR: Tracking = Tracking;
 unsafe extern "C" {
+    fn sdk_service2_should_close(raw: *const abi::generation2::R4XStartContext2) -> u32;
+    fn sdk_service2_yield(raw: *const abi::generation2::R4XStartContext2);
     fn sdk_inventory_c_case() -> i32;
-    fn sdk_inventory_tables(sys: *mut abi::R4XStartR4Sys);
+    fn sdk_inventory_tables(sys: *mut abi::generation2::R4XStartR4Sys2);
     fn sdk_inventory_reset(mode: u32);
     fn sdk_link_c_case() -> i32;
-    fn sdk_link_tables(sys: *mut abi::R4XStartR4Sys);
+    fn sdk_link_tables(sys: *mut abi::generation2::R4XStartR4Sys2);
     fn sdk_link_activations() -> u32;
     fn sdk_service_c_case() -> i32;
     fn sdk_service_tcp_deadline_case() -> i32;
@@ -54,12 +56,12 @@ unsafe extern "C" {
     fn sdk_service_bound_ack();
     fn sdk_service_bound_closes() -> u32;
     fn sdk_service_bound_budget() -> u64;
-    fn sdk_net_current_admission(start: *const abi::R4XStartContext) -> i32;
+    fn sdk_net_current_admission(start: *const abi::generation2::R4XStartContext2) -> i32;
     fn sdk_service_tables(
-        sys: *mut abi::R4XStartR4Sys,
-        net: *mut abi::R4XStartR4Net,
-        desk: *mut abi::R4XStartR4Desk,
-        dev: *mut abi::R4XStartR4Dev,
+        sys: *mut abi::generation2::R4XStartR4Sys2,
+        net: *mut abi::generation2::R4XStartR4Net2,
+        desk: *mut abi::generation2::R4XStartR4Desk2,
+        dev: *mut abi::generation2::R4XStartR4Dev2,
     );
     fn sdk_service_mode(value: u32);
     fn sdk_service_queue(value: u32);
@@ -82,10 +84,10 @@ fn service_network_serial_deadline_owners_and_retained_requests() {
     assert_eq!(unsafe { sdk_service_extra_c_case() }, 0);
     assert_eq!(unsafe { sdk_service_bound_c_case() }, 0);
     let (mut sys, mut net, mut desk, mut dev) = (
-        abi::R4XStartR4Sys::default(),
-        abi::R4XStartR4Net::default(),
-        abi::R4XStartR4Desk::default(),
-        abi::R4XStartR4Dev::default(),
+        abi::generation2::R4XStartR4Sys2::default(),
+        abi::generation2::R4XStartR4Net2::default(),
+        abi::generation2::R4XStartR4Desk2::default(),
+        abi::generation2::R4XStartR4Dev2::default(),
     );
     unsafe { sdk_service_tables(&mut sys, &mut net, &mut desk, &mut dev) };
     let records = [
@@ -124,34 +126,38 @@ fn service_network_serial_deadline_owners_and_retained_requests() {
     ];
     let imports = records.map(|(id, name, table, _, _, _)| abi::R4XStartImport {
         group_id: id,
-        min_version: 1,
-        resolved_version: 1,
+        min_version: 2,
+        resolved_version: 2,
         flags: abi::r4xstart_import_flag_group_interface,
         module_name: name.as_ptr() as u64,
-        symbol_name: c"Query".as_ptr() as u64,
+        symbol_name: c"Query2".as_ptr() as u64,
         table,
     });
-    let specs = records.map(|(id, name, _, magic, version, size)| ImportSpec {
-        module_name: name.to_bytes(),
-        symbol_name: b"Query",
-        minimum: 1,
-        optional: false,
+    let specs = records.map(|(id, name, _, _magic, _version, _size)| ImportSpec {
+        module_name: name.as_ptr().cast(),
+        symbol_name: c"Query2".as_ptr().cast(),
+        minimum: 2,
+        optional: 0,
         group_id: id,
-        magic,
-        version,
-        size,
+
+        reserved: 0,
     });
-    let ctx = abi::R4XStartContext {
+    let ctx = abi::generation2::R4XStartContext2 {
         app_class: abi::R4XStartAppClass::console.0,
         instance_id: 42,
-        flags: abi::r4xstart_flag_imports_valid,
+        flags: abi::r4xstart_flag_imports_valid
+            | abi::r4xstart_flag_close_supported
+            | abi::r4xstart_flag_yield_supported,
+        should_close: sdk_service2_should_close as *const () as u64,
+        r#yield: sdk_service2_yield as *const () as u64,
         imports: imports.as_ptr() as u64,
         import_count: 4,
         ..Default::default()
     };
     let expected = StartupInfo {
-        app_class: abi::R4XStartAppClass::console,
-        required_groups: records.iter().fold(0, |m, r| m | (1 << r.0)),
+        profile: 0,
+        app_class: abi::R4XStartAppClass::console.0,
+        required_groups: 2,
         imports: &specs,
     };
     let app = unsafe { App::from_raw(&ctx, &expected, c"SERVICE-INTEROP") }.unwrap();

@@ -33,9 +33,9 @@ static R4SdkWebSlot invoke(void *user,uint32_t kind,const R4SdkWebSlot *args,uin
     state->next+=args[2].length;state->calls++;return (R4SdkWebSlot){.bits=1,.flags=1};
 }
 int sdk_transport_bootstrap_case(void){
-    R4XStartR4Sys sys={.magic=R4XSTART_R4SYS_MAGIC,.abi_version=R4XSTART_R4SYS_VERSION,.size=sizeof(sys),.entropy_source_info=(uintptr_t)&entropy_info,.entropy_fill=(uintptr_t)&entropy_fill};
-    R4XStartImport import={.group_id=R4L_GROUP_R4SYS,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.table=(uintptr_t)&sys};
-    R4XStartContext start={.magic=R4XSTART_MAGIC,.abi_major=R4XSTART_ABI_MAJOR,.abi_minor=R4XSTART_ABI_MINOR,.size=sizeof(start),.app_class=R4XSTART_APP_CLASS_CONSOLE,.instance_id=42,.flags=R4XSTART_FLAG_IMPORTS_VALID,.imports=(uintptr_t)&import,.import_count=1};
+    R4XStartR4Sys2 sys={.magic=R4OS2_R4SYS_MAGIC,.abi_version=R4OS2_R4SYS_VERSION,.size=sizeof(sys),.entropy_source_info=(uintptr_t)&entropy_info,.entropy_fill=(uintptr_t)&entropy_fill};
+    R4XStartImport import={.group_id=R4L_GROUP_R4SYS,.min_version=2,.resolved_version=2,.flags=R4XSTART_IMPORT_FLAG_GROUP_INTERFACE,.module_name=(uintptr_t)"R4SYS",.symbol_name=(uintptr_t)"Query2",.table=(uintptr_t)&sys};
+    R4XStartContext2 start={.magic=R4OS2_START_MAGIC,.abi_major=2u,.abi_minor=R4XSTART_ABI_MINOR,.size=sizeof(start),.app_class=R4XSTART_APP_CLASS_CONSOLE,.instance_id=42,.flags=R4XSTART_FLAG_IMPORTS_VALID,.imports=(uintptr_t)&import,.import_count=1};
     CHECK(R4SdkBindProgramEntropy(&start)==0);CHECK(R4SdkDataRandom_available(0).bits==1);
     uint8_t bytes[129];DATA(R4SdkDataRandom_fill(0,bytes,sizeof(bytes)));for(uintptr_t i=0;i<sizeof(bytes);i++)CHECK(bytes[i]==0x5a);
     /* Other native cases retain the genuine no-provider policy. */

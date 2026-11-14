@@ -466,10 +466,6 @@ static inline int32_t r4video_video_v1_from_import(const R4XStartImport *item, R
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4video_video_v1_init(const R4XStartContext *ctx, R4VideoV1Client *out_client) {
-    return r4video_video_v1_from_import(r4xstart_find_import_named(ctx, "R4VIDEO", "VIDEO_V1"), out_client);
-}
-
 static inline int32_t r4video_video_v1_init2(const R4XStartContext2 *raw, R4VideoV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -489,15 +485,6 @@ static inline int32_t r4video_video_v1_init2_optional(const R4XStartContext2 *ra
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4VIDEO", "VIDEO_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4video_video_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4video_video_v1_init_optional(const R4XStartContext *ctx, R4VideoV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4VIDEO", "VIDEO_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4video_video_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4video_open(R4VideoV1Client *client, const R4VideoStartup * startup, R4VideoRuntime * runtime) {

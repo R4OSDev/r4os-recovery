@@ -6,7 +6,7 @@ Grundmodell
 
 Ein R4X erhaelt beim Start ein Bundle der explizit importierten
 Plattformschnittstellen. R4SYS ist die Basis; weitere Gruppen werden in
-`module.R4MF` als `<NAME>:Query:1` angefordert. Gruppen-ID, Tabellenlayout,
+`module.R4MF` als `<NAME>:Query2:2` angefordert. Gruppen-ID, Tabellenlayout,
 Slots und Signaturen stehen ausschliesslich in `ApiContract.json`.
 
 Alle sechs Gruppen sind eingebaute Kernel-Provider. Ihre oeffentlichen

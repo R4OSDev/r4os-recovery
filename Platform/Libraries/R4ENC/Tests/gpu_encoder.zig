@@ -68,8 +68,8 @@ fn inspect(words: []const u8) void {
 pub fn run() !void {
     var state: fixture.Model = .{};
     fixture.model = &state;
-    var raw: a.R4XStartContext = .{};
-    var table: a.R4XStartR4Draw = .{};
+    var raw: @import("r4os").platform2.abi.R4XStartContext2 = .{};
+    var table: @import("r4os").platform2.abi.R4XStartR4Draw2 = .{};
     fixture.install(&table);
     var bundle: r.program.Bundle = .{ .raw = &raw, .draw = &table };
     const base = r.program.Context.initBundle(&bundle);

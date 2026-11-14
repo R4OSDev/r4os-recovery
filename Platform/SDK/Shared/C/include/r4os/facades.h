@@ -38,7 +38,7 @@
 #include "transport_helpers.h"
 #include "update_helpers.h"
 
-int32_t R4SdkAppFacade(const R4XStartContext *, R4App *);
+int32_t R4SdkAppFacade(const R4XStartContext2 *, R4App *);
 
 /* SDK-local object functions. These are not new platform API slots. */
 int32_t R4SdkFilePath(const uint8_t *, uintptr_t, int32_t, uint8_t *, uintptr_t, uint16_t *, uint8_t *);

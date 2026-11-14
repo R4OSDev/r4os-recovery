@@ -3,7 +3,7 @@ extern crate alloc;
 use alloc::{boxed::Box, vec};
 use core::{ffi::c_void, fmt::Write, mem::MaybeUninit, pin::pin};
 use r4os_sdk::{
-    App,
+    App2,
     data::{Arena, ArenaStorage},
     resources::Timeout,
     web::{
@@ -11,7 +11,7 @@ use r4os_sdk::{
         transport::{self, Job, Request, Transport, raw as c},
     },
 };
-struct Output<'a, 'b>(&'a App<'b>);
+struct Output<'a, 'b>(&'a App2<'b>);
 impl Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         if self.0.write(s) < 0 {
@@ -56,7 +56,7 @@ macro_rules! ensure {
 unsafe extern "C" {
     fn sdk_transport_c_case(scratch: *mut u8, capacity: usize) -> i32;
     fn sdk_transport_network_case(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         scratch: *mut u8,
         capacity: usize,
         download: *mut u8,
@@ -64,7 +64,7 @@ unsafe extern "C" {
         tls_error: *mut u32,
     ) -> i32;
     fn sdk_transport_runtime_job_case(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         allocator: *mut c::R4SdkDataAllocator,
         programs: *mut c::R4SdkWebJsProgramAllocator,
         document: *mut c::R4SdkWebHtmlDocument,
@@ -96,9 +96,9 @@ unsafe extern "C" fn cancel(
         flags: 1,
     }
 }
-fn sync(app: &App<'_>) -> Result<()> {
+fn sync(app: &App2<'_>) -> Result<()> {
     let mut storage = MaybeUninit::uninit();
-    let mut t = Transport::open(&mut storage, app)?;
+    let mut t = Transport::open2(&mut storage, app)?;
     let mut raw = vec![0; 32768];
     let mut body = vec![0; 8192];
     let mut scratch = vec![0; transport::SCRATCH_BYTES];
@@ -147,8 +147,8 @@ fn sync(app: &App<'_>) -> Result<()> {
     ensure!(e == Some(transport::Error::Fetch(c::R4SdkTransportError_cancelled)));
     Ok(())
 }
-fn jobs(app: &App<'_>) -> Result<()> {
-    let mut job = Job::get(
+fn jobs(app: &App2<'_>) -> Result<()> {
+    let mut job = Job::get2(
         app,
         b"http://10.0.2.2:18163/plain?rust-job",
         32768,
@@ -166,7 +166,7 @@ fn jobs(app: &App<'_>) -> Result<()> {
     ensure!(joined);
     ensure!(job.response()?.body == b"transport-body");
     drop(job);
-    let mut job = Job::get(
+    let mut job = Job::get2(
         app,
         b"http://10.0.2.2:18163/stall?rust-cancel",
         32768,
@@ -189,7 +189,7 @@ fn jobs(app: &App<'_>) -> Result<()> {
     );
     drop(job);
     // Drop itself must cancel/service/join before freeing any owned backing.
-    let job = Job::get(
+    let job = Job::get2(
         app,
         b"http://10.0.2.2:18163/stall?rust-drop",
         32768,
@@ -199,7 +199,7 @@ fn jobs(app: &App<'_>) -> Result<()> {
     drop(job);
     Ok(())
 }
-fn runtime_job(app: &App<'_>) -> Result<()> {
+fn runtime_job(app: &App2<'_>) -> Result<()> {
     let mut arena_storage = pin!(ArenaStorage::new());
     let mut backing = vec![0; 64 * 1024 * 1024];
     let mut arena = Arena::open(arena_storage.as_mut(), &mut backing)?;
@@ -240,7 +240,7 @@ fn runtime_job(app: &App<'_>) -> Result<()> {
     ensure!(code == 0);
     Ok(())
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     let before = app.heap().unwrap().stats().unwrap();
     {
         let mut scratch = vec![0; transport::SCRATCH_BYTES];
@@ -273,7 +273,7 @@ fn main(app: &mut App<'_>) -> i32 {
         }
         app.write("PASS TRANSPORT63 C cookies/target policy/owner-thread callbacks/TLS alert/200000-byte resume\n");
     }
-    for (i, case) in [sync as fn(&App<'_>) -> Result<()>, jobs, runtime_job]
+    for (i, case) in [sync as fn(&App2<'_>) -> Result<()>, jobs, runtime_job]
         .into_iter()
         .enumerate()
     {
@@ -295,4 +295,4 @@ fn main(app: &mut App<'_>) -> i32 {
     );
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

@@ -160,7 +160,7 @@ try{
     $codegen=$sdkProfiles.Build.codegen['rust-module']
     Assert-R4SdkProjectCFlags $sdkProfiles $facts.kind $facts.name $rust.c_flags
     $profileRole=if($isLibrary){'library'}elseif($isDriver){'driver'}elseif($isProtocol){'protocol'}elseif($facts.entry_mode -ceq 'lowlevel'){'lowlevel'}else{'app'}
-    if($sourceBinding.platform.generation -eq 2 -and ($profileRole -cnotin @('app','lowlevel','driver','protocol') -or $sourceBinding.build.kind -cne $facts.kind)){throw 'RustGeneration2ProviderKindMismatch'}
+    if($sourceBinding.platform.generation -eq 2 -and ($profileRole -cnotin @('app','lowlevel','library','driver','protocol') -or $sourceBinding.build.kind -cne $facts.kind)){throw 'RustGeneration2ProviderKindMismatch'}
     $expectedProfile=$facts.sdk_profile
     if($rust.schema -ne 2 -or $codegen.schema -ne 2 -or $rust.profile -cne $expectedProfile -or $codegen.target -cne $description.kernel_target){throw 'RustModuleProfileMismatch'}
     if($DependencyRootsJson){
@@ -200,7 +200,7 @@ try{
     $cargo=Join-Path $description.toolchain ('bin/cargo'+$(if($IsWindows){'.exe'}else{''}))
     $targetDir=Join-Path $CacheRoot ('Projects/'+[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($ProjectRoot+'|'+$description.toolset_manifest_sha256))).ToLowerInvariant())
     $cpuPath=Join-Path $ContractRoot 'Module/CpuBaseline.json'
-    $cpu=$sdkProfiles.Build.cpu_baselines[$sdkProfiles.Build.profiles['r4os-zig-module-v1'].cpu]
+    $cpu=$sdkProfiles.Build.cpu_baselines[$sdkProfiles.Build.profiles['r4os-zig-generation2'].cpu]
     if((Hash $cpuPath) -cne $rustToolProfile.runtime.heap.cpu_baseline_sha256){throw 'HeapRuntimeCpuContractMismatch'}
     foreach($name in @('facades','storage')){if((Hash $cpuPath) -cne $rustToolProfile.runtime[$name].cpu_baseline_sha256){throw ('SdkRuntimeCpuContractMismatch: '+$name)}}
     if($cpu.format -ne 1 -or $cpu.xcr0_mask -ne 7){throw 'Unsupported CPU baseline'}

@@ -199,12 +199,16 @@ fn run(init: std.process.Init) !void {
             try validateSourceFiles(arena_allocator, io, cwd, value);
             if (value.kind != .r4x) return error.StartupInfoRequiresR4X;
             const profile = try manifest_contract.startup_metadata.profileForClass(value.app_class.?.text());
+            if (value.platform_generation != 2) return error.UnsupportedSdkPlatform;
             const rendered = switch (value.language.?) {
-                .rust => if (value.platform_generation == 2)
-                    (if (value.entry_mode.? == .app) try manifest_contract.startup_metadata.app2(allocator, .rust, profile, value.imports) else try manifest_contract.startup_metadata.rust2(allocator, profile, value.imports.len))
+                .rust => if (value.entry_mode.? == .app)
+                    try manifest_contract.startup_metadata.app2(allocator, .rust, profile, value.imports)
                 else
-                    try manifest_contract.startup_metadata.rust(allocator, profile, value.imports),
-                .c => if (value.platform_generation == 2) try manifest_contract.startup_metadata.app2(allocator, .c, profile, value.imports) else try manifest_contract.startup_metadata.c(allocator, profile, value.imports),
+                    try manifest_contract.startup_metadata.rust2(allocator, profile, value.imports.len),
+                .c => if (value.entry_mode.? == .app)
+                    try manifest_contract.startup_metadata.app2(allocator, .c, profile, value.imports)
+                else
+                    try manifest_contract.startup_metadata.c2(allocator, profile, value.imports.len),
                 .zig => return error.StartupInfoRequiresRustOrC,
             };
             defer allocator.free(rendered);
@@ -1389,7 +1393,7 @@ test "catalog exposes common optimization for non-R4X modules" {
         \\TARGET=/R4OS/DRIVERS/FASTDRV.R4D
         \\IMAGE_SCOPE=slim
         \\OPTIMIZE=speed
-        \\IMPORT=R4DEV:Query:1
+        \\IMPORT=R4DEV:Query2:2
         \\META=r4d.name=FASTDRV
         \\META=r4d.type=test
     ;
@@ -1504,8 +1508,7 @@ fn renderOwnerPlan(a: std.mem.Allocator, entry: manifest_contract.Manifest) ![]u
         }
         try metadata.append(a, value);
     }
-    const next = entry.platform_generation == 2;
-    if (entry.imports.len != 1 or !std.mem.eql(u8, entry.imports[0], if (next) "R4DEV:Query2:2" else "R4DEV:Query:1")) return error.OwnerImportsMismatch;
+    if (entry.platform_generation != 2 or entry.imports.len != 1 or !std.mem.eql(u8, entry.imports[0], "R4DEV:Query2:2")) return error.OwnerImportsMismatch;
     const profile = try manifest_contract.sdkBuildProfile(entry);
     const rust_project = .{ .schema = manifest_contract.capabilities.rust_build_plan_schema, .profile = profile, .tools = manifest_contract.capabilities.rust_tools, .host_build_qualified = manifest_contract.capabilities.rust_host_builder, .cargo_manifest = "Cargo.toml", .cargo_lock = "Cargo.lock", .target = "x86_64-unknown-none", .source = entry.sources[0], .c_sources = entry.sources[1..], .c_includes = entry.c_includes, .c_defines = entry.c_defines, .c_flags = entry.c_flags, .module_version = entry.module_version.text, .icons = entry.icons, .help = entry.help, .resources = entry.resources };
     const exports = try manifest_contract.moduleExports(a, entry);

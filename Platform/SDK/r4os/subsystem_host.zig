@@ -2031,8 +2031,8 @@ fn fakeCancel(context: *anyopaque) i32 {
 test "custom software backends keep explicit optional streaming hooks unavailable" {
     // A current custom CPU backend is independent of R4OS capability age.
     // The R4OS adapter itself refuses missing current streaming/shared APIs.
-    var raw: abi.R4XStartContext = .{};
-    var table: abi.R4XStartR4Draw = .{};
+    var raw: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table: @import("r4os_contract2").R4XStartR4Draw2 = .{};
     const bundle = @import("program.zig").Bundle{ .raw = &raw, .draw = &table };
     const draw = r4draw.Context.init(&bundle);
     const desk = r4desk.Context.init(&bundle);

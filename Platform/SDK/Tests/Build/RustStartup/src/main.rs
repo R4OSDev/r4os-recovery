@@ -1,12 +1,12 @@
 #![no_std]
 use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
-use r4os_sdk::App;
+use r4os_sdk::App2;
 
 static ZERO: AtomicU64 = AtomicU64::new(0);
 static DATA_POINTER: &[u8] = b"[RUSTSTART] entry/BSS/data/stack OK\n";
 static INITIALIZED_POINTER: AtomicPtr<u8> = AtomicPtr::new(DATA_POINTER.as_ptr().cast_mut());
 
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     if ZERO.load(Ordering::Relaxed) != 0 {
         return 21;
     }
@@ -14,7 +14,7 @@ fn main(app: &mut App<'_>) -> i32 {
     if ZERO.load(Ordering::Relaxed) == 0 || stack_probe(7) != 7 {
         return 22;
     }
-    if app.system_api().is_none()
+    if app.context().group(1).is_none()
         || app
             .import("R4STD", "SETTINGS_V1")
             .is_none_or(|entry| entry.table == 0)
@@ -35,13 +35,14 @@ fn main(app: &mut App<'_>) -> i32 {
         return 23;
     }
     if app.args() == b"/BADCTX" {
-        let invalid = r4os_sdk::abi::R4XStartContext::default();
-        let expected = r4os_sdk::StartupInfo {
-            app_class: r4os_sdk::abi::R4XStartAppClass::console,
+        let invalid = r4os_sdk::abi::generation2::R4XStartContext2::default();
+        let expected = r4os_sdk::app2::StartupInfo {
+            profile: 0,
+            app_class: 1,
             required_groups: 0,
             imports: &[],
         };
-        if unsafe { r4os_sdk::App::from_raw(&invalid, &expected, c"RUSTSTART") }.is_ok() {
+        if unsafe { r4os_sdk::App2::from_raw(&invalid, &expected, c"RUSTSTART") }.is_ok() {
             return 25;
         }
         let _ = app.write("[RUSTSTART] bad-context rejected\n");
@@ -61,4 +62,4 @@ fn stack_probe(seed: u8) -> u32 {
     pages.iter().map(|x| *x as u32).sum()
 }
 
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

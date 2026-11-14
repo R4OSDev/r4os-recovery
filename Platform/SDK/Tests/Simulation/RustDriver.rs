@@ -1,7 +1,7 @@
 #![cfg(test)]
 use r4os_sdk::{abi, driver::Driver};
 unsafe extern "C" {
-    fn sdk67_driver_oracle() -> *const abi::DriverApi;
+    fn sdk67_driver_oracle() -> *const abi::DriverApi2;
     fn sdk67_driver_terminal();
     fn sdk67_driver_counts() -> u32;
     fn sdk67_driver_c_case() -> i32;

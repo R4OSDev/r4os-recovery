@@ -45,13 +45,13 @@ fn Caller(comptime B: type) type {
         }
     };
 }
-fn runOne(comptime B: type, app: *r4os.App, tag: u64) !void {
-    const client = try B.ApiV1Client.init(app.startContext());
+fn runOne(comptime B: type, app: *r4os.App2, tag: u64) !void {
+    const client = try B.ApiV1Client.init2(app.startContext());
     const C = Caller(B);
-    const qi = r4os.r4xstart.Context.init(app.startContext()).findImportNamed(B.module_name, "Query") orelse return error.MissingQuery;
-    try require(qi.table != 0 and qi.resolved_version == 1);
-    const query: *const r4os.abi.R4LQuery = @ptrFromInt(qi.table);
-    try require(query.magic == r4os.abi.r4l_abi_magic and query.abi_version == r4os.abi.r4l_abi_version and query.group == 0 and query.kernel_bridge == 0);
+    const qi = app.context.findImportNamed(B.module_name, "Query2") orelse return error.MissingQuery;
+    try require(qi.table != 0 and qi.resolved_version == 2);
+    const query: *const r4os.platform2.abi.R4LQuery2 = @ptrFromInt(qi.table);
+    try require(query.magic == r4os.platform2.abi.query_magic and query.abi_version == 2 and query.group == 0 and query.reserved == 0);
     const close_fn = r4os.runtime_r4l.functionAt(B.ApiV1CloseFn, client.header, 48).?;
     var a = std.mem.zeroes(B.R4L66State);
     var b = std.mem.zeroes(B.R4L66State);
@@ -80,7 +80,7 @@ fn runOne(comptime B: type, app: *r4os.App, tag: u64) !void {
     try require(ca.notifies == 1 and cb.notifies == 2 and ca.attempts == 2 and cb.attempts == 1 and cb.releases == 1 and sum == 604 + 3 * tag);
     app.system().println(if (tag == 0x43) "PASS R4L66 L66C work=805 sessions=2 callbacks=3 failed-release-held=1 heap=exact" else "PASS R4L66 L66R work=850 sessions=2 callbacks=3 failed-release-held=1 heap=exact");
 }
-fn run(app: *r4os.App) !void {
+fn run(app: *r4os.App2) !void {
     const before = r4os.vm_allocator.stats();
     try runOne(@import("c_provider"), app, 0x43);
     try runOne(@import("rust_provider"), app, 0x52);
@@ -88,7 +88,7 @@ fn run(app: *r4os.App) !void {
     try require(before.active_allocations == after.active_allocations and before.active_bytes == after.active_bytes);
     app.system().println("PASS R4L66 independent Zig generated clients and exact active heap release");
 }
-pub fn r4_app_main(app: *r4os.App) i32 {
+pub fn r4_app_main(app: *r4os.App2) i32 {
     run(app) catch |err| {
         app.system().println(@errorName(err));
         return 1;

@@ -4,6 +4,7 @@ use core::{ffi::CStr, marker::PhantomData, mem};
 
 pub(crate) type Memory = c::R4App2Memory;
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct ImportSpec {
     pub module_name: *const u8,
     pub symbol_name: *const u8,
@@ -153,7 +154,7 @@ impl<'a> App<'a> {
         unsafe { function(text.as_ptr(), length) }
     }
     pub fn heap(&self) -> Result<heap::Heap<'_>, heap::Error> {
-        heap::Heap::new2(self)
+        heap::Heap::new(self)
     }
     pub fn system(&self) -> crate::storage::Result<crate::storage::System<'_>> {
         crate::storage::System::new2(self)

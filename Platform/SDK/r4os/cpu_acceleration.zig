@@ -4,12 +4,14 @@ const abi = @import("r4os_contract").abi;
 pub const WorkFn = abi.R4DevFns.cpu_acceleration_work;
 pub const InfoFn = abi.R4DevFns.cpu_acceleration_info;
 
-pub fn protocolWork(api: *const abi.ProtocolApi) ?WorkFn {
-    if (api.size < @offsetOf(abi.ProtocolApi, "cpu_acceleration_work") + @sizeOf(usize)) return null;
+pub fn protocolWork(api: *const abi.ProtocolApi2) ?WorkFn {
+    if (api.magic != @import("technical2.zig").abi.protocol_magic or api.version < 1 or api.reserved != 0) return null;
+    if (api.size < @offsetOf(abi.ProtocolApi2, "cpu_acceleration_work") + @sizeOf(usize)) return null;
     return api.cpu_acceleration_work;
 }
-pub fn protocolInfo(api: *const abi.ProtocolApi) ?InfoFn {
-    if (api.size < @offsetOf(abi.ProtocolApi, "cpu_acceleration_info") + @sizeOf(usize)) return null;
+pub fn protocolInfo(api: *const abi.ProtocolApi2) ?InfoFn {
+    if (api.magic != @import("technical2.zig").abi.protocol_magic or api.version < 1 or api.reserved != 0) return null;
+    if (api.size < @offsetOf(abi.ProtocolApi2, "cpu_acceleration_info") + @sizeOf(usize)) return null;
     return api.cpu_acceleration_info;
 }
 pub fn accepted(v: *const abi.CpuAccelerationWork, kind: u32, iterations: u32) bool {

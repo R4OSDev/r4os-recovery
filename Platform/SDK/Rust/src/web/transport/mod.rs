@@ -1,6 +1,6 @@
 //! Original HTTP/TLS transport and job owners. Pure parsers/policy/cache and
 //! advanced resource/document operations remain fully typed in `raw`.
-use crate::{App, abi, c_facades as c, resources::Timeout};
+use crate::{App, App2, abi, c_facades as c, resources::Timeout};
 use core::{marker::PhantomData, mem::MaybeUninit};
 pub mod raw {
     pub use crate::c_facades::*;
@@ -236,7 +236,7 @@ pub(crate) fn response<'a>(
 pub struct Transport<'s, 'a> {
     native: *mut c::R4SdkTransportContext,
     _storage: PhantomData<&'s mut MaybeUninit<c::R4SdkTransportContext>>,
-    _app: PhantomData<&'a App<'a>>,
+    _app: PhantomData<&'a ()>,
     _local: PhantomData<*mut ()>,
 }
 impl<'s, 'a> Transport<'s, 'a> {
@@ -244,8 +244,14 @@ impl<'s, 'a> Transport<'s, 'a> {
         storage: &'s mut MaybeUninit<c::R4SdkTransportContext>,
         app: &'a App<'_>,
     ) -> Result<Self> {
+        Self::open2(storage, app)
+    }
+    pub fn open2(
+        storage: &'s mut MaybeUninit<c::R4SdkTransportContext>,
+        app: &'a App2<'_>,
+    ) -> Result<Self> {
         let v = required(unsafe {
-            c::R4SdkTransport_open(0, storage.as_mut_ptr(), app.start_context())
+            c::R4SdkTransport_open2(0, storage.as_mut_ptr(), app.start_context())
         })?;
         if v.bits == 0 {
             return Err(Error::Unavailable);

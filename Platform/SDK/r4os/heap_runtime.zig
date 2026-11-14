@@ -39,10 +39,10 @@ var bound_memory: Memory = .{};
 
 fn current(api: anytype, instance: u64) ?abi.ProgramJoinHandle {
     const source = Source.from(api);
-    if (comptime @TypeOf(api) == *const abi.R4XStartR4Sys) {
-        const expected: abi.R4XStartR4Sys = .{};
+    if (comptime @TypeOf(api) == *const @import("r4os_contract2").R4XStartR4Sys2) {
+        const expected: @import("r4os_contract2").R4XStartR4Sys2 = .{};
         if (api.magic != expected.magic or api.abi_version < expected.abi_version or
-            api.size < @sizeOf(abi.R4XStartR4Sys)) return null;
+            api.size < @sizeOf(@import("r4os_contract2").R4XStartR4Sys2)) return null;
     } else {
         if (!api.valid()) return null;
     }
@@ -222,7 +222,7 @@ fn heapFinish(api: anytype, instance: u64) i32 {
     };
 }
 
-export fn R4SdkHeapBind(api: *const abi.R4XStartR4Sys, instance: u64) callconv(.c) i32 {
+export fn R4SdkHeapBind(api: *const @import("r4os_contract2").R4XStartR4Sys2, instance: u64) callconv(.c) i32 {
     return heapBind(api, instance);
 }
 
@@ -238,7 +238,7 @@ export fn R4SdkHeapMemory2(api: *const Memory, instance: u64) callconv(.c) ?*con
     return &bound_memory;
 }
 
-export fn R4SdkHeapAlloc(api: *const abi.R4XStartR4Sys, instance: u64, size: usize, alignment: usize) callconv(.c) ?*anyopaque {
+export fn R4SdkHeapAlloc(api: *const @import("r4os_contract2").R4XStartR4Sys2, instance: u64, size: usize, alignment: usize) callconv(.c) ?*anyopaque {
     return heapAlloc(api, instance, size, alignment);
 }
 
@@ -246,7 +246,7 @@ export fn R4SdkHeapAlloc2(api: *const Memory, instance: u64, size: usize, alignm
     return heapAlloc(api, instance, size, alignment);
 }
 
-export fn R4SdkHeapFree(api: *const abi.R4XStartR4Sys, instance: u64, pointer: ?*anyopaque) callconv(.c) i32 {
+export fn R4SdkHeapFree(api: *const @import("r4os_contract2").R4XStartR4Sys2, instance: u64, pointer: ?*anyopaque) callconv(.c) i32 {
     return heapFree(api, instance, pointer);
 }
 
@@ -254,7 +254,7 @@ export fn R4SdkHeapFree2(api: *const Memory, instance: u64, pointer: ?*anyopaque
     return heapFree(api, instance, pointer);
 }
 
-export fn R4SdkHeapRealloc(api: *const abi.R4XStartR4Sys, instance: u64, pointer: ?*anyopaque, size: usize, alignment: usize) callconv(.c) ?*anyopaque {
+export fn R4SdkHeapRealloc(api: *const @import("r4os_contract2").R4XStartR4Sys2, instance: u64, pointer: ?*anyopaque, size: usize, alignment: usize) callconv(.c) ?*anyopaque {
     return heapRealloc(api, instance, pointer, size, alignment);
 }
 
@@ -262,7 +262,7 @@ export fn R4SdkHeapRealloc2(api: *const Memory, instance: u64, pointer: ?*anyopa
     return heapRealloc(api, instance, pointer, size, alignment);
 }
 
-export fn R4SdkHeapStats(api: *const abi.R4XStartR4Sys, instance: u64, values: [*]u64, capacity: u32) callconv(.c) i32 {
+export fn R4SdkHeapStats(api: *const @import("r4os_contract2").R4XStartR4Sys2, instance: u64, values: [*]u64, capacity: u32) callconv(.c) i32 {
     return heapStats(api, instance, values, capacity);
 }
 
@@ -270,7 +270,7 @@ export fn R4SdkHeapStats2(api: *const Memory, instance: u64, values: [*]u64, cap
     return heapStats(api, instance, values, capacity);
 }
 
-export fn R4SdkHeapFinish(api: *const abi.R4XStartR4Sys, instance: u64) callconv(.c) i32 {
+export fn R4SdkHeapFinish(api: *const @import("r4os_contract2").R4XStartR4Sys2, instance: u64) callconv(.c) i32 {
     return heapFinish(api, instance);
 }
 

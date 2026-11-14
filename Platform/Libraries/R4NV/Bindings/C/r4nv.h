@@ -574,10 +574,6 @@ static inline int32_t r4nv_backend_v1_from_import(const R4XStartImport *item, R4
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4nv_backend_v1_init(const R4XStartContext *ctx, R4NvBackendV1Client *out_client) {
-    return r4nv_backend_v1_from_import(r4xstart_find_import_named(ctx, "R4NV", "BACKEND_V1"), out_client);
-}
-
 static inline int32_t r4nv_backend_v1_init2(const R4XStartContext2 *raw, R4NvBackendV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -597,15 +593,6 @@ static inline int32_t r4nv_backend_v1_init2_optional(const R4XStartContext2 *raw
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4NV", "BACKEND_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4nv_backend_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4nv_backend_v1_init_optional(const R4XStartContext *ctx, R4NvBackendV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4NV", "BACKEND_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4nv_backend_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4nv_negotiate(R4NvBackendV1Client *client, const R4NvDeviceProfile * profile, R4NvFeatures * output) {
@@ -664,10 +651,6 @@ static inline int32_t r4nv_shader_v1_from_import(const R4XStartImport *item, R4N
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4nv_shader_v1_init(const R4XStartContext *ctx, R4NvShaderV1Client *out_client) {
-    return r4nv_shader_v1_from_import(r4xstart_find_import_named(ctx, "R4NV", "SHADER_V1"), out_client);
-}
-
 static inline int32_t r4nv_shader_v1_init2(const R4XStartContext2 *raw, R4NvShaderV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -687,15 +670,6 @@ static inline int32_t r4nv_shader_v1_init2_optional(const R4XStartContext2 *raw,
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4NV", "SHADER_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4nv_shader_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4nv_shader_v1_init_optional(const R4XStartContext *ctx, R4NvShaderV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4NV", "SHADER_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4nv_shader_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4nv_shader_info(R4NvShaderV1Client *client, uint32_t profile, R4NvShaderInfo * output) {
@@ -749,10 +723,6 @@ static inline int32_t r4nv_render_v1_from_import(const R4XStartImport *item, R4N
     return R4L_BINDING_OK;
 }
 
-static inline int32_t r4nv_render_v1_init(const R4XStartContext *ctx, R4NvRenderV1Client *out_client) {
-    return r4nv_render_v1_from_import(r4xstart_find_import_named(ctx, "R4NV", "RENDER_V1"), out_client);
-}
-
 static inline int32_t r4nv_render_v1_init2(const R4XStartContext2 *raw, R4NvRenderV1Client *out_client) {
     if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
     out_client->header = 0;
@@ -772,15 +742,6 @@ static inline int32_t r4nv_render_v1_init2_optional(const R4XStartContext2 *raw,
     const R4XStartImport *item = r4xstart2_find_import_named(&ctx, "R4NV", "RENDER_V1");
     if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
     return r4nv_render_v1_init2(raw, out_client);
-}
-
-static inline int32_t r4nv_render_v1_init_optional(const R4XStartContext *ctx, R4NvRenderV1Client *out_client) {
-    if (!out_client) return R4L_BINDING_INVALID_EXPECTATION;
-    out_client->header = 0;
-    if (!r4xstart_context_valid(ctx)) return R4L_BINDING_INVALID_IMPORT;
-    const R4XStartImport *item = r4xstart_find_import_named(ctx, "R4NV", "RENDER_V1");
-    if (!item || (item->table == 0 && item->resolved_version == 0 && item->group_id == 0 && item->flags == 0 && item->min_version != 0)) return R4L_BINDING_ABSENT;
-    return r4nv_render_v1_init(ctx, out_client);
 }
 
 static inline int32_t r4nv_render_info(R4NvRenderV1Client *client, uint32_t graphics_class, R4NvRenderInfo * output) {

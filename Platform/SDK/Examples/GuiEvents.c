@@ -1,7 +1,8 @@
+#include <r4os/app2.h>
 /* Public C facade only. Launch as a hosted GUI application from Desktop. */
 #include <r4os/app_gui.h>
 
-int32_t r4_app_main(R4App *app) {
+static int32_t run(R4App *app) {
     R4Window window;
     if (!r4_window_open(app, 0, 0, &window)) return 1;
     if (r4_window_set_title(&window, "C GUI events") < 0) return 1;
@@ -40,3 +41,5 @@ int32_t r4_app_main(R4App *app) {
         }
     }
 }
+
+int32_t r4_app_main(R4App2 *actual){R4App facade;int32_t rc=r4_app2_facade(actual,&facade);return rc<0?rc:run(&facade);}

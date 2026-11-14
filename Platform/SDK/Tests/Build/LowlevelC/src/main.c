@@ -1,3 +1,3 @@
-#include <r4os/r4sys.h>
+#include <r4os/platform2.h>
 __attribute__((noinline)) static int stack_probe(void){volatile uint8_t b[24576];for(uint32_t i=0;i<sizeof(b);i++)b[i]=(uint8_t)(i*13+91);for(uint32_t i=0;i<sizeof(b);i++)if(b[i]!=(uint8_t)(i*13+91))return 0;return 1;}
-int32_t r4_main(const R4XStartContext *ctx,R4Sys *sys){if(!ctx->instance_id || !stack_probe())return -20;if(ctx->args_len==6 && ((const char *)(uintptr_t)ctx->args)[0]=='r')return 37;r4sys_write_cstr(sys,"PASS RAW69C lowlevel original C raw-context,24KB stack and normal return\n");return 0;}
+int32_t r4_main2(const R4OS2Context *view){const R4XStartContext2 *ctx=view->raw;if(!ctx->instance_id || !stack_probe())return -20;if(ctx->args_len==6 && ((const char *)(uintptr_t)ctx->args)[0]=='r')return 37;uint64_t address=0;if(R4OS2ContextFunction(view,1,offsetof(R4XStartR4Sys2,write),&address))return -23;static const uint8_t text[]="PASS RAW69C lowlevel original C raw-context,24KB stack and normal return\n";((R4SysWriteFn)(uintptr_t)address)(text,sizeof(text)-1);return 0;}

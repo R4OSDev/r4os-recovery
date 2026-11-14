@@ -112,10 +112,9 @@ fn emit(c: *std.Io.Writer, z: *std.Io.Writer) !void {
         if (comptime !selected(decl.name)) continue;
         const f = @typeInfo(@TypeOf(@field(net.Context, decl.name))).@"fn";
         const Ret = f.return_type.?;
-        inline for (.{ false, true }) |generation2| {
-            const prefix = if (generation2) "R4SdkNet2_" else "R4SdkNet_";
-            try c.print("{s} {s}{s}(const {s} *context", .{ cResult(Ret), prefix, decl.name, if (generation2) "R4OS2Context" else "R4XStartContext" });
-            try z.print("pub export fn {s}{s}(context: *const {s}", .{ prefix, decl.name, if (generation2) "@import(\"../platform2.zig\").Context" else "abi.R4XStartContext" });
+        {
+            try c.print("{s} R4SdkNet2_{s}(const R4OS2Context *context", .{ cResult(Ret), decl.name });
+            try z.print("pub export fn R4SdkNet2_{s}(context: *const @import(\"../platform2.zig\").Context", .{decl.name});
             inline for (f.params[1..], 0..) |param, i| {
                 const T = param.type.?;
                 try c.print(", {s} p{d}", .{ cParam(T), i });
@@ -126,11 +125,7 @@ fn emit(c: *std.Io.Writer, z: *std.Io.Writer) !void {
                 }
             }
             try c.writeAll(");\n");
-            if (generation2) {
-                try z.print(") callconv(.c) {s} {{\n    _ = context.system() orelse return {s};\n    const owner = net.Context.fromProgram(.{{ .generation2 = context }});\n", .{ zResult(Ret), failure(Ret) });
-            } else {
-                try z.print(") callconv(.c) {s} {{\n    const bundle = bridge.bundle(context) orelse return {s};\n    const owner = net.Context.init(&bundle);\n", .{ zResult(Ret), failure(Ret) });
-            }
+            try z.print(") callconv(.c) {s} {{\n    _ = context.system() orelse return {s};\n    const owner = net.Context.fromProgram(.{{ .generation2 = context }});\n", .{ zResult(Ret), failure(Ret) });
             inline for (f.params[1..], 0..) |param, i| {
                 const T = param.type.?;
                 if (comptime resolverPointer(T)) try z.print("    var result{d}: program.ResolverResult = .{{}};\n", .{i});
@@ -205,8 +200,8 @@ fn emitRust(w: *std.Io.Writer) !void {
         inline for (f.params[1..], 0..) |p, i| {
             if (comptime sliceType(p.type.?)) try w.print("        if p{d}.len() > u32::MAX as usize {{ return {s}; }}\n", .{ i, if (comptime resultSlice(Ret)) "None" else if (Ret == bool) "false" else if (Ret == program.TcpReadiness) "unsafe { core::mem::zeroed() }" else if (Ret == i32) "abi::io_error_invalid" else "0" });
         }
-        try w.writeAll("        let value = unsafe { if self.context2.is_null() { ");
-        inline for (.{ false, true }) |generation2| {
+        try w.writeAll("        let value = unsafe { ");
+        inline for (.{true}) |generation2| {
             try w.print("c::{s}{s}({s}", .{ if (generation2) "R4SdkNet2_" else "R4SdkNet_", decl.name, if (generation2) "self.context2" else "self.context" });
             inline for (f.params[1..], 0..) |p, i| {
                 const T = p.type.?;
@@ -222,7 +217,7 @@ fn emitRust(w: *std.Io.Writer) !void {
                     try w.print(", p{d} as u64", .{i});
                 } else try w.print(", p{d}", .{i});
             }
-            try w.writeAll(if (generation2) ") } };\n" else ") } else { ");
+            try w.writeAll(") };\n");
         }
         if (comptime resultSlice(Ret)) try w.writeAll("        // Owner returns only a view of the input or resident label storage.\n        unsafe { crate::network::view(value) }\n") else if (Ret == bool) try w.writeAll("        value != 0\n") else try w.writeAll("        value\n");
         try w.writeAll("    }\n");
@@ -247,8 +242,8 @@ fn emitRust(w: *std.Io.Writer) !void {
         inline for (f.params[1..], 0..) |p, i| {
             if (comptime sliceType(p.type.?)) try w.print("        if p{d}.len() > u32::MAX as usize {{ return abi::io_error_invalid; }}\n", .{i});
         }
-        try w.writeAll("        unsafe { if self.network.context2.is_null() { ");
-        inline for (.{ false, true }) |generation2| {
+        try w.writeAll("        unsafe { ");
+        inline for (.{true}) |generation2| {
             try w.print("c::{s}{s}({s}", .{ if (generation2) "R4SdkNet2_" else "R4SdkNet_", decl.name, if (generation2) "self.network.context2" else "self.network.context" });
             inline for (f.params[1..], 0..) |p, i| {
                 const T = p.type.?;
@@ -264,7 +259,7 @@ fn emitRust(w: *std.Io.Writer) !void {
                     try w.print(", p{d} as u64", .{i});
                 } else try w.print(", p{d}", .{i});
             }
-            try w.writeAll(if (generation2) ") } }\n    }\n" else ") } else { ");
+            try w.writeAll(") }\n    }\n");
         }
     }
     try w.writeAll("}\n");

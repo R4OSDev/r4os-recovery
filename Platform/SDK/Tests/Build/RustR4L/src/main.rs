@@ -144,4 +144,4 @@ pub static l66r_api_v1: ApiV1 = ApiV1 {
     r#work: Some(l66r_work_impl),
     r#close: Some(l66r_close_impl),
 };
-r4os_sdk::r4l_provider!(l66r_query);
+r4os_sdk::r4l_provider2!(l66r_query);

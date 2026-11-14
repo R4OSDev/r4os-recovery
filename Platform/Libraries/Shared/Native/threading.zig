@@ -24,10 +24,7 @@ pub const Host = struct {
     current: a.R4SysFns.thread_current,
     clock: a.R4SysFns.monotonic_clock,
 
-    pub fn fromTable(table: *const a.R4XStartR4Sys) ?Host {
-        if (table.abi_version < 19) return null;
-        return fromActualTable(table);
-    }
+    pub const fromTable = fromTable2;
     pub fn fromTable2(table: *const r4os.platform2.abi.R4XStartR4Sys2) ?Host {
         return fromActualTable(table);
     }
@@ -44,8 +41,7 @@ pub const Host = struct {
 
     pub fn bound() ?Host {
         const system = @import("system.zig");
-        if (system.generation2()) |table| return fromTable2(table);
-        return fromTable(system.legacy() orelse return null);
+        return fromTable2(system.generation2() orelse return null);
     }
 
     pub fn waitUntil(self: *const Host, handle: u64, sequence: u64, deadline_ns: u64) c_int {

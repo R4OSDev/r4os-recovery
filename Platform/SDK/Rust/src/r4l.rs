@@ -115,13 +115,7 @@ impl<'a> Interface<'a> {
         export: &str,
         expected: Expectation,
     ) -> Result<Self, Error> {
-        check_expectation(expected)?;
-        let item = app.import(module, export).ok_or(Error::MissingImport)?;
-        let header = unsafe { validate(item, expected) }?;
-        Ok(Self {
-            header,
-            _local: PhantomData,
-        })
+        Self::new2(app, module, export, expected)
     }
     /// Absence is accepted explicitly. Malformed/incompatible loaded tables
     /// still return their precise error, never a substituted implementation.
@@ -252,30 +246,8 @@ fn check_expectation(expected: Expectation) -> Result<(), Error> {
 
 /// Read a standalone library's current Query metadata. Query is a descriptor,
 /// not its named API table and not an old kernel/provider bridge.
-pub fn query<'a>(app: &'a App<'_>, module: &str) -> Result<&'a abi::R4LQuery, Error> {
-    let item = app.import(module, "Query").ok_or(Error::MissingImport)?;
-    if item.group_id != 0
-        || item.table == 0
-        || !item
-            .table
-            .is_multiple_of(mem::align_of::<abi::R4LQuery>() as u64)
-        || item.min_version == 0
-        || item.resolved_version < item.min_version
-    {
-        return Err(Error::InvalidImport);
-    }
-    let table = unsafe { &*(item.table as *const abi::R4LQuery) };
-    if item.resolved_version != 1
-        || table.magic != abi::r4l_abi_magic
-        || table.abi_version != abi::r4l_abi_version
-        || table.size < mem::size_of::<abi::R4LQuery>() as u32
-        || table.group != 0
-        || table.kernel_bridge != 0
-        || table.reserved != 0
-    {
-        return Err(Error::InvalidQuery);
-    }
-    Ok(table)
+pub fn query<'a>(app: &'a App<'_>, module: &str) -> Result<&'a abi::generation2::R4LQuery2, Error> {
+    query2(app, module)
 }
 
 /// Technical Query2 admission leaves the independent named API revision alone.
@@ -297,13 +269,60 @@ pub fn query2<'a>(
     let table = unsafe { &*(item.table as *const abi::generation2::R4LQuery2) };
     if table.magic != abi::generation2::QUERY_MAGIC
         || table.abi_version != 2
-        || table.size < mem::size_of::<abi::generation2::R4LQuery2>() as u32
+        || table.size != mem::size_of::<abi::generation2::R4LQuery2>() as u32
         || table.group != 0
         || table.reserved != 0
     {
         return Err(Error::InvalidQuery);
     }
     Ok(table)
+}
+
+/// Const provider header from the generated library-owned expectation.
+/// Use the exact current table size/revision/flags; the loader verifies exports.
+pub const fn provider_header(expected: Expectation) -> InterfaceHeader {
+    InterfaceHeader {
+        magic: INTERFACE_MAGIC,
+        header_version: HEADER_VERSION,
+        flags: expected.known_required_flags as u16,
+        size: expected.required_size,
+        abi_major: expected.abi_major,
+        abi_minor: expected.min_revision,
+        interface_id_lo: expected.interface_id_lo,
+        interface_id_hi: expected.interface_id_hi,
+    }
+}
+/// Ordinary standalone metadata uses the current technical descriptor.
+pub const PROVIDER_QUERY: abi::generation2::R4LQuery2 = PROVIDER_QUERY2;
+/// Normal provider entry and Query2 export. API tables are declared by the
+/// library's generated contract and explicitly exported by its own manifest.
+/// Library state/allocators/callbacks belong to each explicit caller/session;
+/// never use an R4X-global allocator as a shared library heap.
+#[macro_export]
+macro_rules! r4l_provider {
+    ($query:ident) => {
+        $crate::r4l_provider2!($query);
+    };
+}
+
+/// Generation2 admission for independent library-owned interfaces. The API
+/// records and each caller's allocators/callbacks remain library-owned.
+pub const PROVIDER_QUERY2: abi::generation2::R4LQuery2 = abi::generation2::R4LQuery2 {
+    magic: abi::generation2::QUERY_MAGIC,
+    abi_version: 2,
+    size: core::mem::size_of::<abi::generation2::R4LQuery2>() as u32,
+    group: 0,
+    reserved: 0,
+};
+#[macro_export]
+macro_rules! r4l_provider2 {
+    ($query:ident) => {
+        #[unsafe(no_mangle)]
+        pub extern "C" fn r4l_entry() {}
+        #[unsafe(no_mangle)]
+        #[unsafe(link_section = ".data.r4l_exports")]
+        pub static $query: $crate::abi::generation2::R4LQuery2 = $crate::r4l::PROVIDER_QUERY2;
+    };
 }
 
 #[cfg(test)]
@@ -415,42 +434,4 @@ mod tests {
         };
         assert!(interface.slot_address(32).is_none());
     }
-}
-
-/// Const provider header from the generated library-owned expectation.
-/// Use the exact current table size/revision/flags; the loader verifies exports.
-pub const fn provider_header(expected: Expectation) -> InterfaceHeader {
-    InterfaceHeader {
-        magic: INTERFACE_MAGIC,
-        header_version: HEADER_VERSION,
-        flags: expected.known_required_flags as u16,
-        size: expected.required_size,
-        abi_major: expected.abi_major,
-        abi_minor: expected.min_revision,
-        interface_id_lo: expected.interface_id_lo,
-        interface_id_hi: expected.interface_id_hi,
-    }
-}
-/// Ordinary standalone R4L query metadata. No kernel bridge or private heap.
-pub const PROVIDER_QUERY: abi::R4LQuery = abi::R4LQuery {
-    magic: abi::r4l_abi_magic,
-    abi_version: abi::r4l_abi_version,
-    size: abi::r4l_query_struct_size,
-    group: 0,
-    kernel_bridge: 0,
-    reserved: 0,
-};
-/// Normal provider entry and Query export. API tables are declared by the
-/// library's generated contract and explicitly exported by its own manifest.
-/// Library state/allocators/callbacks belong to each explicit caller/session;
-/// never use an R4X-global allocator as a shared library heap.
-#[macro_export]
-macro_rules! r4l_provider {
-    ($query:ident) => {
-        #[unsafe(no_mangle)]
-        pub extern "C" fn r4l_entry() {}
-        #[unsafe(no_mangle)]
-        #[unsafe(link_section = ".data.r4l_exports")]
-        pub static $query: $crate::abi::R4LQuery = $crate::r4l::PROVIDER_QUERY;
-    };
 }

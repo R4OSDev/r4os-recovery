@@ -7,15 +7,15 @@ name = "r4os-contract"
 version = "0.1.0"
 
 [[package]]
-name = "r4os-sdk"
-version = "0.1.0"
-dependencies = [
- "r4os-contract",
-]
-
-[[package]]
 name = "r4os-platform-probe"
 version = "0.1.0"
 dependencies = [
  "r4os-sdk",
+]
+
+[[package]]
+name = "r4os-sdk"
+version = "0.1.0"
+dependencies = [
+ "r4os-contract",
 ]

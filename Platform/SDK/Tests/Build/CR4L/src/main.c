@@ -27,4 +27,4 @@ int32_t l66c_close_impl(R4L66State *s,uint64_t generation){
  if(rc)return rc;s->allocation=0;s->active=0;return 0;
 }
 R4L66ApiV1 l66c_api_v1 __attribute__((aligned(8),section(".data.r4l_exports")))={L66C_API_V1_HEADER_INITIALIZER,l66c_open_impl,l66c_work_impl,l66c_close_impl};
-R4L_PROVIDER_QUERY(l66c_query);
+R4L_PROVIDER_QUERY2(l66c_query);

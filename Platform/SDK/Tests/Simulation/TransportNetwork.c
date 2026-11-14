@@ -1,3 +1,4 @@
+#include "GuestContext2.h"
 /* Controlled QEMU/SLIRP counterpart: TransportServer.py, port 18163. */
 #include <r4os/facades.h>
 #define B(s) (const uint8_t *)(s),sizeof(s)-1
@@ -59,9 +60,9 @@ static int response(R4SdkTransportFetchResult *r,R4SdkTransportFetchResponse *v)
 static int failure(R4SdkTransportFetchResult *r,uint32_t code){
     return R4SdkTransportFetchResult_inspectNative(r).bits==R4SdkTransportFetchResult_TAG_failure&&R4SdkTransportFetchResult_get_failure(r).bits==code;
 }
-int sdk_transport_network_case(const R4XStartContext *start,uint8_t *scratch,uintptr_t capacity,uint8_t *download_bytes,uintptr_t download_capacity,uint32_t *tls_error){
-    R4Sys sys;CHECK(r4sys_init(start,&sys)==0);State s={.sys=&sys,.thread=r4sys_thread_current(&sys),.download=download_bytes,.download_capacity=download_capacity};
-    R4SdkTransportContext ctx;CHECK(R4SdkTransport_open(0,&ctx,start).bits==1);
+int sdk_transport_network_case(const R4XStartContext2 *start,uint8_t *scratch,uintptr_t capacity,uint8_t *download_bytes,uintptr_t download_capacity,uint32_t *tls_error){
+    R4App2 actual;R4App app;CHECK(sdk_guest_app2(start,&actual,&app)==0);R4Sys sys=app.system;State s={.sys=&sys,.thread=r4sys_thread_current(&sys),.download=download_bytes,.download_capacity=download_capacity};
+    R4SdkTransportContext ctx;CHECK(R4SdkTransport_open2(0,&ctx,start).bits==1);
     R4SdkTransportWebTransport *transport=(R4SdkTransportWebTransport *)R4SdkTransport_transport(0,&ctx).ptr;
     R4SdkWebCallbackTable cb;CHECK(table(&cb,&s,(UINT64_C(1)<<R4SdkWebCallbackKind_network_progress)|(UINT64_C(1)<<R4SdkWebCallbackKind_cookie_provider)|(UINT64_C(1)<<R4SdkWebCallbackKind_cookie_sink)|(UINT64_C(1)<<R4SdkWebCallbackKind_target_authorize)));
     R4SdkTransportFetchOptions options;TRY(R4SdkTransportFetchOptions_create(&options));TRY(R4SdkTransport_fetchCallbacks(0,&options,&cb));
@@ -90,9 +91,9 @@ int sdk_transport_network_case(const R4XStartContext *start,uint8_t *scratch,uin
     for(uintptr_t i=0;i<200000;i++)CHECK(download_bytes[i]==(uint8_t)(i*17+3));
     return 0;
 }
-int sdk_transport_runtime_job_case(const R4XStartContext *start,R4SdkDataAllocator *allocator,R4SdkWebJsProgramAllocator *programs,R4SdkWebHtmlDocument *doc,R4SdkWebNative_web_security_BrowserStorage *storage,R4SdkWebRuntimeWebRuntime *runtime,R4SdkTransportRuntimeJobsRequestJob *job){
-    R4Sys sys;CHECK(r4sys_init(start,&sys)==0);State s={.sys=&sys,.thread=r4sys_thread_current(&sys),.runtime=runtime,.generation=73};
-    R4SdkTransportContext ctx;CHECK(R4SdkTransport_open(0,&ctx,start).bits==1);
+int sdk_transport_runtime_job_case(const R4XStartContext2 *start,R4SdkDataAllocator *allocator,R4SdkWebJsProgramAllocator *programs,R4SdkWebHtmlDocument *doc,R4SdkWebNative_web_security_BrowserStorage *storage,R4SdkWebRuntimeWebRuntime *runtime,R4SdkTransportRuntimeJobsRequestJob *job){
+    R4App2 actual;R4App app;CHECK(sdk_guest_app2(start,&actual,&app)==0);R4Sys sys=app.system;State s={.sys=&sys,.thread=r4sys_thread_current(&sys),.runtime=runtime,.generation=73};
+    R4SdkTransportContext ctx;CHECK(R4SdkTransport_open2(0,&ctx,start).bits==1);
     R4SdkWebCallbackTable cb;CHECK(table(&cb,&s,UINT64_C(1)<<R4SdkWebCallbackKind_runtime_lookup));
     R4SdkTransportRuntimeJobsOwner owner;TRY(R4SdkTransport_owner(0,&cb,&owner));TRY(R4SdkTransport_requestJob(0,job,&ctx,allocator,&owner));
     WEB(R4SdkWebRuntimeWebRuntime_initialize(0,runtime,programs));WEB(R4SdkWebNative_web_security_BrowserStorage_reset(0,storage));

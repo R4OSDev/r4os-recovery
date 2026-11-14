@@ -5,9 +5,10 @@ const r4os = @import("r4os");
 
 const sample = @embedFile("Fixtures/sample-glyf.ttf");
 const module_name: [:0]const u8 = "R4FONT";
+const test_system: r4os.platform2.abi.R4XStartR4Sys2 = .{};
 const api_name: [:0]const u8 = "API_V1";
 
-fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.abi.R4XStartContext {
+fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.platform2.abi.R4XStartContext2 {
     return .{
         .flags = r4os.abi.r4xstart_flag_imports_valid,
         .imports = @intFromPtr(imports.ptr),
@@ -16,7 +17,7 @@ fn makeContext(imports: []const r4os.abi.R4XStartImport) r4os.abi.R4XStartContex
 }
 
 test "productive font decode crosses the named API_V1 table" {
-    var imports = [1]r4os.abi.R4XStartImport{.{
+    var imports = [3]r4os.abi.R4XStartImport{ .{
         .group_id = 0,
         .min_version = 1,
         .resolved_version = 1,
@@ -24,7 +25,7 @@ test "productive font decode crosses the named API_V1 table" {
         .module_name = @intFromPtr(module_name.ptr),
         .symbol_name = @intFromPtr(api_name.ptr),
         .table = @intFromPtr(&project.r4font_api_v1),
-    }};
+    }, .{ .min_version = 2, .resolved_version = 2, .module_name = @intFromPtr(module_name.ptr), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&project.r4font_query2) }, .{ .group_id = 1, .min_version = 2, .resolved_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .module_name = @intFromPtr("R4SYS"), .symbol_name = @intFromPtr("Query2"), .table = @intFromPtr(&test_system) } };
     var raw = makeContext(&imports);
     raw.imports = @intFromPtr(&imports);
     var fonts = r4font.Context.init(&raw) orelse return error.MissingRuntimeBinding;

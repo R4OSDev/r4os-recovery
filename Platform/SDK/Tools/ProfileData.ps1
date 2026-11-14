@@ -56,15 +56,14 @@ function Read-R4SdkProfiles([string]$SdkRoot) {
         Assert-R4ProfileId $id 'platform'
         $platform=$build.platforms[$id]
         Assert-R4ProfileKeys $platform @('generation','contract_module','sdk_module','query_symbol','query_version','entry_symbol','entry_version') "platforms.$id"
-        if($platform.generation -notin @(1,2)){throw "SdkPlatformGenerationUnsupported: $id"}
-        $next=$platform.generation -eq 2
-        if($platform.contract_module -cne $(if($next){'r4os_contract2'}else{'r4os_contract'}) -or
-           $platform.sdk_module -cne $(if($next){'r4os_platform2'}else{'r4os'}) -or
-           $platform.query_symbol -cne $(if($next){'Query2'}else{'Query'}) -or
-           $platform.entry_symbol -cne $(if($next){'R4XStart2'}else{'R4XStart'}) -or
-           $platform.query_version -ne $platform.generation -or $platform.entry_version -ne $platform.generation){throw "SdkPlatformIdentityMismatch: $id"}
+        if($platform.generation -ne 2){throw "SdkPlatformGenerationUnsupported: $id"}
+        if($platform.contract_module -cne 'r4os_contract2' -or
+           $platform.sdk_module -cne 'r4os_platform2' -or
+           $platform.query_symbol -cne 'Query2' -or
+           $platform.entry_symbol -cne 'R4XStart2' -or
+           $platform.query_version -ne 2 -or $platform.entry_version -ne 2){throw "SdkPlatformIdentityMismatch: $id"}
     }
-    if(!$build.platforms.Contains('platform1') -or $build.platforms.platform1.generation -ne 1){throw 'SdkPlatformDefaultMissing'}
+    if(!$build.platforms.Contains('platform2') -or $build.platforms.platform2.generation -ne 2){throw 'SdkPlatformDefaultMissing'}
     Assert-R4ProfileKeys $tools @('schema', 'toolsets', 'tools') 'Tools'
     Assert-R4ProfileKeys $components @('schema', 'policy', 'repositories', 'libraries', 'sets') 'Components'
     foreach ($entry in @(@($build.profiles, 'profiles'), @($build.codegen, 'codegen'),
@@ -192,7 +191,7 @@ function Get-R4SdkBuildProfile([string]$SdkRoot, [string]$Id) {
     $data = Read-R4SdkProfiles $SdkRoot
     Assert-R4ProfileReference $data.Build.profiles $Id 'profile'
     $profile = $data.Build.profiles[$Id]
-    $platformId=if($profile.Contains('platform')){$profile.platform}else{'platform1'}
+    $platformId=if($profile.Contains('platform')){$profile.platform}else{'platform2'}
     return [ordered]@{
         schema=1; sdk_version=$data.sdk_version; id=$Id; hashes=$data.hashes
         build=$profile; platform=$data.Build.platforms[$platformId]; codegen=$data.Build.codegen[$profile.codegen]

@@ -1,3 +1,4 @@
+#include <r4os/app2.h>
 /* Explicit, on-demand public C observer for the real MouseLook guest case.
  * K:pid:gen retains portable completion/output;
  * R:pid:gen:cookie reads completed output and closes; X/C:pid:gen kills/closes.
@@ -12,7 +13,7 @@ static int part(const uint8_t *p,uint64_t length,uint64_t *at,uint64_t *out){
   uint64_t d=p[(*at)++]-'0';if(v>(UINT64_MAX-d)/10)return 0;v=v*10+d;
  }if(*at==start)return 0;*out=v;if(*at<length){if(p[(*at)++]!=':')return 0;}return 1;
 }
-int32_t r4_app_main(R4App *a){
+static int32_t run(R4App *a){
  uint64_t len=0;const uint8_t *args=r4_app_args(a,&len);if(!args||!len)return 2;
  if(args[0]=='W'||args[0]=='A'){
   R4RemoteInputEvent event={.magic=R4_REMOTE_INPUT_MAGIC,.version=R4_REMOTE_INPUT_VERSION,
@@ -35,8 +36,8 @@ int32_t r4_app_main(R4App *a){
   return query==R4OS_GUI_POINTER_ERROR_STALE&&release==R4OS_GUI_POINTER_ERROR_STALE&&untouched?0:1;
  }
  if(args[0]=='X'||args[0]=='C'){
-  int32_t rc=args[0]=='X'?((R4SysProgramHandleKillFn)(uintptr_t)a->system.table->program_handle_kill)(&process)
-   :((R4SysProgramHandleRequestCloseFn)(uintptr_t)a->system.table->program_handle_request_close)(&process);
+  int32_t rc=args[0]=='X'?((R4SysProgramHandleKillFn)(uintptr_t)R4SYS_SLOT(&a->system,program_handle_kill))(&process)
+   :((R4SysProgramHandleRequestCloseFn)(uintptr_t)R4SYS_SLOT(&a->system,program_handle_request_close))(&process);
   text(a,"M28CONTROL");f(a," action=",args[0]);f(a," rc=",rc);text(a,"\n");return rc?1:0;
  }
  R4Resources resources={.app=a};R4ProgramObservationHandle observation={.process=process};
@@ -57,3 +58,5 @@ int32_t r4_app_main(R4App *a){
  text(a,"M28OUTPUT-END");f(a," read=",rc);f(a," bytes=",offset);
  f(a," release=",r4_resources_observation_release(&resources,&observation));text(a,"\n");return rc?1:0;
 }
+
+int32_t r4_app_main(R4App2 *actual){R4App facade;int32_t rc=r4_app2_facade(actual,&facade);return rc<0?rc:run(&facade);}

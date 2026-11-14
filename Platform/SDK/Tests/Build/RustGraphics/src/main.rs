@@ -2,7 +2,7 @@
 use core::fmt::Write;
 use core::pin::pin;
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     graphics::{Graphics, GraphicsStorage, raw as c},
     resources::{Resources, Timeout},
 };
@@ -13,7 +13,7 @@ unsafe extern "C" {
 const PIXELS: [u32; 12] = [
     0x112233, 0x445566, 0, 0, 0, 0xffffff, 0xcc0000, 0xcc0000, 0xffffff, 0, 0, 0x010203,
 ];
-struct Output<'a, 'b>(&'a App<'b>);
+struct Output<'a, 'b>(&'a App2<'b>);
 impl core::fmt::Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         if self.0.write(s) < 0 {
@@ -23,9 +23,9 @@ impl core::fmt::Write for Output<'_, '_> {
         }
     }
 }
-fn exercise(app: &App<'_>) -> Result<(), i32> {
+fn exercise(app: &App2<'_>) -> Result<(), i32> {
     let mut storage = pin!(GraphicsStorage::new());
-    let gfx = Graphics::open(storage.as_mut(), app).map_err(|_| 10)?;
+    let gfx = Graphics::open2(storage.as_mut(), app).map_err(|_| 10)?;
     let before = gfx.buffers().stats().map_err(|_| 11)?;
     let mut descriptor = abi::GfxBufferDescriptor {
         byte_length: 4096,
@@ -69,7 +69,7 @@ fn exercise(app: &App<'_>) -> Result<(), i32> {
         source: source.reference,
         target: target.reference,
         byte_length: 48,
-        deadline_ns: r4os_sdk::time::Clock::new(app)
+        deadline_ns: r4os_sdk::time::Clock::new2(app)
             .instant()
             .map_err(|_| 29)?
             .nanoseconds
@@ -81,7 +81,7 @@ fn exercise(app: &App<'_>) -> Result<(), i32> {
         let _ = writeln!(&mut Output(app), "GFX57 submit: {:?}", e);
         31
     })?;
-    let ticks = Resources::new(app)
+    let ticks = Resources::new2(app)
         .map_err(|_| 32)?
         .timeout_ticks(Timeout::AfterNanos(5_000_000_000))
         .map_err(|_| 33)?;
@@ -127,7 +127,7 @@ fn exercise(app: &App<'_>) -> Result<(), i32> {
     let _caps = gfx.present_capabilities().map_err(|_| 50)?;
     Ok(())
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     match exercise(app) {
         Ok(()) => {
             app.write("PASS GFX57 Rust/C offscreen pixels, buffer imports/maps, CPU queue and exact cleanup\n");
@@ -139,4 +139,4 @@ fn main(app: &mut App<'_>) -> i32 {
         }
     }
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

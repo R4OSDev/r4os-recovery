@@ -22,7 +22,7 @@ function Run([string]$Action,[string]$Manifest,[bool]$Success,[string]$Expected=
 foreach($class in @('console','gui','service')){
     $root=Join-Path $WorkRoot $class; Copy-Item -LiteralPath $fixture -Destination $root -Recurse
     $manifest=Join-Path $root 'module.R4MF'; $text=$original.Replace('APP_CLASS=console',"APP_CLASS=$class")
-    if($class -eq 'gui'){$text+="`nIMPORT=R4DESK:Query:1`nIMPORT=R4DRAW:Query:1`n"}
+    if($class -eq 'gui'){$text+="`nIMPORT=R4DESK:Query2:2`nIMPORT=R4DRAW:Query2:2`n"}
     [IO.File]::WriteAllText($manifest,$text,$utf8)
     Run validate $manifest $true|Out-Null
     $plan=(Run plan $manifest $true)|ConvertFrom-Json
@@ -30,7 +30,7 @@ foreach($class in @('console','gui','service')){
     Run contract-plan $manifest $true 'R4MF_PLAN=1'|Out-Null
     [IO.File]::WriteAllText($manifest,$text.Replace('ENTRY_MODE=app','ENTRY_MODE=lowlevel'),$utf8)
     $raw=(Run plan $manifest $true)|ConvertFrom-Json
-    if($raw.plan.entry_mode -cne 'lowlevel' -or $raw.plan.rust_project.profile -cne 'r4os-rust-r4x-lowlevel-v1' -or !$raw.plan.build_profile.Contains('_LowLevel_')){throw 'Raw Rust profile lost its explicit entry mode.'}
+    if($raw.plan.entry_mode -cne 'lowlevel' -or $raw.plan.platform_generation -ne 2 -or $raw.plan.rust_project.profile -cne 'r4os-rust-generation2' -or $raw.plan.build_profile -cne 'r4os-rust-generation2'){throw 'Raw Rust profile lost its explicit entry mode.'}
     Run contract-plan $manifest $true 'ENTRY_MODE=lowlevel'|Out-Null
     Run startup-info $manifest $true 'StartupInfo'|Out-Null
     [IO.File]::WriteAllText($manifest,$text,$utf8)

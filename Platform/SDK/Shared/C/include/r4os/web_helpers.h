@@ -12,6 +12,7 @@
 #ifndef R4SDKWEB_HELPERS_H
 #define R4SDKWEB_HELPERS_H
 #include "r4os/abi.h"
+#include "r4os/generation2.h"
 #define R4SDKWEB_PRESENT 1u
 #define R4SDKWEB_NATIVE_ERROR 2u
 #define R4SDKWEB_DEFAULT 4u

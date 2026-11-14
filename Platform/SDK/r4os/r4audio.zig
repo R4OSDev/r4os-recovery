@@ -2,9 +2,9 @@ const abi = @import("r4os_contract").abi;
 const program = @import("program.zig");
 
 pub const name = "R4AUDIO";
-pub const import_query = "R4AUDIO:Query:1";
+pub const import_query = "R4AUDIO:Query2:2";
 pub const group = abi.R4LGroup.r4audio;
-pub const abi_version = abi.r4l_abi_version;
+pub const abi_version = @import("r4os_contract2").query_version;
 pub const contract = "Repositories/Contract/API/Groups.txt";
 pub const provider_repository = "Repositories/Kernel";
 pub const c_header = "Repositories/SDK/Shared/C/include/r4os/r4audio.h";
@@ -171,9 +171,9 @@ pub const Context = struct {
 test "r4audio exposes project and ABI metadata" {
     const std = @import("std");
     try std.testing.expectEqualStrings("R4AUDIO", name);
-    try std.testing.expectEqualStrings("R4AUDIO:Query:1", import_query);
+    try std.testing.expectEqualStrings("R4AUDIO:Query2:2", import_query);
     try std.testing.expectEqual(@as(u32, 5), @intFromEnum(group));
-    try std.testing.expectEqual(abi.r4l_abi_version, abi_version);
+    try std.testing.expectEqual(@as(u32, 2), abi_version);
     try std.testing.expectEqualStrings("Repositories/Kernel", provider_repository);
     try std.testing.expectEqualStrings("Repositories/SDK/Shared/C/include/r4os/r4audio.h", c_header);
 }

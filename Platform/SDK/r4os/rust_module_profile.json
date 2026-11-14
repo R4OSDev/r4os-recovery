@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "id": "r4os-rust-r4x-v2",
+  "id": "r4os-rust-generation2",
   "target": "x86_64-unknown-none",
   "backend_features": {
     "selection": "target-defaults",
@@ -88,11 +88,11 @@
     "--strip-debug"
   ],
   "profile_ids": {
-    "app": "r4os-rust-r4x-v2",
-    "lowlevel": "r4os-rust-r4x-lowlevel-v1",
-    "library": "r4os-rust-r4l-v1",
-    "driver": "r4os-rust-r4d-v1",
-    "protocol": "r4os-rust-r4p-v1"
+    "app": "r4os-rust-generation2",
+    "lowlevel": "r4os-rust-generation2",
+    "library": "r4os-rust-r4l-generation2",
+    "driver": "r4os-rust-r4d-generation2",
+    "protocol": "r4os-rust-r4p-generation2"
   },
   "edition": "2024"
 }

@@ -1,20 +1,20 @@
 #![no_std]
 extern crate alloc;
 use alloc::{boxed::Box, vec::Vec};
-use core::sync::atomic::{AtomicPtr, AtomicU32, AtomicU64, Ordering};
+use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use r4os_sdk::{
-    App, abi,
+    App2, abi,
     path::FilePath,
     resources::{IoBuffers, IoControl, Resources, StopFlag, Timeout, Wait, WriteKind},
     storage::{Presence, System},
 };
-static API: AtomicPtr<abi::R4XStartR4Sys> = AtomicPtr::new(core::ptr::null_mut());
+static API: [AtomicU64; 4] = [const { AtomicU64::new(0) }; 4];
 static SIGNAL: AtomicU64 = AtomicU64::new(0);
 static SEEN_CPUS: AtomicU64 = AtomicU64::new(0);
 static READY: AtomicU32 = AtomicU32::new(0);
 static STOP: StopFlag = StopFlag::new();
 unsafe extern "C" {
-    fn sdk54_c_resources(context: *const abi::R4XStartContext, path: *const u8) -> i32;
+    fn sdk54_c_resources(context: *const abi::generation2::R4XStartContext2, path: *const u8) -> i32;
 }
 unsafe extern "C" fn worker(seed: u64) -> i32 {
     // Same bounded Vec/Box byte pattern as the qualified worker case in50.
@@ -26,16 +26,15 @@ unsafe extern "C" fn worker(seed: u64) -> i32 {
     if bytes[4095] != (4095 ^ seed) as u8 || boxed[0] != 0xa5 {
         return 21;
     }
-    let api = unsafe { &*API.load(Ordering::Acquire) };
-    let query: abi::R4SysFns::notification_query =
-        unsafe { core::mem::transmute(api.notification_query) };
-    let wait: abi::R4SysFns::notification_wait =
-        unsafe { core::mem::transmute(api.notification_wait) };
+    let query: abi::generation2::R4SysFns2::notification_query =
+        unsafe { core::mem::transmute(API[0].load(Ordering::Acquire)) };
+    let wait: abi::generation2::R4SysFns2::notification_wait =
+        unsafe { core::mem::transmute(API[1].load(Ordering::Acquire)) };
     let notification = SIGNAL.load(Ordering::Acquire);
-    let current: abi::R4SysFns::thread_current_handle =
-        unsafe { core::mem::transmute(api.thread_current_handle) };
-    let placement: abi::R4SysFns::thread_placement_get =
-        unsafe { core::mem::transmute(api.thread_placement_get) };
+    let current: abi::generation2::R4SysFns2::thread_current_handle =
+        unsafe { core::mem::transmute(API[2].load(Ordering::Acquire)) };
+    let placement: abi::generation2::R4SysFns2::thread_placement_get =
+        unsafe { core::mem::transmute(API[3].load(Ordering::Acquire)) };
     let mut handle = abi::ProgramJoinHandle::default();
     let mut info = abi::ThreadPlacementInfo::default();
     let mut cpus = [0u64; 2];
@@ -63,7 +62,7 @@ unsafe extern "C" fn worker(seed: u64) -> i32 {
     }
     0
 }
-fn close_io(app: &App<'_>, io: &mut r4os_sdk::resources::OwnedIo<'_>) {
+fn close_io(app: &App2<'_>, io: &mut r4os_sdk::resources::OwnedIo<'_>) {
     for _ in 0..2000 {
         match io.close() {
             Ok(()) => return,
@@ -73,7 +72,7 @@ fn close_io(app: &App<'_>, io: &mut r4os_sdk::resources::OwnedIo<'_>) {
     }
     panic!("I/O close did not acknowledge");
 }
-fn main(app: &mut App<'_>) -> i32 {
+fn main(app: &mut App2<'_>) -> i32 {
     if app.args() == b"child" {
         app.write("[SDK54] child output\n");
         return 42;
@@ -90,7 +89,7 @@ fn main(app: &mut App<'_>) -> i32 {
         }
         return 7;
     }
-    let resources = Resources::new(app).unwrap();
+    let resources = Resources::new2(app).unwrap();
     let file = FilePath::parse(b"C:\\TEMP\\SDKRS54\\R54.BIN").unwrap();
     if app.args() == b"pending-panic" {
         let io = resources
@@ -100,7 +99,7 @@ fn main(app: &mut App<'_>) -> i32 {
         panic!("SDK54 deliberate pending-I/O exit");
     }
     assert_eq!(resources.capacity().unwrap().available_cpus, 4);
-    let system = System::new(app).unwrap();
+    let system = System::new2(app).unwrap();
     let files = system.files();
     let directory = FilePath::parse(b"C:\\TEMP\\SDKRS54").unwrap();
     assert_eq!(
@@ -174,10 +173,14 @@ fn main(app: &mut App<'_>) -> i32 {
         notification.wait(sequence, Timeout::Poll),
         Ok(Wait::TimedOut)
     );
-    API.store(
-        core::ptr::from_ref(app.system_api().unwrap()).cast_mut(),
-        Ordering::Release,
-    );
+    for (slot, offset) in API.iter().zip([
+        core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, notification_query),
+        core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, notification_wait),
+        core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, thread_current_handle),
+        core::mem::offset_of!(abi::generation2::R4XStartR4Sys2, thread_placement_get),
+    ]) {
+        slot.store(app.context().lookup(1, offset as u32).unwrap() as u64, Ordering::Release);
+    }
     SIGNAL.store(notification.handle(), Ordering::Release);
     let mut workers = [const { None }; 4];
     for (i, slot) in workers.iter_mut().enumerate() {
@@ -295,4 +298,4 @@ fn main(app: &mut App<'_>) -> i32 {
     app.write("[SDK54] Rust/C resources, four joined AP workers, VM and retained I/O PASS\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

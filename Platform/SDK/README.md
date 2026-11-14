@@ -24,10 +24,18 @@ generation, Busy, pending and release-acknowledgement rules. Optional Rust
 alloc uses the same heap and an SDK-owned callback copy across workers.
 Panic paths terminate the exact module or fault through UD2.
 
-Existing App/default profiles remain on generation1 during migration.
+SDK0.64.213 selects generation2 for every central Zig/C/C++/Rust module
+default. New application, driver and protocol templates use the matching
+Query2 and Start2/DriverInit2/ProtocolInit2 identities. Runtime libraries
+select Query2 metadata while keeping their independent API revisions.
+SDK0.64.218 removes the retired module profiles, startup implementations and
+positive SDK adapters. Unversioned App/context helpers now use generation2.
+Historical wire records and explicit rejection fixtures remain in Contract;
+they do not provide an executable generation1 path. Rebuild C/Rust projections
+and native runtime objects together after this SDK change.
 SDK-private native facade storage has changed: rebuild generated headers,
 Rust projection and runtime objects together. Targeted checks are
-platform2-test, vm-allocator-test, Tools/Test-RustHeap.ps1 (also -Generation2),
+platform2-test, vm-allocator-test, Tools/Test-RustHeap.ps1 (current default),
 Tests/Simulation/App2Startup.c and Tests/Build/App2Zig, App2C and App2Rust.
 
 SDK0.64.174 adds copied family-aware Query2 service clients in Zig
@@ -1046,8 +1054,8 @@ qualification and limits remain in the shared language-parity matrix.
 SDK0.64.85 adds genuine C/Rust Runtime-R4L provider roots. Zig retains its
 `IMPLEMENTATION_ZIG` module; C/Rust use their generated local table contracts
 without a dummy Zig implementation. Rust requires `BINDING_RUST` and builds
-through `Tools/Build-RustModule.ps1` using `r4os-rust-r4l-v1`, ordinary
-`r4l_entry`, Query and declared API exports. Matched toolsets can include
+through `Tools/Build-RustModule.ps1` using the current `r4os-rust-r4l-generation2` profile,
+`r4l_entry`, Query2 and declared independent API exports. Matched toolsets can include
 both host `r4l-contract-gen` binaries; the builder checks their identity and
 the original contract/baseline/bindings before compilation. The SDK R4X-global
 `alloc` feature is rejected for shared providers. Keep explicit caller/session

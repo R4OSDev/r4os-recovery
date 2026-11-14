@@ -12,27 +12,12 @@ const S = support.Session;
 const E = support.Event;
 const Kind = support.EventKind;
 
-pub export fn R4SdkGuiSessionOpenNative(fingerprint: u64, s: *S, raw: *const a.R4XStartContext, role: u32, timers: ?[*]app.Timer, count: usize) callconv(.c) i32 {
-    if (fingerprint != @import("gui_bridge_schema.zig").fingerprint) return a.io_error_invalid;
-    if (role > 1 or raw.instance_id > std.math.maxInt(u32) or (count != 0 and timers == null) or count > std.math.maxInt(isize) / @sizeOf(app.Timer)) return a.io_error_invalid;
-    const bundle = p.bundleValueFromR4XStart(raw) orelse return a.err_no_group;
-    inline for (.{ .{ bundle.sys, a.R4XStartR4Sys{} }, .{ bundle.desk, a.R4XStartR4Desk{} }, .{ bundle.draw, a.R4XStartR4Draw{} } }) |entry| {
-        const table = entry[0] orelse return a.err_no_group;
-        if (table.abi_version < entry[1].abi_version or table.size < entry[1].size) return a.err_no_fn;
-    }
-    s.* = .{ .bundle = bundle, .instance_id = @intCast(raw.instance_id), .program = undefined, .sys = undefined, .desk = undefined, .draw = undefined, .timers = if (count == 0) &.{} else timers.?[0..count], .role = role };
-    s.program = p.Context.initBundle(&s.bundle);
-    s.sys = sys.Context.init(&s.bundle);
-    s.desk = desk.Context.init(&s.bundle);
-    s.draw = draw.Context.init(&s.bundle);
-    return finishOpen(s);
-}
 pub export fn R4SdkGuiSessionOpenNative2(fingerprint: u64, s: *S, raw: *const @import("platform2.zig").abi.R4XStartContext2, role: u32, timers: ?[*]app.Timer, count: usize) callconv(.c) i32 {
     if (fingerprint != @import("gui_bridge_schema.zig").fingerprint) return a.io_error_invalid;
     if (role > 1 or raw.instance_id == 0 or raw.instance_id > std.math.maxInt(u32) or (count != 0 and timers == null) or count > std.math.maxInt(isize) / @sizeOf(app.Timer)) return a.io_error_invalid;
     const context = @import("platform2.zig").Context.init(raw) catch return a.io_error_invalid;
     if (context.desktop() == null or context.drawing() == null) return a.err_no_group;
-    s.* = .{ .bundle = undefined, .context2 = context, .instance_id = @intCast(raw.instance_id), .program = undefined, .sys = undefined, .desk = undefined, .draw = undefined, .timers = if (count == 0) &.{} else timers.?[0..count], .role = role };
+    s.* = .{ .context2 = context, .instance_id = @intCast(raw.instance_id), .program = undefined, .sys = undefined, .desk = undefined, .draw = undefined, .timers = if (count == 0) &.{} else timers.?[0..count], .role = role };
     // The caller pins Session before admission. Both pointers target its final
     // storage and remain borrowed until explicit Close and all subloans retire.
     s.memory2 = @import("allocator_source.zig").Memory.fromContext2(&s.context2.?);

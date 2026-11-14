@@ -90,9 +90,9 @@ test "text metrics owner exact original Canvas offsets and bounded linear prepar
     mode = 0;
     revision = 77;
     reentrant = null;
-    var table: a.R4XStartR4Draw = .{};
+    var table: @import("r4os_contract2").R4XStartR4Draw2 = .{};
     table.font_measure = @intFromPtr(&legacy);
-    const raw: a.R4XStartContext = .{};
+    const raw: @import("r4os_contract2").R4XStartContext2 = .{};
     const bundle: program.Bundle = .{ .raw = &raw, .draw = &table };
     const context = draw.Context.init(&bundle);
     const canvas: gui.Canvas = .{ .ctx = &context, .w = 50000, .h = 20 };

@@ -97,7 +97,7 @@ test "modern controls preserve classic defaults and share bounded native resourc
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     const drawing = app.drawing().?;
     var paint = switch (r4os.app_gui.beginPaintForSize(&drawing, 640, 480)) {
@@ -164,7 +164,7 @@ pub export fn sdk_gui_modern_expected() callconv(.c) u64 {
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = makeApp(&tables, &imports, &context) catch return 0;
     const drawing = app.drawing().?;
     var paint = switch (r4os.app_gui.beginPaintForSize(&drawing, 320, 200)) {
@@ -251,11 +251,11 @@ fn gridFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
-    const legacy: r4os.r4xstart.R4Desk = .{ .raw = &raw, .table = &tables[1] };
+    const legacy: r4os.r4xstart.R4Desk = r4os.r4xstart.R4Desk.fromProgram(app.lowLevel());
     tables[1].mouse_motion = @intFromPtr(&motionProbe);
-    tables[1].size = @offsetOf(a.R4XStartR4Desk, "mouse_motion");
+    tables[1].size = @offsetOf(r4os.platform2.abi.R4XStartR4Desk2, "mouse_motion");
     var motion: a.MouseMotion = .{ .mouse = std.mem.zeroes(a.Mouse), .motion_x = 79 };
     try t.expectEqual(a.err_no_fn, legacy.mouseMotion(&motion));
     try t.expectEqual(@as(u32, 79), motion.motion_x);
@@ -269,7 +269,7 @@ fn gridFacadeProbe() !void {
     const queue: a.GfxQueueHandle = .{ .timeline = 0x200000017 };
     const request: a.GfxSubmission = .{ .operation = a.gfx_queue_operation_render_grid_list };
     var result: a.GfxFenceStatus = .{ .deadline_ns = 79 };
-    tables[2].size = @offsetOf(a.R4XStartR4Draw, "gfx_queue_submit_render_grid_list");
+    tables[2].size = @offsetOf(r4os.platform2.abi.R4XStartR4Draw2, "gfx_queue_submit_render_grid_list");
     try t.expectEqual(a.err_no_fn, queues.submitRenderGridList(&queue, &request, &list, &result));
     try t.expect(result.deadline_ns == 79 and result.fence.point == 0);
     tables[2].size += 8;
@@ -310,10 +310,10 @@ fn captureFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const desk = app.desktop().?;
-    const direct: r4os.r4xstart.R4Desk = .{ .raw = &raw, .table = &tables[1] };
+    const direct: r4os.r4xstart.R4Desk = r4os.r4xstart.R4Desk.fromProgram(app.lowLevel());
     tables[1].remote_frame_snapshot_acquire = @intFromPtr(&captureAcquireProbe);
     tables[1].remote_frame_snapshot_release = @intFromPtr(&captureReleaseProbe);
     tables[1].remote_frame_source_reset = @intFromPtr(&captureResetProbe);
@@ -323,7 +323,7 @@ fn captureFacadeProbe() !void {
     var lease: a.RemoteFrameLease = .{ .id = 19 };
     try t.expect(desk.remoteFrameSnapshotAcquire(73, &info, &lease) < 0 and info.revision == 17 and lease.id == 19);
     try t.expect(direct.remoteFrameSnapshotRelease(&lease) < 0 and desk.remoteFrameSourceReset() < 0);
-    tables[1].size = @sizeOf(a.R4XStartR4Desk);
+    tables[1].size = @sizeOf(r4os.platform2.abi.R4XStartR4Desk2);
     try t.expect(desk.remoteFrameSnapshotAcquire(73, &info, &lease) == 0 and info.revision == 73 and lease.capacity_pixels == 2);
     try t.expect(direct.remoteFrameSnapshotRelease(&lease) == 0 and desk.remoteFrameSourceReset() == 0);
     try t.expect(direct.remoteFrameSnapshotAcquire(73, &info, &lease) == 0 and desk.remoteFrameSnapshotRelease(&lease) == 0);
@@ -352,7 +352,7 @@ fn colorFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const queues = app.drawing().?.queues();
     tables[2].gfx_queue_submit_render_color_list = @intFromPtr(&colorSubmitProbe);
@@ -398,7 +398,7 @@ fn modeColorFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const outputs = app.drawing().?.outputs();
     tables[2].gfx_atomic_test_color = @intFromPtr(&modeColorTestProbe);
@@ -448,7 +448,7 @@ fn refreshFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const outputs = app.drawing().?.outputs();
     tables[2].gfx_output_refresh = @intFromPtr(&refreshReadProbe);
@@ -505,7 +505,7 @@ fn powerFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const outputs = app.drawing().?.outputs();
     tables[2].gfx_output_power = @intFromPtr(&powerReadProbe);
@@ -567,7 +567,7 @@ fn brightnessFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const outputs = app.drawing().?.outputs();
     tables[2].gfx_output_brightness = @intFromPtr(&brightnessReadProbe);
@@ -696,10 +696,11 @@ fn ownedFacadeProbe() !void {
     }
     native.table.size = 152;
     try std.testing.expectEqual(@as(i32, 1), native.bufferFinishRelease(&release, 1));
-    var api: a.DriverApi = undefined;
-    api.magic = a.driver_magic;
-    api.version = 25;
-    api.size = 568;
+    var api: r4os.platform2.abi.DriverApi2 = undefined;
+    api.magic = r4os.platform2.abi.driver_magic;
+    api.reserved = 0;
+    api.version = 1;
+    api.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     api.gfx_memory_query = &memoryPrefixProbe;
     const ctx = r4os.r4dev.DriverContext.init(&api);
     const old = ctx.memory().?;
@@ -786,7 +787,7 @@ fn virtualFacadeProbe() !void {
     tables[2].gfx_virtual_wait = @intFromPtr(&virtualWaitProbe);
     tables[2].gfx_virtual_close = @intFromPtr(&virtualCloseProbe);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const draw = app.drawing().?;
     const handle: a.GfxBufferHandle = .{ .generation = 0x400000035 };
@@ -842,7 +843,7 @@ fn budgetFacadeProbe() !void {
     var tables = makeTables(true);
     tables[2].gfx_memory_budget = @intFromPtr(&budgetProbe);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const draw = app.drawing().?;
     var driver: r4os.driver_memory.Context = .{ .table = .{ .memory_budget = @intFromPtr(&budgetProbe) } };
@@ -888,7 +889,7 @@ fn telemetryFacadeProbe() !void {
     var tables = makeTables(true);
     tables[2].gfx_telemetry = @intFromPtr(&telemetryProbe);
     var imports: [3]a.R4XStartImport = undefined;
-    var raw: a.R4XStartContext = undefined;
+    var raw: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &raw);
     const draw = app.drawing().?;
     var driver: r4os.driver_memory.Context = .{ .table = .{ .telemetry_exchange = @intFromPtr(&telemetryDriverProbe) } };
@@ -938,17 +939,17 @@ test "graphics buffer optional tails preserve 64-bit offsets in Zig and R4D call
     try nativeFacadeProbe();
     try virtualFacadeProbe();
     var tables = makeTables(true);
-    tables[2].abi_version = (r4os.abi.R4XStartR4Draw{}).abi_version;
+    tables[2].abi_version = (r4os.platform2.abi.R4XStartR4Draw2{}).abi_version;
     tables[2].gfx_buffer_map = @intFromPtr(&gfxMapProbe);
-    tables[2].size = @offsetOf(r4os.abi.R4XStartR4Draw, "gfx_buffer_map");
+    tables[2].size = @offsetOf(r4os.platform2.abi.R4XStartR4Draw2, "gfx_buffer_map");
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     const draw = app.drawing().?;
     const buffers = draw.buffers();
     tables[2].gfx_buffer_stats = @intFromPtr(&statsProbe);
     var stats: r4os.abi.GfxBufferStats = .{ .device_bytes = 79 };
-    tables[2].size = @offsetOf(r4os.abi.R4XStartR4Draw, "gfx_buffer_stats") + 8;
+    tables[2].size = @offsetOf(r4os.platform2.abi.R4XStartR4Draw2, "gfx_buffer_stats") + 8;
     const stats_driver = r4os.driver_memory.Context{ .table = .{ .buffer_stats = @intFromPtr(&statsProbe) } };
     const before_stats = stats;
     for ([_]u32{ 56, 135 }) |bytes| {
@@ -963,12 +964,12 @@ test "graphics buffer optional tails preserve 64-bit offsets in Zig and R4D call
     try std.testing.expect(stats.size == 136 and stats.committed_bytes == 0x100000003 and stats.system_bytes == 17 and stats.device_bytes == 19);
     try std.testing.expectEqual(@as(i32, 1), stats_driver.bufferStats(&stats));
     try std.testing.expect(stats.size == 136 and stats.system_bytes == 17 and stats.device_bytes == 19);
-    tables[2].size = @offsetOf(r4os.abi.R4XStartR4Draw, "gfx_buffer_map");
+    tables[2].size = @offsetOf(r4os.platform2.abi.R4XStartR4Draw2, "gfx_buffer_map");
     const ref: r4os.abi.GfxBufferHandle = .{ .id = 7, .generation = 99 };
     var output: r4os.abi.GfxBufferMap = .{ .byte_length = 37 };
     try std.testing.expectEqual(r4os.abi.err_no_fn, buffers.map(&ref, 1, 0x100000003, 0x200000000, &output));
     try std.testing.expectEqual(@as(u64, 37), output.byte_length);
-    tables[2].size = @sizeOf(r4os.abi.R4XStartR4Draw);
+    tables[2].size = @sizeOf(r4os.platform2.abi.R4XStartR4Draw2);
     try std.testing.expectEqual(@as(i32, 1), buffers.map(&ref, 1, 0x100000003, 0x200000000, &output));
     tables[2].gfx_buffer_map_persistent = @intFromPtr(&gfxMapProbe);
     const saved_output = output;
@@ -977,14 +978,15 @@ test "graphics buffer optional tails preserve 64-bit offsets in Zig and R4D call
         try std.testing.expectEqual(r4os.abi.err_no_fn, buffers.mapPersistent(&ref, 1, 0x100000003, 0x200000000, &output));
         try std.testing.expectEqualDeep(saved_output, output);
     }
-    tables[2].size = @sizeOf(r4os.abi.R4XStartR4Draw);
+    tables[2].size = @sizeOf(r4os.platform2.abi.R4XStartR4Draw2);
     try std.testing.expectEqual(@as(i32, 1), buffers.mapPersistent(&ref, 1, 0x100000003, 0x200000000, &output));
-    var old_driver: r4os.abi.DriverApi = undefined;
-    old_driver.magic = r4os.abi.driver_magic;
-    old_driver.version = 24;
-    old_driver.size = @offsetOf(r4os.abi.DriverApi, "gfx_memory_query");
+    var old_driver: r4os.platform2.abi.DriverApi2 = undefined;
+    old_driver.magic = r4os.platform2.abi.driver_magic;
+    old_driver.reserved = 0;
+    old_driver.version = 1;
+    old_driver.size = @offsetOf(r4os.platform2.abi.DriverApi2, "gfx_memory_query");
     const old_context = r4os.r4dev.DriverContext.init(&old_driver);
-    try std.testing.expect(old_context.apiCompatible());
+    try std.testing.expect(!old_context.apiCompatible());
     try std.testing.expect(old_context.memory() == null);
     try std.testing.expect(old_context.graphicsQueue() == null);
     const memory = @import("r4os").driver_memory.Context{ .table = .{ .buffer_map = @intFromPtr(&gfxMapProbe) } };
@@ -993,7 +995,7 @@ test "graphics buffer optional tails preserve 64-bit offsets in Zig and R4D call
     const fence: r4os.abi.GfxFence = .{ .slot = 7, .timeline = 23, .point = 0x100000007, .reset_generation = 0x200000001 };
     var result: r4os.abi.GfxFenceStatus = .{ .deadline_ns = 123 };
     tables[2].gfx_fence_wait = @intFromPtr(&gfxWaitProbe);
-    tables[2].size = @offsetOf(r4os.abi.R4XStartR4Draw, "gfx_fence_wait");
+    tables[2].size = @offsetOf(r4os.platform2.abi.R4XStartR4Draw2, "gfx_fence_wait");
     try std.testing.expectEqual(r4os.abi.err_no_fn, queues.wait(&fence, 0x300000003, 1, &result));
     try std.testing.expectEqual(@as(u64, 123), result.deadline_ns);
     tables[2].size += 8;
@@ -1114,20 +1116,20 @@ test "graphics buffer optional tails preserve 64-bit offsets in Zig and R4D call
     try std.testing.expectEqual(@as(i32, 1), native.queueOwnerInfo(&binding, 0x200000009, &queue_owner));
     try std.testing.expectEqual(@as(u64, 0x300000005), queue_owner.producer_generation);
     try std.testing.expectEqual(@as(u32, 1), queue_owner.closing);
-    old_driver.version = 26;
-    old_driver.size = 576;
+    old_driver.version = 1;
+    old_driver.size = @sizeOf(r4os.platform2.abi.DriverApi2);
     old_driver.gfx_queue_query = &gfxQueuePrefixProbe;
     const prefix = old_context.graphicsQueue().?;
     try std.testing.expectEqual(@as(i32, -4), prefix.complete(&fence, 6, 0));
     try std.testing.expectEqual(r4os.abi.err_no_fn, prefix.retainResource(&fence, 1, &retained));
-    try std.testing.expectEqual(@as(usize, 560), @offsetOf(r4os.abi.DriverApi, "gfx_memory_query"));
-    try std.testing.expectEqual(@as(usize, 568), @offsetOf(r4os.abi.DriverApi, "gfx_queue_query"));
-    try std.testing.expectEqual(@as(usize, 576), @offsetOf(r4os.abi.DriverApi, "gfx_output_query"));
-    try std.testing.expectEqual(@as(usize, 584), @offsetOf(r4os.abi.DriverApi, "gfx_display_query"));
-    try std.testing.expectEqual(@as(usize, 592), @offsetOf(r4os.abi.DriverApi, "resource_query"));
+    try std.testing.expectEqual(@as(usize, 544), @offsetOf(r4os.platform2.abi.DriverApi2, "gfx_memory_query"));
+    try std.testing.expectEqual(@as(usize, 552), @offsetOf(r4os.platform2.abi.DriverApi2, "gfx_queue_query"));
+    try std.testing.expectEqual(@as(usize, 560), @offsetOf(r4os.platform2.abi.DriverApi2, "gfx_output_query"));
+    try std.testing.expectEqual(@as(usize, 568), @offsetOf(r4os.platform2.abi.DriverApi2, "gfx_display_query"));
+    try std.testing.expectEqual(@as(usize, 576), @offsetOf(r4os.platform2.abi.DriverApi2, "resource_query"));
     // v29's resource query is still the end of that historical 600-byte
     // prefix; newer optional DriverApi services may follow it.
-    try std.testing.expectEqual(@as(usize, 600), @offsetOf(r4os.abi.DriverApi, "resource_query") + @sizeOf(usize));
+    try std.testing.expectEqual(@as(usize, 584), @offsetOf(r4os.platform2.abi.DriverApi2, "resource_query") + @sizeOf(usize));
 }
 
 fn outputTestProbe(state: *const r4os.abi.GfxAtomicState, out: *r4os.abi.GfxAtomicResult) callconv(.c) i32 {
@@ -1282,7 +1284,7 @@ fn cursorFacadeProbe() !void {
     const t = std.testing;
     var tables = makeTables(true);
     var imports: [3]a.R4XStartImport = undefined;
-    var context: a.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     const draw = app.drawing().?;
     tables[2].display_cursor_info = @intFromPtr(&cursorInfoProbe);
@@ -1329,7 +1331,7 @@ test "old display and driver prefixes hide output tails while C/Zig preserve rec
     tables[2].size = 536;
     tables[2].gfx_atomic_test = @intFromPtr(&outputTestProbe);
     var imports: [3]a.R4XStartImport = undefined;
-    var context: a.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     const outputs = app.drawing().?.outputs();
     const draw = app.drawing().?;
@@ -1359,7 +1361,7 @@ test "old display and driver prefixes hide output tails while C/Zig preserve rec
     const before = result;
     try std.testing.expectEqual(a.err_no_fn, outputs.testState(&state, &result));
     try std.testing.expectEqualDeep(before, result);
-    tables[2].size = @sizeOf(a.R4XStartR4Draw);
+    tables[2].size = @sizeOf(r4os.platform2.abi.R4XStartR4Draw2);
     try std.testing.expectEqual(@as(i32, 1), outputs.testState(&state, &result));
     try std.testing.expectEqual(state.topology_revision, result.topology_revision);
     tables[2].gfx_atomic_submit = @intFromPtr(&modeSubmitProbe);
@@ -1369,7 +1371,7 @@ test "old display and driver prefixes hide output tails while C/Zig preserve rec
     tables[2].size = 584;
     try std.testing.expectEqual(a.err_no_fn, outputs.submit(&state, 15000, &mode_status));
     try std.testing.expectEqual(@as(u64, 0), mode_status.ticket);
-    tables[2].size = @sizeOf(a.R4XStartR4Draw);
+    tables[2].size = @sizeOf(r4os.platform2.abi.R4XStartR4Draw2);
     try std.testing.expectEqual(a.gfx_output_ok, outputs.submit(&state, 15000, &mode_status));
     try std.testing.expectEqual(a.gfx_output_ok, outputs.status(mode_status.ticket, &mode_status));
     try std.testing.expectEqual(a.gfx_output_ok, outputs.resolve(mode_status.ticket, 2, &mode_status));
@@ -1386,9 +1388,10 @@ test "old display and driver prefixes hide output tails while C/Zig preserve rec
     try std.testing.expectEqual(a.gfx_output_ok, mode_driver.enableModes(&mode_binding));
     try std.testing.expectEqual(a.gfx_output_ok, mode_driver.takeMode(&mode_binding, &mode_job));
     try std.testing.expectEqual(a.gfx_output_error_stale, mode_driver.completeMode(&.{ .ticket = mode_job.ticket, .sequence = mode_job.sequence, .quiesced = 1 }));
-    var old_driver: a.DriverApi = undefined;
-    old_driver.magic = a.driver_magic;
-    old_driver.version = 26;
+    var old_driver: r4os.platform2.abi.DriverApi2 = undefined;
+    old_driver.magic = r4os.platform2.abi.driver_magic;
+    old_driver.reserved = 0;
+    old_driver.version = 1;
     old_driver.size = 576;
     try std.testing.expect(r4os.r4dev.DriverContext.init(&old_driver).graphicsOutputs() == null);
     var native = r4os.driver_outputs.Context{ .table = .{ .publish = @intFromPtr(&outputPublishProbe) } };
@@ -1400,7 +1403,7 @@ test "old display and driver prefixes hide output tails while C/Zig preserve rec
     tables[2].size = 752;
     try std.testing.expectEqual(a.err_no_fn, outputs.color(&port, &color_state));
     try std.testing.expectEqualDeep(color_before, color_state);
-    tables[2].size = @sizeOf(a.R4XStartR4Draw);
+    tables[2].size = @sizeOf(r4os.platform2.abi.R4XStartR4Draw2);
     try std.testing.expectEqual(a.gfx_output_ok, outputs.color(&port, &color_state));
     try std.testing.expect(color_state.revision == 0x600000007 and std.meta.eql(color_state.identity, port) and color_state.formats == 1);
     try std.testing.expect(color_state.max_frl_rate == 6);
@@ -1477,7 +1480,7 @@ test "old display and driver prefixes hide output tails while C/Zig preserve rec
     native.table.size = @offsetOf(a.GfxDriverOutputApi, "publish");
     try std.testing.expectEqual(a.err_no_fn, native.publish(&publication, &identity));
     try std.testing.expectEqual(@as(u64, 0x40000000d), identity.connection_generation);
-    old_driver.version = 27;
+    old_driver.version = 1;
     old_driver.size = 584;
     try std.testing.expect(r4os.r4dev.DriverContext.init(&old_driver).graphicsDisplay() == null);
     var display = r4os.driver_display.Context{ .table = .{ .transition = @intFromPtr(&displayTransitionProbe), .schedule = @intFromPtr(&displayScheduleProbe) } };
@@ -1569,7 +1572,21 @@ fn fakeTimeState(out: *r4os.abi.TimeState) callconv(.c) void {
     out.* = .{ .monotonic_ticks = now_ticks, .monotonic_hz = 1000, .valid = 1 };
 }
 
-fn fakeShouldClose(context: *const r4os.abi.R4XStartContext) callconv(.c) u32 {
+fn fakeMonotonicClock(out: *r4os.abi.MonotonicClockInfo) callconv(.c) i32 {
+    out.* = .{
+        .flags = r4os.abi.monotonic_clock_flag_valid,
+        .source = 1,
+        .generation = 1,
+        .frequency_hz = r4os.abi.monotonic_clock_frequency_hz,
+        .resolution_ns = 1,
+        .instant_ns = now_ticks * 1_000_000,
+        .event_requested_hz = 1000,
+        .event_effective_hz = 1000,
+    };
+    return 1;
+}
+
+fn fakeShouldClose(context: *const r4os.platform2.abi.R4XStartContext2) callconv(.c) u32 {
     _ = context;
     return 0;
 }
@@ -1764,13 +1781,14 @@ fn fakeFrameRead(handle: *const r4os.abi.ProgramProcessHandle, expected_generati
     return r4os.abi.gui_frame_result_ok;
 }
 
-fn makeTables(draw_available: bool) struct { r4os.abi.R4XStartR4Sys, r4os.abi.R4XStartR4Desk, r4os.abi.R4XStartR4Draw } {
-    var sys: r4os.abi.R4XStartR4Sys = .{};
+fn makeTables(draw_available: bool) struct { r4os.platform2.abi.R4XStartR4Sys2, r4os.platform2.abi.R4XStartR4Desk2, r4os.platform2.abi.R4XStartR4Draw2 } {
+    var sys: r4os.platform2.abi.R4XStartR4Sys2 = .{};
     sys.write = @intFromPtr(&fakeWrite);
     sys.putc = @intFromPtr(&fakePutc);
     sys.ticks = @intFromPtr(&fakeTicks);
     sys.time_state = @intFromPtr(&fakeTimeState);
-    var desk: r4os.abi.R4XStartR4Desk = .{};
+    sys.monotonic_clock = @intFromPtr(&fakeMonotonicClock);
+    var desk: r4os.platform2.abi.R4XStartR4Desk2 = .{};
     desk.program_window_id = @intFromPtr(&fakeWindowId);
     desk.gui_window_info = @intFromPtr(&fakeWindowInfo);
     desk.gui_poll_event = @intFromPtr(&fakePollEvent);
@@ -1780,7 +1798,7 @@ fn makeTables(draw_available: bool) struct { r4os.abi.R4XStartR4Sys, r4os.abi.R4
     desk.desktop_activity_wait = @intFromPtr(&fakeActivityWait);
     desk.gui_activity_wait = @intFromPtr(&fakeGuiActivityWait);
     desk.gui_activity_notify = @intFromPtr(&fakeGuiActivityNotify);
-    var draw: r4os.abi.R4XStartR4Draw = .{};
+    var draw: r4os.platform2.abi.R4XStartR4Draw2 = .{};
     draw.gui_clear = @intFromPtr(&fakeClear);
     draw.gui_rect = @intFromPtr(&fakeRect);
     draw.gui_draw_text = @intFromPtr(&fakeText);
@@ -1791,7 +1809,7 @@ fn makeTables(draw_available: bool) struct { r4os.abi.R4XStartR4Sys, r4os.abi.R4
     return .{ sys, desk, draw };
 }
 
-fn enableFrameContract(draw: *r4os.abi.R4XStartR4Draw) void {
+fn enableFrameContract(draw: *r4os.platform2.abi.R4XStartR4Draw2) void {
     draw.gui_frame_begin = @intFromPtr(&fakeFrameBegin);
     draw.gui_frame_append = @intFromPtr(&fakeFrameAppend);
     draw.gui_frame_commit = @intFromPtr(&fakeFrameCommit);
@@ -1819,7 +1837,7 @@ test "transactional paint regional replacement retains full commands and promote
     enableFrameContract(&tables[2]);
     tables[2].gui_frame_begin_replace = @intFromPtr(&fakeFrameReplace);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [0]r4os.Timer = .{};
     var window = app.window(&timers) orelse return error.WindowMissing;
@@ -1907,7 +1925,7 @@ fn replayCaptured(width: usize, height: usize, output: []u32) void {
 
 // Language interop reuses the original callbacks, capture and pixel oracle.
 // These exports belong to the test object, never the SDK product runtime.
-pub export fn sdk_gfx_oracle_tables(sys: *r4os.abi.R4XStartR4Sys, desk: *r4os.abi.R4XStartR4Desk, draw: *r4os.abi.R4XStartR4Draw) callconv(.c) void {
+pub export fn sdk_gfx_oracle_tables(sys: *r4os.platform2.abi.R4XStartR4Sys2, desk: *r4os.platform2.abi.R4XStartR4Desk2, draw: *r4os.platform2.abi.R4XStartR4Draw2) callconv(.c) void {
     sdk_gui_oracle_tables(sys, desk, draw);
     draw.gfx_buffer_map = @intFromPtr(&gfxMapProbe);
     draw.gfx_buffer_map_persistent = @intFromPtr(&gfxMapProbe);
@@ -1925,7 +1943,7 @@ pub export fn sdk_gfx_oracle_tables(sys: *r4os.abi.R4XStartR4Sys, desk: *r4os.ab
     draw.display_cursor_submit = @intFromPtr(&cursorSubmitProbe);
     budget_probe_rc = 1;
 }
-pub export fn sdk_gui_oracle_tables(sys: *r4os.abi.R4XStartR4Sys, desk: *r4os.abi.R4XStartR4Desk, draw: *r4os.abi.R4XStartR4Draw) callconv(.c) void {
+pub export fn sdk_gui_oracle_tables(sys: *r4os.platform2.abi.R4XStartR4Sys2, desk: *r4os.platform2.abi.R4XStartR4Desk2, draw: *r4os.platform2.abi.R4XStartR4Draw2) callconv(.c) void {
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     sys.* = tables[0];
@@ -1959,15 +1977,15 @@ pub export fn sdk_gui_oracle_cancelled() callconv(.c) u32 {
     return frame_cancel_count;
 }
 
-fn makeApp(tables: anytype, imports: *[3]r4os.abi.R4XStartImport, context: *r4os.abi.R4XStartContext) !r4os.App {
+fn makeApp(tables: anytype, imports: *[3]r4os.abi.R4XStartImport, context: *r4os.platform2.abi.R4XStartContext2) !r4os.App {
     imports.* = .{
-        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4sys), .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(&tables[0]) },
-        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4desk), .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(&tables[1]) },
-        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4draw), .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(&tables[2]) },
+        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4sys), .resolved_version = 2, .min_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(&tables[0]) },
+        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4desk), .resolved_version = 2, .min_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(&tables[1]) },
+        .{ .group_id = @intFromEnum(r4os.abi.R4LGroup.r4draw), .resolved_version = 2, .min_version = 2, .flags = r4os.abi.r4xstart_import_flag_group_interface, .table = @intFromPtr(&tables[2]) },
     };
     context.* = .{
         .app_class = @intFromEnum(r4os.abi.R4XStartAppClass.gui),
-        .flags = r4os.abi.r4xstart_flag_imports_valid,
+        .flags = r4os.abi.r4xstart_flag_imports_valid | r4os.abi.r4xstart_flag_close_supported,
         .imports = @intFromPtr(imports),
         .import_count = imports.len,
         .should_close = @intFromPtr(&fakeShouldClose),
@@ -1989,7 +2007,7 @@ test "raw GUI events become typed messages and paint presents once" {
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [1]r4os.Timer = .{.{}};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;
@@ -2070,7 +2088,7 @@ test "command clipboard timer wait and missing draw capability stay explicit" {
     clipboard_revision = 7;
     var tables = makeTables(true);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [1]r4os.Timer = .{.{}};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;
@@ -2097,20 +2115,20 @@ test "command clipboard timer wait and missing draw capability stay explicit" {
     try std.testing.expect(window.waitMessage(r4os.time_contract.timeoutPoll()) == .timed_out);
 
     const desk = app.desktop().?;
-    const raw_desk: r4os.r4xstart.R4Desk = .{ .raw = &context, .table = &tables[1] };
+    const raw_desk = r4os.r4xstart.R4Desk.fromProgram(app.lowLevel());
     try std.testing.expectEqual(r4os.abi.remote_frame_error_unsupported, desk.desktopActivityNotify());
     tables[1].desktop_activity_notify = @intFromPtr(&fakeActivityNotify);
     try std.testing.expectEqual(@as(i32, 0), desk.desktopActivityNotify());
     try std.testing.expectEqual(@as(i32, 0), raw_desk.desktopActivityNotify());
     // An old prefix must hide the optional pointer even if memory beyond its
     // advertised size happens to contain a callable address.
-    tables[1].size = @offsetOf(r4os.abi.R4XStartR4Desk, "desktop_activity_notify");
+    tables[1].size = @offsetOf(r4os.platform2.abi.R4XStartR4Desk2, "desktop_activity_notify");
     try std.testing.expectEqual(r4os.abi.remote_frame_error_unsupported, desk.desktopActivityNotify());
     try std.testing.expectEqual(r4os.abi.remote_frame_error_unsupported, raw_desk.desktopActivityNotify());
 
     var missing_tables = makeTables(false);
     var missing_imports: [3]r4os.abi.R4XStartImport = undefined;
-    var missing_context: r4os.abi.R4XStartContext = undefined;
+    var missing_context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var missing_app = try makeApp(&missing_tables, &missing_imports, &missing_context);
     try std.testing.expect(missing_app.window(timers[0..]) == null);
 }
@@ -2125,7 +2143,7 @@ test "command clipboard timer scoped activity preserves enrollment race deadline
     defer gui_wait_mode = 0;
     var tables = makeTables(true);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [0]r4os.Timer = .{};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;
@@ -2166,7 +2184,7 @@ test "transactional paint and immutable snapshot use the complete frame facade" 
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [1]r4os.Timer = .{.{}};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;
@@ -2236,7 +2254,7 @@ test "buffered Canvas keeps pixels identical while collapsing draw transitions" 
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [1]r4os.Timer = .{.{}};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;
@@ -2304,7 +2322,7 @@ test "buffered Canvas covers widgets partial flush direct operations and rejects
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [1]r4os.Timer = .{.{}};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;
@@ -2338,7 +2356,7 @@ test "buffered Canvas covers widgets partial flush direct operations and rejects
     present_count = 0;
     var incomplete_tables = makeTables(true);
     var incomplete_imports: [3]r4os.abi.R4XStartImport = undefined;
-    var incomplete_context: r4os.abi.R4XStartContext = undefined;
+    var incomplete_context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var incomplete_app = try makeApp(&incomplete_tables, &incomplete_imports, &incomplete_context);
     var incomplete_window = incomplete_app.window(timers[0..]) orelse return error.WindowMissing;
     switch (incomplete_window.beginPaint()) {
@@ -2359,7 +2377,7 @@ test "buffered Canvas cancels a transactional frame after a partial flush failur
     var tables = makeTables(true);
     enableFrameContract(&tables[2]);
     var imports: [3]r4os.abi.R4XStartImport = undefined;
-    var context: r4os.abi.R4XStartContext = undefined;
+    var context: r4os.platform2.abi.R4XStartContext2 = undefined;
     var app = try makeApp(&tables, &imports, &context);
     var timers: [1]r4os.Timer = .{.{}};
     var window = app.window(timers[0..]) orelse return error.WindowMissing;

@@ -31,3 +31,8 @@ pub fn opaqueType(comptime T: type) bool {
     return false;
 }
 pub const callbackTypes = .{ web.CookieProvider, web.CookieSink, web.TargetAuthorizer, web.DownloadProgress, web.DownloadWrite, web.DownloadHeadObserver, web.PostStreamRead, web.PostStreamWrite, @FieldType(runtime_jobs.Owner, "find"), @typeInfo(@FieldType(web.FetchOptions, "progress")).optional.child };
+
+pub fn canonicalTypeName(comptime T: type) ?[]const u8 {
+    if (T == @import("platform2.zig").abi.R4XStartContext2) return "R4XStartContext2";
+    return null;
+}

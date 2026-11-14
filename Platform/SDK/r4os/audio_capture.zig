@@ -69,8 +69,8 @@ test "capture backend selects actual2 callbacks without a legacy bundle and pres
     table2.audio_capture_io = 0;
     try t.expectEqual(@as(i32, 0), backend.io(&request, &reply, &bytes));
     try t.expectEqual(abi.audio_capture_error_unsupported, reply.result);
-    var raw1: abi.R4XStartContext = .{};
-    var table1: abi.R4XStartR4Audio = .{};
+    var raw1: @import("r4os_contract2").R4XStartContext2 = .{};
+    var table1: @import("r4os_contract2").R4XStartR4Audio2 = .{};
     table1.audio_capture_io = @intFromPtr(&P.invoke);
     const bundle = program.Bundle{ .raw = &raw1, .audio = &table1 };
     const audio1 = Audio.Context.init(&bundle);

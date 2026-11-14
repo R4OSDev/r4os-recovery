@@ -12,20 +12,16 @@ pub struct Fonts<'a> {
 }
 impl<'a> Fonts<'a> {
     pub fn open(app: &'a App<'_>) -> Result<Self> {
-        let mut native = MaybeUninit::uninit();
-        required(unsafe {
-            c::R4FontHelpersContext_init(0, app.start_context(), native.as_mut_ptr())
-        })?;
-        Ok(Self {
-            native,
-            _app: PhantomData,
-            _local: PhantomData,
-        })
+        Self::open2(app)
     }
     pub fn open2(app: &'a r4os_sdk::app2::App<'_>) -> Result<Self> {
         let mut native = MaybeUninit::uninit();
         required(unsafe {
-            c::R4FontHelpersContext_init2(0, core::ptr::from_ref(app.start_context()).cast(), native.as_mut_ptr())
+            c::R4FontHelpersContext_init2(
+                0,
+                core::ptr::from_ref(app.start_context()).cast(),
+                native.as_mut_ptr(),
+            )
         })?;
         Ok(Self {
             native,
