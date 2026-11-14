@@ -6,8 +6,8 @@
     .dependencies = .{
         .r4os_sdk = .{ .path = "../../../Artifacts/SDKProfile/SDK" },
         .r4os_libraries = .{
-            .url = "https://github.com/R4OSDev/r4os-libraries/archive/8fc5437b33bf531409b76fc8aba45e481902e58d.tar.gz",
-            .hash = "r4os_libraries-0.64.62-dH4fNY-5ewO7AX8hkbfKPxn2mVKTvSHex_RMNyZjctg-",
+            .url = "https://github.com/R4OSDev/r4os-libraries/archive/86d39b56ee8fe55f7776139acf1b84132d81c92c.tar.gz",
+            .hash = "r4os_libraries-0.64.64-dH4fNVUvewN-DveVONaNeRrIGds90KMIvIxINzxLbJ7_",
         },
     },
     .paths = .{

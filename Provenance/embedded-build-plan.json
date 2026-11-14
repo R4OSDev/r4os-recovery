@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "scope": "39 original Recovery roles using exact current canonical SDK218/Contract95/Library64 snapshots. All58 historical archives are retained plus3 new owner archives. Runtime admission, artifact-derived versions, paired Kernel/Menu/Runtime and native qualification remain separate pending work.",
+  "scope": "39 current-only original Recovery roles on exact SDK218 epochC/Contract95/Library64; versions derived from actual candidate body changes. Final versioned rebuild/admission and paired runtime/native acceptance remain pending.",
   "snapshot_sdk": "0.64.218",
   "snapshot_contract": "0.64.95",
   "snapshot_libraries": "0.64.64",
@@ -924,7 +924,7 @@
       "original_archive_sha256": "e8a3e90f9d1595c9b99d6fbbd658d794cb915d4dca46d833bb8c4484d861bd08",
       "original_version": "0.1.5",
       "source": "RecoveryTools/Embedded/Services-DhcpService",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "target": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -963,7 +963,7 @@
       "original_archive_sha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
       "original_version": "0.1.3",
       "source": "RecoveryTools/Embedded/Services-DnsService",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "target": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1002,7 +1002,7 @@
       "original_archive_sha256": "94c473a703c26c5f700c0240daffa210a7318955dc66663f02671ee2e2e4d682",
       "original_version": "0.1.6",
       "source": "RecoveryTools/Embedded/Services-TcpService",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "target": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1041,7 +1041,7 @@
       "original_archive_sha256": "c96d213fd652e62325f4297cee0364648ac54617bc64e621dbf099e5382acfce",
       "original_version": "0.1.3",
       "source": "RecoveryTools/Embedded/Services-UdpService",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "target": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1080,7 +1080,7 @@
       "original_archive_sha256": "48c0cd2ba2d5768120a477c6f85b79808f1ff4e3050166923bbaae2e2630b8ba",
       "original_version": "0.1.9",
       "source": "RecoveryTools/Embedded/Services-SshService",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "target": "Runtime/R4OS/SERVICES/SSHD.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1122,7 +1122,7 @@
       "original_archive_sha256": "673bbc45011f2107a92c3b68cc7bb57403f9afaf6fc3c6757c03aa34e9deb723",
       "original_version": "0.1.7",
       "source": "RecoveryTools/Embedded/Services-FtpService",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "target": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1161,7 +1161,7 @@
       "original_archive_sha256": "0ec648750e6d978e750609d256f9d7e99698a6e8def64872c0808e9359c94ccd",
       "original_version": "0.1.12",
       "source": "RecoveryTools/Embedded/Apps-Terminal",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1201,7 +1201,7 @@
       "original_archive_sha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
       "original_version": "0.1.2",
       "source": "RecoveryTools/Embedded/Apps-ServiceManager",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1240,7 +1240,7 @@
       "original_archive_sha256": "eea0ae3e087f97c9ce3a55319bde66d6a0812f032cef2af4cd31fe6ea5e9c66e",
       "original_version": "0.1.1",
       "source": "RecoveryTools/Embedded/Apps-Help",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/HELP.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1279,7 +1279,7 @@
       "original_archive_sha256": "191799a172d39bde2e357e97a19094abad2772ea2f68d27ad6224ccc2f113b09",
       "original_version": "0.1.1",
       "source": "RecoveryTools/Embedded/Apps-IpConfig",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/IPCONFIG.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1318,7 +1318,7 @@
       "original_archive_sha256": "96b07272db1dfe754be506f2f9a3895c3f30b6cc7d2b6f334553998fa310a761",
       "original_version": "0.1.2",
       "source": "RecoveryTools/Embedded/Apps-SysInfo",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/SYSINFO.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1357,7 +1357,7 @@
       "original_archive_sha256": "f98f7229cf79d9e14200e4314de2a9e83f67bc48f8ae6d14b2ecb01fd2640057",
       "original_version": "0.1.1",
       "source": "RecoveryTools/Embedded/Apps-HttpGet",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/HTTPGET.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1396,7 +1396,7 @@
       "original_archive_sha256": "ccca7ff9c4022c74ebc8ca6d15272a49ddb511b86b650f6fe48502a67a165bf6",
       "original_version": "0.1.1",
       "source": "RecoveryTools/Embedded/Apps-NetCat",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/NETCAT.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
@@ -1448,7 +1448,7 @@
       "original_archive_sha256": "5592fd1bdbb958a33031bbc2350cd5491d1ba86973b47d86628e71a242748345",
       "original_version": "0.1.5",
       "source": "RecoveryTools/Embedded/Apps-R4Part",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {

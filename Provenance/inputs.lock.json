@@ -44500,7 +44500,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "fe62f8eb3af97a64127cf436195150651edccde2eb28ca248807866893bbf632",
+      "sha256": "4e781307aec428344567b513f1b53ae5166bfbf04da972551c6f98f29216e32c",
       "originalSha256": "993c3bd08df299aec9ddc6041567a71344e69c3102010dbf6e352be59a08839f",
       "path": "RecoveryTools/Embedded/Apps-Help/module.R4MF",
       "bytes": 234
@@ -44577,7 +44577,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "c6151a152d5d90ec3b35b32b4114f45436741957c8eaff0c7494647201d79e99",
+      "sha256": "bf91aa29aee0703b37e4bb969525848067ab1df2d2c14940679cc3bab48f4ece",
       "originalSha256": "86d80cbd8e3455322f857e8a5076d007964bae16c9b5f36d4f05119e40e45577",
       "path": "RecoveryTools/Embedded/Apps-HttpGet/module.R4MF",
       "bytes": 262
@@ -44654,7 +44654,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "92a8b4f2a120251db076c2be6070523fc1b77fbe70b9171565ed2927029969a3",
+      "sha256": "dfe44038f0b010fb50ac05adc75b101f889e4a2d46a6a37bf543e06e914d1da6",
       "originalSha256": "7b53a3e44f25848c6a4abaeb62063d7748bf4f6bf29ee9e3573843d733d6f573",
       "path": "RecoveryTools/Embedded/Apps-IpConfig/module.R4MF",
       "bytes": 264
@@ -44731,7 +44731,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "5b8152f4ae3b33e2403222b98dd58834bcb3b0c7159f756591a4b4b623d80ee9",
+      "sha256": "c08f5ea0ec27729624f02ccf4609d389563443748532ee42d467818f54ed15d0",
       "originalSha256": "518479fbd63438258ce1f6d7cbb6d156df7e1b3afff59a6fa61b65b8ed9f33ea",
       "path": "RecoveryTools/Embedded/Apps-NetCat/module.R4MF",
       "bytes": 283
@@ -44808,7 +44808,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "230d02891333f7a9a637dfa8c894a61689c06b6fe6670531c6fb5cef14da546f",
+      "sha256": "5665a163d37c8cd31bdedae9ca11b4196fe6ebb3759a747ebcf55a0b21117b5c",
       "originalSha256": "8f8d49adc801aa06230bf062c95909ad35870cd78687e03e39ee16cecad0d9b0",
       "path": "RecoveryTools/Embedded/Apps-R4Part/module.R4MF",
       "bytes": 308
@@ -44929,7 +44929,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "f92a7b3e09dc29b9e198bcefe7ff5783a9e7c55d1fc6e6ec57a22e6ebf7a726d",
+      "sha256": "bc1dcc998f5a5b26791bc9f2397caae1c89944039f663a05310a198218b1d815",
       "originalSha256": "0ac40a3b601ea66a2b8d56cbf2fc45f07da885c40b5dc09ef2682e1064002ff6",
       "path": "RecoveryTools/Embedded/Apps-ServiceManager/module.R4MF",
       "bytes": 292
@@ -45006,7 +45006,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "c359e95d719c7d86eb79be8003809cbb3fc3657f2b7fe49c266559364bad206e",
+      "sha256": "dc678b1e8312c093ec0cee37f3a3d58cf6f7dd42ec8ac5b3a8f51167b7900f70",
       "originalSha256": "ddfe5a582f45a3c8a3791084e272536c510de793e81fbc6e8303341f9f6f496f",
       "path": "RecoveryTools/Embedded/Apps-SysInfo/module.R4MF",
       "bytes": 284
@@ -45083,7 +45083,7 @@
         "path": "build.zig.zon",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "8d25e6be06223e8ac52591a0376bb7a10ae70f6a12715333879add1a8dc09826",
+      "sha256": "ffb77950e946f5a85e1984779ad4e21c8f8b5705701be04307e38c35647c7742",
       "originalSha256": "680366234af3def61f7f620732cc79edd33beb4eb7edc9dd496ab694a314cf86",
       "path": "RecoveryTools/Embedded/Apps-Terminal/build.zig.zon",
       "bytes": 759
@@ -45094,7 +45094,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "91025fd623f6c23ae10bed82d70212d6e65e85ab17458b6eade079dc25fd3bfb",
+      "sha256": "b30707d9f31d8e53316e6d7d8c5ae5b2ce5819cc08bf2c41e7cfb88675fa4735",
       "originalSha256": "21ec0c6e3d0d5432c1fbf489e7ff30d60a1283c2dd19e85ca7809d7aa420abc5",
       "path": "RecoveryTools/Embedded/Apps-Terminal/module.R4MF",
       "bytes": 482
@@ -47462,7 +47462,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "ee9fb61ca874966dfa46426f8f282e3783468fe5bd438df66a1872d658bcc345",
+      "sha256": "bd13ad2839e23c6a736238452bcd46a1ca1ff39b51f0140798a6a0713e0261f6",
       "originalSha256": "70d2d65090d41ba0f4cee38988fd59e3061a7bdeb27846250051d80e20c522b1",
       "path": "RecoveryTools/Embedded/Services-DhcpService/module.R4MF",
       "bytes": 406
@@ -47539,7 +47539,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "51a1a579670485815cde8fd9cc62e2b6116cd10a51f5dc15e97aca2e4a36334a",
+      "sha256": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
       "originalSha256": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca",
       "path": "RecoveryTools/Embedded/Services-DnsService/module.R4MF",
       "bytes": 474
@@ -47623,7 +47623,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "41a98e344a36cbf31fa6917b0a7e89aeb23444b5a627b415c71823a0f1925a43",
+      "sha256": "6d1607b932c319cc465a52f80e1370db51ec3dbe788ec98a122189317c1876e8",
       "originalSha256": "3cb20e178c0e21b82ccd20161f438f7b781c1723ff90c4608bbb9c530cedf846",
       "path": "RecoveryTools/Embedded/Services-FtpService/module.R4MF",
       "bytes": 451
@@ -47700,7 +47700,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "5423a08d4e8edb44b92a015a85bf67a12d5f746c47297792256ef15fefded36b",
+      "sha256": "3d6200262ab2c9b51e96cd225bec497dee9ea5f431e7ab02ec85309600b46aed",
       "originalSha256": "5e4c3ab55343442a69ace2cc08d5fcc607b9e31bb6e09d9499fc338bcadc82b2",
       "path": "RecoveryTools/Embedded/Services-SshService/module.R4MF",
       "bytes": 538
@@ -47810,7 +47810,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "9140c4b9b37ea611aa4f5c653bd9eed9cb699822ea124d77d7446b3c5296a67c",
+      "sha256": "4a0e94cd7c733677ccd86d4b93c8d59876992eca07443b9421788db3bc8bc237",
       "originalSha256": "0f7b0ca3b5ec6ae6b69452b74201eb7d996b926dd60e523f2b29e0d928bb8c2c",
       "path": "RecoveryTools/Embedded/Services-TcpService/module.R4MF",
       "bytes": 403
@@ -47887,7 +47887,7 @@
         "path": "module.R4MF",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "121029d3fdf495da28bb6c74a60492a88bed55fadc9f4183b2c2f27bd1f40e76",
+      "sha256": "a2abdfcf35df3f9ab13726426aaa63dc54ce7e49abccd1f7cab62c158f4b8be7",
       "originalSha256": "736343176154d1d4d95b30531b0a6167f1daa5970395ac18411970b28235ff0a",
       "path": "RecoveryTools/Embedded/Services-UdpService/module.R4MF",
       "bytes": 403
@@ -78214,6 +78214,91 @@
           "path": "Legal/Sources/SDK-0.90.90-identities.zip",
           "before": null,
           "after": "0079d165fd72a636728c8b3d75248af743cf5d8ae7ed25116c1059ebc90e473c"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.90 current Terminal direct Library peer edge must equal its SDK Library64 edge; two package identities for the same fork root rejected correctly. No implementation/manifest/Runtime body changed by this metadata correction; actual remaining build and final whole equality pending.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Embedded/Apps-Terminal/build.zig.zon",
+          "before": "8d25e6be06223e8ac52591a0376bb7a10ae70f6a12715333879add1a8dc09826",
+          "after": "ffb77950e946f5a85e1984779ad4e21c8f8b5705701be04307e38c35647c7742"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.90 actual39 candidate bodies determine derivative module increments; unchanged modules retain versions and canonical R4STD11 retains its owner64 identity. Candidate files preserved before rebuild; source-built Runtime admission remains pending.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Embedded/Services-DhcpService/module.R4MF",
+          "before": "ee9fb61ca874966dfa46426f8f282e3783468fe5bd438df66a1872d658bcc345",
+          "after": "bd13ad2839e23c6a736238452bcd46a1ca1ff39b51f0140798a6a0713e0261f6"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/module.R4MF",
+          "before": "51a1a579670485815cde8fd9cc62e2b6116cd10a51f5dc15e97aca2e4a36334a",
+          "after": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-TcpService/module.R4MF",
+          "before": "9140c4b9b37ea611aa4f5c653bd9eed9cb699822ea124d77d7446b3c5296a67c",
+          "after": "4a0e94cd7c733677ccd86d4b93c8d59876992eca07443b9421788db3bc8bc237"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-UdpService/module.R4MF",
+          "before": "121029d3fdf495da28bb6c74a60492a88bed55fadc9f4183b2c2f27bd1f40e76",
+          "after": "a2abdfcf35df3f9ab13726426aaa63dc54ce7e49abccd1f7cab62c158f4b8be7"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-SshService/module.R4MF",
+          "before": "5423a08d4e8edb44b92a015a85bf67a12d5f746c47297792256ef15fefded36b",
+          "after": "3d6200262ab2c9b51e96cd225bec497dee9ea5f431e7ab02ec85309600b46aed"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-FtpService/module.R4MF",
+          "before": "41a98e344a36cbf31fa6917b0a7e89aeb23444b5a627b415c71823a0f1925a43",
+          "after": "6d1607b932c319cc465a52f80e1370db51ec3dbe788ec98a122189317c1876e8"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-Terminal/module.R4MF",
+          "before": "91025fd623f6c23ae10bed82d70212d6e65e85ab17458b6eade079dc25fd3bfb",
+          "after": "b30707d9f31d8e53316e6d7d8c5ae5b2ce5819cc08bf2c41e7cfb88675fa4735"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-ServiceManager/module.R4MF",
+          "before": "f92a7b3e09dc29b9e198bcefe7ff5783a9e7c55d1fc6e6ec57a22e6ebf7a726d",
+          "after": "bc1dcc998f5a5b26791bc9f2397caae1c89944039f663a05310a198218b1d815"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-Help/module.R4MF",
+          "before": "fe62f8eb3af97a64127cf436195150651edccde2eb28ca248807866893bbf632",
+          "after": "4e781307aec428344567b513f1b53ae5166bfbf04da972551c6f98f29216e32c"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-IpConfig/module.R4MF",
+          "before": "92a8b4f2a120251db076c2be6070523fc1b77fbe70b9171565ed2927029969a3",
+          "after": "dfe44038f0b010fb50ac05adc75b101f889e4a2d46a6a37bf543e06e914d1da6"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-SysInfo/module.R4MF",
+          "before": "c359e95d719c7d86eb79be8003809cbb3fc3657f2b7fe49c266559364bad206e",
+          "after": "dc678b1e8312c093ec0cee37f3a3d58cf6f7dd42ec8ac5b3a8f51167b7900f70"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-HttpGet/module.R4MF",
+          "before": "c6151a152d5d90ec3b35b32b4114f45436741957c8eaff0c7494647201d79e99",
+          "after": "bf91aa29aee0703b37e4bb969525848067ab1df2d2c14940679cc3bab48f4ece"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-NetCat/module.R4MF",
+          "before": "5b8152f4ae3b33e2403222b98dd58834bcb3b0c7159f756591a4b4b623d80ee9",
+          "after": "c08f5ea0ec27729624f02ccf4609d389563443748532ee42d467818f54ed15d0"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Apps-R4Part/module.R4MF",
+          "before": "230d02891333f7a9a637dfa8c894a61689c06b6fe6670531c6fb5cef14da546f",
+          "after": "5665a163d37c8cd31bdedae9ca11b4196fe6ebb3759a747ebcf55a0b21117b5c"
         }
       ]
     }
