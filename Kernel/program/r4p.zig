@@ -25,7 +25,6 @@ pub const ROLE_STATE_ERROR: u8 = 4;
 pub const ROLE_STATE_DISABLED: u8 = 5;
 
 const next_api = @import("generation2.zig").abi;
-const InitFn = *const fn (*const protocol_api.Table) callconv(.c) i32;
 const InitFn2 = *const fn (*const next_api.ProtocolApi2) callconv(.c) i32;
 const ShutdownFn = *const fn () callconv(.c) i32;
 const QueryFn = *const fn (*protocol_api.ProtocolStatus) callconv(.c) i32;
@@ -580,12 +579,10 @@ fn initModule(module: *const Module) void {
     }
     const init_start = loader_perf.now();
     protocol_api.enter(module.registry_slot);
-    const result = if (module.init_generation == 2) result: {
+    const result = result: {
+        if (module.init_generation != 2) break :result -1;
         const init: InitFn2 = @ptrFromInt(init_address);
         break :result init(&protocol_api.table2);
-    } else result: {
-        const init: InitFn = @ptrFromInt(init_address);
-        break :result init(&protocol_api.table);
     };
     protocol_api.leave();
     loader_perf.addR4pInitTicks(init_start);

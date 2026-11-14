@@ -7,6 +7,10 @@ Zig/C contracts. Higher text/image/font/graphics/media/compiler Rust and C helpe
 [Shared/Rust/README.md](Shared/Rust/README.md); they execute the original owner
 functions and are linked explicitly, without changing provider binaries.
 
+Technical module metadata uses `Query2:2` exclusively. The obsolete `Query:1`
+descriptors and exports are retired. Functional interfaces such as `TEXT_V1`,
+`COMPILER_V1` and `EGL_V1` keep their independent revisions and layouts.
+
 ## Build and validation
 
 Build and test all libraries on Windows:

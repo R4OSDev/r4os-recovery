@@ -1,7 +1,7 @@
 R4OS_MODULE_MANIFEST=2
 KIND=R4L
 NAME=R4NV
-VERSION=0.1.20
+VERSION=0.1.21
 LANGUAGE=Zig
 SOURCE=Source/main.zig
 TARGET=/R4OS/LIBS/R4NV.R4L
@@ -10,7 +10,6 @@ OPTIMIZE=speed
 EXPORT=BACKEND_V1:r4nv_backend_v1:3
 EXPORT=SHADER_V1:r4nv_shader_v1:1
 EXPORT=RENDER_V1:r4nv_render_v1:1
-EXPORT=Query:r4nv_query:1
 EXPORT=Query2:r4nv_query2:2
 CONTRACT=Contract/LibraryContract.json
 CONTRACT_BASELINE=Contract/LibraryContract.baseline.json

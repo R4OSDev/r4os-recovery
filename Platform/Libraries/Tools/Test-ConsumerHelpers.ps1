@@ -76,7 +76,7 @@ r4os-sdk={path="$($SdkRoot.Replace('\','/'))/Rust",features=["alloc"]}
             @('E0277','fn send<T:Send>(){} pub fn bad(){send::<r4os_library_helpers::font::Decoder<''static,''static>>();}')
         )
         if($Media){$cases+=,@('E0521','pub fn bad(m:&mut r4os_library_helpers::media::Mux,packet:&[u8]){let mut saved=alloc::vec::Vec::new();let _=m.packet(packet,true,0,1,|b|{saved.push(b);true});drop(saved);}')}
-        if($Media){$cases+=,@('E0505','pub fn bad(app:&r4os_sdk::App<''_>,heap:r4os_library_helpers::Heap,b:&[u8]){let p=r4os_library_helpers::graphics::ColorProfile::open(app,&heap,b,1,0).unwrap();drop(heap);drop(p);}')}
+        if($Media){$cases+=,@('E0505','pub fn bad(app:&r4os_sdk::App2<''_>,heap:r4os_library_helpers::Heap,b:&[u8]){let p=r4os_library_helpers::graphics::ColorProfile::open2(app,&heap,b,1,0).unwrap();drop(heap);drop(p);}')}
         foreach($case in $cases){
             [IO.File]::WriteAllText($negative,"extern crate alloc;`n"+$case[1]+"`n",[Text.UTF8Encoding]::new($false))
             $log=(& $pwsh -NoLogo -NoProfile -File $RustLauncher cargo check --offline --manifest-path (Join-Path $WorkRoot 'Cargo.toml') --target-dir (Join-Path $WorkRoot 'negative-target') @patches --message-format=json 2>&1|Out-String)

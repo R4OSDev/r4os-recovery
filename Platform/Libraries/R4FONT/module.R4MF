@@ -1,7 +1,7 @@
 R4OS_MODULE_MANIFEST=2
 KIND=R4L
 NAME=R4FONT
-VERSION=0.2.4
+VERSION=0.2.5
 LANGUAGE=Zig
 SOURCE=Source/main.zig
 SOURCE=ThirdParty/r4font/freetype/src/base/ftbase.c
@@ -48,7 +48,6 @@ TARGET=/R4OS/LIBS/R4FONT.R4L
 IMAGE_SCOPE=slim
 OPTIMIZE=speed
 EXPORT=API_V1:r4font_api_v1:1
-EXPORT=Query:r4font_query:1
 EXPORT=Query2:r4font_query2:2
 CONTRACT=Contract/LibraryContract.json
 CONTRACT_BASELINE=Contract/LibraryContract.baseline.json

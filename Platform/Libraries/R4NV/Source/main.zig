@@ -36,15 +36,6 @@ pub export var r4nv_render_v1: c.RenderV1 align(8) linksection(".data.r4l_export
     .render_upload = r4nv_render_upload_impl,
     .encode_yuv = r4nv_encode_yuv_impl,
 };
-pub export var r4nv_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 test "backend and shader ABI preserve operands, executable identity and rejected outputs" {
     try checkGraphicsCopyChannel();
     try @import("encode_checks.zig").run();

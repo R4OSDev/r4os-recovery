@@ -19,7 +19,7 @@ Versioned interfaces:
 - R4STD:CONFIG_V1:1
 
 Applications import only the interfaces they use and bind
-Bindings/Zig/r4std.zig or Bindings/C/r4std.h. Query:1 is the technical module
+Bindings/Zig/r4std.zig or Bindings/C/r4std.h. Query2:2 is the technical module
 identity, not a functional R4STD import.
 
 CODEC_V1 provides strict CP437, CP850 and Windows-1252 conversion and scalar UTF-8

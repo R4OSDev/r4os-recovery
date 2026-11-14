@@ -106,14 +106,6 @@ pub export var r4gfx_device_v1: c.DeviceV1 align(8) linksection(".data.r4l_expor
     .resource_priority = device.resourcePriority,
 };
 pub export var r4gfx_color_v1: c.ColorV1 align(8) linksection(".data.r4l_exports") = color_api.table;
-pub export var r4gfx_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
 test "bounded color conversion preserves reference and error semantics" {
     try @import("color_test.zig").check(&r4gfx_color_v1);
 }

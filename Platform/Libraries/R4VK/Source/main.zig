@@ -56,14 +56,5 @@ pub export var r4vk_vulkan_v1: c.VulkanV1 align(8) linksection(".data.r4l_export
     .header = c.vulkan_v1_header,
     .open = r4vk_open_impl,
 };
-pub export var r4vk_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 // Technical generation2 query; independent interfaces keep their revisions.
 pub export var r4vk_query2: r4os.platform2.abi.R4LQuery2 align(8) linksection(".data.r4l_exports") = .{};

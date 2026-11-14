@@ -8,7 +8,7 @@ use r4os_library_helpers::{
     media::{BuiltinShader, Nv12, shader},
     video::Clock,
 };
-use r4os_sdk::App;
+use r4os_sdk::App2 as App;
 struct Output<'a, 'b>(&'a App<'b>);
 impl core::fmt::Write for Output<'_, '_> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
@@ -21,19 +21,19 @@ impl core::fmt::Write for Output<'_, '_> {
 }
 unsafe extern "C" {
     fn r4libraries60_color(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         bytes: *const u8,
         length: usize,
         pixels: *mut u32,
     ) -> i32;
-    fn r4libraries60_workers(start: *const r4os_sdk::abi::R4XStartContext) -> i32;
+    fn r4libraries60_workers(start: *const r4os_sdk::abi::generation2::R4XStartContext2) -> i32;
 }
 const ICC: &[u8] = include_bytes!("../../../../R4GFX/Tests/Color/Fixtures/vcgt-display.icc");
 const EDID: &[u8] = include_bytes!("../../../../R4GFX/Tests/Display/Fixtures/qemu.edid");
 fn exercise(app: &App<'_>) -> Result<(), (i32, Error)> {
     let bad = Error::InvalidProvider;
     let heap = Heap::new().map_err(|e| (1, e))?;
-    let mut profile = ColorProfile::open(app, &heap, ICC, 1, 2).map_err(|e| (2, e))?;
+    let mut profile = ColorProfile::open2(app, &heap, ICC, 1, 2).map_err(|e| (2, e))?;
     let mut rust = [0xffffff, 0, 0xff0000, 0x00ff00];
     let mut c = rust;
     profile.apply_sdr(&mut rust, 4, 1).map_err(|e| (3, e))?;
@@ -108,4 +108,4 @@ fn main(app: &mut App<'_>) -> i32 {
     app.write("PASS MEDIA60 Rust/C original ICC/VCGT, receiver, NV12, clock, shader data; optional compiler availability and exact allocation release\n");
     0
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

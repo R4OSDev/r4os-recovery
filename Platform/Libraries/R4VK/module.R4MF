@@ -1,7 +1,7 @@
 R4OS_MODULE_MANIFEST=2
 KIND=R4L
 NAME=R4VK
-VERSION=0.1.46
+VERSION=0.1.50
 LANGUAGE=Zig
 SOURCE=Source/main.zig
 TARGET=/R4OS/LIBS/R4VK.R4L
@@ -13,7 +13,6 @@ NATIVE_ARCHIVE=NIL_RUST
 ZIG_MODULE=runtime:Port/runtime.zig
 ZIG_MODULE=r4native:../Shared/Native/root.zig
 EXPORT=VULKAN_V1:r4vk_vulkan_v1:1
-EXPORT=Query:r4vk_query:1
 EXPORT=Query2:r4vk_query2:2
 CONTRACT=Contract/LibraryContract.json
 CONTRACT_BASELINE=Contract/LibraryContract.baseline.json

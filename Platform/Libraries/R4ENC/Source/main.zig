@@ -46,14 +46,5 @@ pub export var r4enc_encode_v1: c.EncodeV1 align(8) linksection(".data.r4l_expor
     .destroy = r4enc_destroy_impl,
     .finish = r4enc_finish_impl,
 };
-pub export var r4enc_query: r.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r.abi.r4l_abi_magic,
-    .abi_version = r.abi.r4l_abi_version,
-    .size = r.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 // Technical generation2 query; independent interfaces keep their revisions.
 pub export var r4enc_query2: r.platform2.abi.R4LQuery2 align(8) linksection(".data.r4l_exports") = .{};

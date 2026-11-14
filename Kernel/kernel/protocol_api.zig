@@ -30,25 +30,6 @@ pub const Table = extern struct {
 
 var current_slot: ?usize = null;
 
-pub var table = initialTable();
-fn initialTable() Table {
-    return Table{
-        .magic = MAGIC,
-        .version = VERSION,
-        .size = @sizeOf(Table),
-        .reserved = 0,
-        .log_info = logInfo,
-        .log_warn = logWarn,
-        .log_error = logError,
-        .register_role = registerRole,
-        .set_status = setStatus,
-        .dependency_status = dependencyStatus,
-        .alloc = alloc,
-        .free = free,
-        .file_read = fileRead,
-    };
-}
-
 pub fn enter(slot: usize) void {
     current_slot = slot;
 }

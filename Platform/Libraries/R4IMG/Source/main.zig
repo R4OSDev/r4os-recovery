@@ -235,15 +235,6 @@ pub export var r4img_raster_v1: contract.RasterV1 align(8) linksection(".data.r4
     .raster_icc_profile = color_api.rasterProfile,
 };
 
-pub export var r4img_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 test "ABI conversion preserves every supported format and fixed layout" {
     inline for (.{ codec.Format.png, codec.Format.jpeg, codec.Format.bmp, codec.Format.svg }) |format| {
         const info = codec.Info{ .format = format, .width = 2, .height = 3, .channels = 4 };

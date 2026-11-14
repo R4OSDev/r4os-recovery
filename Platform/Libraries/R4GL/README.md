@@ -109,7 +109,7 @@ Import `R4GL:EGL_V1:1` and the R4SYS/R4DRAW/R4DEV platform groups. Call
 EGL/GL commands through the returned resolver. C consumers include
 `Bindings/C/r4gl_api.h`; Zig consumers use the generated `r4gl.zig` binding.
 Use standard API queries and context negotiation for supported capabilities.
-For ordinary application C stdio, also import `R4DESK:Query:1`, including in
+For ordinary application C stdio, also import `R4DESK:Query2:2`, including in
 console diagnostics. The Mesa C runtime can write diagnostic stderr through
 that platform group; the minimal EGL/GL binding alone does not provide it.
 `EGL_DEFAULT_DISPLAY` selects the opened process profile. Native window handles

@@ -77,6 +77,17 @@ impl<'a> Images<'a> {
             _local: PhantomData,
         })
     }
+    pub fn open2(app: &'a r4os_sdk::app2::App<'_>) -> Result<Self> {
+        let mut native = MaybeUninit::uninit();
+        required(unsafe {
+            c::R4ImgHelpersContext_init2(0, core::ptr::from_ref(app.start_context()).cast(), native.as_mut_ptr())
+        })?;
+        Ok(Self {
+            native,
+            _app: PhantomData,
+            _local: PhantomData,
+        })
+    }
     pub fn probe(&self, bytes: &[u8], content_type: &str) -> Result<Info> {
         let mut info = MaybeUninit::uninit();
         required(unsafe {
@@ -222,6 +233,17 @@ impl<'a> Png<'a> {
         let mut native = MaybeUninit::uninit();
         required(unsafe {
             c::R4ImgHelpersPngContext_init(0, app.start_context(), native.as_mut_ptr())
+        })?;
+        Ok(Self {
+            native,
+            _app: PhantomData,
+            _local: PhantomData,
+        })
+    }
+    pub fn open2(app: &'a r4os_sdk::app2::App<'_>) -> Result<Self> {
+        let mut native = MaybeUninit::uninit();
+        required(unsafe {
+            c::R4ImgHelpersPngContext_init2(0, core::ptr::from_ref(app.start_context()).cast(), native.as_mut_ptr())
         })?;
         Ok(Self {
             native,

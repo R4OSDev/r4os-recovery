@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "scope": "Explicit Recovery-owned derivatives of all38 original module archives plus canonical R4STD9/Libraries58. All39 source builds and target-generation containers verified against admitted Runtime; native qualification tracked separately. Original43 archives remain untouched. Module targets and39 roles unchanged.",
+  "scope": "39 original Recovery roles; 38 unchanged derivatives and exact canonical Library62/R4STD10. Original archives retained. Source builds, Runtime admission and native qualification are separate.",
   "snapshot_sdk": "0.64.210",
   "snapshot_contract": "0.64.93",
   "snapshot_libraries": "0.64.58",
@@ -1433,10 +1433,10 @@
       "original_source": "Libraries",
       "original_version": "0.2.2",
       "source": "Platform/Libraries/R4STD",
-      "source_owner": "Libraries-0.90.85",
+      "source_owner": "Libraries-0.90.89",
       "original_manifest": "R4STD/module.R4MF",
       "canonical_reuse": true,
-      "version": "0.2.9",
+      "version": "0.2.10",
       "target": "Runtime/R4OS/LIBS/R4STD.R4L",
       "original_artifact_sha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b"
     },

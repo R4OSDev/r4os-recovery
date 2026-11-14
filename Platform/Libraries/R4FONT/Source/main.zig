@@ -246,15 +246,6 @@ pub export var r4font_api_v1: contract.ApiV1 align(8) linksection(".data.r4l_exp
     .rasterize = r4font_rasterize_impl,
 };
 
-pub export var r4font_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 test "R4FONT implementation preserves every fixed V1 layout" {
     try std.testing.expectEqual(@as(usize, 32), @sizeOf(contract.R4FontAllocator));
     try std.testing.expectEqual(@as(usize, 56), @sizeOf(contract.R4FontDiagnostics));

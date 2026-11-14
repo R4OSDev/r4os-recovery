@@ -823,17 +823,8 @@ pub export var r4std_codec_v1: contract.CodecV1 align(8) linksection(".data.r4l_
     .utf8_finish = r4std_codec_utf8_finish_impl,
 };
 
-pub export var r4std_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 test "R4STD preserves five interfaces and adds independent scalar codecs" {
-    try std.testing.expectEqual(@as(u32, 0), r4std_query.group);
+    try std.testing.expectEqual(@as(u32, 0), r4std_query2.group);
     try std.testing.expectEqual(contract.text_v1_header.interface_id_lo, r4std_text_v1.header.interface_id_lo);
     try std.testing.expectEqual(contract.codec_v1_header.interface_id_lo, r4std_codec_v1.header.interface_id_lo);
     try std.testing.expectEqual(contract.settings_v1_header.interface_id_lo, r4std_settings_v1.header.interface_id_lo);

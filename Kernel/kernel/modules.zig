@@ -43,21 +43,6 @@ const R4M_RELOC_IMPORT_SLOT64: u32 = 4;
 
 pub const Kind = module_r4m.Kind;
 
-const platform_api_queries: [r4x_api.r4_platform_apis.len]r4x_api.R4LQuery = blk: {
-    var queries: [r4x_api.r4_platform_apis.len]r4x_api.R4LQuery = undefined;
-    for (r4x_api.r4_platform_apis, 0..) |meta, index| {
-        queries[index] = .{
-            .magic = r4x_api.r4l_abi_magic,
-            .abi_version = r4x_api.r4l_abi_version,
-            .size = r4x_api.r4l_query_struct_size,
-            .group = @intFromEnum(meta.group),
-            .kernel_bridge = 0,
-            .reserved = 0,
-        };
-    }
-    break :blk queries;
-};
-
 const platform_api_queries2: [r4x_api.r4_platform_apis.len]generation2.abi.R4LQuery2 = blk: {
     var queries: [r4x_api.r4_platform_apis.len]generation2.abi.R4LQuery2 = undefined;
     for (r4x_api.r4_platform_apis, 0..) |meta, index| queries[index] = .{ .group = @intFromEnum(meta.group) };
@@ -341,9 +326,9 @@ fn initIdentity(entry: *const Entry) ?InitIdentity {
     const new_name: []const u8 = if (entry.kind == .r4d) "DriverInit2" else "ProtocolInit2";
     const first = findExport(entry, old_name);
     const second = findExport(entry, new_name);
-    if ((first == null) == (second == null)) return null;
-    const generation: u8 = if (second != null) 2 else 1;
-    const exp = if (second) |value| value else first.?;
+    if (first != null or second == null) return null;
+    const generation: u8 = 2;
+    const exp = second.?;
     if (exp.version != generation or exp.address == 0 or exp.section_index >= entry.section_count) return null;
     const section = &entry.sections[@intCast(exp.section_index)];
     if ((section.flags & R4M_SECTION_FLAG_EXEC) == 0 or exp.section_offset >= section.mem_size) return null;
@@ -356,7 +341,7 @@ fn requiredExportsValid(entry: *const Entry, imports: []const ResolvedImport) bo
         else => return true,
     };
     const identity = initIdentity(entry) orelse return rejectLoadedExport(entry.name[0..entry.name_len], "Init/Init2", "ambiguous or invalid technical entry");
-    const expected_query: []const u8 = if (identity.generation == 2) "Query2" else "Query";
+    const expected_query: []const u8 = "Query2";
     for (imports) |item| {
         const name = item.module[0..item.module_len];
         const symbol = item.symbol[0..item.symbol_len];
@@ -568,7 +553,7 @@ fn registerPlatformApis() void {
             .kind = .platform_api_provider_reserved,
             .state = .builtin,
             .resolver_status = .builtin,
-            .export_count = 2,
+            .export_count = 1,
             .generation = load.generation,
             .pinned = true,
         };
@@ -577,20 +562,12 @@ fn registerPlatformApis() void {
         e.path_len += copyBytes(meta.name, e.path[e.path_len..]);
         e.exports[0] = .{
             .used = true,
-            .version = 1,
-            .address = @intFromPtr(&platform_api_queries[index]),
-            .section_index = 0,
-            .section_offset = 0,
-        };
-        e.exports[0].name_len = copyBytes("Query", e.exports[0].name[0..]);
-        e.exports[1] = .{
-            .used = true,
             .version = generation2.abi.query_version,
             .address = @intFromPtr(&platform_api_queries2[index]),
             .section_index = 0,
             .section_offset = 0,
         };
-        e.exports[1].name_len = copyBytes(generation2.abi.query_symbol, e.exports[1].name[0..]);
+        e.exports[0].name_len = copyBytes(generation2.abi.query_symbol, e.exports[0].name[0..]);
         _ = load.commit() orelse return;
     }
 }
@@ -923,7 +900,7 @@ pub fn exportInfo(slot: usize, symbol: []const u8, min_version: u32) ?ExportInfo
     if (entries[slot].kind == .platform_api_provider_reserved) return .{
         .address = exp.address,
         .version = exp.version,
-        .available_size = if (nameEq(symbol, generation2.abi.query_symbol)) @sizeOf(generation2.abi.R4LQuery2) else r4x_api.r4l_query_struct_size,
+        .available_size = if (nameEq(symbol, generation2.abi.query_symbol)) @sizeOf(generation2.abi.R4LQuery2) else 0,
         .generation = entries[slot].generation,
         .module_slot = @intCast(slot),
         .kind = entries[slot].kind,
@@ -1504,7 +1481,8 @@ fn validateLoadedExport(
     image: []const u8,
     module_name: []const u8,
 ) bool {
-    const is_query = nameEq(name, "Query") or nameEq(name, generation2.abi.query_symbol);
+    if (nameEq(name, "Query")) return rejectLoadedExport(module_name, name, "retired-platform-generation");
+    const is_query = nameEq(name, generation2.abi.query_symbol);
     const has_interface_prefix = interfaceExportPrefix(name);
     if (!is_query and !has_interface_prefix) return true;
     if (section_index >= sections.len or section_index >= section_offsets.len) {
@@ -1530,24 +1508,12 @@ fn validateLoadedQuery(table: []const u8, export_version: u32, module_name: []co
         if (table.len < @sizeOf(generation2.abi.R4LQuery2)) return rejectLoadedExport(module_name, symbol_name, "query2-range");
         const declared = readLe32(table[8..12]);
         if (export_version != generation2.abi.query_version or readLe32(table[0..4]) != generation2.abi.query_magic or
-            readLe32(table[4..8]) != 2 or declared < @sizeOf(generation2.abi.R4LQuery2) or
+            readLe32(table[4..8]) != 2 or declared != @sizeOf(generation2.abi.R4LQuery2) or
             (declared & 7) != 0 or declared > table.len or readLe32(table[12..16]) != 0 or readLe64(table[16..24]) != 0)
             return rejectLoadedExport(module_name, symbol_name, "query2-header");
         return true;
     }
-    if (table.len < R4L_QUERY_SIZE) return rejectLoadedExport(module_name, symbol_name, "query-range");
-    const declared_size = readLe32(table[8..12]);
-    if (export_version != 1 or
-        readLe32(table[0..4]) != R4L_QUERY_MAGIC or
-        readLe32(table[4..8]) != R4L_QUERY_VERSION or
-        declared_size < R4L_QUERY_SIZE or
-        (declared_size & 7) != 0 or
-        @as(usize, @intCast(declared_size)) > table.len or
-        readLe64(table[24..32]) != 0)
-    {
-        return rejectLoadedExport(module_name, symbol_name, "query-header");
-    }
-    return true;
+    return rejectLoadedExport(module_name, symbol_name, "retired-platform-generation");
 }
 
 fn validateLoadedInterface(table: []const u8, export_version: u32, expected_major: u16, module_name: []const u8, symbol_name: []const u8) bool {
@@ -2181,7 +2147,7 @@ test "Runtime-R4L identity parser fails closed" {
     try testing.expectEqual(@as(?Kind, null), kindFromRaw(7));
 }
 
-test "built-in platform APIs own the six reserved Query providers" {
+test "built-in platform APIs own only the six current Query2 providers" {
     const testing = @import("std").testing;
 
     try testing.expect(module_r4m.isLoadableContainerKind(.r4x));
@@ -2198,14 +2164,17 @@ test "built-in platform APIs own the six reserved Query providers" {
         const entry = entries[slot];
         try testing.expectEqual(Kind.platform_api_provider_reserved, entry.kind);
         try testing.expectEqual(State.builtin, entry.state);
-        const info = exportInfo(slot, "Query", 1) orelse return error.MissingPlatformQuery;
-        try testing.expectEqual(r4x_api.r4l_query_struct_size, info.available_size);
-        const query: *const r4x_api.R4LQuery = @ptrFromInt(info.address);
-        try testing.expectEqual(r4x_api.r4l_abi_magic, query.magic);
-        try testing.expectEqual(r4x_api.r4l_abi_version, query.abi_version);
+        try testing.expectEqual(@as(?ExportInfo, null), exportInfo(slot, "Query", 1));
+        try testing.expectEqual(@as(?ExportInfo, null), exportInfo(slot, "Query", 2));
+        const info = exportInfo(slot, "Query2", 2) orelse return error.MissingPlatformQuery;
+        try testing.expectEqual(@as(u32, 24), info.available_size);
+        const query: *const generation2.abi.R4LQuery2 = @ptrFromInt(info.address);
+        try testing.expectEqual(@as(u32, 0x324c3452), query.magic);
+        try testing.expectEqual(@as(u32, 2), query.abi_version);
+        try testing.expectEqual(@as(u32, 24), query.size);
         try testing.expectEqual(@intFromEnum(meta.group), query.group);
-        try testing.expectEqual(@as(u64, 0), query.kernel_bridge);
         try testing.expectEqual(@as(u64, 0), query.reserved);
+        try testing.expectEqual(@as(?ExportInfo, null), exportInfo(slot, "Query2", 3));
         try testing.expectEqual(@as(?u32, @intFromEnum(meta.group)), platformApiGroupId(meta.name));
     }
     try testing.expectEqual(@as(?u32, 6), platformApiGroupId("r4dev"));

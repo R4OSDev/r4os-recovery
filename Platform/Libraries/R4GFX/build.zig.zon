@@ -7,8 +7,8 @@
         .r4nv = .{ .path = "../R4NV" },
         .r4amd = .{ .path = "../R4AMD" },
         .r4os_sdk = .{
-            .url = "https://github.com/R4OSDev/r4os-sdk/archive/2fdc71e11d6a26fd1998dfddb43923f9d707abda.tar.gz",
-            .hash = "r4os_sdk-0.64.35-NnPzAr_IEwGTHSJwdpAoaC4r1p2R4j3ifyp5n06kIwL1",
+            .url = "https://github.com/R4OSDev/r4os-sdk/archive/f25b0edacbc01e7b751ce6b75d4710b9c343bf31.tar.gz",
+            .hash = "r4os_sdk-0.64.213-NnPzAjhMHQJUG_oCN3ipwhHDqhmflksruYg4W-UdZJL4",
         },
     },
     .paths = .{ "Bindings", "Contract", "Docs", "Display", "Examples", "Source", "Tests", "ThirdParty", "display_tests.zig", "build.zig", "color_build.zig", "build.zig.zon", "module.R4MF", "README.txt" },

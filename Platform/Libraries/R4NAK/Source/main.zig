@@ -16,14 +16,5 @@ pub export var r4nak_compiler_v1: c.CompilerV1 align(8) linksection(".data.r4l_e
     .cache_read = r4nak_cache_read_impl,
     .format_info = r4nak_format_info_impl,
 };
-pub export var r4nak_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 // Technical generation2 query; independent interfaces keep their revisions.
 pub export var r4nak_query2: r4os.platform2.abi.R4LQuery2 align(8) linksection(".data.r4l_exports") = .{};

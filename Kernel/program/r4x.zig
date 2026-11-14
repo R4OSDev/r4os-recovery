@@ -67,10 +67,6 @@ const MAX_R4M_EXPORTS: usize = 16;
 const MAX_R4M_METADATA_PROBE: usize = 2048;
 const MAX_R4M_SYMBOL_PROBE: usize = 64;
 const MAX_R4M_NAME_PROBE: usize = 128;
-const R4XSTART_MAGIC = r4x_api.r4xstart_magic;
-const R4XSTART_ABI_MAJOR = r4x_api.r4xstart_abi_major;
-const R4XSTART_ABI_MINOR = r4x_api.r4xstart_abi_minor;
-const R4XSTART_CONTEXT_SIZE = r4x_api.r4xstart_context_size;
 const R4XSTART_IMPORT_SIZE = r4x_api.r4xstart_import_size;
 const R4XSTART_R4SYS_MAGIC = r4x_api.r4xstart_r4sys_magic;
 const R4XSTART_R4SYS_VERSION = r4x_api.r4xstart_r4sys_version;
@@ -492,14 +488,7 @@ const R4XStartImportSeed = struct {
 };
 
 const generation2 = @import("generation2.zig");
-const R4XStartContext = r4x_api.R4XStartContext;
 const R4XStartImport = r4x_api.R4XStartImport;
-const R4XStartR4Sys = r4x_api.R4XStartR4Sys;
-const R4XStartR4Desk = r4x_api.R4XStartR4Desk;
-const R4XStartR4Draw = r4x_api.R4XStartR4Draw;
-const R4XStartR4Net = r4x_api.R4XStartR4Net;
-const R4XStartR4Audio = r4x_api.R4XStartR4Audio;
-const R4XStartR4Dev = r4x_api.R4XStartR4Dev;
 
 const LoadedProgram = struct {
     image: ProgramImage,
@@ -507,7 +496,7 @@ const LoadedProgram = struct {
     memory_contract: ProgramMemoryContract = .{},
     imports: [MAX_R4M_IMPORTS]R4XStartImportSeed = .{R4XStartImportSeed{}} ** MAX_R4M_IMPORTS,
     import_count: u32 = 0,
-    start_generation: u8 = 1,
+    start_generation: u8 = 2,
     loader_section_count: u32 = 0,
     loader_relocation_count: u32 = 0,
     /// Aufgeloester Startpfad aus ProgramFile.origin, siehe dort.
@@ -791,14 +780,10 @@ const ProgramPayloadHeader = struct {
     reserved: u16 = 0,
 };
 
-const StartContextStorage = extern union {
-    legacy: R4XStartContext,
-    current: generation2.abi.R4XStartContext2,
-};
 const ProgramRuntimePayload = struct {
     header: ProgramPayloadHeader = .{},
-    start_generation: u8 = 1,
-    start_context: StartContextStorage = .{ .legacy = .{} },
+    start_generation: u8 = 2,
+    start_context: generation2.abi.R4XStartContext2 = .{},
     r4xstart_imports: [MAX_R4M_IMPORTS]R4XStartImport = .{R4XStartImport{}} ** MAX_R4M_IMPORTS,
     r4xstart_import_count: u32 = 0,
     r4xstart_import_module_names: [MAX_R4M_IMPORTS][R4XSTART_IMPORT_NAME_BYTES]u8 = .{.{0} ** R4XSTART_IMPORT_NAME_BYTES} ** MAX_R4M_IMPORTS,
@@ -7132,18 +7117,7 @@ var work_drive_letter: u8 = 'C';
 var work_cwd: [drive.MAX_PATH]u8 = .{0} ** drive.MAX_PATH;
 var work_cwd_len: usize = 1;
 
-var r4xstart_r4sys_table: R4XStartR4Sys = .{};
-
-var r4xstart_r4desk_table: R4XStartR4Desk = .{};
-
-var r4xstart_r4draw_table: R4XStartR4Draw = .{};
-
 // R4NET-Gruppentabelle fuer den R4L-Importvertrag.
-var r4xstart_r4net_table: R4XStartR4Net = .{};
-
-var r4xstart_r4audio_table: R4XStartR4Audio = .{};
-
-var r4xstart_r4dev_table: R4XStartR4Dev = .{};
 
 const api_allocator_vtable = ProgramAllocatorVTable{
     .alloc = apiAllocatorAlloc,
@@ -7175,12 +7149,12 @@ fn configureApiGroups() void {
     r4api.r4sys.setProgramModuleRunningProvider(programModuleRunningByPath);
     r4api.r4draw.setDisplayUsedHook(noteDisplayUsed);
     r4api.r4draw.setFontCatalogChangedHook(broadcastGuiFontCatalogChanged);
-    configureR4XStartR4SysTable();
-    configureR4XStartR4DeskTable();
-    configureR4XStartR4DrawTable();
-    configureR4XStartR4NetTable();
-    configureR4XStartR4AudioTable();
-    configureR4XStartR4DevTable();
+    r4api.r4dev.setProgramInstanceStorageSummaryProvider(&fillProgramInstanceStorageSummary);
+    r4api.r4dev.setProgramInstanceStorageSelfTestProvider(&runProgramInstanceStorageSelfTestProvider);
+    r4api.r4dev.setProgramRegistrySummaryProvider(&fillProgramRegistrySummary);
+    r4api.r4dev.setProgramRegistrySelfTestProvider(&runProgramRegistrySelfTestProvider);
+    r4api.r4dev.setExecutionInventorySummaryProvider(&fillExecutionInventorySummaryProvider);
+    r4api.r4dev.setInputPerformanceProvider(&fillInputPerformanceInfo);
     configureR4XStartR4SysTable2();
     configureR4XStartR4DeskTable2();
     configureR4XStartR4DrawTable2();
@@ -7189,336 +7163,8 @@ fn configureApiGroups() void {
     configureR4XStartR4DevTable2();
 }
 
-fn configureR4XStartR4SysTable() void {
-    r4xstart_r4sys_table = r4x_api.buildR4SysTable(.{
-        .write = &r4xstartR4SysWrite,
-        .putc = &r4xstartR4SysPutc,
-        .sleep_ticks = &r4api.r4sys.sleepTicks,
-        .ticks = &r4api.r4sys.ticks,
-        .env_get = &apiEnvGet,
-        .directory_next = &r4api.r4sys.directoryNext,
-        .directory_change_begin = &r4api.r4sys.directoryChangeBegin,
-        .directory_change_poll = &r4api.r4sys.directoryChangePoll,
-        .dir_entry = &r4api.r4sys.dirEntry,
-        .program_should_close = &apiProgramShouldClose,
-        .program_class = &apiProgramClass,
-        .program_instance = &apiProgramInstance,
-        .service_status = &apiServiceStatus,
-        .service_open = &apiServiceOpen,
-        .service_close = &apiServiceClose,
-        .service_call = &apiServiceCall,
-        .service_endpoint_register = &apiServiceEndpointRegister,
-        .service_endpoint_unregister = &apiServiceEndpointUnregister,
-        .service_endpoint_poll = &apiServiceEndpointPoll,
-        .service_endpoint_recv = &apiServiceEndpointRecv,
-        .service_endpoint_reply = &apiServiceEndpointReply,
-        .service_detail_by_name = &apiServiceDetailByName,
-        .service_start = &apiServiceStart,
-        .service_stop = &apiServiceStop,
-        .service_restart = &apiServiceRestart,
-        .service_install = &apiServiceInstall,
-        .service_remove = &apiServiceRemove,
-        .vm_reserve = &apiVmReserve,
-        .vm_commit = &apiVmCommit,
-        .vm_decommit = &apiVmDecommit,
-        .vm_release = &apiVmRelease,
-        .vm_query = &apiVmQuery,
-        .thread_create = &apiThreadCreate,
-        .thread_exit = &apiThreadExit,
-        .thread_join = &apiThreadJoin,
-        .thread_current = &apiThreadCurrent,
-        .thread_status = &apiThreadStatus,
-        .io_file_read = &apiIoFileRead,
-        .io_file_read_at = &apiIoFileReadAt,
-        .io_file_write = &apiIoFileWrite,
-        .io_file_append = &apiIoFileAppend,
-        .io_file_stream_begin = &apiIoFileStreamBegin,
-        .io_file_stream_write = &apiIoFileStreamWrite,
-        .io_file_stream_finish = &apiIoFileStreamFinish,
-        .io_file_stream_abort = &apiIoFileStreamAbort,
-        .io_service_call = &apiIoServiceCall,
-        .io_status = &apiIoStatus,
-        .io_wait = &apiIoWait,
-        .io_close = &apiIoClose,
-        .task_yield = &r4api.r4sys.taskYield,
-        .system_halt = &r4api.r4sys.systemHalt,
-        .system_reboot = &r4api.r4sys.systemReboot,
-        .system_poweroff = &r4api.r4sys.systemPoweroff,
-        .time_state = &r4api.r4sys.timeState,
-        .time_set_state = &r4api.r4sys.timeSetState,
-        .time_seconds_since_midnight = &r4api.r4sys.timeSecondsSinceMidnight,
-        .dir_list = &r4api.r4sys.dirList,
-        .dir_create = &r4api.r4sys.dirCreate,
-        .dir_delete = &r4api.r4sys.dirDelete,
-        .drive_info = &r4api.r4sys.driveInfo,
-        .file_info = &r4api.r4sys.fileInfo,
-        .file_delete = &r4api.r4sys.fileDelete,
-        .file_rename = &r4api.r4sys.fileRename,
-        .file_copy = &r4api.r4sys.fileCopy,
-        .file_copy_buffered = &r4api.r4sys.fileCopyBuffered,
-        .file_move = &r4api.r4sys.fileMove,
-        .file_read = &apiFileRead,
-        .file_write = &apiFileWrite,
-        .file_read_at = &apiFileReadAt,
-        .file_append = &apiFileAppend,
-        .file_stream_begin = &apiFileStreamBegin,
-        .file_stream_write = &apiFileStreamWrite,
-        .file_stream_finish = &apiFileStreamFinish,
-        .file_stream_abort = &apiFileStreamAbort,
-        .env_set = &apiEnvSet,
-        .registry_key_info = &r4api.r4sys.registryKeyInfo,
-        .registry_enum_key = &r4api.r4sys.registryEnumKey,
-        .registry_enum_value = &r4api.r4sys.registryEnumValue,
-        .registry_get_value = &r4api.r4sys.registryGetValue,
-        .registry_set_value = &r4api.r4sys.registrySetValue,
-        .registry_delete_value = &r4api.r4sys.registryDeleteValue,
-        .service_info = &apiServiceInfo,
-        .service_detail = &apiServiceDetail,
-        .service_set_start_mode = &apiServiceSetStartMode,
-        .service_endpoint_wait = &apiServiceEndpointPollWait,
-        .program_run = &apiProgramRun,
-        .program_launch = &apiProgramLaunch,
-        .program_spawn = &apiProgramSpawn,
-        .program_kill = &apiProgramKill,
-        .program_status = &apiProgramStatus,
-        .program_request_close = &apiProgramRequestClose,
-        .program_reap_instance = &apiProgramReapInstance,
-        .program_spawn_handle = &apiProgramSpawnHandle,
-        .program_open_handle = &apiProgramOpenHandle,
-        .program_handle_status = &apiProgramHandleStatus,
-        .program_handle_request_close = &apiProgramHandleRequestClose,
-        .program_handle_kill = &apiProgramHandleKill,
-        .program_handle_wait = &apiProgramHandleWait,
-        .program_handle_reap = &apiProgramHandleReap,
-        .program_completion_read = &apiProgramCompletionRead,
-        .program_inventory_begin = &apiProgramInventoryBegin,
-        .program_inventory_programs = &apiProgramInventoryPrograms,
-        .program_inventory_tasks = &apiProgramInventoryTasks,
-        .program_inventory_threads = &apiProgramInventoryThreads,
-        .thread_create_handle = &apiThreadCreateHandle,
-        .thread_handle_join = &apiThreadHandleJoin,
-        .thread_handle_status = &apiThreadHandleStatus,
-        .file_replace_atomic = &r4api.r4sys.fileReplaceAtomic,
-        .file_delete_if_match = &r4api.r4sys.fileDeleteIfMatch,
-        .file_update_atomic_checked = &r4api.r4sys.fileUpdateAtomicChecked,
-        .path_names_equal_collated = &r4api.r4sys.pathNamesEqualCollated,
-        .file_update_cleanup_checked = &r4api.r4sys.fileUpdateCleanupChecked,
-        .file_stream_declare_publish = &r4api.r4sys.fileStreamDeclarePublish,
-        .boot_log_info = &r4api.r4sys.bootLogInfo,
-        .boot_log_read = &r4api.r4sys.bootLogRead,
-        .module_resource_stat = &r4api.r4sys.moduleResourceStat,
-        .module_resource_read = &r4api.r4sys.moduleResourceRead,
-        .program_module_path = &apiProgramModulePath,
-        .program_module_running = &r4api.r4sys.programModuleRunning,
-        .monotonic_clock = &r4api.r4sys.monotonicClock,
-        .boot_ready = &apiBootReady,
-        .registry_snapshot_begin = &r4api.r4sys.registrySnapshotBegin,
-        .registry_snapshot_page = &r4api.r4sys.registrySnapshotPage,
-        .registry_batch_mutate = &r4api.r4sys.registryBatchMutate,
-        .io_file_write_at = &apiIoFileWriteAt,
-        .io_file_info = &apiIoFileInfo,
-        .io_file_lock = &apiIoFileLock,
-        .storage_inventory = &@import("../storage/operations.zig").inventory,
-        .storage_device = &@import("../storage/operations.zig").deviceInfo,
-        .storage_partition = &@import("../storage/operations.zig").partitionInfo,
-        .storage_volume = &@import("../storage/operations.zig").volumeInfo,
-        .storage_claim_begin = &@import("../storage/operations.zig").claimBegin,
-        .storage_claim_end = &@import("../storage/operations.zig").claimEnd,
-        .storage_read = &@import("../storage/operations.zig").read,
-        .storage_claim_read = &@import("../storage/operations.zig").claimRead,
-        .storage_claim_write = &@import("../storage/operations.zig").claimWrite,
-        .storage_claim_flush = &@import("../storage/operations.zig").claimFlush,
-        .storage_rescan = &@import("../storage/operations.zig").rescan,
-        .storage_mount = &@import("../storage/operations.zig").mount,
-        .storage_unmount = &@import("../storage/operations.zig").unmount,
-        .storage_use_begin = &r4api.r4sys.storageUseBegin,
-        .storage_use_end = &@import("../storage/operations.zig").useEnd,
-    });
-}
-
-fn configureR4XStartR4DeskTable() void {
-    r4xstart_r4desk_table = r4x_api.buildR4DeskTable(.{
-        .read_key = &apiReadKey,
-        .read_key_codepoint = &apiReadKeyCodepoint,
-        .mouse_state = &r4api.r4desk.mouseState,
-        .mouse_show = &r4api.r4desk.mouseShow,
-        .mouse_hide = &r4api.r4desk.mouseHide,
-        .keyboard_layout_current = &r4api.r4desk.keyboardLayoutCurrent,
-        .keyboard_layout_at = &r4api.r4desk.keyboardLayoutAt,
-        .keyboard_layout_set = &r4api.r4desk.keyboardLayoutSet,
-        .program_set_window = &apiProgramSetWindow,
-        .program_set_console_host = &apiProgramSetConsoleHost,
-        .program_request_host_launch = &apiProgramRequestHostLaunch,
-        .program_take_host_launch = &apiProgramTakeHostLaunch,
-        .program_window_id = &apiProgramWindowId,
-        .gui_window_info = &apiGuiWindowInfo,
-        .gui_set_window_info = &apiGuiSetWindowInfo,
-        .gui_poll_event = &apiGuiPollEvent,
-        .gui_push_event = &apiGuiPushEvent,
-        .gui_set_text = &apiGuiSetText,
-        .gui_text = &apiGuiText,
-        .gui_revision = &apiGuiRevision,
-        .gui_command = &apiGuiCommand,
-        .gui_set_title = &apiGuiSetTitle,
-        .gui_title = &apiGuiTitle,
-        .gui_set_min_size = &apiGuiSetMinSize,
-        .gui_min_size = &apiGuiMinSize,
-        .console_output = &apiConsoleOutput,
-        .console_revision = &apiConsoleRevision,
-        .console_state = &apiConsoleState,
-        .console_set_metrics = &apiConsoleSetMetrics,
-        .console_push_key = &apiConsolePushKey,
-        .console_write = &apiConsoleWrite,
-        .console_read = &apiConsoleRead,
-        .console_input_wait = &apiConsoleInputWait,
-        .clipboard_write = &r4api.r4desk.clipboardWrite,
-        .clipboard_read = &r4api.r4desk.clipboardRead,
-        .clipboard_revision = &r4api.r4desk.clipboardRevision,
-        .clipboard_info = &r4api.r4desk.clipboardInfo,
-        .clipboard_clear = &r4api.r4desk.clipboardClear,
-        .remote_frame_info = &r4api.r4desk.remoteFrameInfo,
-        .remote_frame_read = &r4api.r4desk.remoteFrameRead,
-        .remote_frame_wait = &r4api.r4desk.remoteFrameWait,
-        .remote_frame_publish = &r4api.r4desk.remoteFramePublish,
-        .remote_input_push = &r4api.r4desk.remoteInputPush,
-        .remote_input_poll = &r4api.r4desk.remoteInputPoll,
-        .remote_input_status = &r4api.r4desk.remoteInputStatus,
-        .desktop_activity_wait = &r4api.r4desk.desktopActivityWait,
-        .remote_frame_map = &r4api.r4desk.remoteFrameMap,
-        .program_current_console_host = &apiProgramCurrentConsoleHost,
-        .program_request_desktop = &apiProgramRequestDesktop,
-        .program_spawn_with_console_host = &apiProgramSpawnWithConsoleHost,
-        .program_spawn_with_console_host_handle = &apiProgramSpawnWithConsoleHostHandle,
-        .program_set_window_handle = &apiProgramSetWindowHandle,
-        .console_push_input = &apiConsolePushInput,
-        .remote_frame_acquire = &r4api.r4desk.remoteFrameAcquire,
-        .remote_frame_release = &r4api.r4desk.remoteFrameRelease,
-        .remote_frame_consumers = &r4api.r4desk.remoteFrameConsumers,
-        .remote_frame_publish_regions = &r4api.r4desk.remoteFramePublishRegions,
-        .physical_key_poll = &r4api.r4desk.physicalKeyPoll,
-    });
-}
-
-fn configureR4XStartR4DrawTable() void {
-    r4xstart_r4draw_table = r4x_api.buildR4DrawTable(.{
-        .screen_width = &r4api.r4draw.screenWidth,
-        .screen_height = &r4api.r4draw.screenHeight,
-        .clear = &r4api.r4draw.clear,
-        .rect = &r4api.r4draw.rect,
-        .text = &r4api.r4draw.text,
-        .display_revision = &r4api.r4draw.displayRevision,
-        .display_begin_frame = &r4api.r4draw.displayBeginFrame,
-        .display_begin_frame_rect = &r4api.r4draw.displayBeginFrameRect,
-        .display_present = &r4api.r4draw.displayPresent,
-        .display_blit_xrgb32 = &r4api.r4draw.displayBlitXrgb32,
-        .gui_clear = &apiGuiClear,
-        .gui_rect = &apiGuiRect,
-        .gui_draw_text = &apiGuiDrawText,
-        .gui_draw_text_ex = &apiGuiDrawTextEx,
-        .gui_blit = &apiGuiBlit,
-        .gui_raster_read = &apiGuiRasterRead,
-        .gui_present = &apiGuiPresent,
-        .font_count = &r4api.r4draw.fontCount,
-        .font_info = &r4api.r4draw.fontInfo,
-        .font_measure = &r4api.r4draw.fontMeasure,
-        .gui_set_font = &apiGuiSetFont,
-        .gui_font = &apiGuiFont,
-        .text_font = &r4api.r4draw.textFont,
-        .font_reload = &r4api.r4draw.fontReload,
-        .font_glyph_row = &r4api.r4draw.fontGlyphRow,
-        .gui_blend_alpha8 = &apiGuiBlendAlpha8,
-        .gui_frame_begin = &apiGuiFrameBegin,
-        .gui_frame_append = &apiGuiFrameAppend,
-        .gui_frame_commit = &apiGuiFrameCommit,
-        .gui_frame_cancel = &apiGuiFrameCancel,
-        .gui_frame_info = &apiGuiFrameInfo,
-        .gui_frame_read = &apiGuiFrameRead,
-        .display_blit_xrgb32_stride = &r4api.r4draw.displayBlitXrgb32Stride,
-        .display_present_regions = &r4api.r4draw.displayPresentRegions,
-        .display_present_capabilities = &r4api.r4draw.displayPresentCapabilities,
-        .display_present_completion = &r4api.r4draw.displayPresentCompletion,
-        .gui_frame_begin_damage = &apiGuiFrameBeginDamage,
-        .gui_frame_generation_info = &apiGuiFrameGenerationInfo,
-        .gui_frame_generation_read = &apiGuiFrameGenerationRead,
-        .font_glyph_bitmap = &r4api.r4draw.fontGlyphBitmap,
-        .font_revision = &r4api.r4draw.fontRevision,
-        .gui_frame_begin_replace = &apiGuiFrameBeginReplace,
-        .gui_frame_stream_info = &apiGuiFrameStreamInfo,
-        .gui_shared_raster_create = &apiGuiSharedRasterCreate,
-        .gui_shared_raster_destroy = &apiGuiSharedRasterDestroy,
-        .gui_shared_raster_map_write = &apiGuiSharedRasterMapWrite,
-        .gui_shared_raster_publish = &apiGuiSharedRasterPublish,
-        .gui_shared_raster_acquire = &apiGuiSharedRasterAcquire,
-        .gui_shared_raster_release = &apiGuiSharedRasterRelease,
-    });
-}
-
 // Verdrahtung der R4NET-Gruppentabelle mit ihren aktuellen Kernel-
 // Implementierungen. Die Tabellenfelder sind der oeffentliche R4L-Ausgang.
-fn configureR4XStartR4NetTable() void {
-    r4xstart_r4net_table = r4x_api.buildR4NetTable(.{
-        .tcp_connect = &r4api.r4net.tcpConnect,
-        .tcp_write = &r4api.r4net.tcpWrite,
-        .tcp_read = &r4api.r4net.tcpRead,
-        .tcp_close = &r4api.r4net.tcpClose,
-        .tcp_summary = &r4api.r4net.tcpSummary,
-        .tcp_connection = &r4api.r4net.tcpConnection,
-        .tcp_echo_listen_once = &r4api.r4net.tcpEchoListenOnce,
-        .tcp_accept_read_once = &r4api.r4net.tcpAcceptReadOnce,
-        .net_ipv4_send = &r4api.r4net.netIpv4Send,
-        .net_ipv4_recv = &r4api.r4net.netIpv4Recv,
-        .net_config_get = &r4api.r4net.netConfigGet,
-        .net_config_set = &r4api.r4net.netConfigSet,
-        .net_dns_resolve = &r4api.r4net.netDnsResolve,
-        .net_dns_resolve_server = &r4api.r4net.netDnsResolveServer,
-        .net_dhcp_acquire = &r4api.r4net.netDhcpAcquire,
-        .net_dhcp_renew = &r4api.r4net.netDhcpRenew,
-        .net_dhcp_release = &r4api.r4net.netDhcpRelease,
-        .net_dhcp_status = &r4api.r4net.netDhcpStatus,
-        .net_detail_get = &r4api.r4net.netDetailGet,
-        .net_diag_run = &r4api.r4net.netDiagRun,
-        .ipc_open = &r4api.r4net.ipcOpen,
-        .ipc_send = &r4api.r4net.ipcSend,
-        .ipc_recv = &r4api.r4net.ipcRecv,
-        .ipc_poll = &r4api.r4net.ipcPoll,
-        .ipc_close = &r4api.r4net.ipcClose,
-        .ipc_summary = &r4api.r4net.ipcSummary,
-        .ipc_channel = &r4api.r4net.ipcChannel,
-        .serial_link_status = &r4api.r4net.serialLinkStatus,
-        .serial_link_poll = &r4api.r4net.serialLinkPoll,
-        .serial_link_send_message = &r4api.r4net.serialLinkSendMessage,
-        .serial_link_host_test = &r4api.r4net.serialLinkHostTest,
-        .serial_link_inbox = &r4api.r4net.serialLinkInbox,
-        .net_service_request = &r4api.r4net.netServiceRequest,
-        .ipc_performance = &r4api.r4net.ipcPerformance,
-        .tcp_performance = &r4api.r4net.tcpPerformance,
-    });
-}
-
-fn configureR4XStartR4AudioTable() void {
-    r4xstart_r4audio_table = r4x_api.buildR4AudioTable(.{
-        .audio_open_stream = &apiAudioOpenStream,
-        .audio_write = &apiAudioWrite,
-        .audio_close = &apiAudioClose,
-        .audio_set_volume = &apiAudioSetVolume,
-        .sid_acquire = &r4api.r4audio.sidAcquire,
-        .sid_write_register = &r4api.r4audio.sidWriteRegister,
-        .sid_release = &r4api.r4audio.sidRelease,
-        .sid_load_data = &r4api.r4audio.sidLoadData,
-        .sid_init = &r4api.r4audio.sidInit,
-        .sid_play_frame = &r4api.r4audio.sidPlayFrame,
-        .sid_stop = &r4api.r4audio.sidStop,
-        .sid_model_name = &r4api.r4audio.sidModelName,
-        .midi_open_synth = &r4api.r4audio.midiOpenSynth,
-        .midi_send = &r4api.r4audio.midiSend,
-        .midi_close = &r4api.r4audio.midiClose,
-        .opl3_write_register = &r4api.r4audio.opl3WriteRegister,
-        .opl3_reset = &r4api.r4audio.opl3Reset,
-        .opl3_render_block = &r4api.r4audio.opl3RenderBlock,
-        .opl3_stop = &r4api.r4audio.opl3Stop,
-    });
-}
-
 fn apiAudioOpenStream(rate: u32, channels: u16, format: u16) callconv(.c) i32 {
     const handle = currentProgramHandle() orelse return r4x_api.service_api_result_invalid;
     return audio.openStreamForOwner(.{
@@ -7872,56 +7518,6 @@ fn fillInputPerformanceInfo(out: *r4api.r4dev.ProgramInputPerformanceInfo) void 
     out.program_launch_attempts = program_launch_attempts;
     out.program_entries_started = program_entries_started;
     out.program_attach_wait_events = program_attach_wait_events;
-}
-
-fn configureR4XStartR4DevTable() void {
-    r4api.r4dev.setProgramInstanceStorageSummaryProvider(&fillProgramInstanceStorageSummary);
-    r4api.r4dev.setProgramInstanceStorageSelfTestProvider(&runProgramInstanceStorageSelfTestProvider);
-    r4api.r4dev.setProgramRegistrySummaryProvider(&fillProgramRegistrySummary);
-    r4api.r4dev.setProgramRegistrySelfTestProvider(&runProgramRegistrySelfTestProvider);
-    r4api.r4dev.setExecutionInventorySummaryProvider(&fillExecutionInventorySummaryProvider);
-    r4api.r4dev.setInputPerformanceProvider(&fillInputPerformanceInfo);
-    r4xstart_r4dev_table = r4x_api.buildR4DevTable(.{
-        .cpu_acceleration_info = @import("generation2.zig").callback(r4x_api.R4DevFns.cpu_acceleration_info, &@import("../platform/cpu_acceleration.zig").info),
-        .cpu_acceleration_work = @import("generation2.zig").callback(r4x_api.R4DevFns.cpu_acceleration_work, &@import("../platform/cpu_acceleration.zig").work),
-        .device_inventory_summary = &r4api.r4dev.deviceInventorySummary,
-        .device_inventory_record = &r4api.r4dev.deviceInventoryRecord,
-        .memory_summary = &r4api.r4dev.memorySummary,
-        .memory_block_count = &r4api.r4dev.memoryBlockCount,
-        .memory_block = &r4api.r4dev.memoryBlock,
-        .memory_pressure_snapshot = &r4api.r4dev.memoryPressureSnapshot,
-        .memory_reclaim_probe = &r4api.r4dev.memoryReclaimProbe,
-        .memory_backing_store_probe = &r4api.r4dev.memoryBackingStoreProbe,
-        .memory_backing_store_slot_probe = &r4api.r4dev.memoryBackingStoreSlotProbe,
-        .memory_pager_gate_probe = &r4api.r4dev.memoryPagerGateProbe,
-        .memory_page_io_probe = &r4api.r4dev.memoryPageIoProbe,
-        .memory_vm_page_state_probe = &r4api.r4dev.memoryVmPageStateProbe,
-        .memory_vm_reserve_probe = &apiMemoryVmReserveProbe,
-        .paging_summary = &r4api.r4dev.pagingSummary,
-        .performance_summary = &r4api.r4dev.performanceSummary,
-        .performance_task = &r4api.r4dev.performanceTask,
-        .performance_storage = &r4api.r4dev.performanceStorage,
-        .performance_boot_phase = &r4api.r4dev.performanceBootPhase,
-        .protocol_status = &r4api.r4dev.protocolStatus,
-        .protocol_dispatch = &r4api.r4dev.protocolDispatch,
-        .display_summary = &r4api.r4dev.displaySummary,
-        .hardware_summary = &r4api.r4dev.hardwareSummary,
-        .boot_info_summary = &r4api.r4dev.bootInfoSummary,
-        .boot_info_memory_count = &r4api.r4dev.bootInfoMemoryCount,
-        .boot_info_memory_entry = &r4api.r4dev.bootInfoMemoryEntry,
-        .program_instance_storage_self_test = &r4api.r4dev.programInstanceStorageSelfTest,
-        .program_registry_summary_v2 = &r4api.r4dev.programRegistrySummaryV2,
-        .program_registry_self_test_v2 = &r4api.r4dev.programRegistrySelfTestV2,
-        .execution_inventory_summary = &r4api.r4dev.executionInventorySummary,
-        .program_instance_storage_summary_v2 = &r4api.r4dev.programInstanceStorageSummaryV2,
-        .kernel_version = &r4api.r4dev.kernelVersion,
-        .performance_boot_phase_clock = &r4api.r4dev.performanceBootPhaseClock,
-        .performance_irq_timing = &r4api.r4dev.performanceIrqTiming,
-        .performance_boot_summary = &r4api.r4dev.performanceBootSummary,
-        .performance_driver_work = &r4api.r4dev.performanceDriverWork,
-        .performance_pci_inventory = &r4api.r4dev.performancePciInventory,
-        .performance_input = &r4api.r4dev.performanceInput,
-    });
 }
 
 pub fn runPath(d: *drive.Drive, path: []const u8, args: []const u8, working_drive: *drive.Drive) RunResult {
@@ -8985,7 +8581,7 @@ fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.He
         if (!copyR4XStartName(import.module, seed.module_name[0..], &seed.module_name_len)) return false;
         if (!copyR4XStartName(import.symbol, seed.symbol_name[0..], &seed.symbol_name_len)) return false;
         if (is_query) {
-            const interface = if (selected_generation == 2) generation2.group(group_id) else r4xstartGroupInterface(group_id);
+            const interface = generation2.group(group_id);
             if (interface) |table| {
                 seed.flags |= R4XSTART_IMPORT_FLAG_GROUP_INTERFACE;
                 seed.table = table;
@@ -9006,20 +8602,7 @@ fn resolveR4MImportsFromReader(reader: *module_r4m.Reader, header: module_r4m.He
         }
         start_out[i] = seed;
     }
-    return selected_generation == 1 or (groups & 1) != 0;
-}
-
-fn r4xstartGroupInterface(group_id: u32) ?u64 {
-    return switch (group_id) {
-        R4L_GROUP_R4SYS => @intFromPtr(&r4xstart_r4sys_table),
-        R4L_GROUP_R4DESK => @intFromPtr(&r4xstart_r4desk_table),
-        R4L_GROUP_R4DRAW => @intFromPtr(&r4xstart_r4draw_table),
-        // NET/AUDIO/DEV liefern eigenstaendige Kernel-Gruppentabellen.
-        R4L_GROUP_R4NET => @intFromPtr(&r4xstart_r4net_table),
-        R4L_GROUP_R4AUDIO => @intFromPtr(&r4xstart_r4audio_table),
-        R4L_GROUP_R4DEV => @intFromPtr(&r4xstart_r4dev_table),
-        else => null,
-    };
+    return selected_generation == 2 and (groups & 1) != 0;
 }
 
 fn copyR4XStartName(src: []const u8, dest: []u8, out_len: *usize) bool {
@@ -10420,7 +10003,7 @@ fn callInstanceEntry(run: *ProgramInstance) i32 {
     }
     program_entries_started +%= 1;
     const runtime = runtimePayload(run);
-    const context_address = if (runtime.start_generation == 2) @intFromPtr(&runtime.start_context.current) else @intFromPtr(&runtime.start_context.legacy);
+    const context_address = @intFromPtr(&runtime.start_context);
     const exit_code = r4os_call_program(entry, context_address, run.stack_top);
     if (stackFromInstance(run)) |initial_stack| {
         var measured_stack = initial_stack;
@@ -17219,44 +16802,16 @@ fn prepareR4XStartContext(instance: *ProgramInstance) void {
     var flags: u32 = R4XSTART_FLAG_CLOSE_SUPPORTED | R4XSTART_FLAG_YIELD_SUPPORTED;
     if (runtime.r4xstart_import_count > 0) flags |= R4XSTART_FLAG_IMPORTS_VALID;
     const arg_len = cStringLen(process.args[0..]);
-    if (runtime.start_generation == 2) {
-        runtime.start_context.current = .{
-            .flags = flags,
-            .instance_id = instance.id,
-            .app_class = r4xstartAppClass(instance.app_class),
-            .args = @intFromPtr(&process.args),
-            .args_len = arg_len,
-            .imports = if (runtime.r4xstart_import_count > 0) @intFromPtr(&runtime.r4xstart_imports) else 0,
-            .import_count = runtime.r4xstart_import_count,
-            .should_close = @intFromPtr(&r4xstartShouldClose2),
-            .yield = @intFromPtr(&r4xstartYield2),
-        };
-        return;
-    }
-    runtime.start_context.legacy = .{
-        .magic = R4XSTART_MAGIC,
-        .abi_major = R4XSTART_ABI_MAJOR,
-        .abi_minor = R4XSTART_ABI_MINOR,
-        .size = R4XSTART_CONTEXT_SIZE,
+    runtime.start_context = .{
         .flags = flags,
         .instance_id = instance.id,
         .app_class = r4xstartAppClass(instance.app_class),
-        .reserved0 = 0,
-        .program_path = 0,
         .args = @intFromPtr(&process.args),
         .args_len = arg_len,
         .imports = if (runtime.r4xstart_import_count > 0) @intFromPtr(&runtime.r4xstart_imports) else 0,
         .import_count = runtime.r4xstart_import_count,
-        .reserved1 = 0,
-        .reserved_memory0 = 0,
-        .reserved_memory1 = 0,
-        .exit = 0,
-        .should_close = @intFromPtr(&r4xstartShouldClose),
-        .yield = @intFromPtr(&r4xstartYield),
-        // Der ABI-reservierte Slot bleibt 0; alle Systemfunktionen werden
-        // ausschliesslich ueber die R4L-Gruppentabellen in imports geliefert.
-        .reserved_runtime = 0,
-        .reserved2 = 0,
+        .should_close = @intFromPtr(&r4xstartShouldClose2),
+        .yield = @intFromPtr(&r4xstartYield2),
     };
 }
 
@@ -17283,17 +16838,6 @@ fn r4xstartYield2(ctx: *const generation2.abi.R4XStartContext2) callconv(.c) voi
     _ = ctx;
     scheduler.yield();
 }
-fn r4xstartShouldClose(ctx: *const R4XStartContext) callconv(.c) u32 {
-    _ = ctx;
-    const instance = currentInstance() orelse return 1;
-    return if (instance.close_requested) 1 else 0;
-}
-
-fn r4xstartYield(ctx: *const R4XStartContext) callconv(.c) void {
-    _ = ctx;
-    scheduler.yield();
-}
-
 fn r4xstartR4SysWrite(data: [*]const u8, len: u32) callconv(.c) i32 {
     const limit: usize = @intCast(len);
     apiOutputTextSpan(.stdout, data[0..limit]);

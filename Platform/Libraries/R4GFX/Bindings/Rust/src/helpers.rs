@@ -44,6 +44,37 @@ impl<'a, 'h> ColorProfile<'a, 'h> {
             _heap: heap,
         })
     }
+    pub fn open2(
+        app: &'a r4os_sdk::app2::App<'_>,
+        heap: &'h Heap,
+        bytes: &[u8],
+        intent: u32,
+        flags: u32,
+    ) -> Result<Self> {
+        let mut colors = MaybeUninit::uninit();
+        crate::required(unsafe {
+            c::R4Library_colorClient2(0, core::ptr::from_ref(app.start_context()).cast(), colors.as_mut_ptr())
+        })?;
+        let allocator = heap.allocator()?;
+        let mut native = storage();
+        crate::required(unsafe {
+            c::R4GfxDisplayProfileOwner_open(
+                0,
+                allocator.as_ptr(),
+                colors.as_ptr(),
+                bytes.as_ptr(),
+                bytes.len() as u64,
+                intent,
+                flags,
+                native.as_mut_ptr(),
+            )
+        })?;
+        Ok(Self {
+            native,
+            _app: PhantomData,
+            _heap: heap,
+        })
+    }
     /// Use only unpublished pixels. On error discard the entire frame, since
     /// the original owner may have converted a prefix. Retain canonical SDR
     /// pixels separately, rather than feeding monitor-encoded pixels back in.

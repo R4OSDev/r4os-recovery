@@ -22,6 +22,17 @@ impl<'a> Fonts<'a> {
             _local: PhantomData,
         })
     }
+    pub fn open2(app: &'a r4os_sdk::app2::App<'_>) -> Result<Self> {
+        let mut native = MaybeUninit::uninit();
+        required(unsafe {
+            c::R4FontHelpersContext_init2(0, core::ptr::from_ref(app.start_context()).cast(), native.as_mut_ptr())
+        })?;
+        Ok(Self {
+            native,
+            _app: PhantomData,
+            _local: PhantomData,
+        })
+    }
     pub fn decoder<'f, 'h>(
         &'f self,
         heap: &'h Heap,

@@ -31,7 +31,6 @@ const DriverType = enum(u16) {
 };
 
 const next_api = @import("generation2.zig").abi;
-const InitFn = *const fn (*const driver_api.Table) callconv(.c) i32;
 const InitFn2 = *const fn (*const next_api.DriverApi2) callconv(.c) i32;
 const ShutdownFn = *const fn () callconv(.c) i32;
 
@@ -475,12 +474,9 @@ fn initRuntimeModuleResultSource(module_slot: usize, source: LoadSource) Runtime
     }
     const result = owner_init: {
         defer _ = driver_api.leaveOwner();
-        if (descriptor.init_generation == 2) {
-            const init: InitFn2 = @ptrFromInt(init_address);
-            break :owner_init init(&driver_api.table2);
-        }
-        const init: InitFn = @ptrFromInt(init_address);
-        break :owner_init init(&driver_api.table);
+        if (descriptor.init_generation != 2) break :owner_init -1;
+        const init: InitFn2 = @ptrFromInt(init_address);
+        break :owner_init init(&driver_api.table2);
     };
     if (result != 0) {
         k.puts("[R4D] init failed code=");

@@ -8,7 +8,7 @@ use r4os_library_helpers::{
     image::{Images, Png},
     standard::{Codepage, Graphemes, Mode, Standard},
 };
-use r4os_sdk::App;
+use r4os_sdk::App2 as App;
 #[path = "../../fixtures.rs"]
 mod fixtures;
 struct Output<'a, 'b>(&'a App<'b>);
@@ -23,7 +23,7 @@ impl core::fmt::Write for Output<'_, '_> {
 }
 unsafe extern "C" {
     fn r4libraries59_guest(
-        start: *const r4os_sdk::abi::R4XStartContext,
+        start: *const r4os_sdk::abi::generation2::R4XStartContext2,
         png: *const u8,
         png_length: usize,
         font: *const u8,
@@ -61,7 +61,7 @@ fn main(app: &mut App<'_>) -> i32 {
 fn exercise(app: &App<'_>) -> Result<(), (i32, r4os_library_helpers::Error)> {
     use r4os_library_helpers::Error;
     let bad = Error::InvalidProvider;
-    let standard = Standard::open(app).map_err(|e| (1, e))?;
+    let standard = Standard::open2(app).map_err(|e| (1, e))?;
     if standard
         .utf8("Aü".as_bytes())
         .map_err(|e| (2, e))?
@@ -183,7 +183,7 @@ fn exercise(app: &App<'_>) -> Result<(), (i32, r4os_library_helpers::Error)> {
     if status < 0 || value != 59 {
         return Err((48, bad));
     }
-    let images = Images::open(app).map_err(|e| (49, e))?;
+    let images = Images::open2(app).map_err(|e| (49, e))?;
     let info = images
         .probe(fixtures::PNG, "image/png")
         .map_err(|e| (50, e))?;
@@ -213,7 +213,7 @@ fn exercise(app: &App<'_>) -> Result<(), (i32, r4os_library_helpers::Error)> {
     {
         return Err((57, bad));
     }
-    let png = Png::open(app).map_err(|e| (58, e))?;
+    let png = Png::open2(app).map_err(|e| (58, e))?;
     let mut precise_scratch = vec![
         0;
         png.scratch_bytes(info, fixtures::PNG.len())
@@ -239,7 +239,7 @@ fn exercise(app: &App<'_>) -> Result<(), (i32, r4os_library_helpers::Error)> {
         .decode_svg(svg, &mut svg_pixels, &mut svg_scratch, 2, 2)
         .map_err(|e| (62, e))?;
     let heap = Heap::new().map_err(|e| (63, e))?;
-    let fonts = Fonts::open(app).map_err(|e| (64, e))?;
+    let fonts = Fonts::open2(app).map_err(|e| (64, e))?;
     let mut decoder = fonts.decoder(&heap, 8 * 1024 * 1024).map_err(|e| (65, e))?;
     let initial = decoder.allocated_bytes().map_err(|e| (66, e))?;
     {
@@ -285,4 +285,4 @@ fn exercise(app: &App<'_>) -> Result<(), (i32, r4os_library_helpers::Error)> {
     }
     Ok(())
 }
-r4os_sdk::app!(main);
+r4os_sdk::app2!(main);

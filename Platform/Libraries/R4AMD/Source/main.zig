@@ -37,15 +37,6 @@ pub export fn r4amd_negotiate_impl(profile: *const c.R4AmdDeviceProfile, output:
     return @import("backend.zig").negotiate(profile, output);
 }
 
-pub export var r4amd_query: r4os.abi.R4LQuery align(8) linksection(".data.r4l_exports") = .{
-    .magic = r4os.abi.r4l_abi_magic,
-    .abi_version = r4os.abi.r4l_abi_version,
-    .size = r4os.abi.r4l_query_struct_size,
-    .group = 0,
-    .kernel_bridge = 0,
-    .reserved = 0,
-};
-
 pub export fn r4amd_encode_copy_impl(request: *const c.R4AmdCopy, commands: [*]u32, capacity: u32, written: *u32) callconv(.c) i32 {
     return @import("backend.zig").encodeCopy(request, commands, capacity, written);
 }

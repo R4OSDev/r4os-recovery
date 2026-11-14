@@ -1,7 +1,7 @@
 R4OS_MODULE_MANIFEST=2
 KIND=R4L
 NAME=R4VIDEO
-VERSION=0.1.17
+VERSION=0.1.18
 LANGUAGE=Zig
 SOURCE=Source/main.zig
 TARGET=/R4OS/LIBS/R4VIDEO.R4L
@@ -24,7 +24,6 @@ ZIG_MODULE=gpu_resources:../Shared/Native/gpu_resources.zig
 ZIG_MODULE=r4native:../Shared/Native/root.zig
 ZIG_MODULE=r4native_date:../R4STD/Source/date.zig
 EXPORT=VIDEO_V1:r4video_video_v1:1
-EXPORT=Query:r4video_query:1
 EXPORT=Query2:r4video_query2:2
 CONTRACT=Contract/LibraryContract.json
 CONTRACT_BASELINE=Contract/LibraryContract.baseline.json
