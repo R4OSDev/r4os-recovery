@@ -2614,14 +2614,14 @@
     },
     "recovery-contract": {
       "repository": "https://github.com/R4OSDev/r4os-recovery.git",
-      "commit": "b8c7a46c18a399bd1ad385def486756376a97808",
+      "commit": "ee373e80b99dfbaf44d999424af7cc12814a77cb",
       "version": "0.64.95",
       "files": {
         "build.zig.zon": "c6db8b1b6e251f7825594058a766b535327d99b8c3bf5c0d377b0766e6425243"
       },
       "tree": {
         "algorithm": "r4os-files-sha256-lf-v1",
-        "sha256": "76de44a5ed8f0a63deba83e277b89822d18ba99057a0777f95ecdaf186dde137",
+        "sha256": "9483dbd2dbafc375d73c9f97a349e3631b3e1806250df70131ed813317eef4d8",
         "files": [
           ".gitattributes",
           ".gitignore",
@@ -2715,28 +2715,28 @@
           "Tools/Test-RustABI.ps1"
         ]
       },
-      "zig_archive_url": "https://github.com/R4OSDev/r4os-contract/archive/8fb41b466fb64a6df866c564feb4d598c66411b2.tar.gz",
-      "zig_hash": "r4os_contract-0.64.95-ELhbYUmucgEqHNyLzdLH5v1X5D4tUkiOiBSx20BAe_Fv",
+      "zig_archive_url": "https://github.com/R4OSDev/r4os-contract/archive/0f93f6ca116ca920ada8cf23fbb79545cfce063e.tar.gz",
+      "zig_hash": "r4os_contract-0.64.95-ELhbYVq0cgEor7-mlk1ijxAPGzAGjbQoCSCOHZrdLUEa",
       "provenance": {
         "version": "0.64.95",
-        "archive_sha256": "1fd7ca2690c08183bd2f217f6df064333254d908103cec959cabdb740d2a6b1a",
+        "archive_sha256": "021dda7efdc75fb8456b6233dcded323b16fdf8a4c07ec957a6b9f8230ecc4d3",
         "repository": "https://github.com/R4OSDev/r4os-contract.git",
-        "commit": "8fb41b466fb64a6df866c564feb4d598c66411b2"
+        "commit": "0f93f6ca116ca920ada8cf23fbb79545cfce063e"
       },
       "source_subdir": "Platform/Contract",
-      "archive_url": "https://github.com/R4OSDev/r4os-recovery/archive/b8c7a46c18a399bd1ad385def486756376a97808.tar.gz",
+      "archive_url": "https://github.com/R4OSDev/r4os-recovery/archive/ee373e80b99dfbaf44d999424af7cc12814a77cb.tar.gz",
       "archive_format": "tar.gz"
     },
     "recovery-sdk": {
       "repository": "https://github.com/R4OSDev/r4os-recovery.git",
-      "commit": "b8c7a46c18a399bd1ad385def486756376a97808",
-      "version": "0.64.210",
+      "commit": "ee373e80b99dfbaf44d999424af7cc12814a77cb",
+      "version": "0.64.218",
       "files": {
-        "build.zig.zon": "87fbf5b5ceaa9698cbed93a35a25cc8ef1808374c3a67707b7b4cd224b4d59f3"
+        "build.zig.zon": "51c2f9e6ba78ebd0c36d733ac18581c40dd4836834db918f89b53f6f7aa99ed7"
       },
       "tree": {
         "algorithm": "r4os-files-sha256-lf-v1",
-        "sha256": "7d308217b019c7e25bfc5af6aa9785bf352674d3df95bfeb786462471c618ec2",
+        "sha256": "4c0ce94a9ebd6192d77962522792463b19deb6525bf212feae12827486b17d1d",
         "files": [
           ".gitattributes",
           ".gitignore",
@@ -2745,9 +2745,6 @@
           "Build.sh",
           "build.zig",
           "build.zig.zon",
-          "BuildProfiles/R4X_C_Console.ini",
-          "BuildProfiles/R4X_C_Desktop_OK.ini",
-          "BuildProfiles/R4X_C.ini",
           "BuildProfiles/R4X_C2_Console.ini",
           "BuildProfiles/R4X_C2_Desktop_OK.ini",
           "BuildProfiles/R4X_C2.ini",
@@ -3241,6 +3238,8 @@
           "Shared/C/include/r4os/driver_serial.h",
           "Shared/C/include/r4os/driver_threads.h",
           "Shared/C/include/r4os/driver.h",
+          "Shared/C/include/r4os/driver2_lifecycle.h",
+          "Shared/C/include/r4os/driver2.h",
           "Shared/C/include/r4os/facades.h",
           "Shared/C/include/r4os/file_picker_platform2.h",
           "Shared/C/include/r4os/file_picker.h",
@@ -3260,6 +3259,7 @@
           "Shared/C/include/r4os/poll_budget.h",
           "Shared/C/include/r4os/power_profiles.h",
           "Shared/C/include/r4os/protocol.h",
+          "Shared/C/include/r4os/protocol2.h",
           "Shared/C/include/r4os/published_frame.h",
           "Shared/C/include/r4os/r4audio.h",
           "Shared/C/include/r4os/r4desk.h",
@@ -3290,9 +3290,7 @@
           "Shared/C/include/r4os/web_helpers.h",
           "Shared/C/include/r4os/wire_helpers.h",
           "Shared/C/src/facades.c",
-          "Shared/C/src/r4app_startup.c",
           "Shared/C/src/r4app2_startup.c",
-          "Shared/C/src/r4xstart_startup.c",
           "Shared/C/src/r4xstart2_startup.c",
           "Shared/Generated/R4STD_Grapheme/console_text.zig",
           "Shared/Generated/R4STD_Grapheme/Data/GraphemeBreakTest.txt",
@@ -3301,7 +3299,6 @@
           "Shared/Generated/R4STD_Grapheme/R4STD-LICENSE.txt",
           "Shared/Generated/R4STD_Grapheme/SOURCE.json",
           "Shared/Generated/R4STD_Grapheme/UNICODE-LICENSE.txt",
-          "Shared/Zig/r4app_startup.zig",
           "Shared/Zig/r4app2_startup.zig",
           "Smoke/AppEntry/C/Console/module.R4MF",
           "Smoke/AppEntry/C/Console/src/companion.c",
@@ -3317,7 +3314,9 @@
           "Smoke/AppEntry/Zig/Desktop/src/main.zig",
           "Smoke/AppEntry/Zig/Service/module.R4MF",
           "Smoke/AppEntry/Zig/Service/src/main.zig",
+          "Smoke/R4D/module.R4MF",
           "Smoke/R4D/src/main.zig",
+          "Smoke/R4P/module.R4MF",
           "Smoke/R4P/src/main.zig",
           "Smoke/R4XStart/C/module.R4MF",
           "Smoke/R4XStart/C/src/main.c",
@@ -3775,6 +3774,7 @@
           "Tests/Simulation/DriverLifecycle.c",
           "Tests/Simulation/DriverLifecycleHost.c",
           "Tests/Simulation/Fixtures/installed-library-v5.jrn",
+          "Tests/Simulation/GuestContext2.h",
           "Tests/Simulation/GuiParity.c",
           "Tests/Simulation/NetworkPeer.py",
           "Tests/Simulation/PointerBindings.c",
@@ -3901,18 +3901,18 @@
         ]
       },
       "provenance": {
-        "version": "0.64.210",
-        "archive_sha256": "1e8348d1a6794cb87c1fa297e222d668d8154ca39bf892d26b346ec151b3590c",
+        "version": "0.64.218",
+        "archive_sha256": "33eb0d5e1d08a3a6724b5cfc171e44148ba5e0060a502c8db158d9012ac3fdd3",
         "repository": "https://github.com/R4OSDev/r4os-sdk.git",
-        "commit": "f3fa008ceeed9c9c7f1d88a059d662171580c700"
+        "commit": "45e4899f696aa51b09aa8c99b724dd33ae8b089b"
       },
       "source_subdir": "Platform/SDK",
-      "archive_url": "https://github.com/R4OSDev/r4os-recovery/archive/b8c7a46c18a399bd1ad385def486756376a97808.tar.gz",
+      "archive_url": "https://github.com/R4OSDev/r4os-recovery/archive/ee373e80b99dfbaf44d999424af7cc12814a77cb.tar.gz",
       "archive_format": "tar.gz"
     },
     "recovery-libraries": {
       "tree": {
-        "sha256": "b842f2e6aeab65b36337e0dcc78305e6c9758ab14d48ed70583fa72fef5d25dd",
+        "sha256": "e22e22482adaa50628e2dbade195cf088b89ec6a954828c77990d3de2b706f57",
         "algorithm": "r4os-files-sha256-lf-v1",
         "files": [
           ".gitattributes",
@@ -6372,21 +6372,21 @@
           "Tools/Test-ConsumerHelpers.ps1"
         ]
       },
-      "archive_url": "https://github.com/R4OSDev/r4os-recovery/archive/b8c7a46c18a399bd1ad385def486756376a97808.tar.gz",
-      "version": "0.64.62",
+      "archive_url": "https://github.com/R4OSDev/r4os-recovery/archive/ee373e80b99dfbaf44d999424af7cc12814a77cb.tar.gz",
+      "version": "0.64.64",
       "repository": "https://github.com/R4OSDev/r4os-recovery.git",
       "files": {
-        "build.zig.zon": "6117c79ab6717d4634a3d6eccb8311195fb07ceac2843069f57ef34ed80b7291"
+        "build.zig.zon": "1177d0c2ba011cf9f312ffc009cb021532788a98d857504ac6d3ee31e9391070"
       },
       "provenance": {
-        "commit": "8fc5437b33bf531409b76fc8aba45e481902e58d",
-        "version": "0.64.62",
+        "commit": "86d39b56ee8fe55f7776139acf1b84132d81c92c",
+        "version": "0.64.64",
         "repository": "https://github.com/R4OSDev/r4os-libraries.git",
-        "archive_sha256": "d7518e60cccbe635b8231fe152a016fdc8f8f1630ba6d5076f9abfb19874046f"
+        "archive_sha256": "2c26db52f60a7cc836d069f52ad382c10c8da39b99ee3c4f9b0da7b448b2ceaa"
       },
       "archive_format": "tar.gz",
       "source_subdir": "Platform/Libraries",
-      "commit": "b8c7a46c18a399bd1ad385def486756376a97808"
+      "commit": "ee373e80b99dfbaf44d999424af7cc12814a77cb"
     }
   },
   "libraries": {
@@ -6394,9 +6394,9 @@
       "name": "R4ACO",
       "repository": "libraries",
       "path": "R4ACO",
-      "version": "0.1.14",
+      "version": "0.1.15",
       "target": "/R4OS/LIBS/R4ACO.R4L",
-      "manifest_sha256": "a83405f7f7629d47a023bc030866f7da0b7601c3d7a6f630b64acc64e324b7fe"
+      "manifest_sha256": "b0d5d81e1df9abbca45fbecb138ff9cfa08502f92435a5f8c45ce74674e71377"
     },
     "r4amd": {
       "name": "R4AMD",
@@ -6410,9 +6410,9 @@
       "name": "R4ENC",
       "repository": "libraries",
       "path": "R4ENC",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "target": "/R4OS/LIBS/R4ENC.R4L",
-      "manifest_sha256": "342e527deac7bb7553f109e56e326289031d716372f4e7e7f2b34f15fdf5e0d0"
+      "manifest_sha256": "d7fed684519762e8e0b5448ce6326f1fba07e07e6ba3b0241472797f288da1ff"
     },
     "r4font": {
       "name": "R4FONT",
@@ -6426,17 +6426,17 @@
       "name": "R4GFX",
       "repository": "libraries",
       "path": "R4GFX",
-      "version": "0.1.41",
+      "version": "0.1.42",
       "target": "/R4OS/LIBS/R4GFX.R4L",
-      "manifest_sha256": "18ff3d8f6008ad557e4d807d0a6ebb6fb32416b9ec25eeebd2fe1d36abb190e0"
+      "manifest_sha256": "e9f9db6d3a9a3e1a9366c0cb7e8779481d32f71b098b0d4ce9aa0d8fcf072f1b"
     },
     "r4gl": {
       "name": "R4GL",
       "repository": "libraries",
       "path": "R4GL",
-      "version": "0.1.36",
+      "version": "0.1.37",
       "target": "/R4OS/LIBS/R4GL.R4L",
-      "manifest_sha256": "5547fd81b3fcdcba82824dad43cc357bb5bf581edfa733af458b655337630411"
+      "manifest_sha256": "864974a17c812cae458d5da015f1aa8fb58403bdfde485f0ddce26e89f19f30e"
     },
     "r4img": {
       "name": "R4IMG",
@@ -6450,9 +6450,9 @@
       "name": "R4NAK",
       "repository": "libraries",
       "path": "R4NAK",
-      "version": "0.1.12",
+      "version": "0.1.13",
       "target": "/R4OS/LIBS/R4NAK.R4L",
-      "manifest_sha256": "90ba974543c646ade012cdd63b5a3338b4039cba85f93b7e4e369ea44c6abcb1"
+      "manifest_sha256": "4e30fcf5f09819faa898d175171013dd420861f6701b154531d0aaeec0028abe"
     },
     "r4nv": {
       "name": "R4NV",
@@ -6466,25 +6466,25 @@
       "name": "R4STD",
       "repository": "libraries",
       "path": "R4STD",
-      "version": "0.2.10",
+      "version": "0.2.11",
       "target": "/R4OS/LIBS/R4STD.R4L",
-      "manifest_sha256": "2fb5b965aa666676c40046952f7b8946376ebfb84b054219e17dc9eec4b9cb53"
+      "manifest_sha256": "536a24b5be9fde9a5e1d3dc1a5fc26917d6b7638368ba2ca704914c6f224f51c"
     },
     "r4video": {
       "name": "R4VIDEO",
       "repository": "libraries",
       "path": "R4VIDEO",
-      "version": "0.1.18",
+      "version": "0.1.19",
       "target": "/R4OS/LIBS/R4VIDEO.R4L",
-      "manifest_sha256": "0c2c313e778243129059bdc5c72a7e7273480b86f8b177f47fe857c08a3143d1"
+      "manifest_sha256": "f8654bc8be37c93bb108cce8a7e63cab1b851e560ebd26910797b5b74889450e"
     },
     "r4vk": {
       "name": "R4VK",
       "repository": "libraries",
       "path": "R4VK",
-      "version": "0.1.50",
+      "version": "0.1.51",
       "target": "/R4OS/LIBS/R4VK.R4L",
-      "manifest_sha256": "e9e62a1b9ba03e7de55c24823a5009c7afdf8dc08bccf1dc61f230882713c31a"
+      "manifest_sha256": "450cdcd860b309fb7f61c2ea18b752bdcabbbad9cb0787b4a39dafc5466d255d"
     }
   },
   "sets": {

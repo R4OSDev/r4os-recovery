@@ -51514,7 +51514,7 @@
       },
       {
         "path": "Repositories/SDK/Profiles/Components.json",
-        "sha256": "b888cba94671095f02802ec651a57f50cca129aeac18daae305c57087886c83e"
+        "sha256": "fb0c4b8e5c714c9dccc1e0c9a73ab1697cb785199731d93af374b6dbbba3a72a"
       },
       {
         "path": "Repositories/SDK/r4os/rust_module_profile.json",
@@ -59334,6 +59334,24 @@
       "libraries": "0.64.64",
       "report": "Docs/API/ConsumerMigration.txt",
       "scope": "Original full SDK test completed with actual process0 on the current implementation source; its exact source snapshot and original stderr remain in the local receipt. Subsequent changes are the measured eight Library module increments/source package64, exact clean supplier metadata and removal of the unused pre-JSON Recovery host rewriter. Existing current JSON Recovery policy is retained; actual frozen218 Recovery builds and final normal artifacts/native90 are still required. All other watched implementations are byte-identical to the reviewed/tested source epoch. No Windows execution, hardware, native or performance qualification is inferred."
+    },
+    "recovery_current_source_selection_09090": {
+      "complete": true,
+      "performed_in": "0.90.90",
+      "sdk": "0.64.218",
+      "contract": "0.64.95",
+      "libraries": "0.64.64",
+      "report": "Docs/API/ConsumerMigration.txt",
+      "scope": "Exact new immutable Recovery Platform source selections: canonical SDK218 epochA, Contract95 and Libraries64, 61 legal source archives including all58 historical originals. Controller SDK218 epochB changes only Components and this explicit source review; every normal SDK implementation, generator, profile policy, facade and template is byte-identical to qualified epochA. Frozen source archive and controller source are distinct recorded commits; no circular or invented package identity. Actual Recovery39/Menu/Kernel/Runtime, final normal artifacts/native90 and soleSTANDARD90 are still required. This source snapshot selection does not claim those acceptances."
+    },
+    "library64_exact_module_identities_09090": {
+      "complete": true,
+      "performed_in": "0.90.90",
+      "sdk": "0.64.218",
+      "contract": "0.64.95",
+      "libraries": "0.64.64",
+      "report": "Docs/API/ConsumerMigration.txt",
+      "scope": "Eight measured changed Library providers had their actual module.R4MF versions advanced, but the SDK system-library selectors still named their previous versions. The unchanged strict normal resolver refused r4aco/VERSION before compilation. All twelve selectors now match exact canonical64 manifest names/targets, versions and SHA256; eight changed rows, four untouched. SDK implementations/ABI/profile policy/templates are unchanged. The aborted Recovery candidate parent and original failed host-tool parent remain failed; new frozen source transfer and actual new normal/recovery builds are required separately."
     }
   },
   "wave_bindings": [
@@ -59590,10 +59608,10 @@
     "sdk": "0.64.218",
     "contract": "0.64.95",
     "libraries": "0.64.64",
-    "evidence": "full_sdk_current_source_09090",
+    "evidence": "library64_exact_module_identities_09090",
     "historical_snapshot_retained": true,
     "prepared_only": true,
-    "scope": "Original full SDK test completed with actual process0 on the current implementation source; its exact source snapshot and original stderr remain in the local receipt. Subsequent changes are the measured eight Library module increments/source package64, exact clean supplier metadata and removal of the unused pre-JSON Recovery host rewriter. Existing current JSON Recovery policy is retained; actual frozen218 Recovery builds and final normal artifacts/native90 are still required. All other watched implementations are byte-identical to the reviewed/tested source epoch. No Windows execution, hardware, native or performance qualification is inferred."
+    "scope": "Eight measured changed Library providers had their actual module.R4MF versions advanced, but the SDK system-library selectors still named their previous versions. The unchanged strict normal resolver refused r4aco/VERSION before compilation. All twelve selectors now match exact canonical64 manifest names/targets, versions and SHA256; eight changed rows, four untouched. SDK implementations/ABI/profile policy/templates are unchanged. The aborted Recovery candidate parent and original failed host-tool parent remain failed; new frozen source transfer and actual new normal/recovery builds are required separately."
   },
   "drift_guard": {
     "schema": 1,
@@ -61317,7 +61335,7 @@
       },
       {
         "path": "Repositories/SDK/Profiles/Components.json",
-        "sha256": "b888cba94671095f02802ec651a57f50cca129aeac18daae305c57087886c83e"
+        "sha256": "fb0c4b8e5c714c9dccc1e0c9a73ab1697cb785199731d93af374b6dbbba3a72a"
       },
       {
         "path": "Repositories/SDK/Profiles/Tools.json",
@@ -66965,6 +66983,26 @@
       "historical_snapshot_retained": true,
       "prepared_only": true,
       "scope": "Completed bounded owner/source/interop review on the explicitly technical working source. No final90 source release, whole SDK, Recovery,145 artifacts/images/native/benchmark/push acceptance is claimed. These are separately required before subversion closure."
+    },
+    {
+      "performed_in": "0.90.90",
+      "sdk": "0.64.218",
+      "contract": "0.64.95",
+      "libraries": "0.64.64",
+      "evidence": "full_sdk_current_source_09090",
+      "historical_snapshot_retained": true,
+      "prepared_only": true,
+      "scope": "Original full SDK test completed with actual process0 on the current implementation source; its exact source snapshot and original stderr remain in the local receipt. Subsequent changes are the measured eight Library module increments/source package64, exact clean supplier metadata and removal of the unused pre-JSON Recovery host rewriter. Existing current JSON Recovery policy is retained; actual frozen218 Recovery builds and final normal artifacts/native90 are still required. All other watched implementations are byte-identical to the reviewed/tested source epoch. No Windows execution, hardware, native or performance qualification is inferred."
+    },
+    {
+      "performed_in": "0.90.90",
+      "sdk": "0.64.218",
+      "contract": "0.64.95",
+      "libraries": "0.64.64",
+      "evidence": "recovery_current_source_selection_09090",
+      "historical_snapshot_retained": true,
+      "prepared_only": true,
+      "scope": "Exact new immutable Recovery Platform source selections: canonical SDK218 epochA, Contract95 and Libraries64, 61 legal source archives including all58 historical originals. Controller SDK218 epochB changes only Components and this explicit source review; every normal SDK implementation, generator, profile policy, facade and template is byte-identical to qualified epochA. Frozen source archive and controller source are distinct recorded commits; no circular or invented package identity. Actual Recovery39/Menu/Kernel/Runtime, final normal artifacts/native90 and soleSTANDARD90 are still required. This source snapshot selection does not claim those acceptances."
     }
   ],
   "source_inventory_scope": "Historical declaration census retained at its explicit row epochs. Current reviewed source identities are drift_guard.files; counts and names do not qualify implementations.",
