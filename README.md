@@ -4,14 +4,17 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.70 / its own Zig Kernel0.1.69 and Menu0.1.28 implement the
-canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. The Recovery
-owner builds all39 embedded modules:38 explicit source derivatives under
-`RecoveryTools/Embedded/`, plus canonical R4STD0.2.9 from the pinned
-Libraries0.64.58 snapshot. Their original source archives remain available.
-Contract0.64.93, snapshot SDK0.64.210 and Libraries0.64.58 retain their exact
-canonical source bytes, except for the three documented `.gitattributes`
-host policies. SDK0.64.212 controls the shared Linux/Windows build.
+Recovery0.1.74 / its own Zig Kernel0.1.73 and Menu0.1.29 use only the
+canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. All39 embedded
+modules have been built from the current frozen sources:24 unchanged bodies,
+14 independently versioned changed derivatives, plus canonical R4STD0.2.11
+from Libraries0.64.64. The frozen canonical sources are Contract0.64.95,
+SDK0.64.218 source epochC and Libraries0.64.64; controller SDK0.64.218 epochD
+selects their exact immutable trees. Only the three recorded .gitattributes
+host policies differ from canonical archive bytes. All58 historical source
+archives remain, alongside six current source archives. Source/body/version
+and original Kernel host tests pass. Current guest and deployment acceptance
+remain separate; the qualified older runs below retain their actual versions.
 
 The IPv4 family service path uses the current DNS/TCP/UDP owner sources and
 the canonical DNS address codec. The kernel supplies only resident backend
@@ -47,7 +50,7 @@ unchanged five scored normal artifacts; it is not a Recovery performance claim.
 Claim/original import/fullGET/independent server scoring remain pending under
 the explicit local closure exception. This source work does not publish
 a binary release or qualify execution on Windows or physical hardware.
-The old technical platform provider remains until the controlled0.90.89 cutover.
+Since0.90.89 only the technical Generation2 platform providers are published.
 
 The current baseline contains pinned kernel, platform contract and SDK sources,
 39 source-built console, service, driver, protocol and library modules, and

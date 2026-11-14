@@ -744,5 +744,28 @@
   "preserved_original_archives": 58,
   "total_source_archives": 64,
   "kernel_host_tests_log_sha256": "093890621fd3181df84f558707317b099e964c1427970ced3d8a9f86a19a722e",
-  "scope": "Actual current source/build/whole-body/version closure, exact39 Runtime admissions, Menu,64MB Runtime and paired production Kernel; original Recovery Kernel host tests pass. Current independent frozen SDK218C and controller218D epochs explicit. Every historical source archive retained. This record does not grant native, install/update/repair, physical hardware, performance or release acceptance."
+  "scope": "Actual current source/build/whole-body/version closure, exact39 Runtime admissions, Menu,64MB Runtime and paired production Kernel; original Recovery Kernel host tests pass. Current independent frozen SDK218C and controller218D epochs explicit. Every historical source archive retained. This record does not grant native, install/update/repair, physical hardware, performance or release acceptance.",
+  "owners": [
+    {
+      "owner": "Contract",
+      "version": "0.64.95",
+      "sourceCommit": "0f93f6ca116ca920ada8cf23fbb79545cfce063e",
+      "pendingOwnerCommit": false,
+      "scope": "Exact canonical frozen source owner; current controller SDK source is separately recorded."
+    },
+    {
+      "owner": "SDK",
+      "version": "0.64.218",
+      "sourceCommit": "6daa3113abcf6931ed1f26bd0fbdc9b404140cc9",
+      "pendingOwnerCommit": false,
+      "scope": "Exact canonical frozen source owner; current controller SDK source is separately recorded."
+    },
+    {
+      "owner": "Libraries",
+      "version": "0.64.64",
+      "sourceCommit": "86d39b56ee8fe55f7776139acf1b84132d81c92c",
+      "pendingOwnerCommit": false,
+      "scope": "Exact canonical frozen source owner; current controller SDK source is separately recorded."
+    }
+  ]
 }

@@ -1,6 +1,19 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
+Aktueller Quellen-/Artefaktstand0.90.90
+-------------------------------------
+Recovery0.1.74, eigener Kernel0.1.73, Menue0.1.29:39 tatsaechlich gebaute und
+aufgenommene Runtimevarianten.24 Koerper unveraendert,14 gemessene neue
+Derivatversionen sowie das kanonische R4STD0.2.11 aus Libraries0.64.64.
+Contract95, eingefrorenes SDK218-QuellpaketC und Libraries64 bleiben exakte
+Besitzerquellen; das getrennte Controller-SDK218-D waehlt ihre Hashbaeume.
+Alle58 historischen Archive bleiben erhalten, dazu sechs aktuelle Archive.
+Finales64MB-Runtime-/Kernelpaar und urspruengliche Kernel-Hosttests bestehen.
+Aktuelle Gast-/Installationsabnahme, Performance und Releaseabschluss sind
+davon getrennt. Beleg: Provenance/owner-update-0.90.90.json. Die folgenden
+85er Ergebnisse sind historische Nachweise mit ihren damaligen Paaren.
+
 Stand 0.90.85: Recovery0.1.70 / eigener Kernel0.1.69 / Menue0.1.28
 ----------------------------------------------------------------
 Aktueller Quellstand:39 aus Quellen gebaute Runtimevarianten mit58 Imports:
