@@ -2229,6 +2229,29 @@ test "Runtime-R4L executable ownership is exact and generation safe" {
     try testing.expect(!isExecutableAddress(@intCast(slot), 7, 0x1000));
 }
 
+test "current Query2 requires the exact header and retired Query is refused before payload access" {
+    const testing = @import("std").testing;
+    var bytes: [32]u8 align(8) = .{0} ** 32;
+    writeLe32(bytes[0..4], 0x324c3452);
+    writeLe32(bytes[4..8], 2);
+    writeLe32(bytes[8..12], 24);
+    try testing.expect(validateLoadedQuery(&bytes, 2, "R4STD", "Query2"));
+    for ([_]u32{ 0, 16, 25, 32 }) |size| {
+        writeLe32(bytes[8..12], size);
+        try testing.expect(!validateLoadedQuery(&bytes, 2, "R4STD", "Query2"));
+    }
+    writeLe32(bytes[8..12], 24);
+    try testing.expect(!validateLoadedQuery(bytes[0..23], 2, "R4STD", "Query2"));
+    try testing.expect(!validateLoadedQuery(&bytes, 1, "R4STD", "Query2"));
+    writeLe32(bytes[12..16], 1);
+    try testing.expect(!validateLoadedQuery(&bytes, 2, "R4STD", "Query2"));
+    writeLe32(bytes[12..16], 0);
+    writeLe64(bytes[16..24], 1);
+    try testing.expect(!validateLoadedQuery(&bytes, 2, "R4STD", "Query2"));
+    // No section, address, offset or record can be observed for the retired name.
+    try testing.expect(!validateLoadedExport("Query", 1, ~@as(u32, 0), ~@as(u32, 0), &.{}, &.{}, &.{}, "R4STD"));
+}
+
 fn logPublication(e: *const Entry) void {
     k.puts("[MOD] load ");
     k.puts(e.name[0..e.name_len]);

@@ -1705,12 +1705,12 @@
     },
     {
       "name": "R4STD",
-      "version": "0.2.9",
-      "source": "Libraries-0.90.85",
+      "version": "0.2.10",
+      "source": "Libraries-0.90.89",
       "path": "Runtime/R4OS/LIBS/R4STD.R4L",
       "manifest": "Legal/Manifests/R4STD/module.R4MF",
       "kind": 2,
-      "bytes": 58560,
+      "bytes": 58523,
       "imports": [],
       "exports": [
         "TEXT_V1:1",
@@ -1719,7 +1719,6 @@
         "DATE_V1:1",
         "TIME_V1:1",
         "CONFIG_V1:1",
-        "Query:1",
         "Query2:2"
       ],
       "protocolRoles": [],
@@ -1729,15 +1728,15 @@
         "original_artifact_sha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b",
         "frozen_sdk": "0.64.210",
         "generation": 2,
-        "controller_sdk": "0.64.214",
+        "controller_sdk": "0.64.217",
         "source": "Platform/Libraries/R4STD",
-        "frozen_libraries": "0.64.58",
-        "manifest_sha256": "1f38416dc4184785d9e190961a405300aa2f589906b0255162cb2dbbff0b46f1",
+        "frozen_libraries": "0.64.62",
+        "manifest_sha256": "2fb5b965aa666676c40046952f7b8946376ebfb84b054219e17dc9eec4b9cb53",
         "original_version": "0.2.2",
-        "frozen_contract": "0.64.93",
-        "source_tree_sha256": "e54452d2b71929b6d5927ad9d21e0af259d7b04e637c71f15ebd907f6dd56b1f",
+        "frozen_contract": "0.64.95",
+        "source_tree_sha256": "16c8505e9f001e94ac96b9e48b1935560278c780628f0126c42419aa4f7c89aa",
         "owner": "Recovery",
-        "source_archive": "Legal/Sources/Libraries-0.90.85.zip"
+        "source_archive": "Legal/Sources/Libraries-0.90.89.zip"
       }
     },
     {
@@ -3192,10 +3191,10 @@
         "path": "kernel/modules.zig",
         "source": "Kernel"
       },
-      "sha256": "ee4651fde51c969c5ad75262426c52581cf9bc7e09324e797d55c0d3e7d49a11",
+      "sha256": "ae59066fef406f88995af08ed4ae872767ebc00708c2bb316cd89b3a03865861",
       "originalSha256": "fb0b8ec6aa24c52c590eb498cd1279b7574e295eac447e07f995d5d221beb0e5",
       "path": "Kernel/kernel/modules.zig",
-      "bytes": 87397
+      "bytes": 88576
     },
     {
       "origin": {
@@ -5521,16 +5520,13 @@
     },
     {
       "origin": {
-        "source": "Libraries-0.90.85",
-        "path": "Platform/Libraries/R4STD",
-        "derivativeOwner": "Recovery",
-        "sourceTreeSha256": "e54452d2b71929b6d5927ad9d21e0af259d7b04e637c71f15ebd907f6dd56b1f",
-        "controllerSdk": "0.64.212"
+        "source": "Libraries-0.90.89",
+        "path": "R4STD/module.R4MF"
       },
-      "sha256": "1f38416dc4184785d9e190961a405300aa2f589906b0255162cb2dbbff0b46f1",
-      "originalSha256": "c90d0150b2b46cf62e1bf0b156fe3012bb81daa22bf6ba9ef9fe26c6d6a6dac7",
+      "sha256": "2fb5b965aa666676c40046952f7b8946376ebfb84b054219e17dc9eec4b9cb53",
+      "originalSha256": "2fb5b965aa666676c40046952f7b8946376ebfb84b054219e17dc9eec4b9cb53",
       "path": "Legal/Manifests/R4STD/module.R4MF",
-      "bytes": 1249
+      "bytes": 1223
     },
     {
       "origin": {
@@ -48338,16 +48334,17 @@
     },
     {
       "origin": {
-        "source": "Libraries-0.90.85",
         "path": "Platform/Libraries/R4STD",
         "derivativeOwner": "Recovery",
-        "sourceTreeSha256": "e54452d2b71929b6d5927ad9d21e0af259d7b04e637c71f15ebd907f6dd56b1f",
-        "controllerSdk": "0.64.214"
+        "frozenSdk": "0.64.210",
+        "controllerSdk": "0.64.217",
+        "source": "Libraries-0.90.89",
+        "sourceTreeSha256": "16c8505e9f001e94ac96b9e48b1935560278c780628f0126c42419aa4f7c89aa"
       },
-      "sha256": "1c8b69a6cd49f321c77c99086b08cb5635aa6164eaa11fadcdc0cf8beaa8a689",
+      "sha256": "2245a97c06449bc1860bb04d49b078a48d5bf69d99a5ad8560eea69cdaebf854",
       "originalSha256": "9d8610cc8a3c7d64a7067c6c656341546f9927092f08aed77564accb67a3738b",
       "path": "Runtime/R4OS/LIBS/R4STD.R4L",
-      "bytes": 58560
+      "bytes": 58523
     },
     {
       "origin": null,
@@ -75979,6 +75976,31 @@
           "after": "57acc75224f7d57f391625b834d41ad15d93557d4afdc5dbdcb211ee400625c5"
         }
       ]
+    },
+    {
+      "reason": "0.90.89 isolated focused Query2 size/revision/group/reserved/truncation regression cases and pre-payload retired-name refusal in existing loader unit suite; actual execution pending.",
+      "changes": [
+        {
+          "path": "Kernel/kernel/modules.zig",
+          "before": "ee4651fde51c969c5ad75262426c52581cf9bc7e09324e797d55c0d3e7d49a11",
+          "after": "ae59066fef406f88995af08ed4ae872767ebc00708c2bb316cd89b3a03865861"
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "before": "1c8b69a6cd49f321c77c99086b08cb5635aa6164eaa11fadcdc0cf8beaa8a689",
+          "path": "Runtime/R4OS/LIBS/R4STD.R4L",
+          "after": "2245a97c06449bc1860bb04d49b078a48d5bf69d99a5ad8560eea69cdaebf854"
+        },
+        {
+          "before": "1f38416dc4184785d9e190961a405300aa2f589906b0255162cb2dbbff0b46f1",
+          "path": "Legal/Manifests/R4STD/module.R4MF",
+          "after": "2fb5b965aa666676c40046952f7b8946376ebfb84b054219e17dc9eec4b9cb53"
+        }
+      ],
+      "reason": "0.90.89 isolated actual canonical R4STD10 build admitted; only its obsolete technical Query1 export removed; all six independent functional interfaces and other38 Runtime bodies retained; guest qualification pending"
     }
   ],
   "sdkProfile": {
