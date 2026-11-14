@@ -1,0 +1,748 @@
+{
+  "at": "2026-11-14T07:35:26.334951+00:00",
+  "source_commit": "a4a1ea0437149371187d432a49a354c0b09aeead",
+  "source_archive": {
+    "id": "Recovery-Owned-0.90.90",
+    "archive": "Legal/Sources/Recovery-Owned-0.90.90.zip",
+    "archiveSha256": "cf6ce941cf514e3888d7476c60c38cb6e6df0ecf65d75a26b530e6b60898d0ca",
+    "commit": "a4a1ea0437149371187d432a49a354c0b09aeead",
+    "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+  },
+  "controller_sdk": "67be558280e445e51f33f4bf3ef9f2e771a40a5e",
+  "frozen_sdk": "6daa3113abcf6931ed1f26bd0fbdc9b404140cc9",
+  "contract": "0f93f6ca116ca920ada8cf23fbb79545cfce063e",
+  "libraries": "86d39b56ee8fe55f7776139acf1b84132d81c92c",
+  "recovery_version": "0.1.74",
+  "kernel_version": "0.1.73",
+  "kernel_sha256": "107924bdb30b140f3a1e25a1b0ed2c9dcdda3cf4fe4d080ad1a4f422a598b60f",
+  "runtime_sha256": "5b352926f78d3fa7e01a5bf6248738dc14df3fe4693199d0a1ba4969dfae1cdf",
+  "runtime_bytes": 67108864,
+  "menu_version": "0.1.29",
+  "menu_sha256": "41a1d3d47360dda593386dea04c79b765d56e159aafaf74456feaca45faea0ce",
+  "modules": [
+    {
+      "name": "AHCI",
+      "version": "0.2.4",
+      "path": "Runtime/R4OS/DRIVERS/AHCI.R4D",
+      "sha256": "ea526d2b302bfe531b0979f534b82296ef3d45f54a6c4d61be362736e636e076",
+      "manifest": "Legal/Manifests/AHCI/module.R4MF",
+      "manifest_sha256": "1927345c5ab0b9450fa88b7c4f0d89996e96115863e8185262012fdbe7201e56",
+      "source": "RecoveryTools/Embedded/Drivers-AHCI",
+      "source_tree_sha256": "0cd7503a85026b9b7b0bbd7dc45f9ff6241ef9011af6b16482b1a8bcf34791ed",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "ATAPIO",
+      "version": "0.1.4",
+      "path": "Runtime/R4OS/DRIVERS/ATAPIO.R4D",
+      "sha256": "02ed56031511c4161609088621939560529ad92a89251da89ad8ce3e21f4b29d",
+      "manifest": "Legal/Manifests/ATAPIO/module.R4MF",
+      "manifest_sha256": "af82cc2fe885fdb0e1d85fed52b150681fb0100d406470244cc8bd1db507075a",
+      "source": "RecoveryTools/Embedded/Drivers-ATAPIO",
+      "source_tree_sha256": "189202516b3a0ebf5e7b4352424523f1500f7a2ac3efb8e9bbe3ba5fdee61816",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "DHCPSVC",
+      "version": "0.1.7",
+      "path": "Runtime/R4OS/SERVICES/DHCPSVC.R4X",
+      "sha256": "e38d3854441474a77e8301135542b2cb1730355b81d81757e7ec4486d1267e7c",
+      "manifest": "Legal/Manifests/DHCPSVC/module.R4MF",
+      "manifest_sha256": "bd13ad2839e23c6a736238452bcd46a1ca1ff39b51f0140798a6a0713e0261f6",
+      "source": "RecoveryTools/Embedded/Services-DhcpService",
+      "source_tree_sha256": "615d17094590370d881c790fea78a2736c53b86a1a28ea90ab7465abdc660931",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "DNSSVC",
+      "version": "0.1.5",
+      "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
+      "sha256": "843187b9e2de424e69c0d533f686c104d60b1a29b687b933dd180b2024555aca",
+      "manifest": "Legal/Manifests/DNSSVC/module.R4MF",
+      "manifest_sha256": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
+      "source": "RecoveryTools/Embedded/Services-DnsService",
+      "source_tree_sha256": "abdee2c9bc03efeea50309f6801cbc4e53525faba60819f38a446b91c73149b7",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "FTPSVC",
+      "version": "0.1.9",
+      "path": "Runtime/R4OS/SERVICES/FTPSVC.R4X",
+      "sha256": "e510bcecc7726f840bc84d5d59fa5231bbc5543435bd19c4fc48db06ce60021d",
+      "manifest": "Legal/Manifests/FTPSVC/module.R4MF",
+      "manifest_sha256": "6d1607b932c319cc465a52f80e1370db51ec3dbe788ec98a122189317c1876e8",
+      "source": "RecoveryTools/Embedded/Services-FtpService",
+      "source_tree_sha256": "047c22e467b5b94e2c50c1f14a84d915f32aa0ab7fec569eff7d110730a15a93",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "HELP",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/HELP.R4X",
+      "sha256": "a2514d32d6c423c5a65d62821ab2a8604ece87e36208b3fb015e7af81ad874d4",
+      "manifest": "Legal/Manifests/HELP/module.R4MF",
+      "manifest_sha256": "4e781307aec428344567b513f1b53ae5166bfbf04da972551c6f98f29216e32c",
+      "source": "RecoveryTools/Embedded/Apps-Help",
+      "source_tree_sha256": "137557ced5beb4ead48c1c071546f7fb3a6696a2ff64a1783b0d28aea84f92f2",
+      "imports": [
+        "R4SYS:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "HIDREPORT",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/HIDREPORT.R4P",
+      "sha256": "3ab2e85410e72798552630cb8b2a9740a53689e36bb8fa8219908e28c3c6b924",
+      "manifest": "Legal/Manifests/HIDREPORT/module.R4MF",
+      "manifest_sha256": "bc438f0677ad307124da974a87d7e8ec58ecbbcbe7de676b9dbc5e97aa9abbbc",
+      "source": "RecoveryTools/Embedded/Protocols-UsbHidReport",
+      "source_tree_sha256": "bc7099caa73353b7e8bdcb413f3aabf606543b9b20d26eae2cf2f77002395522",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "HTTPGET",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/HTTPGET.R4X",
+      "sha256": "2a31f62dbf4ab0f9aecf8eb31afbd42f2853923853314c650b806ad554acc367",
+      "manifest": "Legal/Manifests/HTTPGET/module.R4MF",
+      "manifest_sha256": "bf91aa29aee0703b37e4bb969525848067ab1df2d2c14940679cc3bab48f4ece",
+      "source": "RecoveryTools/Embedded/Apps-HttpGet",
+      "source_tree_sha256": "1f14fb4507c5d0086635bb9603ebf12e6545913ccf97b66e56f735ee767bab7a",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "IPCONFIG",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/IPCONFIG.R4X",
+      "sha256": "0614f268ae0a09eb8f68ec656213929e3cbe55fe5ddd21560bb21307bfcff47d",
+      "manifest": "Legal/Manifests/IPCONFIG/module.R4MF",
+      "manifest_sha256": "dfe44038f0b010fb50ac05adc75b101f889e4a2d46a6a37bf543e06e914d1da6",
+      "source": "RecoveryTools/Embedded/Apps-IpConfig",
+      "source_tree_sha256": "11b5d6af6e387a65086b577baee2a3afcb1c29a82fbd5102d0c8c73cde91df99",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "JSON",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/JSON.R4P",
+      "sha256": "1ebdc76d22d7a1905e0a52125a6b0630801533f1ec38737e90b264cda584a499",
+      "manifest": "Legal/Manifests/JSON/module.R4MF",
+      "manifest_sha256": "1703500d227173e455d74a7f82119314a6976d6cd58965ca095d3412801d58d2",
+      "source": "RecoveryTools/Embedded/Protocols-JSON",
+      "source_tree_sha256": "659b9c1b6ea1b7bc850572bcb5b220ca18724aae5ff9ea7b890a32b7ca12924e",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETARP",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/NETARP.R4P",
+      "sha256": "ad4a7524ee4344cdf1f7bfbffadc4b7b99249b46a97d5f0a09fa06ecea344ca6",
+      "manifest": "Legal/Manifests/NETARP/module.R4MF",
+      "manifest_sha256": "c7c11ba5668541142137b1451c71f394fdb452bc465bdc4423674b15d2e1ad2f",
+      "source": "RecoveryTools/Embedded/Protocols-NetArp",
+      "source_tree_sha256": "6156b4742baeb6ae9edd6b056bf926e45a54d844e1b3a002276f28c0d73539b2",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETCAT",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/NETCAT.R4X",
+      "sha256": "ca2f05c5dc3769b6a38c3d0c561b9ba290579897a829dd3b3db610bebacfc73e",
+      "manifest": "Legal/Manifests/NETCAT/module.R4MF",
+      "manifest_sha256": "c08f5ea0ec27729624f02ccf4609d389563443748532ee42d467818f54ed15d0",
+      "source": "RecoveryTools/Embedded/Apps-NetCat",
+      "source_tree_sha256": "6e6b0c10079ade53c1ea08fc558ce343d3380d6255cbf7263e51328cdafe1cd6",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4DESK:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "NETDHCP",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
+      "sha256": "f326a9cb11438bf53aaf4400bd99c1315ed09447595f9bbf1f862fb6ffa272a2",
+      "manifest": "Legal/Manifests/NETDHCP/module.R4MF",
+      "manifest_sha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+      "source": "RecoveryTools/Embedded/Protocols-NetDhcp",
+      "source_tree_sha256": "6349dbe3b8286f21423d35f58c38a83a7502818f9a8a5d2178cd8212a4b75627",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETDNS",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/NETDNS.R4P",
+      "sha256": "3b9fc29573fe50132f061f9bde262c668e003e545bc8123f7a775565714d9bc9",
+      "manifest": "Legal/Manifests/NETDNS/module.R4MF",
+      "manifest_sha256": "3b51a7fd2695d25019e06eee5a0de2f9f6c2090a8410d30e6b2a4d02e2ac025f",
+      "source": "RecoveryTools/Embedded/Protocols-NetDns",
+      "source_tree_sha256": "8241b83f6eb5f0999d2dfcc6068e61b8f3accbc6ad0af49e714075678c089e27",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETETH",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/NETETH.R4P",
+      "sha256": "c5cfd54975993a7ecf6f2e3c514c6c359fb90ca90aa2f7268278158f4fe6f26f",
+      "manifest": "Legal/Manifests/NETETH/module.R4MF",
+      "manifest_sha256": "2af486c878a9ac0c601c21e4cb855984199c6c76649643eb965193a4135ecbc4",
+      "source": "RecoveryTools/Embedded/Protocols-NetEthernet",
+      "source_tree_sha256": "ce521ae6b663d4740ac41d6e55e5947051f5bbf38bdcf55dabf9ad33f9316f38",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETICMP",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/NETICMP.R4P",
+      "sha256": "19f80b6a5b9cfa9928748acedc4c8265310a9d789958eae6f441718c2ec5775c",
+      "manifest": "Legal/Manifests/NETICMP/module.R4MF",
+      "manifest_sha256": "44e50f0b8214a4d78e0e57725fd43d76e18a0a8767a6c78a1159077a33e3bd07",
+      "source": "RecoveryTools/Embedded/Protocols-NetIcmp",
+      "source_tree_sha256": "d0c58f323562d0271289d3ea5cae5c54b77104fb953f55093ec48e0f1260aec9",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETIPV4",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/NETIPV4.R4P",
+      "sha256": "6333b91ab34c9c8ef8b9c9e46aa4a17ed84e7033c6f801a13c6e0cae11becb2c",
+      "manifest": "Legal/Manifests/NETIPV4/module.R4MF",
+      "manifest_sha256": "d1f6d59d805e0c8247cf021b112e2104a4952eb09a049758334fdc0d08f4bcee",
+      "source": "RecoveryTools/Embedded/Protocols-NetIpv4",
+      "source_tree_sha256": "b9453eb2e83bb47d5ce3202c2e3719f14df5c952a2f6bec75c8536a701c8aa2c",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETTCP",
+      "version": "0.1.4",
+      "path": "Runtime/R4OS/PROTOCOLS/NETTCP.R4P",
+      "sha256": "63b17e4c681524a5b6c4dfa1c1a696f5e99c560111b66252fb0bea214d78add3",
+      "manifest": "Legal/Manifests/NETTCP/module.R4MF",
+      "manifest_sha256": "bf2a88625b24db846fe51cb83143f5634636b33b67f4fa0962329d60fdfbbb8b",
+      "source": "RecoveryTools/Embedded/Protocols-NetTcp",
+      "source_tree_sha256": "d8ecb6ec7696caeb5cc3ee09f2e2696f19a413d84322d19520c354fdfd8fda28",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NETUDP",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/PROTOCOLS/NETUDP.R4P",
+      "sha256": "0c5f28341cdb372d8eda048e4a1fadc7b180d964d04e3aeedde3859a1efe1fad",
+      "manifest": "Legal/Manifests/NETUDP/module.R4MF",
+      "manifest_sha256": "aec871fc5ae5dc372bde9a9e126fb944d251bb59ef187f0c75c975201bcee8cc",
+      "source": "RecoveryTools/Embedded/Protocols-NetUdp",
+      "source_tree_sha256": "0527093345c31df0b0fe1674c8f2cdbaa1aefbf4cebb0372ccc48b3be02868a4",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "NVME",
+      "version": "0.1.8",
+      "path": "Runtime/R4OS/DRIVERS/NVME.R4D",
+      "sha256": "4d79260d26eff741d1a9c2d89976dad66cbb195b3ead10ee19dee20e5b8baeb3",
+      "manifest": "Legal/Manifests/NVME/module.R4MF",
+      "manifest_sha256": "e9dbe1e321315991a419c0d2cd4921abca312d21816cf18a148673a52815e529",
+      "source": "RecoveryTools/Embedded/Drivers-NVME",
+      "source_tree_sha256": "0547e291cfcd7eeff16278986da74e2442b728392392e8c15ff100a7bd2580dc",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "R4HTTP",
+      "version": "0.1.5",
+      "path": "Runtime/R4OS/PROTOCOLS/R4HTTP.R4P",
+      "sha256": "40f7eebb3136a6eb549487669c488f390510396cd3178f69cf00967923b317a8",
+      "manifest": "Legal/Manifests/R4HTTP/module.R4MF",
+      "manifest_sha256": "a7fd8b30d151f81e79a841346dfe31aefd779e03a78cc217e916fa66a1725636",
+      "source": "RecoveryTools/Embedded/Protocols-R4Http",
+      "source_tree_sha256": "05ab9a2f055f608a3d66a0afe59b7fd26e1ff88d6f899c52728f3de39b6bd8a5",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "R4PART",
+      "version": "0.1.7",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/R4PART.R4X",
+      "sha256": "ab5e5cf0941ab3004203dba7e4db385dc4465b992b84a4f160b3209003d0ae0a",
+      "manifest": "Legal/Manifests/R4PART/module.R4MF",
+      "manifest_sha256": "5665a163d37c8cd31bdedae9ca11b4196fe6ebb3759a747ebcf55a0b21117b5c",
+      "source": "RecoveryTools/Embedded/Apps-R4Part",
+      "source_tree_sha256": "67bd7ed8b154a796ca5f09c50095602cd2711685ff8d0ae90c85f87656261832",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4DESK:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "R4STD",
+      "version": "0.2.11",
+      "path": "Runtime/R4OS/LIBS/R4STD.R4L",
+      "sha256": "9366c461660f506bccd60a9b8e68e4df51f634dc9b2d007e7aa79e53baeeec03",
+      "manifest": "Legal/Manifests/R4STD/module.R4MF",
+      "manifest_sha256": "536a24b5be9fde9a5e1d3dc1a5fc26917d6b7638368ba2ca704914c6f224f51c",
+      "source": "Platform/Libraries/R4STD",
+      "source_tree_sha256": "422af73febe8dc7e212e75ea8ccc93146917b6f43b60bac24c0a6047bad92a3d",
+      "imports": [],
+      "exports": [
+        "TEXT_V1:1",
+        "CODEC_V1:1",
+        "SETTINGS_V1:1",
+        "DATE_V1:1",
+        "TIME_V1:1",
+        "CONFIG_V1:1",
+        "Query2:2"
+      ]
+    },
+    {
+      "name": "R4TLS",
+      "version": "0.2.8",
+      "path": "Runtime/R4OS/PROTOCOLS/R4TLS.R4P",
+      "sha256": "44b60159c90e411575d14049068ae6b0a33ec91065ececddd254c4c36a6b6558",
+      "manifest": "Legal/Manifests/R4TLS/module.R4MF",
+      "manifest_sha256": "8c33ffcf0713afe6da3fba4aa41870101ea7915fc0ea38ce2b21493a8ee352e0",
+      "source": "RecoveryTools/Embedded/Protocols-R4Tls",
+      "source_tree_sha256": "37334fcadcd1e324228aa989f958641d60e792ca2152a5f0ab3e98da45963458",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "R4ZIP",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/PROTOCOLS/R4ZIP.R4P",
+      "sha256": "a75e266e3224731a0f07eccb1d40f4f19bdd4e805bab2a6a5fb2b6024857720a",
+      "manifest": "Legal/Manifests/R4ZIP/module.R4MF",
+      "manifest_sha256": "5f7537554fcf69da3719c25714c96326bb6e7b6cb72822bdc969e1db023a2d99",
+      "source": "RecoveryTools/Embedded/Protocols-R4Zip",
+      "source_tree_sha256": "dc71e5068a762094dc5c0980b474166e8b83899c4ce5ef6e30e40860c9730c37",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "RTL8139",
+      "version": "0.1.5",
+      "path": "Runtime/R4OS/DRIVERS/RTL8139.R4D",
+      "sha256": "458d0ef79630a680f59b6303ab43331b23da0f3a0fdd3aea9f9a360dcfb6724d",
+      "manifest": "Legal/Manifests/RTL8139/module.R4MF",
+      "manifest_sha256": "01014da2238852bd7c41be37304f07d6a6d33abf5ac7277e664dc2749c15598c",
+      "source": "RecoveryTools/Embedded/Drivers-RTL8139",
+      "source_tree_sha256": "9837ab26ef4c0788ba4bdc59548451a079102fd0cab288fafdf0ef3192f846fe",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "RTL8168",
+      "version": "0.1.4",
+      "path": "Runtime/R4OS/DRIVERS/RTL8168.R4D",
+      "sha256": "dc94658b28efe9975cf940fef27a9e1e9e0a1fd24463fc557bb6809abb4b723d",
+      "manifest": "Legal/Manifests/RTL8168/module.R4MF",
+      "manifest_sha256": "93e022cd6721d4aef7a116239a893dec844767a19aa444dfc999e727c988e2e7",
+      "source": "RecoveryTools/Embedded/Drivers-RTL8168",
+      "source_tree_sha256": "93e441d7fa3036ad231640d15f52d614314bc9dd169d727bc927ea1825408c40",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "SERVMAN",
+      "version": "0.1.4",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
+      "sha256": "2dad81d030b60520f1affa27a2310d6f08948de71882a02d7f91c8dbcf8394c5",
+      "manifest": "Legal/Manifests/SERVMAN/module.R4MF",
+      "manifest_sha256": "bc1dcc998f5a5b26791bc9f2397caae1c89944039f663a05310a198218b1d815",
+      "source": "RecoveryTools/Embedded/Apps-ServiceManager",
+      "source_tree_sha256": "bd86aa8eff72ad3102cadaa178f54c559e8d6c256a1274ac7adc4d162b55aeb9",
+      "imports": [
+        "R4SYS:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "SSHD",
+      "version": "0.1.11",
+      "path": "Runtime/R4OS/SERVICES/SSHD.R4X",
+      "sha256": "f8f58bc99d56c30c2629861b1d389737ee3351934fd2465afa4455873493080a",
+      "manifest": "Legal/Manifests/SSHD/module.R4MF",
+      "manifest_sha256": "3d6200262ab2c9b51e96cd225bec497dee9ea5f431e7ab02ec85309600b46aed",
+      "source": "RecoveryTools/Embedded/Services-SshService",
+      "source_tree_sha256": "8913f02414a144e7d215b7e57acb4167a06178c166d5bc300b071b04e784bc66",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2",
+        "R4DESK:Query2:2",
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "SYSINFO",
+      "version": "0.1.4",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/SYSINFO.R4X",
+      "sha256": "02e7f4c5e331aa38f533273e95ed7a7a2468a46129ec503ee4183e4f4cdb2fda",
+      "manifest": "Legal/Manifests/SYSINFO/module.R4MF",
+      "manifest_sha256": "dc678b1e8312c093ec0cee37f3a3d58cf6f7dd42ec8ac5b3a8f51167b7900f70",
+      "source": "RecoveryTools/Embedded/Apps-SysInfo",
+      "source_tree_sha256": "b6a7440c999afc2306a2b1b967c379da59a86d56e54ea02681385b28427f8d11",
+      "imports": [
+        "R4DEV:Query2:2",
+        "R4NET:Query2:2",
+        "R4SYS:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "TCPSVC",
+      "version": "0.1.8",
+      "path": "Runtime/R4OS/SERVICES/TCPSVC.R4X",
+      "sha256": "d34dc7c59ee5e9d5a403026dfccc3aaa9c14d52e9bd23759c901d9c2dde34ba8",
+      "manifest": "Legal/Manifests/TCPSVC/module.R4MF",
+      "manifest_sha256": "4a0e94cd7c733677ccd86d4b93c8d59876992eca07443b9421788db3bc8bc237",
+      "source": "RecoveryTools/Embedded/Services-TcpService",
+      "source_tree_sha256": "71a548b5d3b950a9707bf6f8e90db0b808697fa6298de1dd120dd71d1af8d792",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "TERMINAL",
+      "version": "0.1.14",
+      "path": "Runtime/R4OS/SOFTWARE/TERMINAL/TERMINAL.R4X",
+      "sha256": "03f1add41a6d51e08360014a6485c58e6044e83a40981c0fe2cfb4b388cdda16",
+      "manifest": "Legal/Manifests/TERMINAL/module.R4MF",
+      "manifest_sha256": "b30707d9f31d8e53316e6d7d8c5ae5b2ce5819cc08bf2c41e7cfb88675fa4735",
+      "source": "RecoveryTools/Embedded/Apps-Terminal",
+      "source_tree_sha256": "604f9a7c78d1acc6a238db2ccd6de89b6a9a4e631333812c86f42c826fefc3e5",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4DESK:Query2:2",
+        "R4DEV:Query2:2",
+        "R4STD:DATE_V1:1",
+        "R4STD:TIME_V1:1",
+        "R4STD:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "UDPSVC",
+      "version": "0.1.5",
+      "path": "Runtime/R4OS/SERVICES/UDPSVC.R4X",
+      "sha256": "2db63b30d0675f6b261a9a3fb5bd1b743b723bc8b224e10fcd050fad279b25bc",
+      "manifest": "Legal/Manifests/UDPSVC/module.R4MF",
+      "manifest_sha256": "a2abdfcf35df3f9ab13726426aaa63dc54ce7e49abccd1f7cab62c158f4b8be7",
+      "source": "RecoveryTools/Embedded/Services-UdpService",
+      "source_tree_sha256": "f247149a151b8027533524df680f8b407261fc5ba3eabc3ea3c09df5c890f0bd",
+      "imports": [
+        "R4SYS:Query2:2",
+        "R4NET:Query2:2"
+      ],
+      "exports": [
+        "R4XStart2:2"
+      ]
+    },
+    {
+      "name": "USBBOT",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/USBBOT.R4P",
+      "sha256": "14bdc85009ca2e754c81d0f9960cbf7c669b793657c546e46cc94c048fdb00ae",
+      "manifest": "Legal/Manifests/USBBOT/module.R4MF",
+      "manifest_sha256": "37a5bcce8e9c658db436e21c341fc47098f3e16a9e7324b81295188c16483731",
+      "source": "RecoveryTools/Embedded/Protocols-UsbMscBot",
+      "source_tree_sha256": "49e2c2274f47858080e3916ad6273ce222b5c7d3993b2bc4e2c49c285b1426fc",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "USBHID",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/PROTOCOLS/USBHID.R4P",
+      "sha256": "312d0296f2147b63c03f761cbffa0a129e79e60ffda1a1f8da903fb98711e963",
+      "manifest": "Legal/Manifests/USBHID/module.R4MF",
+      "manifest_sha256": "aef173103c52ce589beb8de3f7335941194c8c0538f2b7689b07215b2842bfe3",
+      "source": "RecoveryTools/Embedded/Protocols-UsbHidBoot",
+      "source_tree_sha256": "584daab0a97876e9c1427de92b7ffc4dda2bbc0a1157688e4f3421bd0ffd895f",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "USBMSC",
+      "version": "0.1.2",
+      "path": "Runtime/R4OS/DRIVERS/USBMSC.R4D",
+      "sha256": "6226368ee97ed82b549cd0dda52b4bd5d06ec50c5586d4ca33ef47b38141b670",
+      "manifest": "Legal/Manifests/USBMSC/module.R4MF",
+      "manifest_sha256": "9bb0526c4df915171ef3e6f9b140320f1e61499eb08db2d56fdddcd635dfa74f",
+      "source": "RecoveryTools/Embedded/Drivers-USBMSC",
+      "source_tree_sha256": "b94e20b6464ceddbe199d31de576deb92464df4291a3794619c115abb65e810d",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "USBSCSI",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/PROTOCOLS/USBSCSI.R4P",
+      "sha256": "4523a92758315852aad7b413256a715456802b0b6ddb9b4b978e05aaf9bffbe0",
+      "manifest": "Legal/Manifests/USBSCSI/module.R4MF",
+      "manifest_sha256": "d2387b2b5363c53fa0ca9e544431a05389749964b9e66464129da87bc37ec838",
+      "source": "RecoveryTools/Embedded/Protocols-UsbScsiBlock",
+      "source_tree_sha256": "5812f692f9a3f20780f4167b54c1e096453f6fc5f7149c9d0740cfa4c660bb5a",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "ProtocolInit2:2",
+        "ProtocolShutdown:1",
+        "ProtocolQuery:1",
+        "ProtocolDispatch:1",
+        "ProtocolRole:1"
+      ]
+    },
+    {
+      "name": "VIRTNET",
+      "version": "0.1.5",
+      "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
+      "sha256": "70e756ecc5e64ccb8e1615d5b2053ec0967b9f234e170eddf9f0fd46d9ba88f6",
+      "manifest": "Legal/Manifests/VIRTNET/module.R4MF",
+      "manifest_sha256": "34c22f12bd12e0a61c3755aab590ca0c6846fc74a11078b1bc845dba69909b41",
+      "source": "RecoveryTools/Embedded/Drivers-VirtioNet",
+      "source_tree_sha256": "5163e079f54c10dec5a67a6d3ade16f7ca9b0a567cc264c4edb0320cf5d531cf",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    },
+    {
+      "name": "XHCI",
+      "version": "0.1.3",
+      "path": "Runtime/R4OS/DRIVERS/XHCI.R4D",
+      "sha256": "d8039665cfd618f9fb8ced7df08c09298191d0620faec0a8a00075b287ae0873",
+      "manifest": "Legal/Manifests/XHCI/module.R4MF",
+      "manifest_sha256": "f3c80c29fa2821926b8f6de1bb7787cad24460b98054a48ed3a6397ac3ae65fb",
+      "source": "RecoveryTools/Embedded/Drivers-XHCI",
+      "source_tree_sha256": "4971235a0047a3ebeb1e3f76b0ecdbdb1a06c599950876582621cd8c699ef029",
+      "imports": [
+        "R4DEV:Query2:2"
+      ],
+      "exports": [
+        "DriverInit2:2",
+        "DriverShutdown:1"
+      ]
+    }
+  ],
+  "preserved_original_archives": 58,
+  "total_source_archives": 64,
+  "kernel_host_tests_log_sha256": "093890621fd3181df84f558707317b099e964c1427970ced3d8a9f86a19a722e",
+  "scope": "Actual current source/build/whole-body/version closure, exact39 Runtime admissions, Menu,64MB Runtime and paired production Kernel; original Recovery Kernel host tests pass. Current independent frozen SDK218C and controller218D epochs explicit. Every historical source archive retained. This record does not grant native, install/update/repair, physical hardware, performance or release acceptance."
+}

@@ -446,6 +446,13 @@
       "archive": "Legal/Sources/Recovery-Embedded-0.90.90.zip",
       "archiveSha256": "2ca6b48c428ed6524a18589a5448ccdeb11e879d81daf4d3f53f9684cbaf1d85",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "Recovery-Owned-0.90.90",
+      "archive": "Legal/Sources/Recovery-Owned-0.90.90.zip",
+      "archiveSha256": "cf6ce941cf514e3888d7476c60c38cb6e6df0ecf65d75a26b530e6b60898d0ca",
+      "commit": "a4a1ea0437149371187d432a49a354c0b09aeead",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     }
   ],
   "platformProviders": [
@@ -48913,6 +48920,13 @@
       "path": "Legal/Sources/Recovery-Embedded-0.90.90.zip",
       "bytes": 700101,
       "origin": null
+    },
+    {
+      "path": "Legal/Sources/Recovery-Owned-0.90.90.zip",
+      "bytes": 8214868,
+      "sha256": "cf6ce941cf514e3888d7476c60c38cb6e6df0ecf65d75a26b530e6b60898d0ca",
+      "originalSha256": "cf6ce941cf514e3888d7476c60c38cb6e6df0ecf65d75a26b530e6b60898d0ca",
+      "origin": null
     }
   ],
   "validation": "Pinned canonical source and actual container/import/role closure; host/source/layout, guest BIOS/UEFI and complete release qualification remain distinct. Transition generations are explicit.",
@@ -78596,6 +78610,16 @@
           "after": "1943192af3d14d943fa0c4d553affdb1de3c9e99e4db871a6257afa51399a0a4",
           "before_version": "0.1.73",
           "after_version": "0.1.74"
+        }
+      ]
+    },
+    {
+      "reason": "0.90.90 actual final source-built39 bodies, measured Menu version and paired production Kernel/64MB Runtime plus original Kernel host tests pass. Exact Recovery-owned source archive covers final Kernel, Menu, embedded variants, shared tools and version inputs; frozen canonical sources remain separately archived. All historical archives retained. Native/deployment acceptance remains separate.",
+      "changes": [
+        {
+          "path": "Legal/Sources/Recovery-Owned-0.90.90.zip",
+          "before": null,
+          "after": "cf6ce941cf514e3888d7476c60c38cb6e6df0ecf65d75a26b530e6b60898d0ca"
         }
       ]
     }
