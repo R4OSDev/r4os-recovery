@@ -1,6 +1,13 @@
 ﻿R4OS Recovery: Buildgrundlage und Uebernahmebestand
 =================================================
 
+Die eingefrorenen Platformquellen und legalen Quellarchive behalten exakt
+die Lieferantenepoche ihrer Artefakte. Ihre Handdokumentation ist eine
+datierte Quellkopie; aktuelle normative API-Anleitungen gehoeren dem
+kanonischen Contract-Repository. Spaetere manuelle Korrekturen dort schreiben
+weder diese eingefrorene Quellidentitaet noch deren erzeugte ABI95, reine
+Query2-Anbieter oder bereits gemessene Kernel-/Runtimekoerper um.
+
 Aktueller Quellen-/Artefaktstand0.90.90
 -------------------------------------
 Recovery0.1.74, eigener Kernel0.1.73, Menue0.1.29:39 tatsaechlich gebaute und

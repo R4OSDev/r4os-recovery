@@ -1,5 +1,12 @@
 ﻿# R4OS Recovery
 
+The frozen Platform trees and legal source archives retain the exact supplier
+epoch that produced these artifacts. Their manual documentation is a dated
+source snapshot; current normative API instructions belong to the canonical
+Contract repository. Later manual corrections there do not rewrite this
+frozen source identity or change its generated ABI95, Query2-only executable
+providers or already measured Kernel/runtime bodies.
+
 R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
