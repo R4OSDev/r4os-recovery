@@ -44980,7 +44980,7 @@
         "path": "build.zig.zon",
         "derivativeOwner": "Recovery"
       },
-      "sha256": "4e4642a9c34be3bb6ec7a7b61cf4fde8028b3953f26544584e85b6976f7d7e41",
+      "sha256": "8d25e6be06223e8ac52591a0376bb7a10ae70f6a12715333879add1a8dc09826",
       "originalSha256": "680366234af3def61f7f620732cc79edd33beb4eb7edc9dd496ab694a314cf86",
       "path": "RecoveryTools/Embedded/Apps-Terminal/build.zig.zon",
       "bytes": 759
@@ -76001,6 +76001,16 @@
         }
       ],
       "reason": "0.90.89 isolated actual canonical R4STD10 build admitted; only its obsolete technical Query1 export removed; all six independent functional interfaces and other38 Runtime bodies retained; guest qualification pending"
+    },
+    {
+      "reason": "0.90.89 isolated Terminal direct Library peer edge must equal its SDK Library62 edge; two package identities for the same fork root rejected correctly. No implementation/manifest/Runtime body changed by this metadata correction; actual remaining build and final whole equality pending.",
+      "changes": [
+        {
+          "path": "RecoveryTools/Embedded/Apps-Terminal/build.zig.zon",
+          "before": "4e4642a9c34be3bb6ec7a7b61cf4fde8028b3953f26544584e85b6976f7d7e41",
+          "after": "8d25e6be06223e8ac52591a0376bb7a10ae70f6a12715333879add1a8dc09826"
+        }
+      ]
     }
   ],
   "sdkProfile": {
