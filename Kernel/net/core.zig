@@ -2026,7 +2026,7 @@ fn processReceivedFrame(adapter_index: usize, frame: []const u8, metadata: rx_ha
         copyMacFromBytes(&source_mac, frame[6..12]);
         learnIpv4Sender(ip_view.source_ip, source_mac);
         enqueueAppIpv4(ip_view);
-        icmpHandleRx(ip_view);
+        const echo_request = icmpHandleRx(ip_view);
         const l4_checksum_valid = metadata.l4_checksum_valid and
             (ip_view.protocol == udp.IPV4_PROTOCOL or ip_view.protocol == tcp.IPV4_PROTOCOL);
         if (l4_checksum_valid) {
@@ -2040,7 +2040,7 @@ fn processReceivedFrame(adapter_index: usize, frame: []const u8, metadata: rx_ha
             if ((udp_view.dest_port == dns.PORT or udp_view.source_port == dns.PORT) and !udpSocketPortBound(udp_view.dest_port)) _ = dnsHandleResponse(udp_view.payload);
         }
         tcpHandleRxMetadata(ip_view, l4_checksum_valid);
-        if (icmpIsEchoRequest(ip_view.payload)) sendIcmpEchoReply(adapter_index, frame, ip_view);
+        if (echo_request) sendIcmpEchoReply(adapter_index, frame, ip_view);
         adapters[adapter_index].stats.rx_packets += 1;
         adapters[adapter_index].stats.rx_bytes += frame.len;
         return true;
@@ -2776,19 +2776,21 @@ fn icmpBuildEchoReply(out: []u8, request: []const u8) ?[]u8 {
     return out[0..len];
 }
 
-fn icmpHandleRx(ip_view: ipv4.PacketView) void {
-    if (ip_view.protocol != icmp.IPV4_PROTOCOL) return;
+fn icmpHandleRx(ip_view: ipv4.PacketView) bool {
+    if (ip_view.protocol != icmp.IPV4_PROTOCOL) return false;
     var op = newIcmpOp() orelse {
         icmp_dispatch_failures += 1;
         icmp_stats.last_error = "r4p-required";
-        return;
+        return false;
     };
     if (!setIcmpPayload(&op, ip_view.payload) or !icmpDispatch(r4p_contract.ICMP_OP_HANDLE_RX, &op)) {
         icmp_stats.last_error = "r4p-dispatch";
-        return;
+        return false;
     }
     applyIcmpRxResult(op);
-    if (op.result == r4p_contract.ICMP_RESULT_OK) icmp_r4p_rx += 1;
+    if (op.result != r4p_contract.ICMP_RESULT_OK) return false;
+    icmp_r4p_rx += 1;
+    return (op.flags & r4p_contract.ICMP_FLAG_ECHO_REQUEST) != 0;
 }
 
 fn icmpHandleTx(ip_view: ipv4.PacketView) void {
@@ -2804,21 +2806,6 @@ fn icmpHandleTx(ip_view: ipv4.PacketView) void {
     }
     applyIcmpTxResult(op);
     if (op.result == r4p_contract.ICMP_RESULT_OK) icmp_r4p_tx += 1;
-}
-
-fn icmpIsEchoRequest(payload: []const u8) bool {
-    var op = newIcmpOp() orelse {
-        icmp_dispatch_failures += 1;
-        icmp_stats.last_error = "r4p-required";
-        return false;
-    };
-    if (!setIcmpPayload(&op, payload) or !icmpDispatch(r4p_contract.ICMP_OP_IS_ECHO_REQUEST, &op)) {
-        icmp_stats.last_error = "r4p-dispatch";
-        return false;
-    }
-    if (op.result != r4p_contract.ICMP_RESULT_OK) return false;
-    icmp_r4p_classify += 1;
-    return (op.flags & r4p_contract.ICMP_FLAG_ECHO_REQUEST) != 0;
 }
 
 fn newIcmpOp() ?r4p_contract.IcmpOp {
@@ -4672,7 +4659,7 @@ pub fn runPacketCorpusProbe() bool {
     if (!corpusIpv4()) return false;
     passed += 4;
     if (!corpusIcmp()) return false;
-    passed += 2;
+    passed += 6;
     if (!corpusUdp()) return false;
     passed += 3;
     if (!corpusDhcp()) return false;
@@ -4902,7 +4889,7 @@ fn corpusIcmp() bool {
         .dest_ip = net_config.localIp(),
         .payload = (&[_]u8{ 8, 0, 0, 0 })[0..],
     };
-    icmpHandleRx(packet_short);
+    _ = icmpHandleRx(packet_short);
     if (icmp_stats.malformed <= before_malformed) return false;
 
     const before_checksum = icmp_stats.checksum_errors;
@@ -4915,8 +4902,63 @@ fn corpusIcmp() bool {
         .dest_ip = net_config.localIp(),
         .payload = request,
     };
-    icmpHandleRx(packet_bad);
-    return icmp_stats.checksum_errors > before_checksum;
+    _ = icmpHandleRx(packet_bad);
+    return icmp_stats.checksum_errors > before_checksum and corpusEchoProtocol();
+}
+
+fn corpusEchoTransmit(_: usize, frame: []const u8) TxResult {
+    if (frame.len < 34 or readBe16(frame, 12) != ethernet.TYPE_IPV4) return .backend_error;
+    if (frame[23] != icmp.IPV4_PROTOCOL) return .ok;
+    const total = readBe16(frame, 16);
+    if (frame[14] != 0x45 or total != 36 or frame.len < 14 + @as(usize, total) or
+        internetChecksum(frame[14..34]) != 0) return .backend_error;
+    const payload = frame[34 .. 14 + @as(usize, total)];
+    if (payload[0] != 0 or payload[1] != 0 or readBe16(payload, 4) != 0x2345 or
+        readBe16(payload, 6) != 7 or !memEql(payload[8..], "R4OSPING") or
+        internetChecksum(payload) != 0) return .backend_error;
+    return .ok;
+}
+
+fn corpusEchoProtocol() bool {
+    const local_mac = [6]u8{ 2, 0, 0, 0, 0, 1 };
+    const remote_mac = [6]u8{ 2, 0, 0, 0, 0, 2 };
+    const index = register(.{ .name = "diag-echo-protocol", .driver = "diag", .link = .up, .mac = local_mac, .ops = .{ .transmit = corpusEchoTransmit } }) orelse return false;
+    defer _ = discardDiagnosticAdapter(index);
+    const dest = net_config.localIp();
+    // Valid UDP from2048, checksum disabled; also a valid ICMP Echo Request.
+    const datagram = [_]u8{ 8, 0, 0xf7, 0xf7, 0, 8, 0, 0 };
+    var segment_bytes: [64]u8 = undefined;
+    // Pseudo-header sumffff makes the valid TCP checksum also sum to0 when
+    // the segment alone is mistaken for ICMP. No malformed TCP fixture.
+    var sum: u32 = 0xc000 + @as(u32, readBe16(&dest, 0)) + @as(u32, readBe16(&dest, 2)) + 6 + 20;
+    sum = (sum & 0xffff) + (sum >> 16);
+    sum = (sum & 0xffff) + (sum >> 16);
+    const low = ~@as(u16, @intCast(sum));
+    const tcp_source = [4]u8{ 192, 0, @intCast(low >> 8), @truncate(low) };
+    const segment = tcpBuildSegment(&segment_bytes, tcp_source, dest, 2048, 63480, 1, 0, tcp.FLAG_SYN, "", 1024, 0) orelse return false;
+    if (segment.len != 20 or internetChecksum(segment) != 0) return false;
+    for ([_]u8{ udp.IPV4_PROTOCOL, tcp.IPV4_PROTOCOL, 99 }) |protocol| {
+        const before_rx = icmp_r4p_rx;
+        const before_classify = icmp_r4p_classify;
+        const before_build = icmp_r4p_build;
+        var frame_bytes: [128]u8 = undefined;
+        const source = if (protocol == tcp.IPV4_PROTOCOL) tcp_source else [4]u8{ 203, 0, 113, 10 };
+        const payload = if (protocol == tcp.IPV4_PROTOCOL) segment else &datagram;
+        const frame = ipv4BuildPacketFrom(&frame_bytes, remote_mac, local_mac, source, dest, protocol, payload) orelse return false;
+        if (!processReceivedFrame(index, frame, .{})) return false;
+        if (icmp_r4p_rx != before_rx or icmp_r4p_classify != before_classify or icmp_r4p_build != before_build) return false;
+    }
+    var payload_bytes: [32]u8 = undefined;
+    const payload = icmpBuildEchoRequest(&payload_bytes, 0x2345, 7) orelse return false;
+    const before_rx = icmp_r4p_rx;
+    const before_build = icmp_r4p_build;
+    const before_classify = icmp_r4p_classify;
+    const transmitted = adapters[index].stats.tx_packets;
+    var frame_bytes: [128]u8 = undefined;
+    const frame = ipv4BuildPacketFrom(&frame_bytes, remote_mac, local_mac, .{ 203, 0, 113, 10 }, dest, icmp.IPV4_PROTOCOL, payload) orelse return false;
+    if (!processReceivedFrame(index, frame, .{})) return false;
+    return icmp_r4p_rx == before_rx + 1 and icmp_r4p_build == before_build + 1 and
+        icmp_r4p_classify == before_classify and adapters[index].stats.tx_packets == transmitted + 1;
 }
 
 fn corpusUdp() bool {
@@ -7484,7 +7526,7 @@ fn upperAscii(ch: u8) u8 {
 }
 
 fn sendIcmpEchoReply(adapter_index: usize, request_frame: []const u8, request: ipv4.PacketView) void {
-    if (adapter_index >= adapter_count or request_frame.len < ethernet.HEADER_SIZE) return;
+    if (adapter_index >= adapter_count or request_frame.len < ethernet.HEADER_SIZE or request.protocol != icmp.IPV4_PROTOCOL) return;
     var dest_mac: [6]u8 = .{0} ** 6;
     var i: usize = 0;
     while (i < 6) : (i += 1) dest_mac[i] = request_frame[6 + i];

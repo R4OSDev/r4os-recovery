@@ -2,7 +2,8 @@ param(
     [ValidateSet('Verify', 'Embedded', 'Runtime', 'Kernel', 'BootTest', 'RuntimeTest', 'StorageTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest', 'InputTest', 'UITest', 'PackageTest', 'DownloadTest', 'NetworkTest')][string]$Mode = 'Verify',
     [string]$Zig = '', [string]$SdkRoot='',
     [ValidateSet('none', 'poweroff', 'reboot', 'ram', 'storage', 'input', 'ui')][string]$BootProbe = 'none',
-    [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both'
+    [ValidateSet('Bios', 'Uefi', 'Both')][string]$Firmware = 'Both',
+    [string]$PacketCorpusProbe = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -72,7 +73,9 @@ try {
             if ($LASTEXITCODE -ne 0) { throw 'Recovery input acceptance failed.' }
         }
         if ($Mode -in @('NetworkTest', 'StorageAccessTest', 'StorageToolsTest', 'R4PartTest')) {
-            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Network.ps1') -Firmware $Firmware -Zig $Zig -StorageAccess:($Mode -eq 'StorageAccessTest') -StorageTools:($Mode -eq 'StorageToolsTest') -R4Part:($Mode -eq 'R4PartTest') -TimeoutSeconds 300
+            $probeArguments=@()
+            if($PacketCorpusProbe){$probeArguments=@('-PacketCorpusProbe',([IO.Path]::GetFullPath($PacketCorpusProbe,$PSScriptRoot)))}
+            & pwsh -NoLogo -NoProfile -File (Join-Path $PSScriptRoot 'Tools/Test-Network.ps1') -Firmware $Firmware -Zig $Zig -StorageAccess:($Mode -eq 'StorageAccessTest') -StorageTools:($Mode -eq 'StorageToolsTest') -R4Part:($Mode -eq 'R4PartTest') -TimeoutSeconds 300 @probeArguments
             if ($LASTEXITCODE -ne 0) { throw 'Recovery network acceptance failed.' }
         }
         if ($Mode -eq 'UITest') {

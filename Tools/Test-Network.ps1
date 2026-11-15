@@ -6,6 +6,7 @@ param(
     [switch]$R4Part,
     [string]$Zig='', [string]$Qemu='', [string]$LimineRoot='',
     [string]$OvmfCode='', [string]$OvmfVars='',
+    [string]$PacketCorpusProbe='',
     [ValidateRange(30,300)][int]$TimeoutSeconds=120
 )
 $ErrorActionPreference='Stop'
@@ -22,6 +23,12 @@ Add-Type -Path (Join-Path $PSScriptRoot 'Download-FixtureServer.cs')
 Add-Type -Path (Join-Path $PSScriptRoot 'UI-Framebuffer.cs')
 $root=Split-Path $PSScriptRoot -Parent
 $workspace=[IO.Path]::GetFullPath((Join-Path $root '../..'))
+$packetCorpusProbeHash=''
+if($PacketCorpusProbe){
+    $PacketCorpusProbe=[IO.Path]::GetFullPath($PacketCorpusProbe,$root)
+    if(!(Test-Path -LiteralPath $PacketCorpusProbe -PathType Leaf)){throw 'Packet corpus diagnostic fixture is missing.'}
+    $packetCorpusProbeHash=Get-RecoveryHash $PacketCorpusProbe
+}
 $suffix=if($IsWindows){'.exe'}else{''}
 if(!$Zig){$Zig=Join-Path $workspace "DevKit/Toolchains/Zig/zig$suffix"}
 if(!$Qemu){$Qemu=Join-Path $workspace "DevKit/Emulation/QEMU/qemu-system-x86_64$suffix"}
@@ -32,7 +39,8 @@ $limine=Join-Path $LimineRoot $(if($IsWindows){'limine-tool-windows-x86/limine.e
 $output=Join-Path $root $(if($R4Part){'Artifacts/BootProbe/r4part'}elseif($StorageTools){'Artifacts/BootProbe/storage-tools'}elseif($StorageAccess){'Artifacts/BootProbe/storage-access'}else{'Artifacts/BootProbe/network'})
 $kernel=Join-Path $root 'Artifacts/Kernel/bin/recovery.elf'
 $runtime=Join-Path $root 'Artifacts/Runtime/runtime.img'
-$askpass=Join-Path $output "askpass$suffix"
+$privateScratch=Join-Path $workspace ('Temp/RecoveryNetwork/'+[guid]::NewGuid().ToString('N'))
+$askpass=Join-Path $privateScratch "askpass$suffix"
 $resultPath=Join-Path $output 'network-results.json'
 $releaseVersion=(Get-RecoveryFields (Join-Path $root 'VERSION.R4S')).RECOVERY_VERSION[0]
 $utf8=[Text.UTF8Encoding]::new($false)
@@ -54,6 +62,7 @@ function Wait-Marker([string]$Pattern){
 function Capture([string]$Label){$path=Join-Path $output "$name-$Label.ppm";$null=Qmp $session 'screendump' @{filename=$path};return $path}
 try{
     [IO.Directory]::CreateDirectory($output)|Out-Null
+    [IO.Directory]::CreateDirectory($privateScratch)|Out-Null
     Test-RecoveryInventory $root|Out-Null
     foreach($path in @($kernel,$runtime,$Zig,$Qemu,$limine)){if(!(Test-Path -LiteralPath $path -PathType Leaf)){throw "Missing input: $path"}}
     Checked $Zig @('cc','-O2',(Join-Path $PSScriptRoot 'Guest-Askpass.c'),'-o',$askpass)
@@ -117,6 +126,24 @@ try{
                 Wait-Marker 'DHCP05913 state=bound';Wait-Marker '\[RECOVERYNET\] autostart=RETURNED'
                 $ip=Ssh 'IPCONFIG /ALL';if($ip -notmatch '10\.0\.2\.15' -or $ip -notmatch 'dhcp=2'){throw 'Missing actual DHCP/network configuration.'}
                 $services=Ssh 'SERVMAN LIST';foreach($service in @('DNSSVC','DHCPSVC','TCPSVC','UDPSVC','SSHD','FTPSVC')){if($services -notmatch $service){throw "Missing service: $service"}}
+                if($PacketCorpusProbe){
+                    # Explicit ordinary diagnostic, borrowed only in this
+                    # snapshot's RAM drive; the packaged39 modules stay fixed.
+                    $null=Sftp @("put $(Host-Path $PacketCorpusProbe) /C/TEMP/SPECTRA.R4X") -TimeoutMilliseconds 60000
+                    # The frozen SSH console has no current launch-I/O sink.
+                    # Use Spectra's ordinary explicit file sink and retain the
+                    # original JSON bytes before interpreting its result.
+                    $probeError=$null
+                    try{$null=Ssh 'C:\TEMP\SPECTRA.R4X CHECK NETWORK CORPUS /JSON /EXPORT:C:\TEMP\PKTCORP.JSON'}catch{$probeError=$_}
+                    $corpusPath=Join-Path $output "$name-packet-corpus.ndjson"
+                    $null=Sftp @("get /C/TEMP/PKTCORP.JSON $(Host-Path $corpusPath)")
+                    $records=@(Get-Content -LiteralPath $corpusPath|Where-Object {$_}|ForEach-Object {$_|ConvertFrom-Json -AsHashtable})
+                    $results=@($records|Where-Object {$_.kind -ceq 'result'})
+                    $corpus=(@($records|Where-Object {$_.kind -ceq 'message'}|ForEach-Object {$_.data.text}) -join "`n")
+                    $corpusCount=[regex]::Match($corpus,'Corpus: tests=\d+ cases=(\d+)')
+                    if($probeError -or $results.Count -ne 1 -or !$results[0].data.success -or $corpus -notmatch 'SPECTRA NETWORK corpus: ok' -or !$corpusCount.Success -or [uint64]$corpusCount.Groups[1].Value -lt 25){throw 'Original packet corpus, including cross-protocol Echo rejection, failed.'}
+                    $null=Ssh 'DEL C:\TEMP\SPECTRA.R4X'
+                }
                 # Execute the remaining small console consumers against real
                 # borrowed App2 groups, using bounded local host fixtures.
                 $info=Ssh 'SYSINFO';if($info -notmatch 'Kernel'){throw 'Missing SYSINFO kernel information.'}
@@ -219,6 +246,7 @@ try{
         if($text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0' -or $text -notmatch '\[RESET\]' -or $text -match '\[CRASH\]'){throw 'Incomplete SMP4 network acceptance.'}
         $run=[ordered]@{firmware=$case.mode;adapter=$case.nic;result='ok';cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog;clients=$clientLog;
             coverage=$(if($online){'SSH shell/exec; SFTP/SCP; active/passive FTP; SYSINFO/HELP; HTTPGET redirect/body/save; NETCAT host echo/read/close; offline FAT32/NTFS read/create/copy/replace/rename/delete; hashes; executable admission; unchanged menu'}else{'no network; damaged SYSTEM; local Terminal; return and restart'})}
+        if($online -and $PacketCorpusProbe){$run.packetCorpusProbeSha256=$packetCorpusProbeHash;$run.packetCorpusReadback=Join-Path $output "$name-packet-corpus.ndjson";$run.coverage+='; temporary unmodified diagnostic: NETWORK CORPUS25 with original guest JSON readback'}
         if($StorageAccess -and $online){$run.storageAccess=$true;$run.coverage+='; local/remote volume uses; raw bounds; exclusive/foreign owner denial; abandoned-claim cleanup; stale generations; real remount/flush failures'}
         if($StorageTools -and $online){$run.storageTools=$true;$run.coverage+='; shared MBR/GPT creation/readback; FAT32 quick and NTFS full; partition claims; mount/read/write/unmount'}
         if($R4Part -and $online){$run.r4part=$true;$run.coverage+='; same imported R4PART binary: GPT primary-header/backup-array repair, scripts/first-error/EOF/exit codes, confirmations, MBR/GPT, create/delete/convert/clean, FAT32/NTFS format, mount/letter/online/offline, identity changes, NTFS EXTEND/SHRINK, actual QUERYMAX and 40-MB hash/space witness, no-space/unsupported/busy refusals, unrelated volumes and menu/Terminal EXIT'}
@@ -226,3 +254,4 @@ try{
     }
     exit 0
 }catch{Write-Error "$($_.Exception.Message)`n$($_.ScriptStackTrace)" -ErrorAction Continue;exit 1}
+finally{if(Test-Path -LiteralPath $privateScratch){Remove-Item -LiteralPath $privateScratch -Recurse -Force}}

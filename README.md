@@ -1,5 +1,23 @@
 ﻿# R4OS Recovery
 
+Finaler STANDARD e2d044cf-dff5-475b-acbd-4a1f450c1125 / Kernel0.1.481 / KVM4:30 Rohsamples, fuenf metric-v2-Werte und sechs Scores vollstaendig gegen die feste Originalreferenz nachgerechnet. Status: lokal validiert; R4OS Server ausstehend. Rest: Claim, Import, voller GET-Readback und unabhaengige Serverauswertung. Er misst das normale Gesamtsystem, keinen isolierten Netzwerkgewinn.
+
+0.91.9 corrects cross-protocol Echo classification in the independent kernel.
+The existing protocol1 RX result now drives replies without a second payload
+classification. Public contracts and all39 embedded module bodies are unchanged.
+NETWORK CORPUS retains21 cases and adds valid UDP2048/TCP/other-protocol negative
+frames plus an exact true Echo Reply. With an explicit `-PacketCorpusProbe` path,
+NetworkTest uploads that ordinary SPECTRA artifact temporarily to the guest RAM
+drive and requires the original25-case corpus through its explicit JSON file
+export. The fixture SHA256 and original guest JSON are retained per online case.
+BIOS/VirtioNet, UEFI/RTL8139 and the offline SMP4 matrix pass with the original
+transport, storage, menu and reset checks. Both online cases pass CORPUS25.
+Evidence: ExFiles/Reports/Fable091/0.91.9/recovery-network/. The normal Rust
+kernel separately passes its original full8/8 R4P control; the frozen Recovery
+role list still includes its historical unprovided SerialLink entry, so no
+full9-role Recovery qualification is claimed here.
+This development version is not a newly published Recovery package.
+
 The frozen Platform trees and legal source archives retain the exact supplier
 epoch that produced these artifacts. Their manual documentation is a dated
 source snapshot; current normative API instructions belong to the canonical
@@ -11,7 +29,7 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.74 / its own Zig Kernel0.1.73 and Menu0.1.29 use only the
+Recovery0.1.75 / its own Zig Kernel0.1.74 and Menu0.1.29 use only the
 canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. All39 embedded
 modules have been built from the current frozen sources:24 unchanged bodies,
 14 independently versioned changed derivatives, plus canonical R4STD0.2.11
@@ -19,9 +37,11 @@ from Libraries0.64.64. The frozen canonical sources are Contract0.64.95,
 SDK0.64.218 source epochC and Libraries0.64.64; controller SDK0.64.218 epochD
 selects their exact immutable trees. Only the three recorded .gitattributes
 host policies differ from canonical archive bytes. All58 historical source
-archives remain, alongside six current source archives. Source/body/version
-and original Kernel host tests pass. Current guest and deployment acceptance
-remain separate; the qualified older runs below retain their actual versions.
+archives and the six0.90.90 checkpoint archives remain. Frozen source/body/
+version checks remain valid; older host-test results keep their actual version.
+Current Recovery-owned edits are complete in this repository and its explicit
+local revisions; a matching source archive accompanies the planned release.
+Current guest and deployment acceptance remain separate.
 
 The IPv4 family service path uses the current DNS/TCP/UDP owner sources and
 the canonical DNS address codec. The kernel supplies only resident backend

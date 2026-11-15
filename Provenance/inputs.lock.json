@@ -1998,10 +1998,10 @@
         "path": "README.md",
         "source": "Kernel"
       },
-      "sha256": "ea39baa16acc3e5dbb204630424ba0b556cb909e1ea301393a51f5a6957d9701",
+      "sha256": "5871ce3fcc7da28d8ee51bea5519e9d5cb2a1517d45756a2b7065931215eda42",
       "originalSha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
       "path": "Kernel/README.md",
-      "bytes": 1846
+      "bytes": 2301
     },
     {
       "origin": {
@@ -2172,7 +2172,7 @@
         "path": "VERSION.R4S",
         "source": "Kernel"
       },
-      "sha256": "70d3904616e3a9bb94068bf3da833945fa1deb4b2999036e7ad13e21b79be211",
+      "sha256": "cd6f7fff5fd6c66d5d7f5720682980840f82acea5b2100d79d8b8c7d52bfa126",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "path": "Kernel/VERSION.R4S",
       "bytes": 25
@@ -3950,10 +3950,10 @@
         "path": "net/core.zig",
         "source": "Kernel"
       },
-      "sha256": "78d4bb862909d06356cbb52184771cc8a6a24cee4450cc584b6edbf4ccbdca0c",
+      "sha256": "94028763b28c1f2f5422f0401432487bf955a14134e3fa23f1b8ec751fa447f4",
       "originalSha256": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
       "path": "Kernel/net/core.zig",
-      "bytes": 280302
+      "bytes": 283393
     },
     {
       "origin": {
@@ -48311,7 +48311,7 @@
     },
     {
       "origin": null,
-      "sha256": "9e190649b0cf557d2a034f290db9fe4382a817fbd158d5150a64a75b47389cce",
+      "sha256": "60a50ba197a6e8d9f1d61b848aacb70bed647fa3612bce00183aae669608ee84",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64
@@ -48335,7 +48335,7 @@
     },
     {
       "origin": null,
-      "sha256": "1943192af3d14d943fa0c4d553affdb1de3c9e99e4db871a6257afa51399a0a4",
+      "sha256": "b6b43fadb7c34e88569b5a9a7469cca5ede0da9498bf2b1906450be438281603",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26
@@ -78620,6 +78620,73 @@
           "path": "Legal/Sources/Recovery-Owned-0.90.90.zip",
           "before": null,
           "after": "cf6ce941cf514e3888d7476c60c38cb6e6df0ecf65d75a26b530e6b60898d0ca"
+        }
+      ]
+    },
+    {
+      "reason": "0.91.9 development fixture: original NETWORK CORPUS extended with valid UDP2048/TCP/other-protocol mimics and exact Echo Reply; original unfixed classification retained for before proof. Independent candidate Kernel0.1.74/Recovery0.1.75; frozen supplier epochs/originalSha256/embedded modules unchanged. This intermediate is not a published or qualified release.",
+      "changes": [
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "70d3904616e3a9bb94068bf3da833945fa1deb4b2999036e7ad13e21b79be211",
+          "after": "cd6f7fff5fd6c66d5d7f5720682980840f82acea5b2100d79d8b8c7d52bfa126"
+        },
+        {
+          "path": "Kernel/net/core.zig",
+          "before": "78d4bb862909d06356cbb52184771cc8a6a24cee4450cc584b6edbf4ccbdca0c",
+          "after": "9740162c19f1cb9453a202c0744dc582dab3e1ce64c309542655e390f62ceee4"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "9e190649b0cf557d2a034f290db9fe4382a817fbd158d5150a64a75b47389cce",
+          "after": "60a50ba197a6e8d9f1d61b848aacb70bed647fa3612bce00183aae669608ee84"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "1943192af3d14d943fa0c4d553affdb1de3c9e99e4db871a6257afa51399a0a4",
+          "after": "b6b43fadb7c34e88569b5a9a7469cca5ede0da9498bf2b1906450be438281603"
+        },
+        {
+          "path": "VERSION.R4S",
+          "before": "51b77ba65df8b88b1235546bd67c38d2ba169e1b48b050519dc5df619403ea14",
+          "after": "7f6352a8b41f5156dbbec476140a447d2bf4a802009de0cac1e6fa1d9ba836fa",
+          "before_version": "0.1.74",
+          "after_version": "0.1.75"
+        }
+      ]
+    },
+    {
+      "reason": "0.91.9: return the existing protocol-gated ICMP RX echo flag to the IPv4 owner; one dispatch, no cross-protocol classifier. Echo reply additionally requires protocol1. Existing corpus retains its original short/checksum cases and adds valid UDP/TCP/other-protocol negative frames plus exact true Echo Reply. Frozen originals and embedded artifacts unchanged.",
+      "changes": [
+        {
+          "path": "Kernel/net/core.zig",
+          "before": "9740162c19f1cb9453a202c0744dc582dab3e1ce64c309542655e390f62ceee4",
+          "after": "94028763b28c1f2f5422f0401432487bf955a14134e3fa23f1b8ec751fa447f4"
+        }
+      ]
+    },
+    {
+      "reason": "0.91.9: document the Recovery-owned protocol-gated Echo correction and25-case existing corpus; historical supplier source identities and prior release qualifications retain their original meaning.",
+      "changes": [
+        {
+          "path": "Kernel/README.md",
+          "before": "ea39baa16acc3e5dbb204630424ba0b556cb909e1ea301393a51f5a6957d9701",
+          "after": "5871ce3fcc7da28d8ee51bea5519e9d5cb2a1517d45756a2b7065931215eda42"
+        }
+      ]
+    },
+    {
+      "reason": "0.91.9 QA host orchestration: explicit optional unmodified diagnostic borrowed in guest RAM, original JSON readback, qualified25-case corpus within the existing three-case network matrix. Credentials use unique workspace Temp with finally cleanup. No embedded artifact or supplier epoch changes.",
+      "changes": [
+        {
+          "path": "Build.ps1",
+          "before": "06891541337f65e43c865f59669de12d0b053004a93bf32512b3a117c54d0d47",
+          "after": "7d812a8e09e16e52ebe3c923e824254047634dc01c89555a333b2a7ec4e52594"
+        },
+        {
+          "path": "Tools/Test-Network.ps1",
+          "before": "0aac89a7c02f46555023b5d87e1dd8b46d68e28e45501c34b230c5a1e90d95ba",
+          "after": "6db401f70e9f77f9b8029db568b91e49b2e7263f4ea01eee219057482987a401"
         }
       ]
     }

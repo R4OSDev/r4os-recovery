@@ -1,5 +1,12 @@
 ﻿# Recovery kernel
 
+Kernel0.1.74 / Roadmap0.91.9 reuses the existing protocol1 ICMP RX Echo flag
+and guards Echo output by the same IPv4 protocol. The previous payload-only
+classifier is removed from this owner. Existing CORPUS21 oracles plus four
+full receive/reply regressions run through the original diagnostic API; the
+public ABI and frozen provider modules remain unchanged. Parent Recovery0.1.75
+records this derivative separately from the original supplier archive.
+
 This is the independent R4OS Recovery kernel, derived from the source commit
 recorded in `../Provenance/inputs.lock.json`. Original unmodified sources and
 notices remain available in `../Legal/Sources/Kernel.zip`.
