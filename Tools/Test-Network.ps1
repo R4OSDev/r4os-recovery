@@ -133,6 +133,16 @@ try{
                     # The frozen SSH console has no current launch-I/O sink.
                     # Use Spectra's ordinary explicit file sink and retain the
                     # original JSON bytes before interpreting its result.
+                    # LIMIT expects a fresh ICMP queue; CORPUS deliberately queues Echo.
+                    $limitError=$null
+                    try{$null=Ssh 'C:\TEMP\SPECTRA.R4X CHECK NETWORK LIMIT /JSON /EXPORT:C:\TEMP\PKTLIMIT.JSON'}catch{$limitError=$_}
+                    $limitPath=Join-Path $output "$name-packet-limit.ndjson"
+                    $null=Sftp @("get /C/TEMP/PKTLIMIT.JSON $(Host-Path $limitPath)")
+                    $limitRecords=@(Get-Content -LiteralPath $limitPath|Where-Object {$_}|ForEach-Object {$_|ConvertFrom-Json -AsHashtable})
+                    $limitResults=@($limitRecords|Where-Object {$_.kind -ceq 'result'})
+                    $limits=(@($limitRecords|Where-Object {$_.kind -ceq 'message'}|ForEach-Object {$_.data.text}) -join "`n")
+                    $limitCount=[regex]::Match($limits,'Limits: tests=\d+ cases=(\d+)')
+                    if($limitError -or $limitResults.Count -ne 1 -or !$limitResults[0].data.success -or $limits -notmatch 'SPECTRA NETWORK limits: ok' -or !$limitCount.Success -or [uint64]$limitCount.Groups[1].Value -lt 10){throw 'Original LIMIT contract, including ACK/catalog/window ownership, failed.'}
                     $probeError=$null
                     try{$null=Ssh 'C:\TEMP\SPECTRA.R4X CHECK NETWORK CORPUS /JSON /EXPORT:C:\TEMP\PKTCORP.JSON'}catch{$probeError=$_}
                     $corpusPath=Join-Path $output "$name-packet-corpus.ndjson"
@@ -246,7 +256,7 @@ try{
         if($text -notmatch '\[SMP\] stage=active discovered=4 started=3 online=4 failed=0' -or $text -notmatch '\[RESET\]' -or $text -match '\[CRASH\]'){throw 'Incomplete SMP4 network acceptance.'}
         $run=[ordered]@{firmware=$case.mode;adapter=$case.nic;result='ok';cpus=4;seconds=[Math]::Round($watch.Elapsed.TotalSeconds,3);kernelSha256=$inputs.kernel;runtimeSha256=$inputs.runtime;serialLog=$serialLog;clients=$clientLog;
             coverage=$(if($online){'SSH shell/exec; SFTP/SCP; active/passive FTP; SYSINFO/HELP; HTTPGET redirect/body/save; NETCAT host echo/read/close; offline FAT32/NTFS read/create/copy/replace/rename/delete; hashes; executable admission; unchanged menu'}else{'no network; damaged SYSTEM; local Terminal; return and restart'})}
-        if($online -and $PacketCorpusProbe){$run.packetCorpusProbeSha256=$packetCorpusProbeHash;$run.packetCorpusReadback=Join-Path $output "$name-packet-corpus.ndjson";$run.coverage+='; temporary unmodified diagnostic: NETWORK CORPUS25 with original guest JSON readback'}
+        if($online -and $PacketCorpusProbe){$run.packetCorpusProbeSha256=$packetCorpusProbeHash;$run.packetCorpusReadback=Join-Path $output "$name-packet-corpus.ndjson";$run.packetLimitReadback=Join-Path $output "$name-packet-limit.ndjson";$run.coverage+='; temporary unmodified diagnostic: NETWORK CORPUS25 and LIMIT10 with original guest JSON readback'}
         if($StorageAccess -and $online){$run.storageAccess=$true;$run.coverage+='; local/remote volume uses; raw bounds; exclusive/foreign owner denial; abandoned-claim cleanup; stale generations; real remount/flush failures'}
         if($StorageTools -and $online){$run.storageTools=$true;$run.coverage+='; shared MBR/GPT creation/readback; FAT32 quick and NTFS full; partition claims; mount/read/write/unmount'}
         if($R4Part -and $online){$run.r4part=$true;$run.coverage+='; same imported R4PART binary: GPT primary-header/backup-array repair, scripts/first-error/EOF/exit codes, confirmations, MBR/GPT, create/delete/convert/clean, FAT32/NTFS format, mount/letter/online/offline, identity changes, NTFS EXTEND/SHRINK, actual QUERYMAX and 40-MB hash/space witness, no-space/unsupported/busy refusals, unrelated volumes and menu/Terminal EXIT'}

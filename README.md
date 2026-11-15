@@ -1,6 +1,24 @@
 ﻿# R4OS Recovery
 
-Finaler STANDARD e2d044cf-dff5-475b-acbd-4a1f450c1125 / Kernel0.1.481 / KVM4:30 Rohsamples, fuenf metric-v2-Werte und sechs Scores vollstaendig gegen die feste Originalreferenz nachgerechnet. Status: lokal validiert; R4OS Server ausstehend. Rest: Claim, Import, voller GET-Readback und unabhaengige Serverauswertung. Er misst das normale Gesamtsystem, keinen isolierten Netzwerkgewinn.
+Finaler STANDARD e5f207dc-aabb-4602-abe3-a34c549041ca / normaler Rust-Kernel0.1.483 / KVM4:30 Rohsamples, fuenf metric-v2-Werte und sechs Scores gegen die feste Originalreferenz nachgerechnet. Status: lokal validiert; R4OS Server ausstehend. Rest: Claim, Import, voller GET-Readback und unabhaengige Serverauswertung. Er misst das normale Gesamtsystem; die eigenstaendige Recovery-Matrix ist eine getrennte Funktionsabnahme.
+
+0.91.11 / Recovery0.1.76 / Kernel0.1.75 validates ACK and receive sequence
+edges before touching the retained send catalog or window. Rejected ACKs
+publish an immediate reply intent consumed by the existing transport. The
+existing LIMIT performance contract adds bounded invalid-ACK, stale/future
+pure-ACK and serial-wrap cases, plus valid partial/full acknowledgments.
+The explicit optional `-PacketCorpusProbe` now also exports and checks the
+original LIMIT10 result. The default three-case matrix retains its scope.
+Publication of this development package is handled by the later Recovery
+release step; all39 embedded module bodies retain their identities.
+
+The final existing SMP4 matrix passes BIOS/VirtioNet36.223s, UEFI/RTL8139
+33.897s and offline10.628s. Both online runs pass original LIMIT10 and
+CORPUS25; all earlier transport/file/menu/reset oracles remain active.
+LIMIT runs before CORPUS because its original ICMP queue check requires a
+fresh queue. The reverse-order failure is preserved, with no predicate
+relaxation. Exact development kernel/runtime and originals are retained in
+ExFiles/Reports/Fable091/0.91.11/. This is a virtual functional qualification.
 
 0.91.9 corrects cross-protocol Echo classification in the independent kernel.
 The existing protocol1 RX result now drives replies without a second payload
@@ -29,7 +47,7 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.75 / its own Zig Kernel0.1.74 and Menu0.1.29 use only the
+Recovery0.1.76 / its own Zig Kernel0.1.75 and Menu0.1.29 use only the
 canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. All39 embedded
 modules have been built from the current frozen sources:24 unchanged bodies,
 14 independently versioned changed derivatives, plus canonical R4STD0.2.11

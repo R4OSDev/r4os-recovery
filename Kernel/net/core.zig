@@ -3738,7 +3738,7 @@ fn tcpHandleRxMetadata(ip_view: ipv4.PacketView, l4_checksum_valid: bool) void {
             if (tcp.acceptInbound(parsed, nextTcpSeq(parsed.source_ip, parsed.source_port))) |conn_id| {
                 _ = sendTcpForConnection(conn_id, tcp.FLAG_SYN | tcp.FLAG_ACK, "");
             }
-        } else if ((parsed.payload.len != 0 or (parsed.flags & tcp.FLAG_FIN) != 0) and (parsed.flags & tcp.FLAG_RST) == 0) {
+        } else if ((parsed.payload.len != 0 or (parsed.flags & (tcp.FLAG_FIN | tcp.FLAG_ACK)) != 0) and (parsed.flags & tcp.FLAG_RST) == 0) {
             if (rx_conn_id) |conn_id| {
                 if (tcp.requestAck(conn_id, previous_rx_ack, parsed, time_core.monotonicTicks(), TCP_DELAYED_ACK_TICKS) == .immediate) {
                     _ = sendTcpForConnection(conn_id, tcp.FLAG_ACK, "");

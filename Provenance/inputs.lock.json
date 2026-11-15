@@ -1998,10 +1998,10 @@
         "path": "README.md",
         "source": "Kernel"
       },
-      "sha256": "5871ce3fcc7da28d8ee51bea5519e9d5cb2a1517d45756a2b7065931215eda42",
+      "sha256": "912fbc568b0fe056f877367a56a66d0dfe99f493191cb8a7a3723bdd329e15cf",
       "originalSha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
       "path": "Kernel/README.md",
-      "bytes": 2301
+      "bytes": 2748
     },
     {
       "origin": {
@@ -2172,7 +2172,7 @@
         "path": "VERSION.R4S",
         "source": "Kernel"
       },
-      "sha256": "cd6f7fff5fd6c66d5d7f5720682980840f82acea5b2100d79d8b8c7d52bfa126",
+      "sha256": "564f10ee56a86f39ae94d612e1951add056a00736483d011f1180cc1230dee69",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "path": "Kernel/VERSION.R4S",
       "bytes": 25
@@ -3950,10 +3950,10 @@
         "path": "net/core.zig",
         "source": "Kernel"
       },
-      "sha256": "94028763b28c1f2f5422f0401432487bf955a14134e3fa23f1b8ec751fa447f4",
+      "sha256": "88abc8b5ac4dd6e716ffa715d370f5649b1e09a3ac6ede1ed3aa7620b220fb50",
       "originalSha256": "85a68c4a63efd4014bac31a8a02c1b53afefad057acf39a282ba6d35989bc0db",
       "path": "Kernel/net/core.zig",
-      "bytes": 283393
+      "bytes": 283410
     },
     {
       "origin": {
@@ -4070,10 +4070,10 @@
         "path": "net/tcp.zig",
         "source": "Kernel"
       },
-      "sha256": "d23c4a6e62728022f9d5d29f37ea6a1a9a8420f2e66d718eef6d52d87c4f7d2a",
+      "sha256": "44c55a2b803c83e5e13192311e52c532eb730c5ce2c81c47daa03c73440d1792",
       "originalSha256": "c4beca3e62eda2c4194a72e01b8e9c8cc1a0897b143f02ba7f59a00f66403982",
       "path": "Kernel/net/tcp.zig",
-      "bytes": 67452
+      "bytes": 72103
     },
     {
       "origin": {
@@ -48311,7 +48311,7 @@
     },
     {
       "origin": null,
-      "sha256": "60a50ba197a6e8d9f1d61b848aacb70bed647fa3612bce00183aae669608ee84",
+      "sha256": "d0f8651756bad7851206c8e68e689517f3b9a973f63dffd42a38cccd1011843c",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64
@@ -48335,7 +48335,7 @@
     },
     {
       "origin": null,
-      "sha256": "b6b43fadb7c34e88569b5a9a7469cca5ede0da9498bf2b1906450be438281603",
+      "sha256": "bad7aece4804031b52e479064a1d83f63f61cad7cda3efb34a55104cc6ce55e8",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26
@@ -78687,6 +78687,74 @@
           "path": "Tools/Test-Network.ps1",
           "before": "0aac89a7c02f46555023b5d87e1dd8b46d68e28e45501c34b230c5a1e90d95ba",
           "after": "6db401f70e9f77f9b8029db568b91e49b2e7263f4ea01eee219057482987a401"
+        }
+      ]
+    },
+    {
+      "reason": "0.91.11: ACK/send-edge and pure-ACK sequence validation before catalog/window mutation; existing immediate-ACK intent, bounded existing LIMIT regression including serial wrap, and explicit optional unmodified diagnostic LIMIT10 JSON within original NetworkTest. Recovery76/ownKernel75; original supplier archives/commits, originalSha256 and all39 embedded module bodies retained. Explicit LIMIT precedes CORPUS to retain its original fresh-ICMP-queue precondition; failed reverse-order original exports retained.",
+      "changes": [
+        {
+          "path": "Kernel/README.md",
+          "before": "5871ce3fcc7da28d8ee51bea5519e9d5cb2a1517d45756a2b7065931215eda42",
+          "after": "912fbc568b0fe056f877367a56a66d0dfe99f493191cb8a7a3723bdd329e15cf",
+          "bytesBefore": 2301,
+          "bytesAfter": 2748
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "cd6f7fff5fd6c66d5d7f5720682980840f82acea5b2100d79d8b8c7d52bfa126",
+          "after": "564f10ee56a86f39ae94d612e1951add056a00736483d011f1180cc1230dee69",
+          "bytesBefore": 25,
+          "bytesAfter": 25
+        },
+        {
+          "path": "Kernel/net/core.zig",
+          "before": "94028763b28c1f2f5422f0401432487bf955a14134e3fa23f1b8ec751fa447f4",
+          "after": "88abc8b5ac4dd6e716ffa715d370f5649b1e09a3ac6ede1ed3aa7620b220fb50",
+          "bytesBefore": 283393,
+          "bytesAfter": 283410
+        },
+        {
+          "path": "Kernel/net/tcp.zig",
+          "before": "d23c4a6e62728022f9d5d29f37ea6a1a9a8420f2e66d718eef6d52d87c4f7d2a",
+          "after": "44c55a2b803c83e5e13192311e52c532eb730c5ce2c81c47daa03c73440d1792",
+          "bytesBefore": 67452,
+          "bytesAfter": 72103
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "60a50ba197a6e8d9f1d61b848aacb70bed647fa3612bce00183aae669608ee84",
+          "after": "d0f8651756bad7851206c8e68e689517f3b9a973f63dffd42a38cccd1011843c",
+          "bytesBefore": 64,
+          "bytesAfter": 64
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "b6b43fadb7c34e88569b5a9a7469cca5ede0da9498bf2b1906450be438281603",
+          "after": "bad7aece4804031b52e479064a1d83f63f61cad7cda3efb34a55104cc6ce55e8",
+          "bytesBefore": 26,
+          "bytesAfter": 26
+        },
+        {
+          "path": "VERSION.R4S",
+          "before": "7f6352a8b41f5156dbbec476140a447d2bf4a802009de0cac1e6fa1d9ba836fa",
+          "after": "4e97e76dfa997e67924699dc2fc02704e5fe82f40875fd8180bab53eea99ba2c",
+          "bytesBefore": 27,
+          "bytesAfter": 27
+        },
+        {
+          "path": "README.md",
+          "before": "e1b3d8d1c6c78ad5a5bfe13d0fde8ada0415d60c6b954164ba14d8f5647137ea",
+          "after": "372d54306d6c190452449bc1f226d2a5c1da1a78708ca06413ad8b1ff4750255",
+          "bytesBefore": 32282,
+          "bytesAfter": 33498
+        },
+        {
+          "path": "Tools/Test-Network.ps1",
+          "before": "6db401f70e9f77f9b8029db568b91e49b2e7263f4ea01eee219057482987a401",
+          "after": "c2413c34f2314b5df6960df2f23f720c28bbe6c318865012687b61cae37fce85",
+          "bytesBefore": 23424,
+          "bytesAfter": 24680
         }
       ]
     }

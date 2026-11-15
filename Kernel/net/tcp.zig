@@ -765,7 +765,9 @@ pub fn rxAckOf(conn_id: u32) u32 {
 
 pub fn requestAck(conn_id: u32, previous_ack: u32, view: SegmentView, now: u64, delay_ticks: u64) AckRequest {
     const c = byId(conn_id) orelse return .none;
-    if (view.payload.len == 0 and (view.flags & FLAG_FIN) == 0) return .none;
+    if (view.payload.len == 0 and (view.flags & FLAG_FIN) == 0) {
+        return if (c.delayed_ack_pending and c.delayed_ack_immediate) .immediate else .none;
+    }
 
     const advanced = c.ack != previous_ack;
     const in_order = view.seq == previous_ack;
@@ -1092,6 +1094,20 @@ pub fn applyRxView(view: SegmentView) ?SegmentView {
         return view;
     }
     if (matchConnection(view)) |c| {
+        if ((c.state == .established or c.state == .fin_wait) and (view.flags & FLAG_ACK) != 0) {
+            const reason: ?[]const u8 = if (!segmentSeqAcceptable(c, view)) "seq-stale" else if (seqAfter(view.ack, c.seq)) "ack-unsent" else null;
+            if (reason) |why| {
+                c.rx_drops +|= 1;
+                stats.rx_drops += 1;
+                stats.last_error = why;
+                // Only a reply intent is published here. Transport consumes it
+                // after state processing, using the current send/receive edge.
+                c.delayed_ack_pending = true;
+                c.delayed_ack_immediate = true;
+                c.delayed_ack_deadline = 0;
+                return view;
+            }
+        }
         if (c.state == .syn_sent and (view.flags & (FLAG_SYN | FLAG_ACK)) == (FLAG_SYN | FLAG_ACK) and view.ack == c.seq +% 1) {
             applyPeerHandshakeOptions(c, view);
             c.seq +%= 1;
@@ -1109,7 +1125,7 @@ pub fn applyRxView(view: SegmentView) ?SegmentView {
             stats.accepts += 1;
             stats.last_error = "accepted";
         } else if (c.state == .established) {
-            if ((view.payload.len != 0 or (view.flags & FLAG_FIN) != 0) and !segmentSeqAcceptable(c, view)) {
+            if ((view.flags & FLAG_ACK) == 0 and (view.payload.len != 0 or (view.flags & FLAG_FIN) != 0) and !segmentSeqAcceptable(c, view)) {
                 c.rx_drops += 1;
                 stats.rx_drops += 1;
                 stats.last_error = "seq-stale";
@@ -1913,7 +1929,79 @@ pub fn performanceContractProbe() bool {
     if (delayedAckDue(identity.slot, 200) != null) return false;
 
     stats.self_tests +%= 1;
-    return retainedTerminalProbe();
+    return retainedTerminalProbe() and ackValidityProbe();
+}
+
+// Same bounded ACK/window/catalog oracle as the native Rust owner, including
+// serial ordering across u32 wrap. Never copy the full retained send catalog.
+fn ackValidityProbe() bool {
+    const remote: [4]u8 = .{ 198, 51, 100, 97 };
+    for ([_]u32{ 0x9000, 0xFFFF_FFF0 }) |initial| {
+        const raw = beginLiveConnect(remote, 65097, initial);
+        if (raw <= 0) return false;
+        const id: u32 = @intCast(raw);
+        defer abort(id, "ack-validity-probe");
+        if (!commitSent(id, FLAG_SYN, "", 1)) return false;
+        const c = byId(id) orelse return false;
+        const handshake = SegmentView{
+            .source_ip = remote,
+            .dest_ip = .{ 192, 0, 2, 2 },
+            .source_port = c.remote_port,
+            .dest_port = c.local_port,
+            .seq = 0xA000,
+            .ack = initial +% 1,
+            .flags = FLAG_SYN | FLAG_ACK,
+            .window = MAX_ADVERTISED_WINDOW,
+            .payload = "",
+        };
+        _ = applyRxView(handshake) orelse return false;
+        if (!established(id)) return false;
+        const bytes = [_]u8{0x5A} ** 40;
+        if (!commitSent(id, FLAG_ACK | FLAG_PSH, &bytes, 2)) return false;
+        const before = planRetransmit(id, .data) orelse return false;
+        const before_ack = c.tx_ack;
+        const before_window = c.tx_window;
+        const before_seq = c.seq;
+        const before_rx = c.ack;
+        const next_token = c.sent.next_token;
+        for ([_]struct { seq: u32, ack: u32 }{
+            .{ .seq = before_rx, .ack = before_seq +% 1000 },
+            .{ .seq = before_rx -% 1, .ack = before_seq },
+            .{ .seq = before_rx +% @as(u32, @intCast(rxFree(c))) +% 1, .ack = before_seq },
+        }) |value| {
+            var rejected = handshake;
+            rejected.seq = value.seq;
+            rejected.ack = value.ack;
+            rejected.flags = FLAG_ACK;
+            rejected.window = 0;
+            _ = applyRxView(rejected) orelse return false;
+            if (c.state != .established or c.tx_ack != before_ack or c.tx_window != before_window or
+                c.seq != before_seq or c.ack != before_rx or c.sent.next_token != next_token or
+                outstandingCount(id) != 1 or outstandingBytes(id) != bytes.len) return false;
+            const after = planRetransmit(id, .data) orelse return false;
+            if (after.token != before.token or after.seq != before.seq or after.ack != before.ack or
+                after.flags != before.flags or after.sent_tick != before.sent_tick or after.retransmits != before.retransmits or
+                !@import("std").mem.eql(u8, after.payload, &bytes) or requestAck(id, before_rx, rejected, 10, 5) != .immediate) return false;
+            const reply = planSend(id, FLAG_ACK) orelse return false;
+            if (reply.seq != before_seq or reply.ack != before_rx) return false;
+            noteAckSent(id, false, reply.rx_window);
+        }
+        var partial = handshake;
+        partial.seq = before_rx;
+        partial.ack = before.seq +% 10;
+        partial.flags = FLAG_ACK;
+        _ = applyRxView(partial) orelse return false;
+        if (outstandingCount(id) != 1 or outstandingBytes(id) != 30 or c.tx_ack != partial.ack or
+            requestAck(id, before_rx, partial, 20, 5) != .none) return false;
+        const tail = planRetransmit(id, .data) orelse return false;
+        if (tail.seq != partial.ack or !@import("std").mem.eql(u8, tail.payload, bytes[10..])) return false;
+        var full = partial;
+        full.ack = before_seq;
+        _ = applyRxView(full) orelse return false;
+        if (outstandingCount(id) != 0 or outstandingBytes(id) != 0 or c.tx_ack != before_seq or
+            requestAck(id, before_rx, full, 21, 5) != .none) return false;
+    }
+    return true;
 }
 
 fn retainedTerminalProbe() bool {

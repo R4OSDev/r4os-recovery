@@ -1,5 +1,12 @@
 ﻿# Recovery kernel
 
+Kernel0.1.75 / Roadmap0.91.11 checks ACKs against the actual send edge and
+validates receive sequence numbers for pure ACKs before changing a catalog
+or send window. It schedules an existing immediate ACK after rejection.
+The existing performance-contract probe covers retained retransmit bytes,
+window/sequence state, current-edge reply plans and valid partial/full ACKs,
+including u32 wrap. Parent Recovery0.1.76 records this owned derivative.
+
 Kernel0.1.74 / Roadmap0.91.9 reuses the existing protocol1 ICMP RX Echo flag
 and guards Echo output by the same IPv4 protocol. The previous payload-only
 classifier is removed from this owner. Existing CORPUS21 oracles plus four
