@@ -1,5 +1,11 @@
 ﻿# Recovery kernel
 
+Kernel0.1.77 / Roadmap0.91.13 widens the FAT allocation-capacity product
+and data-entry count before taking their minimum with FAT_RESERVED_START.
+The bound agrees with validCluster and preserves valid padded FAT geometry.
+Parent Recovery0.1.78 records this derivative and both runtime versions;
+the original supplier records and embedded provider modules are retained.
+
 Kernel0.1.76 / Roadmap0.91.12 retains the FIN state/catalog on stale or
 duplicate acknowledgments. The existing simplified close contract requires
 an ACK covering our FIN or an actually in-order payload-free peer FIN.

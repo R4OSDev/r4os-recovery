@@ -1998,10 +1998,10 @@
         "path": "README.md",
         "source": "Kernel"
       },
-      "sha256": "cf730ee1600e47b678ab43efa39c387df87fd9284d99e969b8bc6f012c98790b",
+      "sha256": "27949fe81b93a135eadd1221a5fb52d15da89484e982e545868577d0451805cb",
       "originalSha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
       "path": "Kernel/README.md",
-      "bytes": 3190
+      "bytes": 3561
     },
     {
       "origin": {
@@ -2172,7 +2172,7 @@
         "path": "VERSION.R4S",
         "source": "Kernel"
       },
-      "sha256": "7210ba69858d346892dcd6e8595817c26d19cc25b95f443695de76d7b7db3996",
+      "sha256": "381d78ee9f6adc3554c6d2f2bc0411f091d1fb16b4c4e8f54294227abac11afc",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "path": "Kernel/VERSION.R4S",
       "bytes": 25
@@ -2924,10 +2924,10 @@
         "path": "fs/fat/fat32.zig",
         "source": "Kernel"
       },
-      "sha256": "c2b9e1d0e57c01b49ad1fe34c4231f7f0edc25219f93fac577fe973aef895aee",
+      "sha256": "cd8df9ed07a2981965825296d0b1852b8fb1c68857e9c45a8e9afe649ed6d76e",
       "originalSha256": "fef4a245658ab6a3c6733522de0410d96bd2ec8640e3f7ba2fe534ccf4b4ab8d",
       "path": "Kernel/fs/fat/fat32.zig",
-      "bytes": 153461
+      "bytes": 153442
     },
     {
       "origin": {
@@ -48311,7 +48311,7 @@
     },
     {
       "origin": null,
-      "sha256": "32041eb7b76064f01c00f5cb1aa30104f3a68bc2bc64026a68209f4c9c8590e3",
+      "sha256": "7f7001071a06142b9d6b42a9259bde70204a09808e4069510ad000afb171d4fb",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64
@@ -48335,7 +48335,7 @@
     },
     {
       "origin": null,
-      "sha256": "ed3e17ad1a8db3bd3ed5bd7709046c2b17c403b78f25253033e10ad888572f6d",
+      "sha256": "5342cc20a04b063df4f729dc854c591dca61554a32d5f92e02a02d8e8968ae2e",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26
@@ -78807,6 +78807,60 @@
           "path": "VERSION.R4S",
           "before": "4e97e76dfa997e67924699dc2fc02704e5fe82f40875fd8180bab53eea99ba2c",
           "after": "a7575cf4120a281ab214dcf8c6f58ac8dabefed20e95ee0f77b7388fcb0b3193",
+          "bytesBefore": 27,
+          "bytesAfter": 27
+        }
+      ]
+    },
+    {
+      "reason": "0.91.13: widen FAT allocation capacity and data bound to64 bits, cap before u32 conversion at FAT_RESERVED_START; padded FAT geometry remains accepted. Recovery78/ownKernel77. Supplier/originalSha256 records and39 embedded module records retained.",
+      "changes": [
+        {
+          "path": "Kernel/README.md",
+          "before": "cf730ee1600e47b678ab43efa39c387df87fd9284d99e969b8bc6f012c98790b",
+          "after": "27949fe81b93a135eadd1221a5fb52d15da89484e982e545868577d0451805cb",
+          "bytesBefore": 3190,
+          "bytesAfter": 3561
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "7210ba69858d346892dcd6e8595817c26d19cc25b95f443695de76d7b7db3996",
+          "after": "381d78ee9f6adc3554c6d2f2bc0411f091d1fb16b4c4e8f54294227abac11afc",
+          "bytesBefore": 25,
+          "bytesAfter": 25
+        },
+        {
+          "path": "Kernel/fs/fat/fat32.zig",
+          "before": "c2b9e1d0e57c01b49ad1fe34c4231f7f0edc25219f93fac577fe973aef895aee",
+          "after": "cd8df9ed07a2981965825296d0b1852b8fb1c68857e9c45a8e9afe649ed6d76e",
+          "bytesBefore": 153461,
+          "bytesAfter": 153442
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "32041eb7b76064f01c00f5cb1aa30104f3a68bc2bc64026a68209f4c9c8590e3",
+          "after": "7f7001071a06142b9d6b42a9259bde70204a09808e4069510ad000afb171d4fb",
+          "bytesBefore": 64,
+          "bytesAfter": 64
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "ed3e17ad1a8db3bd3ed5bd7709046c2b17c403b78f25253033e10ad888572f6d",
+          "after": "5342cc20a04b063df4f729dc854c591dca61554a32d5f92e02a02d8e8968ae2e",
+          "bytesBefore": 26,
+          "bytesAfter": 26
+        },
+        {
+          "path": "README.md",
+          "before": "ac2bc634eccb229d90a40fa5000cda9e83a9396e4a0c72a47eb7b0abb90d2bfc",
+          "after": "7ca0b0fefe00535e3a16c28c05eba34d8d35a87bc4c2b9b2c9f13ce65f3da8db",
+          "bytesBefore": 34367,
+          "bytesAfter": 34891
+        },
+        {
+          "path": "VERSION.R4S",
+          "before": "a7575cf4120a281ab214dcf8c6f58ac8dabefed20e95ee0f77b7388fcb0b3193",
+          "after": "02c0ef6869d697bfb70ed30f5c50f72ecca89db5811b4795ea34a8e3d54ad3d0",
           "bytesBefore": 27,
           "bytesAfter": 27
         }

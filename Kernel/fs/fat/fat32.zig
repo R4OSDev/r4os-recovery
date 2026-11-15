@@ -3564,10 +3564,9 @@ fn scanFreeClusterRun(volume: Volume, start_cluster: u32, stop_cluster: u32, wan
 }
 
 fn allocClusterEnd(volume: Volume) u32 {
-    const fat_entries = (volume.sectors_per_fat * @as(u32, SECTOR_SIZE)) / 4;
-    const data_entries = volume.totalClusters() + 2;
-    if (data_entries >= 2 and data_entries < fat_entries) return data_entries;
-    return fat_entries;
+    const fat_entries = (@as(u64, volume.sectors_per_fat) * SECTOR_SIZE) / 4;
+    const data_entries = @as(u64, volume.totalClusters()) + 2;
+    return @intCast(@min(data_entries, fat_entries, FAT_RESERVED_START));
 }
 
 fn nextFreeStart(volume: Volume, requested_start: u32) u32 {
