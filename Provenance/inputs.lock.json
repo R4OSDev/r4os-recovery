@@ -1998,10 +1998,10 @@
         "path": "README.md",
         "source": "Kernel"
       },
-      "sha256": "912fbc568b0fe056f877367a56a66d0dfe99f493191cb8a7a3723bdd329e15cf",
+      "sha256": "cf730ee1600e47b678ab43efa39c387df87fd9284d99e969b8bc6f012c98790b",
       "originalSha256": "9717512c1271aba8b53bfa74a9b1045fad18f4e35c495da6ea2dc285517003c5",
       "path": "Kernel/README.md",
-      "bytes": 2748
+      "bytes": 3190
     },
     {
       "origin": {
@@ -2172,7 +2172,7 @@
         "path": "VERSION.R4S",
         "source": "Kernel"
       },
-      "sha256": "564f10ee56a86f39ae94d612e1951add056a00736483d011f1180cc1230dee69",
+      "sha256": "7210ba69858d346892dcd6e8595817c26d19cc25b95f443695de76d7b7db3996",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "path": "Kernel/VERSION.R4S",
       "bytes": 25
@@ -4070,10 +4070,10 @@
         "path": "net/tcp.zig",
         "source": "Kernel"
       },
-      "sha256": "44c55a2b803c83e5e13192311e52c532eb730c5ce2c81c47daa03c73440d1792",
+      "sha256": "23f69bef523e738528b4ff18fad1feed495a9aff34a4845f2f60809285acc290",
       "originalSha256": "c4beca3e62eda2c4194a72e01b8e9c8cc1a0897b143f02ba7f59a00f66403982",
       "path": "Kernel/net/tcp.zig",
-      "bytes": 72103
+      "bytes": 73258
     },
     {
       "origin": {
@@ -48311,7 +48311,7 @@
     },
     {
       "origin": null,
-      "sha256": "d0f8651756bad7851206c8e68e689517f3b9a973f63dffd42a38cccd1011843c",
+      "sha256": "32041eb7b76064f01c00f5cb1aa30104f3a68bc2bc64026a68209f4c9c8590e3",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64
@@ -48335,7 +48335,7 @@
     },
     {
       "origin": null,
-      "sha256": "bad7aece4804031b52e479064a1d83f63f61cad7cda3efb34a55104cc6ce55e8",
+      "sha256": "ed3e17ad1a8db3bd3ed5bd7709046c2b17c403b78f25253033e10ad888572f6d",
       "originalSha256": null,
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26
@@ -78755,6 +78755,60 @@
           "after": "c2413c34f2314b5df6960df2f23f720c28bbe6c318865012687b61cae37fce85",
           "bytesBefore": 23424,
           "bytesAfter": 24680
+        }
+      ]
+    },
+    {
+      "reason": "0.91.12: retain FinWait/retransmit FIN on old or duplicate ACK; close only after FIN acknowledgment or valid in-order payload-free peer FIN; existing graceful-close oracle extended, original supplier/originalSha256/module records retained. Recovery77/ownKernel76.",
+      "changes": [
+        {
+          "path": "Kernel/README.md",
+          "before": "912fbc568b0fe056f877367a56a66d0dfe99f493191cb8a7a3723bdd329e15cf",
+          "after": "cf730ee1600e47b678ab43efa39c387df87fd9284d99e969b8bc6f012c98790b",
+          "bytesBefore": 2748,
+          "bytesAfter": 3190
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "564f10ee56a86f39ae94d612e1951add056a00736483d011f1180cc1230dee69",
+          "after": "7210ba69858d346892dcd6e8595817c26d19cc25b95f443695de76d7b7db3996",
+          "bytesBefore": 25,
+          "bytesAfter": 25
+        },
+        {
+          "path": "Kernel/net/tcp.zig",
+          "before": "44c55a2b803c83e5e13192311e52c532eb730c5ce2c81c47daa03c73440d1792",
+          "after": "23f69bef523e738528b4ff18fad1feed495a9aff34a4845f2f60809285acc290",
+          "bytesBefore": 72103,
+          "bytesAfter": 73258
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "d0f8651756bad7851206c8e68e689517f3b9a973f63dffd42a38cccd1011843c",
+          "after": "32041eb7b76064f01c00f5cb1aa30104f3a68bc2bc64026a68209f4c9c8590e3",
+          "bytesBefore": 64,
+          "bytesAfter": 64
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "bad7aece4804031b52e479064a1d83f63f61cad7cda3efb34a55104cc6ce55e8",
+          "after": "ed3e17ad1a8db3bd3ed5bd7709046c2b17c403b78f25253033e10ad888572f6d",
+          "bytesBefore": 26,
+          "bytesAfter": 26
+        },
+        {
+          "path": "README.md",
+          "before": "372d54306d6c190452449bc1f226d2a5c1da1a78708ca06413ad8b1ff4750255",
+          "after": "ac2bc634eccb229d90a40fa5000cda9e83a9396e4a0c72a47eb7b0abb90d2bfc",
+          "bytesBefore": 33498,
+          "bytesAfter": 34367
+        },
+        {
+          "path": "VERSION.R4S",
+          "before": "4e97e76dfa997e67924699dc2fc02704e5fe82f40875fd8180bab53eea99ba2c",
+          "after": "a7575cf4120a281ab214dcf8c6f58ac8dabefed20e95ee0f77b7388fcb0b3193",
+          "bytesBefore": 27,
+          "bytesAfter": 27
         }
       ]
     }

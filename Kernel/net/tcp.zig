@@ -1149,7 +1149,12 @@ pub fn applyRxView(view: SegmentView) ?SegmentView {
             }
         } else if (c.state == .fin_wait and (view.flags & FLAG_ACK) != 0) {
             updateTxWindow(c, view);
-            if ((view.flags & FLAG_FIN) != 0 and view.seq == c.ack) c.ack +%= 1;
+            const peer_fin = (view.flags & FLAG_FIN) != 0 and view.payload.len == 0 and view.seq == c.ack;
+            if (view.ack != c.seq and !peer_fin) {
+                stats.last_error = "fin-unacked";
+                return view;
+            }
+            if (peer_fin) c.ack +%= 1;
             c.state = .closed;
             c.terminal_cause = .peer_closed;
             if ((view.flags & FLAG_FIN) == 0) {
@@ -1797,6 +1802,27 @@ pub fn gracefulCloseProbe() bool {
     if (!closeReady(conn_id)) return false;
     if (!commitSent(conn_id, FLAG_ACK | FLAG_FIN, "", 2)) return false;
     if (!finWaiting(conn_id) or closeReady(conn_id)) return false;
+
+    const fin = planRetransmit(conn_id, .fin) orelse return false;
+    for (0..2) |_| {
+        const stale = SegmentView{
+            .source_ip = remote,
+            .dest_ip = local,
+            .source_port = c.remote_port,
+            .dest_port = c.local_port,
+            .seq = c.ack,
+            .ack = c.seq -% 1,
+            .flags = FLAG_ACK,
+            .window = MAX_ADVERTISED_WINDOW,
+            .payload = "",
+        };
+        _ = applyRxView(stale) orelse return false;
+        if (!finWaiting(conn_id) or connectionIdentity(conn_id) == null or outstandingCount(conn_id) != 1) return false;
+        const retry = planRetransmit(conn_id, .fin) orelse return false;
+        if (retry.token != fin.token or retry.seq != fin.seq or retry.flags != fin.flags or
+            retry.sent_tick != fin.sent_tick or retry.retransmits != fin.retransmits or
+            retry.payload.len != 0 or c.seq != fin.seq +% 1) return false;
+    }
 
     const fin_ack = SegmentView{
         .source_ip = remote,

@@ -1,6 +1,20 @@
 ﻿# R4OS Recovery
 
-Finaler STANDARD e5f207dc-aabb-4602-abe3-a34c549041ca / normaler Rust-Kernel0.1.483 / KVM4:30 Rohsamples, fuenf metric-v2-Werte und sechs Scores gegen die feste Originalreferenz nachgerechnet. Status: lokal validiert; R4OS Server ausstehend. Rest: Claim, Import, voller GET-Readback und unabhaengige Serverauswertung. Er misst das normale Gesamtsystem; die eigenstaendige Recovery-Matrix ist eine getrennte Funktionsabnahme.
+Finaler STANDARD6ddc235e-4d7c-4e72-bfc4-470a9e1e69d0 / normaler Rust-Kernel0.1.484 / KVM4:30 Rohsamples, fuenf metric-v2-Werte und sechs Scores gegen die feste Originalreferenz nachgerechnet. Status: lokal validiert; R4OS Server ausstehend. Rest: Claim, Import, voller GET-Readback und unabhaengige Serverauswertung. Er misst das normale Gesamtsystem; die eigenstaendige Recovery-Matrix ist eine getrennte Funktionsabnahme.
+
+0.91.12 / Recovery0.1.77 / Kernel0.1.76 keeps an outstanding FIN after a
+stale or duplicate ACK. The existing simple close path proceeds when the
+ACK covers the FIN, or an in-order payload-free peer FIN is received.
+The original graceful-close LIMIT case now verifies the exact retained
+FIN retransmit token/sequence/tick/flags after two stale acknowledgments,
+then still requires the original correct-ACK close behavior. Embedded module
+bodies and the public wire contract retain their identities. Package
+publication remains assigned to the later Recovery release step.
+
+Final existing SMP4 matrix: BIOS/VirtioNet36.209s, UEFI/RTL813933.558s and
+offline10.586s pass. Both online cases retain LIMIT10/CORPUS25 and every
+earlier transport/storage/menu/reset oracle. Exact originals and final
+kernel/runtime: ExFiles/Reports/Fable091/0.91.12/; virtual functional scope.
 
 0.91.11 / Recovery0.1.76 / Kernel0.1.75 validates ACK and receive sequence
 edges before touching the retained send catalog or window. Rejected ACKs
@@ -47,7 +61,7 @@ R4OS Recovery is the independent recovery environment developed in R4OS roadmap
 0.76.X. It boots through Limine with its own lightweight kernel and a
 complete RAM-resident console runtime.
 
-Recovery0.1.76 / its own Zig Kernel0.1.75 and Menu0.1.29 use only the
+Recovery0.1.77 / its own Zig Kernel0.1.76 and Menu0.1.29 use only the
 canonical Query2/Start2/DriverInit2/ProtocolInit2 interfaces. All39 embedded
 modules have been built from the current frozen sources:24 unchanged bodies,
 14 independently versioned changed derivatives, plus canonical R4STD0.2.11

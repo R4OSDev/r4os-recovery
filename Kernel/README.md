@@ -1,5 +1,12 @@
 ﻿# Recovery kernel
 
+Kernel0.1.76 / Roadmap0.91.12 retains the FIN state/catalog on stale or
+duplicate acknowledgments. The existing simplified close contract requires
+an ACK covering our FIN or an actually in-order payload-free peer FIN.
+The original graceful-close probe adds exact FIN retransmit-plan checks
+after duplicate old ACKs, followed by the original normal close assertions.
+Parent Recovery0.1.77 records this derivative without rewriting suppliers.
+
 Kernel0.1.75 / Roadmap0.91.11 checks ACKs against the actual send edge and
 validates receive sequence numbers for pure ACKs before changing a catalog
 or send window. It schedules an existing immediate ACK after rejection.
