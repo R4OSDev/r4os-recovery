@@ -460,6 +460,13 @@
       "archiveSha256": "8896abfefaa08f51faaf260cdd78a11cffe7d5170f7fb8d9e41fc89512589461",
       "commit": "82fc0437c6cce866941f6371c9021b077048e074",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "Recovery-Embedded-0.94.5",
+      "archive": "Legal/Sources/Recovery-Embedded-0.94.5.zip",
+      "archiveSha256": "fc8c5320f67f39a03a6882f3cb3f76ed01a5e3df9e7dfc2574f8533dc5832e4a",
+      "commit": "4bbd1008b45db383d47f9028b07f019baf678a59",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     }
   ],
   "platformProviders": [
@@ -1359,7 +1366,7 @@
     },
     {
       "name": "DNSSVC",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "source": "Services-DnsService",
       "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
       "manifest": "Legal/Manifests/DNSSVC/module.R4MF",
@@ -1379,15 +1386,15 @@
         "original_artifact_sha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f",
         "frozen_sdk": "0.64.218",
         "generation": 2,
-        "controller_sdk": "0.64.218",
+        "controller_sdk": "0.64.234",
         "source": "RecoveryTools/Embedded/Services-DnsService",
         "frozen_libraries": "0.64.64",
-        "manifest_sha256": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
+        "manifest_sha256": "4d8798e1ac6a03b36140eabc0feb0aaa5d1c6016deaa8549ab4fc6d09bc9d9fc",
         "original_version": "0.1.3",
         "frozen_contract": "0.64.95",
-        "source_tree_sha256": "abdee2c9bc03efeea50309f6801cbc4e53525faba60819f38a446b91c73149b7",
+        "source_tree_sha256": "d4bdbf5610a32797dc502ff91d5f46125b9a52a49de0c54884b4241f45423e50",
         "owner": "Recovery",
-        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.90.zip"
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.94.5.zip"
       }
     },
     {
@@ -4623,7 +4630,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "dd044c99cc2dcb96b67da6805518e9416deecbd039c92bf469af454ab3b55d60",
+      "sha256": "19fd0281cd70c1568b647e07f224eba264202736bfa55df14335920dfe0c1476",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -5347,14 +5354,14 @@
     {
       "path": "Legal/Manifests/DNSSVC/module.R4MF",
       "bytes": 474,
-      "sha256": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
+      "sha256": "4d8798e1ac6a03b36140eabc0feb0aaa5d1c6016deaa8549ab4fc6d09bc9d9fc",
       "originalSha256": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
       "origin": {
-        "controllerSdk": "0.64.218",
+        "controllerSdk": "0.64.234",
         "derivativeOwner": "Recovery",
         "path": "RecoveryTools/Embedded/Services-DnsService/module.R4MF",
-        "source": "Recovery-Embedded-0.90.90",
-        "sourceTreeSha256": "abdee2c9bc03efeea50309f6801cbc4e53525faba60819f38a446b91c73149b7",
+        "source": "Recovery-Embedded-0.94.5",
+        "sourceTreeSha256": "d4bdbf5610a32797dc502ff91d5f46125b9a52a49de0c54884b4241f45423e50",
         "frozenSdk": "0.64.218"
       }
     },
@@ -47605,7 +47612,7 @@
     {
       "path": "RecoveryTools/Embedded/Services-DnsService/module.R4MF",
       "bytes": 474,
-      "sha256": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
+      "sha256": "4d8798e1ac6a03b36140eabc0feb0aaa5d1c6016deaa8549ab4fc6d09bc9d9fc",
       "originalSha256": "03498d4dba5be018042920918fbc6f69751d210cef68c5791d7e78950b0993ca",
       "origin": {
         "source": "Services-DnsService",
@@ -47626,8 +47633,8 @@
     },
     {
       "path": "RecoveryTools/Embedded/Services-DnsService/src/main.zig",
-      "bytes": 62551,
-      "sha256": "715327c16378fb7b1d90824e6358591d84421ee50458685e0f012a4b4bac8abd",
+      "bytes": 62566,
+      "sha256": "7e07917d9f42537c3f6a7a0de84ec217245d7b998d34f52e8911c473f9fc8e41",
       "originalSha256": "96b0eb523766b8eb417ab511a06dda235f53d2506e7ee8d3e7d49a51526dc020",
       "origin": {
         "source": "Services-DnsService",
@@ -48347,7 +48354,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "42d9ded308c228130ca8ba680fe8bbd61786849c2dc5a12cbfe4203e4f0d0928",
+      "sha256": "251119b93be8de16e16e1f8934d471ed631c01dd2b85040be1e7184d45396707",
       "originalSha256": null,
       "origin": null
     },
@@ -48371,7 +48378,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "a190f94e91e278a616fec7e2e41a4ff3c1b13ea20011362ac9ec4ba658d77a44",
+      "sha256": "237e8e88484f4ca24eff79111b4025dc285f68efadcd2363a7fe3d67281aadd7",
       "originalSha256": null,
       "origin": null
     },
@@ -48763,14 +48770,14 @@
     {
       "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
       "bytes": 111572,
-      "sha256": "843187b9e2de424e69c0d533f686c104d60b1a29b687b933dd180b2024555aca",
+      "sha256": "e5229954c9234013103eeea89b90a1c136ce643e18911c85ef7b03c943fcc6ae",
       "originalSha256": "921306ef92090773bce2f60c425883b475f875470d8708a6bef5a8d4e369d54f",
       "origin": {
-        "controllerSdk": "0.64.218",
+        "controllerSdk": "0.64.234",
         "derivativeOwner": "Recovery",
         "path": "RecoveryTools/Embedded/Services-DnsService",
-        "source": "Recovery-Embedded-0.90.90",
-        "sourceTreeSha256": "abdee2c9bc03efeea50309f6801cbc4e53525faba60819f38a446b91c73149b7",
+        "source": "Recovery-Embedded-0.94.5",
+        "sourceTreeSha256": "d4bdbf5610a32797dc502ff91d5f46125b9a52a49de0c54884b4241f45423e50",
         "frozenSdk": "0.64.218"
       }
     },
@@ -48954,6 +48961,13 @@
       "bytes": 19582,
       "sha256": "8896abfefaa08f51faaf260cdd78a11cffe7d5170f7fb8d9e41fc89512589461",
       "originalSha256": "8896abfefaa08f51faaf260cdd78a11cffe7d5170f7fb8d9e41fc89512589461",
+      "origin": null
+    },
+    {
+      "path": "Legal/Sources/Recovery-Embedded-0.94.5.zip",
+      "bytes": 22187,
+      "sha256": "fc8c5320f67f39a03a6882f3cb3f76ed01a5e3df9e7dfc2574f8533dc5832e4a",
+      "originalSha256": "fc8c5320f67f39a03a6882f3cb3f76ed01a5e3df9e7dfc2574f8533dc5832e4a",
       "origin": null
     }
   ],
@@ -78991,6 +79005,51 @@
           "path": "RecoveryTools/Embedded/Drivers-VirtioNet/src/main.zig",
           "before": "6194aa76132c074fa2d29f80ea9d77d5908bd72306904bd0b0fc5a9f394a2027",
           "after": "e0ccb68326605509f7856826327690e549c089981a526e99d771862a69cfd08a"
+        }
+      ]
+    },
+    {
+      "reason": "0.94.5 Recovery-owned DNSSVC 0.1.6 admission from the recorded owner revision and selected SDK build. Paired kernel embeds the new runtime digest.",
+      "changes": [
+        {
+          "path": "Legal/Sources/Recovery-Embedded-0.94.5.zip",
+          "before": null,
+          "after": "fc8c5320f67f39a03a6882f3cb3f76ed01a5e3df9e7dfc2574f8533dc5832e4a"
+        },
+        {
+          "path": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
+          "before": "843187b9e2de424e69c0d533f686c104d60b1a29b687b933dd180b2024555aca",
+          "after": "e5229954c9234013103eeea89b90a1c136ce643e18911c85ef7b03c943fcc6ae"
+        },
+        {
+          "path": "Legal/Manifests/DNSSVC/module.R4MF",
+          "before": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
+          "after": "4d8798e1ac6a03b36140eabc0feb0aaa5d1c6016deaa8549ab4fc6d09bc9d9fc"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "dd044c99cc2dcb96b67da6805518e9416deecbd039c92bf469af454ab3b55d60",
+          "after": "19fd0281cd70c1568b647e07f224eba264202736bfa55df14335920dfe0c1476"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "42d9ded308c228130ca8ba680fe8bbd61786849c2dc5a12cbfe4203e4f0d0928",
+          "after": "251119b93be8de16e16e1f8934d471ed631c01dd2b85040be1e7184d45396707"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "a190f94e91e278a616fec7e2e41a4ff3c1b13ea20011362ac9ec4ba658d77a44",
+          "after": "237e8e88484f4ca24eff79111b4025dc285f68efadcd2363a7fe3d67281aadd7"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/module.R4MF",
+          "before": "581c88974a95a25edbdd6be8e6b6e2800d97d69b774134b6b6453cc18e5bfac7",
+          "after": "4d8798e1ac6a03b36140eabc0feb0aaa5d1c6016deaa8549ab4fc6d09bc9d9fc"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Services-DnsService/src/main.zig",
+          "before": "715327c16378fb7b1d90824e6358591d84421ee50458685e0f012a4b4bac8abd",
+          "after": "7e07917d9f42537c3f6a7a0de84ec217245d7b998d34f52e8911c473f9fc8e41"
         }
       ]
     }

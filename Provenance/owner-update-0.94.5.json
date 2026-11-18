@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "release": "0.94.5",
+  "source_archive": {
+    "id": "Recovery-Embedded-0.94.5",
+    "archive": "Legal/Sources/Recovery-Embedded-0.94.5.zip",
+    "archiveSha256": "fc8c5320f67f39a03a6882f3cb3f76ed01a5e3df9e7dfc2574f8533dc5832e4a",
+    "commit": "4bbd1008b45db383d47f9028b07f019baf678a59",
+    "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+  },
+  "module": "DNSSVC",
+  "version": "0.1.6",
+  "source_tree_sha256": "d4bdbf5610a32797dc502ff91d5f46125b9a52a49de0c54884b4241f45423e50",
+  "manifest_sha256": "4d8798e1ac6a03b36140eabc0feb0aaa5d1c6016deaa8549ab4fc6d09bc9d9fc",
+  "binary_sha256": "e5229954c9234013103eeea89b90a1c136ce643e18911c85ef7b03c943fcc6ae",
+  "controller_sdk": "0.64.234",
+  "imports": [
+    "R4SYS:Query2:2",
+    "R4NET:Query2:2"
+  ],
+  "exports": [
+    "R4XStart2:2"
+  ]
+}
