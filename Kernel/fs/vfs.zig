@@ -12,6 +12,7 @@
 // Filesystem probing (recognizing a volume on a partition) stays
 // filesystem-specific in the MBR scanner; only mounted volumes live here.
 
+const CopyTarget = @import("copy_target.zig").Target;
 const fat32 = @import("fat/fat32.zig");
 const ntfs_fs = @import("ntfs/ntfs.zig");
 const access = @import("../storage/access_runtime.zig");
@@ -473,13 +474,7 @@ fn ntfsCurrentSize(v: ntfs_fs.Volume, parent: NodeRef, name: []const u8) u64 {
 
 pub fn copyFile(src_volume: Volume, dst_volume: Volume, src_entry: Entry, dst_parent: NodeRef, dst_name: []const u8) bool {
     defer notifyDirectoryChanged(dst_volume, dst_parent);
-    return switch (src_volume) {
-        .fat32 => |sv| switch (dst_volume) {
-            .fat32 => |dv| fat32.copyFile(sv, dv, entryToFat32(src_entry), @intCast(dst_parent), dst_name),
-            .ntfs => copyFileGeneric(src_volume, dst_volume, src_entry, dst_parent, dst_name, true),
-        },
-        .ntfs => copyFileGeneric(src_volume, dst_volume, src_entry, dst_parent, dst_name, true),
-    };
+    return copyFileGeneric(src_volume, dst_volume, src_entry, dst_parent, dst_name, true);
 }
 
 pub fn copyFileNoReplace(src_volume: Volume, dst_volume: Volume, src_entry: Entry, dst_parent: NodeRef, dst_name: []const u8) bool {
@@ -511,38 +506,38 @@ fn copyFileGeneric(src_volume: Volume, dst_volume: Volume, src_entry: Entry, dst
 }
 
 /// The caller exclusively owns the bounded buffer until this call returns.
-/// Progress counts completed appends; an I/O error may leave a partial target.
+/// Progress counts completed appends to the private stage.
 pub fn copyFileBuffered(src_volume: Volume, dst_volume: Volume, src_entry: Entry, dst_parent: NodeRef, dst_name: []const u8, replace: bool, chunk: []u8, progress: *CopyProgress) bool {
     progress.* = .{ .source_size = src_entry.size };
     if (src_entry.isDir() or chunk.len == 0 or src_entry.size > 0xFFFF_FFFF) return false;
     var existing: Entry = undefined;
-    switch (lookupEntryStatus(dst_volume, dst_parent, dst_name, &existing)) {
-        .found => {
+    const original: ?Entry = switch (lookupEntryStatus(dst_volume, dst_parent, dst_name, &existing)) {
+        .found => blk: {
             if (!replace or existing.isDir() or existing.isReadOnly()) return false;
             if (sameVolume(src_volume, dst_volume) and sameFileForCopy(src_volume, src_entry, existing)) return false;
-            if (!deleteFile(dst_volume, dst_parent, dst_name)) return false;
+            break :blk existing;
         },
-        .not_found => {},
+        .not_found => null,
         .io => return false,
-    }
-    var completed = false;
-    // Match stream-copy abort: retire our incomplete destination while the
-    // namespace request still excludes another writer. Cleanup I/O can fail.
-    defer if (!completed) {
-        _ = deleteFile(dst_volume, dst_parent, dst_name);
     };
-    if (!writeFile(dst_volume, dst_parent, dst_name, chunk[0..0])) return false;
+    const target = CopyTarget.select(dst_volume, dst_parent, dst_name) orelse return false;
+    var publishing = false;
+    defer if (!publishing) {
+        _ = deleteFile(dst_volume, dst_parent, &target.stage);
+    };
+    if (!writeFile(dst_volume, dst_parent, &target.stage, chunk[0..0])) return false;
     while (progress.bytes < src_entry.size) {
         const want: usize = @intCast(@min(src_entry.size - progress.bytes, chunk.len));
         const got = readFileRange(src_volume, src_entry, @intCast(progress.bytes), chunk[0..want]) orelse return false;
         if (got != want) return false;
-        if (appendFileAtOffsetStatusDeferred(dst_volume, dst_parent, dst_name, progress.bytes, chunk[0..want]) != .ok) return false;
+        if (appendFileAtOffsetStatusDeferred(dst_volume, dst_parent, &target.stage, progress.bytes, chunk[0..want]) != .ok) return false;
         progress.bytes += want;
         progress.chunks += 1;
         progress.max_chunk = @max(progress.max_chunk, @as(u32, @intCast(want)));
     }
-    completed = flushVolume(dst_volume);
-    return completed;
+    if (!flushVolume(dst_volume)) return false;
+    publishing = true;
+    return target.publish(original);
 }
 
 pub fn makeDirectory(volume: Volume, parent: NodeRef, name: []const u8) bool {
@@ -676,6 +671,14 @@ pub fn renameEntryStatus(volume: Volume, parent: NodeRef, old_name: []const u8, 
     return switch (volume) {
         .fat32 => |v| renameStatusFromFat32(fat32.renameEntryStatus(v, @intCast(parent), old_name, new_name)),
         .ntfs => |v| renameStatusFromNtfs(ntfs_fs.renameEntryStatus(v, parent, old_name, new_name)),
+    };
+}
+
+pub fn publishStagedCopy(volume: Volume, parent: NodeRef, stage: []const u8, target: []const u8) bool {
+    defer notifyDirectoryChanged(volume, parent);
+    return switch (volume) {
+        .fat32 => |v| fat32.publishStagedCopy(v, @intCast(parent), stage, target) == .ok,
+        .ntfs => |v| ntfs_fs.publishFileCreateOnly(v, parent, target, stage) == .ok,
     };
 }
 

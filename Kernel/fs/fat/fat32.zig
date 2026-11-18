@@ -1608,7 +1608,7 @@ pub fn replaceFileAtomic(
 
     if (target) |target_loc| {
         if (sameFileOwnership(target_loc.entry, staged_loc.entry)) {
-            if (!detachEntryNoFree(volume, staged_loc)) return .io;
+            if (!flushOwnershipBoundary(volume) or !detachEntryNoFree(volume, staged_loc)) return .io;
             return if (flushVolume(volume)) .ok else .io;
         }
 
@@ -1655,8 +1655,6 @@ pub fn replaceFileAtomicCreateOnly(
     staged_name: []const u8,
     backup_name: []const u8,
 ) AtomicReplaceResult {
-    invalidateAppendCache();
-    invalidateReadRangeCache();
     if (!validInputName(target_name) or
         !validateShortName83(staged_name) or
         !validateShortName83(backup_name))
@@ -1667,15 +1665,25 @@ pub fn replaceFileAtomicCreateOnly(
         entryNameEqualAscii(staged_name, backup_name))
         return .alias;
 
+    var backup: ?EntryLocation = null;
+    switch (findOptionalEntryLocationStatus(volume, parent_cluster, backup_name, &backup)) {
+        .found => return .conflict,
+        .io => return .io,
+        .not_found => return publishStagedCopy(volume, parent_cluster, staged_name, target_name),
+    }
+}
+
+/// A normal copy may create a long name. Keep the flushed short-name stage
+/// until the target's directory entry is visible and owns the same chain.
+pub fn publishStagedCopy(volume: Volume, parent_cluster: u32, staged_name: []const u8, target_name: []const u8) AtomicReplaceResult {
+    if (!validInputName(target_name) or !validateShortName83(staged_name)) return .invalid;
+    if (entryNameEqualAscii(target_name, staged_name)) return .alias;
+    invalidateAppendCache();
+    invalidateReadRangeCache();
     var target: ?EntryLocation = null;
     var staged: ?EntryLocation = null;
-    var backup: ?EntryLocation = null;
     if (findOptionalEntryLocationStatus(volume, parent_cluster, target_name, &target) == .io or
-        findOptionalEntryLocationStatus(volume, parent_cluster, staged_name, &staged) == .io or
-        findOptionalEntryLocationStatus(volume, parent_cluster, backup_name, &backup) == .io)
-        return .io;
-    if (backup != null) return .conflict;
-
+        findOptionalEntryLocationStatus(volume, parent_cluster, staged_name, &staged) == .io) return .io;
     const stage_loc = staged orelse return if (target == null) .not_found else .conflict;
     if (stage_loc.entry.isDir() or stage_loc.entry.isReadOnly()) return .read_only;
 
@@ -1687,11 +1695,11 @@ pub fn replaceFileAtomicCreateOnly(
                 return .io;
             if (!sameFileOwnership(target.?.entry, stage_loc.entry)) return .conflict;
         }
-        if (!flushOwnershipBoundary(volume)) return .io;
-        if (findOptionalEntryLocationStatus(volume, parent_cluster, target_name, &target) != .found)
-            return .io;
-        if (!sameFileOwnership(target.?.entry, stage_loc.entry)) return .conflict;
     }
+    if (!flushOwnershipBoundary(volume)) return .io;
+    if (findOptionalEntryLocationStatus(volume, parent_cluster, target_name, &target) != .found)
+        return .io;
+    if (!sameFileOwnership(target.?.entry, stage_loc.entry)) return .conflict;
 
     var stage_after: ?EntryLocation = null;
     const stage_status = findOptionalEntryLocationStatus(volume, parent_cluster, staged_name, &stage_after);
