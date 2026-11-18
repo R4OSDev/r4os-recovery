@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "release": "0.94.6",
+  "source_archive": {
+    "id": "Recovery-Embedded-0.94.6",
+    "archive": "Legal/Sources/Recovery-Embedded-0.94.6.zip",
+    "archiveSha256": "20162d37478cd099d354df44c5b6e893d6b914c5123c47766fb788b32df1482d",
+    "commit": "c5e6c3b9a072e6c943bbd15a2e7ba9eb690be481",
+    "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+  },
+  "module": "SERVMAN",
+  "version": "0.1.5",
+  "source_tree_sha256": "3cd26412d5b05485d53b47773b4876315ee01965e2a8e4e266a1e569fc9cba44",
+  "manifest_sha256": "607303217448c4ac1ffdcb07da08a907e697a31201977e1cb6067e3a5e62175a",
+  "binary_sha256": "355d272c2e55ae5caad50112d0a7c55ee13ad12d6a05915520b065a951ff03e3",
+  "controller_sdk": "0.64.234",
+  "imports": [
+    "R4SYS:Query2:2"
+  ],
+  "exports": [
+    "R4XStart2:2"
+  ]
+}
