@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "release": "0.93.13",
+  "date": "2026-11-18",
+  "scope": "Source synchronization of the frozen R4RD v2 reader. Existing published Recovery 0.1.78 is the separately pinned Distribution package.",
+  "owners": [
+    {
+      "owner": "SDK",
+      "sourceCommit": "159c8a73751a110a96da67f2c368d2cb448f7623",
+      "baseRecoveryCommit": "823bfb34f7f3ab06e383adfa9bed1c35f801b034",
+      "pendingOwnerCommit": false,
+      "patch": "Legal/Changes/SDK-0.93.13.patch",
+      "patchSha256": "22bcfe834dfdfe0921f2f8c364bb5751567edafbe0a496082891520ffa6992f4",
+      "importMode": "Byte-identical transfer of the recent-document reader and its Zig format tests.",
+      "files": [
+        {
+          "path": "Platform/SDK/r4os/recent_documents.zig",
+          "sourcePath": "r4os/recent_documents.zig",
+          "sha256": "1fd9f9841e8e868fb60033a959a1342673c687b096e9b459a42af7af96f36601",
+          "sourceSha256": "1fd9f9841e8e868fb60033a959a1342673c687b096e9b459a42af7af96f36601",
+          "byteIdentical": true
+        }
+      ]
+    }
+  ]
+}

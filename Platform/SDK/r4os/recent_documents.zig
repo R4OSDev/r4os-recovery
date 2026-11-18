@@ -7,7 +7,6 @@ pub const max_items: usize = 8;
 pub const path_max: usize = path_contract.file_path_max;
 pub const app_max: usize = 31;
 pub const title_max: usize = 63;
-const legacy_path_max: usize = 191;
 
 const items_value = "Items";
 const packed_magic = "R4RD";
@@ -15,7 +14,6 @@ const packed_version: u16 = 2;
 const packed_header_size: usize = 8;
 const packed_record_size: usize = (path_max + 1) + (app_max + 1) + (title_max + 1);
 const packed_max_bytes: usize = packed_header_size + packed_record_size * max_items;
-const legacy_record_size: usize = (legacy_path_max + 1) + (app_max + 1) + (title_max + 1);
 
 pub const Entry = struct {
     path: [path_max + 1]u8 = .{0} ** (path_max + 1),
@@ -101,23 +99,20 @@ fn packEntries(entries_raw: []const Entry, out: []u8) ?[]const u8 {
 fn unpackEntries(data: []const u8, out: []Entry) usize {
     if (data.len < packed_header_size) return 0;
     if (!std.mem.eql(u8, data[0..4], packed_magic)) return 0;
-    const version = readU16(data[4..]);
-    if (version != 1 and version != packed_version) return 0;
-    const count = @min(@as(usize, readU16(data[6..])), @min(out.len, max_items));
-    const stored_path_max = if (version == 1) legacy_path_max else path_max;
-    const stored_record_size = (stored_path_max + 1) + (app_max + 1) + (title_max + 1);
-    if (data.len < packed_header_size + stored_record_size * count) return 0;
+    if (readU16(data[4..]) != packed_version) return 0;
+    const stored_count = readU16(data[6..]);
+    if (stored_count > max_items or data.len < packed_header_size + packed_record_size * @as(usize, stored_count)) return 0;
 
     var actual: usize = 0;
     var offset: usize = packed_header_size;
     var i: usize = 0;
-    while (i < count) : (i += 1) {
+    while (i < stored_count and actual < out.len) : (i += 1) {
         var entry = Entry{};
-        if (!copyPackedZChecked(entry.path[0..], data[offset .. offset + stored_path_max + 1])) {
-            offset += stored_record_size;
+        if (!copyPackedZChecked(entry.path[0..], data[offset .. offset + path_max + 1])) {
+            offset += packed_record_size;
             continue;
         }
-        offset += stored_path_max + 1;
+        offset += path_max + 1;
         copyPackedZ(entry.app[0..], data[offset .. offset + app_max + 1]);
         offset += app_max + 1;
         copyPackedZ(entry.title[0..], data[offset .. offset + title_max + 1]);
@@ -320,7 +315,7 @@ test "recent document packed payload roundtrips newest first" {
     try std.testing.expectEqualStrings("C:\\TEMP\\B.BMP", decoded[1].pathText());
 }
 
-test "recent documents reject overlong paths and read legacy in-range records" {
+test "recent documents reject overlong paths and unsupported registry versions" {
     var too_long: [path_max + 1]u8 = .{'A'} ** (path_max + 1);
     too_long[0] = 'C';
     too_long[1] = ':';
@@ -328,15 +323,74 @@ test "recent documents reject overlong paths and read legacy in-range records" {
     var updated: [max_items]Entry = .{Entry{}} ** max_items;
     try std.testing.expectEqual(@as(usize, 0), buildUpdatedList(updated[0..], too_long[0..], "Test", &.{}));
 
-    var legacy: [packed_header_size + legacy_record_size]u8 = .{0} ** (packed_header_size + legacy_record_size);
+    const v1_path_bytes = 192;
+    var legacy: [packed_header_size + v1_path_bytes + app_max + 1 + title_max + 1]u8 = @splat(0);
     @memcpy(legacy[0..4], packed_magic);
-    writeU16(legacy[4..], 1);
     writeU16(legacy[6..], 1);
     const path = "C:\\TEMP\\LEGACY.TXT";
     @memcpy(legacy[packed_header_size .. packed_header_size + path.len], path);
-    const app_offset = packed_header_size + legacy_path_max + 1;
-    @memcpy(legacy[app_offset .. app_offset + 7], "Notepad");
     var out: [1]Entry = .{Entry{}};
-    try std.testing.expectEqual(@as(usize, 1), unpackEntries(legacy[0..], out[0..]));
-    try std.testing.expectEqualStrings(path, out[0].pathText());
+    for ([_]u16{ 1, 3, 0xffff }) |version| {
+        writeU16(legacy[4..], version);
+        try std.testing.expectEqual(@as(usize, 0), unpackEntries(&legacy, &out));
+    }
+}
+
+test "recent document registry keeps readable v2 records and replaces old data only on a successful open" {
+    const Registry = struct {
+        bytes: [packed_max_bytes]u8 = @splat(0),
+        len: usize = 0,
+        writes: usize = 0,
+        fail_write: bool = false,
+        pub fn hasFn(_: *@This(), _: []const u8) bool {
+            return true;
+        }
+        pub fn registryGetValue(self: *@This(), _: [*:0]const u8, name: [*:0]const u8, info: *abi.RegistryValueInfo, out: []u8) i32 {
+            if (!std.mem.eql(u8, std.mem.span(name), items_value) or self.len == 0) return -1;
+            info.value_type = abi.registry_value_type_binary;
+            info.data_len = @intCast(self.len);
+            const size = @min(out.len, self.len);
+            @memcpy(out[0..size], self.bytes[0..size]);
+            return @intCast(size);
+        }
+        pub fn registrySetBinary(self: *@This(), _: [*:0]const u8, _: [*:0]const u8, data: []const u8) i32 {
+            if (self.fail_write) return -1;
+            self.len = data.len;
+            @memcpy(self.bytes[0..data.len], data);
+            self.writes += 1;
+            return abi.registry_api_result_ok;
+        }
+    };
+    var registry = Registry{};
+    var out: [max_items]Entry = undefined;
+    try std.testing.expectEqual(@as(usize, 0), readEntries(&registry, &out));
+    try std.testing.expect(addOpenedFile(&registry, "C:\\A.TXT", "Editor"));
+    try std.testing.expect(addOpenedFile(&registry, "C:\\B.TXT", "Editor"));
+    try std.testing.expectEqual(@as(usize, 2), readEntries(&registry, &out));
+    try std.testing.expectEqualStrings("C:\\B.TXT", out[0].pathText());
+    try std.testing.expectEqualStrings("C:\\A.TXT", out[1].pathText());
+    // A truncated list is invalid even when its caller requests one record.
+    const intact = registry;
+    registry.len -= 1;
+    try std.testing.expectEqual(@as(usize, 0), readEntries(&registry, out[0..1]));
+    registry = intact;
+    writeU16(registry.bytes[6..], max_items + 1);
+    try std.testing.expectEqual(@as(usize, 0), readEntries(&registry, out[0..1]));
+    registry = intact;
+    @memset(registry.bytes[packed_header_size..][0 .. path_max + 1], 'x');
+    try std.testing.expectEqual(@as(usize, 1), readEntries(&registry, &out));
+    try std.testing.expectEqual(@as(usize, 1), readEntries(&registry, out[0..1]));
+    try std.testing.expectEqualStrings("C:\\A.TXT", out[0].pathText());
+    writeU16(registry.bytes[4..], 1);
+    const saved = registry;
+    try std.testing.expectEqual(@as(usize, 0), readEntries(&registry, &out));
+    registry.fail_write = true;
+    try std.testing.expect(!addOpenedFile(&registry, "C:\\NEW.TXT", "Editor"));
+    try std.testing.expectEqualSlices(u8, &saved.bytes, &registry.bytes);
+    try std.testing.expectEqual(saved.writes, registry.writes);
+    registry.fail_write = false;
+    try std.testing.expect(addOpenedFile(&registry, "C:\\NEW.TXT", "Editor"));
+    try std.testing.expectEqual(packed_version, readU16(registry.bytes[4..]));
+    try std.testing.expectEqual(@as(usize, 1), readEntries(&registry, &out));
+    try std.testing.expectEqualStrings("C:\\NEW.TXT", out[0].pathText());
 }

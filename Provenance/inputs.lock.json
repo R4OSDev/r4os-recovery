@@ -5255,6 +5255,13 @@
     },
     {
       "origin": null,
+      "sha256": "22bcfe834dfdfe0921f2f8c364bb5751567edafbe0a496082891520ffa6992f4",
+      "originalSha256": null,
+      "path": "Legal/Changes/SDK-0.93.13.patch",
+      "bytes": 7614
+    },
+    {
+      "origin": null,
       "sha256": "79d1c425628ed5c794a142abe0ea85dc8cbc7496fab5ffc5e17dd70b831aef42",
       "originalSha256": null,
       "path": "Legal/Changes/SSHD-0.76.7.patch",
@@ -42943,8 +42950,8 @@
     },
     {
       "path": "Platform/SDK/r4os/recent_documents.zig",
-      "sha256": "13000dfecbbc7c952efa5f055e1201c6fa52b3dda61e051295e0e3acb6b88c01",
-      "bytes": 13561,
+      "sha256": "1fd9f9841e8e868fb60033a959a1342673c687b096e9b459a42af7af96f36601",
+      "bytes": 16281,
       "originalSha256": "13000dfecbbc7c952efa5f055e1201c6fa52b3dda61e051295e0e3acb6b88c01",
       "origin": {
         "source": "SDK-0.90.90-identities",
@@ -78863,6 +78870,26 @@
           "after": "02c0ef6869d697bfb70ed30f5c50f72ecca89db5811b4795ea34a8e3d54ad3d0",
           "bytesBefore": 27,
           "bytesAfter": 27
+        }
+      ]
+    },
+    {
+      "changes": [
+        {
+          "path": "Platform/SDK/r4os/recent_documents.zig",
+          "before": "13000dfecbbc7c952efa5f055e1201c6fa52b3dda61e051295e0e3acb6b88c01",
+          "after": "1fd9f9841e8e868fb60033a959a1342673c687b096e9b459a42af7af96f36601"
+        }
+      ],
+      "reason": "0.93.13: R4RD-v2-Leser aus SDK 159c8a73751a110a96da67f2c368d2cb448f7623 übernommen und die Formatfälle mit dem eingefrorenen Recovery-Contract geprüft."
+    },
+    {
+      "reason": "0.93.13: Legal/Changes enthält den verifizierten Quellpatch des SDK-Besitzers 159c8a73751a110a96da67f2c368d2cb448f7623 für den eingefrorenen R4RD-v2-Leser.",
+      "changes": [
+        {
+          "after": "22bcfe834dfdfe0921f2f8c364bb5751567edafbe0a496082891520ffa6992f4",
+          "before": null,
+          "path": "Legal/Changes/SDK-0.93.13.patch"
         }
       ]
     }
