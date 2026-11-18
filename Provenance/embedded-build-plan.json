@@ -963,7 +963,7 @@
       "original_archive_sha256": "e3c29932de8fdbf4c172a9ee664d0b8066ad0d119e7dc31b336f45f68ca5df3a",
       "original_version": "0.1.3",
       "source": "RecoveryTools/Embedded/Services-DnsService",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "target": "Runtime/R4OS/SERVICES/DNSSVC.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
