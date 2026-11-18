@@ -766,7 +766,7 @@
       "original_archive_sha256": "6a0df9719f819742106c2b913119b2abbb224e4d88bd9aa2665365577c891b67",
       "original_version": "0.1.2",
       "source": "RecoveryTools/Embedded/Protocols-NetDhcp",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "target": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
       "canonical_reuse": false,
       "source_original_sha256": {
