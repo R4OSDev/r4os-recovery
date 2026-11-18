@@ -97,6 +97,17 @@ pub const Session = struct {
         if (self.prepared.?.system) |system| self.tree = try source.Tree.read(self.arena.allocator(), try self.prepared.?.archive.image(), system.releaseVersion, self.pool.pump);
         if (cache_checksum) |out| out.* = original.checksum;
     }
+    pub fn digest(self: *Session, bytes: []const u8) ![32]u8 {
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        var at: usize = 0;
+        while (at < bytes.len) {
+            const count = @min(bytes.len - at, 128 * 1024);
+            hash.update(bytes[at..][0..count]);
+            at += count;
+            try self.pool.pump.run("Checking original ZIP", at, bytes.len);
+        }
+        return hash.finalResult();
+    }
     pub fn targetSystem(self: *Session, first: u64, sectors: u64, serial: u64) !void {
         self.target = try self.tree.?.prepareTarget(self.arena.allocator(), first, sectors, serial, self.pool.pump);
     }
