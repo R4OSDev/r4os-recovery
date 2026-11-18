@@ -474,6 +474,13 @@
       "archiveSha256": "20162d37478cd099d354df44c5b6e893d6b914c5123c47766fb788b32df1482d",
       "commit": "c5e6c3b9a072e6c943bbd15a2e7ba9eb690be481",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "Recovery-Embedded-0.94.8",
+      "archive": "Legal/Sources/Recovery-Embedded-0.94.8.zip",
+      "archiveSha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
+      "commit": "32507a20efb61804a10fb71f2e1bfbe7f392d88c",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     }
   ],
   "platformProviders": [
@@ -718,7 +725,7 @@
     },
     {
       "name": "VIRTNET",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "source": "Drivers-VirtioNet",
       "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
       "manifest": "Legal/Manifests/VIRTNET/module.R4MF",
@@ -741,12 +748,12 @@
         "controller_sdk": "0.64.234",
         "source": "RecoveryTools/Embedded/Drivers-VirtioNet",
         "frozen_libraries": "0.64.64",
-        "manifest_sha256": "54cac98ede31300c80b59a6afe1b4d6b8f709a2acb84d0c7f59854e80a1fef21",
+        "manifest_sha256": "553773ad156dec081ab1ce91f086859d1118445123031016bf3cbd6b76b752a7",
         "original_version": "0.1.4",
         "frozen_contract": "0.64.95",
-        "source_tree_sha256": "26a18f16f50ad58261fd8a75fec11599892da9f9571234920b111357de7b6b4f",
+        "source_tree_sha256": "98ca9b8adbdde52baf2bb555afb719d89cee34989f67b4be331b7ddf7627a041",
         "owner": "Recovery",
-        "source_archive": "Legal/Sources/Recovery-Embedded-0.94.3.zip"
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.94.8.zip"
       }
     },
     {
@@ -4637,7 +4644,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "c06ead8671eac538e356da3f40fd4cb54fb38dcbb37ebdf44acc3cf82a334116",
+      "sha256": "af263375bcffc326d1b85b71a4c0f7f67a392557f99486adc918aae763fca053",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -5837,14 +5844,14 @@
     {
       "path": "Legal/Manifests/VIRTNET/module.R4MF",
       "bytes": 310,
-      "sha256": "54cac98ede31300c80b59a6afe1b4d6b8f709a2acb84d0c7f59854e80a1fef21",
+      "sha256": "553773ad156dec081ab1ce91f086859d1118445123031016bf3cbd6b76b752a7",
       "originalSha256": "34c22f12bd12e0a61c3755aab590ca0c6846fc74a11078b1bc845dba69909b41",
       "origin": {
         "controllerSdk": "0.64.234",
         "derivativeOwner": "Recovery",
         "path": "RecoveryTools/Embedded/Drivers-VirtioNet/module.R4MF",
-        "source": "Recovery-Embedded-0.94.3",
-        "sourceTreeSha256": "26a18f16f50ad58261fd8a75fec11599892da9f9571234920b111357de7b6b4f",
+        "source": "Recovery-Embedded-0.94.8",
+        "sourceTreeSha256": "98ca9b8adbdde52baf2bb555afb719d89cee34989f67b4be331b7ddf7627a041",
         "frozenSdk": "0.64.218"
       }
     },
@@ -45823,7 +45830,7 @@
     {
       "path": "RecoveryTools/Embedded/Drivers-VirtioNet/module.R4MF",
       "bytes": 310,
-      "sha256": "54cac98ede31300c80b59a6afe1b4d6b8f709a2acb84d0c7f59854e80a1fef21",
+      "sha256": "553773ad156dec081ab1ce91f086859d1118445123031016bf3cbd6b76b752a7",
       "originalSha256": "fb3eebe9ad5a2a83708c88fd2ffda4883b02cfa8fd15316e40b5f86bcdf6c895",
       "origin": {
         "source": "Drivers-VirtioNet",
@@ -45866,8 +45873,8 @@
     },
     {
       "path": "RecoveryTools/Embedded/Drivers-VirtioNet/src/main.zig",
-      "bytes": 35462,
-      "sha256": "e0ccb68326605509f7856826327690e549c089981a526e99d771862a69cfd08a",
+      "bytes": 35085,
+      "sha256": "5da2d869eff5dfdf320466b28a4625f42cbbc498d8a0eca5b7156ab28c0fe92e",
       "originalSha256": "5573f113aa4d85975e7c4d68e6ed84dad89a025ba6874164cc42ff626b1e20d0",
       "origin": {
         "source": "Drivers-VirtioNet",
@@ -48361,7 +48368,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "eaa77966b7a31550b32b04441b7321b96dee5b31c53d053d597859003623c7df",
+      "sha256": "d78027f72080b83906b9873d589183c8d06e2930f9c96be5f4d19b934813b304",
       "originalSha256": null,
       "origin": null
     },
@@ -48385,7 +48392,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "1e8ffe5a1b27285df356c062915fe1c6d6a3dfc7fc740a97da25e44d89f241ad",
+      "sha256": "ef7ed17cc46f56fa942af96d6958682c0eb37968012fd7e94956dca6404a246e",
       "originalSha256": null,
       "origin": null
     },
@@ -48476,14 +48483,14 @@
     {
       "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
       "bytes": 25343,
-      "sha256": "2e4d320b0b2aea57fc094449149e9f2cb52056f105b5788826274ad4f1282541",
+      "sha256": "fbc6bd5f4211b2ba4b9febafacf07590534d4a7835de6d9cfe1b3162b78b9f2b",
       "originalSha256": "579f4cbbc39737a0044b7d2b62596ed6fbd5a4bef7af5d3f98cd375def417bee",
       "origin": {
         "controllerSdk": "0.64.234",
         "derivativeOwner": "Recovery",
         "path": "RecoveryTools/Embedded/Drivers-VirtioNet",
-        "source": "Recovery-Embedded-0.94.3",
-        "sourceTreeSha256": "26a18f16f50ad58261fd8a75fec11599892da9f9571234920b111357de7b6b4f",
+        "source": "Recovery-Embedded-0.94.8",
+        "sourceTreeSha256": "98ca9b8adbdde52baf2bb555afb719d89cee34989f67b4be331b7ddf7627a041",
         "frozenSdk": "0.64.218"
       }
     },
@@ -48982,6 +48989,13 @@
       "bytes": 14794,
       "sha256": "20162d37478cd099d354df44c5b6e893d6b914c5123c47766fb788b32df1482d",
       "originalSha256": "20162d37478cd099d354df44c5b6e893d6b914c5123c47766fb788b32df1482d",
+      "origin": null
+    },
+    {
+      "path": "Legal/Sources/Recovery-Embedded-0.94.8.zip",
+      "bytes": 19484,
+      "sha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
+      "originalSha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
       "origin": null
     }
   ],
@@ -79109,6 +79123,51 @@
           "path": "RecoveryTools/Embedded/Apps-ServiceManager/src/main.zig",
           "before": "41d9d08ef1f367c789c8a6331b9c00b0ae23a8854a0909f5b82a0d03b9d1bd03",
           "after": "7b6ca8b48b2e02c9d31146824d5be62b1bbaf86b0da8d34d951a2f0cfe656580"
+        }
+      ]
+    },
+    {
+      "reason": "0.94.8 Recovery-owned VIRTNET 0.1.7 admission from the recorded owner revision and selected SDK build. Paired kernel embeds the new runtime digest.",
+      "changes": [
+        {
+          "path": "Legal/Sources/Recovery-Embedded-0.94.8.zip",
+          "before": null,
+          "after": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d"
+        },
+        {
+          "path": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
+          "before": "2e4d320b0b2aea57fc094449149e9f2cb52056f105b5788826274ad4f1282541",
+          "after": "fbc6bd5f4211b2ba4b9febafacf07590534d4a7835de6d9cfe1b3162b78b9f2b"
+        },
+        {
+          "path": "Legal/Manifests/VIRTNET/module.R4MF",
+          "before": "54cac98ede31300c80b59a6afe1b4d6b8f709a2acb84d0c7f59854e80a1fef21",
+          "after": "553773ad156dec081ab1ce91f086859d1118445123031016bf3cbd6b76b752a7"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "c06ead8671eac538e356da3f40fd4cb54fb38dcbb37ebdf44acc3cf82a334116",
+          "after": "af263375bcffc326d1b85b71a4c0f7f67a392557f99486adc918aae763fca053"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "eaa77966b7a31550b32b04441b7321b96dee5b31c53d053d597859003623c7df",
+          "after": "d78027f72080b83906b9873d589183c8d06e2930f9c96be5f4d19b934813b304"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "1e8ffe5a1b27285df356c062915fe1c6d6a3dfc7fc740a97da25e44d89f241ad",
+          "after": "ef7ed17cc46f56fa942af96d6958682c0eb37968012fd7e94956dca6404a246e"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Drivers-VirtioNet/module.R4MF",
+          "before": "54cac98ede31300c80b59a6afe1b4d6b8f709a2acb84d0c7f59854e80a1fef21",
+          "after": "553773ad156dec081ab1ce91f086859d1118445123031016bf3cbd6b76b752a7"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Drivers-VirtioNet/src/main.zig",
+          "before": "e0ccb68326605509f7856826327690e549c089981a526e99d771862a69cfd08a",
+          "after": "5da2d869eff5dfdf320466b28a4625f42cbbc498d8a0eca5b7156ab28c0fe92e"
         }
       ]
     }

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "release": "0.94.8",
+  "source_archive": {
+    "id": "Recovery-Embedded-0.94.8",
+    "archive": "Legal/Sources/Recovery-Embedded-0.94.8.zip",
+    "archiveSha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
+    "commit": "32507a20efb61804a10fb71f2e1bfbe7f392d88c",
+    "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+  },
+  "module": "VIRTNET",
+  "version": "0.1.7",
+  "source_tree_sha256": "98ca9b8adbdde52baf2bb555afb719d89cee34989f67b4be331b7ddf7627a041",
+  "manifest_sha256": "553773ad156dec081ab1ce91f086859d1118445123031016bf3cbd6b76b752a7",
+  "binary_sha256": "fbc6bd5f4211b2ba4b9febafacf07590534d4a7835de6d9cfe1b3162b78b9f2b",
+  "controller_sdk": "0.64.234",
+  "imports": [
+    "R4DEV:Query2:2"
+  ],
+  "exports": [
+    "DriverInit2:2",
+    "DriverShutdown:1"
+  ]
+}
