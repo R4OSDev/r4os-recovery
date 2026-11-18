@@ -576,6 +576,7 @@ fn startAutoServices(sys: *r4os.r4sys.Context) i32 {
     var attempted: u32 = 0;
     var started: u32 = 0;
     var failed: u32 = 0;
+    var first_error: i32 = r4os.abi.service_api_result_ok;
     var staging: [16]r4os.abi.ServiceDetail = undefined;
     const total = readDetails(sys, &staging) orelse return 1;
     for (staging[0..total]) |detail| {
@@ -588,6 +589,7 @@ fn startAutoServices(sys: *r4os.r4sys.Context) i32 {
         if (start_rc == r4os.abi.service_api_result_ok) {
             started += 1;
         } else {
+            if (failed == 0) first_error = start_rc;
             failed += 1;
             printCommandResult(sys, "BOOT", name, start_rc);
         }
@@ -600,7 +602,7 @@ fn startAutoServices(sys: *r4os.r4sys.Context) i32 {
     sys.write(" failed=");
     writeUnsigned(sys, failed);
     sys.println("");
-    return 0;
+    return first_error;
 }
 
 fn printList(sys: *r4os.r4sys.Context) i32 {

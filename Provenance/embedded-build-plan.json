@@ -1201,7 +1201,7 @@
       "original_archive_sha256": "ed96e70202e7f65b400d879d33d98688495dc767afa1c48f14e8ebae7dee2e97",
       "original_version": "0.1.2",
       "source": "RecoveryTools/Embedded/Apps-ServiceManager",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "target": "Runtime/R4OS/SOFTWARE/TERMINAL/SERVMAN.R4X",
       "canonical_reuse": false,
       "source_original_sha256": {
