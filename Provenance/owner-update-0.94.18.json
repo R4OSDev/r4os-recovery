@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "release": "0.94.18",
+  "source_archive": {
+    "id": "Recovery-Embedded-0.94.18",
+    "archive": "Legal/Sources/Recovery-Embedded-0.94.18.zip",
+    "archiveSha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
+    "commit": "d772a89cd6188ee91957bb3ca42dd1f351403796",
+    "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+  },
+  "module": "NETDHCP",
+  "version": "0.1.4",
+  "source_tree_sha256": "6dcf722f665d34a723dd09aa7360d6917e8d3cbf2cde1e5a4fd8ff186c6ba6fc",
+  "manifest_sha256": "17fadd79174f130031e8324c96c1d8eea6e69e47a21b271491c27084eae8bd6c",
+  "binary_sha256": "a5c67fa2f526c860f48ab03eddb5e3ecfae5962657d147deb880c32803b9962e",
+  "controller_sdk": "0.64.237",
+  "imports": [
+    "R4DEV:Query2:2"
+  ],
+  "exports": [
+    "ProtocolInit2:2",
+    "ProtocolShutdown:1",
+    "ProtocolQuery:1",
+    "ProtocolDispatch:1",
+    "ProtocolRole:1"
+  ]
+}

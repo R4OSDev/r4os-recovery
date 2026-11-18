@@ -488,6 +488,13 @@
       "archiveSha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
       "commit": "629cefa292b70a96c61644be99ca795fa86c153f",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "Recovery-Embedded-0.94.18",
+      "archive": "Legal/Sources/Recovery-Embedded-0.94.18.zip",
+      "archiveSha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
+      "commit": "d772a89cd6188ee91957bb3ca42dd1f351403796",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     }
   ],
   "platformProviders": [
@@ -1199,12 +1206,12 @@
     },
     {
       "name": "NETDHCP",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "source": "Protocols-NetDhcp",
       "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
       "manifest": "Legal/Manifests/NETDHCP/module.R4MF",
       "kind": 4,
-      "bytes": 8560,
+      "bytes": 8596,
       "imports": [
         "R4DEV:Query2:2"
       ],
@@ -1227,15 +1234,15 @@
         "original_artifact_sha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35",
         "frozen_sdk": "0.64.218",
         "generation": 2,
-        "controller_sdk": "0.64.218",
+        "controller_sdk": "0.64.237",
         "source": "RecoveryTools/Embedded/Protocols-NetDhcp",
         "frozen_libraries": "0.64.64",
-        "manifest_sha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+        "manifest_sha256": "17fadd79174f130031e8324c96c1d8eea6e69e47a21b271491c27084eae8bd6c",
         "original_version": "0.1.2",
         "frozen_contract": "0.64.95",
-        "source_tree_sha256": "6349dbe3b8286f21423d35f58c38a83a7502818f9a8a5d2178cd8212a4b75627",
+        "source_tree_sha256": "6dcf722f665d34a723dd09aa7360d6917e8d3cbf2cde1e5a4fd8ff186c6ba6fc",
         "owner": "Recovery",
-        "source_archive": "Legal/Sources/Recovery-Embedded-0.90.90.zip"
+        "source_archive": "Legal/Sources/Recovery-Embedded-0.94.18.zip"
       }
     },
     {
@@ -4651,7 +4658,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "3c32039d0aa031b6de2326dd04da68635359425de1aa86ce2c3dbdc7a0dd785f",
+      "sha256": "1b22aa052976b1b0048cdb83def1d5b17be06730b413d9f7bf76d8f28064b0b3",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -5501,14 +5508,14 @@
     {
       "path": "Legal/Manifests/NETDHCP/module.R4MF",
       "bytes": 504,
-      "sha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+      "sha256": "17fadd79174f130031e8324c96c1d8eea6e69e47a21b271491c27084eae8bd6c",
       "originalSha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
       "origin": {
-        "controllerSdk": "0.64.218",
+        "controllerSdk": "0.64.237",
         "derivativeOwner": "Recovery",
         "path": "RecoveryTools/Embedded/Protocols-NetDhcp/module.R4MF",
-        "source": "Recovery-Embedded-0.90.90",
-        "sourceTreeSha256": "6349dbe3b8286f21423d35f58c38a83a7502818f9a8a5d2178cd8212a4b75627",
+        "source": "Recovery-Embedded-0.94.18",
+        "sourceTreeSha256": "6dcf722f665d34a723dd09aa7360d6917e8d3cbf2cde1e5a4fd8ff186c6ba6fc",
         "frozenSdk": "0.64.218"
       }
     },
@@ -46189,7 +46196,7 @@
     {
       "path": "RecoveryTools/Embedded/Protocols-NetDhcp/module.R4MF",
       "bytes": 504,
-      "sha256": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+      "sha256": "17fadd79174f130031e8324c96c1d8eea6e69e47a21b271491c27084eae8bd6c",
       "originalSha256": "58c4a65127a2b8faf0b26ff7a3714e40553fb0edd4dc050e37decabd444f6804",
       "origin": {
         "source": "Protocols-NetDhcp",
@@ -46210,8 +46217,8 @@
     },
     {
       "path": "RecoveryTools/Embedded/Protocols-NetDhcp/src/main.zig",
-      "bytes": 11293,
-      "sha256": "95812a4e36b5f8f0a85b0b78fd15b8cc8654d6901baf3939629dde12b91b01ad",
+      "bytes": 11950,
+      "sha256": "9ca1d8ff9ddfe11dd9028e64a28f8d8f39d94e1a94f872196c26639ac7f1a58e",
       "originalSha256": "fea26ef985ca4b383426f4ba17bf5846566531c6066f2f949bf53288e3c2659b",
       "origin": {
         "source": "Protocols-NetDhcp",
@@ -48375,7 +48382,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "08d6de3c7168e06b0f1ee58d04d19ed0d379cce5411cc4e022620a3fd2490354",
+      "sha256": "35ca13a99a24524bd2dcfbbcdfd09d4efe0d9dd7bc58223bab191fd650b20cf8",
       "originalSha256": null,
       "origin": null
     },
@@ -48399,7 +48406,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "36b55c244c0892930693b29e1b7d93a111221ccfa48d354a34b7607894bb4b76",
+      "sha256": "175a7c1ee854298af1c41726da78399bf75780647e3cb38f8ba3dbd152181610",
       "originalSha256": null,
       "origin": null
     },
@@ -48594,15 +48601,15 @@
     },
     {
       "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
-      "bytes": 8560,
-      "sha256": "f326a9cb11438bf53aaf4400bd99c1315ed09447595f9bbf1f862fb6ffa272a2",
+      "bytes": 8596,
+      "sha256": "a5c67fa2f526c860f48ab03eddb5e3ecfae5962657d147deb880c32803b9962e",
       "originalSha256": "0c264b34d0d2eaed90d8ff0fe3ebcd8aba1177060e97cd72aba00b6562364c35",
       "origin": {
-        "controllerSdk": "0.64.218",
+        "controllerSdk": "0.64.237",
         "derivativeOwner": "Recovery",
         "path": "RecoveryTools/Embedded/Protocols-NetDhcp",
-        "source": "Recovery-Embedded-0.90.90",
-        "sourceTreeSha256": "6349dbe3b8286f21423d35f58c38a83a7502818f9a8a5d2178cd8212a4b75627",
+        "source": "Recovery-Embedded-0.94.18",
+        "sourceTreeSha256": "6dcf722f665d34a723dd09aa7360d6917e8d3cbf2cde1e5a4fd8ff186c6ba6fc",
         "frozenSdk": "0.64.218"
       }
     },
@@ -49010,6 +49017,13 @@
       "bytes": 96237,
       "sha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
       "originalSha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
+      "origin": null
+    },
+    {
+      "path": "Legal/Sources/Recovery-Embedded-0.94.18.zip",
+      "bytes": 10200,
+      "sha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
+      "originalSha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
       "origin": null
     }
   ],
@@ -79232,6 +79246,51 @@
           "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
           "before": "ef7ed17cc46f56fa942af96d6958682c0eb37968012fd7e94956dca6404a246e",
           "after": "36b55c244c0892930693b29e1b7d93a111221ccfa48d354a34b7607894bb4b76"
+        }
+      ]
+    },
+    {
+      "reason": "0.94.18 Recovery-owned NETDHCP 0.1.4 admission from the recorded owner revision and selected SDK build. Paired kernel embeds the new runtime digest.",
+      "changes": [
+        {
+          "path": "Legal/Sources/Recovery-Embedded-0.94.18.zip",
+          "before": null,
+          "after": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd"
+        },
+        {
+          "path": "Runtime/R4OS/PROTOCOLS/NETDHCP.R4P",
+          "before": "f326a9cb11438bf53aaf4400bd99c1315ed09447595f9bbf1f862fb6ffa272a2",
+          "after": "a5c67fa2f526c860f48ab03eddb5e3ecfae5962657d147deb880c32803b9962e"
+        },
+        {
+          "path": "Legal/Manifests/NETDHCP/module.R4MF",
+          "before": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+          "after": "17fadd79174f130031e8324c96c1d8eea6e69e47a21b271491c27084eae8bd6c"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "3c32039d0aa031b6de2326dd04da68635359425de1aa86ce2c3dbdc7a0dd785f",
+          "after": "1b22aa052976b1b0048cdb83def1d5b17be06730b413d9f7bf76d8f28064b0b3"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "08d6de3c7168e06b0f1ee58d04d19ed0d379cce5411cc4e022620a3fd2490354",
+          "after": "35ca13a99a24524bd2dcfbbcdfd09d4efe0d9dd7bc58223bab191fd650b20cf8"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "36b55c244c0892930693b29e1b7d93a111221ccfa48d354a34b7607894bb4b76",
+          "after": "175a7c1ee854298af1c41726da78399bf75780647e3cb38f8ba3dbd152181610"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Protocols-NetDhcp/module.R4MF",
+          "before": "a9419a6a2bc1fa86ae9f57dfb4907e255974f44d8c57b3392fd1859a6839a739",
+          "after": "17fadd79174f130031e8324c96c1d8eea6e69e47a21b271491c27084eae8bd6c"
+        },
+        {
+          "path": "RecoveryTools/Embedded/Protocols-NetDhcp/src/main.zig",
+          "before": "95812a4e36b5f8f0a85b0b78fd15b8cc8654d6901baf3939629dde12b91b01ad",
+          "after": "9ca1d8ff9ddfe11dd9028e64a28f8d8f39d94e1a94f872196c26639ac7f1a58e"
         }
       ]
     }
