@@ -536,7 +536,7 @@ const State = struct {
         return true;
     }
     fn prepareTargetPackage(self: *State, session: *packages.Session) !void {
-        try session.prepare(targets.cachePath(self.operation()), self.kind(), if (self.cache.state == .manifest or self.cache.state == .verified) self.cache.digest else null);
+        try session.prepare(targets.cachePath(self.operation()), self.kind(), if (self.cache.state == .manifest or self.cache.state == .verified) self.cache.digest else null, null);
         const catalog = &self.catalog.?;
         const target = catalog.targets.items[self.target_index];
         if (self.operation() == .system) {

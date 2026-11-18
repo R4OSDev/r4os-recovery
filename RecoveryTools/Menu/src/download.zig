@@ -154,17 +154,10 @@ pub const Client = struct {
         defer {
             if (!session.deinit()) self.sys.write("[RECOVERYDOWNLOAD] cleanup=RETAINED\r\n");
         }
-        try session.prepare(path, self.kind, asset.sha256);
+        var checksum: u32 = undefined;
+        try session.prepare(path, self.kind, asset.sha256, &checksum);
         if (!github.matches(asset, &session.prepared.?)) return error.AssetMismatch;
-        var checksum = r4os.system_update_recovery.checksum_seed;
         const original = session.prepared.?.archive.original;
-        var at: usize = 0;
-        while (at < original.len) {
-            const amount = @min(128 * 1024, original.len - at);
-            checksum = r4os.system_update_recovery.checksumUpdate(checksum, original[at..][0..amount]);
-            at += amount;
-            try self.pump.run("Preparing cache replacement", at, original.len);
-        }
         try transaction.activate(.{ .bytes = original.len, .checksum = checksum, .sha256 = session.original_digest });
         var preview = packages.Preview{ .state = .verified, .bytes = asset.bytes, .digest = session.original_digest };
         @memcpy(preview.version[0..asset.version.len], asset.version);

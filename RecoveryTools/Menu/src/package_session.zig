@@ -54,46 +54,48 @@ pub const Session = struct {
             self.image_arena.deinit();
         }
     }
-    pub fn read(self: *Session, path: [*:0]const u8) ![]const u8 {
+    const ReadResult = struct {
+        bytes: []const u8,
+        sha256: [32]u8,
+        checksum: u32,
+    };
+    fn read(self: *Session, path: [*:0]const u8, cache_checksum: bool) !ReadResult {
         const info = self.sys.fileInfo(path) orelse return error.PackageMissing;
         if (info.size < 22 or info.size > package.max_archive_bytes) return error.ArchiveSize;
         const bytes = try self.arena.allocator().alloc(u8, @intCast(info.size));
+        var sha = std.crypto.hash.sha2.Sha256.init(.{});
+        var checksum = r4os.system_update_recovery.checksum_seed;
         var done: usize = 0;
         while (done < bytes.len) {
             const amount = @min(bytes.len - done, 128 * 1024);
-            if (self.sys.fileReadAt(path, @intCast(done), bytes[done..][0..amount]) != amount) return error.PackageRead;
+            const chunk = bytes[done..][0..amount];
+            if (self.sys.fileReadAt(path, @intCast(done), chunk) != amount) return error.PackageRead;
+            sha.update(chunk);
+            if (cache_checksum) checksum = r4os.system_update_recovery.checksumUpdate(checksum, chunk);
             done += amount;
-            try self.pool.pump.run("Reading local package", done, bytes.len);
+            try self.pool.pump.run("Reading and checking local package", done, bytes.len);
         }
         const after = self.sys.fileInfo(path) orelse return error.PackageRead;
         if (after.size != info.size) return error.SourceChanged;
-        return bytes;
-    }
-    pub fn digest(self: *Session, bytes: []const u8) ![32]u8 {
-        var hash = std.crypto.hash.sha2.Sha256.init(.{});
-        var at: usize = 0;
-        while (at < bytes.len) {
-            const count = @min(bytes.len - at, 128 * 1024);
-            hash.update(bytes[at..][0..count]);
-            at += count;
-            try self.pool.pump.run("Checking original ZIP", at, bytes.len);
-        }
-        return hash.finalResult();
+        return .{ .bytes = bytes, .sha256 = sha.finalResult(), .checksum = checksum };
     }
     pub fn describe(self: *Session, path: [*:0]const u8, kind: package.Kind) !Preview {
-        const bytes = try self.read(path);
+        const original = try self.read(path, false);
+        const bytes = original.bytes;
         const version = try package.peek(self.arena.allocator(), r4os.zip.Context{ .dev = self.dev }, bytes, kind, self.pool.pump);
-        var out = Preview{ .state = .manifest, .bytes = bytes.len, .digest = try self.digest(bytes) };
+        var out = Preview{ .state = .manifest, .bytes = bytes.len, .digest = original.sha256 };
         @memcpy(out.version[0..version.len], version);
         return out;
     }
-    pub fn prepare(self: *Session, path: [*:0]const u8, kind: package.Kind, expected: ?[32]u8) !void {
-        const bytes = try self.read(path);
-        self.original_digest = try self.digest(bytes);
-        if (expected) |wanted| if (!std.mem.eql(u8, &wanted, &self.original_digest)) return error.SourceChanged;
+    pub fn prepare(self: *Session, path: [*:0]const u8, kind: package.Kind, cache_expected: ?[32]u8, cache_checksum: ?*u32) !void {
+        const original = try self.read(path, cache_checksum != null);
+        const bytes = original.bytes;
+        self.original_digest = original.sha256;
+        if (cache_expected) |wanted| if (!std.mem.eql(u8, &wanted, &self.original_digest)) return error.SourceChanged;
         self.prepared = try package.prepareWithImageAllocator(self.arena.allocator(), self.image_arena.allocator(), r4os.zip.Context{ .dev = self.dev }, bytes, kind, self.pool.pump);
         try @import("memory_budget.zig").require(self.pool.ram_bytes, self.prepared.?.recovery.minimumRamBytes);
         if (self.prepared.?.system) |system| self.tree = try source.Tree.read(self.arena.allocator(), try self.prepared.?.archive.image(), system.releaseVersion, self.pool.pump);
+        if (cache_checksum) |out| out.* = original.checksum;
     }
     pub fn targetSystem(self: *Session, first: u64, sectors: u64, serial: u64) !void {
         self.target = try self.tree.?.prepareTarget(self.arena.allocator(), first, sectors, serial, self.pool.pump);

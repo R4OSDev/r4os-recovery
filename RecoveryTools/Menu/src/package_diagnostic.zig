@@ -68,7 +68,7 @@ fn witness(sys: *const r4os.r4sys.Context, dev: *const r4os.r4dev.Context, args:
     };
     const kind: packages.package.Kind = if (recovery or reject) .recovery else .r4os;
     const path = if (recovery or reject) "R:\\INSTALL\\RECOVERY.ZIP" else "R:\\INSTALL\\RELEASE.ZIP";
-    session.prepare(path, kind, null) catch |err| {
+    session.prepare(path, kind, null, null) catch |err| {
         const memory_refused = oom and (err == error.OutOfMemory or err == error.InsufficientRam);
         if (memory_refused or (reject and (err == error.HashMismatch or err == error.InvalidArchive or err == error.Inflate or err == error.Checksum or err == error.FileSetMismatch))) {
             const ram_capacity = session.pool.ram_bytes;
