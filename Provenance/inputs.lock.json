@@ -481,6 +481,13 @@
       "archiveSha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
       "commit": "32507a20efb61804a10fb71f2e1bfbe7f392d88c",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "Recovery-Menu-0.94.15",
+      "archive": "Legal/Sources/Recovery-Menu-0.94.15.zip",
+      "archiveSha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
+      "commit": "629cefa292b70a96c61644be99ca795fa86c153f",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     }
   ],
   "platformProviders": [
@@ -4644,7 +4651,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "af263375bcffc326d1b85b71a4c0f7f67a392557f99486adc918aae763fca053",
+      "sha256": "3c32039d0aa031b6de2326dd04da68635359425de1aa86ce2c3dbdc7a0dd785f",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -48032,7 +48039,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 627,
-      "sha256": "2c4df038171188e7f58a0fa6e4d7e5e1422bd17297c63165fc1126103788ee6b",
+      "sha256": "7953aaefaec0de366eb5f87e6cca329e19b6717dcbe6fd02acdf35c3b3ed66fb",
       "originalSha256": null,
       "origin": null
     },
@@ -48087,8 +48094,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/download.zig",
-      "bytes": 14074,
-      "sha256": "58023dce7b4b2ad9ee93914cf93229c171db7bfce36d991308cd0f297eea193f",
+      "bytes": 13711,
+      "sha256": "3f6c05e223d78e560d7e4215b15e519d21e76d0381640fa32b3b323cbeb29d55",
       "originalSha256": null,
       "origin": null
     },
@@ -48115,8 +48122,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 47021,
-      "sha256": "70449df43537d21cfc4d441fcbdb9295cee3e825ec55a83bba275e5cae53295c",
+      "bytes": 47027,
+      "sha256": "fb0e550c717839cfadbad22af3983b499e0f71e9d01669a7e77cefd8fd2dd77c",
       "originalSha256": null,
       "origin": null
     },
@@ -48143,8 +48150,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package_diagnostic.zig",
-      "bytes": 7241,
-      "sha256": "60dadc7961722538312f882c460e9516ca687d00ea6efe6b4fb3b4aa3d298c72",
+      "bytes": 7247,
+      "sha256": "5913bde4564eb54af3b2652a36b1e152dddbf42d418fa32b9dab300155a618ae",
       "originalSha256": null,
       "origin": null
     },
@@ -48157,8 +48164,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/package_session.zig",
-      "bytes": 7297,
-      "sha256": "b02e9af27bd872de238a9ccf211520ffe9d297c749cb2c1ee311b554911797a2",
+      "bytes": 7992,
+      "sha256": "2cf0e3740a1d39bc4cb67d9197e436d7d4921c85f993e6b21ab7e5eac904f431",
       "originalSha256": null,
       "origin": null
     },
@@ -48368,7 +48375,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "d78027f72080b83906b9873d589183c8d06e2930f9c96be5f4d19b934813b304",
+      "sha256": "08d6de3c7168e06b0f1ee58d04d19ed0d379cce5411cc4e022620a3fd2490354",
       "originalSha256": null,
       "origin": null
     },
@@ -48392,7 +48399,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "ef7ed17cc46f56fa942af96d6958682c0eb37968012fd7e94956dca6404a246e",
+      "sha256": "36b55c244c0892930693b29e1b7d93a111221ccfa48d354a34b7607894bb4b76",
       "originalSha256": null,
       "origin": null
     },
@@ -48996,6 +49003,13 @@
       "bytes": 19484,
       "sha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
       "originalSha256": "1859e54af2c2460fd79409c7b22f40c26fd8fc4bd5b72e56d6fa7ecfe2424d0d",
+      "origin": null
+    },
+    {
+      "path": "Legal/Sources/Recovery-Menu-0.94.15.zip",
+      "bytes": 96237,
+      "sha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
+      "originalSha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
       "origin": null
     }
   ],
@@ -79168,6 +79182,56 @@
           "path": "RecoveryTools/Embedded/Drivers-VirtioNet/src/main.zig",
           "before": "e0ccb68326605509f7856826327690e549c089981a526e99d771862a69cfd08a",
           "after": "5da2d869eff5dfdf320466b28a4625f42cbbc498d8a0eca5b7156ab28c0fe92e"
+        }
+      ]
+    },
+    {
+      "reason": "0.94.15 Recovery-owned Menu 0.1.30. Paired kernel embeds the new runtime digest.",
+      "changes": [
+        {
+          "path": "Legal/Sources/Recovery-Menu-0.94.15.zip",
+          "before": null,
+          "after": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "2c4df038171188e7f58a0fa6e4d7e5e1422bd17297c63165fc1126103788ee6b",
+          "after": "7953aaefaec0de366eb5f87e6cca329e19b6717dcbe6fd02acdf35c3b3ed66fb"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/package_session.zig",
+          "before": "b02e9af27bd872de238a9ccf211520ffe9d297c749cb2c1ee311b554911797a2",
+          "after": "2cf0e3740a1d39bc4cb67d9197e436d7d4921c85f993e6b21ab7e5eac904f431"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/package_diagnostic.zig",
+          "before": "60dadc7961722538312f882c460e9516ca687d00ea6efe6b4fb3b4aa3d298c72",
+          "after": "5913bde4564eb54af3b2652a36b1e152dddbf42d418fa32b9dab300155a618ae"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/download.zig",
+          "before": "58023dce7b4b2ad9ee93914cf93229c171db7bfce36d991308cd0f297eea193f",
+          "after": "3f6c05e223d78e560d7e4215b15e519d21e76d0381640fa32b3b323cbeb29d55"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "70449df43537d21cfc4d441fcbdb9295cee3e825ec55a83bba275e5cae53295c",
+          "after": "fb0e550c717839cfadbad22af3983b499e0f71e9d01669a7e77cefd8fd2dd77c"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "af263375bcffc326d1b85b71a4c0f7f67a392557f99486adc918aae763fca053",
+          "after": "3c32039d0aa031b6de2326dd04da68635359425de1aa86ce2c3dbdc7a0dd785f"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "d78027f72080b83906b9873d589183c8d06e2930f9c96be5f4d19b934813b304",
+          "after": "08d6de3c7168e06b0f1ee58d04d19ed0d379cce5411cc4e022620a3fd2490354"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "ef7ed17cc46f56fa942af96d6958682c0eb37968012fd7e94956dca6404a246e",
+          "after": "36b55c244c0892930693b29e1b7d93a111221ccfa48d354a34b7607894bb4b76"
         }
       ]
     }

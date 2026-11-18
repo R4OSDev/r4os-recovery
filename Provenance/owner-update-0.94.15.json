@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "release": "0.94.15",
+  "recovery_version": "0.1.84",
+  "kernel_version": "0.1.83",
+  "menu_version": "0.1.30",
+  "menu_sha256": "4838161b042617f05b5e4759b6da6da3add99c88f940d6458602ad6fcdd74c0f",
+  "kernel_sha256": "50f78386157d7c19099980ea648a11498acc8d9a227d248ddb7fd5f2ae215ae7",
+  "runtime_sha256": "6056b7fb958fbcfc6a5c6446caa02b0404dee0e280194d2f8008c407c041ceaa",
+  "source_archive": {
+    "id": "Recovery-Menu-0.94.15",
+    "archive": "Legal/Sources/Recovery-Menu-0.94.15.zip",
+    "archiveSha256": "7339090efe83b4deb4d73e31487095b1b7bef344b704668426ff24b0ed1c3b2b",
+    "commit": "629cefa292b70a96c61644be99ca795fa86c153f",
+    "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+  }
+}

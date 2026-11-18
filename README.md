@@ -1,12 +1,15 @@
 ﻿# R4OS Recovery
 
+The public release includes the matching Recovery kernel and RAM runtime, a
+source manifest and SHA-256 checksums. [Current release](https://github.com/R4OSDev/r4os-recovery/releases/latest)
+
 0.91.13 / Recovery0.1.78 / Kernel0.1.77 computes FAT allocation capacity
 with 64-bit intermediates and caps it at the valid cluster range. Oversized
 padded FATs retain their accepted geometry; the on-disk and module contracts
 are unchanged. The ordinary Rust kernel reproduces the original overflow
 with SPF0x800000 and a real sparse FAT32 volume. Evidence and validation
-scope: ExFiles/Reports/Fable091/0.91.13/. Package publication follows in the
-planned Recovery release step; the39 embedded module bodies are retained.
+scope: ExFiles/Reports/Fable091/0.91.13/. This build was published as Recovery 0.1.78 with its 39 embedded module bodies.
+[Recovery 0.1.78](https://github.com/R4OSDev/r4os-recovery/releases/tag/v0.1.78)
 
 Finaler STANDARD6ddc235e-4d7c-4e72-bfc4-470a9e1e69d0 / normaler Rust-Kernel0.1.484 / KVM4:30 Rohsamples, fuenf metric-v2-Werte und sechs Scores gegen die feste Originalreferenz nachgerechnet. Status: lokal validiert; R4OS Server ausstehend. Rest: Claim, Import, voller GET-Readback und unabhaengige Serverauswertung. Er misst das normale Gesamtsystem; die eigenstaendige Recovery-Matrix ist eine getrennte Funktionsabnahme.
 

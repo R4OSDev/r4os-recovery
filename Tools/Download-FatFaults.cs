@@ -17,18 +17,27 @@ public sealed class RecoveryDownloadFatFaults : IDisposable {
         if (Path.GetExtension(image) != ".img") throw new IOException("Only a fixture .img is accepted.");
         file = new FileStream(image,FileMode.Open,FileAccess.ReadWrite,FileShare.None);
         try {
-            if (file.Length != 2048L*1024*1024) throw new IOException("Unexpected fixture length.");
             var gpt=Read(512,512); if (Encoding.ASCII.GetString(gpt,0,8)!="EFI PART") throw new IOException("No fixture GPT.");
             var part=Read(1024+3*128,128);
             if (Encoding.Unicode.GetString(part,56,72).TrimEnd('\0')!="RECOVERY" || BitConverter.ToUInt64(part,32)!=2363392) throw new IOException("No expected RECOVERY partition.");
-            start=(long)BitConverter.ToUInt64(part,32)*512;
+            long firstSector=checked((long)BitConverter.ToUInt64(part,32));
+            long lastSector=checked((long)BitConverter.ToUInt64(part,40));
+            long sectorCount=checked(lastSector-firstSector+1);
+            long recoveryBytes=checked(sectorCount*512);
+            if (recoveryBytes < 512L*1024*1024 || file.Length != checked(1536L*1024*1024+recoveryBytes))
+                throw new IOException("Unexpected fixture length or RECOVERY capacity.");
+            start=firstSector*512;
             var bpb=Read(start,512);
             if (BitConverter.ToUInt16(bpb,11)!=512 || bpb[510]!=85 || bpb[511]!=170 || bpb[16]!=2) throw new IOException("Not fixture FAT32.");
+            if (bpb[13]==0 || (bpb[13] & (bpb[13]-1))!=0 || BitConverter.ToUInt32(bpb,32)!=sectorCount)
+                throw new IOException("FAT geometry differs from the fixture partition.");
             clusterBytes=bpb[13]*512; fat=start+BitConverter.ToUInt16(bpb,14)*512L;
             data=fat+bpb[16]*BitConverter.ToUInt32(bpb,36)*512L;
             fatBytes=checked((int)BitConverter.ToUInt32(bpb,36)*512);
             root=BitConverter.ToUInt32(bpb,44);
-            clusterCount=(uint)((start+1048576L*512-data)/clusterBytes);
+            clusterCount=checked((uint)((start+recoveryBytes-data)/clusterBytes));
+            if (clusterCount==0 || (long)clusterCount+2>fatBytes/4)
+                throw new IOException("Invalid fixture FAT bounds.");
         } catch { file.Dispose(); throw; }
     }
     byte[] Read(long at,int count) { var b=new byte[count]; file.Position=at; file.ReadExactly(b); return b; }

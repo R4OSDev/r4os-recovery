@@ -71,7 +71,12 @@ if(!$ReuseFixture){
  Older-Zip $good $oldRecovery;Older-Zip $normal $oldNormal
  foreach($name in @('good','redirect','truncated','wrong','retry3','retry4')){Metadata $name $good}
  Metadata invalid $bad;Metadata normal $normal r4os
- $null=New-Installation 1 $false '1024x768x32' @{RECOVERY=@("$oldRecovery|/INSTALL/RECOVERY.ZIP","$oldNormal|/INSTALL/RELEASE.ZIP")}
+ # The active boot pair, both existing ZIPs and the largest incoming ZIP coexist.
+ [long]$residentBytes=([IO.FileInfo]$kernel).Length+([IO.FileInfo]$runtime).Length+([IO.FileInfo]$oldRecovery).Length+([IO.FileInfo]$oldNormal).Length
+ [long]$peakBytes=$residentBytes+[Math]::Max(([IO.FileInfo]$good).Length,([IO.FileInfo]$normal).Length)
+ # Include room for FAT metadata and the cache journal before rounding the fixture up.
+ [long]$recoveryMB=[Math]::Max(512,64*[Math]::Ceiling(($peakBytes*1.02+1MB)/64MB))
+ $null=New-Installation 1 $false '1024x768x32' @{RECOVERY=@("$oldRecovery|/INSTALL/RECOVERY.ZIP","$oldNormal|/INSTALL/RELEASE.ZIP")} -RecoveryMB $recoveryMB -DiskMB (1536+$recoveryMB)
  $files=@{}
  foreach($relative in @('disk-1.img','good.zip','invalid.zip','normal.zip','older-recovery.zip','older-r4os.zip','meta-good.json','meta-redirect.json','meta-truncated.json','meta-wrong.json','meta-retry3.json','meta-retry4.json','meta-invalid.json','meta-normal.json')){$files[$relative]=Get-RecoveryHash (Join-Path $output $relative)}
  Write-RecoveryJson $stamp @{inputs=$fixtureInputs;files=$files}
@@ -116,15 +121,11 @@ function Stop-Guest {
   $process.Dispose();$script:process=$null
  }
 }
-# Current source-bearing ZIPs exceed65MB. The complete witness includes
-# transfer, ZIP/file hashes, durable journal and verified cache publication.
-# The observed65MB Recovery workflow completes in275s; the74MB R4OS
-# workflow reaches its final cache check at294s. Scale only this host
-# workflow allowance with actual ZIP bytes, with a hard ten-minute ceiling.
-# Individual probes keep180s and product deadlines/retry limits stay intact.
+# Budget the complete host-side transfer and cache check from the actual ZIP size.
+# The watchdog includes the durable replacement and full cache readbacks.
 $packageWitnessBytes=[Math]::Max(([IO.FileInfo]$good).Length,([IO.FileInfo]$normal).Length)
-$packageWitnessTimeoutMs=[int][Math]::Max(300000,120000+5000*[Math]::Ceiling($packageWitnessBytes/1MB))
-if($packageWitnessTimeoutMs -gt 600000){throw 'Fixture package exceeds the bounded ten-minute workflow allowance.'}
+[int]$estimatedWorkflowMs=120000+5000*[Math]::Ceiling($packageWitnessBytes/1MB)
+$packageWitnessTimeoutMs=[Math]::Max(300000,$estimatedWorkflowMs)
 Write-Host ("Full-package host witness bound: {0}ms, largest actual ZIP: {1} bytes." -f $packageWitnessTimeoutMs,$packageWitnessBytes)
 function Witness([string]$Argument,[int]$ExitCode=0,[int]$TimeoutMs=180000){
  $elapsed=[Diagnostics.Stopwatch]::StartNew()
@@ -153,7 +154,8 @@ try{
   $null=Witness FAT
   $null=Witness NOSPACE;Cache-Matches $oldRecovery -Complete
   foreach($case in @('truncated','wrong','invalid')){
-   $text=Witness "FIXTURE $base $case" 1
+   $timeoutMs=if($case -eq 'truncated'){180000}else{$packageWitnessTimeoutMs}
+   $text=Witness "FIXTURE $base $case" 1 $timeoutMs
    $wanted=switch($case){'truncated'{'NetworkDownload'};'wrong'{'SourceChanged'};'invalid'{'HashMismatch'}}
    if($text -notmatch "error=$wanted"){throw "Unexpected rejection: $case"}
    Cache-Matches $oldRecovery;Cache-Matches $oldNormal -R4OS -Complete

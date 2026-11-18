@@ -34,8 +34,14 @@ function Wait-Marker([string]$Pattern){
         Start-Sleep -Milliseconds 50
     }
 }
+function Get-PackagePreparationSeconds([string]$Path){
+    $megabytes=[Math]::Ceiling(([IO.FileInfo]$Path).Length/1MB)
+    return [Math]::Clamp([int](30+2*$megabytes),60,180)
+}
 function Package-Command([string]$Argument){
-    $text=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /PACKAGESMOKE $Argument")) '' 60000
+    $archive=switch($Argument){'OOM'{$systemPackage};'REJECT'{$bad};default{$good}}
+    $timeoutMs=1000*(Get-PackagePreparationSeconds $archive)
+    $text=Client $ssh (@('-p',"$sshPort")+$sshOptions+@('r4os@127.0.0.1',"C:\R4OS\SOFTWARE\RECOVERY\RECOVERY.R4X /PACKAGESMOKE $Argument")) '' $timeoutMs
     if($text -notmatch '\[PACKAGERAM\] resident=pinned' -or $text -notmatch '\[PACKAGESMOKE\].*result=OK writes=0'){throw "Incomplete package witness: $Argument"}
     return $text
 }
@@ -51,7 +57,7 @@ function Package-Detach {
         # nested Recovery before publishing READY. Bound only the host witness
         # from actual archive bytes; original digest/detach/release assertions
         # and the product30s post-READY deadline remain unchanged.
-        $readyTimeoutSeconds=[int][Math]::Min(180,[Math]::Max(60,30+2*[Math]::Ceiling(([IO.FileInfo]$systemPackage).Length/1MB)))
+        $readyTimeoutSeconds=Get-PackagePreparationSeconds $systemPackage
         $readyElapsed=[Diagnostics.Stopwatch]::StartNew()
         $deadline=[DateTime]::UtcNow.AddSeconds($readyTimeoutSeconds);$ready=$false
         while([DateTime]::UtcNow -lt $deadline -and !$holder.HasExited){
