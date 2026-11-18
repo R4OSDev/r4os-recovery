@@ -495,6 +495,13 @@
       "archiveSha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
       "commit": "d772a89cd6188ee91957bb3ca42dd1f351403796",
       "remote": "https://github.com/R4OSDev/r4os-recovery.git"
+    },
+    {
+      "id": "Recovery-Menu-0.94.22",
+      "archive": "Legal/Sources/Recovery-Menu-0.94.22.zip",
+      "archiveSha256": "06b96953c17fdbdc4e1b15441175e5c198ea694f45a01900a776ef9a62eec98b",
+      "commit": "cb7023a33fbcef79e70567f8330e791a8c097ad0",
+      "remote": "https://github.com/R4OSDev/r4os-recovery.git"
     }
   ],
   "platformProviders": [
@@ -3016,8 +3023,8 @@
     },
     {
       "path": "Kernel/kernel/desktop_events.zig",
-      "bytes": 2043,
-      "sha256": "3acd00b0db5f8e362d059654a0c38a30951a97b14c333ccb9bf1826723015ad5",
+      "bytes": 1734,
+      "sha256": "561f72f424fe7dc9da3f9ca131b4aad1fbe7541c2a1e33da0afa74a923b45a60",
       "originalSha256": "3acd00b0db5f8e362d059654a0c38a30951a97b14c333ccb9bf1826723015ad5",
       "origin": {
         "path": "kernel/desktop_events.zig",
@@ -4233,8 +4240,8 @@
     },
     {
       "path": "Kernel/program/r4x.zig",
-      "bytes": 820812,
-      "sha256": "e5b387980636e98ab9f32c94c4dbff1d45025195b2ddaa00f1ed4e32c1144e79",
+      "bytes": 821037,
+      "sha256": "f92a54ba0860e32322c7b3d2ef518d4d1c83554199ebcd390a9690d6da457c4b",
       "originalSha256": "6e0478b07e4db0b757c0c208474b2dd785eb9b1146fa26462dcd04b31dc4925a",
       "origin": {
         "path": "program/r4x.zig",
@@ -4658,7 +4665,7 @@
     {
       "path": "Kernel/VERSION.R4S",
       "bytes": 25,
-      "sha256": "1b22aa052976b1b0048cdb83def1d5b17be06730b413d9f7bf76d8f28064b0b3",
+      "sha256": "d6ef32f983eec0b2f80f94ff573b616083339e764fe172486c4b707bbb7b17c8",
       "originalSha256": "690161420e9dfba56a422d76343a54b2d49a429bd23374a7dae00ec4e5f529f1",
       "origin": {
         "path": "VERSION.R4S",
@@ -48046,7 +48053,7 @@
     {
       "path": "RecoveryTools/Menu/module.R4MF",
       "bytes": 627,
-      "sha256": "7953aaefaec0de366eb5f87e6cca329e19b6717dcbe6fd02acdf35c3b3ed66fb",
+      "sha256": "0ce36a112e1e6fbdb4a26ade48632ab4c76ce401606d12201ad2628ca2f2c3ef",
       "originalSha256": null,
       "origin": null
     },
@@ -48129,8 +48136,8 @@
     },
     {
       "path": "RecoveryTools/Menu/src/main.zig",
-      "bytes": 47027,
-      "sha256": "fb0e550c717839cfadbad22af3983b499e0f71e9d01669a7e77cefd8fd2dd77c",
+      "bytes": 47873,
+      "sha256": "b3967347ec8c213ba1d98e86bbfb660c4e38d6769fcc6562176162d87d045939",
       "originalSha256": null,
       "origin": null
     },
@@ -48382,7 +48389,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
       "bytes": 64,
-      "sha256": "35ca13a99a24524bd2dcfbbcdfd09d4efe0d9dd7bc58223bab191fd650b20cf8",
+      "sha256": "060ba4cf27ec561b4b60e55a76ac592812d4d59c951a808dbb190b1a43252adf",
       "originalSha256": null,
       "origin": null
     },
@@ -48406,7 +48413,7 @@
     {
       "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
       "bytes": 26,
-      "sha256": "175a7c1ee854298af1c41726da78399bf75780647e3cb38f8ba3dbd152181610",
+      "sha256": "7877c8157f80647ed9c540b9bf430f031e345375779c7d0743511e27f61c12db",
       "originalSha256": null,
       "origin": null
     },
@@ -49024,6 +49031,13 @@
       "bytes": 10200,
       "sha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
       "originalSha256": "1ce50e47df90d84ab1a9f07093b099c5b4570ae3a1339a709cdbabbe33a11dbd",
+      "origin": null
+    },
+    {
+      "path": "Legal/Sources/Recovery-Menu-0.94.22.zip",
+      "bytes": 245747,
+      "sha256": "06b96953c17fdbdc4e1b15441175e5c198ea694f45a01900a776ef9a62eec98b",
+      "originalSha256": "06b96953c17fdbdc4e1b15441175e5c198ea694f45a01900a776ef9a62eec98b",
       "origin": null
     }
   ],
@@ -79291,6 +79305,51 @@
           "path": "RecoveryTools/Embedded/Protocols-NetDhcp/src/main.zig",
           "before": "95812a4e36b5f8f0a85b0b78fd15b8cc8654d6901baf3939629dde12b91b01ad",
           "after": "9ca1d8ff9ddfe11dd9028e64a28f8d8f39d94e1a94f872196c26639ac7f1a58e"
+        }
+      ]
+    },
+    {
+      "reason": "0.94.22 Recovery-owned Menu 0.1.31. Paired kernel embeds the new runtime digest.",
+      "changes": [
+        {
+          "path": "Legal/Sources/Recovery-Menu-0.94.22.zip",
+          "before": null,
+          "after": "06b96953c17fdbdc4e1b15441175e5c198ea694f45a01900a776ef9a62eec98b"
+        },
+        {
+          "path": "RecoveryTools/Menu/module.R4MF",
+          "before": "7953aaefaec0de366eb5f87e6cca329e19b6717dcbe6fd02acdf35c3b3ed66fb",
+          "after": "0ce36a112e1e6fbdb4a26ade48632ab4c76ce401606d12201ad2628ca2f2c3ef"
+        },
+        {
+          "path": "RecoveryTools/Menu/src/main.zig",
+          "before": "fb0e550c717839cfadbad22af3983b499e0f71e9d01669a7e77cefd8fd2dd77c",
+          "after": "b3967347ec8c213ba1d98e86bbfb660c4e38d6769fcc6562176162d87d045939"
+        },
+        {
+          "path": "Kernel/kernel/desktop_events.zig",
+          "before": "3acd00b0db5f8e362d059654a0c38a30951a97b14c333ccb9bf1826723015ad5",
+          "after": "561f72f424fe7dc9da3f9ca131b4aad1fbe7541c2a1e33da0afa74a923b45a60"
+        },
+        {
+          "path": "Kernel/program/r4x.zig",
+          "before": "e5b387980636e98ab9f32c94c4dbff1d45025195b2ddaa00f1ed4e32c1144e79",
+          "after": "f92a54ba0860e32322c7b3d2ef518d4d1c83554199ebcd390a9690d6da457c4b"
+        },
+        {
+          "path": "Kernel/VERSION.R4S",
+          "before": "1b22aa052976b1b0048cdb83def1d5b17be06730b413d9f7bf76d8f28064b0b3",
+          "after": "d6ef32f983eec0b2f80f94ff573b616083339e764fe172486c4b707bbb7b17c8"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/RECOVERY.R4S",
+          "before": "35ca13a99a24524bd2dcfbbcdfd09d4efe0d9dd7bc58223bab191fd650b20cf8",
+          "after": "060ba4cf27ec561b4b60e55a76ac592812d4d59c951a808dbb190b1a43252adf"
+        },
+        {
+          "path": "Runtime/R4OS/CONFIG/VERSION.R4S",
+          "before": "175a7c1ee854298af1c41726da78399bf75780647e3cb38f8ba3dbd152181610",
+          "after": "7877c8157f80647ed9c540b9bf430f031e345375779c7d0743511e27f61c12db"
         }
       ]
     }
