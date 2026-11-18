@@ -296,7 +296,7 @@
       "original_archive_sha256": "c8a8f1359c4547f17f20eac3f3c82871c016e562345af53eda782f11a97ccd96",
       "original_version": "0.1.4",
       "source": "RecoveryTools/Embedded/Drivers-VirtioNet",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "target": "Runtime/R4OS/DRIVERS/VIRTNET.R4D",
       "canonical_reuse": false,
       "source_original_sha256": {

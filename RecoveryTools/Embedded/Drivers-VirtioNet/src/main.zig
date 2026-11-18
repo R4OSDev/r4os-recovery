@@ -121,6 +121,7 @@ const State = struct {
 
     // Ring-Zustand
     tx_lock: bool = false,
+    poll_lock: bool = false,
     rx_avail_idx: u16 = 0,
     rx_last_used: u16 = 0,
     tx_avail_idx: u16 = 0,
@@ -174,11 +175,9 @@ const VirtioCap = struct {
 
 var state: State = .{};
 var backend: r4os.abi.NetBackend = .{};
-var poll_active: bool = false;
 
 export fn virtnet_init(api: *const r4os.r4dev.DriverApi2) callconv(.c) i32 {
     state = .{ .api = api };
-    poll_active = false;
     var ctx = context();
     if (!ctx.requires(.{ "alloc_dma_region", "free_dma_region", "get_option", "irq_register", "irq_unregister", "net_backend_query", "net_receive_packet", "net_schedule_rx", "pci_device_at", "pci_device_count", "pci_enable_bus_master", "pci_map_bar", "pci_read_config32", "register_net_backend", "wait_ticks" })) return -10;
     ctx.logInfo("VIRTNET.R4D init");
@@ -458,7 +457,7 @@ fn transmit(raw_context: ?*anyopaque, frame: [*]const u8, len: u32) callconv(.c)
     // konkurrierende Sender (net-rx-Retransmit vs. Service-Task, siehe
     // RTL8139-Guard) bekommen busy(1) und pacen darauf.
     if (@atomicRmw(bool, &s.tx_lock, .Xchg, true, .acq_rel)) {
-        s.tx_busy += 1;
+        _ = @atomicRmw(u64, &s.tx_busy, .Add, 1, .monotonic);
         return 1;
     }
     defer @atomicStore(bool, &s.tx_lock, false, .release);
@@ -474,7 +473,7 @@ fn transmit(raw_context: ?*anyopaque, frame: [*]const u8, len: u32) callconv(.c)
             slot = allocTxSlot(s);
         }
         if (slot == null) {
-            s.tx_busy += 1;
+            _ = @atomicRmw(u64, &s.tx_busy, .Add, 1, .monotonic);
             return 1;
         }
     }
@@ -514,9 +513,9 @@ fn reclaimTx(s: *State) void {
         const id = ramRead32(elem_off);
         if (id < TX_RING) {
             s.tx_free_mask |= @as(u32, 1) << @intCast(id);
-            s.tx_ok += 1;
+            _ = @atomicRmw(u64, &s.tx_ok, .Add, 1, .monotonic);
         } else {
-            s.tx_errors += 1;
+            _ = @atomicRmw(u64, &s.tx_errors, .Add, 1, .monotonic);
         }
         s.tx_last_used +%= 1;
     }
@@ -525,9 +524,8 @@ fn reclaimTx(s: *State) void {
 fn poll(raw_context: ?*anyopaque) callconv(.c) void {
     const s = stateFrom(raw_context) orelse return;
     if (!@atomicLoad(bool, &s.active, .acquire) or s.dma.virt_addr == 0) return;
-    if (poll_active) return;
-    poll_active = true;
-    defer poll_active = false;
+    if (@atomicRmw(bool, &s.poll_lock, .Xchg, true, .acq_rel)) return;
+    defer @atomicStore(bool, &s.poll_lock, false, .release);
     s.poll_count += 1;
     if (!s.irq_registered) {
         // Poll-Fallback: ISR lesen, damit eine anstehende INTx-Leitung
@@ -535,7 +533,10 @@ fn poll(raw_context: ?*anyopaque) callconv(.c) void {
         s.poll_fallbacks += 1;
         s.last_isr = mmioRead8(s.isr_base);
     }
-    reclaimTx(s);
+    if (!@atomicRmw(bool, &s.tx_lock, .Xchg, true, .acq_rel)) {
+        reclaimTx(s);
+        @atomicStore(bool, &s.tx_lock, false, .release);
+    }
     if (drainRx(s)) {
         const ctx = context();
         _ = ctx.netScheduleRx(s.adapter_index);
@@ -648,12 +649,13 @@ fn backendShutdown(raw_context: ?*anyopaque) callconv(.c) i32 {
 
 fn status(raw_context: ?*anyopaque, out: *r4os.abi.NetBackendStatus) callconv(.c) i32 {
     const s = stateFrom(raw_context) orelse return -1;
+    const tx_errors = @atomicLoad(u64, &s.tx_errors, .monotonic);
     out.* = .{
         .link_up = if (@atomicLoad(bool, &s.active, .acquire) and deviceCarrierUp(s)) 1 else 0,
         .rx_packets = s.rx_ok,
-        .tx_packets = s.tx_ok,
+        .tx_packets = @atomicLoad(u64, &s.tx_ok, .monotonic),
         .drops = s.bad_frames,
-        .errors = s.rx_errors + s.tx_errors,
+        .errors = s.rx_errors + tx_errors,
         .irq_line = irqDisplayLine(s),
         .irq_pin = s.info.interrupt_pin,
         .irq_registered = if (s.irq_registered) 1 else 0,
@@ -665,7 +667,7 @@ fn status(raw_context: ?*anyopaque, out: *r4os.abi.NetBackendStatus) callconv(.c
         .last_isr = s.last_isr,
         .reserved = @truncate(s.notify_kicks),
         .rx_errors = s.rx_errors,
-        .tx_errors = s.tx_errors,
+        .tx_errors = tx_errors,
         .rx_overflows = 0,
         .rx_recoveries = 0,
         .offered_capabilities = if (s.guest_checksum_feature) r4os.abi.net_backend_cap_rx_l4_checksum_valid else 0,
