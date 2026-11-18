@@ -12753,11 +12753,13 @@ fn apiProgramHandleRequestClose(handle_ptr: *const ProgramProcessHandle) callcon
         unlockProgramRegistry();
         return PROGRAM_HANDLE_ERROR_NOT_RUNNING;
     }
-    if (!slot.instance.close_requested) {
+    const first_close = !slot.instance.close_requested;
+    if (first_close) {
         slot.instance.close_requested = true;
         bumpProgramInventoryEpochLocked();
     }
     unlockProgramRegistry();
+    if (first_close) desktop_events.signal();
     signalConsoleInputForHandle(handle);
     requestConsoleClientsClose(handle);
     return PROGRAM_HANDLE_OK;
@@ -15957,11 +15959,12 @@ fn pushConsoleInput(instance: *ProgramInstance, data: []const u8) usize {
     const console = consolePayload(instance);
     console_input_bytes_attempted +%= @as(u64, @intCast(data.len));
     if (!console.input_lock.lock(sync.WAIT_FOREVER)) return 0;
+    var accepted: usize = 0;
     defer {
         _ = console.input_lock.unlock();
         if (isRawFullscreenPresenter(instance)) keyboard.signalInputActivity();
+        if (accepted != 0) desktop_events.signal();
     }
-    var accepted: usize = 0;
     while (accepted < data.len) : (accepted += 1) {
         const next_head = (console.input_head + 1) % INPUT_QUEUE_SIZE;
         if (next_head == console.input_tail) break;
@@ -17106,7 +17109,10 @@ fn requestConsoleClientsClose(host: ProgramProcessHandle) void {
             }
         }
         unlockProgramRegistry();
-        if (changed_handle) |handle| signalConsoleInputForHandle(handle);
+        if (changed_handle) |handle| {
+            signalConsoleInputForHandle(handle);
+            desktop_events.signal();
+        }
         if (!changed) return;
     }
 }
@@ -17452,6 +17458,7 @@ fn retireProgramSlot(slot: *ProgramRegistrySlot) ProgramRetireResult {
     }
     clearProgramRegistrySlotLocked(reap_slot);
     unlockProgramRegistry();
+    desktop_events.signal();
 
     reportBootForegroundRetireStage(report_boot_foreground, "SERVMAN: Bereit");
 

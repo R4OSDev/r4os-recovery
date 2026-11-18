@@ -9,7 +9,6 @@
 // durch seinen intrusiven WaitNode generationstreu gebundenen Task wie der
 // Timer-Tick.
 const sync = @import("../sched/sync.zig");
-const timer = @import("timer.zig");
 
 var activity: sync.WaitQueue = sync.WaitQueue.init();
 var signal_seq: u64 = 0;
@@ -31,25 +30,16 @@ fn predStillWaitActivity(raw: *anyopaque) bool {
     return signal_seq == c.last_seq;
 }
 
-// 0.56.40: hz-neutral (250-ms-Slice; bei 100 Hz wie zuvor 25 Ticks).
-const WAIT_SLICE_TICKS: u64 = @max(1, (250 * @as(u64, timer.DEFAULT_HZ)) / 1000);
-
-// 1 = neue Aktivitaet seit last_seq, 0 = Timeout. out_seq erhaelt den
-// aktuellen Sequenzstand fuer den naechsten Aufruf.
+// Compare again in the scheduler enrollment critical section. Each caller
+// supplies its actual deadline; input, completion or stop can wake it earlier.
 pub fn wait(last_seq: u64, timeout_ticks: u64, out_seq: *u64) i32 {
-    var waited: u64 = 0;
-    while (true) {
-        const current_seq = activity.readSequence(&signal_seq);
-        if (current_seq != last_seq) {
-            out_seq.* = current_seq;
-            return 1;
-        }
-        if (waited >= timeout_ticks) break;
-        const slice = @min(WAIT_SLICE_TICKS, timeout_ticks - waited);
+    var current = sequence();
+    if (current == last_seq and timeout_ticks != 0) {
         var ctx = WaitCtx{ .last_seq = last_seq };
-        _ = activity.waitUnless(slice, "desk-activity", predStillWaitActivity, &ctx);
-        waited += slice;
+        const result = activity.waitUnless(timeout_ticks, "desk-activity", predStillWaitActivity, &ctx);
+        current = sequence();
+        if (result == .failed and current == last_seq) return -1;
     }
-    out_seq.* = activity.readSequence(&signal_seq);
-    return 0;
+    out_seq.* = current;
+    return @intFromBool(current != last_seq);
 }

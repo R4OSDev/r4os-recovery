@@ -718,6 +718,16 @@ const State = struct {
     }
 };
 
+fn ticksUntil(now: u64, deadline: u64) u64 {
+    const remaining: i64 = @bitCast(deadline -% now);
+    return if (remaining > 0) @intCast(remaining) else 0;
+}
+
+fn menuWaitTicks(now: u64, status: u64, blink: ?u64) u64 {
+    const delay = ticksUntil(now, status);
+    return if (blink) |deadline| @min(delay, ticksUntil(now, deadline)) else delay;
+}
+
 pub fn r4_app_main(app: *r4os.App2) i32 {
     const result = run(app);
     if (result != 0) {
@@ -808,9 +818,14 @@ fn run(app: *r4os.App2) i32 {
         const ram = @import("memory_budget.zig").capacity(&state.dev) catch 0;
         sys.write(std.fmt.bufPrint(&line, "[RECOVERYRAM] ram_capacity={d} menu_used={d} free={d} available={d}\r\n", .{ ram, ram -| memory.free_physical_bytes, memory.free_physical_bytes, memory.app_available_bytes }) catch "");
     }
-    var next_blink = sys.ticks() + sys.ticksFromMilliseconds(500);
-    var next_status = sys.ticks() + sys.ticksFromMilliseconds(1000);
+    var sequence: u64 = 0;
+    if (desk.desktopActivityWait(0, 0, &sequence) < 0) return -20;
+    const blink_interval = sys.ticksFromMilliseconds(500);
+    const status_interval = sys.ticksFromMilliseconds(1000);
+    var next_blink = sys.ticks() +% blink_interval;
+    var next_status = sys.ticks() +% status_interval;
     while (!sys.programShouldClose()) {
+        const was_terminal = state.page == .terminal;
         if (!state.pollChild()) return -13;
         var budget: usize = 0;
         while (budget < 64) : (budget += 1) {
@@ -819,9 +834,9 @@ fn run(app: *r4os.App2) i32 {
             if (!state.input(key)) return -14;
         }
         const now = sys.ticks();
-        if (now >= next_status) {
+        if (ticksUntil(now, next_status) == 0) {
             state.dirty = state.status() or state.dirty;
-            next_status = now + sys.ticksFromMilliseconds(1000);
+            next_status = now +% status_interval;
         }
         if (state.page == .terminal) {
             const revision = desk.consoleRevision(state.child.instance_id);
@@ -829,14 +844,17 @@ fn run(app: *r4os.App2) i32 {
                 state.child_revision = revision;
                 state.dirty = true;
             }
-            if (now >= next_blink) {
+            if (!was_terminal) next_blink = now +% blink_interval;
+            if (ticksUntil(now, next_blink) == 0) {
                 state.blink = !state.blink;
                 state.dirty = true;
-                next_blink = now + sys.ticksFromMilliseconds(500);
+                next_blink = now +% blink_interval;
             }
         }
         if (state.dirty and !state.render(false)) return -15;
-        sys.sleepTicks(sys.ticksFromMilliseconds(20));
+        if (budget == 64) continue;
+        const delay = menuWaitTicks(sys.ticks(), next_status, if (state.page == .terminal) next_blink else null);
+        if (delay != 0 and desk.desktopActivityWait(sequence, delay, &sequence) < 0) return -20;
     }
     if (state.child.instance_id != 0) {
         _ = sys.programHandleRequestClose(&state.child);
